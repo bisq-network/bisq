@@ -420,7 +420,7 @@ public class OfferResourceIT {
     @InSequence(8)
     @Test
     public void takeOffer_offerNotFound_returns404status() {
-        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template("non-existing-id", payload, 404);
     }
 
@@ -442,35 +442,47 @@ public class OfferResourceIT {
     @InSequence(8)
     @Test
     public void takeOffer_validPayloadButNoFunds_returns427status() {
-        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template(createdOffer.id, payload, 427);
     }
 
     @InSequence(8)
     @Test
     public void takeOffer_paymentAccountIdMissing_returns422status() {
-        final TakeOffer payload = new TakeOffer(null, "1");
+        final TakeOffer payload = new TakeOffer(null, 1);
         takeOffer_template(createdOffer.id, payload, 422);
     }
 
     @InSequence(8)
     @Test
     public void takeOffer_amountMissing_returns422() {
-        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, null);
-        takeOffer_template(createdOffer.id, payload, 422);
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
+        final JSONObject jsonPayload = toJsonObject(payload);
+        jsonPayload.remove("amount");
+        given().
+                port(getBobPort()).
+                body(jsonPayload).
+                contentType(ContentType.JSON).
+                //
+                        when().
+                post("/api/v1/offers/" + createdOffer.id + "/take").
+                //
+                        then().
+                statusCode(422)
+        ;
     }
 
     @InSequence(8)
     @Test
     public void takeOffer_paymentAccountNotFound_returns425() {
-        final TakeOffer payload = new TakeOffer("non-existing-account", "1");
+        final TakeOffer payload = new TakeOffer("non-existing-account", 1);
         takeOffer_template(createdOffer.id, payload, 425);
     }
 
     @InSequence(8)
     @Test
     public void takeOffer_incompatiblePaymentAccount_returns423() {
-        final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, "1");
+        final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
         takeOffer_template(createdOffer.id, payload, 423);
     }
 
@@ -479,7 +491,7 @@ public class OfferResourceIT {
     @Test
     public void takeOffer_noArbitratorSelected_returns424() {
         ApiTestHelper.deselectAllArbitrators(getBobPort());
-        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template(createdOffer.id, payload, 423);
     }
 
@@ -496,7 +508,7 @@ public class OfferResourceIT {
         ApiTestHelper.deselectAllArbitrators(bobPort);
         ApiTestHelper.selectArbitrator(bobPort, arbitrators.get(0));
 
-        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, "1");
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template(createdOffer.id, payload, 0);
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -526,7 +538,7 @@ public class OfferResourceIT {
         final int bobPort = getBobPort();
 
         final TakeOffer payload = new TakeOffer();
-        payload.amount = "6250000";
+        payload.amount = 6250000;
         payload.paymentAccountId = bobPaymentAccount.id;
 
         final String offerId = createdOffer.id;
@@ -634,6 +646,14 @@ public class OfferResourceIT {
         putIfNotNull(jsonOffer, "accountId", offer.accountId);
         putIfNotNull(jsonOffer, "percentageFromMarketPrice", offer.percentageFromMarketPrice);
         return jsonOffer;
+    }
+
+    @NotNull
+    private JSONObject toJsonObject(TakeOffer payload) {
+        final JSONObject json = new JSONObject();
+        putIfNotNull(json, "paymentAccountId", payload.paymentAccountId);
+        putIfNotNull(json, "amount", payload.amount);
+        return json;
     }
 
     private static void putIfNotNull(JSONObject jsonObject, String key, Object value) {

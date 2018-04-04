@@ -268,7 +268,7 @@ public class BisqProxy {
 
     /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
-    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) {
+    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
         final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
         final Offer offer;
         try {
@@ -290,7 +290,7 @@ public class BisqProxy {
         }
 
         // check the amount is within the range
-        Coin coinAmount = Coin.valueOf(Long.valueOf(amount));
+        Coin coinAmount = Coin.valueOf(amount);
         //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
 
         // workaround because TradeTask does not have an error handler to notify us that something went wrong
