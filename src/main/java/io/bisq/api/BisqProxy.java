@@ -41,6 +41,7 @@ import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.network.Statistic;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -754,6 +755,11 @@ public class BisqProxy {
         final NodeAddress address = p2PService.getAddress();
         if (null != address)
             p2PNetworkStatus.address = address.getFullAddress();
+        p2PNetworkStatus.p2pNetworkConnection = p2PService.getNetworkNode().getAllConnections().stream()
+                .map(P2PNetworkConnection::new)
+                .collect(Collectors.toList());
+        p2PNetworkStatus.totalSentBytes = Statistic.totalSentBytesProperty().get();
+        p2PNetworkStatus.totalReceivedBytes = Statistic.totalReceivedBytesProperty().get();
         return p2PNetworkStatus;
     }
 

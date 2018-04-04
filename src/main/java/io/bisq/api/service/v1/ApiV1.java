@@ -30,14 +30,14 @@ public class ApiV1 {
         return new MarketResource(bisqProxy);
     }
 
+    @Path("network")
+    public NetworkResource getNetworkResource() {
+        return new NetworkResource(bisqProxy);
+    }
+
     @Path("offers")
     public OfferResource getOfferResource() {
         return new OfferResource(bisqProxy);
-    }
-
-    @Path("p2p")
-    public P2PResource getP2PResource() {
-        return new P2PResource(bisqProxy);
     }
 
     @Path("payment-accounts")

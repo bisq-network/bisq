@@ -11,19 +11,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 
-@Api("p2p")
+@Api("network")
 @Produces(MediaType.APPLICATION_JSON)
-public class P2PResource {
+public class NetworkResource {
 
     private final BisqProxy bisqProxy;
 
-    public P2PResource(BisqProxy bisqProxy) {
+    public NetworkResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 
     @ApiOperation(value = "Get P2P network status")
     @GET
-    @Path("/status")
+    @Path("/p2p/status")
     public P2PNetworkStatus getP2PNetworkStatus() {
         return bisqProxy.getP2PNetworkStatus();
     }
