@@ -24,6 +24,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
+import bisq.desktop.util.validation.NationalAccountIdValidator;
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Country;
@@ -359,6 +360,7 @@ abstract class BankForm extends PaymentMethodForm {
                     bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
                     branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
                     accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
+                    nationalAccountIdInputTextField.setValidator(new NationalAccountIdValidator(countryCode));
                 } else {
                     validatorsApplied = false;
                     if (useHolderID)
@@ -367,12 +369,14 @@ abstract class BankForm extends PaymentMethodForm {
                     bankIdInputTextField.setValidator(null);
                     branchIdInputTextField.setValidator(null);
                     accountNrInputTextField.setValidator(null);
+                    nationalAccountIdInputTextField.setValidator(null);
                 }
                 holderNameInputTextField.resetValidation();
                 bankNameInputTextField.resetValidation();
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
                 accountNrInputTextField.resetValidation();
+                nationalAccountIdInputTextField.resetValidation();
 
                 boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                 if (requiresHolderId) {
@@ -651,6 +655,9 @@ abstract class BankForm extends PaymentMethodForm {
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
                 result = result && holderIdInputTextField.getValidator().validate(bankAccountPayload.getHolderTaxId()).isValid;
+
+            if(BankUtil.isNationalAccountIdRequired(countryCode))
+                result = result && nationalAccountIdInputTextField.getValidator().validate(bankAccountPayload.getNationalAccountId()).isValid;
         }
         allInputsValid.set(result);
     }
