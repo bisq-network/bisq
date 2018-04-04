@@ -35,6 +35,8 @@ import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import javafx.scene.Node;
@@ -159,7 +161,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     @Override
     public void onBlockAdded(BsqBlock bsqBlock) {
         // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
-        //UserThread.execute(this::updateList);
+        UserThread.execute(this::updateProposalList);
     }
 
 
