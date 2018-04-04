@@ -217,21 +217,21 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                CompensationRequestPayload compensationRequestPayload = compensationRequestService.getCompensationRequestPayload(
+                CompensationRequestPayload compensationRequestPayload = compensationRequestService.createCompensationRequestPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
                         Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
-                return compensationRequestService.getCompensationRequest(compensationRequestPayload);
+                return compensationRequestService.createCompensationRequest(compensationRequestPayload);
             case GENERIC:
-                GenericProposalPayload genericProposalPayload = genericProposalService.getGenericProposalPayload(
+                GenericProposalPayload genericProposalPayload = genericProposalService.createGenericProposalPayload(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());
-                return genericProposalService.getGenericProposal(genericProposalPayload);
+                return genericProposalService.createGenericProposal(genericProposalPayload);
             case CHANGE_PARAM:
                 //TODO
                 return null;
