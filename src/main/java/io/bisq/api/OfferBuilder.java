@@ -25,7 +25,6 @@ import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
-import java.math.BigDecimal;
 import java.util.*;
 
 import static io.bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -54,7 +53,7 @@ public class OfferBuilder {
         this.user = user;
     }
 
-    public Offer build(String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+    public Offer build(String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
                        boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
         final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
@@ -65,7 +64,7 @@ public class OfferBuilder {
         if (marketPriceMargin == null && useMarketBasedPrice) {
             throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
-            throw new ValidationException("When choosing FIXED price, fill in fixed_price with a price > 0");
+            throw new ValidationException("When choosing FIXED price, fill in fixedPrice with a price > 0");
         }
         if (null == marketPriceMargin)
             marketPriceMargin = 0d;
@@ -120,7 +119,7 @@ public class OfferBuilder {
         updateMarketPriceAvailable(baseCurrencyCode);
 
         // TODO dummy values in this constructor !!!
-        Coin coinAmount = Coin.valueOf(amount.longValueExact());
+        Coin coinAmount = Coin.valueOf(amount);
         if (null == buyerSecurityDeposit) {
             buyerSecurityDeposit = preferences.getBuyerSecurityDepositAsCoin().value;
         }
@@ -133,8 +132,8 @@ public class OfferBuilder {
                 fiatPrice,
                 marketPriceMargin,
                 useMarketBasedPrice,
-                amount.longValueExact(),
-                minAmount.longValueExact(),
+                amount,
+                minAmount,
                 baseCurrencyCode,
                 counterCurrencyCode,
                 acceptedArbitratorAddresses,
@@ -173,7 +172,7 @@ public class OfferBuilder {
             throw new IncompatiblePaymentAccountException(errorMessage);
         }
 
-        if (null == getMakerFee(false, Coin.valueOf(amount.longValue()), marketPriceMargin)) {
+        if (null == getMakerFee(false, Coin.valueOf(amount), marketPriceMargin)) {
             throw new ValidationException("makerFee must not be null");
         }
         return offer;

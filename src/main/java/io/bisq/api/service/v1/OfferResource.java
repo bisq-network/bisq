@@ -6,6 +6,7 @@ import io.bisq.api.NotFoundException;
 import io.bisq.api.model.*;
 import io.bisq.api.service.ResourceHelper;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
@@ -65,15 +66,18 @@ public class OfferResource {
     @ApiOperation(value = "Create offer", response = OfferDetail.class)
     @POST
     public void create(@Suspended final AsyncResponse asyncResponse, @Valid OfferToCreate offer) {
+        final OfferPayload.Direction direction = OfferPayload.Direction.valueOf(offer.direction);
+        final PriceType priceType = PriceType.valueOf(offer.priceType);
+        final Double marketPriceMargin = null == offer.percentageFromMarketPrice ? null : offer.percentageFromMarketPrice.doubleValue();
         final CompletableFuture<Offer> completableFuture = bisqProxy.offerMake(
                 offer.fundUsingBisqWallet,
                 offer.offerId,
                 offer.accountId,
-                offer.direction,
+                direction,
                 offer.amount,
                 offer.minAmount,
-                PriceType.PERCENTAGE.equals(offer.priceType),
-                offer.percentageFromMarketPrice,
+                PriceType.PERCENTAGE.equals(priceType),
+                marketPriceMargin,
                 offer.marketPair,
                 offer.fixedPrice, offer.buyerSecurityDeposit);
         completableFuture.thenApply(response -> asyncResponse.resume(new OfferDetail(response)))

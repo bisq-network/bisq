@@ -51,7 +51,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -229,7 +228,7 @@ public class BisqProxy {
         return offerBookService.getOffers();
     }
 
-    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, BigDecimal amount, BigDecimal minAmount,
+    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
                                               boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
@@ -246,7 +245,7 @@ public class BisqProxy {
         }
         Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
         if (!OfferUtil.isBuyOffer(direction))
-            reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount.longValue()));
+            reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount));
 
 //        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
 //        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler

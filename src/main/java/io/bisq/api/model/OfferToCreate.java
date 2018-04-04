@@ -1,5 +1,6 @@
 package io.bisq.api.model;
 
+import io.bisq.api.model.validation.StringEnumeration;
 import io.bisq.core.offer.OfferPayload;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -17,26 +18,28 @@ public class OfferToCreate {
     public String accountId;
 
     @NotNull
-    public OfferPayload.Direction direction;
+    @StringEnumeration(enumClass = OfferPayload.Direction.class)
+    public String direction;
 
     @NotNull
-    public PriceType priceType;
+    @StringEnumeration(enumClass = PriceType.class)
+    public String priceType;
 
     @NotEmpty
     public String marketPair;
 
     @Min(0)
-    public Double percentageFromMarketPrice;
+    public BigDecimal percentageFromMarketPrice;
 
     @Min(0)
     public long fixedPrice;
 
-    @Min(0)
-    public BigDecimal amount;
+    @Min(1)
+    public long amount;
 
-    @Min(0)
-    public BigDecimal minAmount;
+    @Min(1)
+    public long minAmount;
 
-    @Min(0)
+    @Min(1)
     public Long buyerSecurityDeposit;
 }
