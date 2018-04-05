@@ -2,7 +2,7 @@ package io.bisq.api;
 
 import com.github.javafaker.Faker;
 import io.bisq.api.model.payment.*;
-import io.bisq.common.locale.CountryUtil;
+import bisq.core.locale.CountryUtil;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;

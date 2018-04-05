@@ -2,24 +2,24 @@ package io.bisq.api;
 
 import com.google.inject.Inject;
 import io.bisq.api.model.Market;
-import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.util.MathUtils;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.Restrictions;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.payment.*;
-import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
-import io.bisq.core.util.CoinUtil;
-import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.P2PService;
+import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
+import bisq.core.locale.CurrencyUtil;
+import bisq.common.util.MathUtils;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.*;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+import bisq.core.util.CoinUtil;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Coin;
 
@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import javax.validation.ValidationException;
 import java.util.*;
 
-import static io.bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 
 public class OfferBuilder {
 

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.SameBankAccount;
-import io.bisq.core.payment.payload.SameBankAccountPayload;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.payload.SameBankAccountPayload;
 
 public class SameBankAccountPaymentAccountConverter extends AbstractPaymentAccountConverter<SameBankAccount, SameBankAccountPayload, SameBankAccountPaymentAccount> {
 

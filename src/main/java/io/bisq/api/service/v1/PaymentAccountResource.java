@@ -32,7 +32,7 @@ public class PaymentAccountResource {
     @POST
     @Path("/")
     public PaymentAccount create(@Valid PaymentAccount account) {
-        final io.bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+        final bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
         return PaymentAccountHelper.toRestModel(bisqProxy.addPaymentAccount(paymentAccount));
     }
 

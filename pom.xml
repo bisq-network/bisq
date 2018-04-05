@@ -50,6 +50,11 @@
             <snapshots/>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
+        <repository>
+            <id>jerady</id>
+            <snapshots/>
+            <url>https://dl.bintray.com/jerady/maven</url>
+        </repository>
     </repositories>
 
     <build>
@@ -94,9 +99,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.bisq-network</groupId>
-            <artifactId>exchange</artifactId>
-            <version>db8a5686b191bb2653107f5453b9ab6b2d8b60db</version>
+            <groupId>network.bisq</groupId>
+            <artifactId>bisq-desktop</artifactId>
+            <version>-SNAPSHOT</version>
         </dependency>
         <!-- enable this to test with locally built bisq-exchange
         <dependency>

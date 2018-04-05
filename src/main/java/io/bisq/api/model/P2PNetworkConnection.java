@@ -1,8 +1,8 @@
 package io.bisq.api.model;
 
-import io.bisq.network.p2p.network.Connection;
-import io.bisq.network.p2p.network.OutboundConnection;
-import io.bisq.network.p2p.network.Statistic;
+import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.OutboundConnection;
+import bisq.network.p2p.network.Statistic;
 
 public class P2PNetworkConnection {
 

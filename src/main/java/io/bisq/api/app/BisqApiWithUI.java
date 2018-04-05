@@ -24,51 +24,51 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import io.bisq.api.service.BisqApiApplication;
-import io.bisq.common.CommonOptionKeys;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Log;
-import io.bisq.common.app.Version;
-import io.bisq.common.crypto.LimitedKeyStrengthException;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.proto.persistable.PersistedDataHost;
-import io.bisq.common.storage.Storage;
-import io.bisq.common.util.Profiler;
-import io.bisq.common.util.Utilities;
-import io.bisq.core.alert.AlertManager;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.arbitration.ArbitratorManager;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.btc.AddressEntryList;
-import io.bisq.core.btc.BaseCurrencyNetwork;
-import io.bisq.core.btc.wallet.*;
-import io.bisq.core.dao.compensation.CompensationRequestManager;
-import io.bisq.core.dao.vote.VotingManager;
-import io.bisq.core.filter.FilterManager;
-import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.trade.failed.FailedTradesManager;
-import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
-import io.bisq.gui.Navigation;
-import io.bisq.gui.SystemTray;
-import io.bisq.gui.app.BisqApp;
-import io.bisq.gui.app.BisqAppModule;
-import io.bisq.gui.common.UITimer;
-import io.bisq.gui.common.view.CachingViewLoader;
-import io.bisq.gui.common.view.View;
-import io.bisq.gui.common.view.ViewLoader;
-import io.bisq.gui.common.view.guice.InjectorViewFactory;
-import io.bisq.gui.main.MainView;
-import io.bisq.gui.main.debug.DebugView;
-import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.*;
-import io.bisq.gui.util.ImageUtil;
-import io.bisq.network.p2p.P2PService;
+import bisq.common.CommonOptionKeys;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.app.Version;
+import bisq.common.crypto.LimitedKeyStrengthException;
+import bisq.common.handlers.ResultHandler;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.Storage;
+import bisq.common.util.Profiler;
+import bisq.common.util.Utilities;
+import bisq.core.alert.AlertManager;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.AddressEntryList;
+import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.wallet.*;
+//import bisq.core.dao.compensation.CompensationRequestManager;
+//import bisq.core.dao.vote.VotingManager;
+import bisq.core.filter.FilterManager;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+import bisq.desktop.Navigation;
+import bisq.desktop.SystemTray;
+import bisq.desktop.app.BisqApp;
+import bisq.desktop.app.BisqAppModule;
+import bisq.desktop.common.UITimer;
+import bisq.desktop.common.view.CachingViewLoader;
+import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.ViewLoader;
+import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.debug.DebugView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.*;
+import bisq.desktop.util.ImageUtil;
+import bisq.network.p2p.P2PService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
@@ -192,8 +192,8 @@ public class BisqApiWithUI extends Application {
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
             persistedDataHosts.add(injector.getInstance(DisputeManager.class));
             persistedDataHosts.add(injector.getInstance(P2PService.class));
-            persistedDataHosts.add(injector.getInstance(VotingManager.class));
-            persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
+//            persistedDataHosts.add(injector.getInstance(VotingManager.class));
+//            persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
@@ -269,7 +269,7 @@ public class BisqApiWithUI extends Application {
                             injector.getInstance(ManualPayoutTxWindow.class).show();
                         else
                             new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (DevEnv.DEV_MODE) {
+                    } else if (DevEnv.isDevMode()) {
                         // dev ode only
                         if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
                             // BSQ empty wallet not public yet

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.VenmoAccount;
-import io.bisq.core.payment.payload.VenmoAccountPayload;
+import bisq.core.payment.VenmoAccount;
+import bisq.core.payment.payload.VenmoAccountPayload;
 
 public class VenmoPaymentAccountConverter extends AbstractPaymentAccountConverter<VenmoAccount, VenmoAccountPayload, VenmoPaymentAccount> {
 

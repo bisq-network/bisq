@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
 
 import javax.ws.rs.WebApplicationException;
 import java.util.HashMap;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public final class PaymentAccountHelper {
 
-    private static Map<String, PaymentAccountConverter<? extends io.bisq.core.payment.PaymentAccount, ? extends PaymentAccountPayload, ? extends PaymentAccount>> converters = new HashMap<>();
+    private static Map<String, PaymentAccountConverter<? extends bisq.core.payment.PaymentAccount, ? extends PaymentAccountPayload, ? extends PaymentAccount>> converters = new HashMap<>();
 
     static {
         converters.put(PaymentMethod.ALI_PAY_ID, new AliPayPaymentAccountConverter());
@@ -37,7 +37,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.WESTERN_UNION_ID, new WesternUnionPaymentAccountConverter());
     }
 
-    public static io.bisq.core.payment.PaymentAccount toBusinessModel(PaymentAccount rest) {
+    public static bisq.core.payment.PaymentAccount toBusinessModel(PaymentAccount rest) {
         final PaymentAccountConverter converter = converters.get(rest.paymentMethod);
         if (null != converter) {
             return converter.toBusinessModel(rest);
@@ -45,7 +45,7 @@ public final class PaymentAccountHelper {
         throw new WebApplicationException("Unsupported paymentMethod:" + rest.paymentMethod, 400);
     }
 
-    public static io.bisq.api.model.payment.PaymentAccount toRestModel(io.bisq.core.payment.PaymentAccount business) {
+    public static io.bisq.api.model.payment.PaymentAccount toRestModel(bisq.core.payment.PaymentAccount business) {
         final String paymentMethodId = business.getPaymentMethod().getId();
         final PaymentAccountConverter converter = converters.get(paymentMethodId);
         if (null != converter) {

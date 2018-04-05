@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.PopmoneyAccount;
-import io.bisq.core.payment.payload.PopmoneyAccountPayload;
+import bisq.core.payment.PopmoneyAccount;
+import bisq.core.payment.payload.PopmoneyAccountPayload;
 
 public class PopmoneyPaymentAccountConverter extends AbstractPaymentAccountConverter<PopmoneyAccount, PopmoneyAccountPayload, PopmoneyPaymentAccount> {
 

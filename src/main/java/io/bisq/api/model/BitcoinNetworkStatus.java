@@ -1,6 +1,6 @@
 package io.bisq.api.model;
 
-import io.bisq.core.btc.BitcoinNodes;
+import bisq.core.btc.BitcoinNodes;
 
 import java.util.List;
 

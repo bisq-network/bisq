@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.OKPayAccount;
-import io.bisq.core.payment.payload.OKPayAccountPayload;
+import bisq.core.payment.OKPayAccount;
+import bisq.core.payment.payload.OKPayAccountPayload;
 
 public class OKPayPaymentAccountConverter extends AbstractPaymentAccountConverter<OKPayAccount, OKPayAccountPayload, OKPayPaymentAccount> {
 

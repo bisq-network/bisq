@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.CashAppAccount;
-import io.bisq.core.payment.payload.CashAppAccountPayload;
+import bisq.core.payment.CashAppAccount;
+import bisq.core.payment.payload.CashAppAccountPayload;
 
 public class CashAppPaymentAccountConverter extends AbstractPaymentAccountConverter<CashAppAccount, CashAppAccountPayload, CashAppPaymentAccount> {
 

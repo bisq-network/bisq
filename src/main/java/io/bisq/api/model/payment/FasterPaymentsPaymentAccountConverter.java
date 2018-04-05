@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.FasterPaymentsAccount;
-import io.bisq.core.payment.payload.FasterPaymentsAccountPayload;
+import bisq.core.payment.FasterPaymentsAccount;
+import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 
 public class FasterPaymentsPaymentAccountConverter extends AbstractPaymentAccountConverter<FasterPaymentsAccount, FasterPaymentsAccountPayload, FasterPaymentsPaymentAccount> {
 

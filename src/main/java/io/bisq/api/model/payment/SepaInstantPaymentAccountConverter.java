@@ -1,8 +1,8 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.common.locale.CountryUtil;
-import io.bisq.core.payment.SepaInstantAccount;
-import io.bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.locale.CountryUtil;
+import bisq.core.payment.SepaInstantAccount;
+import bisq.core.payment.payload.SepaInstantAccountPayload;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.USPostalMoneyOrderAccount;
-import io.bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
+import bisq.core.payment.USPostalMoneyOrderAccount;
+import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 
 public class USPostalMoneyOrderPaymentAccountConverter extends AbstractPaymentAccountConverter<USPostalMoneyOrderAccount, USPostalMoneyOrderAccountPayload, USPostalMoneyOrderPaymentAccount> {
 

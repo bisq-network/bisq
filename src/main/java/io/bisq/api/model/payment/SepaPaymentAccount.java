@@ -2,7 +2,7 @@ package io.bisq.api.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.bisq.api.model.validation.CountryCode;
-import io.bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.PaymentMethod;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 

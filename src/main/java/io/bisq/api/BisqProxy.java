@@ -4,40 +4,40 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Injector;
 import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccountHelper;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.locale.*;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.arbitration.Arbitrator;
-import io.bisq.core.arbitration.ArbitratorManager;
-import io.bisq.core.btc.*;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletService;
-import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.offer.*;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.trade.BuyerAsMakerTrade;
-import io.bisq.core.trade.SellerAsMakerTrade;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.trade.failed.FailedTradesManager;
-import io.bisq.core.trade.protocol.*;
-import io.bisq.core.user.BlockChainExplorer;
-import io.bisq.core.user.User;
-import io.bisq.core.util.CoinUtil;
-import io.bisq.gui.util.validation.AltCoinAddressValidator;
-import io.bisq.gui.util.validation.BtcAddressValidator;
-import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.P2PService;
-import io.bisq.network.p2p.network.Statistic;
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.core.locale.*;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.arbitration.Arbitrator;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.btc.*;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.*;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.BuyerAsMakerTrade;
+import bisq.core.trade.SellerAsMakerTrade;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.protocol.*;
+import bisq.core.user.BlockChainExplorer;
+import bisq.core.user.User;
+import bisq.core.util.CoinUtil;
+import bisq.core.payment.validation.AltCoinAddressValidator;
+import bisq.desktop.util.validation.BtcAddressValidator;
+import bisq.core.util.validation.InputValidator;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.Statistic;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -79,7 +79,7 @@ public class BisqProxy {
     private P2PService p2PService;
     private KeyRing keyRing;
     private FeeService feeService;
-    private io.bisq.core.user.Preferences preferences;
+    private bisq.core.user.Preferences preferences;
     private BsqWalletService bsqWalletService;
     private final boolean useDevPrivilegeKeys;
     private WalletsSetup walletsSetup;
@@ -90,7 +90,7 @@ public class BisqProxy {
 
     public BisqProxy(Injector injector, AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, User user,
-                     FeeService feeService, io.bisq.core.user.Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
+                     FeeService feeService, bisq.core.user.Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
                      ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys) {
         this.injector = injector;
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -140,7 +140,7 @@ public class BisqProxy {
             if (null == tradeCurrency) {
                 throw new ValidationException("There must be exactly one trade currency");
             }
-            final AltCoinAddressValidator altCoinAddressValidator = new AltCoinAddressValidator();
+            final AltCoinAddressValidator altCoinAddressValidator = injector.getInstance(AltCoinAddressValidator.class);
             altCoinAddressValidator.setCurrencyCode(tradeCurrency.getCode());
             final InputValidator.ValidationResult validationResult = altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress());
             if (!validationResult.isValid) {

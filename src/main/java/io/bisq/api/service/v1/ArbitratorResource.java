@@ -57,7 +57,7 @@ public class ArbitratorResource {
         return toRestModel(bisqProxy.deselectArbitrator(address));
     }
 
-    private static ArbitratorList toRestModel(Collection<io.bisq.core.arbitration.Arbitrator> businessModelList) {
+    private static ArbitratorList toRestModel(Collection<bisq.core.arbitration.Arbitrator> businessModelList) {
         final ArbitratorList arbitratorList = new ArbitratorList();
         arbitratorList.arbitrators = businessModelList
                 .stream()

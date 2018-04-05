@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.NationalBankAccount;
-import io.bisq.core.payment.payload.NationalBankAccountPayload;
+import bisq.core.payment.NationalBankAccount;
+import bisq.core.payment.payload.NationalBankAccountPayload;
 
 public class NationalBankAccountPaymentAccountConverter extends AbstractPaymentAccountConverter<NationalBankAccount, NationalBankAccountPayload, NationalBankAccountPaymentAccount> {
 

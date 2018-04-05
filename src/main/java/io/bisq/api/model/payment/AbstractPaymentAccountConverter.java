@@ -1,16 +1,16 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.common.locale.CryptoCurrency;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.FiatCurrency;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.payload.PaymentAccountPayload;
 
 import javax.validation.ValidationException;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class AbstractPaymentAccountConverter<B extends io.bisq.core.payment.PaymentAccount, BP extends PaymentAccountPayload, R extends PaymentAccount> implements PaymentAccountConverter<B, BP, R> {
+public abstract class AbstractPaymentAccountConverter<B extends bisq.core.payment.PaymentAccount, BP extends PaymentAccountPayload, R extends PaymentAccount> implements PaymentAccountConverter<B, BP, R> {
 
     protected void toBusinessModel(B business, R rest) {
         if (null != rest.accountName)

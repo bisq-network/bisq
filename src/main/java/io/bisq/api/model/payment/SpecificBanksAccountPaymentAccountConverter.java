@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.SpecificBanksAccount;
-import io.bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.payment.SpecificBanksAccount;
+import bisq.core.payment.payload.SpecificBanksAccountPayload;
 
 import java.util.List;
 
