@@ -463,11 +463,11 @@ public class OfferResourceIT {
                 port(getBobPort()).
                 body(jsonPayload).
                 contentType(ContentType.JSON).
-                //
-                        when().
+//
+        when().
                 post("/api/v1/offers/" + createdOffer.id + "/take").
-                //
-                        then().
+//
+        then().
                 statusCode(422)
         ;
     }
@@ -618,6 +618,63 @@ public class OfferResourceIT {
         ;
     }
 
+    @InSequence(12)
+    @Test
+    public void cancelOffer_notMyOffer_returns404() throws Exception {
+        createOffer_validPayloadAndHasFunds_returnsOffer();
+        final int bobPort = getBobPort();
+        assertOfferExists(bobPort, createdOffer.id);
+        given().
+                port(bobPort).
+//
+        when().
+                delete("/api/v1/offers/" + createdOffer.id).
+//
+        then().
+                statusCode(404)
+        ;
+        assertOfferExists(bobPort, createdOffer.id);
+    }
+
+    @InSequence(13)
+    @Test
+    public void cancelOffer_ownExistingOffer_returns200() throws Exception {
+        final int alicePort = getAlicePort();
+        given().
+                port(alicePort).
+//
+        when().
+                delete("/api/v1/offers/" + createdOffer.id).
+//
+        then().
+                statusCode(200)
+        ;
+        given().
+                port(alicePort).
+//
+        when().
+                get("/api/v1/offers/" + createdOffer.id).
+//
+        then().
+                statusCode(404)
+        ;
+    }
+
+    @InSequence(14)
+    @Test
+    public void cancelOffer_ownNonExistingOffer_returns404() throws Exception {
+        final int alicePort = getAlicePort();
+        given().
+                port(alicePort).
+//
+        when().
+                delete("/api/v1/offers/" + createdOffer.id + createdOffer.id).
+//
+        then().
+                statusCode(404)
+        ;
+    }
+
     @NotNull
     private OfferToCreate getOfferToCreateFixedBuy(String tradeCurrency, String paymentAccountId) {
         final OfferToCreate offer = new OfferToCreate();
@@ -666,6 +723,18 @@ public class OfferResourceIT {
         else
             //noinspection unchecked
             jsonObject.put(key, value);
+    }
+
+    private static void assertOfferExists(int apiPort, String offerId) {
+        given().
+                port(apiPort).
+//
+        when().
+                get("/api/v1/offers/" + offerId).
+//
+        then().
+                statusCode(200)
+        ;
     }
 
     private int getArbitratorPort() {

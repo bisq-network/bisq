@@ -1,6 +1,5 @@
 package io.bisq.api;
 
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Injector;
 import io.bisq.api.model.*;
@@ -39,7 +38,6 @@ import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Statistic;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -200,17 +198,16 @@ public class BisqProxy {
         return paymentAccountList;
     }
 
-    public Optional<BisqProxyError> offerCancel(String offerId) {
-        if (Strings.isNullOrEmpty(offerId)) {
-            BisqProxyError.getOptional("offerId is null");
-        }
+    public CompletableFuture<Void> offerCancel(String offerId) {
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
         Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
         if (!openOfferById.isPresent()) {
-            BisqProxyError.getOptional("Offer with id:" + offerId + " was not found.");
+            return failFuture(futureResult, new NotFoundException("Offer not found: " + offerId));
         }
-        // do something more intelligent here, maybe block till handler is called.
-        Platform.runLater(() -> openOfferManager.removeOpenOffer(openOfferById.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err)));
-        return Optional.empty();
+        openOfferManager.removeOpenOffer(openOfferById.get(),
+                () -> futureResult.complete(null),
+                error -> futureResult.completeExceptionally(new RuntimeException(error)));
+        return futureResult;
     }
 
     public Offer getOffer(String offerId) {
