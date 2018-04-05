@@ -34,9 +34,13 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BroadcastException;
+import bisq.core.btc.wallet.BroadcastTimeoutException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.MalleabilityException;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
@@ -50,16 +54,10 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
@@ -159,18 +157,25 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     bsqFormatter.formatCoinWithCode(receiverAmount)))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                walletsManager.publishAndCommitBsqTx(txWithBtcFee, new FutureCallback<Transaction>() {
+                                walletsManager.publishAndCommitBsqTx(txWithBtcFee, new TxBroadcaster.Callback() {
                                     @Override
-                                    public void onSuccess(@Nullable Transaction transaction) {
-                                        if (transaction != null) {
-                                            log.debug("Successfully sent tx with id " + transaction.getHashAsString());
-                                        }
+                                    public void onSuccess() {
+                                        log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
                                     }
 
                                     @Override
-                                    public void onFailure(@NotNull Throwable t) {
-                                        log.error(t.toString());
-                                        new Popup<>().warning(t.toString());
+                                    public void onTimeout(BroadcastTimeoutException exception) {
+                                        new Popup<>().warning(exception.toString());
+                                    }
+
+                                    @Override
+                                    public void onTxMalleability(MalleabilityException exception) {
+                                        new Popup<>().warning(exception.toString());
+                                    }
+
+                                    @Override
+                                    public void onFailure(BroadcastException exception) {
+                                        new Popup<>().warning(exception.toString());
                                     }
                                 });
 
