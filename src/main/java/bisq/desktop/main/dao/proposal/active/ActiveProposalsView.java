@@ -39,6 +39,7 @@ import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.dao.vote.result.BooleanVoteResult;
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.CryptoException;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -47,11 +48,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-
-import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -69,10 +67,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
@@ -130,19 +125,21 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
                 // TODO verify stake
-                //TODO show popup
+                Popup startPublishingPopup = new Popup<>();
+                startPublishingPopup.information(Res.get("dao.proposal.blindVote.startPublishing"))
+                        .hideCloseButton()
+                        .show();
                 try {
-                    blindVoteService.publishBlindVote(stake, new FutureCallback<Transaction>() {
-                        @Override
-                        public void onSuccess(@Nullable Transaction result) {
-                            //TODO
-                        }
-
-                        @Override
-                        public void onFailure(@NotNull Throwable t) {
-                            //TODO
-                        }
-                    });
+                    blindVoteService.publishBlindVote(stake,
+                            () -> {
+                                startPublishingPopup.hide();
+                                UserThread.runAfter(() -> {
+                                    new Popup<>().feedback(Res.get("dao.proposal.blindVote.success"))
+                                            .show();
+                                }, 100, TimeUnit.MILLISECONDS);
+                            }, errorMessage -> {
+                                new Popup<>().error(errorMessage).show();
+                            });
                 } catch (CryptoException e1) {
                     //TODO show error popup
                     e1.printStackTrace();
