@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import io.bisq.api.*;
 import io.bisq.api.NotFoundException;
 import io.bisq.api.model.*;
-import io.bisq.api.service.ResourceHelper;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
@@ -27,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 import static java.util.stream.Collectors.toList;
 
-//        TODO use more standard error handling than ResourceHelper.handleBisqProxyError
 @Api("offers")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
@@ -59,13 +57,29 @@ public class OfferResource {
     @ApiOperation("Cancel offer")
     @DELETE
     @Path("/{id}")
-    public void removeById(@PathParam("id") String id) {
-        ResourceHelper.handleBisqProxyError(bisqProxy.offerCancel(id), Response.Status.NOT_FOUND);
+    public void cancelOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
+        final CompletableFuture<Void> completableFuture = bisqProxy.offerCancel(id);
+        completableFuture.thenApply(response -> asyncResponse.resume(Response.status(200).build()))
+                .exceptionally(e -> {
+                    final Throwable cause = e.getCause();
+                    final Response.ResponseBuilder responseBuilder;
+                    final String message = cause.getMessage();
+                    if (cause instanceof NotFoundException) {
+                        responseBuilder = toValidationErrorResponse(cause, 404);
+                    } else {
+                        responseBuilder = Response.status(500);
+                        if (null != message)
+                            responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
+                        log.error("Unable to remove offer: " + id, cause);
+                    }
+                    return asyncResponse.resume(responseBuilder.build());
+                });
+
     }
 
     @ApiOperation(value = "Create offer", response = OfferDetail.class)
     @POST
-    public void create(@Suspended final AsyncResponse asyncResponse, @Valid OfferToCreate offer) {
+    public void createOffer(@Suspended final AsyncResponse asyncResponse, @Valid OfferToCreate offer) {
         final OfferPayload.Direction direction = OfferPayload.Direction.valueOf(offer.direction);
         final PriceType priceType = PriceType.valueOf(offer.priceType);
         final Double marketPriceMargin = null == offer.percentageFromMarketPrice ? null : offer.percentageFromMarketPrice.doubleValue();

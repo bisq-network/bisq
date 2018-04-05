@@ -11,7 +11,7 @@ curl -X POST -s "http://localhost:$ARBITRATOR_PORT/api/v1/arbitrators" -H "accep
 sleep 1
 ARBITRATOR_ADDRESS=`curl -X GET -s "http://localhost:$ALICE_PORT/api/v1/arbitrators" -H "accept: application/json" | jq -r '.arbitrators[0].address'`
 curl -X POST -s "http://localhost:$ALICE_PORT/api/v1/arbitrators/$ARBITRATOR_ADDRESS/select"
-ALICE_BISQ_WALLET=`curl -X POST -s "http://localhost:$ALICE_PORT/api/v1/wallet/btc/addresses" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"context\": \"AVAILABLE\", \"unused\": true}" | jq -r '.address'`
+ALICE_BISQ_WALLET=`curl -X POST -s "http://localhost:$ALICE_PORT/api/v1/wallet/addresses" -H "accept: application/json" | jq -r '.address'`
 
 docker exec -it ${BITCOIN_DOCKER_CONTAINER} bitcoin-cli -regtest generate 101
 docker exec -it ${BITCOIN_DOCKER_CONTAINER} bitcoin-cli -regtest sendtoaddress ${ALICE_BISQ_WALLET} 1
