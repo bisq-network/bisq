@@ -244,16 +244,17 @@ public class PaymentAccountIT {
 
     @InSequence(2)
     @Test
-    public void create_validClearXchange_returnsCreatedAccount() {
+    public void create_validCryptoCurrency_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
 
-        final ClearXchangePaymentAccount accountToCreate = new ClearXchangePaymentAccount();
-        ApiTestHelper.randomizeAccountPayload(accountToCreate);
-        accountToCreate.emailOrMobileNr = faker.internet().emailAddress();
-        accountToCreate.holderName = faker.name().fullName();
+        final CryptoCurrencyPaymentAccount accountToCreate = new CryptoCurrencyPaymentAccount();
+        accountToCreate.accountName = faker.commerce().productName();
+        accountToCreate.selectedTradeCurrency = "BCH";
+        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
+        accountToCreate.address = "1ab616x3JxQsXsExCKX4iirdFwVDDXuwo";
 
-        final String expectedPaymentDetails = String.format("Zelle (ClearXchange) - Holder name: %s, Email or mobile no.: %s", accountToCreate.holderName, accountToCreate.emailOrMobileNr);
+        final String expectedPaymentDetails = String.format("Receivers altcoin address: %s", accountToCreate.address);
 
         given().
                 port(alicePort).
@@ -271,9 +272,8 @@ public class PaymentAccountIT {
                 and().body("paymentDetails", equalTo(expectedPaymentDetails)).
                 and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
-                and().body("emailOrMobileNr", equalTo(accountToCreate.emailOrMobileNr)).
-                and().body("holderName", equalTo(accountToCreate.holderName)).
-                and().body("size()", equalTo(8))
+                and().body("address", equalTo(accountToCreate.address)).
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -934,6 +934,24 @@ public class PaymentAccountIT {
         create_missingAttributeTemplate("accountName", " ");
     }
 
+    @InSequence(1)
+    @Test
+    public void create_unsupportedCryptoSelectedTradeCurrency_returnsError() throws Exception {
+        create_cryptoValidationFailureTemplate("selectedTradeCurrency", "BCHX", 422, "Unsupported crypto currency code: BCHX");
+    }
+
+    @InSequence(1)
+    @Test
+    public void create_unsupportedCryptoTradeCurrency_returnsError() throws Exception {
+        create_cryptoValidationFailureTemplate("tradeCurrencies", Collections.singletonList("XYZ"), 422, "Unsupported crypto currency code: XYZ");
+    }
+
+    @InSequence(1)
+    @Test
+    public void create_invalidCryptoAddress_returnsError() throws Exception {
+        create_cryptoValidationFailureTemplate("address", "abc", 422, "Address is not a valid BCH address! Input too short");
+    }
+
     @Test
     public void create_missingCountryCode_returnsError() throws Exception {
         create_missingAttributeTemplate("countryCode", null);
@@ -960,7 +978,7 @@ public class PaymentAccountIT {
 
     @Test
     public void create_invalidCountryCode_returnsError() throws Exception {
-        create_validationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
+        create_sepaValidationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
     }
 
     @Test
@@ -985,14 +1003,39 @@ public class PaymentAccountIT {
     }
 
     private void create_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {
-        create_validationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
+        create_sepaValidationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
     }
 
-    private void create_validationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+    private void create_sepaValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
         final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
         SepaPaymentAccount.class.getField(fieldName).set(accountToCreate, fieldValue);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(expectedStatusCode).
+                and().body("errors", hasItem(expectedValidationMessage))
+        ;
+    }
+
+    private void create_cryptoValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final CryptoCurrencyPaymentAccount accountToCreate = new CryptoCurrencyPaymentAccount();
+        accountToCreate.accountName = faker.commerce().productName();
+        accountToCreate.selectedTradeCurrency = "BCH";
+        accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
+        accountToCreate.address = "1ab616x3JxQsXsExCKX4iirdFwVDDXuwo";
+        CryptoCurrencyPaymentAccount.class.getField(fieldName).set(accountToCreate, fieldValue);
 
         given().
                 port(alicePort).

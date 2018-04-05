@@ -7,6 +7,7 @@ public class WalletTransactionList {
 
     public List<WalletTransaction> transactions = new ArrayList<>();
 
+    public int total;
 }
 
 

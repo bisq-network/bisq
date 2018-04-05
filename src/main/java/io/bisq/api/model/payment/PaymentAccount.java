@@ -11,13 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "paymentMethod", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "paymentMethod", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = AliPayPaymentAccount.class, name = PaymentMethod.ALI_PAY_ID),
         @JsonSubTypes.Type(value = CashAppPaymentAccount.class, name = PaymentMethod.CASH_APP_ID),
         @JsonSubTypes.Type(value = CashDepositPaymentAccount.class, name = PaymentMethod.CASH_DEPOSIT_ID),
         @JsonSubTypes.Type(value = ChaseQuickPayPaymentAccount.class, name = PaymentMethod.CHASE_QUICK_PAY_ID),
         @JsonSubTypes.Type(value = ClearXchangePaymentAccount.class, name = PaymentMethod.CLEAR_X_CHANGE_ID),
+        @JsonSubTypes.Type(value = CryptoCurrencyPaymentAccount.class, name = PaymentMethod.BLOCK_CHAINS_ID),
         @JsonSubTypes.Type(value = FasterPaymentsPaymentAccount.class, name = PaymentMethod.FASTER_PAYMENTS_ID),
         @JsonSubTypes.Type(value = InteracETransferPaymentAccount.class, name = PaymentMethod.INTERAC_E_TRANSFER_ID),
         @JsonSubTypes.Type(value = MoneyBeamPaymentAccount.class, name = PaymentMethod.MONEY_BEAM_ID),

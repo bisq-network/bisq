@@ -1,10 +1,14 @@
 package io.bisq.api.model.payment;
 
+import io.bisq.common.locale.CryptoCurrency;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 
+import javax.validation.ValidationException;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class AbstractPaymentAccountConverter<B extends io.bisq.core.payment.PaymentAccount, BP extends PaymentAccountPayload, R extends PaymentAccount> implements PaymentAccountConverter<B, BP, R> {
 
@@ -12,11 +16,16 @@ public abstract class AbstractPaymentAccountConverter<B extends io.bisq.core.pay
         if (null != rest.accountName)
             business.setAccountName(rest.accountName);
         business.getTradeCurrencies().clear();
+        final CurrencyConverter currencyConverter;
+        if (rest instanceof CryptoCurrencyPaymentAccount)
+            currencyConverter = new CryptoCurrencyConverter();
+        else
+            currencyConverter = new FiatCurrencyConverter();
+
         if (null != rest.selectedTradeCurrency)
-            business.setSelectedTradeCurrency(new FiatCurrency(rest.selectedTradeCurrency));
-        if (null != rest.tradeCurrencies) {
-            rest.tradeCurrencies.stream().forEach(currencyCode -> business.addCurrency(new FiatCurrency(currencyCode)));
-        }
+            business.setSelectedTradeCurrency(currencyConverter.convert(rest.selectedTradeCurrency));
+        if (null != rest.tradeCurrencies)
+            rest.tradeCurrencies.stream().forEach(currencyCode -> business.addCurrency(currencyConverter.convert(currencyCode)));
     }
 
     protected void toRestModel(R rest, B business) {
@@ -34,4 +43,25 @@ public abstract class AbstractPaymentAccountConverter<B extends io.bisq.core.pay
         rest.paymentDetails = business.getPaymentDetails();
     }
 
+    private interface CurrencyConverter {
+        TradeCurrency convert(String currencyCode);
+    }
+
+    private static class FiatCurrencyConverter implements CurrencyConverter {
+        @Override
+        public TradeCurrency convert(String currencyCode) {
+            return new FiatCurrency(currencyCode);
+        }
+    }
+
+    private static class CryptoCurrencyConverter implements CurrencyConverter {
+        @Override
+        public TradeCurrency convert(String currencyCode) {
+            final Optional<CryptoCurrency> cryptoCurrencyOptional = CurrencyUtil.getCryptoCurrency(currencyCode);
+            if (!cryptoCurrencyOptional.isPresent()) {
+                throw new ValidationException("Unsupported crypto currency code: " + currencyCode);
+            }
+            return cryptoCurrencyOptional.get();
+        }
+    }
 }

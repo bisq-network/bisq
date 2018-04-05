@@ -1,10 +1,7 @@
 package io.bisq.api;
 
 import com.github.javafaker.Faker;
-import io.bisq.api.model.ArbitratorList;
-import io.bisq.api.model.CreateBtcWalletAddress;
-import io.bisq.api.model.OfferDetail;
-import io.bisq.api.model.P2PNetworkStatus;
+import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.bisq.common.locale.CountryUtil;
@@ -50,6 +47,18 @@ public final class ApiTestHelper {
                         stream().
                         map(arbitrator -> arbitrator.address).
                         collect(Collectors.toList());
+    }
+
+    public static WalletDetails getBalance(int apiPort) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        get("/api/v1/wallet").
+//
+        then().
+                        statusCode(200).
+                        extract().body().as(WalletDetails.class);
     }
 
     public static P2PNetworkStatus getP2PNetworkStatus(int apiPort) {
@@ -139,6 +148,7 @@ public final class ApiTestHelper {
     public static String getAvailableBtcWalletAddress(int apiPort) {
         final CreateBtcWalletAddress payload = new CreateBtcWalletAddress();
         payload.context = AddressEntry.Context.AVAILABLE;
+        payload.unused = true;
         return given().
                 port(apiPort).
 //
