@@ -47,8 +47,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.DaoManager;
+import bisq.core.dao.DaoSetup;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
@@ -231,6 +232,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(P2PService.class));
             persistedDataHosts.add(injector.getInstance(ProposalService.class));
             persistedDataHosts.add(injector.getInstance(BlindVoteService.class));
+            persistedDataHosts.add(injector.getInstance(MyVoteService.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.forEach(e -> {
@@ -478,7 +480,7 @@ public class BisqApp extends Application {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(DaoManager.class).shutDown();
+                injector.getInstance(DaoSetup.class).shutDown();
                 //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {

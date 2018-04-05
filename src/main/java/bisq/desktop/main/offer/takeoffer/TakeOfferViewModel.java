@@ -391,9 +391,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 updateSpinnerInfo();
             } else {
                 final String msg = "trade.getDepositTx() must not be null.";
-                if (DevEnv.isDevMode())
-                    throw new RuntimeException(msg);
-                log.error(msg);
+                DevEnv.logErrorAndThrowIfDevMode(msg);
             }
         }
     }

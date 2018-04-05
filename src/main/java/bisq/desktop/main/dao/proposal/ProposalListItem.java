@@ -27,11 +27,11 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
-import bisq.core.dao.vote.BooleanVoteResult;
-import bisq.core.dao.vote.DaoPeriodService;
-import bisq.core.dao.vote.VoteResult;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
+import bisq.core.dao.vote.result.BooleanVoteResult;
+import bisq.core.dao.vote.result.VoteResult;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -58,7 +58,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     @Getter
     private final Proposal proposal;
     private final ProposalService proposalService;
-    private final DaoPeriodService daoPeriodService;
+    private final PeriodService periodService;
     private final BsqWalletService bsqWalletService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BsqFormatter bsqFormatter;
@@ -72,7 +72,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     private TxConfidenceListener txConfidenceListener;
     private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     private Transaction walletTransaction;
-    private ChangeListener<DaoPeriodService.Phase> phaseChangeListener;
+    private ChangeListener<PeriodService.Phase> phaseChangeListener;
     private AutoTooltipButton actionButton;
     private ImageView actionButtonIconView;
     @Setter
@@ -81,13 +81,13 @@ public class ProposalListItem implements BsqBlockChain.Listener {
 
     ProposalListItem(Proposal proposal,
                      ProposalService proposalService,
-                     DaoPeriodService daoPeriodService,
+                     PeriodService periodService,
                      BsqWalletService bsqWalletService,
                      ReadableBsqBlockChain readableBsqBlockChain,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.proposalService = proposalService;
-        this.daoPeriodService = daoPeriodService;
+        this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.bsqFormatter = bsqFormatter;
@@ -115,18 +115,18 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
-            applyState(daoPeriodService.getPhaseProperty().get(), newValue);
+            applyState(periodService.getPhaseProperty().get(), newValue);
         };
 
-        daoPeriodService.getPhaseProperty().addListener(phaseChangeListener);
+        periodService.getPhaseProperty().addListener(phaseChangeListener);
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(DaoPeriodService.Phase newValue, VoteResult voteResult) {
+    public void applyState(PeriodService.Phase newValue, VoteResult voteResult) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = daoPeriodService.isTxInPastCycle(proposal.getTxId());
+        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId());
         switch (newValue) {
             case UNDEFINED:
                 break;
@@ -247,7 +247,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
-        daoPeriodService.getPhaseProperty().removeListener(phaseChangeListener);
+        periodService.getPhaseProperty().removeListener(phaseChangeListener);
         proposal.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 

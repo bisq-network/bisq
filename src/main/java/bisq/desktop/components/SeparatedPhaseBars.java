@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.vote.DaoPeriodService;
+import bisq.core.dao.vote.PeriodService;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -139,7 +139,7 @@ public class SeparatedPhaseBars extends HBox {
 
     @Getter
     public static class SeparatedPhaseBarsItem {
-        private final DaoPeriodService.Phase phase;
+        private final PeriodService.Phase phase;
         private final boolean showBlocks;
         private final IntegerProperty startValueProperty = new SimpleIntegerProperty();
         private final IntegerProperty endValueProperty = new SimpleIntegerProperty();
@@ -150,7 +150,7 @@ public class SeparatedPhaseBars extends HBox {
         @Setter
         private Label titleLabel;
 
-        public SeparatedPhaseBarsItem(DaoPeriodService.Phase phase, boolean showBlocks) {
+        public SeparatedPhaseBarsItem(PeriodService.Phase phase, boolean showBlocks) {
             this.phase = phase;
             this.showBlocks = showBlocks;
         }

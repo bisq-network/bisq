@@ -45,7 +45,7 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.DaoManager;
+import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
@@ -166,7 +166,7 @@ public class MainViewModel implements ViewModel {
     private final TacWindow tacWindow;
     private final Clock clock;
     private final FeeService feeService;
-    private final DaoManager daoManager;
+    private final DaoSetup daoSetup;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
@@ -245,7 +245,7 @@ public class MainViewModel implements ViewModel {
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, TradeStatisticsManager tradeStatisticsManager,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
-                         DaoManager daoManager, EncryptionService encryptionService,
+                         DaoSetup daoSetup, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
@@ -269,7 +269,7 @@ public class MainViewModel implements ViewModel {
         this.tacWindow = tacWindow;
         this.clock = clock;
         this.feeService = feeService;
-        this.daoManager = daoManager;
+        this.daoSetup = daoSetup;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
@@ -662,7 +662,7 @@ public class MainViewModel implements ViewModel {
         feeService.onAllServicesInitialized();
         GUIUtil.setFeeService(feeService);
 
-        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
+        daoSetup.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         tradeStatisticsManager.onAllServicesInitialized();
 
