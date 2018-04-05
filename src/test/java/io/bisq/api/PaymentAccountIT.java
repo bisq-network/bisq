@@ -171,7 +171,7 @@ public class PaymentAccountIT {
         accountToCreate.bankId = faker.finance().bic();
         accountToCreate.bankName = faker.company().name();
         accountToCreate.branchId = faker.company().buzzword();
-        accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.countryCode = "DE";
         accountToCreate.holderEmail = faker.internet().emailAddress();
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
@@ -397,7 +397,7 @@ public class PaymentAccountIT {
         accountToCreate.bankId = faker.finance().bic();
         accountToCreate.bankName = faker.company().name();
         accountToCreate.branchId = faker.company().buzzword();
-        accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.countryCode = "DE";
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
@@ -578,7 +578,7 @@ public class PaymentAccountIT {
         accountToCreate.bankId = faker.finance().bic();
         accountToCreate.bankName = faker.company().name();
         accountToCreate.branchId = faker.company().buzzword();
-        accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.countryCode = "PL";
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
@@ -669,7 +669,7 @@ public class PaymentAccountIT {
         accountToCreate.bankId = faker.finance().bic();
         accountToCreate.bankName = faker.company().name();
         accountToCreate.branchId = faker.company().buzzword();
-        accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.countryCode = "AT";
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
         accountToCreate.acceptedBanks = Arrays.asList(faker.finance().bic(), faker.finance().bic());
@@ -854,7 +854,7 @@ public class PaymentAccountIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.city = faker.address().city();
-        accountToCreate.countryCode = faker.address().countryCode();
+        accountToCreate.countryCode = "DE";
         accountToCreate.email = faker.internet().emailAddress();
         accountToCreate.state = faker.address().state();
 
