@@ -29,6 +29,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
+import bisq.core.dao.vote.Cycles;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalPayload;
@@ -86,9 +87,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     protected GridPane detailsGridPane, gridPane;
     protected ProposalListItem selectedProposalListItem;
     protected ListChangeListener<Proposal> proposalListChangeListener;
-    protected ChangeListener<PeriodService.Phase> phaseChangeListener;
+    protected ChangeListener<Cycles.Phase> phaseChangeListener;
     protected final PeriodService periodService;
-    protected PeriodService.Phase currentPhase;
+    protected Cycles.Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
 
@@ -236,7 +237,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
             hideProposalDisplay();
     }
 
-    protected void onPhaseChanged(PeriodService.Phase phase) {
+    protected void onPhaseChanged(Cycles.Phase phase) {
         if (!phase.equals(this.currentPhase)) {
             this.currentPhase = phase;
             onSelectProposal(selectedProposalListItem);

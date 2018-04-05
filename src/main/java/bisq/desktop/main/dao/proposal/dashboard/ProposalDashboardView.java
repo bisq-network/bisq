@@ -23,6 +23,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.vote.Cycles;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.locale.Res;
 
@@ -49,7 +50,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private final BsqWalletService bsqWalletService;
     private final PeriodService periodService;
-    private PeriodService.Phase currentPhase;
+    private Cycles.Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
     private int gridRow = 0;
@@ -97,14 +98,14 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
 
     private SeparatedPhaseBars createSeparatedPhaseBars() {
         phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.PROPOSAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK1, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BLIND_VOTE, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK2, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.VOTE_REVEAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.ISSUANCE, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(PeriodService.Phase.BREAK4, false));
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.PROPOSAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.BREAK1, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.BLIND_VOTE, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.BREAK2, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.VOTE_REVEAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.BREAK3, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.ISSUANCE, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Cycles.Phase.BREAK4, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }
 
