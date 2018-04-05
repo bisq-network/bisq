@@ -34,13 +34,13 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.BroadcastException;
-import bisq.core.btc.wallet.BroadcastTimeoutException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.MalleabilityException;
+import bisq.core.btc.wallet.TxBroadcastException;
+import bisq.core.btc.wallet.TxBroadcastTimeoutException;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
@@ -159,22 +159,25 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             .onAction(() -> {
                                 walletsManager.publishAndCommitBsqTx(txWithBtcFee, new TxBroadcaster.Callback() {
                                     @Override
-                                    public void onSuccess() {
+                                    public void onSuccess(Transaction transaction) {
                                         log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
                                     }
 
                                     @Override
-                                    public void onTimeout(BroadcastTimeoutException exception) {
+                                    public void onTimeout(TxBroadcastTimeoutException exception) {
+                                        //TODO handle
                                         new Popup<>().warning(exception.toString());
                                     }
 
                                     @Override
-                                    public void onTxMalleability(MalleabilityException exception) {
+                                    public void onTxMalleability(TxMalleabilityException exception) {
+                                        //TODO handle
                                         new Popup<>().warning(exception.toString());
                                     }
 
                                     @Override
-                                    public void onFailure(BroadcastException exception) {
+                                    public void onFailure(TxBroadcastException exception) {
+                                        //TODO handle
                                         new Popup<>().warning(exception.toString());
                                     }
                                 });
