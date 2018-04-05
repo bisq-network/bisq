@@ -759,7 +759,11 @@ public class BisqProxy {
 
     public BitcoinNetworkStatus getBitcoinNetworkStatus() {
         final BitcoinNetworkStatus networkStatus = new BitcoinNetworkStatus();
-        networkStatus.peers = walletsSetup.connectedPeersProperty().get().stream().map(peer -> peer.getAddress().toString()).collect(Collectors.toList());
+        final List<Peer> peers = walletsSetup.connectedPeersProperty().get();
+        if (null != peers)
+            networkStatus.peers = peers.stream().map(peer -> peer.getAddress().toString()).collect(Collectors.toList());
+        else
+            networkStatus.peers = Collections.emptyList();
         networkStatus.useTorForBitcoinJ = preferences.getUseTorForBitcoinJ();
         networkStatus.bitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         networkStatus.bitcoinNodes = preferences.getBitcoinNodes();
