@@ -147,7 +147,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> {
             item.setStartAndEnd(startBlock, endBlock);
             double progress = 0;
             if (height >= startBlock && height <= endBlock) {
-                progress = (double) (height - startBlock + 1) / (double) item.getPhase().getDurationInBlocks();
+                progress = (double) (height - startBlock + 1) / (double) periodService.getCycle(height).getPhaseDuration(item.getPhase());
             } else if (height < startBlock) {
                 progress = 0;
             } else if (height > endBlock) {
