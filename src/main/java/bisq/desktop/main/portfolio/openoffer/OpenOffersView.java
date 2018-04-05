@@ -243,6 +243,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
                                     if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setGraphic(new AutoTooltipLabel(model.getDate(item)));
@@ -267,8 +268,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
-                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if(item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -287,8 +294,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
-                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if(item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -307,6 +320,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+
                                 if (item != null) {
                                     if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
                                     setGraphic(new AutoTooltipLabel(model.getVolume(item)));
@@ -331,8 +346,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
-                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -351,8 +372,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
-                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                                getStyleClass().removeAll("offer-disabled");
+
+                                if (item != null) {
+                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }

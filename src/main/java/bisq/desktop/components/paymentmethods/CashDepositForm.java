@@ -26,6 +26,7 @@ import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
 import bisq.desktop.util.validation.EmailValidator;
+import bisq.desktop.util.validation.NationalAccountIdValidator;
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Country;
@@ -61,6 +62,10 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+
 public class CashDepositForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(CashDepositForm.class);
 
@@ -71,15 +76,15 @@ public class CashDepositForm extends PaymentMethodForm {
         boolean showRequirements = requirements != null && !requirements.isEmpty();
 
         if (data.getHolderTaxId() != null)
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     Res.get("payment.account.name.emailAndHolderId", BankUtil.getHolderIdLabel(countryCode)),
                     data.getHolderName() + " / " + data.getHolderEmail() + " / " + data.getHolderTaxId());
         else
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.name.email"),
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.name.email"),
                     data.getHolderName() + " / " + data.getHolderEmail());
 
         if (!showRequirements)
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.country"),
                     CountryUtil.getNameAndCode(countryCode));
         else
             requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
@@ -96,14 +101,18 @@ public class CashDepositForm extends PaymentMethodForm {
             nrRows++;
         if (BankUtil.isAccountTypeRequired(countryCode))
             nrRows++;
+        if (BankUtil.isNationalAccountIdRequired(countryCode))
+            nrRows++;
 
         String bankNameLabel = BankUtil.getBankNameLabel(countryCode);
         String bankIdLabel = BankUtil.getBankIdLabel(countryCode);
         String branchIdLabel = BankUtil.getBranchIdLabel(countryCode);
+        String nationalAccountIdLabel = BankUtil.getNationalAccountIdLabel(countryCode);
         String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
         String accountTypeLabel = BankUtil.getAccountTypeLabel(countryCode);
 
         boolean accountNrAccountTypeCombined = false;
+        boolean nationalAccountIdAccountNrCombined = false;
         boolean bankNameBankIdCombined = false;
         boolean bankIdBranchIdCombined = false;
         boolean bankNameBranchIdCombined = false;
@@ -115,34 +124,43 @@ public class CashDepositForm extends PaymentMethodForm {
                 nrRows--;
 
             if (nrRows > 2) {
-                // Next we try BankName + BankId
-                bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
-                if (bankNameBankIdCombined)
+
+                nationalAccountIdAccountNrCombined = BankUtil.isAccountNrRequired(countryCode) &&
+                        BankUtil.isNationalAccountIdRequired(countryCode);
+
+                if (nationalAccountIdAccountNrCombined)
                     nrRows--;
 
-                if (nrRows > 2) {
-                    // Next we try BankId + BranchId
-                    bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) &&
-                            BankUtil.isBranchIdRequired(countryCode);
-                    if (bankIdBranchIdCombined)
+                if(nrRows > 2) {
+                    // Next we try BankName + BankId
+                    bankNameBankIdCombined = BankUtil.isBankNameRequired(countryCode) && BankUtil.isBankIdRequired(countryCode);
+                    if (bankNameBankIdCombined)
                         nrRows--;
 
                     if (nrRows > 2) {
                         // Next we try BankId + BranchId
-                        bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
-                                BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
-                        if (bankNameBranchIdCombined)
+                        bankIdBranchIdCombined = !bankNameBankIdCombined && BankUtil.isBankIdRequired(countryCode) &&
+                                BankUtil.isBranchIdRequired(countryCode);
+                        if (bankIdBranchIdCombined)
                             nrRows--;
 
                         if (nrRows > 2) {
-                            branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined &&
-                                    !accountNrAccountTypeCombined &&
-                                    BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
-                            if (branchIdAccountNrCombined)
+                            // Next we try BankId + BranchId
+                            bankNameBranchIdCombined = !bankNameBankIdCombined && !bankIdBranchIdCombined &&
+                                    BankUtil.isBankNameRequired(countryCode) && BankUtil.isBranchIdRequired(countryCode);
+                            if (bankNameBranchIdCombined)
                                 nrRows--;
 
-                            if (nrRows > 2)
-                                log.warn("We still have too many rows....");
+                            if (nrRows > 2) {
+                                branchIdAccountNrCombined = !bankNameBranchIdCombined && !bankIdBranchIdCombined &&
+                                        !accountNrAccountTypeCombined &&
+                                        BankUtil.isBranchIdRequired(countryCode) && BankUtil.isAccountNrRequired(countryCode);
+                                if (branchIdAccountNrCombined)
+                                    nrRows--;
+
+                                if (nrRows > 2)
+                                    log.warn("We still have too many rows....");
+                            }
                         }
                     }
                 }
@@ -150,33 +168,33 @@ public class CashDepositForm extends PaymentMethodForm {
         }
 
         if (bankNameBankIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
                             bankIdLabel.substring(0, bankIdLabel.length() - 1) + ":",
                     data.getBankName() + " / " + data.getBankId());
         }
         if (bankNameBranchIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
                             branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
                     data.getBankName() + " / " + data.getBranchId());
         }
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && BankUtil.isBankNameRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankNameLabel, data.getBankName());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankNameLabel, data.getBankName());
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && !branchIdAccountNrCombined && bankIdBranchIdCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     bankIdLabel.substring(0, bankIdLabel.length() - 1) + " / " +
                             branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
                     data.getBankId() + " / " + data.getBranchId());
         }
 
         if (!bankNameBankIdCombined && !bankIdBranchIdCombined && BankUtil.isBankIdRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankIdLabel, data.getBankId());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankIdLabel, data.getBankId());
 
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     branchIdLabel.substring(0, branchIdLabel.length() - 1) + " / " +
                             accountNrLabel.substring(0, accountNrLabel.length() - 1) + ":",
                     data.getBranchId() + " / " + data.getAccountNr());
@@ -184,19 +202,25 @@ public class CashDepositForm extends PaymentMethodForm {
 
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && !branchIdAccountNrCombined &&
                 BankUtil.isBranchIdRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchIdLabel, data.getBranchId());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchIdLabel, data.getBranchId());
 
         if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     accountNrLabel.substring(0, accountNrLabel.length() - 1) + " / " + accountTypeLabel,
                     data.getAccountNr() + " / " + data.getAccountType());
         }
 
-        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && BankUtil.isAccountNrRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
+        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && !nationalAccountIdAccountNrCombined && BankUtil.isAccountNrRequired(countryCode))
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
 
         if (!accountNrAccountTypeCombined && BankUtil.isAccountTypeRequired(countryCode))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
+
+        if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && nationalAccountIdAccountNrCombined)
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    nationalAccountIdLabel.substring(0, nationalAccountIdLabel.length() - 1) + " / " +
+                            accountNrLabel.substring(0, accountNrLabel.length() - 1), data.getNationalAccountId() +
+                            " / " + data.getAccountNr());
 
         if (showRequirements) {
             TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
@@ -211,16 +235,13 @@ public class CashDepositForm extends PaymentMethodForm {
     }
 
     protected final CashDepositAccountPayload cashDepositAccountPayload;
-    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
+    private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField,
+            holderIdInputTextField, nationalAccountIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField, emailInputTextField;
-    private Label bankIdLabel;
-    private Label branchIdLabel;
-    private Label accountNrLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple;
-    private Tuple2<Label, InputTextField> accountNrTuple;
-    private Tuple2<Label, InputTextField> branchIdTuple;
-    private Tuple2<Label, InputTextField> bankNameTuple;
+    private Label bankIdLabel, branchIdLabel, accountNrLabel, nationalAccountIdLabel;
+    private Tuple2<Label, InputTextField> bankIdTuple, accountNrTuple, branchIdTuple,
+            bankNameTuple, nationalAccountIdTuple;
     private Tuple2<Label, ComboBox> accountTypeTuple;
     private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
@@ -243,38 +264,42 @@ public class CashDepositForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         String countryCode = cashDepositAccountPayload.getCountryCode();
 
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
                 nameAndCode);
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 cashDepositAccountPayload.getHolderEmail());
 
         if (BankUtil.isBankNameRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
+            addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
                     cashDepositAccountPayload.getBankName()).second.setMouseTransparent(false);
 
         if (BankUtil.isBankIdRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
                     cashDepositAccountPayload.getBankId()).second.setMouseTransparent(false);
 
         if (BankUtil.isBranchIdRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
                     cashDepositAccountPayload.getBranchId()).second.setMouseTransparent(false);
 
+        if (BankUtil.isNationalAccountIdRequired(countryCode))
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(countryCode),
+                    cashDepositAccountPayload.getNationalAccountId()).second.setMouseTransparent(false);
+
         if (BankUtil.isAccountNrRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
                     cashDepositAccountPayload.getAccountNr()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountTypeRequired(countryCode))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
+            addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
                     cashDepositAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
         String requirements = cashDepositAccountPayload.getRequirements();
@@ -341,12 +366,14 @@ public class CashDepositForm extends PaymentMethodForm {
 
                 bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
                 branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
+                nationalAccountIdLabel.setText(BankUtil.getNationalAccountIdLabel(countryCode));
                 accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
                 accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
 
                 bankNameInputTextField.setText("");
                 bankIdInputTextField.setText("");
                 branchIdInputTextField.setText("");
+                nationalAccountIdInputTextField.setText("");
                 accountNrInputTextField.setText("");
                 accountTypeComboBox.getSelectionModel().clearSelection();
                 accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
@@ -359,6 +386,7 @@ public class CashDepositForm extends PaymentMethodForm {
                     bankIdInputTextField.setValidator(new BankIdValidator(countryCode));
                     branchIdInputTextField.setValidator(new BranchIdValidator(countryCode));
                     accountNrInputTextField.setValidator(new AccountNrValidator(countryCode));
+                    nationalAccountIdInputTextField.setValidator(new NationalAccountIdValidator(countryCode));
                 } else {
                     validatorsApplied = false;
                     if (useHolderID)
@@ -367,6 +395,7 @@ public class CashDepositForm extends PaymentMethodForm {
                     bankIdInputTextField.setValidator(null);
                     branchIdInputTextField.setValidator(null);
                     accountNrInputTextField.setValidator(null);
+                    nationalAccountIdInputTextField.setValidator(null);
                 }
                 holderNameInputTextField.resetValidation();
                 emailInputTextField.resetValidation();
@@ -374,6 +403,7 @@ public class CashDepositForm extends PaymentMethodForm {
                 bankIdInputTextField.resetValidation();
                 branchIdInputTextField.resetValidation();
                 accountNrInputTextField.resetValidation();
+                nationalAccountIdInputTextField.resetValidation();
 
                 boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
                 if (requiresHolderId) {
@@ -395,6 +425,12 @@ public class CashDepositForm extends PaymentMethodForm {
                     holderIdLabel.setVisible(requiresHolderId);
                     holderIdLabel.setManaged(requiresHolderId);
                 }
+
+                boolean nationalAccountIdRequired = BankUtil.isNationalAccountIdRequired(countryCode);
+                nationalAccountIdTuple.first.setVisible(nationalAccountIdRequired);
+                nationalAccountIdTuple.first.setManaged(nationalAccountIdRequired);
+                nationalAccountIdInputTextField.setVisible(nationalAccountIdRequired);
+                nationalAccountIdInputTextField.setManaged(nationalAccountIdRequired);
 
                 boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
                 bankNameTuple.first.setVisible(bankNameRequired);
@@ -478,6 +514,16 @@ public class CashDepositForm extends PaymentMethodForm {
         addAcceptedBanksForAddAccount();
 
         addHolderNameAndId();
+
+        nationalAccountIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(""));
+        nationalAccountIdLabel = nationalAccountIdTuple.first;
+        nationalAccountIdInputTextField = nationalAccountIdTuple.second;
+
+        nationalAccountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            cashDepositAccountPayload.setNationalAccountId(newValue);
+            updateFromInputs();
+
+        });
 
         bankNameTuple = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
         bankNameInputTextField = bankNameTuple.second;
@@ -612,6 +658,15 @@ public class CashDepositForm extends PaymentMethodForm {
                 accountNameTextField.setText(method.concat(": ").concat(bankId).concat(", ").concat(accountNr));
             else
                 accountNameTextField.setText(method.concat(": ").concat(accountNr));
+
+            if (BankUtil.isNationalAccountIdRequired(countryCode)) {
+                String nationalAccountId = nationalAccountIdInputTextField.getText();
+
+                if (countryCode.equals("AR") && nationalAccountId.length() == 22) {
+                    branchIdInputTextField.setText(nationalAccountId.substring(3,7));
+                    accountNrInputTextField.setText(nationalAccountId.substring(8,21));
+                }
+            }
         }
     }
 
@@ -642,6 +697,9 @@ public class CashDepositForm extends PaymentMethodForm {
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
                 result = result && holderIdInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderTaxId()).isValid;
+
+            if(BankUtil.isNationalAccountIdRequired(countryCode))
+                result = result && nationalAccountIdInputTextField.getValidator().validate(cashDepositAccountPayload.getNationalAccountId()).isValid;
         }
         allInputsValid.set(result);
     }
@@ -656,7 +714,7 @@ public class CashDepositForm extends PaymentMethodForm {
             holderNameTextField.setMinWidth(300);
             tuple.forth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+            addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                     cashDepositAccountPayload.getHolderName());
         }
     }
