@@ -2,12 +2,10 @@ package io.bisq.api.service.v1;
 
 import io.bisq.api.AmountTooLowException;
 import io.bisq.api.BisqProxy;
-import io.bisq.api.BisqProxyResult;
 import io.bisq.api.model.WalletAddress;
 import io.bisq.api.model.WalletAddressList;
 import io.bisq.api.model.WalletDetails;
 import io.bisq.api.model.WalletTransactionList;
-import io.bisq.api.service.ResourceHelper;
 import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;
 import io.swagger.annotations.Api;
@@ -19,7 +17,6 @@ import javax.validation.ValidationException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.HashSet;
-import java.util.Optional;
 
 
 @Api("wallet")
@@ -36,11 +33,7 @@ public class WalletResource {
     @GET
     @Path("/")
     public WalletDetails getWalletDetails() {
-        BisqProxyResult<WalletDetails> walletDetails = bisqProxy.getWalletDetails();
-        if (walletDetails.isInError()) {
-            ResourceHelper.handleBisqProxyError(Optional.of(walletDetails));
-        }
-        return walletDetails.getResult();
+        return bisqProxy.getWalletDetails();
     }
 
     @ApiOperation("Get wallet addresses")

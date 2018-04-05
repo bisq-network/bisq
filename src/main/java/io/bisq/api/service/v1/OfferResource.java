@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 import static java.util.stream.Collectors.toList;
 
-//        TODO use more standard error handling than ResourceHelper.handleBisqProxyError
 @Api("offers")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j

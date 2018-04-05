@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 import com.google.common.collect.ImmutableList;
 import io.bisq.api.NotFoundException;
+import io.bisq.api.WalletNotReadyException;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 
@@ -21,6 +22,7 @@ public final class ExceptionMappers {
         environment.register(new ExceptionMappers.InvalidTypeIdExceptionMapper());
         environment.register(new ExceptionMappers.NotFoundExceptionMapper());
         environment.register(new ExceptionMappers.ValidationExceptionMapper());
+        environment.register(new ExceptionMappers.WalletNotReadyExceptionMapper());
     }
 
     public static class InvalidTypeIdExceptionMapper implements ExceptionMapper<InvalidTypeIdException> {
@@ -57,6 +59,13 @@ public final class ExceptionMappers {
         @Override
         public Response toResponse(ValidationException exception) {
             return Response.status(422).entity(new ValidationErrorMessage(ImmutableList.of(exception.getMessage()))).build();
+        }
+    }
+
+    public static class WalletNotReadyExceptionMapper implements ExceptionMapper<WalletNotReadyException> {
+        @Override
+        public Response toResponse(WalletNotReadyException exception) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(new ValidationErrorMessage(ImmutableList.of(exception.getMessage()))).build();
         }
     }
 }

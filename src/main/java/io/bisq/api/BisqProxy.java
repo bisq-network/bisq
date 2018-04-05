@@ -379,15 +379,15 @@ public class BisqProxy {
         return tradeOptional.get();
     }
 
-    public BisqProxyResult<WalletDetails> getWalletDetails() {
+    public WalletDetails getWalletDetails() {
         if (!btcWalletService.isWalletReady()) {
-            return BisqProxyResult.createSimpleError("Wallet is not ready");
+            throw new WalletNotReadyException("Wallet is not ready");
         }
 
         Coin availableBalance = btcWalletService.getAvailableBalance();
         Coin reservedBalance = updateReservedBalance();
         Coin lockedBalance = updateLockedBalance();
-        return new BisqProxyResult<>(new WalletDetails(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue()));
+        return new WalletDetails(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue());
     }
 
     // TODO copied from MainViewModel - refactor !
