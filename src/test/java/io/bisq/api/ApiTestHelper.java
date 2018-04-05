@@ -68,7 +68,7 @@ public final class ApiTestHelper {
                 port(apiPort).
 //
         when().
-                        get("/api/v1/p2p/status").
+                        get("/api/v1/network/p2p/status").
 //
         then().
                         extract().as(P2PNetworkStatus.class);

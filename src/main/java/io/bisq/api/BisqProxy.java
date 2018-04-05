@@ -13,10 +13,7 @@ import io.bisq.common.locale.*;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.AddressEntryException;
-import io.bisq.core.btc.InsufficientFundsException;
-import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.*;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletService;
@@ -41,6 +38,7 @@ import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.network.Statistic;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -270,7 +268,7 @@ public class BisqProxy {
 
     /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
-    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, String amount, boolean useSavingsWallet) {
+    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
         final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
         final Offer offer;
         try {
@@ -292,7 +290,7 @@ public class BisqProxy {
         }
 
         // check the amount is within the range
-        Coin coinAmount = Coin.valueOf(Long.valueOf(amount));
+        Coin coinAmount = Coin.valueOf(amount);
         //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
 
         // workaround because TradeTask does not have an error handler to notify us that something went wrong
@@ -754,7 +752,21 @@ public class BisqProxy {
         final NodeAddress address = p2PService.getAddress();
         if (null != address)
             p2PNetworkStatus.address = address.getFullAddress();
+        p2PNetworkStatus.p2pNetworkConnection = p2PService.getNetworkNode().getAllConnections().stream()
+                .map(P2PNetworkConnection::new)
+                .collect(Collectors.toList());
+        p2PNetworkStatus.totalSentBytes = Statistic.totalSentBytesProperty().get();
+        p2PNetworkStatus.totalReceivedBytes = Statistic.totalReceivedBytesProperty().get();
         return p2PNetworkStatus;
+    }
+
+    public BitcoinNetworkStatus getBitcoinNetworkStatus() {
+        final BitcoinNetworkStatus networkStatus = new BitcoinNetworkStatus();
+        networkStatus.peers = walletsSetup.connectedPeersProperty().get().stream().map(peer -> peer.getAddress().toString()).collect(Collectors.toList());
+        networkStatus.useTorForBitcoinJ = preferences.getUseTorForBitcoinJ();
+        networkStatus.bitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        networkStatus.bitcoinNodes = preferences.getBitcoinNodes();
+        return networkStatus;
     }
 
     public enum WalletAddressPurpose {

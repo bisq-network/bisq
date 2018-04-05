@@ -1,5 +1,7 @@
 package io.bisq.api.service;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 import com.google.common.collect.ImmutableList;
 import io.bisq.api.NotFoundException;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
@@ -16,8 +18,32 @@ public final class ExceptionMappers {
     }
 
     public static void register(JerseyEnvironment environment) {
+        environment.register(new ExceptionMappers.InvalidTypeIdExceptionMapper());
         environment.register(new ExceptionMappers.NotFoundExceptionMapper());
         environment.register(new ExceptionMappers.ValidationExceptionMapper());
+    }
+
+    public static class InvalidTypeIdExceptionMapper implements ExceptionMapper<InvalidTypeIdException> {
+        @Override
+        public Response toResponse(InvalidTypeIdException exception) {
+            final Class<?> rawClass = exception.getBaseType().getRawClass();
+            final StringBuilder builder = new StringBuilder("Unable to recognize sub type of ")
+                    .append(rawClass.getSimpleName())
+                    .append(". Value '")
+                    .append(exception.getTypeId())
+                    .append("' is invalid.");
+
+            final JsonSubTypes annotation = rawClass.getAnnotation(JsonSubTypes.class);
+            if (null != annotation && 0 < annotation.value().length) {
+                builder.append(" Allowed values are: ");
+                final String separator = ", ";
+                for (JsonSubTypes.Type subType : annotation.value())
+                    builder.append(subType.name()).append(separator);
+                builder.delete(builder.length() - separator.length(), builder.length());
+            }
+
+            return Response.status(422).entity(new ValidationErrorMessage(ImmutableList.of(builder.toString()))).build();
+        }
     }
 
     public static class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
