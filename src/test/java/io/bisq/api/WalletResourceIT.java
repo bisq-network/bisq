@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Arquillian.class)
@@ -41,6 +42,23 @@ public class WalletResourceIT {
     public void generateBitcoins() {
         ApiTestHelper.generateBlocks(bitcoin, 101);
         emptyMinerAddress = createNewAccountAndAddress();
+    }
+
+    @InSequence(1)
+    @Test
+    public void getOrCreateAvailableUnusedWalletAddresses_always_returns200() {
+        given().
+                port(getAlicePort()).
+//
+        when().
+                post("/api/v1/wallet/addresses").
+//
+        then().
+                statusCode(200).
+                and().body("address", isA(String.class)).
+                and().body("balance", isA(Number.class)).
+                and().body("confirmations", isA(Number.class))
+        ;
     }
 
     @InSequence(2)

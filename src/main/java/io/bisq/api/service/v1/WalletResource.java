@@ -3,6 +3,7 @@ package io.bisq.api.service.v1;
 import io.bisq.api.AmountTooLowException;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.BisqProxyResult;
+import io.bisq.api.model.WalletAddress;
 import io.bisq.api.model.WalletAddressList;
 import io.bisq.api.model.WalletDetails;
 import io.bisq.api.model.WalletTransactionList;
@@ -49,6 +50,13 @@ public class WalletResource {
         return bisqProxy.getWalletAddresses(purpose);
     }
 
+    @ApiOperation("Get or create wallet address")
+    @POST
+    @Path("/addresses")
+    public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
+        return bisqProxy.getOrCreateAvailableUnusedWalletAddresses();
+    }
+
     @ApiOperation("Get wallet transactions")
     @GET
     @Path("/transactions")
@@ -74,11 +82,4 @@ public class WalletResource {
             throw new WebApplicationException(e.getMessage(), 424);
         }
     }
-
-    @Path("btc")
-    public BtcWalletResource getBtcWalletResource() {
-        return new BtcWalletResource(bisqProxy);
-    }
-
-
 }
