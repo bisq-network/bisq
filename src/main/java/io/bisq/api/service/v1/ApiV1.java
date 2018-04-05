@@ -45,6 +45,11 @@ public class ApiV1 {
         return new PaymentAccountResource(bisqProxy);
     }
 
+    @Path("preferences")
+    public PreferencesResource getSettingsResource() {
+        return new PreferencesResource(bisqProxy);
+    }
+
     @Path("trades")
     public TradeResource getTradeResource() {
         return new TradeResource(bisqProxy);

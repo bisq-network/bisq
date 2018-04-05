@@ -12,6 +12,6 @@ public class NotNullItemsValidator implements ConstraintValidator<NotNullItems, 
 
     @Override
     public boolean isValid(Collection value, ConstraintValidatorContext context) {
-        return !value.contains(null);
+        return null == value || !value.contains(null);
     }
 }
