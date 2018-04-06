@@ -24,6 +24,8 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
+import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconSmall;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
@@ -32,15 +34,19 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.UserThread;
 import bisq.common.util.Tuple4;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
@@ -90,6 +96,8 @@ import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
+    private final boolean useDevPrivilegeKeys;
+
     private NumberAxis xAxis;
     private XYChart.Series seriesBuy, seriesSell;
     private final Navigation navigation;
@@ -124,10 +132,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter) {
+    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter,
+                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.navigation = navigation;
         this.formatter = formatter;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
     @Override
@@ -469,9 +479,49 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
+        // trader avatar
+        TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<OfferListItem, OfferListItem>(Res.get("offerbook.trader")) {
+            {
+                setMinWidth(80);
+                setMaxWidth(80);
+                setSortable(true);
+            }
+        };
+        avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.setCellFactory(
+                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
+                        OfferListItem>>() {
+
+                    @Override
+                    public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
+                        return new TableCell<OfferListItem, OfferListItem>() {
+                            @Override
+                            public void updateItem(final OfferListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+                                if (newItem != null && !empty) {
+                                    final Offer offer = newItem.offer;
+                                    final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
+                                    String role = Res.get("peerInfoIcon.tooltip.maker");
+                                    PeerInfoIconSmall peerInfoIcon = new PeerInfoIconSmall(makersNodeAddress,
+                                            role,
+                                            offer,
+                                            model.preferences,
+                                            model.accountAgeWitnessService,
+                                            formatter,
+                                            useDevPrivilegeKeys);
+                                    setGraphic(peerInfoIcon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+
         tableView.getColumns().add(volumeColumn);
         tableView.getColumns().add(amountColumn);
         tableView.getColumns().add(priceColumn);
+        tableView.getColumns().add(avatarColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.multipleOffers")));
