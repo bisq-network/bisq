@@ -622,6 +622,7 @@ public class OfferResourceIT {
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
+        ApiTestHelper.waitForP2PMsgPropagation();
         final int bobPort = getBobPort();
         assertOfferExists(bobPort, createdOffer.id);
         given().
