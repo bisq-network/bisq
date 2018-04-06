@@ -29,6 +29,7 @@ public final class ContainerFactory {
         return builder
                 .withEnvironment("USE_LOCALHOST_FOR_P2P", "true")
                 .withEnvironment("BASE_CURRENCY_NETWORK", "BTC_REGTEST")
+                .withEnvironment("BITCOIN_REGTEST_HOST", "NONE")
                 .withEnvironment("BTC_NODES", "bitcoin:18444")
                 .withEnvironment("SEED_NODES", SEED_NODE_ADDRESS)
                 .withEnvironment("LOG_LEVEL", "debug");
@@ -49,7 +50,7 @@ public final class ContainerFactory {
     }
 
     public static Container createSeedNodeContainer() {
-        return withRegtestEnv(Container.withContainerName("bisq-seednode").fromImage("bisq-seednode").withVolume("m2", "/root/.m2"))
+        return withRegtestEnv(Container.withContainerName("bisq-seednode").fromImage("bisq/seednode"))
                 .withEnvironment("MY_ADDRESS", SEED_NODE_ADDRESS)
                 .build();
     }

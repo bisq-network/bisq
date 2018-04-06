@@ -17,6 +17,9 @@ fi
 if [ ! -z "$BTC_NODES" ]; then
     ARGS="$ARGS --btcNodes=$BTC_NODES"
 fi
+if [ ! -z "$BITCOIN_REGTEST_HOST" ]; then
+    ARGS="$ARGS --bitcoinRegtestHost=$BITCOIN_REGTEST_HOST"
+fi
 if [ ! -z "$BASE_CURRENCY_NETWORK" ]; then
     ARGS="$ARGS --baseCurrencyNetwork=$BASE_CURRENCY_NETWORK"
 fi

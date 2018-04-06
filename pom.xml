@@ -101,7 +101,7 @@
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-desktop</artifactId>
-            <version>a7bf94cc1e</version>
+            <version>77f0260dd2</version>
         </dependency>
         <!--TODO once bisq-desktop is released and depends on non-snapshots we can get rid of following bisq-network dependencies-->
         <dependency>
