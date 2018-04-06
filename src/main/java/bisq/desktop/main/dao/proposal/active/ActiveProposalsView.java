@@ -18,36 +18,37 @@
 package bisq.desktop.main.dao.proposal.active;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.param.DaoParamService;
 import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.dao.vote.result.BooleanVoteResult;
 import bisq.core.locale.Res;
 
-import bisq.common.UserThread;
-import bisq.common.crypto.CryptoException;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -62,17 +63,11 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
@@ -82,6 +77,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
     private List<Node> voteViewItems = new ArrayList<>();
+    private BusyAnimation voteButtonBusyAnimation;
+    private Label voteButtonInfoLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,9 +91,11 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
                                 ReadableBsqBlockChain readableBsqBlockChain,
-                                BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, periodService,
-                bsqFormatter);
+                                DaoParamService daoParamService,
+                                BsqFormatter bsqFormatter,
+                                BSFormatter btcFormatter) {
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoParamService, periodService, bsqFormatter,
+                btcFormatter);
         this.blindVoteService = blindVoteService;
     }
 
@@ -123,41 +122,41 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
         if (voteButton != null) {
             voteButton.setOnAction(e -> {
-                Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
                 // TODO verify stake
-                Popup startPublishingPopup = new Popup<>();
-                startPublishingPopup.information(Res.get("dao.proposal.blindVote.startPublishing"))
-                        .hideCloseButton()
-                        .show();
+                Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
+                final Coin fee = BlindVoteConsensus.getFee(daoParamService, readableBsqBlockChain.getChainHeadHeight());
+                Transaction dummyTx = null;
                 try {
-                    blindVoteService.publishBlindVote(stake,
-                            () -> {
-                                startPublishingPopup.hide();
-                                UserThread.runAfter(() -> {
-                                    new Popup<>().feedback(Res.get("dao.proposal.blindVote.success"))
-                                            .show();
-                                }, 100, TimeUnit.MILLISECONDS);
-                            }, errorMessage -> {
-                                new Popup<>().error(errorMessage).show();
-                            });
-                } catch (CryptoException e1) {
-                    //TODO show error popup
-                    e1.printStackTrace();
-                } catch (InsufficientBsqException e1) {
-                    e1.printStackTrace();
-                } catch (WalletException e1) {
-                    e1.printStackTrace();
-                } catch (TransactionVerificationException e1) {
-                    e1.printStackTrace();
-                } catch (InsufficientMoneyException e1) {
-                    e1.printStackTrace();
-                } catch (InvalidProtocolBufferException e1) {
-                    e1.printStackTrace();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    // We create a tx with dummy opreturn data to get the mining fee for confirmation popup
+                    dummyTx = blindVoteService.getBlindVoteTx(stake, fee, new byte[22]);
+                } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
+                    new Popup<>().warning(exception.toString()).show();
+                }
+
+                if (dummyTx != null) {
+                    Coin miningFee = dummyTx.getFee();
+                    int txSize = dummyTx.bitcoinSerialize().length;
+                    GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                            Res.get("dao.blindVote"), () -> publishBlindVote(stake));
                 }
             });
         }
+    }
+
+    private void publishBlindVote(Coin stake) {
+        voteButtonBusyAnimation.play();
+        voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
+        blindVoteService.publishBlindVote(stake,
+                () -> {
+                    voteButtonBusyAnimation.stop();
+                    voteButtonInfoLabel.setText("");
+                    new Popup().feedback(Res.get("dao.blindVote.success"))
+                            .show();
+                }, exception -> {
+                    voteButtonBusyAnimation.stop();
+                    voteButtonInfoLabel.setText("");
+                    new Popup<>().warning(exception.toString()).show();
+                });
     }
 
     @Override
@@ -180,7 +179,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 Res.getWithCol("dao.proposal.myVote.stake"), Layout
                         .FIRST_ROW_AND_GROUP_DISTANCE - 20);
         stakeInputTextField = tuple2.second;
-        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proposal.myVote.button"));
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow, Res.get("dao.proposal.myVote.button"));
+        voteButton = tuple.first;
+        voteButtonBusyAnimation = tuple.second;
+        voteButtonInfoLabel = tuple.third;
 
         voteViewItems.add(titledGroupBg);
         voteViewItems.add(tuple2.first);

@@ -24,12 +24,14 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
+import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.param.DaoParamService;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
@@ -92,10 +94,12 @@ public class MyVotesView extends BaseProposalView {
                         MyVoteService myVoteService,
                         BsqWalletService bsqWalletService,
                         ReadableBsqBlockChain readableBsqBlockChain,
+                        DaoParamService daoParamService,
                         Preferences preferences,
-                        BsqFormatter bsqFormatter) {
-        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, periodService,
-                bsqFormatter);
+                        BsqFormatter bsqFormatter,
+                        BSFormatter btcFormatter) {
+        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoParamService, periodService, bsqFormatter,
+                btcFormatter);
         this.myVoteService = myVoteService;
         this.readableBsqBlockChain = readableBsqBlockChain;
         this.preferences = preferences;

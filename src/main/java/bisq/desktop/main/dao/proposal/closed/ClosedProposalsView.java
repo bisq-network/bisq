@@ -19,10 +19,12 @@ package bisq.desktop.main.dao.proposal.closed;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
+import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
+import bisq.core.dao.param.DaoParamService;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.ProposalService;
 
@@ -40,8 +42,11 @@ public class ClosedProposalsView extends BaseProposalView {
                                 PeriodService periodService,
                                 BsqWalletService bsqWalletService,
                                 ReadableBsqBlockChain readableBsqBlockChain,
-                                BsqFormatter bsqFormatter) {
-        super(proposalService, bsqWalletService, readableBsqBlockChain, periodService, bsqFormatter);
+                                DaoParamService daoParamService,
+                                BsqFormatter bsqFormatter,
+                                BSFormatter bsFormatter) {
+        super(proposalService, bsqWalletService, readableBsqBlockChain, daoParamService, periodService,
+                bsqFormatter, bsFormatter);
     }
 
     @Override

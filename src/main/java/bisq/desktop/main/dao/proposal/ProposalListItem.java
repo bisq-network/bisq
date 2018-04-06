@@ -162,7 +162,6 @@ public class ProposalListItem implements BsqBlockChain.Listener {
                             //TODO
                         }
                     } else {
-                        log.error("actionButtonIconView.setVisible(false);");
                         actionButtonIconView.setVisible(false);
                     }
                 }

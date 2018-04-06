@@ -23,12 +23,14 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
+import bisq.core.dao.param.DaoParamService;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalPayload;
@@ -73,8 +75,10 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
 
     protected final ProposalService proposalService;
     protected final ReadableBsqBlockChain readableBsqBlockChain;
+    protected final DaoParamService daoParamService;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
+    protected final BSFormatter btcFormatter;
 
     protected final ObservableList<ProposalListItem> proposalListItems = FXCollections.observableArrayList();
     protected final SortedList<ProposalListItem> sortedList = new SortedList<>(proposalListItems);
@@ -101,13 +105,17 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     protected BaseProposalView(ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                ReadableBsqBlockChain readableBsqBlockChain,
+                               DaoParamService daoParamService,
                                PeriodService periodService,
-                               BsqFormatter bsqFormatter) {
+                               BsqFormatter bsqFormatter,
+                               BSFormatter btcFormatter) {
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
+        this.daoParamService = daoParamService;
         this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
+        this.btcFormatter = btcFormatter;
     }
 
     @Override
