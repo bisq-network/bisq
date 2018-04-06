@@ -60,7 +60,7 @@ dependencies {
 
 build.dependsOn installDist
 installDist.destinationDir = file('build/app')
-distZip.enabled = false
+distZip.enabled = true
 
 // generated with `./gradlew -q calculateChecksums | grep -v network.bisq:bisq-`
 dependencyVerification {
