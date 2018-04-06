@@ -35,6 +35,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 
@@ -67,6 +68,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     final Preferences preferences;
     final PriceFeedService priceFeedService;
+    final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
@@ -92,12 +94,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                                   Navigation navigation, BSFormatter formatter) {
+                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, BSFormatter formatter) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.formatter = formatter;
+        this.accountAgeWitnessService = accountAgeWitnessService;
 
         Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getOfferBookChartScreenCurrencyCode());
         if (tradeCurrencyOptional.isPresent())
