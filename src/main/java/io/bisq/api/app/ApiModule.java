@@ -35,7 +35,7 @@ import bisq.core.btc.BitcoinModule;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
-//import bisq.core.network.CoreSeedNodesRepository;
+import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -45,7 +45,7 @@ import bisq.core.user.User;
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
-//import bisq.network.p2p.seed.SeedNodesRepository;
+import bisq.network.p2p.seed.SeedNodeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 
@@ -76,7 +76,7 @@ public class ApiModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
 
-//        bind(SeedNodesRepository.class).to(CoreSeedNodesRepository.class).in(Singleton.class);
+        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
