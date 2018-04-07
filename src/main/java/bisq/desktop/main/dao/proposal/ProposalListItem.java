@@ -27,7 +27,6 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
-import bisq.core.dao.vote.Cycles;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
@@ -73,7 +72,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     private TxConfidenceListener txConfidenceListener;
     private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     private Transaction walletTransaction;
-    private ChangeListener<Cycles.Phase> phaseChangeListener;
+    private ChangeListener<PeriodService.Phase> phaseChangeListener;
     private AutoTooltipButton actionButton;
     private ImageView actionButtonIconView;
     @Setter
@@ -123,7 +122,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(Cycles.Phase newValue, VoteResult voteResult) {
+    public void applyState(PeriodService.Phase newValue, VoteResult voteResult) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
