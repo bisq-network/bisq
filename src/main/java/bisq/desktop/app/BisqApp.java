@@ -17,7 +17,6 @@
 
 package bisq.desktop.app;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.SystemTray;
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
@@ -33,14 +32,13 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
+import bisq.desktop.setup.DesktopPersistedDataHost;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.AddressEntryList;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -48,20 +46,13 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.vote.blindvote.BlindVoteService;
-import bisq.core.dao.vote.myvote.MyVoteService;
-import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.network.p2p.CoreNetworkCapabilities;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.setup.CoreNetworkCapabilities;
+import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 
@@ -196,6 +187,7 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
+        // Setup Capabilities
         CoreNetworkCapabilities.init();
     }
 
@@ -205,39 +197,15 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            // Guice
+            // Setup Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            // All classes which are persisting objects need to be added here
-            // Maintain order!
-            ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
-            final Preferences preferences = injector.getInstance(Preferences.class);
-            persistedDataHosts.add(preferences);
-            persistedDataHosts.add(injector.getInstance(User.class));
-            persistedDataHosts.add(injector.getInstance(Navigation.class));
-            persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
-            persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
-            persistedDataHosts.add(injector.getInstance(TradeManager.class));
-            persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
-            persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
-            persistedDataHosts.add(injector.getInstance(DisputeManager.class));
-            persistedDataHosts.add(injector.getInstance(P2PService.class));
-            persistedDataHosts.add(injector.getInstance(ProposalService.class));
-            persistedDataHosts.add(injector.getInstance(BlindVoteService.class));
-            persistedDataHosts.add(injector.getInstance(MyVoteService.class));
-            persistedDataHosts.add(injector.getInstance(DaoParamService.class));
-
-            // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-            persistedDataHosts.forEach(e -> {
-                try {
-                    log.debug("call readPersisted at " + e.getClass().getSimpleName());
-                    e.readPersisted();
-                } catch (Throwable e1) {
-                    log.error("readPersisted error", e1);
-                }
-            });
+            // Setup PersistedDataHost
+            ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>(CorePersistedDataHost.getPersistedDataHosts(injector));
+            persistedDataHosts.addAll(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+            persistedDataHosts.forEach(PersistedDataHost::readPersisted);
 
             boolean useDevMode = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_MODE)));
             DevEnv.setDevMode(useDevMode);
