@@ -266,7 +266,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
-                    if (proposalService.isMine(proposal)) {
+                    if (proposalService.isMine(proposal.getProposalPayload())) {
                         if (removeButton == null) {
                             removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
                             removeButton.setOnAction(event -> onRemove());

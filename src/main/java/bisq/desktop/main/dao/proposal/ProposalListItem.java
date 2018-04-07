@@ -131,7 +131,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalService.isMine(proposal)) {
+                if (proposalService.isMine(proposal.getProposalPayload())) {
                     actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));
