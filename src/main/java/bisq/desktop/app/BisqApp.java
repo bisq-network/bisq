@@ -55,6 +55,7 @@ import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.network.p2p.CoreNetworkCapabilities;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -66,7 +67,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
-import bisq.common.app.Capabilities;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
@@ -114,7 +114,6 @@ import java.nio.file.Paths;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -197,13 +196,7 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
-        Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
-                Capabilities.Capability.TRADE_STATISTICS.ordinal(),
-                Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
-                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
-                Capabilities.Capability.COMP_REQUEST.ordinal(),
-                Capabilities.Capability.VOTE.ordinal()
-        )));
+        CoreNetworkCapabilities.init();
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
