@@ -175,60 +175,70 @@ public class BisqApp extends Application {
             if (Utilities.isLinux())
                 System.setProperty("prism.lcdtext", "false");
 
-            Storage.setDatabaseCorruptionHandler((String fileName) -> {
-                corruptedDatabaseFiles.add(fileName);
-                if (mainView != null)
-                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-            });
+            setupStage();
 
-            // load the main view and create the main scene
-            CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-            mainView = (MainView) viewLoader.load(MainView.class);
-            mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-
-            scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
-
-            scene.getStylesheets().setAll(
-                    "/bisq/desktop/bisq.css",
-                    "/bisq/desktop/images.css",
-                    "/bisq/desktop/CandleStickChart.css");
-
-            // configure the system tray
-            SystemTray.create(primaryStage, shutDownHandler);
-
-            primaryStage.setOnCloseRequest(event -> {
-                event.consume();
-                stop();
-            });
-            addSceneKeyEventHandler();
-
-            // configure the primary stage
-            primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
-            primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1020);
-            primaryStage.setMinHeight(620);
-
-            // on windows the title icon is also used as task bar icon in a larger size
-            // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
-            String iconPath;
-            if (Utilities.isOSX())
-                iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
-            else if (Utilities.isWindows())
-                iconPath = "/images/task_bar_icon_windows.png";
-            else
-                iconPath = "/images/task_bar_icon_linux.png";
-
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
-
-            // make the UI visible
-            primaryStage.show();
+            setDatabaseCorruptionHandler(mainView);
 
             checkForCorrectOSArchitecture();
+
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             showErrorPopup(throwable, false);
         }
+    }
+
+    private void setupStage() {
+        // load the main view and create the main scene
+        CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        mainView = (MainView) viewLoader.load(MainView.class);
+
+
+        scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
+
+        scene.getStylesheets().setAll(
+                "/bisq/desktop/bisq.css",
+                "/bisq/desktop/images.css",
+                "/bisq/desktop/CandleStickChart.css");
+
+        // configure the system tray
+        SystemTray.create(primaryStage, shutDownHandler);
+
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            stop();
+        });
+        addSceneKeyEventHandler();
+
+        // configure the primary stage
+        primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1020);
+        primaryStage.setMinHeight(620);
+
+        // on windows the title icon is also used as task bar icon in a larger size
+        // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
+        String iconPath;
+        if (Utilities.isOSX())
+            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else if (Utilities.isWindows())
+            iconPath = "/images/task_bar_icon_windows.png";
+        else
+            iconPath = "/images/task_bar_icon_linux.png";
+
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+
+        // make the UI visible
+        primaryStage.show();
+    }
+
+    private void setDatabaseCorruptionHandler(MainView mainView) {
+        Storage.setDatabaseCorruptionHandler((String fileName) -> {
+            corruptedDatabaseFiles.add(fileName);
+            if (mainView != null)
+                mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+        });
+        mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
     }
 
 
