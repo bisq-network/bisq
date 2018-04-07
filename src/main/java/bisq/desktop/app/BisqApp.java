@@ -207,8 +207,7 @@ public class BisqApp extends Application {
             persistedDataHosts.addAll(DesktopPersistedDataHost.getPersistedDataHosts(injector));
             persistedDataHosts.forEach(PersistedDataHost::readPersisted);
 
-            boolean useDevMode = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_MODE)));
-            DevEnv.setDevMode(useDevMode);
+            DevEnv.setup(injector);
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
