@@ -325,7 +325,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(proposalService.getActiveProposals());
+        doUpdateProposalList(proposalService.getValidOrMyUnconfirmedProposals());
     }
 
     private void updateStateAfterVote() {
