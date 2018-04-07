@@ -39,7 +39,6 @@ import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -47,7 +46,6 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
@@ -58,7 +56,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Version;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
@@ -128,16 +125,7 @@ public class BisqApp extends Application {
 
         shutDownHandler = this::stop;
 
-        CoreSetup.setupLog(bisqEnvironment);
-        CoreSetup.setBouncyCastleProvider();
-        CoreSetup.setupCapabilities();
-        CoreSetup.setupErrorHandler(this::showErrorPopup);
-
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
-        Res.setBaseCurrencyCode(currencyCode);
-        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
-        CurrencyUtil.setBaseCurrencyCode(currencyCode);
+        CoreSetup.setup(bisqEnvironment, this::showErrorPopup);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -146,23 +134,14 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            // Setup Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            // Setup PersistedDataHost
             PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
             PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
 
-            // Setup DevEnv
             DevEnv.setup(injector);
-
-            Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
-            Version.printVersion();
-
-            if (Utilities.isLinux())
-                System.setProperty("prism.lcdtext", "false");
 
             setupStage();
 
