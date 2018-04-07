@@ -89,12 +89,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -129,17 +123,16 @@ public class BisqApp extends Application {
 
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
-    public void init() throws Exception {
-        CoreSetup.setupLog(bisqEnvironment);
-
+    public void init() {
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
 
         shutDownHandler = this::stop;
 
+        CoreSetup.setupLog(bisqEnvironment);
+        CoreSetup.setBouncyCastleProvider();
         CoreSetup.setupErrorHandler(this::showErrorPopup);
 
-        Security.addProvider(new BouncyCastleProvider());
 
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
@@ -153,7 +146,7 @@ public class BisqApp extends Application {
 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         BisqApp.primaryStage = stage;
 
         try {
