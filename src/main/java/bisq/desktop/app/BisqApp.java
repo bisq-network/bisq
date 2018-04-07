@@ -133,7 +133,6 @@ public class BisqApp extends Application {
         CoreSetup.setBouncyCastleProvider();
         CoreSetup.setupErrorHandler(this::showErrorPopup);
 
-
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
         Res.setBaseCurrencyCode(currencyCode);
@@ -141,7 +140,7 @@ public class BisqApp extends Application {
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
 
         // Setup Capabilities
-        CoreNetworkCapabilities.init();
+        CoreNetworkCapabilities.setSupportedCapabilities();
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
