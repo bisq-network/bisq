@@ -52,30 +52,24 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CoreNetworkCapabilities;
 import bisq.core.setup.CorePersistedDataHost;
+import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
 import bisq.common.app.Version;
-import bisq.common.crypto.LimitedKeyStrengthException;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.store.BlockStoreException;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.reactfx.EventStreams;
 
@@ -97,10 +91,7 @@ import javafx.scene.layout.StackPane;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-
-import java.nio.file.Paths;
 
 import java.io.IOException;
 
@@ -110,7 +101,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
@@ -140,44 +130,14 @@ public class BisqApp extends Application {
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() throws Exception {
-        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
-        Log.setup(logPath);
-        log.info("Log files under: " + logPath);
-        Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        CoreSetup.setupLog(bisqEnvironment);
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
 
         shutDownHandler = this::stop;
 
-        // setup UncaughtExceptionHandler
-        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread
-            if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
-                    throwable.getCause().getCause() instanceof BlockStoreException) {
-                log.error(throwable.getMessage());
-            } else if (throwable instanceof ClassCastException &&
-                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else {
-                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("throwableMessage= " + throwable.getMessage());
-                log.error("throwableClass= " + throwable.getClass());
-                log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
-                throwable.printStackTrace();
-                UserThread.execute(() -> showErrorPopup(throwable, false));
-            }
-        };
-        Thread.setDefaultUncaughtExceptionHandler(handler);
-        Thread.currentThread().setUncaughtExceptionHandler(handler);
-
-        try {
-            Utilities.checkCryptoPolicySetup();
-        } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
-            e.printStackTrace();
-            UserThread.execute(() -> showErrorPopup(e, true));
-        }
+        CoreSetup.setupErrorHandler(this::showErrorPopup);
 
         Security.addProvider(new BouncyCastleProvider());
 
@@ -203,10 +163,10 @@ public class BisqApp extends Application {
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
             // Setup PersistedDataHost
-            ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>(CorePersistedDataHost.getPersistedDataHosts(injector));
-            persistedDataHosts.addAll(DesktopPersistedDataHost.getPersistedDataHosts(injector));
-            persistedDataHosts.forEach(PersistedDataHost::readPersisted);
+            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
+            PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
 
+            // Setup DevEnv
             DevEnv.setup(injector);
 
             Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
