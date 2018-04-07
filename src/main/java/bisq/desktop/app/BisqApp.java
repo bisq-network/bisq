@@ -50,7 +50,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.setup.CoreNetworkCapabilities;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
@@ -131,6 +130,7 @@ public class BisqApp extends Application {
 
         CoreSetup.setupLog(bisqEnvironment);
         CoreSetup.setBouncyCastleProvider();
+        CoreSetup.setupCapabilities();
         CoreSetup.setupErrorHandler(this::showErrorPopup);
 
         final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
@@ -138,9 +138,6 @@ public class BisqApp extends Application {
         Res.setBaseCurrencyCode(currencyCode);
         Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
         CurrencyUtil.setBaseCurrencyCode(currencyCode);
-
-        // Setup Capabilities
-        CoreNetworkCapabilities.setSupportedCapabilities();
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
