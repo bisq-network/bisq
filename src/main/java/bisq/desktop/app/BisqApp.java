@@ -200,42 +200,7 @@ public class BisqApp extends Application {
                 event.consume();
                 stop();
             });
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
-                if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
-                        Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                    stop();
-                } else {
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                        showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                        showSendAlertMessagePopup();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                        showFilterPopup();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
-                        WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
-                        if (walletsManager.areWalletsAvailable())
-                            new ShowWalletDataWindow(walletsManager).show();
-                        else
-                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
-                        if (injector.getInstance(BtcWalletService.class).isWalletReady())
-                            injector.getInstance(ManualPayoutTxWindow.class).show();
-                        else
-                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (DevEnv.isDevMode()) {
-                        // dev ode only
-                        if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                            // BSQ empty wallet not public yet
-                            showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
-                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
-                            showFPSWindow();
-                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
-                            showDebugWindow();
-                        }
-                    }
-                }
-            });
+            addSceneKeyEventHandler();
 
             // configure the primary stage
             primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
@@ -258,21 +223,52 @@ public class BisqApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-            if (!Utilities.isCorrectOSArchitecture()) {
-                String osArchitecture = Utilities.getOSArchitecture();
-                // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
-                // Needs at least more testing on different machines...
-                new Popup<>().warning(Res.get("popup.warning.wrongVersion",
-                        osArchitecture,
-                        Utilities.getJVMArchitecture(),
-                        osArchitecture))
-                        .show();
-            }
+            checkForCorrectOSArchitecture();
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
             showErrorPopup(throwable, false);
         }
+    }
+
+
+    private void addSceneKeyEventHandler() {
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+            Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
+            if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                stop();
+            } else {
+                if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
+                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
+                    showSendAlertMessagePopup();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
+                    showFilterPopup();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
+                    WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+                    if (walletsManager.areWalletsAvailable())
+                        new ShowWalletDataWindow(walletsManager).show();
+                    else
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
+                    if (injector.getInstance(BtcWalletService.class).isWalletReady())
+                        injector.getInstance(ManualPayoutTxWindow.class).show();
+                    else
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                } else if (DevEnv.isDevMode()) {
+                    // dev ode only
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
+                        // BSQ empty wallet not public yet
+                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
+                        showFPSWindow();
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
+                        showDebugWindow();
+                    }
+                }
+            }
+        });
     }
 
     private void showSendAlertMessagePopup() {
@@ -375,6 +371,19 @@ public class BisqApp extends Application {
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
+    }
+
+    private void checkForCorrectOSArchitecture() {
+        if (!Utilities.isCorrectOSArchitecture()) {
+            String osArchitecture = Utilities.getOSArchitecture();
+            // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
+            // Needs at least more testing on different machines...
+            new Popup<>().warning(Res.get("popup.warning.wrongVersion",
+                    osArchitecture,
+                    Utilities.getJVMArchitecture(),
+                    osArchitecture))
+                    .show();
+        }
     }
 
     @SuppressWarnings("CodeBlock2Expr")
