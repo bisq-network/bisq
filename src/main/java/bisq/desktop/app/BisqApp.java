@@ -115,7 +115,6 @@ public class BisqApp extends Application {
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
-    private MainView mainView;
     private boolean shutDownRequested;
 
     // NOTE: This method is not called on the JavaFX Application Thread.
@@ -125,7 +124,6 @@ public class BisqApp extends Application {
         UserThread.setTimerClass(UITimer.class);
 
         shutDownHandler = this::stop;
-
         CommonSetup.setup(this::showErrorPopup);
         CoreSetup.setup(bisqEnvironment);
     }
@@ -145,7 +143,9 @@ public class BisqApp extends Application {
 
             DevEnv.setup(injector);
 
-            setupStage();
+            MainView mainView = loadMainView(injector);
+            scene = createAndConfigScene(mainView, injector);
+            setupStage(scene);
 
             setDatabaseCorruptionHandler(mainView);
 
@@ -158,19 +158,17 @@ public class BisqApp extends Application {
         }
     }
 
-    private void setupStage() {
-        // load the main view and create the main scene
-        CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-        mainView = (MainView) viewLoader.load(MainView.class);
-
-
-        scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
-
+    private Scene createAndConfigScene(MainView mainView, Injector injector) {
+        Scene scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
         scene.getStylesheets().setAll(
                 "/bisq/desktop/bisq.css",
                 "/bisq/desktop/images.css",
                 "/bisq/desktop/CandleStickChart.css");
+        addSceneKeyEventHandler(scene, injector);
+        return scene;
+    }
 
+    private void setupStage(Scene scene) {
         // configure the system tray
         SystemTray.create(primaryStage, shutDownHandler);
 
@@ -178,7 +176,7 @@ public class BisqApp extends Application {
             event.consume();
             stop();
         });
-        addSceneKeyEventHandler();
+
 
         // configure the primary stage
         primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
@@ -202,6 +200,11 @@ public class BisqApp extends Application {
         primaryStage.show();
     }
 
+    private MainView loadMainView(Injector injector) {
+        CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        return (MainView) viewLoader.load(MainView.class);
+    }
+
     private void setDatabaseCorruptionHandler(MainView mainView) {
         Storage.setDatabaseCorruptionHandler((String fileName) -> {
             corruptedDatabaseFiles.add(fileName);
@@ -212,7 +215,7 @@ public class BisqApp extends Application {
     }
 
 
-    private void addSceneKeyEventHandler() {
+    private void addSceneKeyEventHandler(Scene scene, Injector injector) {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
             Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
             if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
@@ -220,11 +223,11 @@ public class BisqApp extends Application {
                 stop();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
+                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class), injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                    showSendAlertMessagePopup();
+                    showSendAlertMessagePopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                    showFilterPopup();
+                    showFilterPopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
                     if (walletsManager.areWalletsAvailable())
@@ -240,18 +243,18 @@ public class BisqApp extends Application {
                     // dev ode only
                     if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
                         // BSQ empty wallet not public yet
-                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
+                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class), injector);
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
-                        showFPSWindow();
+                        showFPSWindow(scene);
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
-                        showDebugWindow();
+                        showDebugWindow(scene, injector);
                     }
                 }
             }
         });
     }
 
-    private void showSendAlertMessagePopup() {
+    private void showSendAlertMessagePopup(Injector injector) {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
         new SendAlertMessageWindow(useDevPrivilegeKeys)
@@ -260,7 +263,7 @@ public class BisqApp extends Application {
                 .show();
     }
 
-    private void showFilterPopup() {
+    private void showFilterPopup(Injector injector) {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
         new FilterWindow(filterManager, useDevPrivilegeKeys)
@@ -269,7 +272,7 @@ public class BisqApp extends Application {
                 .show();
     }
 
-    private void showEmptyWalletPopup(WalletService walletService) {
+    private void showEmptyWalletPopup(WalletService walletService, Injector injector) {
         EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
         emptyWalletWindow.setWalletService(walletService);
         emptyWalletWindow.show();
@@ -312,7 +315,7 @@ public class BisqApp extends Application {
     }
 
     // Used for debugging trade process
-    private void showDebugWindow() {
+    private void showDebugWindow(Scene scene, Injector injector) {
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
         View debugView = viewLoader.load(DebugView.class);
         Parent parent = (Parent) debugView.getRoot();
@@ -327,7 +330,7 @@ public class BisqApp extends Application {
         stage.show();
     }
 
-    private void showFPSWindow() {
+    private void showFPSWindow(Scene scene) {
         Label label = new AutoTooltipLabel();
         EventStreams.animationTicks()
                 .latestN(100)
