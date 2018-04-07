@@ -73,8 +73,7 @@ public class CreateOfferViewModelTest {
     public void setUp() {
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
         GlobalSettings.setDefaultTradeCurrency(btc);
-        Res.setBaseCurrencyCode(btc.getCode());
-        Res.setBaseCurrencyName(btc.getName());
+        Res.setup();
 
         final BSFormatter bsFormatter = new BSFormatter();
         final BtcValidator btcValidator = new BtcValidator(bsFormatter);
