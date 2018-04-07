@@ -58,6 +58,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
@@ -125,7 +126,8 @@ public class BisqApp extends Application {
 
         shutDownHandler = this::stop;
 
-        CoreSetup.setup(bisqEnvironment, this::showErrorPopup);
+        CommonSetup.setup(this::showErrorPopup);
+        CoreSetup.setup(bisqEnvironment);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
