@@ -32,12 +32,12 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.param.DaoParamService;
+import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Vote;
 import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.voteresult.BooleanVote;
-import bisq.core.dao.vote.voteresult.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
