@@ -27,11 +27,11 @@ import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Vote;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.result.BooleanVoteResult;
-import bisq.core.dao.vote.result.VoteResult;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -63,7 +63,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
-    private final ChangeListener<VoteResult> voteResultChangeListener;
+    private final ChangeListener<Vote> voteResultChangeListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
     @Getter
@@ -111,7 +111,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         readableBsqBlockChain.addListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
-            applyState(newValue, proposal.getVoteResult());
+            applyState(newValue, proposal.getVote());
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
@@ -122,16 +122,17 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(PeriodService.Phase newValue, VoteResult voteResult) {
+    public void applyState(PeriodService.Phase newValue, Vote vote) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId());
+        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(),
+                readableBsqBlockChain.getChainHeadHeight());
         switch (newValue) {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalService.isMine(proposal)) {
+                if (proposalService.isMine(proposal.getProposalPayload())) {
                     actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));
@@ -150,10 +151,10 @@ public class ProposalListItem implements BsqBlockChain.Listener {
                 if (!isTxInPastCycle) {
                     actionNode = actionButtonIconView;
                     actionButton.setVisible(false);
-                    if (proposal.getVoteResult() != null) {
+                    if (proposal.getVote() != null) {
                         actionButtonIconView.setVisible(true);
-                        if (voteResult instanceof BooleanVoteResult) {
-                            if (((BooleanVoteResult) voteResult).isAccepted()) {
+                        if (vote instanceof BooleanVote) {
+                            if (((BooleanVote) vote).isAccepted()) {
                                 actionButtonIconView.setId("accepted");
                             } else {
                                 actionButtonIconView.setId("rejected");
@@ -162,7 +163,6 @@ public class ProposalListItem implements BsqBlockChain.Listener {
                             //TODO
                         }
                     } else {
-                        log.error("actionButtonIconView.setVisible(false);");
                         actionButtonIconView.setVisible(false);
                     }
                 }

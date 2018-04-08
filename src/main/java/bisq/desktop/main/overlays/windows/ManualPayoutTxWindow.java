@@ -25,6 +25,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.TxBroadcastException;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsSetup;
 
 import bisq.network.p2p.P2PService;
@@ -37,15 +39,11 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -154,7 +152,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
 
         actionButtonText("Sign and publish transaction");
 
-        FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
+        TxBroadcaster.Callback callback = new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(@Nullable Transaction result) {
                 log.error("onSuccess");
@@ -167,10 +165,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             }
 
             @Override
-            public void onFailure(@NotNull Throwable t) {
-                log.error(t.toString());
-                log.error("onFailure");
-                UserThread.execute(() -> new Popup<>().warning(t.toString()).show());
+            public void onFailure(TxBroadcastException exception) {
+                log.error(exception.toString());
+                UserThread.execute(() -> new Popup<>().warning(exception.toString()).show());
             }
         };
         onAction(() -> {

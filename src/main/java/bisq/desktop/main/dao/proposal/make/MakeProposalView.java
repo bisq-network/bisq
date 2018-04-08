@@ -44,7 +44,6 @@ import bisq.core.dao.vote.proposal.generic.GenericProposalPayload;
 import bisq.core.dao.vote.proposal.generic.GenericProposalService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -175,25 +174,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             Coin miningFee = Objects.requireNonNull(tx).getFee();
             int txSize = tx.bitcoinSerialize().length;
 
-            final Coin fee = ProposalConsensus.getFee(daoParamService, readableBsqBlockChain);
-            new Popup<>().headLine(Res.get("dao.proposal.create.confirm"))
-                    .confirmation(Res.get("dao.proposal.create.confirm.info",
-                            bsqFormatter.formatCoinWithCode(fee),
-                            btcFormatter.formatCoinWithCode(miningFee),
-                            CoinUtil.getFeePerByte(miningFee, txSize),
-                            txSize / 1000d))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        proposalService.publishProposal(proposal,
-                                () -> {
-                                    proposalDisplay.clearForm();
-                                    proposalTypeComboBox.getSelectionModel().clearSelection();
-                                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                },
-                                errorMessage -> new Popup<>().warning(errorMessage).show());
-                    })
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .show();
+            final Coin fee = ProposalConsensus.getFee(daoParamService, readableBsqBlockChain.getChainHeadHeight());
+
+            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                    Res.get("dao.proposal"), () -> publishProposal(proposal));
+
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
             new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
@@ -212,6 +197,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
         }
+    }
+
+    private void publishProposal(Proposal proposal) {
+        proposalService.publishProposal(proposal,
+                () -> {
+                    proposalDisplay.clearForm();
+                    proposalTypeComboBox.getSelectionModel().clearSelection();
+                    new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                },
+                errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
     private Proposal createProposal(ProposalType type)
