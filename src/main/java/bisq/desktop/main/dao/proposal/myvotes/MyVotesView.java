@@ -36,8 +36,8 @@ import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.voteresult.BooleanVoteResult;
-import bisq.core.dao.vote.voteresult.VoteResult;
+import bisq.core.dao.vote.voteresult.BooleanVote;
+import bisq.core.dao.vote.voteresult.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -375,9 +375,9 @@ public class MyVotesView extends BaseProposalView {
 
                         if (item != null && !empty) {
                             actionButtonIconView = new ImageView();
-                            VoteResult voteResult = item.getProposal().getVoteResult();
-                            if (voteResult instanceof BooleanVoteResult) {
-                                if (((BooleanVoteResult) voteResult).isAccepted()) {
+                            Vote vote = item.getProposal().getVote();
+                            if (vote instanceof BooleanVote) {
+                                if (((BooleanVote) vote).isAccepted()) {
                                     actionButtonIconView.setId("accepted");
                                 } else {
                                     actionButtonIconView.setId("rejected");

@@ -30,8 +30,8 @@ import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.voteresult.BooleanVoteResult;
-import bisq.core.dao.vote.voteresult.VoteResult;
+import bisq.core.dao.vote.voteresult.BooleanVote;
+import bisq.core.dao.vote.voteresult.Vote;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -63,7 +63,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     private final ReadableBsqBlockChain readableBsqBlockChain;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
-    private final ChangeListener<VoteResult> voteResultChangeListener;
+    private final ChangeListener<Vote> voteResultChangeListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
     @Getter
@@ -111,7 +111,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         readableBsqBlockChain.addListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
-            applyState(newValue, proposal.getVoteResult());
+            applyState(newValue, proposal.getVote());
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
@@ -122,7 +122,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(PeriodService.Phase newValue, VoteResult voteResult) {
+    public void applyState(PeriodService.Phase newValue, Vote vote) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
@@ -151,10 +151,10 @@ public class ProposalListItem implements BsqBlockChain.Listener {
                 if (!isTxInPastCycle) {
                     actionNode = actionButtonIconView;
                     actionButton.setVisible(false);
-                    if (proposal.getVoteResult() != null) {
+                    if (proposal.getVote() != null) {
                         actionButtonIconView.setVisible(true);
-                        if (voteResult instanceof BooleanVoteResult) {
-                            if (((BooleanVoteResult) voteResult).isAccepted()) {
+                        if (vote instanceof BooleanVote) {
+                            if (((BooleanVote) vote).isAccepted()) {
                                 actionButtonIconView.setId("accepted");
                             } else {
                                 actionButtonIconView.setId("rejected");
