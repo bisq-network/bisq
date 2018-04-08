@@ -66,8 +66,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final BsqFormatter bsqFormatter;
 
     private int gridRow = 0;
-    private TextField issuedAmountTextField, availableAmountTextField, burntAmountTextField, allTxTextField,
-            burntTxTextField, spentTxTextField,
+    private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, availableAmountTextField, burntAmountTextField, allTxTextField,
+            burntTxTextField/*, spentTxTextField*/,
             utxoTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
     private HyperlinkWithIcon hyperlinkWithIcon;
@@ -94,7 +94,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 12, Res.get("dao.wallet.dashboard.statistics"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 11, Res.get("dao.wallet.dashboard.statistics"), Layout.GROUP_DISTANCE);
 
         addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
                 String.valueOf(readableBsqBlockChain.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -109,13 +109,14 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));
         root.getChildren().add(hyperlinkWithIcon);
 
-        issuedAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.issuedAmount")).second;
+        genesisIssueAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount")).second;
+        compRequestIssueAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
         availableAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
         burntAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
 
         allTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.allTx")).second;
         utxoTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
-        spentTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.spentTxo")).second;
+        // spentTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.spentTxo")).second;
         burntTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntTx")).second;
 
         priceTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.price")).second;
@@ -157,14 +158,20 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
 
     private void updateWithBsqBlockChainData() {
-        issuedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(readableBsqBlockChain.getIssuedAmountAtGenesis()));
+        final Coin issuedAmountFromGenesis = readableBsqBlockChain.getIssuedAmountAtGenesis();
+        genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
+
+        final Coin issuedAmountFromCompRequests = readableBsqBlockChain.getIssuedAmountFromCompRequests();
+        compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
+
         final Coin burntFee = readableBsqBlockChain.getTotalBurntFee();
-        final Coin availableAmount = readableBsqBlockChain.getIssuedAmountAtGenesis().subtract(burntFee);
+        final Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
+
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
         allTxTextField.setText(String.valueOf(readableBsqBlockChain.getTransactions().size()));
         utxoTextField.setText(String.valueOf(readableBsqBlockChain.getUnspentTxOutputs().size()));
-        spentTxTextField.setText(String.valueOf(readableBsqBlockChain.getSpentTxOutputs().size()));
+        //spentTxTextField.setText(String.valueOf(readableBsqBlockChain.getSpentTxOutputs().size()));
         burntTxTextField.setText(String.valueOf(readableBsqBlockChain.getFeeTransactions().size()));
     }
 
