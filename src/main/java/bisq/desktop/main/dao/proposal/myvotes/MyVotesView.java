@@ -36,8 +36,8 @@ import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.ProposalList;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.result.BooleanVoteResult;
-import bisq.core.dao.vote.result.VoteResult;
+import bisq.core.dao.vote.voteresult.BooleanVoteResult;
+import bisq.core.dao.vote.voteresult.VoteResult;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 

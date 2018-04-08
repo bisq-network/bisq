@@ -40,7 +40,7 @@ import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.vote.blindvote.BlindVoteService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.result.BooleanVoteResult;
+import bisq.core.dao.vote.voteresult.BooleanVoteResult;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
