@@ -126,7 +126,8 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId());
+        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(),
+                readableBsqBlockChain.getChainHeadHeight());
         switch (newValue) {
             case UNDEFINED:
                 break;

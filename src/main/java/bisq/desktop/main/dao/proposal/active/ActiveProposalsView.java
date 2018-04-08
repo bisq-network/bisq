@@ -262,7 +262,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         }
         if (selectedProposalListItem != null &&
                 proposalDisplay != null &&
-                !periodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId())) {
+                !periodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId(),
+                        readableBsqBlockChain.getChainHeadHeight())) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:
