@@ -17,28 +17,17 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 
-import bisq.core.locale.BankUtil;
-import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.util.Tuple2;
-
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 public class SameBankForm extends BankForm {
     private static final Logger log = LoggerFactory.getLogger(SameBankForm.class);
