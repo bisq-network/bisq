@@ -17,27 +17,58 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
-import bisq.common.util.Tuple3;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Res;
-import bisq.core.payment.payload.*;
-import bisq.core.trade.Trade;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.paymentmethods.*;
+import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.CashAppForm;
+import bisq.desktop.components.paymentmethods.CashDepositForm;
+import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
+import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
+import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
+import bisq.desktop.components.paymentmethods.InteracETransferForm;
+import bisq.desktop.components.paymentmethods.MoneyBeamForm;
+import bisq.desktop.components.paymentmethods.NationalBankForm;
+import bisq.desktop.components.paymentmethods.OKPayForm;
+import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
+import bisq.desktop.components.paymentmethods.PopmoneyForm;
+import bisq.desktop.components.paymentmethods.RevolutForm;
+import bisq.desktop.components.paymentmethods.SameBankForm;
+import bisq.desktop.components.paymentmethods.SepaForm;
+import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
+import bisq.desktop.components.paymentmethods.UpholdForm;
+import bisq.desktop.components.paymentmethods.VenmoForm;
+import bisq.desktop.components.paymentmethods.WechatPayForm;
+import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
+
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
+import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.trade.Trade;
+import bisq.core.user.DontShowAgainLookup;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple3;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
