@@ -17,6 +17,7 @@
 
 package bisq.desktop.app;
 
+import bisq.desktop.PrimaryStageWrapper;
 import bisq.desktop.SystemTray;
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
@@ -60,7 +61,6 @@ import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -102,13 +102,21 @@ public class BisqApp extends Application {
     private static BisqEnvironment bisqEnvironment;
     public static Runnable shutDownHandler;
     private static Stage primaryStage;
+    private static Runnable onShutdownHook;
 
     protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
-    private BisqAppModule bisqAppModule;
-    private Injector injector;
+    protected static void setInjector(Injector injector) {
+        BisqApp.injector = injector;
+    }
+
+    protected static void setOnShutdownHook(Runnable hook) {
+        BisqApp.onShutdownHook = hook;
+    }
+
+    private static Injector injector;
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
@@ -131,8 +139,7 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
-            injector = Guice.createInjector(bisqAppModule);
+            injector.getInstance(PrimaryStageWrapper.class).setStage(stage);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
             final DesktopAppSetup desktopAppSetup = injector.getInstance(DesktopAppSetup.class);
@@ -398,7 +405,7 @@ public class BisqApp extends Application {
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            bisqAppModule.close(injector);
+                            onShutdownHook.run();
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });

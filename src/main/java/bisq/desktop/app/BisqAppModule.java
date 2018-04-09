@@ -56,19 +56,14 @@ import org.springframework.core.env.Environment;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import javafx.stage.Stage;
-
 import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
 public class BisqAppModule extends AppModule {
 
-    private final Stage primaryStage;
-
-    public BisqAppModule(Environment environment, Stage primaryStage) {
+    public BisqAppModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -153,6 +148,6 @@ public class BisqAppModule extends AppModule {
     }
 
     private DesktopModule guiModule() {
-        return new DesktopModule(environment, primaryStage);
+        return new DesktopModule(environment);
     }
 }

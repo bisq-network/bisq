@@ -27,6 +27,9 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
@@ -70,7 +73,12 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        BisqApp.setEnvironment(getBisqEnvironment(options));
+        final BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
+        BisqApp.setEnvironment(bisqEnvironment);
+        final BisqAppModule bisqAppModule = new BisqAppModule(bisqEnvironment);
+        final Injector injector = Guice.createInjector(bisqAppModule);
+        BisqApp.setInjector(injector);
+        BisqApp.setOnShutdownHook(() -> bisqAppModule.close(injector));
         javafx.application.Application.launch(BisqApp.class);
     }
 }
