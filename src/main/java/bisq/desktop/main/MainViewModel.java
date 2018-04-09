@@ -292,9 +292,6 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
-        //noinspection ConstantConditions,ConstantConditions
-        bisqEnvironment.saveBaseCryptoNetwork(BisqEnvironment.getBaseCurrencyNetwork());
-
         // We do the delete of the spv file at startup before BitcoinJ is initialized to avoid issues with locked files under Windows.
         if (preferences.isResyncSpvRequested()) {
             try {
