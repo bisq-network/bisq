@@ -17,93 +17,39 @@
 
 package bisq.desktop.main.account.content.fiataccounts;
 
+import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.Res;
+import bisq.core.payment.*;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.util.validation.InputValidator;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.paymentmethods.AliPayForm;
-import bisq.desktop.components.paymentmethods.CashAppForm;
-import bisq.desktop.components.paymentmethods.CashDepositForm;
-import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
-import bisq.desktop.components.paymentmethods.ClearXchangeForm;
-import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
-import bisq.desktop.components.paymentmethods.InteracETransferForm;
-import bisq.desktop.components.paymentmethods.MoneyBeamForm;
-import bisq.desktop.components.paymentmethods.NationalBankForm;
-import bisq.desktop.components.paymentmethods.OKPayForm;
-import bisq.desktop.components.paymentmethods.PaymentMethodForm;
-import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
-import bisq.desktop.components.paymentmethods.PopmoneyForm;
-import bisq.desktop.components.paymentmethods.RevolutForm;
-import bisq.desktop.components.paymentmethods.SameBankForm;
-import bisq.desktop.components.paymentmethods.SepaForm;
-import bisq.desktop.components.paymentmethods.SepaInstantForm;
-import bisq.desktop.components.paymentmethods.SpecificBankForm;
-import bisq.desktop.components.paymentmethods.SwishForm;
-import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
-import bisq.desktop.components.paymentmethods.UpholdForm;
-import bisq.desktop.components.paymentmethods.VenmoForm;
-import bisq.desktop.components.paymentmethods.WesternUnionForm;
+import bisq.desktop.components.paymentmethods.*;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.AliPayValidator;
-import bisq.desktop.util.validation.BICValidator;
-import bisq.desktop.util.validation.CashAppValidator;
-import bisq.desktop.util.validation.ChaseQuickPayValidator;
-import bisq.desktop.util.validation.ClearXchangeValidator;
-import bisq.desktop.util.validation.IBANValidator;
-import bisq.desktop.util.validation.InteracETransferValidator;
-import bisq.desktop.util.validation.MoneyBeamValidator;
-import bisq.desktop.util.validation.OKPayValidator;
-import bisq.desktop.util.validation.PerfectMoneyValidator;
-import bisq.desktop.util.validation.PopmoneyValidator;
-import bisq.desktop.util.validation.RevolutValidator;
-import bisq.desktop.util.validation.SwishValidator;
-import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
-import bisq.desktop.util.validation.UpholdValidator;
-import bisq.desktop.util.validation.VenmoValidator;
-
-import bisq.core.app.BisqEnvironment;
-import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.ClearXchangeAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountFactory;
-import bisq.core.payment.WesternUnionAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.util.validation.InputValidator;
-
-import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-
-import org.bitcoinj.core.Coin;
-
-import javax.inject.Inject;
-
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import bisq.desktop.util.validation.*;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.geometry.VPos;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
-
-import javafx.geometry.VPos;
-
-import javafx.beans.value.ChangeListener;
-
-import javafx.collections.FXCollections;
-
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -133,6 +79,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
+    private final WechatPayValidator wechatPayValidator;
 
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
@@ -162,6 +109,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
+                            WechatPayValidator wechatPayValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
@@ -183,6 +131,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.chaseQuickPayValidator = chaseQuickPayValidator;
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
+        this.wechatPayValidator = wechatPayValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
@@ -449,6 +398,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.WECHAT_PAY_ID:
+                return new WechatPayForm(paymentAccount, accountAgeWitnessService, wechatPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
                 return new SwishForm(paymentAccount, accountAgeWitnessService, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:
