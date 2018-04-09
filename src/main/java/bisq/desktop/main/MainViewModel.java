@@ -134,6 +134,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -231,6 +232,7 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
+    private CompletableFuture<Void> bootstrapCompletableFuture = new CompletableFuture<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -319,14 +321,14 @@ public class MainViewModel implements ViewModel {
 
     private void readMapsFromResources() {
         desktopAppSetup.readFromResources()
-                .thenRun(() -> UserThread.execute(this::startBasicServices));
+                .thenRun(() -> UserThread.execute(this::setupBasicServicesListeners));
 
         // TODO can be removed in jdk 9
         checkCryptoSetup();
     }
 
-    private void startBasicServices() {
-        log.info("startBasicServices");
+    private void setupBasicServicesListeners() {
+        log.info("setupBasicServicesListeners");
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             // TODO that seems to be called too often if Tor takes longer to start up...
@@ -367,6 +369,7 @@ public class MainViewModel implements ViewModel {
                     torNetworkSettingsWindow.hide();
             }
         });
+        bootstrapCompletableFuture.complete(null);
     }
 
     private void showTorNetworkSettingsWindow() {
@@ -1301,5 +1304,9 @@ public class MainViewModel implements ViewModel {
         else
             postFix = "";
         return Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + postFix;
+    }
+
+    public CompletableFuture<Void> onBootstrap() {
+        return bootstrapCompletableFuture;
     }
 }
