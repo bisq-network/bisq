@@ -319,7 +319,7 @@ public class MainViewModel implements ViewModel {
 
     private void readMapsFromResources() {
         desktopAppSetup.readFromResources()
-                .thenRun(() -> UserThread.execute(() -> startBasicServices()));
+                .thenRun(() -> UserThread.execute(this::startBasicServices));
 
         // TODO can be removed in jdk 9
         checkCryptoSetup();
@@ -343,6 +343,7 @@ public class MainViewModel implements ViewModel {
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
+        desktopAppSetup.initBasicServices();
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
