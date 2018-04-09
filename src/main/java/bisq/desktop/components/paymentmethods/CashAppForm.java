@@ -50,10 +50,10 @@ public class CashAppForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public CashAppForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, CashAppValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public CashAppForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, CashAppValidator cashAppValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (CashAppAccount) paymentAccount;
-        this.validator = aliPayValidator;
+        this.validator = cashAppValidator;
     }
 
     @Override

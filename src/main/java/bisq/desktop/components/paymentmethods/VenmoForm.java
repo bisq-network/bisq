@@ -52,10 +52,10 @@ public class VenmoForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public VenmoForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, VenmoValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public VenmoForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, VenmoValidator venmoValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (VenmoAccount) paymentAccount;
-        this.validator = aliPayValidator;
+        this.validator = venmoValidator;
     }
 
     @Override

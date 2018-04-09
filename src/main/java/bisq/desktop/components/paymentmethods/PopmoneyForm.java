@@ -52,10 +52,10 @@ public class PopmoneyForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public PopmoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PopmoneyValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PopmoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PopmoneyValidator popmoneyValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (PopmoneyAccount) paymentAccount;
-        this.validator = aliPayValidator;
+        this.validator = popmoneyValidator;
     }
 
     @Override
