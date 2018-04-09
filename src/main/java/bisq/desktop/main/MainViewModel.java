@@ -17,6 +17,7 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.app.DesktopAppSetup;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
@@ -36,7 +37,6 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.app.SetupUtils;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
@@ -147,6 +147,7 @@ import javax.annotation.Nullable;
 public class MainViewModel implements ViewModel {
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
 
+    private final DesktopAppSetup desktopAppSetup;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
@@ -238,7 +239,7 @@ public class MainViewModel implements ViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public MainViewModel(WalletsManager walletsManager, WalletsSetup walletsSetup,
+    public MainViewModel(DesktopAppSetup desktopAppSetup,WalletsManager walletsManager, WalletsSetup walletsSetup,
                          BtcWalletService btcWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
@@ -249,6 +250,7 @@ public class MainViewModel implements ViewModel {
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
+        this.desktopAppSetup = desktopAppSetup;
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -316,10 +318,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private void readMapsFromResources() {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                startBasicServices();
-        });
+        desktopAppSetup.readFromResources()
+                .thenRun(() -> UserThread.execute(() -> startBasicServices()));
 
         // TODO can be removed in jdk 9
         checkCryptoSetup();
@@ -430,7 +430,7 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        p2PService.start(new P2PServiceListener() {
+        p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onTorNodeReady");
@@ -441,6 +441,7 @@ public class MainViewModel implements ViewModel {
                     initWalletService();
 
                 // We want to get early connected to the price relay so we call it already now
+//                REFACTOR: move priceFeedService init so separate listener out of MainViewModel
                 priceFeedService.setCurrencyCodeOnInit();
                 priceFeedService.initialRequestPriceFeed();
             }
@@ -574,8 +575,8 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
 
-        walletsSetup.initialize(null,
-                () -> {
+        walletsSetup.onInitialized()
+                .thenRun(() -> {
                     log.debug("walletsSetup.onInitialized");
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
@@ -602,8 +603,11 @@ public class MainViewModel implements ViewModel {
                             walletInitialized.set(true);
                         }
                     }
-                },
-                walletServiceException::set);
+                })
+                .exceptionally(e -> {
+                    walletServiceException.set(e);
+                    return null;
+                });
     }
 
     private void onBasicServicesInitialized() {
@@ -614,7 +618,6 @@ public class MainViewModel implements ViewModel {
         PaymentMethod.onAllServicesInitialized();
 
         // disputeManager
-        disputeManager.onAllServicesInitialized();
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
             change.next();
             onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
@@ -622,7 +625,6 @@ public class MainViewModel implements ViewModel {
         onDisputesChangeListener(disputeManager.getDisputesAsObservableList(), null);
 
         // tradeManager
-        tradeManager.onAllServicesInitialized();
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
@@ -646,28 +648,18 @@ public class MainViewModel implements ViewModel {
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
-        openOfferManager.onAllServicesInitialized();
         removeOffersWithoutAccountAgeWitness();
 
-        arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue, false));
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
 
-        p2PService.onAllServicesInitialized();
 
-        feeService.onAllServicesInitialized();
         GUIUtil.setFeeService(feeService);
 
+//        REFACTOR why is this different than other services? they don't need to show any errors
         daoSetup.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
-        tradeStatisticsManager.onAllServicesInitialized();
-
-        accountAgeWitnessService.onAllServicesInitialized();
-
-        priceFeedService.setCurrencyCodeOnInit();
-
-        filterManager.onAllServicesInitialized();
         filterManager.addListener(filter -> {
             if (filter != null) {
                 if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())

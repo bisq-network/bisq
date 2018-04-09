@@ -32,7 +32,6 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
-import bisq.desktop.setup.DesktopPersistedDataHost;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
@@ -48,7 +47,6 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
 
@@ -57,7 +55,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
@@ -138,8 +135,8 @@ public class BisqApp extends Application {
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
-            PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+            final DesktopAppSetup desktopAppSetup = injector.getInstance(DesktopAppSetup.class);
+            desktopAppSetup.initPersistedDataHosts().get();
 
             DevEnv.setup(injector);
 
@@ -150,6 +147,8 @@ public class BisqApp extends Application {
             setDatabaseCorruptionHandler(mainView);
 
             checkForCorrectOSArchitecture();
+
+            desktopAppSetup.initBasicServices();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
