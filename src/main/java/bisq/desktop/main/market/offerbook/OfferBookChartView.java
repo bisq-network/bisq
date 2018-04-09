@@ -24,7 +24,6 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
-import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.components.PeerInfoIconSmall;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
