@@ -2,64 +2,64 @@ package io.bisq.api.app;
 
 import com.google.common.net.InetAddresses;
 import com.google.inject.Inject;
-import io.bisq.common.Clock;
-import io.bisq.common.GlobalSettings;
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.SealedAndSigned;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.locale.Res;
-import io.bisq.common.locale.TradeCurrency;
-import io.bisq.core.alert.Alert;
-import io.bisq.core.alert.AlertManager;
-import io.bisq.core.alert.PrivateNotificationManager;
-import io.bisq.core.alert.PrivateNotificationPayload;
-import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.app.SetupUtils;
-import io.bisq.core.arbitration.ArbitratorManager;
-import io.bisq.core.arbitration.Dispute;
-import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.btc.AddressEntry;
-import io.bisq.core.btc.listeners.BalanceListener;
-import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.WalletsManager;
-import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.dao.DaoManager;
-import io.bisq.core.filter.FilterManager;
-import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.payment.AccountAgeWitnessService;
-import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.PerfectMoneyAccount;
-import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.provider.price.MarketPrice;
-import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.trade.failed.FailedTradesManager;
-import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
-import io.bisq.gui.main.PriceFeedComboBoxItem;
-import io.bisq.gui.main.overlays.notifications.NotificationCenter;
-import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.GUIUtil;
-import io.bisq.network.crypto.DecryptedDataTuple;
-import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.p2p.BootstrapListener;
-import io.bisq.network.p2p.P2PService;
-import io.bisq.network.p2p.P2PServiceListener;
-import io.bisq.network.p2p.network.CloseConnectionReason;
-import io.bisq.network.p2p.network.Connection;
-import io.bisq.network.p2p.network.ConnectionListener;
-import io.bisq.network.p2p.peers.keepalive.messages.Ping;
+import bisq.common.Clock;
+import bisq.core.locale.GlobalSettings;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.SealedAndSigned;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.alert.Alert;
+import bisq.core.alert.AlertManager;
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.alert.PrivateNotificationPayload;
+import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.app.SetupUtils;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.arbitration.Dispute;
+import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.DaoSetup;
+import bisq.core.filter.FilterManager;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.PerfectMoneyAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+import bisq.desktop.main.PriceFeedComboBoxItem;
+import bisq.desktop.main.overlays.notifications.NotificationCenter;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.GUIUtil;
+import bisq.network.crypto.DecryptedDataTuple;
+import bisq.network.crypto.EncryptionService;
+import bisq.network.p2p.BootstrapListener;
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.network.CloseConnectionReason;
+import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.peers.keepalive.messages.Ping;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -190,7 +190,7 @@ public class MainViewModelHeadless {
                                  User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                                  FilterManager filterManager, TradeStatisticsManager tradeStatisticsManager,
                                  NotificationCenter notificationCenter, Clock clock, FeeService feeService,
-                                 DaoManager daoManager, EncryptionService encryptionService,
+                                 DaoSetup daoManager, EncryptionService encryptionService,
                                  KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                                  ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                                  BSFormatter formatter) {
@@ -234,7 +234,7 @@ public class MainViewModelHeadless {
 
         //noinspection ConstantConditions,ConstantConditions,PointlessBooleanExpression
 
-        if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
+        if (!preferences.isTacAccepted() && !DevEnv.isDevMode()) {
             log.error("TAC was not accepted, putting to true but should be fixed"); // TODO add TAC acceptance to api
             preferences.setTacAccepted(true);
             checkIfLocalHostNodeIsRunning();
@@ -608,7 +608,7 @@ public class MainViewModelHeadless {
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
-        if (DevEnv.DEV_MODE) {
+        if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
             setupDevDummyPaymentAccounts();
         }

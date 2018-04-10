@@ -14,8 +14,9 @@ services:
       - SEED_NODES=seed:8000
       - BTC_NODES=bitcoin:18444
       - BASE_CURRENCY_NETWORK=BTC_REGTEST
+      - BITCOIN_REGTEST_HOST=NONE
   seed:
-    image: bisq-seednode
+    image: bisq/seednode
     volumes:
       - m2:/root/.m2
     environment:
@@ -24,6 +25,7 @@ services:
       - BTC_NODES=bitcoin:18444
       - USE_LOCALHOST_FOR_P2P=true
       - BASE_CURRENCY_NETWORK=BTC_REGTEST
+      - BITCOIN_REGTEST_HOST=NONE
   bitcoin:
     image: kylemanna/bitcoind:latest
     command: -logips -rpcallowip=::/0 -regtest -printtoconsole

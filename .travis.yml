@@ -25,4 +25,9 @@ jobs:
     - stage: integration
       script:
         docker-compose build;
+        mvn dependency:resolve;
+        docker volume create m2;
+        docker container create -v m2:/m2 --name m2helperContainer busybox;
+        docker cp ~/.m2/repository m2helperContainer:/m2/;
+        docker rm m2helperContainer;
         mvn verify -P integration

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.RevolutAccount;
-import io.bisq.core.payment.payload.RevolutAccountPayload;
+import bisq.core.payment.RevolutAccount;
+import bisq.core.payment.payload.RevolutAccountPayload;
 
 public class RevolutPaymentAccountConverter extends AbstractPaymentAccountConverter<RevolutAccount, RevolutAccountPayload, RevolutPaymentAccount> {
 

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.SwishAccount;
-import io.bisq.core.payment.payload.SwishAccountPayload;
+import bisq.core.payment.SwishAccount;
+import bisq.core.payment.payload.SwishAccountPayload;
 
 public class SwishPaymentAccountConverter extends AbstractPaymentAccountConverter<SwishAccount, SwishAccountPayload, SwishPaymentAccount> {
 

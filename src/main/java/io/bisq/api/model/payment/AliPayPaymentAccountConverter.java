@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.AliPayAccount;
-import io.bisq.core.payment.payload.AliPayAccountPayload;
+import bisq.core.payment.AliPayAccount;
+import bisq.core.payment.payload.AliPayAccountPayload;
 
 public class AliPayPaymentAccountConverter extends AbstractPaymentAccountConverter<AliPayAccount, AliPayAccountPayload, AliPayPaymentAccount> {
 

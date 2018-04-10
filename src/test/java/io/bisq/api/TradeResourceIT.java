@@ -1,9 +1,9 @@
 package io.bisq.api;
 
 import io.bisq.api.model.payment.SepaPaymentAccount;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.trade.Trade;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.trade.Trade;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.hamcrest.Matcher;

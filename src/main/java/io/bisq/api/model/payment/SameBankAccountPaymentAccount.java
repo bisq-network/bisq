@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.PaymentMethod;
 import org.hibernate.validator.constraints.NotBlank;
 
 @JsonTypeName(PaymentMethod.SAME_BANK_ID)

@@ -5,9 +5,9 @@ import io.bisq.api.model.OfferToCreate;
 import io.bisq.api.model.PriceType;
 import io.bisq.api.model.TakeOffer;
 import io.bisq.api.model.payment.SepaPaymentAccount;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.core.trade.Trade;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.trade.Trade;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
@@ -622,6 +622,7 @@ public class OfferResourceIT {
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
+        ApiTestHelper.waitForP2PMsgPropagation();
         final int bobPort = getBobPort();
         assertOfferExists(bobPort, createdOffer.id);
         given().

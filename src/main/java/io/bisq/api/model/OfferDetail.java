@@ -1,9 +1,9 @@
 package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OfferPayload;
-import io.bisq.network.p2p.NodeAddress;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.network.p2p.NodeAddress;
 
 import java.util.Date;
 import java.util.List;

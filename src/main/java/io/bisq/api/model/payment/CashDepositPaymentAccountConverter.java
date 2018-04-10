@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.CashDepositAccount;
-import io.bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.CashDepositAccount;
+import bisq.core.payment.payload.CashDepositAccountPayload;
 
 public class CashDepositPaymentAccountConverter extends AbstractPaymentAccountConverter<CashDepositAccount, CashDepositAccountPayload, CashDepositPaymentAccount> {
 

@@ -1,8 +1,8 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.common.locale.CountryUtil;
-import io.bisq.core.payment.WesternUnionAccount;
-import io.bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.locale.CountryUtil;
+import bisq.core.payment.WesternUnionAccount;
+import bisq.core.payment.payload.WesternUnionAccountPayload;
 
 public class WesternUnionPaymentAccountConverter extends AbstractPaymentAccountConverter<WesternUnionAccount, WesternUnionAccountPayload, WesternUnionPaymentAccount> {
 

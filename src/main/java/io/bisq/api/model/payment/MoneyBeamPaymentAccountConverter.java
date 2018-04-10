@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.MoneyBeamAccount;
-import io.bisq.core.payment.payload.MoneyBeamAccountPayload;
+import bisq.core.payment.MoneyBeamAccount;
+import bisq.core.payment.payload.MoneyBeamAccountPayload;
 
 public class MoneyBeamPaymentAccountConverter extends AbstractPaymentAccountConverter<MoneyBeamAccount, MoneyBeamAccountPayload, MoneyBeamPaymentAccount> {
 

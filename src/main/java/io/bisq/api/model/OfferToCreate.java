@@ -1,7 +1,7 @@
 package io.bisq.api.model;
 
 import io.bisq.api.model.validation.StringEnumeration;
-import io.bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferPayload;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.Min;

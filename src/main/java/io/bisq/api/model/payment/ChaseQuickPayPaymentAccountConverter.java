@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.ChaseQuickPayAccount;
-import io.bisq.core.payment.payload.ChaseQuickPayAccountPayload;
+import bisq.core.payment.ChaseQuickPayAccount;
+import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 
 public class ChaseQuickPayPaymentAccountConverter extends AbstractPaymentAccountConverter<ChaseQuickPayAccount, ChaseQuickPayAccountPayload, ChaseQuickPayPaymentAccount> {
 

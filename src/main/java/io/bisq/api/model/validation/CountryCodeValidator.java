@@ -1,6 +1,6 @@
 package io.bisq.api.model.validation;
 
-import io.bisq.common.locale.CountryUtil;
+import bisq.core.locale.CountryUtil;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

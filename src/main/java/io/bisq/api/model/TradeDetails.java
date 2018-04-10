@@ -3,10 +3,10 @@ package io.bisq.api.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.payment.PaymentAccountHelper;
-import io.bisq.core.offer.Offer;
-import io.bisq.core.trade.Contract;
-import io.bisq.core.trade.Trade;
-import io.bisq.network.p2p.NodeAddress;
+import bisq.core.offer.Offer;
+import bisq.core.trade.Contract;
+import bisq.core.trade.Trade;
+import bisq.network.p2p.NodeAddress;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TradeDetails {

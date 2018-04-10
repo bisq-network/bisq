@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.PerfectMoneyAccount;
-import io.bisq.core.payment.payload.PerfectMoneyAccountPayload;
+import bisq.core.payment.PerfectMoneyAccount;
+import bisq.core.payment.payload.PerfectMoneyAccountPayload;
 
 public class PerfectMoneyPaymentAccountConverter extends AbstractPaymentAccountConverter<PerfectMoneyAccount, PerfectMoneyAccountPayload, PerfectMoneyPaymentAccount> {
 

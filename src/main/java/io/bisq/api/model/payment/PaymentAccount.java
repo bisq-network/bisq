@@ -3,7 +3,7 @@ package io.bisq.api.model.payment;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.PaymentMethod;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 

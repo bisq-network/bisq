@@ -1,7 +1,7 @@
 package io.bisq.api.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.bisq.core.btc.AddressEntry;
+import bisq.core.btc.AddressEntry;
 import lombok.AllArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)

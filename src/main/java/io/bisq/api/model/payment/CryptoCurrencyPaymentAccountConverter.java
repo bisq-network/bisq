@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.CryptoCurrencyAccount;
-import io.bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 
 public class CryptoCurrencyPaymentAccountConverter extends AbstractPaymentAccountConverter<CryptoCurrencyAccount, CryptoCurrencyAccountPayload, CryptoCurrencyPaymentAccount> {
 

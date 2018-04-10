@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.ClearXchangeAccount;
-import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
+import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.payload.ClearXchangeAccountPayload;
 
 public class ClearXchangePaymentAccountConverter extends AbstractPaymentAccountConverter<ClearXchangeAccount, ClearXchangeAccountPayload, ClearXchangePaymentAccount> {
 

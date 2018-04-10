@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.UpholdAccount;
-import io.bisq.core.payment.payload.UpholdAccountPayload;
+import bisq.core.payment.UpholdAccount;
+import bisq.core.payment.payload.UpholdAccountPayload;
 
 public class UpholdPaymentAccountConverter extends AbstractPaymentAccountConverter<UpholdAccount, UpholdAccountPayload, UpholdPaymentAccount> {
 

@@ -1,7 +1,7 @@
 package io.bisq.api.model.payment;
 
-import io.bisq.core.payment.InteracETransferAccount;
-import io.bisq.core.payment.payload.InteracETransferAccountPayload;
+import bisq.core.payment.InteracETransferAccount;
+import bisq.core.payment.payload.InteracETransferAccountPayload;
 
 public class InteracETransferPaymentAccountConverter extends AbstractPaymentAccountConverter<InteracETransferAccount, InteracETransferAccountPayload, InteracETransferPaymentAccount> {
 

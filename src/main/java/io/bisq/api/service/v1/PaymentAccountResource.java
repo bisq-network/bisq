@@ -1,8 +1,8 @@
 package io.bisq.api.service.v1;
 
 import io.bisq.api.BisqProxy;
-import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.PaymentAccountList;
+import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.payment.PaymentAccountHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -28,11 +28,11 @@ public class PaymentAccountResource {
         bisqProxy.removePaymentAccount(id);
     }
 
-    @ApiOperation("Create payment account")
+    @ApiOperation(value = "Create payment account", notes = "Inspect models section at the bottom of the page for valid PaymentAccount sub-types schemas")
     @POST
     @Path("/")
     public PaymentAccount create(@Valid PaymentAccount account) {
-        final io.bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+        final bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
         return PaymentAccountHelper.toRestModel(bisqProxy.addPaymentAccount(paymentAccount));
     }
 
