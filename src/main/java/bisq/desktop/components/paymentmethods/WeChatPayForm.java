@@ -20,15 +20,15 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.PopmoneyValidator;
+import bisq.desktop.util.validation.WeChatPayValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PopmoneyAccount;
+import bisq.core.payment.WeChatPayAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PopmoneyAccountPayload;
+import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
@@ -40,44 +40,35 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
-public class PopmoneyForm extends PaymentMethodForm {
-    private final PopmoneyAccount account;
-    private final PopmoneyValidator validator;
-    private InputTextField accountIdInputTextField;
+public class WeChatPayForm extends PaymentMethodForm {
+
+    private final WeChatPayAccount weChatPayAccount;
+    private final WeChatPayValidator weChatPayValidator;
+    private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((PopmoneyAccountPayload) paymentAccountPayload).getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), ((PopmoneyAccountPayload) paymentAccountPayload).getAccountId());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((WeChatPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 
-    public PopmoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PopmoneyValidator popmoneyValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public WeChatPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, WeChatPayValidator weChatPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.account = (PopmoneyAccount) paymentAccount;
-        this.validator = popmoneyValidator;
+        this.weChatPayAccount = (WeChatPayAccount) paymentAccount;
+        this.weChatPayValidator = weChatPayValidator;
     }
 
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
-        holderNameInputTextField.setValidator(inputValidator);
-        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setHolderName(newValue);
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.no")).second;
+        accountNrInputTextField.setValidator(weChatPayValidator);
+        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            weChatPayAccount.setAccountNr(newValue);
             updateFromInputs();
         });
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId")).second;
-        accountIdInputTextField.setValidator(validator);
-        accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
-            updateFromInputs();
-        });
-
-        final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
+        final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addLimitations();
@@ -87,7 +78,7 @@ public class PopmoneyForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String accountNr = accountIdInputTextField.getText();
+            String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(accountNr));
@@ -97,13 +88,11 @@ public class PopmoneyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                account.getHolderName());
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), account.getAccountId()).second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), weChatPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(weChatPayAccount.getPaymentMethod().getId()));
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), weChatPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
+        final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addLimitations();
@@ -112,8 +101,7 @@ public class PopmoneyForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && inputValidator.validate(account.getHolderName()).isValid
-                && validator.validate(account.getAccountId()).isValid
-                && account.getTradeCurrencies().size() > 0);
+                && weChatPayValidator.validate(weChatPayAccount.getAccountNr()).isValid
+                && weChatPayAccount.getTradeCurrencies().size() > 0);
     }
 }

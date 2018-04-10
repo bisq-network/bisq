@@ -50,10 +50,10 @@ public class MoneyBeamForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public MoneyBeamForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, MoneyBeamValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public MoneyBeamForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, MoneyBeamValidator moneyBeamValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (MoneyBeamAccount) paymentAccount;
-        this.validator = aliPayValidator;
+        this.validator = moneyBeamValidator;
     }
 
     @Override
