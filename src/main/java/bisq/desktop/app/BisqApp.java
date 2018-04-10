@@ -17,7 +17,6 @@
 
 package bisq.desktop.app;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.SystemTray;
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
@@ -33,58 +32,41 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
+import bisq.desktop.setup.DesktopPersistedDataHost;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.AddressEntryList;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.vote.blindvote.BlindVoteService;
-import bisq.core.dao.vote.myvote.MyVoteService;
-import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.setup.CorePersistedDataHost;
+import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
-import bisq.common.app.Capabilities;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
-import bisq.common.app.Version;
-import bisq.common.crypto.LimitedKeyStrengthException;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
-
-import org.bitcoinj.store.BlockStoreException;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.reactfx.EventStreams;
 
@@ -104,23 +86,12 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.Security;
-
-import java.nio.file.Paths;
-
-import java.io.IOException;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
@@ -144,210 +115,42 @@ public class BisqApp extends Application {
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
-    private MainView mainView;
     private boolean shutDownRequested;
 
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
-    public void init() throws Exception {
-        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
-        Log.setup(logPath);
-        log.info("Log files under: " + logPath);
-        Utilities.printSysInfo();
-        Log.setLevel(Level.toLevel(bisqEnvironment.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
-
+    public void init() {
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
 
         shutDownHandler = this::stop;
-
-        // setup UncaughtExceptionHandler
-        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread
-            if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
-                    throwable.getCause().getCause() instanceof BlockStoreException) {
-                log.error(throwable.getMessage());
-            } else if (throwable instanceof ClassCastException &&
-                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
-                log.warn(throwable.getMessage());
-            } else {
-                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
-                log.error("throwableMessage= " + throwable.getMessage());
-                log.error("throwableClass= " + throwable.getClass());
-                log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
-                throwable.printStackTrace();
-                UserThread.execute(() -> showErrorPopup(throwable, false));
-            }
-        };
-        Thread.setDefaultUncaughtExceptionHandler(handler);
-        Thread.currentThread().setUncaughtExceptionHandler(handler);
-
-        try {
-            Utilities.checkCryptoPolicySetup();
-        } catch (NoSuchAlgorithmException | LimitedKeyStrengthException e) {
-            e.printStackTrace();
-            UserThread.execute(() -> showErrorPopup(e, true));
-        }
-
-        Security.addProvider(new BouncyCastleProvider());
-
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        final String currencyCode = baseCurrencyNetwork.getCurrencyCode();
-        Res.setBaseCurrencyCode(currencyCode);
-        Res.setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
-        CurrencyUtil.setBaseCurrencyCode(currencyCode);
-
-        Capabilities.setSupportedCapabilities(new ArrayList<>(Arrays.asList(
-                Capabilities.Capability.TRADE_STATISTICS.ordinal(),
-                Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
-                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
-                Capabilities.Capability.COMP_REQUEST.ordinal(),
-                Capabilities.Capability.VOTE.ordinal()
-        )));
+        CommonSetup.setup(this::showErrorPopup);
+        CoreSetup.setup(bisqEnvironment);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         BisqApp.primaryStage = stage;
 
         try {
-            // Guice
             bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            // All classes which are persisting objects need to be added here
-            // Maintain order!
-            ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
-            final Preferences preferences = injector.getInstance(Preferences.class);
-            persistedDataHosts.add(preferences);
-            persistedDataHosts.add(injector.getInstance(User.class));
-            persistedDataHosts.add(injector.getInstance(Navigation.class));
-            persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
-            persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
-            persistedDataHosts.add(injector.getInstance(TradeManager.class));
-            persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
-            persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
-            persistedDataHosts.add(injector.getInstance(DisputeManager.class));
-            persistedDataHosts.add(injector.getInstance(P2PService.class));
-            persistedDataHosts.add(injector.getInstance(ProposalService.class));
-            persistedDataHosts.add(injector.getInstance(BlindVoteService.class));
-            persistedDataHosts.add(injector.getInstance(MyVoteService.class));
-            persistedDataHosts.add(injector.getInstance(DaoParamService.class));
+            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
+            PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
 
-            // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-            persistedDataHosts.forEach(e -> {
-                try {
-                    log.debug("call readPersisted at " + e.getClass().getSimpleName());
-                    e.readPersisted();
-                } catch (Throwable e1) {
-                    log.error("readPersisted error", e1);
-                }
-            });
+            DevEnv.setup(injector);
 
-            boolean useDevMode = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_MODE)));
-            DevEnv.setDevMode(useDevMode);
+            MainView mainView = loadMainView(injector);
+            scene = createAndConfigScene(mainView, injector);
+            setupStage(scene);
 
-            Version.setBaseCryptoNetworkId(BisqEnvironment.getBaseCurrencyNetwork().ordinal());
-            Version.printVersion();
+            setDatabaseCorruptionHandler(mainView);
 
-            if (Utilities.isLinux())
-                System.setProperty("prism.lcdtext", "false");
+            checkForCorrectOSArchitecture();
 
-            Storage.setDatabaseCorruptionHandler((String fileName) -> {
-                corruptedDatabaseFiles.add(fileName);
-                if (mainView != null)
-                    mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-            });
-
-            // load the main view and create the main scene
-            CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
-            mainView = (MainView) viewLoader.load(MainView.class);
-            mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-
-            scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
-
-            scene.getStylesheets().setAll(
-                    "/bisq/desktop/bisq.css",
-                    "/bisq/desktop/images.css",
-                    "/bisq/desktop/CandleStickChart.css");
-
-            // configure the system tray
-            SystemTray.create(primaryStage, shutDownHandler);
-
-            primaryStage.setOnCloseRequest(event -> {
-                event.consume();
-                stop();
-            });
-            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
-                if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
-                        Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                    stop();
-                } else {
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                        showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                        showSendAlertMessagePopup();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                        showFilterPopup();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
-                        WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
-                        if (walletsManager.areWalletsAvailable())
-                            new ShowWalletDataWindow(walletsManager).show();
-                        else
-                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
-                        if (injector.getInstance(BtcWalletService.class).isWalletReady())
-                            injector.getInstance(ManualPayoutTxWindow.class).show();
-                        else
-                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                    } else if (DevEnv.isDevMode()) {
-                        // dev ode only
-                        if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                            // BSQ empty wallet not public yet
-                            showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
-                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
-                            showFPSWindow();
-                        } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
-                            showDebugWindow();
-                        }
-                    }
-                }
-            });
-
-            // configure the primary stage
-            primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
-            primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1020);
-            primaryStage.setMinHeight(620);
-
-            // on windows the title icon is also used as task bar icon in a larger size
-            // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
-            String iconPath;
-            if (Utilities.isOSX())
-                iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
-            else if (Utilities.isWindows())
-                iconPath = "/images/task_bar_icon_windows.png";
-            else
-                iconPath = "/images/task_bar_icon_linux.png";
-
-            primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
-
-            // make the UI visible
-            primaryStage.show();
-
-            if (!Utilities.isCorrectOSArchitecture()) {
-                String osArchitecture = Utilities.getOSArchitecture();
-                // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
-                // Needs at least more testing on different machines...
-                new Popup<>().warning(Res.get("popup.warning.wrongVersion",
-                        osArchitecture,
-                        Utilities.getJVMArchitecture(),
-                        osArchitecture))
-                        .show();
-            }
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
@@ -355,7 +158,103 @@ public class BisqApp extends Application {
         }
     }
 
-    private void showSendAlertMessagePopup() {
+    private Scene createAndConfigScene(MainView mainView, Injector injector) {
+        Scene scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
+        scene.getStylesheets().setAll(
+                "/bisq/desktop/bisq.css",
+                "/bisq/desktop/images.css",
+                "/bisq/desktop/CandleStickChart.css");
+        addSceneKeyEventHandler(scene, injector);
+        return scene;
+    }
+
+    private void setupStage(Scene scene) {
+        // configure the system tray
+        SystemTray.create(primaryStage, shutDownHandler);
+
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            stop();
+        });
+
+
+        // configure the primary stage
+        primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1020);
+        primaryStage.setMinHeight(620);
+
+        // on windows the title icon is also used as task bar icon in a larger size
+        // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
+        String iconPath;
+        if (Utilities.isOSX())
+            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else if (Utilities.isWindows())
+            iconPath = "/images/task_bar_icon_windows.png";
+        else
+            iconPath = "/images/task_bar_icon_linux.png";
+
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+
+        // make the UI visible
+        primaryStage.show();
+    }
+
+    private MainView loadMainView(Injector injector) {
+        CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
+        return (MainView) viewLoader.load(MainView.class);
+    }
+
+    private void setDatabaseCorruptionHandler(MainView mainView) {
+        Storage.setDatabaseCorruptionHandler((String fileName) -> {
+            corruptedDatabaseFiles.add(fileName);
+            if (mainView != null)
+                mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+        });
+        mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
+    }
+
+
+    private void addSceneKeyEventHandler(Scene scene, Injector injector) {
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+            Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
+            if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                stop();
+            } else {
+                if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
+                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class), injector);
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
+                    showSendAlertMessagePopup(injector);
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
+                    showFilterPopup(injector);
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
+                    WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+                    if (walletsManager.areWalletsAvailable())
+                        new ShowWalletDataWindow(walletsManager).show();
+                    else
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
+                    if (injector.getInstance(BtcWalletService.class).isWalletReady())
+                        injector.getInstance(ManualPayoutTxWindow.class).show();
+                    else
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                } else if (DevEnv.isDevMode()) {
+                    // dev ode only
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
+                        // BSQ empty wallet not public yet
+                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class), injector);
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
+                        showFPSWindow(scene);
+                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
+                        showDebugWindow(scene, injector);
+                    }
+                }
+            }
+        });
+    }
+
+    private void showSendAlertMessagePopup(Injector injector) {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
         new SendAlertMessageWindow(useDevPrivilegeKeys)
@@ -364,7 +263,7 @@ public class BisqApp extends Application {
                 .show();
     }
 
-    private void showFilterPopup() {
+    private void showFilterPopup(Injector injector) {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
         new FilterWindow(filterManager, useDevPrivilegeKeys)
@@ -373,7 +272,7 @@ public class BisqApp extends Application {
                 .show();
     }
 
-    private void showEmptyWalletPopup(WalletService walletService) {
+    private void showEmptyWalletPopup(WalletService walletService, Injector injector) {
         EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
         emptyWalletWindow.setWalletService(walletService);
         emptyWalletWindow.show();
@@ -416,7 +315,7 @@ public class BisqApp extends Application {
     }
 
     // Used for debugging trade process
-    private void showDebugWindow() {
+    private void showDebugWindow(Scene scene, Injector injector) {
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
         View debugView = viewLoader.load(DebugView.class);
         Parent parent = (Parent) debugView.getRoot();
@@ -431,7 +330,7 @@ public class BisqApp extends Application {
         stage.show();
     }
 
-    private void showFPSWindow() {
+    private void showFPSWindow(Scene scene) {
         Label label = new AutoTooltipLabel();
         EventStreams.animationTicks()
                 .latestN(100)
@@ -455,6 +354,19 @@ public class BisqApp extends Application {
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
+    }
+
+    private void checkForCorrectOSArchitecture() {
+        if (!Utilities.isCorrectOSArchitecture()) {
+            String osArchitecture = Utilities.getOSArchitecture();
+            // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
+            // Needs at least more testing on different machines...
+            new Popup<>().warning(Res.get("popup.warning.wrongVersion",
+                    osArchitecture,
+                    Utilities.getJVMArchitecture(),
+                    osArchitecture))
+                    .show();
+        }
     }
 
     @SuppressWarnings("CodeBlock2Expr")
