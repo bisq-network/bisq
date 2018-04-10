@@ -17,7 +17,6 @@
 
 package bisq.desktop.main;
 
-import bisq.desktop.app.DesktopAppSetup;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
@@ -148,7 +147,6 @@ import javax.annotation.Nullable;
 public class MainViewModel implements ViewModel {
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
 
-    private final DesktopAppSetup desktopAppSetup;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
@@ -241,7 +239,7 @@ public class MainViewModel implements ViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public MainViewModel(DesktopAppSetup desktopAppSetup,WalletsManager walletsManager, WalletsSetup walletsSetup,
+    public MainViewModel(WalletsManager walletsManager, WalletsSetup walletsSetup,
                          BtcWalletService btcWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
@@ -252,7 +250,6 @@ public class MainViewModel implements ViewModel {
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
-        this.desktopAppSetup = desktopAppSetup;
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -320,8 +317,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void readMapsFromResources() {
-        desktopAppSetup.readFromResources()
-                .thenRun(() -> UserThread.execute(this::setupBasicServicesListeners));
+        UserThread.execute(this::setupBasicServicesListeners);
 
         // TODO can be removed in jdk 9
         checkCryptoSetup();
@@ -345,7 +341,6 @@ public class MainViewModel implements ViewModel {
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
-        desktopAppSetup.initBasicServices();
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.

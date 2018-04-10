@@ -216,56 +216,49 @@ public class DesktopAppSetup extends AppSetup {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        new Thread(() -> {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        p2PService.start(new P2PServiceListener() {
+            @Override
+            public void onTorNodeReady() {
+                log.debug("onTorNodeReady");
             }
-            p2PService.start(new P2PServiceListener() {
-                @Override
-                public void onTorNodeReady() {
-                    log.debug("onTorNodeReady");
-                }
 
-                @Override
-                public void onHiddenServicePublished() {
-                    log.debug("onHiddenServicePublished");
-                }
+            @Override
+            public void onHiddenServicePublished() {
+                log.debug("onHiddenServicePublished");
+            }
 
-                @Override
-                public void onDataReceived() {
-                    log.debug("onRequestingDataCompleted");
-                    p2pNetworkInitialized.set(true);
-                }
+            @Override
+            public void onDataReceived() {
+                log.debug("onRequestingDataCompleted");
+                p2pNetworkInitialized.set(true);
+            }
 
-                @Override
-                public void onNoSeedNodeAvailable() {
-                    log.debug("onNoSeedNodeAvailable");
-                    p2pNetworkInitialized.set(true);
-                }
+            @Override
+            public void onNoSeedNodeAvailable() {
+                log.debug("onNoSeedNodeAvailable");
+                p2pNetworkInitialized.set(true);
+            }
 
-                @Override
-                public void onNoPeersAvailable() {
-                    log.debug("onNoPeersAvailable");
-                    p2pNetworkInitialized.set(true);
-                }
+            @Override
+            public void onNoPeersAvailable() {
+                log.debug("onNoPeersAvailable");
+                p2pNetworkInitialized.set(true);
+            }
 
-                @Override
-                public void onUpdatedDataReceived() {
-                }
+            @Override
+            public void onUpdatedDataReceived() {
+            }
 
-                @Override
-                public void onSetupFailed(Throwable throwable) {
-                    log.error(throwable.toString());
-                }
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+                log.error(throwable.toString());
+            }
 
-                @Override
-                public void onRequestCustomBridges() {
-                    log.debug("onRequestCustomBridges");
-                }
-            });
-        }).start();
+            @Override
+            public void onRequestCustomBridges() {
+                log.debug("onRequestCustomBridges");
+            }
+        });
         return p2pNetworkInitialized;
     }
 }

@@ -20,7 +20,9 @@ package bisq.desktop.app;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
+import bisq.core.setup.CoreSetup;
 
+import bisq.common.setup.CommonSetup;
 import bisq.common.util.Utilities;
 
 import joptsimple.OptionException;
@@ -29,6 +31,8 @@ import joptsimple.OptionSet;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+
+import java.util.concurrent.ExecutionException;
 
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
@@ -77,8 +81,22 @@ public class BisqAppMain extends BisqExecutable {
         BisqApp.setEnvironment(bisqEnvironment);
         final BisqAppModule bisqAppModule = new BisqAppModule(bisqEnvironment);
         final Injector injector = Guice.createInjector(bisqAppModule);
+
+        final UncaughtExceptionHandler uncaughtExceptionHandler = injector.getInstance(UncaughtExceptionHandler.class);
+        CommonSetup.setup(uncaughtExceptionHandler::broadcast);
+        CoreSetup.setup(bisqEnvironment);
+
+        final DesktopAppSetup desktopAppSetup = injector.getInstance(DesktopAppSetup.class);
+        try {
+            desktopAppSetup.initPersistedDataHosts().get();
+        } catch (InterruptedException|ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
         BisqApp.setInjector(injector);
         BisqApp.setOnShutdownHook(() -> bisqAppModule.close(injector));
+        BisqApp.setOnReadyToStart(desktopAppSetup::initBasicServices);
+
         javafx.application.Application.launch(BisqApp.class);
     }
 }
