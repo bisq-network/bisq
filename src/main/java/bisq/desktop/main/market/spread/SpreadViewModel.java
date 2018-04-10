@@ -51,6 +51,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 class SpreadViewModel extends ActivatableViewModel {
@@ -90,6 +94,11 @@ class SpreadViewModel extends ActivatableViewModel {
         offerBookListItems.removeListener(listChangeListener);
     }
 
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
     private void update(ObservableList<OfferBookListItem> offerBookListItems) {
         Map<String, List<Offer>> offersByCurrencyMap = new HashMap<>();
         for (OfferBookListItem offerBookListItem : offerBookListItems) {
@@ -106,7 +115,10 @@ class SpreadViewModel extends ActivatableViewModel {
         for (String currencyCode : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
-            List<Offer> buyOffers = offers
+
+            List<Offer> uniqueOffers = offers.stream().filter(distinctByKey(Offer::getId)).collect(Collectors.toList());
+
+            List<Offer> buyOffers = uniqueOffers
                     .stream()
                     .filter(e -> e.getDirection().equals(OfferPayload.Direction.BUY))
                     .sorted((o1, o2) -> {
@@ -123,7 +135,7 @@ class SpreadViewModel extends ActivatableViewModel {
                     })
                     .collect(Collectors.toList());
 
-            List<Offer> sellOffers = offers
+            List<Offer> sellOffers = uniqueOffers
                     .stream()
                     .filter(e -> e.getDirection().equals(OfferPayload.Direction.SELL))
                     .sorted((o1, o2) -> {
@@ -198,7 +210,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
             spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
-                    offers.size(), spread, percentage, totalAmount));
+                    uniqueOffers.size(), spread, percentage, totalAmount));
         }
 
         maxPlacesForAmount.set(formatAmount(totalAmount, false).length());

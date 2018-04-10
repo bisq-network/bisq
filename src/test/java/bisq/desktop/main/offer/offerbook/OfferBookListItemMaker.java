@@ -32,6 +32,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class OfferBookListItemMaker {
 
+    public static final Property<OfferBookListItem, String> id = new Property<>();
     public static final Property<OfferBookListItem, Long> price = new Property<>();
     public static final Property<OfferBookListItem, Long> amount = new Property<>();
     public static final Property<OfferBookListItem, Long> minAmount = new Property<>();
@@ -46,7 +47,8 @@ public class OfferBookListItemMaker {
                     with(OfferMaker.minAmount, lookup.valueOf(amount, 100000L)),
                     with(OfferMaker.direction, lookup.valueOf(direction, OfferPayload.Direction.BUY)),
                     with(OfferMaker.useMarketBasedPrice, lookup.valueOf(useMarketBasedPrice, false)),
-                    with(OfferMaker.marketPriceMargin, lookup.valueOf(marketPriceMargin, 0.0)))));
+                    with(OfferMaker.marketPriceMargin, lookup.valueOf(marketPriceMargin, 0.0)),
+                    with(OfferMaker.id, lookup.valueOf(id, "1234")))));
 
     public static final Instantiator<OfferBookListItem> OfferBookListItemWithRange = lookup ->
             new OfferBookListItem(make(btcUsdOffer.but(
@@ -54,7 +56,7 @@ public class OfferBookListItemMaker {
                     with(OfferMaker.minAmount, lookup.valueOf(minAmount, 100000L)),
                     with(OfferMaker.amount, lookup.valueOf(amount, 200000L)))));
 
-    public static final Maker<OfferBookListItem> btcItem = a(OfferBookListItem);
+    public static final Maker<OfferBookListItem> btcBuyItem = a(OfferBookListItem);
     public static final Maker<OfferBookListItem> btcSellItem = a(OfferBookListItem, with(direction, OfferPayload.Direction.SELL));
 
     public static final Maker<OfferBookListItem> btcItemWithRange = a(OfferBookListItemWithRange);

@@ -242,7 +242,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcBuyItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -252,7 +252,7 @@ public class OfferBookViewModelTest {
         model.activate();
 
         assertEquals(6, model.maxPlacesForAmount.intValue());
-        offerBookListItems.addAll(make(btcItem.but(with(amount, 2000000000L))));
+        offerBookListItems.addAll(make(btcBuyItem.but(with(amount, 2000000000L))));
         assertEquals(7, model.maxPlacesForAmount.intValue());
     }
 
@@ -296,7 +296,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcBuyItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -306,7 +306,7 @@ public class OfferBookViewModelTest {
         model.activate();
 
         assertEquals(8, model.maxPlacesForVolume.intValue());
-        offerBookListItems.addAll(make(btcItem.but(with(amount, 2000000000L))));
+        offerBookListItems.addAll(make(btcBuyItem.but(with(amount, 2000000000L))));
         assertEquals(10, model.maxPlacesForVolume.intValue());
     }
 
@@ -350,7 +350,7 @@ public class OfferBookViewModelTest {
         OfferBook offerBook = mock(OfferBook.class);
         OpenOfferManager openOfferManager = mock(OpenOfferManager.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
+        offerBookListItems.addAll(make(OfferBookListItemMaker.btcBuyItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -360,9 +360,9 @@ public class OfferBookViewModelTest {
         model.activate();
 
         assertEquals(7, model.maxPlacesForPrice.intValue());
-        offerBookListItems.addAll(make(btcItem.but(with(price, 149558240L)))); //14955.8240
+        offerBookListItems.addAll(make(btcBuyItem.but(with(price, 149558240L)))); //14955.8240
         assertEquals(10, model.maxPlacesForPrice.intValue());
-        offerBookListItems.addAll(make(btcItem.but(with(price, 14955824L)))); //1495.58240
+        offerBookListItems.addAll(make(btcBuyItem.but(with(price, 14955824L)))); //1495.58240
         assertEquals(10, model.maxPlacesForPrice.intValue());
     }
 
@@ -386,7 +386,7 @@ public class OfferBookViewModelTest {
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
 
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        final Maker<OfferBookListItem> item = btcItem.but(with(useMarketBasedPrice, true));
+        final Maker<OfferBookListItem> item = btcBuyItem.but(with(useMarketBasedPrice, true));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
         when(priceFeedService.getMarketPrice(anyString())).thenReturn(null);
@@ -428,15 +428,15 @@ public class OfferBookViewModelTest {
                 null, null, null, null, null,
                 new BSFormatter());
 
-        final OfferBookListItem item = make(btcItem.but(
+        final OfferBookListItem item = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),
                 with(marketPriceMargin, -0.12)));
 
-        final OfferBookListItem lowItem = make(btcItem.but(
+        final OfferBookListItem lowItem = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),
                 with(marketPriceMargin, 0.01)));
 
-        final OfferBookListItem fixedItem = make(btcItem);
+        final OfferBookListItem fixedItem = make(btcBuyItem);
 
         item.getOffer().setPriceFeedService(priceFeedService);
         lowItem.getOffer().setPriceFeedService(priceFeedService);
