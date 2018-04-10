@@ -17,42 +17,44 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.BSFormatter;
+import bisq.desktop.util.Layout;
+import bisq.desktop.util.validation.WeChatPayValidator;
+
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.WechatPayAccount;
+import bisq.core.payment.WeChatPayAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.WechatPayAccountPayload;
+import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.util.validation.InputValidator;
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.WechatPayValidator;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
-public class WechatPayForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(WechatPayForm.class);
+public class WeChatPayForm extends PaymentMethodForm {
 
-    private final WechatPayAccount wechatPayAccount;
-    private final WechatPayValidator wechatPayValidator;
+    private final WeChatPayAccount weChatPayAccount;
+    private final WeChatPayValidator weChatPayValidator;
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((WechatPayAccountPayload) paymentAccountPayload).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((WeChatPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 
-    public WechatPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, WechatPayValidator wechatPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public WeChatPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, WeChatPayValidator weChatPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.wechatPayAccount = (WechatPayAccount) paymentAccount;
-        this.wechatPayValidator = wechatPayValidator;
+        this.weChatPayAccount = (WeChatPayAccount) paymentAccount;
+        this.weChatPayValidator = weChatPayValidator;
     }
 
     @Override
@@ -60,13 +62,13 @@ public class WechatPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.no")).second;
-        accountNrInputTextField.setValidator(wechatPayValidator);
+        accountNrInputTextField.setValidator(weChatPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            wechatPayAccount.setAccountNr(newValue);
+            weChatPayAccount.setAccountNr(newValue);
             updateFromInputs();
         });
 
-        final TradeCurrency singleTradeCurrency = wechatPayAccount.getSingleTradeCurrency();
+        final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addLimitations();
@@ -86,11 +88,11 @@ public class WechatPayForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), wechatPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(wechatPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), wechatPayAccount.getAccountNr()).second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), weChatPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(weChatPayAccount.getPaymentMethod().getId()));
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), weChatPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        final TradeCurrency singleTradeCurrency = wechatPayAccount.getSingleTradeCurrency();
+        final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addLimitations();
@@ -99,8 +101,7 @@ public class WechatPayForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && wechatPayValidator.validate(wechatPayAccount.getAccountNr()).isValid
-                && wechatPayAccount.getTradeCurrencies().size() > 0);
+                && weChatPayValidator.validate(weChatPayAccount.getAccountNr()).isValid
+                && weChatPayAccount.getTradeCurrencies().size() > 0);
     }
-
 }
