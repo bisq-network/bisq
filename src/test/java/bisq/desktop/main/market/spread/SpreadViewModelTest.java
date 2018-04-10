@@ -54,7 +54,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForAmount.intValue());
     }
 
@@ -66,7 +66,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
         model.activate();
         assertEquals(6, model.maxPlacesForAmount.intValue()); // 0.001
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.amount, 1403000000L))));
@@ -82,7 +82,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final SpreadViewModel model = new SpreadViewModel(offerBook, priceFeedService, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, priceFeedService, new BSFormatter());
         model.activate();
 
         assertEquals(1, model.spreadItems.get(0).numberOfOffers);
