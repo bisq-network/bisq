@@ -74,7 +74,7 @@ public class SpreadViewModelTest {
     }
 
     @Test
-    public void testfilterSpreadItemsForUniqueOffers() {
+    public void testFilterSpreadItemsForUniqueOffers() {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
