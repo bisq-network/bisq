@@ -80,47 +80,6 @@ import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.VenmoValidator;
 import bisq.desktop.util.validation.WechatPayValidator;
-
-import bisq.core.app.BisqEnvironment;
-import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.ClearXchangeAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountFactory;
-import bisq.core.payment.WesternUnionAccount;
-import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.util.validation.InputValidator;
-
-import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-
-import org.bitcoinj.core.Coin;
-
-import javax.inject.Inject;
-
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import bisq.desktop.util.validation.AliPayValidator;
-import bisq.desktop.util.validation.BICValidator;
-import bisq.desktop.util.validation.CashAppValidator;
-import bisq.desktop.util.validation.ChaseQuickPayValidator;
-import bisq.desktop.util.validation.ClearXchangeValidator;
-import bisq.desktop.util.validation.IBANValidator;
-import bisq.desktop.util.validation.InteracETransferValidator;
-import bisq.desktop.util.validation.MoneyBeamValidator;
-import bisq.desktop.util.validation.OKPayValidator;
-import bisq.desktop.util.validation.PerfectMoneyValidator;
-import bisq.desktop.util.validation.PopmoneyValidator;
-import bisq.desktop.util.validation.RevolutValidator;
-import bisq.desktop.util.validation.SwishValidator;
-import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
-import bisq.desktop.util.validation.UpholdValidator;
-import bisq.desktop.util.validation.VenmoValidator;
-import bisq.desktop.util.validation.WechatPayValidator;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
@@ -133,10 +92,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
-
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -149,9 +109,6 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
-
-    private ListView<PaymentAccount> paymentAccountsListView;
-    private ComboBox<PaymentMethod> paymentMethodComboBox;
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -171,10 +128,10 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WechatPayValidator wechatPayValidator;
-
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
-
+    private ListView<PaymentAccount> paymentAccountsListView;
+    private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
     private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
