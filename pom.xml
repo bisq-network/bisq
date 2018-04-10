@@ -101,23 +101,23 @@
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-desktop</artifactId>
-            <version>77f0260dd2</version>
+            <version>e9e656f85b</version>
         </dependency>
         <!--TODO once bisq-desktop is released and depends on non-snapshots we can get rid of following bisq-network dependencies-->
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-core</artifactId>
-            <version>895c222f0d</version>
+            <version>834be82e2c</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-p2p</artifactId>
-            <version>44f0ef776e</version>
+            <version>44f0ef776e3</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-common</artifactId>
-            <version>838c1088f1</version>
+            <version>707c3e836b</version>
         </dependency>
         <!-- enable this to test with locally built bisq-exchange
         <dependency>
