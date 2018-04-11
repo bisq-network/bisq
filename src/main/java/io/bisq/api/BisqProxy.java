@@ -1,14 +1,9 @@
 package io.bisq.api;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.inject.Injector;
-import io.bisq.api.model.*;
-import io.bisq.api.model.payment.PaymentAccountHelper;
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.core.locale.*;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
@@ -17,10 +12,12 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.*;
 import bisq.core.offer.*;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.SellerAsMakerTrade;
@@ -32,12 +29,15 @@ import bisq.core.trade.protocol.*;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
-import bisq.core.payment.validation.AltCoinAddressValidator;
-import bisq.desktop.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
+import bisq.desktop.util.validation.BtcAddressValidator;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.inject.Injector;
+import io.bisq.api.model.*;
+import io.bisq.api.model.payment.PaymentAccountHelper;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +52,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -116,7 +116,7 @@ public class BisqProxy {
     public static CurrencyList calculateCurrencyList() {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
-        CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getSymbol(), fiatCurrency.getName(), "fiat"));
+        CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getCurrencyCode(), fiatCurrency.getName(), "fiat"));
         Collections.sort(currencyList.currencies, (io.bisq.api.model.Currency p1, io.bisq.api.model.Currency p2) -> p1.name.compareTo(p2.name));
         return currencyList;
     }

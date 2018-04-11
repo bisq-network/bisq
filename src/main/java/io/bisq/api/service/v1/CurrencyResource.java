@@ -23,7 +23,7 @@ public class CurrencyResource {
     @ApiOperation("List available currencies")
     @GET
     @Path("/")
-    public CurrencyList find() {
+    public CurrencyList getCurrencyList() {
         return bisqProxy.getCurrencyList();
     }
 }
