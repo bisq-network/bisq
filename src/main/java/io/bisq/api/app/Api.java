@@ -4,7 +4,6 @@ import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOfferManager;
@@ -22,7 +21,7 @@ import java.util.Date;
 
 public class Api {
     private static final Logger log = LoggerFactory.getLogger(Api.class);
-    private static BisqEnvironment env;
+    private static ApiEnvironment env;
     private final Injector injector;
     MainViewModelHeadless mainViewModelHeadless;
 
@@ -35,8 +34,8 @@ public class Api {
         CoreSetup.setup(env);
 
 
-        ApiModule apiModule = new ApiModule(env);
-        injector = Guice.createInjector(apiModule);
+        ApiHeadlessModule apiHeadlessModule = new ApiHeadlessModule(env);
+        injector = Guice.createInjector(apiHeadlessModule);
         PriceFeedService priceFeedService = injector.getInstance(PriceFeedService.class);
         mainViewModelHeadless = injector.getInstance(MainViewModelHeadless.class);
 
@@ -77,7 +76,7 @@ public class Api {
 
     }
 
-    public static void setEnvironment(BisqEnvironment env) {
+    public static void setEnvironment(ApiEnvironment env) {
         Api.env = env;
     }
 

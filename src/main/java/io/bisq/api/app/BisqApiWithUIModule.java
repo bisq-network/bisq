@@ -17,22 +17,27 @@
 
 package io.bisq.api.app;
 
-import bisq.common.app.AppModule;
-import com.google.inject.Singleton;
-import io.bisq.api.service.BisqApiApplication;
+import bisq.desktop.app.BisqAppModule;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 
-public class ApiModule extends AppModule {
+@Slf4j
+public class BisqApiWithUIModule extends BisqAppModule {
 
-    public ApiModule(Environment environment) {
-        super(environment);
+    public BisqApiWithUIModule(Environment environment, Stage primaryStage) {
+        super(environment, primaryStage);
     }
 
     @Override
     protected void configure() {
-        // added for API usage
-        bind(BisqApiApplication.class).in(Singleton.class);
-        bind(MainViewModelHeadless.class).in(Singleton.class);
-        bind(ApiEnvironment.class).toInstance((ApiEnvironment) environment);
+        super.configure();
+
+        install(apiModule());
     }
+
+    private ApiModule apiModule() {
+        return new ApiModule(environment);
+    }
+
 }

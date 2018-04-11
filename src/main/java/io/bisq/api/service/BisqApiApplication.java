@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import io.bisq.api.BisqProxy;
+import io.bisq.api.app.ApiEnvironment;
 import io.bisq.api.health.CurrencyListHealthCheck;
 import io.bisq.api.service.v1.ApiV1;
 import io.dropwizard.Application;
@@ -27,6 +28,8 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -121,10 +124,22 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
         setupCors(environment);
+        setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
+    }
+
+    private void setupHostAndPort(ApiConfiguration configuration, ApiEnvironment environment) {
+        final SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
+        final HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
+        final Integer apiPort = environment.getApiPort();
+        if (null != apiPort)
+            connector.setPort(apiPort);
+        final String apiHost = environment.getApiHost();
+        if (null != apiHost)
+            connector.setBindHost(apiHost);
     }
 
     private void setupCors(Environment environment) {
