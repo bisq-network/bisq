@@ -4,6 +4,7 @@ services:
   api:
     build:
       context: .
+      dockerfile: docker/dev/Dockerfile
     image: bisq-api
     volumes:
       - m2:/root/.m2

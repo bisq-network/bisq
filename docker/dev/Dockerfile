@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /bisq-api
 
+#ENV BISQ_API_HOST=
 #ENV BISQ_API_PORT=
 ENV LANG=en_US
 
