@@ -197,14 +197,6 @@ public class OfferResourceIT {
 
     @InSequence(3)
     @Test
-    public void createOffer_percentageFromMarketPriceNegative_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
-        offer.percentageFromMarketPrice = new BigDecimal(-0.001);
-        createOffer_template(offer, 422, "percentageFromMarketPrice must be greater than or equal to 0");
-    }
-
-    @InSequence(3)
-    @Test
     public void createOffer_fixedPriceNegative_returns422status() {
         final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.fixedPrice = -1;

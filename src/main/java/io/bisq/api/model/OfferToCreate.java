@@ -28,7 +28,6 @@ public class OfferToCreate {
     @NotEmpty
     public String marketPair;
 
-    @Min(0)
     public BigDecimal percentageFromMarketPrice;
 
     @Min(0)
