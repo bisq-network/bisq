@@ -36,7 +36,9 @@ import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.Vote;
 import bisq.core.dao.vote.myvote.MyVoteService;
+import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.ProposalList;
+import bisq.core.dao.vote.proposal.ProposalListService;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -74,7 +76,6 @@ import java.util.stream.Collectors;
 @FxmlView
 public class MyVotesView extends BaseProposalView {
     private final MyVoteService myVoteService;
-    private final ReadableBsqBlockChain readableBsqBlockChain;
     private final Preferences preferences;
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
@@ -89,19 +90,21 @@ public class MyVotesView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyVotesView(ProposalService voteRequestManger,
+    private MyVotesView(MyProposalService myProposalService,
+                        ProposalListService proposalListService,
+                        ProposalService proposalService,
                         PeriodService periodService,
-                        MyVoteService myVoteService,
                         BsqWalletService bsqWalletService,
                         ReadableBsqBlockChain readableBsqBlockChain,
                         DaoParamService daoParamService,
-                        Preferences preferences,
                         BsqFormatter bsqFormatter,
-                        BSFormatter btcFormatter) {
-        super(voteRequestManger, bsqWalletService, readableBsqBlockChain, daoParamService, periodService, bsqFormatter,
-                btcFormatter);
+                        BSFormatter btcFormatter,
+                        MyVoteService myVoteService,
+                        Preferences preferences) {
+
+        super(myProposalService, proposalListService, proposalService, bsqWalletService, readableBsqBlockChain,
+                daoParamService, periodService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
-        this.readableBsqBlockChain = readableBsqBlockChain;
         this.preferences = preferences;
     }
 

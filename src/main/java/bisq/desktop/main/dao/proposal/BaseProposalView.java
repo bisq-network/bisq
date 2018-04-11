@@ -27,17 +27,15 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.param.DaoParamService;
 import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
+import bisq.core.dao.vote.proposal.ProposalListService;
 import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
-
-import bisq.common.UserThread;
 
 import javax.inject.Inject;
 
@@ -71,11 +69,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public abstract class BaseProposalView extends ActivatableView<GridPane, Void> implements BsqBlockChain.Listener {
+public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
-    protected final ProposalService proposalService;
+    protected final MyProposalService myProposalService;
     protected final ReadableBsqBlockChain readableBsqBlockChain;
     protected final DaoParamService daoParamService;
+    protected final ProposalListService proposalListService;
+    protected final ProposalService proposalService;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
     protected final BSFormatter btcFormatter;
@@ -102,13 +102,17 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected BaseProposalView(ProposalService proposalService,
+    protected BaseProposalView(MyProposalService myProposalService,
+                               ProposalListService proposalListService,
+                               ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                ReadableBsqBlockChain readableBsqBlockChain,
                                DaoParamService daoParamService,
                                PeriodService periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
+        this.myProposalService = myProposalService;
+        this.proposalListService = proposalListService;
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.readableBsqBlockChain = readableBsqBlockChain;
@@ -135,8 +139,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
         periodService.getPhaseProperty().addListener(phaseChangeListener);
-        readableBsqBlockChain.addListener(this);
-        proposalService.getObservableList().addListener(proposalListChangeListener);
 
         onPhaseChanged(periodService.getPhaseProperty().get());
 
@@ -151,25 +153,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> i
         selectedProposalSubscription.unsubscribe();
 
         periodService.getPhaseProperty().removeListener(phaseChangeListener);
-        readableBsqBlockChain.removeListener(this);
-        proposalService.getObservableList().removeListener(proposalListChangeListener);
 
         sortedList.comparatorProperty().unbind();
 
         proposalListItems.forEach(ProposalListItem::cleanup);
         proposalTableView.getSelectionModel().clearSelection();
         selectedProposalListItem = null;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqBlockChain.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onBlockAdded(BsqBlock bsqBlock) {
-        // Need delay otherwise we modify list while dispatching  and cause a ConcurrentModificationException
-        UserThread.execute(this::updateProposalList);
     }
 
 

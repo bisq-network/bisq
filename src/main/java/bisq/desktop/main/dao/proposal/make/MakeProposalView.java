@@ -33,9 +33,9 @@ import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.param.DaoParamService;
+import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalConsensus;
-import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.dao.vote.proposal.ProposalType;
 import bisq.core.dao.vote.proposal.ValidationException;
 import bisq.core.dao.vote.proposal.compensation.CompensationRequestPayload;
@@ -85,7 +85,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final FeeService feeService;
-    private final ProposalService proposalService;
+    private final MyProposalService myProposalService;
     private final CompensationRequestService compensationRequestService;
     private final GenericProposalService genericProposalService;
     private final ReadableBsqBlockChain readableBsqBlockChain;
@@ -106,7 +106,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              FeeService feeService,
-                             ProposalService proposalService,
+                             MyProposalService myProposalService,
                              CompensationRequestService compensationRequestService,
                              GenericProposalService genericProposalService,
                              ReadableBsqBlockChain readableBsqBlockChain,
@@ -117,7 +117,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.feeService = feeService;
-        this.proposalService = proposalService;
+        this.myProposalService = myProposalService;
         this.compensationRequestService = compensationRequestService;
         this.genericProposalService = genericProposalService;
         this.readableBsqBlockChain = readableBsqBlockChain;
@@ -200,7 +200,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     }
 
     private void publishProposal(Proposal proposal) {
-        proposalService.publishProposal(proposal,
+        myProposalService.publishProposal(proposal,
                 () -> {
                     proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
