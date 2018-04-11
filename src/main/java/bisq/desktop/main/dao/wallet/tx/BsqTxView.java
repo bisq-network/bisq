@@ -32,11 +32,10 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.dao.state.ChainStateService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -81,14 +80,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqBlockChain.Listener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, bisq.core.dao.state.ChainStateService.Listener {
 
     private TableView<BsqTxListItem> tableView;
     private Pane rootParent;
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final ReadableBsqBlockChain readableBsqBlockChain;
+    private final ChainStateService chainStateService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -112,13 +111,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
-                      ReadableBsqBlockChain readableBsqBlockChain,
+                      ChainStateService chainStateService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
-        this.readableBsqBlockChain = readableBsqBlockChain;
+        this.chainStateService = chainStateService;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -176,7 +175,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        readableBsqBlockChain.addListener(this);
+        chainStateService.addListener(this);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -195,7 +194,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
-        readableBsqBlockChain.removeListener(this);
+        chainStateService.removeListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
@@ -214,7 +213,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqBlockChain.Listener
+    // ChainStateService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -225,7 +224,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void onChainHeightChanged() {
         final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
-        final int bsqBlockChainHeight = readableBsqBlockChain.getChainHeadHeight();
+        final int bsqBlockChainHeight = chainStateService.getChainHeadHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
@@ -256,12 +255,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> {
-                    final Optional<Tx> optionalTx = readableBsqBlockChain.getTx(transaction.getHashAsString());
+                    final Optional<Tx> optionalTx = chainStateService.getTx(transaction.getHashAsString());
                     return new BsqTxListItem(transaction,
                             optionalTx,
                             bsqWalletService,
                             btcWalletService,
-                            readableBsqBlockChain.hasTxBurntFee(transaction.getHashAsString()),
+                            chainStateService.hasTxBurntFee(transaction.getHashAsString()),
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })
@@ -532,7 +531,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             if (item.getOptionalTx().isPresent() && item.getOptionalTx().get().isIssuanceTx()) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
-                                                long blockTimeInSec = readableBsqBlockChain.getBlockTime(item.getOptionalTx().get().getIssuanceBlockHeight());
+                                                long blockTimeInSec = chainStateService.getBlockTime(item.getOptionalTx().get().getIssuanceBlockHeight());
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000)));
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE;

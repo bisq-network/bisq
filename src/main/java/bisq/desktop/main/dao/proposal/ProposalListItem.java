@@ -23,10 +23,9 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.blockchain.BsqBlockChain;
-import bisq.core.dao.blockchain.ReadableBsqBlockChain;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
+import bisq.core.dao.state.ChainStateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.Vote;
@@ -54,13 +53,13 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalListItem implements BsqBlockChain.Listener {
+public class ProposalListItem implements ChainStateService.Listener {
     @Getter
     private final Proposal proposal;
     private final ProposalService proposalService;
     private final PeriodService periodService;
     private final BsqWalletService bsqWalletService;
-    private final ReadableBsqBlockChain readableBsqBlockChain;
+    private final ChainStateService chainStateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     private final ChangeListener<Vote> voteResultChangeListener;
@@ -83,13 +82,13 @@ public class ProposalListItem implements BsqBlockChain.Listener {
                      ProposalService proposalService,
                      PeriodService periodService,
                      BsqWalletService bsqWalletService,
-                     ReadableBsqBlockChain readableBsqBlockChain,
+                     ChainStateService chainStateService,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.proposalService = proposalService;
         this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
-        this.readableBsqBlockChain = readableBsqBlockChain;
+        this.chainStateService = chainStateService;
         this.bsqFormatter = bsqFormatter;
 
 
@@ -108,7 +107,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        readableBsqBlockChain.addListener(this);
+        chainStateService.addListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, proposal.getVote());
@@ -127,7 +126,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
         final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(),
-                readableBsqBlockChain.getChainHeadHeight());
+                chainStateService.getChainHeadHeight());
         switch (newValue) {
             case UNDEFINED:
                 break;
@@ -187,7 +186,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqBlockChain.Listener
+    // ChainStateService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -198,7 +197,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
 
 
     private void setupConfidence() {
-        final Tx tx = readableBsqBlockChain.getTxMap().get(proposal.getProposalPayload().getTxId());
+        final Tx tx = chainStateService.getTxMap().get(proposal.getProposalPayload().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
@@ -242,7 +241,7 @@ public class ProposalListItem implements BsqBlockChain.Listener {
     }
 
     public void cleanup() {
-        readableBsqBlockChain.removeListener(this);
+        chainStateService.removeListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
