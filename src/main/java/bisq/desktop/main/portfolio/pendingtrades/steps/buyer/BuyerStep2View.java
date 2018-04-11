@@ -41,6 +41,7 @@ import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.VenmoForm;
+import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -225,6 +226,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.ALI_PAY_ID:
                 gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.WECHAT_PAY_ID:
+                gridRow = WeChatPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.CLEAR_X_CHANGE_ID:
                 gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);

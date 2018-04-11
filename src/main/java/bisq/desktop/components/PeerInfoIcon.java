@@ -55,9 +55,10 @@ public class PeerInfoIcon extends Group {
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final Label tagLabel;
-    private final Pane tagPane;
-    private final Pane numTradesPane;
+    protected final Pane tagPane;
+    protected final Pane numTradesPane;
     private final String hostName;
+    private final double scaleFactor;
 
     public PeerInfoIcon(NodeAddress nodeAddress,
                         String role,
@@ -70,6 +71,7 @@ public class PeerInfoIcon extends Group {
                         boolean useDevPrivilegeKeys) {
         this.numTrades = numTrades;
 
+        scaleFactor = getScaleFactor();
         hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
         String address = nodeAddress != null ? nodeAddress.getFullAddress() : "";
 
@@ -108,12 +110,12 @@ public class PeerInfoIcon extends Group {
             ringColor = Color.rgb(0, 225, 0);
         }
 
-        double outerSize = 26;
+        double outerSize = 26 * scaleFactor;
         Canvas outerBackground = new Canvas(outerSize, outerSize);
         GraphicsContext outerBackgroundGc = outerBackground.getGraphicsContext2D();
         outerBackgroundGc.setFill(ringColor);
         outerBackgroundGc.fillOval(0, 0, outerSize, outerSize);
-        outerBackground.setLayoutY(1);
+        outerBackground.setLayoutY(1 * scaleFactor);
 
         // inner circle
         int maxIndices = 15;
@@ -138,36 +140,38 @@ public class PeerInfoIcon extends Group {
         Color innerColor = Color.rgb(red, green, blue);
         innerColor = innerColor.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
-        double innerSize = 22;
+        double innerSize = scaleFactor * 22;
         Canvas innerBackground = new Canvas(innerSize, innerSize);
         GraphicsContext innerBackgroundGc = innerBackground.getGraphicsContext2D();
         innerBackgroundGc.setFill(innerColor);
         innerBackgroundGc.fillOval(0, 0, innerSize, innerSize);
-        innerBackground.setLayoutY(3);
-        innerBackground.setLayoutX(2);
+        innerBackground.setLayoutY(3 * scaleFactor);
+        innerBackground.setLayoutX(2 * scaleFactor);
 
         ImageView avatarImageView = new ImageView();
         avatarImageView.setId("avatar_" + index);
         avatarImageView.setLayoutX(0);
-        avatarImageView.setLayoutY(1);
+        avatarImageView.setLayoutY(1 * scaleFactor);
+        avatarImageView.setFitHeight(scaleFactor * 26);
+        avatarImageView.setFitWidth(scaleFactor * 26);
 
         numTradesPane = new Pane();
-        numTradesPane.relocate(18, 14);
+        numTradesPane.relocate(scaleFactor * 18, scaleFactor * 14);
         numTradesPane.setMouseTransparent(true);
         ImageView numTradesCircle = new ImageView();
         numTradesCircle.setId("image-green_circle");
         numTradesLabel = new AutoTooltipLabel();
-        numTradesLabel.relocate(5, 1);
+        numTradesLabel.relocate(scaleFactor * 5, scaleFactor * 1);
         numTradesLabel.setId("ident-num-label");
         numTradesPane.getChildren().addAll(numTradesCircle, numTradesLabel);
 
         tagPane = new Pane();
-        tagPane.relocate(18, -2);
+        tagPane.relocate(Math.round(scaleFactor * 18), scaleFactor * -2);
         tagPane.setMouseTransparent(true);
         ImageView tagCircle = new ImageView();
         tagCircle.setId("image-blue_circle");
         tagLabel = new AutoTooltipLabel();
-        tagLabel.relocate(5, 1);
+        tagLabel.relocate(Math.round(scaleFactor * 5), scaleFactor * 1);
         tagLabel.setId("ident-num-label");
         tagPane.getChildren().addAll(tagCircle, tagLabel);
 
@@ -175,6 +179,10 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
+        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, makersAccountAge);
+    }
+
+    protected void addMouseListener(int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences, BSFormatter formatter, boolean useDevPrivilegeKeys, boolean isFiatCurrency, long makersAccountAge) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
                         formatter.formatAccountAge(makersAccountAge) :
@@ -192,7 +200,11 @@ public class PeerInfoIcon extends Group {
                 .show());
     }
 
-    private void updatePeerInfoIcon() {
+    protected double getScaleFactor() {
+        return 1;
+    }
+
+    protected void updatePeerInfoIcon() {
         String tag;
         if (peerTagMap.containsKey(hostName)) {
             tag = peerTagMap.get(hostName);

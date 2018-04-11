@@ -105,7 +105,6 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.getIcon;
 
 
 

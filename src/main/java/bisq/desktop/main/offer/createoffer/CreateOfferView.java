@@ -102,7 +102,6 @@ import javafx.geometry.VPos;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 
 import javafx.event.ActionEvent;
