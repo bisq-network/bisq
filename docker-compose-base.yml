@@ -15,6 +15,7 @@ services:
       - BTC_NODES=bitcoin:18444
       - BASE_CURRENCY_NETWORK=BTC_REGTEST
       - BITCOIN_REGTEST_HOST=NONE
+      - BISQ_API_HOST=0.0.0.0
   seed:
     image: bisq/seednode
     volumes:

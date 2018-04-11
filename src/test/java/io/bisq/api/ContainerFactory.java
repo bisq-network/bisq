@@ -15,6 +15,7 @@ public final class ContainerFactory {
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
         final ContainerBuilder.ContainerOptionsBuilder containerOptionsBuilder = withRegtestEnv(Container.withContainerName("bisq-api-" + nameSuffix).fromImage("bisq-api").withVolume("m2", "/root/.m2").withPortBinding(portBinding))
                 .withEnvironment("NODE_PORT", nodePort)
+                .withEnvironment("BISQ_API_HOST", "0.0.0.0")
                 .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true);
         if (linkToSeedNode) {
             containerOptionsBuilder.withLink(SEED_NODE_CONTAINER_NAME);
