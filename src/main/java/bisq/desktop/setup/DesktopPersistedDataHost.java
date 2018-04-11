@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DesktopPersistedDataHost {
-    
+
     // All classes which are persisting objects need to be added here
     public static List<PersistedDataHost> getPersistedDataHosts(Injector injector) {
         List<PersistedDataHost> persistedDataHosts = new ArrayList<>();
