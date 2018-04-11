@@ -4,14 +4,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Currency {
     @JsonProperty
-    public String symbol;
+    public String code;
     @JsonProperty
     public String name;
     @JsonProperty
     public String type;
 
-    Currency(String symbol, String name, String type) {
-        this.symbol = symbol;
+    public Currency() {
+    }
+
+    Currency(String code, String name, String type) {
+        this.code = code;
         this.name = name;
         this.type = type;
     }
