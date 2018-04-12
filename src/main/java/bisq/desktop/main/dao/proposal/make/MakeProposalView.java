@@ -32,7 +32,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalConsensus;
@@ -88,7 +88,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final MyProposalService myProposalService;
     private final CompensationRequestService compensationRequestService;
     private final GenericProposalService genericProposalService;
-    private final ChainStateService chainStateService;
+    private final StateService stateService;
     private final DaoParamService daoParamService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -109,7 +109,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              MyProposalService myProposalService,
                              CompensationRequestService compensationRequestService,
                              GenericProposalService genericProposalService,
-                             ChainStateService chainStateService,
+                             StateService stateService,
                              DaoParamService daoParamService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
@@ -120,7 +120,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         this.myProposalService = myProposalService;
         this.compensationRequestService = compensationRequestService;
         this.genericProposalService = genericProposalService;
-        this.chainStateService = chainStateService;
+        this.stateService = stateService;
         this.daoParamService = daoParamService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
@@ -174,7 +174,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             Coin miningFee = Objects.requireNonNull(tx).getFee();
             int txSize = tx.bitcoinSerialize().length;
 
-            final Coin fee = ProposalConsensus.getFee(daoParamService, chainStateService.getChainHeadHeight());
+            final Coin fee = ProposalConsensus.getFee(daoParamService, stateService.getChainHeadHeight());
 
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> publishProposal(proposal));

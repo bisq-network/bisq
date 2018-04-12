@@ -34,7 +34,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
@@ -94,12 +94,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 PeriodService periodService,
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
-                                ChainStateService chainStateService,
+                                StateService stateService,
                                 DaoParamService daoParamService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
-        super(myProposalService, proposalListService, proposalService, bsqWalletService, chainStateService,
+        super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
                 daoParamService, periodService, bsqFormatter, btcFormatter);
         this.blindVoteService = blindVoteService;
     }
@@ -130,7 +130,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 // TODO verify stake
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin fee = BlindVoteConsensus.getFee(daoParamService, chainStateService.getChainHeadHeight());
+                final Coin fee = BlindVoteConsensus.getFee(daoParamService, stateService.getChainHeadHeight());
                 Transaction dummyTx = null;
                 try {
                     // We create a tx with dummy opreturn data to get the mining fee for confirmation popup
@@ -270,7 +270,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         if (selectedProposalListItem != null &&
                 proposalDisplay != null &&
                 !periodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId(),
-                        chainStateService.getChainHeadHeight())) {
+                        stateService.getChainHeadHeight())) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:

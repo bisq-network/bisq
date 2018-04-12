@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
@@ -51,7 +51,7 @@ class BsqTxListItem {
     private final Optional<Tx> optionalTx;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final ChainStateService chainStateService;
+    private final StateService stateService;
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final String txId;
@@ -71,7 +71,7 @@ class BsqTxListItem {
                   Optional<Tx> optionalTx,
                   BsqWalletService bsqWalletService,
                   BtcWalletService btcWalletService,
-                  ChainStateService chainStateService,
+                  StateService stateService,
                   boolean isBurnedBsqTx,
                   Date date,
                   BsqFormatter bsqFormatter) {
@@ -79,7 +79,7 @@ class BsqTxListItem {
         this.optionalTx = optionalTx;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.chainStateService = chainStateService;
+        this.stateService = stateService;
         this.isBurnedBsqTx = isBurnedBsqTx;
         this.date = date;
         this.bsqFormatter = bsqFormatter;
@@ -166,7 +166,7 @@ class BsqTxListItem {
 
     public TxType getTxType() {
         if (optionalTx.isPresent()) {
-            Optional<TxType> optionalTxType = chainStateService.getTxType(optionalTx.get().getId());
+            Optional<TxType> optionalTxType = stateService.getTxType(optionalTx.get().getId());
             if (optionalTxType.isPresent())
                 return optionalTxType.get();
         }

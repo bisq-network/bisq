@@ -28,7 +28,7 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
-    protected final ChainStateService chainStateService;
+    protected final StateService stateService;
     protected final DaoParamService daoParamService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
@@ -106,7 +106,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalListService proposalListService,
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
-                               ChainStateService chainStateService,
+                               StateService stateService,
                                DaoParamService daoParamService,
                                PeriodService periodService,
                                BsqFormatter bsqFormatter,
@@ -115,7 +115,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.proposalListService = proposalListService;
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
-        this.chainStateService = chainStateService;
+        this.stateService = stateService;
         this.daoParamService = daoParamService;
         this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
@@ -255,7 +255,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                         proposalService,
                         periodService,
                         bsqWalletService,
-                        chainStateService,
+                        stateService,
                         bsqFormatter))
                 .collect(Collectors.toSet()));
 

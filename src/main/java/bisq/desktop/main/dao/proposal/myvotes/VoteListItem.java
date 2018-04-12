@@ -25,7 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxOutput;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.myvote.MyVote;
 import bisq.core.locale.Res;
 
@@ -50,11 +50,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class VoteListItem implements ChainStateService.Listener {
+public class VoteListItem implements StateService.Listener {
     @Getter
     private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
-    private final ChainStateService chainStateService;
+    private final StateService stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
@@ -74,11 +74,11 @@ public class VoteListItem implements ChainStateService.Listener {
 
     VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
-                 ChainStateService chainStateService,
+                 StateService stateService,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;
-        this.chainStateService = chainStateService;
+        this.stateService = stateService;
         this.bsqFormatter = bsqFormatter;
 
         txConfidenceIndicator = new TxConfidenceIndicator();
@@ -87,7 +87,7 @@ public class VoteListItem implements ChainStateService.Listener {
         txConfidenceIndicator.setProgress(-1);
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
-        chainStateService.addListener(this);
+        stateService.addListener(this);
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
@@ -97,7 +97,7 @@ public class VoteListItem implements ChainStateService.Listener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChainStateService.Listener
+    // StateService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -109,7 +109,7 @@ public class VoteListItem implements ChainStateService.Listener {
 
     private void setupConfidence() {
         calculateStake();
-        final Tx tx = chainStateService.getTxMap().get(myVote.getBlindVote().getTxId());
+        final Tx tx = stateService.getTxMap().get(myVote.getBlindVote().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
@@ -148,7 +148,7 @@ public class VoteListItem implements ChainStateService.Listener {
     private void calculateStake() {
         if (stake == 0) {
             String txId = myVote.getTxId();
-            stake = chainStateService.getUnspentBlindVoteStakeTxOutputs().stream()
+            stake = stateService.getUnspentBlindVoteStakeTxOutputs().stream()
                     .filter(txOutput -> txOutput.getTxId().equals(txId))
                     .filter(txOutput -> txOutput.getIndex() == 0)
                     .mapToLong(TxOutput::getValue)
@@ -166,7 +166,7 @@ public class VoteListItem implements ChainStateService.Listener {
 
     public void cleanup() {
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
-        chainStateService.removeListener(this);
+        stateService.removeListener(this);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
     }

@@ -35,7 +35,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.blockchain.vo.BsqBlock;
 import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -80,14 +80,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, bisq.core.dao.state.ChainStateService.Listener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, StateService.Listener {
 
     private TableView<BsqTxListItem> tableView;
     private Pane rootParent;
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final ChainStateService chainStateService;
+    private final StateService stateService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -111,13 +111,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
-                      ChainStateService chainStateService,
+                      StateService stateService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
-        this.chainStateService = chainStateService;
+        this.stateService = stateService;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -175,7 +175,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        chainStateService.addListener(this);
+        stateService.addListener(this);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -194,7 +194,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
-        chainStateService.removeListener(this);
+        stateService.removeListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
@@ -213,7 +213,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChainStateService.Listener
+    // StateService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -224,7 +224,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void onChainHeightChanged() {
         final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
-        final int bsqBlockChainHeight = chainStateService.getChainHeadHeight();
+        final int bsqBlockChainHeight = stateService.getChainHeadHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
@@ -255,13 +255,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> {
-                    final Optional<Tx> optionalTx = chainStateService.getTx(transaction.getHashAsString());
+                    final Optional<Tx> optionalTx = stateService.getTx(transaction.getHashAsString());
                     return new BsqTxListItem(transaction,
                             optionalTx,
                             bsqWalletService,
                             btcWalletService,
-                            chainStateService,
-                            chainStateService.hasTxBurntFee(transaction.getHashAsString()),
+                            stateService,
+                            stateService.hasTxBurntFee(transaction.getHashAsString()),
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })
@@ -371,7 +371,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
                                         if (txType == TxType.COMPENSATION_REQUEST &&
                                                 optionalTx.isPresent() &&
-                                                chainStateService.isIssuanceTx(optionalTx.get().getId())) {
+                                                stateService.isIssuanceTx(optionalTx.get().getId())) {
                                             if (field != null)
                                                 field.setOnAction(null);
 
@@ -533,11 +533,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
                                             final String txId = item.getOptionalTx().get().getId();
-                                            if (item.getOptionalTx().isPresent() && chainStateService.isIssuanceTx(txId)) {
+                                            if (item.getOptionalTx().isPresent() && stateService.isIssuanceTx(txId)) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
-                                                final int issuanceBlockHeight = chainStateService.getIssuanceBlockHeight(txId);
-                                                long blockTimeInSec = chainStateService.getBlockTime(issuanceBlockHeight);
+                                                final int issuanceBlockHeight = stateService.getIssuanceBlockHeight(txId);
+                                                long blockTimeInSec = stateService.getBlockTime(issuanceBlockHeight);
                                                 final String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {

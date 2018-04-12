@@ -31,7 +31,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.param.DaoParamService;
-import bisq.core.dao.state.ChainStateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.Vote;
@@ -95,14 +95,14 @@ public class MyVotesView extends BaseProposalView {
                         ProposalService proposalService,
                         PeriodService periodService,
                         BsqWalletService bsqWalletService,
-                        ChainStateService chainStateService,
+                        StateService stateService,
                         DaoParamService daoParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
                         MyVoteService myVoteService,
                         Preferences preferences) {
 
-        super(myProposalService, proposalListService, proposalService, bsqWalletService, chainStateService,
+        super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
                 daoParamService, periodService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
         this.preferences = preferences;
@@ -130,7 +130,7 @@ public class MyVotesView extends BaseProposalView {
 
         voteListItems.clear();
         List<VoteListItem> items = myVoteService.getMyVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, chainStateService, bsqFormatter))
+                .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }
