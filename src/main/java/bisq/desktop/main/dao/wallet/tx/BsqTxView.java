@@ -260,6 +260,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             optionalTx,
                             bsqWalletService,
                             btcWalletService,
+                            chainStateService,
                             chainStateService.hasTxBurntFee(transaction.getHashAsString()),
                             transaction.getUpdateTime(),
                             bsqFormatter);
@@ -367,7 +368,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     Label label;
                                     if (item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal()) {
                                         final Optional<Tx> optionalTx = item.getOptionalTx();
-                                        if (txType == TxType.COMPENSATION_REQUEST && optionalTx.isPresent() && optionalTx.get().isIssuanceTx()) {
+
+                                        if (txType == TxType.COMPENSATION_REQUEST &&
+                                                optionalTx.isPresent() &&
+                                                chainStateService.isIssuanceTx(optionalTx.get().getId())) {
                                             if (field != null)
                                                 field.setOnAction(null);
 
@@ -528,11 +532,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             break;
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
-                                            if (item.getOptionalTx().isPresent() && item.getOptionalTx().get().isIssuanceTx()) {
+                                            final String txId = item.getOptionalTx().get().getId();
+                                            if (item.getOptionalTx().isPresent() && chainStateService.isIssuanceTx(txId)) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
-                                                long blockTimeInSec = chainStateService.getBlockTime(item.getOptionalTx().get().getIssuanceBlockHeight());
-                                                toolTipText = Res.get("dao.tx.issuance.tooltip", bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000)));
+                                                final int issuanceBlockHeight = chainStateService.getIssuanceBlockHeight(txId);
+                                                long blockTimeInSec = chainStateService.getBlockTime(issuanceBlockHeight);
+                                                final String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
+                                                toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE;
                                                 style = "dao-tx-type-fee-icon";
