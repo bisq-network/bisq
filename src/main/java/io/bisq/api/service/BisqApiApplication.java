@@ -1,13 +1,6 @@
 package io.bisq.api.service;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
-import io.bisq.api.BisqProxy;
-import io.bisq.api.health.CurrencyListHealthCheck;
-import io.bisq.api.service.v1.ApiV1;
 import bisq.common.crypto.KeyRing;
-import bisq.common.storage.Storage;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -23,11 +16,20 @@ import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.network.p2p.P2PService;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.name.Named;
+import io.bisq.api.BisqProxy;
+import io.bisq.api.app.ApiEnvironment;
+import io.bisq.api.health.CurrencyListHealthCheck;
+import io.bisq.api.service.v1.ApiV1;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -83,9 +85,6 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     FeeService feeService;
 
     @Inject
-    Storage storage;
-
-    @Inject
     private Preferences preferences;
 
     @Inject
@@ -94,10 +93,6 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     @Inject(optional = true)
     @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)
     private boolean useDevPrivilegeKeys = false;
-
-    public static void main(String[] args) throws Exception {
-        new BisqApiApplication().run(args);
-    }
 
     @Override
     public String getName() {
@@ -129,10 +124,22 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
         setupCors(environment);
+        setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
+    }
+
+    private void setupHostAndPort(ApiConfiguration configuration, ApiEnvironment environment) {
+        final SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
+        final HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
+        final Integer apiPort = environment.getApiPort();
+        if (null != apiPort)
+            connector.setPort(apiPort);
+        final String apiHost = environment.getApiHost();
+        if (null != apiHost)
+            connector.setBindHost(apiHost);
     }
 
     private void setupCors(Environment environment) {

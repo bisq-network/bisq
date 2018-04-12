@@ -84,11 +84,17 @@ public class ApiMain extends BisqExecutable {
         new ApiMain().execute(args);
     }
 
+    @Override
+    protected void customizeOptionParsing(OptionParser parser) {
+        super.customizeOptionParsing(parser);
+        ApiOptionCustomizer.customizeOptionParsing(parser);
+    }
+
     @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
-        final BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
-        Api.setEnvironment(bisqEnvironment);
+        final ApiEnvironment apiEnvironment = new ApiEnvironment(options);
+        Api.setEnvironment(apiEnvironment);
 
         UserThread.execute(() -> {
             try {
@@ -117,7 +123,7 @@ public class ApiMain extends BisqExecutable {
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
 
-        String maxMemoryOption = bisqEnvironment.getProperty(AppOptionKeys.MAX_MEMORY);
+        String maxMemoryOption = apiEnvironment.getProperty(AppOptionKeys.MAX_MEMORY);
         if (maxMemoryOption != null && !maxMemoryOption.isEmpty()) {
             try {
                 maxMemory = Integer.parseInt(maxMemoryOption);
@@ -143,7 +149,7 @@ public class ApiMain extends BisqExecutable {
                 final long finalUsedMemoryInMB = usedMemoryInMB;
                 UserThread.runAfter(() -> {
                     if (finalUsedMemoryInMB > maxMemory)
-                        restart(bisqEnvironment);
+                        restart(apiEnvironment);
                 }, 1);
             }
         }, CHECK_MEMORY_PERIOD_SEC);

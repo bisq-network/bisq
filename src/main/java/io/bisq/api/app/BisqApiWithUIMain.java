@@ -72,8 +72,14 @@ public class BisqApiWithUIMain extends BisqExecutable {
     }
 
     @Override
+    protected void customizeOptionParsing(OptionParser parser) {
+        super.customizeOptionParsing(parser);
+        ApiOptionCustomizer.customizeOptionParsing(parser);
+    }
+
+    @Override
     protected void doExecute(OptionSet options) {
-        BisqApiWithUI.setEnvironment(getBisqEnvironment(options));
+        BisqApiWithUI.setEnvironment(new ApiEnvironment(options));
         javafx.application.Application.launch(BisqApiWithUI.class);
     }
 }

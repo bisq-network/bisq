@@ -120,7 +120,7 @@ public class BisqApiWithUI extends Application {
         BisqApiWithUI.primaryStage = stage;
 
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
+            bisqAppModule = new BisqApiWithUIModule(bisqEnvironment, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
