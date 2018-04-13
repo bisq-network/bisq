@@ -27,7 +27,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.vo.BsqBlock;
+import bisq.core.dao.state.blockchain.BsqBlock;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;

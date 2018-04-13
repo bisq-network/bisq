@@ -33,9 +33,9 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.vo.BsqBlock;
-import bisq.core.dao.state.blockchain.vo.Tx;
-import bisq.core.dao.state.blockchain.vo.TxType;
+import bisq.core.dao.state.blockchain.BsqBlock;
+import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
