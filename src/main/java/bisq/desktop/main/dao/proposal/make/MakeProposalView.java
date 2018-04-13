@@ -31,17 +31,15 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalConsensus;
 import bisq.core.dao.vote.proposal.ProposalType;
 import bisq.core.dao.vote.proposal.ValidationException;
-import bisq.core.dao.vote.proposal.compensation.CompensationRequestPayload;
 import bisq.core.dao.vote.proposal.compensation.CompensationRequestService;
-import bisq.core.dao.vote.proposal.generic.GenericProposalPayload;
 import bisq.core.dao.vote.proposal.generic.GenericProposalService;
+import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -170,7 +168,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private void publishProposal(ProposalType type) {
         try {
             Proposal proposal = createProposal(type);
-            Transaction tx = Objects.requireNonNull(proposal).getTx();
+            final String txId = Objects.requireNonNull(proposal).getTxId();
+            Transaction tx = Objects.requireNonNull(bsqWalletService.getTransaction(txId));
+
             Coin miningFee = Objects.requireNonNull(tx).getFee();
             int txSize = tx.bitcoinSerialize().length;
 
@@ -217,21 +217,18 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                CompensationRequestPayload compensationRequestPayload = compensationRequestService.createCompensationRequestPayload(
-                        proposalDisplay.nameTextField.getText(),
+                return compensationRequestService.makeTxAndGetCompensationRequest(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
                         Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
-                return compensationRequestService.createCompensationRequest(compensationRequestPayload);
             case GENERIC:
-                GenericProposalPayload genericProposalPayload = genericProposalService.createGenericProposalPayload(
+                return genericProposalService.makeTxAndGetGenericProposal(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());
-                return genericProposalService.createGenericProposal(genericProposalPayload);
             case CHANGE_PARAM:
                 //TODO
                 return null;
