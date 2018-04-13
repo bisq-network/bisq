@@ -27,7 +27,7 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.vote.proposal.param.DaoParamService;
+import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
@@ -73,7 +73,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
     protected final StateService stateService;
-    protected final DaoParamService daoParamService;
+    protected final ParamService paramService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
     protected final BsqWalletService bsqWalletService;
@@ -107,7 +107,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                StateService stateService,
-                               DaoParamService daoParamService,
+                               ParamService paramService,
                                PeriodService periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
@@ -116,7 +116,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
-        this.daoParamService = daoParamService;
+        this.paramService = paramService;
         this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;

@@ -33,7 +33,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.vote.proposal.param.DaoParamService;
+import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
@@ -95,12 +95,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BlindVoteService blindVoteService,
                                 BsqWalletService bsqWalletService,
                                 StateService stateService,
-                                DaoParamService daoParamService,
+                                ParamService paramService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                daoParamService, periodService, bsqFormatter, btcFormatter);
+                paramService, periodService, bsqFormatter, btcFormatter);
         this.blindVoteService = blindVoteService;
     }
 
@@ -130,7 +130,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 // TODO verify stake
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin fee = BlindVoteConsensus.getFee(daoParamService, stateService.getChainHeadHeight());
+                final Coin fee = BlindVoteConsensus.getFee(paramService, stateService.getChainHeadHeight());
                 Transaction dummyTx = null;
                 try {
                     // We create a tx with dummy opreturn data to get the mining fee for confirmation popup
