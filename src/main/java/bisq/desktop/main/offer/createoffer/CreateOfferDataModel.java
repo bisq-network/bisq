@@ -98,7 +98,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferDataModel extends OfferDataModel implements BsqBalanceListener {
+public class CreateOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     private final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
@@ -146,7 +146,7 @@ class CreateOfferDataModel extends OfferDataModel implements BsqBalanceListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+    public CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                          PriceFeedService priceFeedService, FilterManager filterManager,
                          AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,

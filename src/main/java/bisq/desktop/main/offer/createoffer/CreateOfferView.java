@@ -140,7 +140,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg;
+    private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
     private InputTextField buyerSecurityDepositInputTextField, amountTextField, minAmountTextField,
@@ -152,7 +152,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
             priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel;
+            waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel,
+            buyerSecurityDepositBtcLabel, paymentAccountsLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
@@ -179,7 +180,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions,
+    public CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
@@ -215,7 +216,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             doActivate();
     }
 
-    private void doActivate() {
+    protected void doActivate() {
         if (!isActivated) {
             isActivated = true;
             currencyComboBox.setPrefWidth(250);
@@ -478,6 +479,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             maybeShowClearXchangeWarning(paymentAccount);
 
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
+            currencyTextField.setVisible(!paymentAccount.hasMultipleCurrencies());
+            currencyTextFieldLabel.setVisible(!paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
@@ -498,6 +501,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             }
         } else {
             currencyComboBox.setVisible(false);
+            currencyTextField.setVisible(true);
+            currencyTextFieldLabel.setVisible(true);
+
             currencyTextField.setText("");
         }
 
@@ -556,14 +562,15 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
         // trading account
+        paymentAccountsComboBox.managedProperty().bind(paymentAccountsComboBox.visibleProperty());
+        paymentAccountsLabel.managedProperty().bind(paymentAccountsLabel.visibleProperty());
+        paymentTitledGroupBg.managedProperty().bind(paymentTitledGroupBg.visibleProperty());
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
         currencyComboBox.managedProperty().bind(currencyComboBox.visibleProperty());
         currencyComboBoxLabel.visibleProperty().bind(currencyComboBox.visibleProperty());
-        currencyComboBoxLabel.managedProperty().bind(currencyComboBox.visibleProperty());
-        currencyTextField.visibleProperty().bind(currencyComboBox.visibleProperty().not());
-        currencyTextField.managedProperty().bind(currencyComboBox.visibleProperty().not());
-        currencyTextFieldLabel.visibleProperty().bind(currencyComboBox.visibleProperty().not());
-        currencyTextFieldLabel.managedProperty().bind(currencyComboBox.visibleProperty().not());
+        currencyComboBoxLabel.managedProperty().bind(currencyComboBoxLabel.visibleProperty());
+        currencyTextField.managedProperty().bind(currencyTextField.visibleProperty());
+        currencyTextFieldLabel.managedProperty().bind(currencyTextFieldLabel.visibleProperty());
     }
 
     private void removeBindings() {
@@ -604,13 +611,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2.disableProperty().unbind();
 
         // trading account
+        paymentTitledGroupBg.managedProperty().unbind();
+        paymentAccountsLabel.managedProperty().unbind();
+        paymentAccountsComboBox.managedProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBox.prefWidthProperty().unbind();
         currencyComboBoxLabel.visibleProperty().unbind();
         currencyComboBoxLabel.managedProperty().unbind();
-        currencyTextField.visibleProperty().unbind();
         currencyTextField.managedProperty().unbind();
-        currencyTextFieldLabel.visibleProperty().unbind();
         currencyTextFieldLabel.managedProperty().unbind();
     }
 
@@ -859,11 +867,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
-        GridPane.setColumnSpan(titledGroupBg, 3);
+        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
+        GridPane.setColumnSpan(paymentTitledGroupBg, 3);
 
         //noinspection unchecked
-        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
+        final Tuple2<Label, ComboBox> paymentAccountLabelComboBoxTuple = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
+        paymentAccountsLabel = paymentAccountLabelComboBoxTuple.first;
+        paymentAccountsComboBox = paymentAccountLabelComboBoxTuple.second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
@@ -890,9 +900,20 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.currency"), "", 5);
         currencyTextFieldLabel = currencyTextFieldTuple.first;
+        currencyTextFieldLabel.setVisible(false);
         editOfferElements.add(currencyTextFieldLabel);
         currencyTextField = currencyTextFieldTuple.second;
+        currencyTextField.setVisible(false);
         editOfferElements.add(currencyTextField);
+    }
+
+    protected void hidePaymentGroup() {
+        paymentTitledGroupBg.setVisible(false);
+        paymentAccountsLabel.setVisible(false);
+        paymentAccountsComboBox.setVisible(false);
+        currencyComboBox.setVisible(false);
+        currencyTextFieldLabel.setVisible(false);
+        currencyTextField.setVisible(false);
     }
 
     private void addAmountPriceGroup() {
@@ -948,6 +969,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         });
     }
 
+    protected void hideOptionsGroup() {
+        setDepositTitledGroupBg.setVisible(false);
+        setDepositTitledGroupBg.setManaged(false);
+        nextButton.setVisible(false);
+        nextButton.setManaged(false);
+        cancelButton1.setVisible(false);
+        cancelButton1.setManaged(false);
+        buyerSecurityDepositLabel.setVisible(false);
+        buyerSecurityDepositLabel.setManaged(false);
+        buyerSecurityDepositInputTextField.setVisible(false);
+        buyerSecurityDepositInputTextField.setManaged(false);
+        buyerSecurityDepositBtcLabel.setVisible(false);
+        buyerSecurityDepositBtcLabel.setManaged(false);
+    }
+
     private void showFeeOption() {
         Coin makerFee = model.dataModel.getMakerFee(false);
         String missingBsq = null;
@@ -980,7 +1016,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 Res.get("createOffer.securityDeposit.prompt"));
         buyerSecurityDepositValueCurrencyBox = tuple.first;
         buyerSecurityDepositInputTextField = tuple.second;
-        Label buyerSecurityDepositBtcLabel = tuple.third;
+        buyerSecurityDepositBtcLabel = tuple.third;
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
         editOfferElements.add(buyerSecurityDepositBtcLabel);
