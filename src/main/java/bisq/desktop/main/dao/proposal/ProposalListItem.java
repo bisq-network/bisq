@@ -24,7 +24,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.BsqBlock;
+import bisq.core.dao.state.blockchain.TxBlock;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
@@ -190,7 +190,7 @@ public class ProposalListItem implements StateService.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(BsqBlock bsqBlock) {
+    public void onBlockAdded(TxBlock txBlock) {
         //TODO do we want that here???
         setupConfidence();
     }

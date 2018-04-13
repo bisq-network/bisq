@@ -27,7 +27,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.BsqBlock;
+import bisq.core.dao.state.blockchain.TxBlock;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -151,7 +151,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(BsqBlock bsqBlock) {
+    public void onBlockAdded(TxBlock txBlock) {
         updateWithBsqBlockChainData();
     }
 

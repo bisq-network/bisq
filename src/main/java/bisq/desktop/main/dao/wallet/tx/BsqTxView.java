@@ -33,7 +33,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.BsqBlock;
+import bisq.core.dao.state.blockchain.TxBlock;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
@@ -217,7 +217,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(BsqBlock bsqBlock) {
+    public void onBlockAdded(TxBlock txBlock) {
         onChainHeightChanged();
     }
 
