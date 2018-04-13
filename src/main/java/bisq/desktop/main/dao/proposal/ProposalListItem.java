@@ -23,8 +23,8 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.state.Block;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.TxBlock;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalListItem implements StateService.Listener {
+public class ProposalListItem implements StateService.BlockListener {
     @Getter
     private final Proposal proposal;
     private final ProposalService proposalService;
@@ -107,7 +107,7 @@ public class ProposalListItem implements StateService.Listener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        stateService.addListener(this);
+        stateService.addBlockListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, proposal.getVote());
@@ -186,11 +186,11 @@ public class ProposalListItem implements StateService.Listener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // StateService.Listener
+    // StateService.BlockListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(TxBlock txBlock) {
+    public void onBlockAdded(Block block) {
         //TODO do we want that here???
         setupConfidence();
     }
@@ -241,7 +241,7 @@ public class ProposalListItem implements StateService.Listener {
     }
 
     public void cleanup() {
-        stateService.removeListener(this);
+        stateService.removeBlockListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);

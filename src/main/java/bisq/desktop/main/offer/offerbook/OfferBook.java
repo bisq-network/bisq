@@ -41,7 +41,7 @@ import static bisq.core.offer.OfferPayload.Direction.BUY;
  * Holds and manages the unsorted and unfiltered offerbook list of both buy and sell offers.
  * It is handled as singleton by Guice and is used by 2 instances of OfferBookDataModel (one for Buy one for Sell).
  * As it is used only by the Buy and Sell UIs we treat it as local UI model.
- * It also use OfferRepository.Listener as the lists items class and we don't want to get any dependency out of the
+ * It also use OfferRepository.BlockListener as the lists items class and we don't want to get any dependency out of the
  * package for that.
  */
 @Slf4j

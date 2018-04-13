@@ -26,8 +26,8 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.state.Block;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.TxBlock;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -56,7 +56,7 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements StateService.Listener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements StateService.BlockListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
     private final StateService stateService;
@@ -128,7 +128,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        stateService.addListener(this);
+        stateService.addBlockListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
         hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + stateService.getGenesisTxId()));
@@ -140,18 +140,18 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        stateService.removeListener(this);
+        stateService.removeBlockListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
         hyperlinkWithIcon.setOnAction(null);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // StateService.Listener
+    // StateService.BlockListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(TxBlock txBlock) {
+    public void onBlockAdded(Block block) {
         updateWithBsqBlockChainData();
     }
 
