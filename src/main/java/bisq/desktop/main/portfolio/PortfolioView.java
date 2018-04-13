@@ -202,9 +202,9 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                     editOpenOfferView.setCloseHandler(() -> {
                         root.getTabs().remove(editOpenOfferTab);
                     });
+                    root.getTabs().add(editOpenOfferTab);
                 }
                 editOpenOfferView.onTabSelected(true);
-                root.getTabs().add(editOpenOfferTab);
                 currentTab = editOpenOfferTab;
             } else {
                 view = viewLoader.load(OpenOffersView.class);
