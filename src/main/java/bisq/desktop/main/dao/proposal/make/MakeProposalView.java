@@ -45,7 +45,7 @@ import bisq.core.provider.fee.FeeService;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -167,17 +167,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     private void publishProposal(ProposalType type) {
         try {
-            Proposal proposal = createProposal(type);
-            final String txId = Objects.requireNonNull(proposal).getTxId();
-            Transaction tx = Objects.requireNonNull(bsqWalletService.getTransaction(txId));
-
-            Coin miningFee = Objects.requireNonNull(tx).getFee();
-            int txSize = tx.bitcoinSerialize().length;
-
+            final Tuple2<Proposal, Transaction> tuple2 = createProposal(type);
+            Proposal proposal = tuple2.first;
+            Transaction transaction = tuple2.second;
+            Coin miningFee = transaction.getFee();
+            int txSize = transaction.bitcoinSerialize().length;
             final Coin fee = ProposalConsensus.getFee(paramService, stateService.getChainHeadHeight());
 
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> publishProposal(proposal));
+                    Res.get("dao.proposal"), () -> publishProposal(proposal, transaction));
 
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
@@ -199,8 +197,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void publishProposal(Proposal proposal) {
+    private void publishProposal(Proposal proposal, Transaction transaction) {
         myProposalService.publishProposal(proposal,
+                transaction,
                 () -> {
                     proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
@@ -209,7 +208,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
-    private Proposal createProposal(ProposalType type)
+    private Tuple2<Proposal, Transaction> createProposal(ProposalType type)
             throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
             WalletException, IOException {
 
@@ -231,14 +230,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                         proposalDisplay.linkInputTextField.getText());
             case CHANGE_PARAM:
                 //TODO
-                return null;
+                throw new RuntimeException("Not implemented yet");
             case REMOVE_ALTCOIN:
                 //TODO
-                return null;
+                throw new RuntimeException("Not implemented yet");
             default:
                 final String msg = "Undefined ProposalType " + selectedProposalType;
-                DevEnv.logErrorAndThrowIfDevMode(msg);
-                return null;
+                log.error(msg);
+                throw new RuntimeException(msg);
         }
     }
 
