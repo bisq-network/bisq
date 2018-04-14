@@ -35,6 +35,7 @@ import bisq.core.alert.AlertManager;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.app.AppSetupFullApp;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.SetupUtils;
 import bisq.core.arbitration.ArbitratorManager;
@@ -147,6 +148,7 @@ import javax.annotation.Nullable;
 public class MainViewModel implements ViewModel {
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
 
+    private final AppSetupFullApp appSetupFullApp;
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
@@ -238,7 +240,8 @@ public class MainViewModel implements ViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public MainViewModel(WalletsManager walletsManager, WalletsSetup walletsSetup,
+    public MainViewModel(AppSetupFullApp appSetupFullApp,
+                         WalletsManager walletsManager, WalletsSetup walletsSetup,
                          BtcWalletService btcWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
@@ -249,6 +252,7 @@ public class MainViewModel implements ViewModel {
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
+        this.appSetupFullApp = appSetupFullApp;
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -292,6 +296,8 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
+        appSetupFullApp.handleResyncSpvRequested();
+
         // We do the delete of the spv file at startup before BitcoinJ is initialized to avoid issues with locked files under Windows.
         if (preferences.isResyncSpvRequested()) {
             try {
