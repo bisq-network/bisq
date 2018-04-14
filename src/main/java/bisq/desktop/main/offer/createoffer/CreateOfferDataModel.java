@@ -15,6 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Proposal ist to change in 
+ * bisq-desktop/src/main/java/bisq/desktop/main/offer/createoffer/CreateOfferDataModel.java 
+ * and where necessary in other files the decimal 
+ * setup of the fiat trade values. In order to increase the privacy of fiat2BTC trades all fiat amounts 
+ * should be optional rounded to a full amount $xx.00, €xx.00. Background is that a decimal place .00 occurs 39 
+ * times more often in all fiat transfers than the average .xy and even 390 times more often than bad 
+ * choices like .93 or .74. If rounded by value = Math.round(value) it would be much more difficult to 
+ * reveal the identity of a bisq trader on the fiat side by time/amount attacks while beeing no big loss 
+ * for the traders. Because the history of all trade amounts+times are public and all unhacked bank data have a high 
+ * chance to be hacked and sold in future it's wise to use only Euro amounts which have many clones in the total currency area 
+ * at the trading time + 24h.
+ */
+
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.main.offer.OfferDataModel;
