@@ -224,7 +224,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void onChainHeightChanged() {
         final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
-        final int bsqBlockChainHeight = stateService.getChainHeadHeight();
+        final int bsqBlockChainHeight = stateService.getChainHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);

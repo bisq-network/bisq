@@ -130,7 +130,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 // TODO verify stake
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin fee = BlindVoteConsensus.getFee(paramService, stateService.getChainHeadHeight());
+                final Coin fee = BlindVoteConsensus.getFee(paramService, stateService.getChainHeight());
                 Transaction dummyTx = null;
                 try {
                     // We create a tx with dummy opreturn data to get the mining fee for confirmation popup
@@ -270,7 +270,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         if (selectedProposalListItem != null &&
                 proposalDisplay != null &&
                 !periodService.isTxInPastCycle(selectedProposalListItem.getProposal().getTxId(),
-                        stateService.getChainHeadHeight())) {
+                        stateService.getChainHeight())) {
             final Proposal proposal = selectedProposalListItem.getProposal();
             switch (phase) {
                 case PROPOSAL:

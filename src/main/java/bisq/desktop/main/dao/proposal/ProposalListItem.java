@@ -126,7 +126,7 @@ public class ProposalListItem implements StateService.BlockListener {
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
         final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(),
-                stateService.getChainHeadHeight());
+                stateService.getChainHeight());
         switch (newValue) {
             case UNDEFINED:
                 break;
