@@ -33,16 +33,16 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.PeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
-import bisq.core.dao.vote.blindvote.BlindVoteService;
+import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalListService;
 import bisq.core.dao.vote.proposal.ProposalService;
+import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
@@ -74,7 +74,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
-    private final BlindVoteService blindVoteService;
+    private final MyVoteService myVoteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
@@ -92,7 +92,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
                                 PeriodService periodService,
-                                BlindVoteService blindVoteService,
+                                MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
                                 StateService stateService,
                                 ParamService paramService,
@@ -101,7 +101,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
                 paramService, periodService, bsqFormatter, btcFormatter);
-        this.blindVoteService = blindVoteService;
+        this.myVoteService = myVoteService;
     }
 
     @Override
@@ -134,7 +134,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 Transaction dummyTx = null;
                 try {
                     // We create a tx with dummy opreturn data to get the mining fee for confirmation popup
-                    dummyTx = blindVoteService.getBlindVoteTx(stake, fee, new byte[22]);
+                    dummyTx = myVoteService.getBlindVoteTx(stake, fee, new byte[22]);
                 } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
                     new Popup<>().warning(exception.toString()).show();
                 }
@@ -152,7 +152,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private void publishBlindVote(Coin stake) {
         voteButtonBusyAnimation.play();
         voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
-        blindVoteService.publishBlindVote(stake,
+        myVoteService.publishBlindVote(stake,
                 () -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
