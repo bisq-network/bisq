@@ -23,6 +23,8 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 import bisq.desktop.util.BSFormatter;
 
+import bisq.core.provider.price.PriceFeedService;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -32,7 +34,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcItem;
+import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcBuyItem;
+import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
+import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.id;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
@@ -40,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(OfferBook.class)
+@PrepareForTest({OfferBook.class, PriceFeedService.class})
 public class SpreadViewModelTest {
 
     @Test
@@ -50,7 +54,7 @@ public class SpreadViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForAmount.intValue());
     }
 
@@ -58,14 +62,38 @@ public class SpreadViewModelTest {
     public void testMaxCharactersForAmount() {
         OfferBook offerBook = mock(OfferBook.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
-        offerBookListItems.addAll(make(OfferBookListItemMaker.btcItem));
+        offerBookListItems.addAll(make(btcBuyItem));
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
+        SpreadViewModel model = new SpreadViewModel(offerBook, null, new BSFormatter());
         model.activate();
         assertEquals(6, model.maxPlacesForAmount.intValue()); // 0.001
-        offerBookListItems.addAll(make(btcItem.but(with(OfferBookListItemMaker.amount, 1403000000L))));
+        offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.amount, 1403000000L))));
         assertEquals(7, model.maxPlacesForAmount.intValue()); //14.0300
+    }
+
+    @Test
+    public void testFilterSpreadItemsForUniqueOffers() {
+        OfferBook offerBook = mock(OfferBook.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
+        offerBookListItems.addAll(make(btcBuyItem));
+
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+
+        SpreadViewModel model = new SpreadViewModel(offerBook, priceFeedService, new BSFormatter());
+        model.activate();
+
+        assertEquals(1, model.spreadItems.get(0).numberOfOffers);
+
+        offerBookListItems.addAll(make(btcBuyItem.but(with(id, "2345"))),
+                make(btcBuyItem.but(with(id, "2345"))),
+                make(btcSellItem.but(with(id, "3456"))),
+                make(btcSellItem.but(with(id, "3456"))));
+
+        assertEquals(2, model.spreadItems.get(0).numberOfBuyOffers);
+        assertEquals(1, model.spreadItems.get(0).numberOfSellOffers);
+        assertEquals(3, model.spreadItems.get(0).numberOfOffers);
     }
 }
