@@ -27,7 +27,8 @@ import bisq.core.dao.state.Block;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Phase;
+import bisq.core.dao.vote.ThreadSafePeriodService;
 import bisq.core.dao.vote.Vote;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
@@ -57,7 +58,7 @@ public class ProposalListItem implements StateService.BlockListener {
     @Getter
     private final Proposal proposal;
     private final ProposalService proposalService;
-    private final PeriodService periodService;
+    private final ThreadSafePeriodService periodService;
     private final BsqWalletService bsqWalletService;
     private final StateService stateService;
     private final BsqFormatter bsqFormatter;
@@ -71,7 +72,7 @@ public class ProposalListItem implements StateService.BlockListener {
     private TxConfidenceListener txConfidenceListener;
     private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     private Transaction walletTransaction;
-    private ChangeListener<PeriodService.Phase> phaseChangeListener;
+    private ChangeListener<Phase> phaseChangeListener;
     private AutoTooltipButton actionButton;
     private ImageView actionButtonIconView;
     @Setter
@@ -80,7 +81,7 @@ public class ProposalListItem implements StateService.BlockListener {
 
     ProposalListItem(Proposal proposal,
                      ProposalService proposalService,
-                     PeriodService periodService,
+                     ThreadSafePeriodService periodService,
                      BsqWalletService bsqWalletService,
                      StateService stateService,
                      BsqFormatter bsqFormatter) {
@@ -121,7 +122,7 @@ public class ProposalListItem implements StateService.BlockListener {
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(PeriodService.Phase newValue, Vote vote) {
+    public void applyState(Phase newValue, Vote vote) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);

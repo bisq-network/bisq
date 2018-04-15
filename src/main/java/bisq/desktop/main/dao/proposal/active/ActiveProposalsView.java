@@ -35,7 +35,8 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Phase;
+import bisq.core.dao.vote.ThreadSafePeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.vote.myvote.MyVoteService;
 import bisq.core.dao.vote.proposal.MyProposalService;
@@ -91,7 +92,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private ActiveProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
-                                PeriodService periodService,
+                                ThreadSafePeriodService periodService,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
                                 StateService stateService,
@@ -257,10 +258,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     @Override
-    protected void onPhaseChanged(PeriodService.Phase phase) {
+    protected void onPhaseChanged(Phase phase) {
         super.onPhaseChanged(phase);
 
-        changeVoteViewItemsVisibility(phase == PeriodService.Phase.BLIND_VOTE);
+        changeVoteViewItemsVisibility(phase == Phase.BLIND_VOTE);
 
         if (removeButton != null) {
             removeButton.setManaged(false);

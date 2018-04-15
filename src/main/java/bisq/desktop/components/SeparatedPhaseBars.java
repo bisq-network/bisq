@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Phase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -55,12 +55,12 @@ public class SeparatedPhaseBars extends HBox {
 
         addLabels();
 
-        items.stream().forEach(item -> {
+        items.forEach(item -> {
             Label titleLabel = new Label(Res.get("dao.phase.short." + item.phase));
             item.setTitleLabel(titleLabel);
 
             Label startLabel = new Label();
-            item.startValueProperty.addListener((observable, oldValue, newValue) -> {
+            item.startBlockProperty.addListener((observable, oldValue, newValue) -> {
                 startLabel.setText(String.valueOf((int) newValue));
             });
             startLabel.setVisible(item.isShowBlocks());
@@ -69,7 +69,7 @@ public class SeparatedPhaseBars extends HBox {
             startLabelPane.getChildren().add(startLabel);
 
             Label endLabel = new Label();
-            item.endValueProperty.addListener((observable, oldValue, newValue) -> {
+            item.lastBlockProperty.addListener((observable, oldValue, newValue) -> {
                 endLabel.setText(String.valueOf((int) newValue));
             });
             endLabel.setVisible(item.isShowBlocks());
@@ -94,9 +94,13 @@ public class SeparatedPhaseBars extends HBox {
         });
 
         widthProperty().addListener((observable, oldValue, newValue) -> {
-            adjustWidth((double) newValue);
+            updateWidth((double) newValue);
         });
-        UserThread.execute(() -> adjustWidth(getWidth()));
+        UserThread.execute(() -> updateWidth(getWidth()));
+    }
+
+    public void updateWidth() {
+        updateWidth(getWidth());
     }
 
     private void addLabels() {
@@ -125,12 +129,12 @@ public class SeparatedPhaseBars extends HBox {
         getChildren().add(vBoxLabels);
     }
 
-    private void adjustWidth(double availableWidth) {
+    private void updateWidth(double availableWidth) {
         totalDuration = items.stream().mapToInt(SeparatedPhaseBarsItem::getDuration).sum();
         availableWidth -= vBoxLabels.getWidth();
         if (availableWidth > 0 && totalDuration > 0) {
             final double finalAvailableWidth = availableWidth;
-            items.stream().forEach(item -> {
+            items.forEach(item -> {
                 final double width = (double) item.duration / (double) totalDuration * finalAvailableWidth;
                 item.getVBox().setPrefWidth(width);
             });
@@ -139,10 +143,10 @@ public class SeparatedPhaseBars extends HBox {
 
     @Getter
     public static class SeparatedPhaseBarsItem {
-        private final PeriodService.Phase phase;
+        private final Phase phase;
         private final boolean showBlocks;
-        private final IntegerProperty startValueProperty = new SimpleIntegerProperty();
-        private final IntegerProperty endValueProperty = new SimpleIntegerProperty();
+        private final IntegerProperty startBlockProperty = new SimpleIntegerProperty();
+        private final IntegerProperty lastBlockProperty = new SimpleIntegerProperty();
         private final DoubleProperty progressProperty = new SimpleDoubleProperty();
         private int duration;
         @Setter
@@ -150,7 +154,7 @@ public class SeparatedPhaseBars extends HBox {
         @Setter
         private Label titleLabel;
 
-        public SeparatedPhaseBarsItem(PeriodService.Phase phase, boolean showBlocks) {
+        public SeparatedPhaseBarsItem(Phase phase, boolean showBlocks) {
             this.phase = phase;
             this.showBlocks = showBlocks;
         }
@@ -163,10 +167,10 @@ public class SeparatedPhaseBars extends HBox {
             titleLabel.setStyle("-fx-text-fill: -fx-accent;");
         }
 
-        public void setStartAndEnd(int startBlock, int endBlock) {
-            startValueProperty.set(startBlock);
-            endValueProperty.set(endBlock);
-            duration = endValueProperty.get() - startValueProperty.get() + 1;
+        public void setPeriodRange(int firstBlock, int lastBlock, int duration) {
+            startBlockProperty.set(firstBlock);
+            lastBlockProperty.set(lastBlock);
+            this.duration = duration;
         }
     }
 }

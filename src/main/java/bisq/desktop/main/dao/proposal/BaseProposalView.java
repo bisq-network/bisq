@@ -27,14 +27,15 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.vote.PeriodService;
+import bisq.core.dao.vote.Phase;
+import bisq.core.dao.vote.ThreadSafePeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalListService;
 import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalService;
+import bisq.core.dao.vote.proposal.param.ParamService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -90,9 +91,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected GridPane detailsGridPane, gridPane;
     protected ProposalListItem selectedProposalListItem;
     protected ListChangeListener<Proposal> proposalListChangeListener;
-    protected ChangeListener<PeriodService.Phase> phaseChangeListener;
-    protected final PeriodService periodService;
-    protected PeriodService.Phase currentPhase;
+    protected ChangeListener<Phase> phaseChangeListener;
+    protected final ThreadSafePeriodService periodService;
+    protected Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
 
@@ -108,7 +109,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                BsqWalletService bsqWalletService,
                                StateService stateService,
                                ParamService paramService,
-                               PeriodService periodService,
+                               ThreadSafePeriodService periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
         this.myProposalService = myProposalService;
@@ -233,7 +234,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
             hideProposalDisplay();
     }
 
-    protected void onPhaseChanged(PeriodService.Phase phase) {
+    protected void onPhaseChanged(Phase phase) {
         if (!phase.equals(this.currentPhase)) {
             this.currentPhase = phase;
             onSelectProposal(selectedProposalListItem);
