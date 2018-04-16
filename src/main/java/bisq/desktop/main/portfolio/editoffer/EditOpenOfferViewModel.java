@@ -45,5 +45,13 @@ public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOffer
     }
 
     public void initWithData(OpenOffer openOffer) {
+        dataModel.initWithData(openOffer);
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+
+        dataModel.populateData();
     }
 }

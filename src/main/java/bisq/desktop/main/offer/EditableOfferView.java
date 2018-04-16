@@ -756,7 +756,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         return label;
     }
 
-    private void updateMarketPriceAvailable() {
+    protected void updateMarketPriceAvailable() {
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
             boolean isMarketPriceAvailable = marketPriceAvailableValue == 1;

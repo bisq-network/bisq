@@ -22,7 +22,6 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
-import bisq.desktop.main.offer.createoffer.CreateOfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
@@ -90,7 +89,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final Preferences preferences;
-    private final BSFormatter btcFormatter;
+    protected final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final FiatVolumeValidator fiatVolumeValidator;
     private final FiatPriceValidator fiatPriceValidator;
@@ -656,7 +655,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
 
     }
 
-    void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
+    public void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         dataModel.setPreferredCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
         applyMakerFee();
     }

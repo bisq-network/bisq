@@ -39,17 +39,19 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
+    public void initWithData(OpenOffer openOffer) {
+        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
+
+        model.initWithData(openOffer);
+    }
+
     @Override
     protected void doActivate() {
         super.doActivate();
 
         hidePaymentGroup();
         hideOptionsGroup();
-    }
 
-    public void initWithData(OpenOffer openOffer) {
-        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
-
-        model.initWithData(openOffer);
+        updateMarketPriceAvailable();
     }
 }

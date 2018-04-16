@@ -25,6 +25,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.fee.FeeService;
@@ -40,8 +42,25 @@ import com.google.inject.Inject;
 
 public class EditOpenOfferDataModel extends EditableOfferDataModel {
 
+    private OpenOffer openOffer;
+
     @Inject
     EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {
         super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
+    }
+
+    public void initWithData(OpenOffer openOffer) {
+        this.openOffer = openOffer;
+    }
+
+    public void populateData() {
+        Offer offer = openOffer.getOffer();
+
+        setAmount(offer.getAmount());
+        setMinAmount(offer.getMinAmount());
+        setPrice(offer.getPrice());
+        setVolume(offer.getVolume());
+        setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
+        if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
     }
 }

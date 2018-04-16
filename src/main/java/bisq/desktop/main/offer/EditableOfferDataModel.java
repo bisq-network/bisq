@@ -552,7 +552,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         }
     }
 
-    void setMarketPriceMargin(double marketPriceMargin) {
+    protected void setMarketPriceMargin(double marketPriceMargin) {
         this.marketPriceMargin = marketPriceMargin;
     }
 
@@ -588,11 +588,11 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return addressEntry;
     }
 
-    public TradeCurrency getTradeCurrency() {
+    protected TradeCurrency getTradeCurrency() {
         return tradeCurrency;
     }
 
-    public PaymentAccount getPaymentAccount() {
+    protected PaymentAccount getPaymentAccount() {
         return paymentAccount;
     }
 
@@ -601,7 +601,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
     }
 
-    public void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
+    protected void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
         this.useMarketBasedPrice.set(useMarketBasedPrice);
         preferences.setUsePercentageBasedPrice(useMarketBasedPrice);
     }
@@ -701,15 +701,15 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
             paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
     }
 
-    void setAmount(Coin amount) {
+    protected void setAmount(Coin amount) {
         this.amount.set(amount);
     }
 
-    public void setPrice(Price price) {
+    protected void setPrice(Price price) {
         this.price.set(price);
     }
 
-    public void setVolume(Volume volume) {
+    protected void setVolume(Volume volume) {
         this.volume.set(volume);
     }
 
@@ -739,7 +739,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return volume;
     }
 
-    void setMinAmount(Coin minAmount) {
+    protected void setMinAmount(Coin minAmount) {
         this.minAmount.set(minAmount);
     }
 
