@@ -109,7 +109,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
     // If we would change the price representation in the domain we would not be backward compatible
-    final StringProperty price = new SimpleStringProperty();
+    protected final StringProperty price = new SimpleStringProperty();
     final StringProperty makerFee = new SimpleStringProperty();
     final StringProperty makerFeeWithCode = new SimpleStringProperty();
     final StringProperty makerFeeCurrencyCode = new SimpleStringProperty();

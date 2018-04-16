@@ -119,9 +119,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
                             .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
                             .dontShowAgainId(key)
                             .show();
+                spinnerInfoLabel.setText("");
                 close();
             }, (message) -> {
                 log.error(message);
+                spinnerInfoLabel.setText("");
                 new Popup<>().warning(Res.get("offerbook.editOffer.failed", message)).show();
             });
         });
@@ -138,6 +140,9 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
         updateMarketPriceAvailable();
         updateElementsWithDirection();
+
+        model.invalidateMarketPriceMargin();
+        model.invalidatePrice();
     }
 
     @Override

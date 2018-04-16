@@ -734,7 +734,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return minAmount;
     }
 
-    protected ReadOnlyObjectProperty<Price> getPrice() {
+    public ReadOnlyObjectProperty<Price> getPrice() {
         return price;
     }
 

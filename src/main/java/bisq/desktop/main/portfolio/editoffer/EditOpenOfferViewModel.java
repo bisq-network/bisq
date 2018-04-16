@@ -29,6 +29,7 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.monetary.Price;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -55,11 +56,19 @@ public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOffer
     protected void activate() {
         super.activate();
         dataModel.populateData();
-        // update marketprice margin
-        marketPriceMargin.set(btcFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         dataModel.onPublishOffer(resultHandler, errorMessageHandler);
+    }
+
+    public void invalidateMarketPriceMargin() {
+        marketPriceMargin.set("0.00%");
+        marketPriceMargin.set(btcFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
+    }
+
+    public void invalidatePrice() {
+        price.set(btcFormatter.formatPrice(null));
+        price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
     }
 }
