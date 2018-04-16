@@ -35,10 +35,10 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.Phase;
-import bisq.core.dao.vote.ThreadSafePeriodService;
 import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.vote.myvote.MyVoteService;
+import bisq.core.dao.vote.period.Phase;
+import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalListService;
@@ -92,7 +92,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private ActiveProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
-                                ThreadSafePeriodService periodService,
+                                UserThreadPeriodService periodService,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
                                 StateService stateService,
@@ -238,7 +238,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 cancelVoteButton = null;
             }
 
-            onPhaseChanged(periodService.getPhaseProperty().get());
+            onPhaseChanged(periodService.phaseProperty().get());
         }
     }
 

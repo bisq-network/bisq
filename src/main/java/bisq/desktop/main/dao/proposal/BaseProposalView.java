@@ -28,8 +28,8 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.vote.Phase;
-import bisq.core.dao.vote.ThreadSafePeriodService;
+import bisq.core.dao.vote.period.Phase;
+import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalListService;
@@ -92,7 +92,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected ProposalListItem selectedProposalListItem;
     protected ListChangeListener<Proposal> proposalListChangeListener;
     protected ChangeListener<Phase> phaseChangeListener;
-    protected final ThreadSafePeriodService periodService;
+    protected final UserThreadPeriodService periodService;
     protected Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
@@ -109,7 +109,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                BsqWalletService bsqWalletService,
                                StateService stateService,
                                ParamService paramService,
-                               ThreadSafePeriodService periodService,
+                               UserThreadPeriodService periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
         this.myProposalService = myProposalService;
@@ -136,12 +136,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(periodService.getPhaseProperty(), this::onPhaseChanged);
+        phaseSubscription = EasyBind.subscribe(periodService.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
-        periodService.getPhaseProperty().addListener(phaseChangeListener);
+        periodService.phaseProperty().addListener(phaseChangeListener);
 
-        onPhaseChanged(periodService.getPhaseProperty().get());
+        onPhaseChanged(periodService.phaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -153,7 +153,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        periodService.getPhaseProperty().removeListener(phaseChangeListener);
+        periodService.phaseProperty().removeListener(phaseChangeListener);
 
         sortedList.comparatorProperty().unbind();
 

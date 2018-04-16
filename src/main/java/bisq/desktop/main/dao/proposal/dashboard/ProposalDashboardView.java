@@ -24,8 +24,8 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.state.Block;
 import bisq.core.dao.state.StateService;
-import bisq.core.dao.vote.Phase;
-import bisq.core.dao.vote.ThreadSafePeriodService;
+import bisq.core.dao.vote.period.Phase;
+import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -47,7 +47,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements StateService.BlockListener {
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private final ThreadSafePeriodService periodService;
+    private final UserThreadPeriodService periodService;
     private final StateService stateService;
     private Phase currentPhase;
     private Subscription phaseSubscription;
@@ -61,7 +61,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(ThreadSafePeriodService periodService, StateService stateService) {
+    private ProposalDashboardView(UserThreadPeriodService periodService, StateService stateService) {
         this.periodService = periodService;
         this.stateService = stateService;
     }
@@ -109,7 +109,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void activate() {
         super.activate();
 
-        phaseSubscription = EasyBind.subscribe(periodService.getPhaseProperty(), phase -> {
+        phaseSubscription = EasyBind.subscribe(periodService.phaseProperty(), phase -> {
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
             }

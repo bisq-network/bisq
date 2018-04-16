@@ -27,9 +27,9 @@ import bisq.core.dao.state.Block;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.Phase;
-import bisq.core.dao.vote.ThreadSafePeriodService;
 import bisq.core.dao.vote.Vote;
+import bisq.core.dao.vote.period.Phase;
+import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
@@ -58,7 +58,7 @@ public class ProposalListItem implements StateService.BlockListener {
     @Getter
     private final Proposal proposal;
     private final ProposalService proposalService;
-    private final ThreadSafePeriodService periodService;
+    private final UserThreadPeriodService periodService;
     private final BsqWalletService bsqWalletService;
     private final StateService stateService;
     private final BsqFormatter bsqFormatter;
@@ -81,7 +81,7 @@ public class ProposalListItem implements StateService.BlockListener {
 
     ProposalListItem(Proposal proposal,
                      ProposalService proposalService,
-                     ThreadSafePeriodService periodService,
+                     UserThreadPeriodService periodService,
                      BsqWalletService bsqWalletService,
                      StateService stateService,
                      BsqFormatter bsqFormatter) {
@@ -115,10 +115,10 @@ public class ProposalListItem implements StateService.BlockListener {
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
-            applyState(periodService.getPhaseProperty().get(), newValue);
+            applyState(periodService.phaseProperty().get(), newValue);
         };
 
-        periodService.getPhaseProperty().addListener(phaseChangeListener);
+        periodService.phaseProperty().addListener(phaseChangeListener);
         proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
@@ -247,7 +247,7 @@ public class ProposalListItem implements StateService.BlockListener {
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
-        periodService.getPhaseProperty().removeListener(phaseChangeListener);
+        periodService.phaseProperty().removeListener(phaseChangeListener);
         proposal.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 
