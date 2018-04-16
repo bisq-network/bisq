@@ -44,7 +44,6 @@ import javafx.fxml.FXML;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.value.ChangeListener;
 
@@ -107,7 +106,6 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
             else if (newValue == editOpenOfferTab) {
                 //noinspection unchecked
                 navigation.navigateTo(MainView.class, PortfolioView.class, EditOpenOfferView.class);
-                if (editOpenOfferView != null) editOpenOfferView.onTabSelected(true);
             }
 
             if (oldValue != null && oldValue == editOpenOfferTab && editOpenOfferView != null)
@@ -178,7 +176,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     private void loadView(Class<? extends View> viewClass) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
-        if (currentTab != null)
+        if (currentTab != null && currentTab != editOpenOfferTab)
             currentTab.setContent(null);
 
         View view = viewLoader.load(viewClass);
@@ -196,15 +194,16 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                 if (editOpenOfferView == null) {
 
                     editOpenOfferView = (EditOpenOfferView) view;
-                    final Optional<TradeCurrency> optionalTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode());
-                    optionalTradeCurrency.ifPresent(tradeCurrency -> editOpenOfferView.initWithData(openOffer.getOffer().getDirection(), tradeCurrency));
+                    editOpenOfferView.initWithData(openOffer);
                     editOpenOfferTab = new Tab(Res.get("portfolio.tab.editOpenOffer"));
                     editOpenOfferView.setCloseHandler(() -> {
                         root.getTabs().remove(editOpenOfferTab);
                     });
                     root.getTabs().add(editOpenOfferTab);
                 }
-                editOpenOfferView.onTabSelected(true);
+                if (currentTab != editOpenOfferTab)
+                    editOpenOfferView.onTabSelected(true);
+
                 currentTab = editOpenOfferTab;
             } else {
                 view = viewLoader.load(OpenOffersView.class);

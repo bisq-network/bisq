@@ -18,7 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 
-import bisq.desktop.main.offer.createoffer.CreateOfferDataModel;
+import bisq.desktop.main.offer.EditableOfferDataModel;
 import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -38,7 +38,7 @@ import bisq.common.crypto.KeyRing;
 
 import com.google.inject.Inject;
 
-public class EditOpenOfferDataModel extends CreateOfferDataModel {
+public class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     @Inject
     EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {

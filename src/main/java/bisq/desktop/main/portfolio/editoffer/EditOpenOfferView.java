@@ -19,22 +19,23 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.offer.createoffer.CreateOfferView;
-import bisq.desktop.main.offer.createoffer.CreateOfferViewModel;
+import bisq.desktop.main.offer.EditableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.offer.OpenOffer;
 import bisq.core.user.Preferences;
 
 import com.google.inject.Inject;
 
 @FxmlView
-public class EditOpenOfferView extends CreateOfferView {
+public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel> {
 
     @Inject
-    private EditOpenOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    private EditOpenOfferView(EditOpenOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
@@ -44,5 +45,11 @@ public class EditOpenOfferView extends CreateOfferView {
 
         hidePaymentGroup();
         hideOptionsGroup();
+    }
+
+    public void initWithData(OpenOffer openOffer) {
+        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
+
+        model.initWithData(openOffer);
     }
 }

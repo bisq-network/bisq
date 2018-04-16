@@ -18,8 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.createoffer.CreateOfferDataModel;
-import bisq.desktop.main.offer.createoffer.CreateOfferViewModel;
+import bisq.desktop.main.offer.EditableOfferViewModel;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.validation.AltcoinValidator;
@@ -30,6 +29,7 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 
@@ -37,10 +37,13 @@ import bisq.network.p2p.P2PService;
 
 import com.google.inject.Inject;
 
-public class EditOpenOfferViewModel extends CreateOfferViewModel {
+public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataModel> {
 
     @Inject
-    public EditOpenOfferViewModel(CreateOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public EditOpenOfferViewModel(EditOpenOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
+    }
+
+    public void initWithData(OpenOffer openOffer) {
     }
 }
