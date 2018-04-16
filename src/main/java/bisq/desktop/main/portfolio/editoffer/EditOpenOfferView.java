@@ -19,20 +19,45 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.funds.FundsView;
+import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.EditableOfferView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
+
+import bisq.common.util.Tuple3;
 
 import com.google.inject.Inject;
 
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+
+import javafx.geometry.Insets;
+
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
+
 @FxmlView
 public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel> {
+
+    private BusyAnimation busyAnimation;
+    private Button confirmButton;
+    private Button cancelButton;
 
     @Inject
     private EditOpenOfferView(EditOpenOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
@@ -43,15 +68,97 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
 
         model.initWithData(openOffer);
+
+
+    }
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+        addConfirmationGroup();
+    }
+
+    private void addConfirmationGroup() {
+
+        int tmpGridRow = 4;
+        final Tuple3<Button, BusyAnimation, Label> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, "Confirm: Edit and Publish");
+
+        confirmButton = editOfferTuple.first;
+        confirmButton.setMinHeight(40);
+        confirmButton.setPadding(new Insets(0, 20, 0, 20));
+        confirmButton.setGraphicTextGap(10);
+        confirmButton.setText("Confirm: Edit offer");
+
+
+        busyAnimation = editOfferTuple.second;
+        Label spinnerInfoLabel = editOfferTuple.third;
+
+
+        cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
+        cancelButton.setDefaultButton(false);
+        cancelButton.setId("cancel-button");
+        cancelButton.setOnAction(e -> {
+            close();
+        });
+
+        confirmButton.setOnAction(e -> {
+            model.isNextButtonDisabled.setValue(true);
+            cancelButton.setDisable(true);
+            busyAnimation.play();
+            spinnerInfoLabel.setText("Publishing your offer");
+            //edit offer
+            model.onPublishOffer(() -> {
+                log.debug("Edit offer was successful");
+
+                String key = "ShowOpenOffersAfterEditing";
+
+                if (DontShowAgainLookup.showAgain(key))
+                    //noinspection unchecked
+                    new Popup<>().instruction(Res.get("offerbook.editOffer.success"))
+                            .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
+                            .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
+                            .dontShowAgainId(key)
+                            .show();
+                close();
+            }, (message) -> {
+                log.error(message);
+                new Popup<>().warning(Res.get("offerbook.editOffer.failed", message)).show();
+            });
+        });
     }
 
     @Override
     protected void doActivate() {
         super.doActivate();
 
+        addBindings();
+
         hidePaymentGroup();
         hideOptionsGroup();
 
         updateMarketPriceAvailable();
+        updateElementsWithDirection();
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        removeBindings();
+    }
+
+    private void addBindings(){
+        confirmButton.disableProperty().bind(model.isNextButtonDisabled);
+    }
+
+    private void removeBindings(){
+        confirmButton.disableProperty().unbind();
+    }
+
+    private void updateElementsWithDirection() {
+        ImageView iconView = new ImageView();
+        iconView.setId(model.isSellOffer() ? "image-sell-white" : "image-buy-white");
+        confirmButton.setGraphic(iconView);
+        confirmButton.setId(model.isSellOffer() ? "sell-button-big" : "buy-button-big");
     }
 }

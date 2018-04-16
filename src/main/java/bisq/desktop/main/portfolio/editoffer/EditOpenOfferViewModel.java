@@ -35,6 +35,9 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
 import com.google.inject.Inject;
 
 public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataModel> {
@@ -51,7 +54,12 @@ public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOffer
     @Override
     protected void activate() {
         super.activate();
-
         dataModel.populateData();
+        // update marketprice margin
+        marketPriceMargin.set(btcFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
+    }
+
+    public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        dataModel.onPublishOffer(resultHandler, errorMessageHandler);
     }
 }

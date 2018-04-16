@@ -93,13 +93,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class EditableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
-    private final OpenOfferManager openOfferManager;
+    protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
-    private final User user;
+    protected final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
-    private final PriceFeedService priceFeedService;
+    protected final PriceFeedService priceFeedService;
     final String shortOfferId;
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -127,7 +127,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
 
     private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
-    PaymentAccount paymentAccount;
+    protected PaymentAccount paymentAccount;
     boolean isTabSelected;
     private double marketPriceMargin = 0;
     private Coin txFeeFromFeeService;
@@ -297,7 +297,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
 
     @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
-        final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
+        final boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue();
         long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
@@ -614,7 +614,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return paymentAccounts;
     }
 
-    double getMarketPriceMargin() {
+    public double getMarketPriceMargin() {
         return marketPriceMargin;
     }
 
@@ -718,20 +718,23 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         preferences.setBuyerSecurityDepositAsLong(buyerSecurityDeposit.value);
     }
 
+    protected boolean isUseMarketBasedPriceValue() {
+        return marketPriceAvailable && useMarketBasedPrice.get();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ReadOnlyObjectProperty<Coin> getAmount() {
+    protected ReadOnlyObjectProperty<Coin> getAmount() {
         return amount;
     }
 
-    ReadOnlyObjectProperty<Coin> getMinAmount() {
+    protected ReadOnlyObjectProperty<Coin> getMinAmount() {
         return minAmount;
     }
 
-    ReadOnlyObjectProperty<Price> getPrice() {
+    protected ReadOnlyObjectProperty<Price> getPrice() {
         return price;
     }
 

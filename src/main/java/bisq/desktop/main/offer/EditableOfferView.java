@@ -125,7 +125,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 public abstract class EditableOfferView<M extends EditableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
-    private final Navigation navigation;
+    protected final Navigation navigation;
     private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -133,7 +133,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private final BsqFormatter bsqFormatter;
 
     private ScrollPane scrollPane;
-    private GridPane gridPane;
+    protected GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
@@ -163,7 +163,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
 
-    private int gridRow = 0;
+    protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
@@ -511,7 +511,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     // Navigation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void close() {
+    protected void close() {
         if (closeHandler != null)
             closeHandler.close();
     }

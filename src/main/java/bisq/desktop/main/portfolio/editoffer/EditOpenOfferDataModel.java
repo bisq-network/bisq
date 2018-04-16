@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -37,6 +38,8 @@ import bisq.core.user.User;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
@@ -51,6 +54,7 @@ public class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     public void initWithData(OpenOffer openOffer) {
         this.openOffer = openOffer;
+        this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
     }
 
     public void populateData() {
@@ -62,5 +66,53 @@ public class EditOpenOfferDataModel extends EditableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
         if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
+    }
+
+    public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        final OfferPayload offerPayload = openOffer.getOffer().getOfferPayload();
+        final OfferPayload editedPayload = new OfferPayload(offerPayload.getId(),
+                offerPayload.getDate(),
+                offerPayload.getOwnerNodeAddress(),
+                offerPayload.getPubKeyRing(),
+                offerPayload.getDirection(),
+                getPrice().get().getValue(),
+                getMarketPriceMargin(),
+                isUseMarketBasedPriceValue(),
+                getAmount().get().getValue(),
+                getMinAmount().get().getValue(),
+                offerPayload.getBaseCurrencyCode(),
+                offerPayload.getCounterCurrencyCode(),
+                offerPayload.getArbitratorNodeAddresses(),
+                offerPayload.getMediatorNodeAddresses(),
+                offerPayload.getPaymentMethodId(),
+                offerPayload.getMakerPaymentAccountId(),
+                offerPayload.getOfferFeePaymentTxId(),
+                offerPayload.getCountryCode(),
+                offerPayload.getAcceptedCountryCodes(),
+                offerPayload.getBankId(),
+                offerPayload.getAcceptedBankIds(),
+                offerPayload.getVersionNr(),
+                offerPayload.getBlockHeightAtOfferCreation(),
+                offerPayload.getTxFee(),
+                offerPayload.getMakerFee(),
+                offerPayload.isCurrencyForMakerFeeBtc(),
+                offerPayload.getBuyerSecurityDeposit(),
+                offerPayload.getSellerSecurityDeposit(),
+                offerPayload.getMaxTradeLimit(),
+                offerPayload.getMaxTradePeriod(),
+                offerPayload.isUseAutoClose(),
+                offerPayload.isUseReOpenAfterAutoClose(),
+                offerPayload.getLowerClosePrice(),
+                offerPayload.getUpperClosePrice(),
+                offerPayload.isPrivateOffer(),
+                offerPayload.getHashOfChallenge(),
+                offerPayload.getExtraDataMap(),
+                offerPayload.getProtocolVersion());
+
+        final Offer editedOffer = new Offer(editedPayload);
+        editedOffer.setPriceFeedService(priceFeedService);
+        editedOffer.setState(Offer.State.AVAILABLE);
+
+        openOfferManager.editOpenOffer(openOffer, editedOffer, resultHandler, errorMessageHandler);
     }
 }

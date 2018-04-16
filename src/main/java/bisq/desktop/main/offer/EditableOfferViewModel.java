@@ -117,7 +117,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     // Positive % value means always a better price form the maker's perspective:
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
-    final StringProperty marketPriceMargin = new SimpleStringProperty();
+    protected final StringProperty marketPriceMargin = new SimpleStringProperty();
     final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
@@ -129,7 +129,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
 
     final BooleanProperty isPlaceOfferButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty cancelButtonDisabled = new SimpleBooleanProperty();
-    final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
+    public final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
@@ -839,7 +839,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
         return btcFormatter;
     }
 
-    boolean isSellOffer() {
+    public boolean isSellOffer() {
         return dataModel.getDirection() == OfferPayload.Direction.SELL;
     }
 
