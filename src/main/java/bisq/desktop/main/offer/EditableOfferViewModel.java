@@ -175,19 +175,19 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
 
     @Inject
     public EditableOfferViewModel(M dataModel,
-                                FiatVolumeValidator fiatVolumeValidator,
-                                FiatPriceValidator fiatPriceValidator,
-                                AltcoinValidator altcoinValidator,
-                                BtcValidator btcValidator,
-                                BsqValidator bsqValidator,
-                                SecurityDepositValidator securityDepositValidator,
-                                P2PService p2PService,
-                                WalletsSetup walletsSetup,
-                                PriceFeedService priceFeedService,
-                                Navigation navigation,
-                                Preferences preferences,
-                                BSFormatter btcFormatter,
-                                BsqFormatter bsqFormatter) {
+                                  FiatVolumeValidator fiatVolumeValidator,
+                                  FiatPriceValidator fiatPriceValidator,
+                                  AltcoinValidator altcoinValidator,
+                                  BtcValidator btcValidator,
+                                  BsqValidator bsqValidator,
+                                  SecurityDepositValidator securityDepositValidator,
+                                  P2PService p2PService,
+                                  WalletsSetup walletsSetup,
+                                  PriceFeedService priceFeedService,
+                                  Navigation navigation,
+                                  Preferences preferences,
+                                  BSFormatter btcFormatter,
+                                  BsqFormatter bsqFormatter) {
         super(dataModel);
 
         this.fiatVolumeValidator = fiatVolumeValidator;

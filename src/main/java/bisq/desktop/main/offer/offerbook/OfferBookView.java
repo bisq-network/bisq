@@ -64,8 +64,6 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
@@ -107,6 +105,10 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+
+
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {

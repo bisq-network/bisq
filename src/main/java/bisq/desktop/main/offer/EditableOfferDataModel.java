@@ -141,10 +141,10 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
 
     @Inject
     public EditableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                                Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
-                                PriceFeedService priceFeedService, FilterManager filterManager,
-                                AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
-                                FeeService feeService, BSFormatter formatter) {
+                                  Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                                  PriceFeedService priceFeedService, FilterManager filterManager,
+                                  AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
+                                  FeeService feeService, BSFormatter formatter) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;

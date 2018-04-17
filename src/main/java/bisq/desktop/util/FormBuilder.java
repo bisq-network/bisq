@@ -44,8 +44,6 @@ import bisq.common.util.Tuple4;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -78,6 +76,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);

@@ -160,7 +160,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
-                model.onActivateOpenOffer(openOffer,
+            model.onActivateOpenOffer(openOffer,
                     () -> {
                         log.debug("Activate offer was successful");
                     },

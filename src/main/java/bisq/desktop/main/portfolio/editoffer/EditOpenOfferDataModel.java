@@ -71,7 +71,8 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.editOpenOfferStart(openOffer, () -> {}, errorMessageHandler);
+        openOfferManager.editOpenOfferStart(openOffer, () -> {
+        }, errorMessageHandler);
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -127,6 +128,7 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
         if (openOffer != null)
-            openOfferManager.editOpenOfferCancel(openOffer, initialState, () -> {}, errorMessageHandler);
+            openOfferManager.editOpenOfferCancel(openOffer, initialState, () -> {
+            }, errorMessageHandler);
     }
 }
