@@ -47,35 +47,35 @@ class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataMod
         super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
     }
 
-    public void initWithData(OpenOffer openOffer) {
-        dataModel.initWithData(openOffer);
-    }
-
     @Override
     protected void activate() {
         super.activate();
         dataModel.populateData();
     }
 
+    public void initWithData(OpenOffer openOffer) {
+        dataModel.initWithData(openOffer);
+    }
+
+    public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
+        dataModel.onStartEditOffer(errorMessageHandler);
+    }
+
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         dataModel.onPublishOffer(resultHandler, errorMessageHandler);
     }
 
-    public void invalidateMarketPriceMargin() {
+    public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
+        dataModel.onCancelEditOffer(errorMessageHandler);
+    }
+
+    public void onInvalidateMarketPriceMargin() {
         marketPriceMargin.set("0.00%");
         marketPriceMargin.set(btcFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
     }
 
-    public void invalidatePrice() {
+    public void onInvalidatePrice() {
         price.set(btcFormatter.formatPrice(null));
         price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
-    }
-
-    public void startEditOffer(ErrorMessageHandler errorMessageHandler) {
-        dataModel.startEditOffer(errorMessageHandler);
-    }
-
-    public void cancelEditOffer(ErrorMessageHandler errorMessageHandler) {
-        dataModel.cancelEditOffer(errorMessageHandler);
     }
 }

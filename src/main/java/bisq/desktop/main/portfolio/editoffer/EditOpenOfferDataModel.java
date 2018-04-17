@@ -68,7 +68,7 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
     }
 
-    public void startEditOffer(ErrorMessageHandler errorMessageHandler) {
+    public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
         openOfferManager.editOpenOfferStart(openOffer, () -> {}, errorMessageHandler);
     }
 
@@ -120,7 +120,7 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         openOfferManager.editOpenOfferPublish(editedOffer, resultHandler, errorMessageHandler);
     }
 
-    public void cancelEditOffer(ErrorMessageHandler errorMessageHandler) {
+    public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
         openOfferManager.editOpenOfferCancel(openOffer, () -> {}, errorMessageHandler);
     }
 }

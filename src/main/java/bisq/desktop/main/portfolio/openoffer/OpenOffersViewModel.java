@@ -62,10 +62,6 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         dataModel.onRemoveOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
-    void onEditOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onEditOpenOffer(openOffer, resultHandler, errorMessageHandler);
-    }
-
     public ObservableList<OpenOfferListItem> getList() {
         return dataModel.getList();
     }

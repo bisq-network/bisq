@@ -56,75 +56,20 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     private Button confirmButton;
     private Button cancelButton;
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     private EditOpenOfferView(EditOpenOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
-    public void initWithData(OpenOffer openOffer) {
-        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
-
-        model.initWithData(openOffer);
-
-
-    }
-
     @Override
     protected void initialize() {
         super.initialize();
-        addConfirmationGroup();
-    }
 
-    private void addConfirmationGroup() {
-
-        int tmpGridRow = 4;
-        final Tuple3<Button, BusyAnimation, Label> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, "Confirm: Edit and Publish");
-
-        confirmButton = editOfferTuple.first;
-        confirmButton.setMinHeight(40);
-        confirmButton.setPadding(new Insets(0, 20, 0, 20));
-        confirmButton.setGraphicTextGap(10);
-        confirmButton.setText("Confirm: Edit offer");
-
-
-        busyAnimation = editOfferTuple.second;
-        Label spinnerInfoLabel = editOfferTuple.third;
-
-
-        cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
-        cancelButton.setDefaultButton(false);
-        cancelButton.setId("cancel-button");
-        cancelButton.setOnAction(e -> {
-            close();
-        });
-
-        confirmButton.setOnAction(e -> {
-            model.isNextButtonDisabled.setValue(true);
-            cancelButton.setDisable(true);
-            busyAnimation.play();
-            spinnerInfoLabel.setText("Publishing your offer");
-            //edit offer
-            model.onPublishOffer(() -> {
-                log.debug("Edit offer was successful");
-
-                String key = "ShowOpenOffersAfterEditing";
-
-                if (DontShowAgainLookup.showAgain(key))
-                    //noinspection unchecked
-                    new Popup<>().instruction(Res.get("offerbook.editOffer.success"))
-                            .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                            .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
-                            .dontShowAgainId(key)
-                            .show();
-                spinnerInfoLabel.setText("");
-                onClose();
-                close();
-            }, (message) -> {
-                log.error(message);
-                spinnerInfoLabel.setText("");
-                new Popup<>().warning(Res.get("offerbook.editOffer.publishFailed", message)).show();
-            });
-        });
+        addConfirmEditGroup();
     }
 
     @Override
@@ -139,24 +84,24 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
-        model.startEditOffer(errorMessage -> {
+        model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("offerbook.editOffer.startFailed", errorMessage))
+            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
                     .onClose(() -> {
                         close();
                     })
                     .show();
         });
 
-        model.invalidateMarketPriceMargin();
-        model.invalidatePrice();
+        model.onInvalidateMarketPriceMargin();
+        model.onInvalidatePrice();
     }
 
     @Override
     public void onClose() {
-        model.cancelEditOffer(errorMessage -> {
+        model.onCancelEditOffer(errorMessage -> {
             log.error(errorMessage);
-            new Popup<>().warning(Res.get("offerbook.editOffer.cancelFailed", errorMessage)).show();
+            new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
         });
     }
 
@@ -167,6 +112,28 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         removeBindings();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void initWithData(OpenOffer openOffer) {
+        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
+        model.initWithData(openOffer);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI actions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onCancelEdit() {
+        onClose();
+        close();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Bindings, Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void addBindings() {
         confirmButton.disableProperty().bind(model.isNextButtonDisabled);
     }
@@ -174,6 +141,65 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     private void removeBindings() {
         confirmButton.disableProperty().unbind();
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Build UI elements
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addConfirmEditGroup() {
+
+        int tmpGridRow = 4;
+        final Tuple3<Button, BusyAnimation, Label> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
+
+        confirmButton = editOfferTuple.first;
+        confirmButton.setMinHeight(40);
+        confirmButton.setPadding(new Insets(0, 20, 0, 20));
+        confirmButton.setGraphicTextGap(10);
+
+
+        busyAnimation = editOfferTuple.second;
+        Label spinnerInfoLabel = editOfferTuple.third;
+
+
+        cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
+        cancelButton.setDefaultButton(false);
+        cancelButton.setId("cancel-button");
+        cancelButton.setOnAction(event -> onCancelEdit());
+
+        confirmButton.setOnAction(e -> {
+            model.isNextButtonDisabled.setValue(true);
+            cancelButton.setDisable(true);
+            busyAnimation.play();
+            spinnerInfoLabel.setText(Res.get("editOffer.publishOffer"));
+            //edit offer
+            model.onPublishOffer(() -> {
+                log.debug("Edit offer was successful");
+
+                String key = "ShowOpenOffersAfterEditing";
+
+                if (DontShowAgainLookup.showAgain(key))
+                    //noinspection unchecked
+                    new Popup<>().instruction(Res.get("editOffer.success"))
+                            .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
+                            .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
+                            .dontShowAgainId(key)
+                            .show();
+                spinnerInfoLabel.setText("");
+                onCancelEdit();
+            }, (message) -> {
+                log.error(message);
+                spinnerInfoLabel.setText("");
+                busyAnimation.stop();
+                model.isNextButtonDisabled.setValue(false);
+                cancelButton.setDisable(false);
+                new Popup<>().warning(Res.get("editOffer.failed", message)).show();
+            });
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateElementsWithDirection() {
         ImageView iconView = new ImageView();
