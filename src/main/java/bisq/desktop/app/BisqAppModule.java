@@ -18,8 +18,6 @@
 package bisq.desktop.app;
 
 import bisq.desktop.DesktopModule;
-import bisq.desktop.common.view.CachingViewLoader;
-import bisq.desktop.main.overlays.notifications.NotificationCenter;
 
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
@@ -75,11 +73,9 @@ public class BisqAppModule extends AppModule {
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
-        bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
