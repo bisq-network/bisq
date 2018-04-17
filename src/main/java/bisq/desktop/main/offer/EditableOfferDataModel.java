@@ -203,7 +203,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     }
 
     @Override
-    protected void activate() {
+    public void activate() {
         addListeners();
 
         if (isTabSelected)
@@ -237,7 +237,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
         this.tradeCurrency = tradeCurrency;
 

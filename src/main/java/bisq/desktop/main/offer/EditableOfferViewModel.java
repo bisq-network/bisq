@@ -101,15 +101,15 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     private final String paymentLabel;
     private boolean createOfferRequested;
 
-    final StringProperty amount = new SimpleStringProperty();
-    final StringProperty minAmount = new SimpleStringProperty();
+    public final StringProperty amount = new SimpleStringProperty();
+    public final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
     final String sellerSecurityDeposit;
 
     // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
     // If we would change the price representation in the domain we would not be backward compatible
-    protected final StringProperty price = new SimpleStringProperty();
+    public final StringProperty price = new SimpleStringProperty();
     final StringProperty makerFee = new SimpleStringProperty();
     final StringProperty makerFeeWithCode = new SimpleStringProperty();
     final StringProperty makerFeeCurrencyCode = new SimpleStringProperty();
@@ -117,8 +117,8 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     // Positive % value means always a better price form the maker's perspective:
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
-    protected final StringProperty marketPriceMargin = new SimpleStringProperty();
-    final StringProperty volume = new SimpleStringProperty();
+    public final StringProperty marketPriceMargin = new SimpleStringProperty();
+    public final StringProperty volume = new SimpleStringProperty();
     final StringProperty volumeDescriptionLabel = new SimpleStringProperty();
     final StringProperty volumePromptLabel = new SimpleStringProperty();
     final StringProperty tradeAmount = new SimpleStringProperty();
@@ -215,7 +215,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     }
 
     @Override
-    protected void activate() {
+    public void activate() {
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
@@ -687,7 +687,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
         }
     }
 
-    void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue) {
+    public void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
@@ -727,7 +727,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
         }
     }
 
-    void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
+    public void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
         if (oldValue && !newValue)
             if (marketPriceMargin.get() == null) {

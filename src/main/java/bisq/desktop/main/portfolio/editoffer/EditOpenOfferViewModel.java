@@ -48,7 +48,7 @@ class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataMod
     }
 
     @Override
-    protected void activate() {
+    public void activate() {
         super.activate();
         dataModel.populateData();
     }
