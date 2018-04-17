@@ -17,6 +17,7 @@
 
 package bisq.desktop.app;
 
+import bisq.desktop.PrimaryStageWrapper;
 import bisq.desktop.SystemTray;
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
@@ -32,12 +33,12 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
-import bisq.desktop.setup.DesktopPersistedDataHost;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.UncaughtExceptionBroadcaster;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -48,8 +49,6 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.setup.CorePersistedDataHost;
-import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
 
 import bisq.network.p2p.P2PService;
@@ -57,13 +56,10 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.setup.CommonSetup;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -105,13 +101,26 @@ public class BisqApp extends Application {
     private static BisqEnvironment bisqEnvironment;
     public static Runnable shutDownHandler;
     private static Stage primaryStage;
+    private static Runnable onShutdownHook;
+    private static Runnable onReadyToStartHook;
 
-    protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
+    public static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
     }
 
-    private BisqAppModule bisqAppModule;
-    private Injector injector;
+    public static void setInjector(Injector injector) {
+        BisqApp.injector = injector;
+    }
+
+    public static void setOnReadyToStart(Runnable hook) {
+        BisqApp.onReadyToStartHook = hook;
+    }
+
+    public static void setOnShutdownHook(Runnable hook) {
+        BisqApp.onShutdownHook = hook;
+    }
+
+    private static Injector injector;
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
@@ -124,8 +133,6 @@ public class BisqApp extends Application {
         UserThread.setTimerClass(UITimer.class);
 
         shutDownHandler = this::stop;
-        CommonSetup.setup(this::showErrorPopup);
-        CoreSetup.setup(bisqEnvironment);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -134,12 +141,9 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
-            injector = Guice.createInjector(bisqAppModule);
+            injector.getInstance(UncaughtExceptionBroadcaster.class).addExceptionHandler(this::showErrorPopup);
+            injector.getInstance(PrimaryStageWrapper.class).setStage(stage);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-
-            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
-            PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
 
             DevEnv.setup(injector);
 
@@ -150,6 +154,9 @@ public class BisqApp extends Application {
             setDatabaseCorruptionHandler(mainView);
 
             checkForCorrectOSArchitecture();
+
+            if (null != onReadyToStartHook)
+                mainView.onBootstrap().thenRun(onReadyToStartHook);
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
@@ -392,6 +399,7 @@ public class BisqApp extends Application {
     private void gracefulShutDown(ResultHandler resultHandler) {
         try {
             if (injector != null) {
+//                TODO this should be moved to core
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(DaoSetup.class).shutDown();
@@ -399,7 +407,8 @@ public class BisqApp extends Application {
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            bisqAppModule.close(injector);
+                            if (null != onShutdownHook)
+                                onShutdownHook.run();
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });

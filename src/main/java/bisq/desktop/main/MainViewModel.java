@@ -36,7 +36,6 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.app.SetupUtils;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
@@ -134,6 +133,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -230,6 +230,7 @@ public class MainViewModel implements ViewModel {
     private BooleanProperty p2pNetWorkReady;
     private final BooleanProperty walletInitialized = new SimpleBooleanProperty();
     private boolean allBasicServicesInitialized;
+    private CompletableFuture<Void> bootstrapCompletableFuture = new CompletableFuture<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -316,17 +317,14 @@ public class MainViewModel implements ViewModel {
     }
 
     private void readMapsFromResources() {
-        SetupUtils.readFromResources(p2PService.getP2PDataStorage()).addListener((observable, oldValue, newValue) -> {
-            if (newValue)
-                startBasicServices();
-        });
+        UserThread.execute(this::setupBasicServicesListeners);
 
         // TODO can be removed in jdk 9
         checkCryptoSetup();
     }
 
-    private void startBasicServices() {
-        log.info("startBasicServices");
+    private void setupBasicServicesListeners() {
+        log.info("setupBasicServicesListeners");
 
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             // TODO that seems to be called too often if Tor takes longer to start up...
@@ -366,6 +364,7 @@ public class MainViewModel implements ViewModel {
                     torNetworkSettingsWindow.hide();
             }
         });
+        bootstrapCompletableFuture.complete(null);
     }
 
     private void showTorNetworkSettingsWindow() {
@@ -430,7 +429,7 @@ public class MainViewModel implements ViewModel {
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();
-        p2PService.start(new P2PServiceListener() {
+        p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
                 log.debug("onTorNodeReady");
@@ -441,6 +440,7 @@ public class MainViewModel implements ViewModel {
                     initWalletService();
 
                 // We want to get early connected to the price relay so we call it already now
+//                REFACTOR: move priceFeedService init so separate listener out of MainViewModel
                 priceFeedService.setCurrencyCodeOnInit();
                 priceFeedService.initialRequestPriceFeed();
             }
@@ -574,8 +574,8 @@ public class MainViewModel implements ViewModel {
             btcInfo.set(newValue);
         });
 
-        walletsSetup.initialize(null,
-                () -> {
+        walletsSetup.onInitialized()
+                .thenRun(() -> {
                     log.debug("walletsSetup.onInitialized");
                     numBtcPeers = walletsSetup.numPeersProperty().get();
 
@@ -602,8 +602,11 @@ public class MainViewModel implements ViewModel {
                             walletInitialized.set(true);
                         }
                     }
-                },
-                walletServiceException::set);
+                })
+                .exceptionally(e -> {
+                    walletServiceException.set(e);
+                    return null;
+                });
     }
 
     private void onBasicServicesInitialized() {
@@ -614,7 +617,6 @@ public class MainViewModel implements ViewModel {
         PaymentMethod.onAllServicesInitialized();
 
         // disputeManager
-        disputeManager.onAllServicesInitialized();
         disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
             change.next();
             onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
@@ -622,7 +624,6 @@ public class MainViewModel implements ViewModel {
         onDisputesChangeListener(disputeManager.getDisputesAsObservableList(), null);
 
         // tradeManager
-        tradeManager.onAllServicesInitialized();
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
@@ -646,28 +647,18 @@ public class MainViewModel implements ViewModel {
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
-        openOfferManager.onAllServicesInitialized();
         removeOffersWithoutAccountAgeWitness();
 
-        arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue, false));
         privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
 
-        p2PService.onAllServicesInitialized();
 
-        feeService.onAllServicesInitialized();
         GUIUtil.setFeeService(feeService);
 
+//        REFACTOR why is this different than other services? they don't need to show any errors
         daoSetup.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
-        tradeStatisticsManager.onAllServicesInitialized();
-
-        accountAgeWitnessService.onAllServicesInitialized();
-
-        priceFeedService.setCurrencyCodeOnInit();
-
-        filterManager.onAllServicesInitialized();
         filterManager.addListener(filter -> {
             if (filter != null) {
                 if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
@@ -1308,5 +1299,9 @@ public class MainViewModel implements ViewModel {
         else
             postFix = "";
         return Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + postFix;
+    }
+
+    public CompletableFuture<Void> onBootstrap() {
+        return bootstrapCompletableFuture;
     }
 }

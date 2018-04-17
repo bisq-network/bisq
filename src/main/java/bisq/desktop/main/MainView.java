@@ -84,6 +84,7 @@ import javafx.geometry.Pos;
 import javafx.beans.value.ChangeListener;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -731,6 +732,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showOpenDisputesNotification);
         buttonHolder.getChildren().add(notification);
+    }
+
+    public CompletableFuture<Void> onBootstrap() {
+        return model.onBootstrap();
     }
 
     private class NavButton extends AutoTooltipToggleButton {
