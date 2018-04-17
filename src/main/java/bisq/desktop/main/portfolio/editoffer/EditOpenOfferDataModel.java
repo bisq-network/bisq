@@ -119,10 +119,14 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
 
-        openOfferManager.editOpenOfferPublish(editedOffer, initialState, resultHandler, errorMessageHandler);
+        openOfferManager.editOpenOfferPublish(editedOffer, initialState, () -> {
+            openOffer = null;
+            resultHandler.handleResult();
+        }, errorMessageHandler);
     }
 
     public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.editOpenOfferCancel(openOffer, initialState, () -> {}, errorMessageHandler);
+        if (openOffer != null)
+            openOfferManager.editOpenOfferCancel(openOffer, initialState, () -> {}, errorMessageHandler);
     }
 }

@@ -56,7 +56,6 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     private BusyAnimation busyAnimation;
     private Button confirmButton;
     private Button cancelButton;
-    private boolean isSuccessfulEdit;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -88,8 +87,6 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
-        isSuccessfulEdit = false;
-
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
             new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
@@ -108,12 +105,10 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
     @Override
     public void onClose() {
-        if (!isSuccessfulEdit) {
-            model.onCancelEditOffer(errorMessage -> {
-                log.error(errorMessage);
-                new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
-            });
-        }
+        model.onCancelEditOffer(errorMessage -> {
+            log.error(errorMessage);
+            new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
+        });
     }
 
     @Override
@@ -181,13 +176,12 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
                 if (DontShowAgainLookup.showAgain(key))
                     //noinspection unchecked
-                    new Popup<>().information(Res.get("editOffer.success"))
+                    new Popup<>().feedback(Res.get("editOffer.success"))
                             .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                             .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
                             .dontShowAgainId(key)
                             .show();
                 spinnerInfoLabel.setText("");
-                isSuccessfulEdit = true;
                 close();
             }, (message) -> {
                 log.error(message);
