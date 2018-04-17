@@ -40,6 +40,7 @@ import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;
 
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
@@ -49,11 +50,8 @@ import java.util.ResourceBundle;
 
 public class DesktopModule extends AppModule {
 
-    private final Stage primaryStage;
-
-    public DesktopModule(Environment environment, Stage primaryStage) {
+    public DesktopModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -76,7 +74,7 @@ public class DesktopModule extends AppModule {
 
         bind(Transitions.class).in(Singleton.class);
 
-        bind(Stage.class).toInstance(primaryStage);
+        bind(PrimaryStageWrapper.class).in(Singleton.class);
 
         bind(TradableRepository.class).in(Singleton.class);
         bind(TransactionListItemFactory.class).in(Singleton.class);
@@ -84,5 +82,10 @@ public class DesktopModule extends AppModule {
         bind(DisplayedTransactionsFactory.class).in(Singleton.class);
 
         bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+    }
+
+    @Provides
+    Stage providePrimaryStage(PrimaryStageWrapper wrapper) {
+        return wrapper.get();
     }
 }

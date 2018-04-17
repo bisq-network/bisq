@@ -25,15 +25,10 @@ import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;
 
-import javafx.stage.Stage;
-
 public class BisqAppModule extends AppModule {
 
-    private final Stage primaryStage;
-
-    public BisqAppModule(Environment environment, Stage primaryStage) {
+    public BisqAppModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -47,6 +42,6 @@ public class BisqAppModule extends AppModule {
     }
 
     private DesktopModule desktopModule() {
-        return new DesktopModule(environment, primaryStage);
+        return new DesktopModule(environment);
     }
 }
