@@ -164,33 +164,37 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         cancelButton.setOnAction(event -> close());
 
         confirmButton.setOnAction(e -> {
-            model.isNextButtonDisabled.setValue(true);
-            cancelButton.setDisable(true);
-            busyAnimation.play();
-            spinnerInfoLabel.setText(Res.get("editOffer.publishOffer"));
-            //edit offer
-            model.onPublishOffer(() -> {
-                log.debug("Edit offer was successful");
 
-                String key = "ShowOpenOffersAfterEditing";
+            if (model.isPriceInRange()) {
 
-                if (DontShowAgainLookup.showAgain(key))
-                    //noinspection unchecked
-                    new Popup<>().feedback(Res.get("editOffer.success"))
-                            .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                            .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
-                            .dontShowAgainId(key)
-                            .show();
-                spinnerInfoLabel.setText("");
-                close();
-            }, (message) -> {
-                log.error(message);
-                spinnerInfoLabel.setText("");
-                busyAnimation.stop();
-                model.isNextButtonDisabled.setValue(false);
-                cancelButton.setDisable(false);
-                new Popup<>().warning(Res.get("editOffer.failed", message)).show();
-            });
+                model.isNextButtonDisabled.setValue(true);
+                cancelButton.setDisable(true);
+                busyAnimation.play();
+                spinnerInfoLabel.setText(Res.get("editOffer.publishOffer"));
+                //edit offer
+                model.onPublishOffer(() -> {
+                    log.debug("Edit offer was successful");
+
+                    String key = "ShowOpenOffersAfterEditing";
+
+                    if (DontShowAgainLookup.showAgain(key))
+                        //noinspection unchecked
+                        new Popup<>().feedback(Res.get("editOffer.success"))
+                                .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
+                                .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
+                                .dontShowAgainId(key)
+                                .show();
+                    spinnerInfoLabel.setText("");
+                    close();
+                }, (message) -> {
+                    log.error(message);
+                    spinnerInfoLabel.setText("");
+                    busyAnimation.stop();
+                    model.isNextButtonDisabled.setValue(false);
+                    cancelButton.setDisable(false);
+                    new Popup<>().warning(Res.get("editOffer.failed", message)).show();
+                });
+            }
         });
     }
 
