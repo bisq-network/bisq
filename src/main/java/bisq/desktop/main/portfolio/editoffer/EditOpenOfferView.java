@@ -43,7 +43,6 @@ import com.google.inject.Inject;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 
 import javafx.geometry.Insets;
 
@@ -82,7 +81,8 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         hidePaymentGroup();
         hideOptionsGroup();
 
-        gridPane.setPadding(new Insets(0, 25, -1, 25));
+        //workaround to fix margin on top of amount group
+        gridPane.setPadding(new Insets(-20, 25, -1, 25));
 
         updateMarketPriceAvailable();
         updateElementsWithDirection();
