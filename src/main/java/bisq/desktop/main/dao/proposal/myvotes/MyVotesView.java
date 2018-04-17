@@ -30,7 +30,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.Vote;
 import bisq.core.dao.vote.myvote.MyVoteService;
@@ -95,7 +95,7 @@ public class MyVotesView extends BaseProposalView {
                         ProposalService proposalService,
                         UserThreadPeriodService periodService,
                         BsqWalletService bsqWalletService,
-                        StateService stateService,
+                        UserThreadStateService stateService,
                         ParamService paramService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,

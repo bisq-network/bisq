@@ -23,7 +23,8 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.state.Block;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.vote.period.Phase;
 import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.locale.Res;
@@ -44,11 +45,11 @@ import java.util.List;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements StateService.BlockListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private final UserThreadPeriodService periodService;
-    private final StateService stateService;
+    private final UserThreadStateService stateService;
     private Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
@@ -61,7 +62,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(UserThreadPeriodService periodService, StateService stateService) {
+    private ProposalDashboardView(UserThreadPeriodService periodService, UserThreadStateService stateService) {
         this.periodService = periodService;
         this.stateService = stateService;
     }

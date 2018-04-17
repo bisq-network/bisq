@@ -33,7 +33,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.vote.myvote.MyVoteService;
@@ -95,7 +95,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 UserThreadPeriodService periodService,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
-                                StateService stateService,
+                                UserThreadStateService stateService,
                                 ParamService paramService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {

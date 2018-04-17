@@ -23,7 +23,8 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.Block;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.vote.myvote.MyVote;
@@ -50,11 +51,11 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class VoteListItem implements StateService.BlockListener {
+public class VoteListItem implements BlockListener {
     @Getter
     private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
-    private final StateService stateService;
+    private final UserThreadStateService stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
@@ -74,7 +75,7 @@ public class VoteListItem implements StateService.BlockListener {
 
     VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
-                 StateService stateService,
+                 UserThreadStateService stateService,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;
@@ -97,7 +98,7 @@ public class VoteListItem implements StateService.BlockListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // StateService.BlockListener
+    // BlockListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

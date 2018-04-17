@@ -27,7 +27,7 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.vote.period.Phase;
 import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
@@ -73,7 +73,7 @@ import java.util.stream.Collectors;
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
-    protected final StateService stateService;
+    protected final UserThreadStateService stateService;
     protected final ParamService paramService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
@@ -107,7 +107,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalListService proposalListService,
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
-                               StateService stateService,
+                               UserThreadStateService stateService,
                                ParamService paramService,
                                UserThreadPeriodService periodService,
                                BsqFormatter bsqFormatter,

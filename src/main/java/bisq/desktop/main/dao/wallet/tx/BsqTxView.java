@@ -33,7 +33,8 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.state.Block;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
@@ -80,14 +81,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, StateService.BlockListener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BlockListener {
 
     private TableView<BsqTxListItem> tableView;
     private Pane rootParent;
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final StateService stateService;
+    private final UserThreadStateService stateService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -111,7 +112,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
-                      StateService stateService,
+                      UserThreadStateService stateService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
@@ -213,7 +214,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // StateService.BlockListener
+    // BlockListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

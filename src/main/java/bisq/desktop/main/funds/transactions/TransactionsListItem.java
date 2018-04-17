@@ -26,7 +26,7 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -80,7 +80,7 @@ class TransactionsListItem {
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Optional<Tradable> tradableOptional,
-                                StateService stateService,
+                                UserThreadStateService stateService,
                                 BSFormatter formatter) {
         this.formatter = formatter;
         txId = transaction.getHashAsString();

@@ -27,7 +27,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.state.Block;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -56,10 +57,10 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements StateService.BlockListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final StateService stateService;
+    private final UserThreadStateService stateService;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
@@ -78,7 +79,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
-                             StateService stateService,
+                             UserThreadStateService stateService,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
                              BsqFormatter bsqFormatter) {
@@ -147,7 +148,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // StateService.BlockListener
+    // BlockListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -157,25 +158,25 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
 
     private void updateWithBsqBlockChainData() {
-        final Coin issuedAmountFromGenesis = stateService.getIssuedAmountAtGenesis();
+        final Coin issuedAmountFromGenesis = stateService.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        final Coin issuedAmountFromCompRequests = stateService.getIssuedAmountFromCompRequests();
+        final Coin issuedAmountFromCompRequests = Coin.valueOf(stateService.getTotalIssuedAmountFromCompRequests());
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
-        final Coin burntFee = stateService.getTotalBurntFee();
+        final Coin burntFee = Coin.valueOf(stateService.getTotalBurntFee());
         final Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
-        allTxTextField.setText(String.valueOf(stateService.getTransactions().size()));
+        allTxTextField.setText(String.valueOf(stateService.getTxs().size()));
         utxoTextField.setText(String.valueOf(stateService.getUnspentTxOutputs().size()));
         //spentTxTextField.setText(String.valueOf(stateService.getSpentTxOutputs().size()));
-        burntTxTextField.setText(String.valueOf(stateService.getFeeTransactions().size()));
+        burntTxTextField.setText(String.valueOf(stateService.getFeeTxs().size()));
     }
 
     private void updatePrice() {
-        final Coin issuedAmount = stateService.getIssuedAmountAtGenesis();
+        final Coin issuedAmount = stateService.getGenesisTotalSupply();
         final MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
         if (bsqMarketPrice != null) {
             long bsqPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));

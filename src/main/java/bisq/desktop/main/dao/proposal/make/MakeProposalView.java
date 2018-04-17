@@ -31,7 +31,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.UserThreadStateService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalConsensus;
@@ -86,7 +86,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final MyProposalService myProposalService;
     private final CompensationRequestService compensationRequestService;
     private final GenericProposalService genericProposalService;
-    private final StateService stateService;
+    private final UserThreadStateService stateService;
     private final ParamService paramService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -107,7 +107,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              MyProposalService myProposalService,
                              CompensationRequestService compensationRequestService,
                              GenericProposalService genericProposalService,
-                             StateService stateService,
+                             UserThreadStateService stateService,
                              ParamService paramService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
