@@ -18,7 +18,6 @@
 package bisq.desktop.app;
 
 import bisq.desktop.SystemTray;
-import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
@@ -38,6 +37,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.ShutDownHandler;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -49,7 +49,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
-import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
 
 import bisq.network.p2p.P2PService;
@@ -71,7 +70,6 @@ import com.google.inject.name.Names;
 import org.reactfx.EventStreams;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -97,7 +95,7 @@ import ch.qos.logback.classic.Logger;
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 import static bisq.desktop.util.Layout.INITIAL_SCENE_WIDTH;
 
-public class BisqApp extends Application {
+public class BisqApp extends Application implements ShutDownHandler {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
 
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
@@ -120,12 +118,8 @@ public class BisqApp extends Application {
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() {
-        UserThread.setExecutor(Platform::runLater);
-        UserThread.setTimerClass(UITimer.class);
-
         shutDownHandler = this::stop;
         CommonSetup.setup(this::showErrorPopup);
-        CoreSetup.setup(bisqEnvironment);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -389,7 +383,8 @@ public class BisqApp extends Application {
         }
     }
 
-    private void gracefulShutDown(ResultHandler resultHandler) {
+    @Override
+    public void gracefulShutDown(ResultHandler resultHandler) {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
