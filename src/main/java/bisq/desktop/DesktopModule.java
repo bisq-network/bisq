@@ -37,8 +37,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.app.AppModule;
 
-import org.springframework.core.env.Environment;
-
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
@@ -49,12 +47,13 @@ import java.util.ResourceBundle;
 
 public class DesktopModule extends AppModule {
 
-    public DesktopModule(Environment environment) {
+    public DesktopModule(DesktopEnvironment environment) {
         super(environment);
     }
 
     @Override
     protected void configure() {
+        bind(DesktopEnvironment.class).toInstance((DesktopEnvironment) environment);
         bind(InjectorViewFactory.class).in(Singleton.class);
         bind(ViewFactory.class).to(InjectorViewFactory.class);
 

@@ -38,6 +38,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.UncaughtExceptionBroadcaster;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -140,7 +141,7 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            injector.getInstance(UncaughtExceptionHandler.class).addExceptionHandler(this::showErrorPopup);
+            injector.getInstance(UncaughtExceptionBroadcaster.class).addExceptionHandler(this::showErrorPopup);
             injector.getInstance(PrimaryStageWrapper.class).setStage(stage);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
