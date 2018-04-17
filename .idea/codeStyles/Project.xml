@@ -73,7 +73,7 @@
           <emptyLine />
           <package name="org.apache.commons" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="de.jensd.fx.fontawesome" withSubpackages="true" static="false" />
+          <package name="de.jensd.fx" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="org.controlsfx" withSubpackages="true" static="false" />
           <emptyLine />

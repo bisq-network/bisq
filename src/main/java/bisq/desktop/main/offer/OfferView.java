@@ -53,10 +53,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
     private TakeOfferView takeOfferView;
-    private AnchorPane createOfferPane;
+    private AnchorPane createOfferPane, takeOfferPane;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
 
-    private AnchorPane takeOfferPane;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Preferences preferences;

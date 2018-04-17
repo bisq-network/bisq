@@ -19,6 +19,8 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
+import de.jensd.fx.glyphs.GlyphIcons;
+
 import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
@@ -31,10 +33,6 @@ import javafx.geometry.Insets;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.getIcon;
-
-
-
-import de.jensd.fx.glyphs.GlyphIcons;
 
 public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
