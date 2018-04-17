@@ -90,6 +90,22 @@ You might also pass program args: `apiPort` and `apiHost`.
         -Dexec.args="--apiPort=8000 --apiHost=localhost"
 
 
+## Docker for production
+
+Since there is no security implemented yet, please be cautious. We do not consider this API to be production ready yet.
+But if you want to give it a try using docker, here is the image with headless version:
+
+    docker run -it -p 8080:8080 -p 9999:9999 bisq/api
+
+or if you want to keep Bisq data outside of docker:
+
+    docker run -it -v ~/.local/share/Bisq:/root/.local/share/Bisq -p 8080:8080 -p 9999:9999 bisq/api
+
+If you want to build your own production image instead of pulling it from docker hub:
+
+    docker build . -f docker/prod/Dockerfile -t bisq/api
+
+
 ## Docker for developers
 
 Since maven dependencies are being fetched after container is started you can seed 'm2' volume used for caching local maven repo:
