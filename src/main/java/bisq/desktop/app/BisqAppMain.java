@@ -18,19 +18,30 @@
 package bisq.desktop.app;
 
 import bisq.desktop.common.UITimer;
+import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.setup.DesktopPersistedDataHost;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
+import bisq.common.app.AppModule;
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 
 import joptsimple.OptionSet;
+
+import com.google.inject.Injector;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqEnvironment bisqEnvironment;
+    private BisqApp application;
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
@@ -45,7 +56,7 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void setupEnvironment(OptionSet options) {
         bisqEnvironment = getBisqEnvironment(options);
-        BisqApp.setEnvironment(bisqEnvironment);
+        BisqApp.setBisqEnvironment(bisqEnvironment);
     }
 
     @Override
@@ -56,6 +67,37 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void launchApplication() {
+        BisqApp.setAppLaunchedHandler(application -> {
+            BisqAppMain.this.application = (BisqApp) application;
+            onApplicationLaunched();
+        });
+
         Application.launch(BisqApp.class);
+    }
+
+    @Override
+    protected void onApplicationLaunched() {
+        super.onApplicationLaunched();
+
+        application.setInjector(injector);
+        application.setGracefulShutDownHandler(this);
+        CommonSetup.setup(application);
+    }
+
+    @Override
+    protected AppModule getModule() {
+        return new BisqAppModule(bisqEnvironment);
+    }
+
+    @Override
+    protected void applyInjector() {
+        super.applyInjector();
+        injector.getInstance(InjectorViewFactory.class).setInjector(injector);
+    }
+
+    @Override
+    protected void setupPersistedDataHosts(Injector injector) {
+        super.setupPersistedDataHosts(injector);
+        PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
     }
 }

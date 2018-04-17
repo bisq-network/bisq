@@ -655,7 +655,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         new Popup().warning(Res.get("settings.net.needRestart"))
                 .onAction(() -> {
                     bisqEnvironment.saveBaseCryptoNetwork(selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
                 })
                 .actionButtonText(Res.get("shared.shutDown"))
                 .closeButtonText(Res.get("shared.cancel"))
