@@ -128,7 +128,7 @@ public class BisqApp extends Application implements ShutDownHandler {
         BisqApp.primaryStage = stage;
 
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
+            bisqAppModule = new BisqAppModule(bisqEnvironment);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 

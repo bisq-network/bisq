@@ -43,17 +43,13 @@ import org.springframework.core.env.Environment;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import javafx.stage.Stage;
-
 import java.util.ResourceBundle;
 
 public class DesktopModule extends AppModule {
 
-    private final Stage primaryStage;
 
-    public DesktopModule(Environment environment, Stage primaryStage) {
+    public DesktopModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
@@ -75,8 +71,6 @@ public class DesktopModule extends AppModule {
         bind(TorNetworkSettingsWindow.class).in(Singleton.class);
 
         bind(Transitions.class).in(Singleton.class);
-
-        bind(Stage.class).toInstance(primaryStage);
 
         bind(TradableRepository.class).in(Singleton.class);
         bind(TransactionListItemFactory.class).in(Singleton.class);

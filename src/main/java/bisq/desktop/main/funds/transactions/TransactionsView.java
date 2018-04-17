@@ -112,7 +112,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final BSFormatter formatter;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
     @SuppressWarnings("deprecation")
     private WalletEventListener walletEventListener;
@@ -130,7 +129,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                              BSFormatter formatter,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
-                             Stage stage,
                              OfferDetailsWindow offerDetailsWindow,
                              DisplayedTransactionsFactory displayedTransactionsFactory) {
         this.btcWalletService = btcWalletService;
@@ -139,7 +137,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.formatter = formatter;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
-        this.stage = stage;
         this.offerDetailsWindow = offerDetailsWindow;
         this.displayedTransactions = displayedTransactionsFactory.create();
         this.sortedDisplayedTransactions = displayedTransactions.asSortedList();
@@ -260,7 +257,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             };
 
             GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
-                    new TransactionsListItem(), sortedDisplayedTransactions, stage);
+                    new TransactionsListItem(), sortedDisplayedTransactions, (Stage) root.getScene().getWindow());
         });
     }
 

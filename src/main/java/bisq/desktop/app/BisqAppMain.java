@@ -19,15 +19,18 @@ package bisq.desktop.app;
 
 import bisq.desktop.common.UITimer;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
 
 import joptsimple.OptionSet;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 
 public class BisqAppMain extends BisqExecutable {
+    private BisqEnvironment bisqEnvironment;
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
@@ -41,7 +44,8 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void setupEnvironment(OptionSet options) {
-        BisqApp.setEnvironment(getBisqEnvironment(options));
+        bisqEnvironment = getBisqEnvironment(options);
+        BisqApp.setEnvironment(bisqEnvironment);
     }
 
     @Override
@@ -52,6 +56,6 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void launchApplication() {
-        javafx.application.Application.launch(BisqApp.class);
+        Application.launch(BisqApp.class);
     }
 }

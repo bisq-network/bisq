@@ -36,7 +36,6 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -60,7 +59,6 @@ import javax.annotation.Nullable;
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
     private int gridRow = 0;
-    private final Stage stage;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
@@ -73,9 +71,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BackupView(Stage stage, Preferences preferences, BisqEnvironment environment) {
+    private BackupView(Preferences preferences, BisqEnvironment environment) {
         super();
-        this.stage = stage;
         this.preferences = preferences;
         dataDir = new File(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
@@ -124,7 +121,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             directoryChooser.setInitialDirectory(new File(path));
             directoryChooser.setTitle(Res.get("account.backup.selectLocation"));
             try {
-                File dir = directoryChooser.showDialog(stage);
+                File dir = directoryChooser.showDialog(root.getScene().getWindow());
                 if (dir != null) {
                     applyBackupDirectory(dir.getAbsolutePath());
                 }
