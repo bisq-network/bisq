@@ -27,9 +27,9 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.UserThreadPeriodService;
 import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.period.Phase;
-import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.dao.vote.proposal.MyProposalService;
 import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalListService;

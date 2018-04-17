@@ -22,11 +22,11 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.UserThreadPeriodService;
 import bisq.core.dao.state.Block;
 import bisq.core.dao.state.BlockListener;
 import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.period.Phase;
-import bisq.core.dao.vote.period.UserThreadPeriodService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;

@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.vote.period.Phase;
+import bisq.core.dao.period.Phase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
