@@ -44,6 +44,8 @@ import bisq.common.util.Tuple4;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -76,11 +78,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-
-import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 public class FormBuilder {
     private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
@@ -1247,10 +1244,14 @@ public class FormBuilder {
     }
 
     public static Button getIconButton(GlyphIcons icon) {
+        return getIconButton(icon, "highlight");
+    }
+
+    public static Button getIconButton(GlyphIcons icon, String styleClass) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "","2em", null, ContentDisplay.CENTER);
             textIcon.setId("icon-button");
-            textIcon.getGraphic().getStyleClass().add("highlight");
+            textIcon.getGraphic().getStyleClass().add(styleClass);
             textIcon.setPrefWidth(20);
             textIcon.setPrefHeight(20);
             textIcon.setPadding(new Insets(0));
