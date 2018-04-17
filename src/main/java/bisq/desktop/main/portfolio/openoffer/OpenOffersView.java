@@ -158,19 +158,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
-            try {
                 model.onActivateOpenOffer(openOffer,
-                        () -> {
-                            log.debug("Activate offer was successful");
-                        },
-                        (message) -> {
-                            log.error(message);
-                            new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
-                        });
-            } catch (IllegalStateException exception) {
-                log.error(exception.getMessage());
-                new Popup<>().warning(Res.get("offerbook.activateOffer.failed", exception.getMessage())).show();
-            }
+                    () -> {
+                        log.debug("Activate offer was successful");
+                    },
+                    (message) -> {
+                        log.error(message);
+                        new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
+                    });
         } else {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }

@@ -51,7 +51,11 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onActivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        try {
+            dataModel.onActivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        } catch (IllegalStateException exception) {
+            errorMessageHandler.handleErrorMessage(exception.getMessage());
+        }
     }
 
     void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -59,7 +63,11 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     void onRemoveOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        dataModel.onRemoveOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        try {
+            dataModel.onRemoveOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        } catch (IllegalStateException exception) {
+            errorMessageHandler.handleErrorMessage(exception.getMessage());
+        }
     }
 
     public ObservableList<OpenOfferListItem> getList() {
