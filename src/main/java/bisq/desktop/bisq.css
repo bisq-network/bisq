@@ -553,6 +553,20 @@ textfield */
     -fx-text-fill: -bs-medium-grey;
 }
 
+.delete-icon {
+    -fx-fill: -bs-red;
+}
+
+.delete {
+    -fx-text-fill: -bs-error-red;
+    -fx-fill: -bs-error-red;
+}
+
+.delete:hover {
+    -fx-text-fill: -bs-black;
+    -fx-fill: -bs-black;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Images                                                                      *
