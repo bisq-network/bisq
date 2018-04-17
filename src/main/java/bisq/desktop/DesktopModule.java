@@ -27,6 +27,7 @@ import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
 import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
 import bisq.desktop.main.offer.offerbook.OfferBook;
+import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -59,12 +60,14 @@ public class DesktopModule extends AppModule {
     protected void configure() {
         bind(InjectorViewFactory.class).in(Singleton.class);
         bind(ViewFactory.class).to(InjectorViewFactory.class);
+        bind(CachingViewLoader.class).in(Singleton.class);
 
         bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
         bind(CachingViewLoader.class).in(Singleton.class);
 
         bind(Navigation.class).in(Singleton.class);
+        bind(NotificationCenter.class).in(Singleton.class);
 
         bind(OfferBook.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);

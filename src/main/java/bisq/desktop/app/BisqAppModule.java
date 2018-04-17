@@ -110,7 +110,7 @@ public class BisqAppModule extends AppModule {
         install(p2pModule());
         install(bitcoinModule());
         install(daoModule());
-        install(guiModule());
+        install(desktopModule());
         install(alertModule());
         install(filterModule());
     }
@@ -151,7 +151,7 @@ public class BisqAppModule extends AppModule {
         return new DaoModule(environment);
     }
 
-    private DesktopModule guiModule() {
+    private DesktopModule desktopModule() {
         return new DesktopModule(environment, primaryStage);
     }
 }
