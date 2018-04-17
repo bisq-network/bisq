@@ -55,6 +55,7 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     private BusyAnimation busyAnimation;
     private Button confirmButton;
     private Button cancelButton;
+    private boolean isSuccessfulEdit;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -84,6 +85,8 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
+        isSuccessfulEdit = false;
+
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
             new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
@@ -93,16 +96,21 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
                     .show();
         });
 
+        model.isNextButtonDisabled.setValue(false);
+        cancelButton.setDisable(false);
+
         model.onInvalidateMarketPriceMargin();
         model.onInvalidatePrice();
     }
 
     @Override
     public void onClose() {
-        model.onCancelEditOffer(errorMessage -> {
-            log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
-        });
+        if (!isSuccessfulEdit) {
+            model.onCancelEditOffer(errorMessage -> {
+                log.error(errorMessage);
+                new Popup<>().warning(Res.get("editOffer.failed", errorMessage)).show();
+            });
+        }
     }
 
     @Override
@@ -119,15 +127,6 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     public void initWithData(OpenOffer openOffer) {
         super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
         model.initWithData(openOffer);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI actions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onCancelEdit() {
-        onClose();
-        close();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +163,7 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
         cancelButton.setId("cancel-button");
-        cancelButton.setOnAction(event -> onCancelEdit());
+        cancelButton.setOnAction(event -> close());
 
         confirmButton.setOnAction(e -> {
             model.isNextButtonDisabled.setValue(true);
@@ -179,13 +178,14 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
                 if (DontShowAgainLookup.showAgain(key))
                     //noinspection unchecked
-                    new Popup<>().instruction(Res.get("editOffer.success"))
+                    new Popup<>().information(Res.get("editOffer.success"))
                             .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                             .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
                             .dontShowAgainId(key)
                             .show();
                 spinnerInfoLabel.setText("");
-                onCancelEdit();
+                isSuccessfulEdit = true;
+                close();
             }, (message) -> {
                 log.error(message);
                 spinnerInfoLabel.setText("");

@@ -46,6 +46,7 @@ import com.google.inject.Inject;
 class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     private OpenOffer openOffer;
+    private OpenOffer.State initialState;
 
     @Inject
     EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {
@@ -54,6 +55,7 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     public void initWithData(OpenOffer openOffer) {
         this.openOffer = openOffer;
+        this.initialState = openOffer.getState();
         this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
     }
 
@@ -117,10 +119,10 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
 
-        openOfferManager.editOpenOfferPublish(editedOffer, resultHandler, errorMessageHandler);
+        openOfferManager.editOpenOfferPublish(editedOffer, initialState, resultHandler, errorMessageHandler);
     }
 
     public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.editOpenOfferCancel(openOffer, () -> {}, errorMessageHandler);
+        openOfferManager.editOpenOfferCancel(openOffer, initialState, () -> {}, errorMessageHandler);
     }
 }
