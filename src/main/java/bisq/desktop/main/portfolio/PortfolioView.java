@@ -105,7 +105,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                 navigation.navigateTo(MainView.class, PortfolioView.class, EditOpenOfferView.class);
             }
 
-            if (oldValue != null && oldValue == editOpenOfferTab && editOpenOfferView != null)
+            if (oldValue != null && oldValue == editOpenOfferTab)
                 editOpenOfferView.onTabSelected(false);
 
         };
@@ -113,10 +113,8 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         tabListChangeListener = change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
-            if (removedTabs.size() == 1) {
-                if (removedTabs.get(0).equals(editOpenOfferTab))
-                    onEditOpenOfferRemoved();
-            }
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(editOpenOfferTab))
+                onEditOpenOfferRemoved();
         };
     }
 
@@ -173,6 +171,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     private void loadView(Class<? extends View> viewClass) {
         // we want to get activate/deactivate called, so we remove the old view on tab change
+        // TODO Don't understand the check for currentTab != editOpenOfferTab
         if (currentTab != null && currentTab != editOpenOfferTab)
             currentTab.setContent(null);
 
@@ -189,7 +188,6 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         } else if (view instanceof EditOpenOfferView) {
             if (openOffer != null) {
                 if (editOpenOfferView == null) {
-
                     editOpenOfferView = (EditOpenOfferView) view;
                     editOpenOfferView.initWithData(openOffer);
                     editOpenOfferTab = new Tab(Res.get("portfolio.tab.editOpenOffer"));
@@ -206,7 +204,6 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                 view = viewLoader.load(OpenOffersView.class);
                 selectOpenOffersView((OpenOffersView) view);
             }
-
         }
 
         currentTab.setContent(view.getRoot());
@@ -217,17 +214,13 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         openOffersView = view;
         currentTab = openOffersTab;
 
-        OpenOfferActionHandler openOfferActionHandler = new OpenOfferActionHandler() {
-            @Override
-            public void onEditOpenOffer(OpenOffer openOffer) {
-                if (!editOpenOfferViewOpen) {
-                    PortfolioView.this.editOpenOfferViewOpen = true;
-                    PortfolioView.this.openOffer = openOffer;
-                    PortfolioView.this.navigation.navigateTo(MainView.class, PortfolioView.this.getClass(),
-                            EditOpenOfferView.class);
-                } else {
-                    log.error("You have already a \"Edit Offer\" tab open.");
-                }
+        OpenOfferActionHandler openOfferActionHandler = openOffer -> {
+            if (!editOpenOfferViewOpen) {
+                editOpenOfferViewOpen = true;
+                PortfolioView.this.openOffer = openOffer;
+                navigation.navigateTo(MainView.class, PortfolioView.this.getClass(), EditOpenOfferView.class);
+            } else {
+                log.error("You have already a \"Edit Offer\" tab open.");
             }
         };
         openOffersView.setOpenOfferActionHandler(openOfferActionHandler);

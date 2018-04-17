@@ -38,8 +38,6 @@ import bisq.core.user.DontShowAgainLookup;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-
 import javafx.fxml.FXML;
 
 import javafx.scene.control.Button;
@@ -60,6 +58,10 @@ import javafx.util.Callback;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.getIconButton;
+
+
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
