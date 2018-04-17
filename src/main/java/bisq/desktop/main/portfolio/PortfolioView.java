@@ -31,9 +31,7 @@ import bisq.desktop.main.portfolio.failedtrades.FailedTradesView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -50,7 +48,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 
 import java.util.List;
-import java.util.Optional;
 
 @FxmlView
 public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable> {
