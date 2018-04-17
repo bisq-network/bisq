@@ -102,7 +102,7 @@ public class BisqApp extends Application implements ShutDownHandler {
 
     private static BisqEnvironment bisqEnvironment;
     public static Runnable shutDownHandler;
-    private static Stage primaryStage;
+    private Stage stage;
 
     protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
         BisqApp.bisqEnvironment = bisqEnvironment;
@@ -125,7 +125,7 @@ public class BisqApp extends Application implements ShutDownHandler {
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     public void start(Stage stage) {
-        BisqApp.primaryStage = stage;
+        this.stage = stage;
 
         try {
             bisqAppModule = new BisqAppModule(bisqEnvironment);
@@ -164,19 +164,19 @@ public class BisqApp extends Application implements ShutDownHandler {
 
     private void setupStage(Scene scene) {
         // configure the system tray
-        SystemTray.create(primaryStage, shutDownHandler);
+        SystemTray.create(stage, shutDownHandler);
 
-        primaryStage.setOnCloseRequest(event -> {
+        stage.setOnCloseRequest(event -> {
             event.consume();
             stop();
         });
 
 
         // configure the primary stage
-        primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(1020);
-        primaryStage.setMinHeight(620);
+        stage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        stage.setScene(scene);
+        stage.setMinWidth(1020);
+        stage.setMinHeight(620);
 
         // on windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
@@ -188,10 +188,10 @@ public class BisqApp extends Application implements ShutDownHandler {
         else
             iconPath = "/images/task_bar_icon_linux.png";
 
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        stage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
 
         // make the UI visible
-        primaryStage.show();
+        stage.show();
     }
 
     private MainView loadMainView(Injector injector) {
@@ -280,8 +280,8 @@ public class BisqApp extends Application implements ShutDownHandler {
                 scene.getStylesheets().setAll(
                         "/bisq/desktop/bisq.css",
                         "/bisq/desktop/images.css");
-                primaryStage.setScene(scene);
-                primaryStage.show();
+                stage.setScene(scene);
+                stage.show();
             }
             try {
                 try {
@@ -319,8 +319,8 @@ public class BisqApp extends Application implements ShutDownHandler {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
-        stage.setY(primaryStage.getY());
+        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
+        stage.setY(this.stage.getY());
         stage.show();
     }
 
@@ -343,8 +343,8 @@ public class BisqApp extends Application implements ShutDownHandler {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
-        stage.setY(primaryStage.getY());
+        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
+        stage.setY(this.stage.getY());
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
