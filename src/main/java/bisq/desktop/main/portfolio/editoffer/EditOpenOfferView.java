@@ -21,8 +21,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.EditableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -30,7 +28,6 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
@@ -120,11 +117,12 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
                             .dontShowAgainId(key)
                             .show();
                 spinnerInfoLabel.setText("");
+                onClose();
                 close();
             }, (message) -> {
                 log.error(message);
                 spinnerInfoLabel.setText("");
-                new Popup<>().warning(Res.get("offerbook.editOffer.failed", message)).show();
+                new Popup<>().warning(Res.get("offerbook.editOffer.publishFailed", message)).show();
             });
         });
     }
@@ -141,8 +139,25 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
+        model.startEditOffer(errorMessage -> {
+            log.error(errorMessage);
+            new Popup<>().warning(Res.get("offerbook.editOffer.startFailed", errorMessage))
+                    .onClose(() -> {
+                        close();
+                    })
+                    .show();
+        });
+
         model.invalidateMarketPriceMargin();
         model.invalidatePrice();
+    }
+
+    @Override
+    public void onClose() {
+        model.cancelEditOffer(errorMessage -> {
+            log.error(errorMessage);
+            new Popup<>().warning(Res.get("offerbook.editOffer.cancelFailed", errorMessage)).show();
+        });
     }
 
     @Override
@@ -152,11 +167,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         removeBindings();
     }
 
-    private void addBindings(){
+    private void addBindings() {
         confirmButton.disableProperty().bind(model.isNextButtonDisabled);
     }
 
-    private void removeBindings(){
+    private void removeBindings() {
         confirmButton.disableProperty().unbind();
     }
 

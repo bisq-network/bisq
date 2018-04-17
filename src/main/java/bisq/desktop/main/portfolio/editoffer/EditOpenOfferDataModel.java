@@ -43,7 +43,7 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
-public class EditOpenOfferDataModel extends EditableOfferDataModel {
+class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     private OpenOffer openOffer;
 
@@ -66,6 +66,10 @@ public class EditOpenOfferDataModel extends EditableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
         if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
+    }
+
+    public void startEditOffer(ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.editOpenOfferStart(openOffer, () -> {}, errorMessageHandler);
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -113,6 +117,10 @@ public class EditOpenOfferDataModel extends EditableOfferDataModel {
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
 
-        openOfferManager.editOpenOffer(openOffer, editedOffer, resultHandler, errorMessageHandler);
+        openOfferManager.editOpenOfferPublish(editedOffer, resultHandler, errorMessageHandler);
+    }
+
+    public void cancelEditOffer(ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.editOpenOfferCancel(openOffer, () -> {}, errorMessageHandler);
     }
 }

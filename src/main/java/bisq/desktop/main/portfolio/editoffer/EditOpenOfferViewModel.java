@@ -29,7 +29,6 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.monetary.Price;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -41,7 +40,7 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
-public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataModel> {
+class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataModel> {
 
     @Inject
     public EditOpenOfferViewModel(EditOpenOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
@@ -70,5 +69,13 @@ public class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOffer
     public void invalidatePrice() {
         price.set(btcFormatter.formatPrice(null));
         price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
+    }
+
+    public void startEditOffer(ErrorMessageHandler errorMessageHandler) {
+        dataModel.startEditOffer(errorMessageHandler);
+    }
+
+    public void cancelEditOffer(ErrorMessageHandler errorMessageHandler) {
+        dataModel.cancelEditOffer(errorMessageHandler);
     }
 }
