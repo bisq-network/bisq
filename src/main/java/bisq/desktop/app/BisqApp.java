@@ -17,6 +17,7 @@
 
 package bisq.desktop.app;
 
+import bisq.desktop.PrimaryStageWrapper;
 import bisq.desktop.SystemTray;
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
@@ -134,8 +135,9 @@ public class BisqApp extends Application {
         BisqApp.primaryStage = stage;
 
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
+            bisqAppModule = new BisqAppModule(bisqEnvironment);
             injector = Guice.createInjector(bisqAppModule);
+            injector.getInstance(PrimaryStageWrapper.class).setStage(stage);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
             PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
