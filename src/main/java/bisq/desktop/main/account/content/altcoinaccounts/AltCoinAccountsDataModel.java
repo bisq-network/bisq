@@ -53,7 +53,6 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final Stage stage;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";
@@ -65,14 +64,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                                     OpenOfferManager openOfferManager,
                                     TradeManager tradeManager,
                                     AccountAgeWitnessService accountAgeWitnessService,
-                                    Stage stage,
                                     PersistenceProtoResolver persistenceProtoResolver) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.stage = stage;
         this.persistenceProtoResolver = persistenceProtoResolver;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
@@ -143,7 +140,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         user.setCurrentPaymentAccount(paymentAccount);
     }
 
-    public void exportAccounts() {
+    public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
@@ -152,7 +149,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         }
     }
 
-    public void importAccounts() {
+    public void importAccounts(Stage stage) {
         GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver);
     }
 }
