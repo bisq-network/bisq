@@ -43,7 +43,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.setup.CommonSetup;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.storage.Storage;
@@ -113,7 +112,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() {
-        CommonSetup.setup(this);
     }
 
     @Override
