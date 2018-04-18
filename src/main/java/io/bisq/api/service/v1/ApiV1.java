@@ -55,6 +55,11 @@ public class ApiV1 {
         return new TradeResource(bisqProxy);
     }
 
+    @Path("user")
+    public UserResource getUserResource() {
+        return new UserResource(bisqProxy);
+    }
+
     @Path("wallet")
     public WalletResource getWalletResource() {
         return new WalletResource(bisqProxy);

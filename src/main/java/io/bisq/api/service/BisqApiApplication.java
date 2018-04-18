@@ -5,7 +5,6 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OpenOfferManager;
@@ -134,7 +133,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     }
 
     private void setupAuth(Environment environment) {
-        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", new AuthFilter(walletService, injector.getInstance(WalletsManager.class)));
+        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", new AuthFilter(walletService, injector.getInstance(TokenRegistry.class)));
         auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 

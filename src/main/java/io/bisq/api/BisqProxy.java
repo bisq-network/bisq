@@ -8,10 +8,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.*;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletService;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.wallet.*;
 import bisq.core.locale.*;
 import bisq.core.offer.*;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -38,12 +35,15 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Injector;
 import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccountHelper;
+import io.bisq.api.service.TokenRegistry;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
@@ -846,6 +846,17 @@ public class BisqProxy {
             preferences.setWithdrawalTxFeeInBytes(update.withdrawalTxFee);
         }
         return getPreferences();
+    }
+
+    public AuthResult authenticate(String password) {
+        final TokenRegistry tokenRegistry = injector.getInstance(TokenRegistry.class);
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        if (walletsManager.checkAESKey(aesKey)) {
+            return new AuthResult(tokenRegistry.generateToken());
+        }
+        throw new UnauthorizedException();
     }
 
     public enum WalletAddressPurpose {

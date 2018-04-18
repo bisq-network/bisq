@@ -1,9 +1,6 @@
 package io.bisq.api.service;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsManager;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -14,11 +11,11 @@ public class AuthFilter implements Filter {
 
 
     private final BtcWalletService btcWalletService;
-    private final WalletsManager walletsManager;
+    private final TokenRegistry tokenRegistry;
 
-    public AuthFilter(BtcWalletService btcWalletService, WalletsManager walletsManager) {
+    public AuthFilter(BtcWalletService btcWalletService, TokenRegistry tokenRegistry) {
         this.btcWalletService = btcWalletService;
-        this.walletsManager = walletsManager;
+        this.tokenRegistry = tokenRegistry;
     }
 
     @Override
@@ -28,26 +25,31 @@ public class AuthFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+        final String pathInfo = httpServletRequest.getPathInfo();
+        if(!pathInfo.startsWith("/api") || pathInfo.endsWith("/user/auth")) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
         if (!btcWalletService.isWalletReady()) {
             httpServletResponse.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             return;
         }
-        if (!btcWalletService.isWalletReady() || !btcWalletService.isEncrypted()) {
+        if (!btcWalletService.isEncrypted()) {
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }
-        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-        final String authorizationHeader = ((HttpServletRequest) servletRequest).getHeader("authorization");
-        final String token = null == authorizationHeader ? "" : authorizationHeader.substring("Bearer ".length());
-        KeyParameter aesKey = keyCrypterScrypt.deriveKey(token);
-
-        final boolean result = walletsManager.checkAESKey(aesKey);
-        if (result)
-            filterChain.doFilter(servletRequest, servletResponse);
-        else {
+        final String authorizationHeader = httpServletRequest.getHeader("authorization");
+        if (null == authorizationHeader) {
             httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+        final String token = authorizationHeader.substring("Bearer ".length());
+        if (tokenRegistry.isValidToken(token))
+            filterChain.doFilter(servletRequest, servletResponse);
+        else
+            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
     }
 
     @Override
