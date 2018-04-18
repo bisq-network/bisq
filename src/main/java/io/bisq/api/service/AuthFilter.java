@@ -45,8 +45,7 @@ public class AuthFilter implements Filter {
             httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        final String token = authorizationHeader.substring("Bearer ".length());
-        if (tokenRegistry.isValidToken(token))
+        if (tokenRegistry.isValidToken(authorizationHeader))
             filterChain.doFilter(servletRequest, servletResponse);
         else
             httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
