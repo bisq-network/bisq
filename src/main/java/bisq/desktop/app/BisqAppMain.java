@@ -21,15 +21,12 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
-
-import joptsimple.OptionSet;
 
 import com.google.inject.Injector;
 
@@ -40,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
-    private BisqEnvironment bisqEnvironment;
     private BisqApp application;
 
     public static void main(String[] args) throws Exception {
@@ -53,11 +49,10 @@ public class BisqAppMain extends BisqExecutable {
         }
     }
 
-    @Override
-    protected void setupEnvironment(OptionSet options) {
-        bisqEnvironment = getBisqEnvironment(options);
-        BisqApp.setBisqEnvironment(bisqEnvironment);
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // First synchronous execution tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void configUserThread() {
@@ -75,14 +70,22 @@ public class BisqAppMain extends BisqExecutable {
         Application.launch(BisqApp.class);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // As application is a JavaFX application we need to wait for onApplicationLaunched
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     protected void onApplicationLaunched() {
         super.onApplicationLaunched();
 
-        application.setInjector(injector);
         application.setGracefulShutDownHandler(this);
         CommonSetup.setup(application);
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // We continue with a series of synchronous execution tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected AppModule getModule() {
@@ -92,6 +95,8 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void applyInjector() {
         super.applyInjector();
+
+        application.setInjector(injector);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
     }
 
@@ -99,5 +104,10 @@ public class BisqAppMain extends BisqExecutable {
     protected void setupPersistedDataHosts(Injector injector) {
         super.setupPersistedDataHosts(injector);
         PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+    }
+
+    @Override
+    protected void startApplication() {
+        application.startApplication();
     }
 }

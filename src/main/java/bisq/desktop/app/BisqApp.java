@@ -34,7 +34,6 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -87,25 +86,20 @@ import static bisq.desktop.util.Layout.INITIAL_SCENE_WIDTH;
 @Slf4j
 public class BisqApp extends Application implements UncaughtExceptionHandler {
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
-
     @Setter
-    private static BisqEnvironment bisqEnvironment;
+    private static Consumer<Application> appLaunchedHandler;
     @Getter
     private static Runnable shutDownHandler;
 
     @Setter
-    private static Consumer<Application> appLaunchedHandler;
-    @Setter
     private Injector injector;
-
-
+    @Setter
+    private GracefulShutDownHandler gracefulShutDownHandler;
     private Stage stage;
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private boolean shutDownRequested;
-    @Setter
-    private GracefulShutDownHandler gracefulShutDownHandler;
 
     public BisqApp() {
         shutDownHandler = this::stop;
@@ -127,6 +121,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         this.stage = stage;
 
         appLaunchedHandler.accept(this);
+    }
+
+    public void startApplication() {
         try {
             MainView mainView = loadMainView(injector);
             scene = createAndConfigScene(mainView, injector);
@@ -226,9 +223,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             stop();
         });
 
-
         // configure the primary stage
-        stage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
+        String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
+        stage.setTitle(appName);
         stage.setScene(scene);
         stage.setMinWidth(1020);
         stage.setMinHeight(620);
