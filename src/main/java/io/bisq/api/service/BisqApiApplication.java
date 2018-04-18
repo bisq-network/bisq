@@ -5,6 +5,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OpenOfferManager;
@@ -124,11 +125,17 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
         setupCors(environment);
+        setupAuth(environment);
         setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
+    }
+
+    private void setupAuth(Environment environment) {
+        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", new AuthFilter(walletService, injector.getInstance(WalletsManager.class)));
+        auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
     private void setupHostAndPort(ApiConfiguration configuration, ApiEnvironment environment) {
