@@ -28,13 +28,13 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.state.events.payloads.Proposal;
+import bisq.core.dao.consensus.vote.proposal.Ballot;
 import bisq.core.dao.consensus.vote.proposal.MyProposalService;
-import bisq.core.dao.consensus.vote.proposal.Proposal;
 import bisq.core.dao.consensus.vote.proposal.ProposalListService;
-import bisq.core.dao.consensus.state.events.payloads.ProposalPayload;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -74,7 +74,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
     protected final StateServiceFacade stateService;
-    protected final ParamService paramService;
+    protected final ChangeParamService changeParamService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
     protected final BsqWalletService bsqWalletService;
@@ -90,9 +90,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected int gridRow = 0;
     protected GridPane detailsGridPane, gridPane;
     protected ProposalListItem selectedProposalListItem;
-    protected ListChangeListener<Proposal> proposalListChangeListener;
+    protected ListChangeListener<Ballot> proposalListChangeListener;
     protected ChangeListener<Phase> phaseChangeListener;
-    protected final UserThreadPeriodService periodService;
+    protected final PeriodServiceFacade periodService;
     protected Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
@@ -108,8 +108,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                StateServiceFacade stateService,
-                               ParamService paramService,
-                               UserThreadPeriodService periodService,
+                               ChangeParamService changeParamService,
+                               PeriodServiceFacade periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
         this.myProposalService = myProposalService;
@@ -117,7 +117,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
-        this.paramService = paramService;
+        this.changeParamService = changeParamService;
         this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -211,14 +211,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalDisplayView.setManaged(false);
     }
 
-    protected void showProposalDisplay(Proposal proposal) {
+    protected void showProposalDisplay(Ballot ballot) {
         proposalDisplayView.setVisible(true);
         proposalDisplayView.setManaged(true);
 
-        proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
+        proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, ballot.getType(),
                 false, false);
         proposalDisplay.setEditable(false);
-        proposalDisplay.applyProposalPayload(proposal.getProposalPayload());
+        proposalDisplay.applyProposalPayload(ballot.getProposal());
     }
 
 
@@ -229,7 +229,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected void onSelectProposal(ProposalListItem item) {
         selectedProposalListItem = item;
         if (item != null)
-            showProposalDisplay(item.getProposal());
+            showProposalDisplay(item.getBallot());
         else
             hideProposalDisplay();
     }
@@ -248,7 +248,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     abstract protected void updateProposalList();
 
-    protected void doUpdateProposalList(List<Proposal> list) {
+    protected void doUpdateProposalList(List<Ballot> list) {
         proposalListItems.forEach(ProposalListItem::cleanup);
 
         proposalListItems.setAll(list.stream()
@@ -295,14 +295,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getProposal().getProposalPayload().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getBallot().getProposal().getCreationDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getProposal().getProposalPayload().getCreationDate()));
+        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getBallot().getProposal().getCreationDate()));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
@@ -320,14 +320,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getProposal().getProposalPayload().getName());
+                                    setText(item.getBallot().getProposal().getName());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getProposalPayload().getName()));
+        nameColumn.setComparator(Comparator.comparing(o2 -> o2.getBallot().getProposal().getName()));
         tableView.getColumns().add(nameColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
@@ -344,14 +344,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getProposal().getProposalPayload().getTitle());
+                                    setText(item.getBallot().getProposal().getTitle());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getProposalPayload().getTitle()));
+        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getBallot().getProposal().getTitle()));
         tableView.getColumns().add(titleColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
@@ -370,11 +370,11 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final Proposal proposal = item.getProposal();
-                                    final ProposalPayload proposalPayload = proposal.getProposalPayload();
-                                    field = new HyperlinkWithIcon(proposalPayload.getShortId());
+                                    final Ballot ballot = item.getBallot();
+                                    final Proposal proposal = ballot.getProposal();
+                                    field = new HyperlinkWithIcon(proposal.getShortId());
                                     field.setOnAction(event -> {
-                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposalPayload).show();
+                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposal).show();
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
@@ -387,7 +387,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                         };
                     }
                 });
-        uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
+        uidColumn.setComparator(Comparator.comparing(o -> o.getBallot().getUid()));
         tableView.getColumns().add(uidColumn);
     }
 

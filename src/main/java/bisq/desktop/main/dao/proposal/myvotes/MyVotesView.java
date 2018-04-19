@@ -30,15 +30,15 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.period.UserThreadPeriodService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.consensus.vote.myvote.MyVoteService;
+import bisq.core.dao.consensus.vote.proposal.BallotList;
 import bisq.core.dao.consensus.vote.proposal.MyProposalService;
-import bisq.core.dao.consensus.vote.proposal.ProposalList;
 import bisq.core.dao.consensus.vote.proposal.ProposalListService;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -93,17 +93,17 @@ public class MyVotesView extends BaseProposalView {
     private MyVotesView(MyProposalService myProposalService,
                         ProposalListService proposalListService,
                         ProposalService proposalService,
-                        UserThreadPeriodService periodService,
+                        PeriodServiceFacade periodService,
                         BsqWalletService bsqWalletService,
                         StateServiceFacade stateService,
-                        ParamService paramService,
+                        ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
                         MyVoteService myVoteService,
                         Preferences preferences) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                paramService, periodService, bsqFormatter, btcFormatter);
+                changeParamService, periodService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
         this.preferences = preferences;
     }
@@ -182,7 +182,7 @@ public class MyVotesView extends BaseProposalView {
     // Handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onShowProposalList(ProposalList proposalList) {
+    private void onShowProposalList(BallotList ballotList) {
 
     }
 
@@ -194,7 +194,7 @@ public class MyVotesView extends BaseProposalView {
     @Override
     protected void updateProposalList() {
         if (selectedVoteListItem != null)
-            doUpdateProposalList(selectedVoteListItem.getMyVote().getProposalList().getList());
+            doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
     }
 
 
@@ -249,9 +249,9 @@ public class MyVotesView extends BaseProposalView {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    ProposalList proposalList = item.getMyVote().getProposalList();
+                                    BallotList ballotList = item.getMyVote().getBallotList();
                                     HyperlinkWithIcon field = new HyperlinkWithIcon(Res.get("dao.proposal.myVotes.showProposalList"), AwesomeIcon.INFO_SIGN);
-                                    field.setOnAction(event -> onShowProposalList(proposalList));
+                                    field.setOnAction(event -> onShowProposalList(ballotList));
                                     field.setTooltip(new Tooltip(Res.get("dao.proposal.myVotes.tooltip.showProposalList")));
                                     setGraphic(field);
                                 } else {
@@ -378,7 +378,7 @@ public class MyVotesView extends BaseProposalView {
 
                         if (item != null && !empty) {
                             actionButtonIconView = new ImageView();
-                            Vote vote = item.getProposal().getVote();
+                            Vote vote = item.getBallot().getVote();
                             if (vote instanceof BooleanVote) {
                                 if (((BooleanVote) vote).isAccepted()) {
                                     actionButtonIconView.setId("accepted");

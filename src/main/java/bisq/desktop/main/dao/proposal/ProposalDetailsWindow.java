@@ -22,7 +22,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.state.events.payloads.ProposalPayload;
+import bisq.core.dao.consensus.state.events.payloads.Proposal;
 import bisq.core.locale.Res;
 
 import javafx.geometry.Insets;
@@ -36,7 +36,7 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(ProposalDetailsWindow.class);
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private ProposalPayload proposalPayload;
+    private Proposal proposal;
     private ProposalDisplay proposalDisplay;
 
 
@@ -44,10 +44,10 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProposalDetailsWindow(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, ProposalPayload proposalPayload) {
+    public ProposalDetailsWindow(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, Proposal proposal) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.proposalPayload = proposalPayload;
+        this.proposal = proposal;
 
         type = Type.Confirmation;
         width = 950;
@@ -58,10 +58,10 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
 
         proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, bsqWalletService, null);
         proposalDisplay.createAllFields(Res.get("dao.proposal.details"), 1, Layout.GROUP_DISTANCE,
-                proposalPayload.getType(), false, true);
+                proposal.getType(), false, true);
 
         proposalDisplay.setEditable(false);
-        proposalDisplay.applyProposalPayload(proposalPayload);
+        proposalDisplay.applyProposalPayload(proposal);
 
         closeButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.close"));
         closeButton.setOnAction(e -> doClose());

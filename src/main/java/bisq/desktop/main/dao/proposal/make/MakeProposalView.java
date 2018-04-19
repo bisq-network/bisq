@@ -31,14 +31,14 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.consensus.vote.proposal.Ballot;
 import bisq.core.dao.consensus.vote.proposal.MyProposalService;
-import bisq.core.dao.consensus.vote.proposal.Proposal;
 import bisq.core.dao.consensus.vote.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.vote.proposal.ProposalType;
 import bisq.core.dao.consensus.vote.proposal.ValidationException;
 import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestService;
 import bisq.core.dao.consensus.vote.proposal.generic.GenericProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
@@ -87,7 +87,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final CompensationRequestService compensationRequestService;
     private final GenericProposalService genericProposalService;
     private final StateServiceFacade stateService;
-    private final ParamService paramService;
+    private final ChangeParamService changeParamService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private ComboBox<ProposalType> proposalTypeComboBox;
@@ -108,7 +108,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              CompensationRequestService compensationRequestService,
                              GenericProposalService genericProposalService,
                              StateServiceFacade stateService,
-                             ParamService paramService,
+                             ChangeParamService changeParamService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
@@ -119,7 +119,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         this.compensationRequestService = compensationRequestService;
         this.genericProposalService = genericProposalService;
         this.stateService = stateService;
-        this.paramService = paramService;
+        this.changeParamService = changeParamService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -167,15 +167,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     private void publishProposal(ProposalType type) {
         try {
-            final Tuple2<Proposal, Transaction> tuple2 = createProposal(type);
-            Proposal proposal = tuple2.first;
+            final Tuple2<Ballot, Transaction> tuple2 = createProposal(type);
+            Ballot ballot = tuple2.first;
             Transaction transaction = tuple2.second;
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
-            final Coin fee = ProposalConsensus.getFee(paramService, stateService.getChainHeight());
+            final Coin fee = ProposalConsensus.getFee(changeParamService, stateService.getChainHeight());
 
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> publishProposal(proposal, transaction));
+                    Res.get("dao.proposal"), () -> publishProposal(ballot, transaction));
 
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
@@ -197,8 +197,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void publishProposal(Proposal proposal, Transaction transaction) {
-        myProposalService.publishProposal(proposal,
+    private void publishProposal(Ballot ballot, Transaction transaction) {
+        myProposalService.publishProposal(ballot,
                 transaction,
                 () -> {
                     proposalDisplay.clearForm();
@@ -208,7 +208,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
-    private Tuple2<Proposal, Transaction> createProposal(ProposalType type)
+    private Tuple2<Ballot, Transaction> createProposal(ProposalType type)
             throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
             WalletException, IOException {
 

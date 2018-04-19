@@ -28,11 +28,11 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.consensus.state.events.payloads.CompensationRequestProposal;
+import bisq.core.dao.consensus.state.events.payloads.Proposal;
 import bisq.core.dao.consensus.vote.proposal.ProposalConsensus;
-import bisq.core.dao.consensus.state.events.payloads.ProposalPayload;
 import bisq.core.dao.consensus.vote.proposal.ProposalType;
 import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestConsensus;
-import bisq.core.dao.consensus.state.events.payloads.CompensationRequestPayload;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -153,26 +153,26 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.display.txId"), "").second;
     }
 
-    public void applyProposalPayload(ProposalPayload proposalPayload) {
+    public void applyProposalPayload(Proposal proposal) {
         if (uidTextField != null)
-            uidTextField.setText(proposalPayload.getUid());
-        nameTextField.setText(proposalPayload.getName());
-        titleTextField.setText(proposalPayload.getTitle());
-        descriptionTextArea.setText(proposalPayload.getDescription());
+            uidTextField.setText(proposal.getUid());
+        nameTextField.setText(proposal.getName());
+        titleTextField.setText(proposal.getTitle());
+        descriptionTextArea.setText(proposal.getDescription());
         linkInputTextField.setVisible(false);
         linkInputTextField.setManaged(false);
         linkHyperlinkWithIcon.setVisible(true);
         linkHyperlinkWithIcon.setManaged(true);
-        linkHyperlinkWithIcon.setText(proposalPayload.getLink());
-        linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposalPayload.getLink()));
-        if (proposalPayload instanceof CompensationRequestPayload) {
-            CompensationRequestPayload compensationRequestPayload = (CompensationRequestPayload) proposalPayload;
-            Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationRequestPayload.getRequestedBsq()));
+        linkHyperlinkWithIcon.setText(proposal.getLink());
+        linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
+        if (proposal instanceof CompensationRequestProposal) {
+            CompensationRequestProposal compensationRequestProposal = (CompensationRequestProposal) proposal;
+            Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationRequestProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
-                bsqAddressTextField.setText(compensationRequestPayload.getBsqAddress());
+                bsqAddressTextField.setText(compensationRequestProposal.getBsqAddress());
         }
         if (txIdTextField != null)
-            txIdTextField.setup(proposalPayload.getTxId());
+            txIdTextField.setup(proposal.getTxId());
     }
 
     public void clearForm() {

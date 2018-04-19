@@ -23,11 +23,13 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.period.UserThreadPeriodService;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
+
+import bisq.common.UserThread;
 
 import javax.inject.Inject;
 
@@ -48,7 +50,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private final UserThreadPeriodService periodService;
+    private final PeriodServiceFacade periodService;
     private final StateServiceFacade stateService;
     private Phase currentPhase;
     private Subscription phaseSubscription;
@@ -62,7 +64,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(UserThreadPeriodService periodService, StateServiceFacade stateService) {
+    private ProposalDashboardView(PeriodServiceFacade periodService, StateServiceFacade stateService) {
         this.periodService = periodService;
         this.stateService = stateService;
     }
@@ -123,14 +125,16 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        stateService.addBlockListener(this);
-        onChainHeightChanged(periodService.getChainHeight());
+        periodService.addBlockListener(this);
+
+        // We need to delay as otherwise the periodService has not been updated yet.
+        UserThread.execute(() -> onChainHeightChanged(periodService.getChainHeight()));
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        stateService.removeBlockListener(this);
+        periodService.removeBlockListener(this);
         phaseSubscription.unsubscribe();
     }
 

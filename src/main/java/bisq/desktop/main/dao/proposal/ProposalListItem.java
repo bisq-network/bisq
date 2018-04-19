@@ -24,14 +24,14 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.period.UserThreadPeriodService;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
-import bisq.core.dao.consensus.vote.proposal.Proposal;
+import bisq.core.dao.consensus.vote.proposal.Ballot;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -57,9 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public class ProposalListItem implements BlockListener {
     @Getter
-    private final Proposal proposal;
+    private final Ballot ballot;
     private final ProposalService proposalService;
-    private final UserThreadPeriodService periodService;
+    private final PeriodServiceFacade periodService;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateService;
     private final BsqFormatter bsqFormatter;
@@ -80,13 +80,13 @@ public class ProposalListItem implements BlockListener {
     private Runnable onRemoveHandler;
     private Node actionNode;
 
-    ProposalListItem(Proposal proposal,
+    ProposalListItem(Ballot ballot,
                      ProposalService proposalService,
-                     UserThreadPeriodService periodService,
+                     PeriodServiceFacade periodService,
                      BsqWalletService bsqWalletService,
                      StateServiceFacade stateService,
                      BsqFormatter bsqFormatter) {
-        this.proposal = proposal;
+        this.ballot = ballot;
         this.proposalService = proposalService;
         this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
@@ -112,7 +112,7 @@ public class ProposalListItem implements BlockListener {
         stateService.addBlockListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
-            applyState(newValue, proposal.getVote());
+            applyState(newValue, ballot.getVote());
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
@@ -120,20 +120,20 @@ public class ProposalListItem implements BlockListener {
         };
 
         periodService.phaseProperty().addListener(phaseChangeListener);
-        proposal.getVoteResultProperty().addListener(voteResultChangeListener);
+        ballot.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
     public void applyState(Phase newValue, Vote vote) {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(),
+        final boolean isTxInPastCycle = periodService.isTxInPastCycle(ballot.getTxId(),
                 stateService.getChainHeight());
         switch (newValue) {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalService.isMine(proposal.getProposalPayload())) {
+                if (proposalService.isMine(ballot.getProposal())) {
                     actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));
@@ -152,7 +152,7 @@ public class ProposalListItem implements BlockListener {
                 if (!isTxInPastCycle) {
                     actionNode = actionButtonIconView;
                     actionButton.setVisible(false);
-                    if (proposal.getVote() != null) {
+                    if (ballot.getVote() != null) {
                         actionButtonIconView.setVisible(true);
                         if (vote instanceof BooleanVote) {
                             if (((BooleanVote) vote).isAccepted()) {
@@ -199,7 +199,7 @@ public class ProposalListItem implements BlockListener {
 
 
     private void setupConfidence() {
-        final Tx tx = stateService.getTxMap().get(proposal.getProposalPayload().getTxId());
+        final Tx tx = stateService.getTxMap().get(ballot.getProposal().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
@@ -249,7 +249,7 @@ public class ProposalListItem implements BlockListener {
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
         periodService.phaseProperty().removeListener(phaseChangeListener);
-        proposal.getVoteResultProperty().removeListener(voteResultChangeListener);
+        ballot.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 
     private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {

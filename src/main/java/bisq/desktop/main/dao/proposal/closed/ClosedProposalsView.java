@@ -23,11 +23,11 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.period.UserThreadPeriodService;
 import bisq.core.dao.consensus.vote.proposal.MyProposalService;
 import bisq.core.dao.consensus.vote.proposal.ProposalListService;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 
 import javax.inject.Inject;
@@ -43,15 +43,15 @@ public class ClosedProposalsView extends BaseProposalView {
     private ClosedProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
-                                UserThreadPeriodService periodService,
+                                PeriodServiceFacade periodService,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
-                                ParamService paramService,
+                                ChangeParamService changeParamService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                paramService, periodService, bsqFormatter, btcFormatter);
+                changeParamService, periodService, bsqFormatter, btcFormatter);
     }
 
     @Override
@@ -65,18 +65,18 @@ public class ClosedProposalsView extends BaseProposalView {
     @Override
     protected void activate() {
         super.activate();
-        proposalListService.getClosedProposals().addListener(proposalListChangeListener);
+        proposalListService.getClosedBallots().addListener(proposalListChangeListener);
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        proposalListService.getClosedProposals().removeListener(proposalListChangeListener);
+        proposalListService.getClosedBallots().removeListener(proposalListChangeListener);
     }
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(proposalListService.getClosedProposals());
+        doUpdateProposalList(proposalListService.getClosedBallots());
     }
 }
 
