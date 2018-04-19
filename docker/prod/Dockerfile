@@ -14,13 +14,12 @@ CMD ./docker/startApi.sh
 
 COPY pom.xml .
 COPY docker ./docker
-RUN ./docker/setup.sh
 #This is to fetch maven plugins needed to run exec:java from docker/startApi.sh
-RUN mvn exec:java -Dexec.mainClass="bisq.desktop.app.BisqAppMain" -Dexec.args="--help"
+RUN mvn dependency:resolve compile -P integration exec:java -Dexec.mainClass="bisq.desktop.app.BisqAppMain" -Dexec.args="--help"
 
 COPY . /bisq-api
 
 VOLUME /root/.local/share/Bisq
-RUN ./docker/setup.sh
+RUN mvn compile
 ENV SKIP_BUILD=true
 ENV BISQ_API_HOST=0.0.0.0

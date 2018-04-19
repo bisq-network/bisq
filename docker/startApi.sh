@@ -1,8 +1,8 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-SETUP_SCRIPT=${SCRIPT_DIR}/setup.sh
-source ${SETUP_SCRIPT}
+if [ "$SKIP_BUILD" != "true" ]; then
+    mvn compile
+fi
 
 IP=`ip -4 -o addr show eth0  | sed 's/.*inet \([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/'`
 ARGS="--myAddress $IP:${NODE_PORT:-9999}"

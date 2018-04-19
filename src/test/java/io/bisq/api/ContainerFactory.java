@@ -13,10 +13,17 @@ public final class ContainerFactory {
     private static final String SEED_NODE_ADDRESS = SEED_NODE_HOST_NAME + ":8000";
 
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
+        final Await awaitStrategy = new Await();
+        awaitStrategy.setStrategy("polling");
+        final int sleepPollingTime = 250;
+        awaitStrategy.setIterations(60000/ sleepPollingTime);
+        awaitStrategy.setSleepPollingTime(sleepPollingTime);
         final ContainerBuilder.ContainerOptionsBuilder containerOptionsBuilder = withRegtestEnv(Container.withContainerName("bisq-api-" + nameSuffix).fromImage("bisq-api").withVolume("m2", "/root/.m2").withPortBinding(portBinding))
                 .withEnvironment("NODE_PORT", nodePort)
                 .withEnvironment("BISQ_API_HOST", "0.0.0.0")
-                .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true);
+                .withEnvironment("USE_DEV_PRIVILEGE_KEYS", true)
+                .withAwaitStrategy(awaitStrategy)
+                ;
         if (linkToSeedNode) {
             containerOptionsBuilder.withLink(SEED_NODE_CONTAINER_NAME);
         }

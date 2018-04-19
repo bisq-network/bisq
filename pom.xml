@@ -46,11 +46,6 @@
             <url>https://jitpack.io</url>
         </repository>
         <repository>
-            <id>sonatype-oss-snapshot</id>
-            <snapshots/>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-        <repository>
             <id>jerady</id>
             <snapshots/>
             <url>https://dl.bintray.com/jerady/maven</url>
