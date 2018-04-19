@@ -43,4 +43,7 @@ public class TokenRegistry {
         }
     }
 
+    public void clear() {
+        tokens.clear();
+    }
 }

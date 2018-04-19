@@ -3,6 +3,7 @@ package io.bisq.api.service.v1;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.model.AuthForm;
 import io.bisq.api.model.AuthResult;
+import io.bisq.api.model.ChangePassword;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -23,11 +24,19 @@ public class UserResource {
         this.bisqProxy = bisqProxy;
     }
 
-    @ApiOperation("Authenticate")
+    @ApiOperation("Exchange password for access token")
     @POST
-    @Path("/auth")
+    @Path("/authenticate")
     public AuthResult authenticate(@Valid AuthForm authForm) {
         return bisqProxy.authenticate(authForm.password);
+    }
+
+
+    @ApiOperation("Change password")
+    @POST
+    @Path("/password")
+    public AuthResult changePassword(@Valid ChangePassword data) {
+        return bisqProxy.changePassword(data.oldPassword, data.newPassword);
     }
 
 }

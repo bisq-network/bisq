@@ -5,6 +5,7 @@ import io.bisq.api.model.CurrencyList;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +22,13 @@ public class CurrencyResourceIT {
     @DockerContainer
     private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);
 
+    @InSequence
+    @Test
+    public void waitForAllServicesToBeReady() throws InterruptedException {
+        ApiTestHelper.waitForAllServicesToBeReady();
+    }
+
+    @InSequence(1)
     @Test
     public void getCurrencyList_always_returns200() {
         final CurrencyList currencyList = given().

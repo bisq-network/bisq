@@ -4,6 +4,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Tuple2;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
@@ -850,13 +851,51 @@ public class BisqProxy {
 
     public AuthResult authenticate(String password) {
         final TokenRegistry tokenRegistry = injector.getInstance(TokenRegistry.class);
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
-        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
-        if (walletsManager.checkAESKey(aesKey)) {
+        final boolean isPasswordValid = btcWalletService.isWalletReady() && btcWalletService.isEncrypted() && isWalletPasswordValid(password);
+        if (isPasswordValid) {
             return new AuthResult(tokenRegistry.generateToken());
         }
         throw new UnauthorizedException();
+    }
+
+    private boolean isWalletPasswordValid(String password) {
+        final KeyParameter aesKey = getAESKey(password);
+        return isWalletPasswordValid(aesKey);
+    }
+
+    private boolean isWalletPasswordValid(KeyParameter aesKey) {
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        return null != aesKey && walletsManager.checkAESKey(aesKey);
+    }
+
+    private KeyParameter getAESKey(String password) {
+        return getAESKeyAndScrypt(password).first;
+    }
+
+    private Tuple2<KeyParameter, KeyCrypterScrypt> getAESKeyAndScrypt(String password) {
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        final KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        return new Tuple2<>(keyCrypterScrypt.deriveKey(password), keyCrypterScrypt);
+    }
+
+    public AuthResult changePassword(String oldPassword, String newPassword) {
+        if (!btcWalletService.isWalletReady())
+            throw new WalletNotReadyException("Wallet not ready yet");
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        if (btcWalletService.isEncrypted()) {
+            final KeyParameter aesKey = null == oldPassword ? null : getAESKey(oldPassword);
+            if (!isWalletPasswordValid(aesKey))
+                throw new UnauthorizedException();
+            walletsManager.decryptWallets(aesKey);
+        }
+        if (null != newPassword && newPassword.length() > 0) {
+            final Tuple2<KeyParameter, KeyCrypterScrypt> aesKeyAndScrypt = getAESKeyAndScrypt(newPassword);
+            walletsManager.encryptWallets(aesKeyAndScrypt.second, aesKeyAndScrypt.first);
+            final TokenRegistry tokenRegistry = injector.getInstance(TokenRegistry.class);
+            tokenRegistry.clear();
+            return new AuthResult(tokenRegistry.generateToken());
+        }
+        return null;
     }
 
     public enum WalletAddressPurpose {

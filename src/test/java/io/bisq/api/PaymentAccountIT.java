@@ -31,8 +31,7 @@ public class PaymentAccountIT {
         /**
          * PaymentMethod initializes it's static values after all services get initialized
          */
-        final int ALL_SERVICES_INITIALIZED_DELAY = 5000;
-        Thread.sleep(ALL_SERVICES_INITIALIZED_DELAY);
+        ApiTestHelper.waitForAllServicesToBeReady();
     }
 
     @InSequence(1)
@@ -952,35 +951,41 @@ public class PaymentAccountIT {
         create_cryptoValidationFailureTemplate("address", "abc", 422, "Address is not a valid BCH address! Input too short");
     }
 
+    @InSequence(1)
     @Test
     public void create_missingCountryCode_returnsError() throws Exception {
         create_missingAttributeTemplate("countryCode", null);
         create_missingAttributeTemplate("countryCode", " ");
     }
 
+    @InSequence(1)
     @Test
     public void create_missingHolderName_returnsError() throws Exception {
         create_missingAttributeTemplate("holderName", null);
         create_missingAttributeTemplate("holderName", " ");
     }
 
+    @InSequence(1)
     @Test
     public void create_missingBic_returnsError() throws Exception {
         create_missingAttributeTemplate("bic", null);
         create_missingAttributeTemplate("bic", " ");
     }
 
+    @InSequence(1)
     @Test
     public void create_missingIban_returnsError() throws Exception {
         create_missingAttributeTemplate("iban", null);
         create_missingAttributeTemplate("iban", " ");
     }
 
+    @InSequence(1)
     @Test
     public void create_invalidCountryCode_returnsError() throws Exception {
         create_sepaValidationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
     }
 
+    @InSequence(1)
     @Test
     public void create_invalidPaymentMethod_returnsError() throws Exception {
         final int alicePort = getAlicePort();

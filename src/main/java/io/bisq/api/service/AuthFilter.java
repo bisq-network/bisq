@@ -28,7 +28,7 @@ public class AuthFilter implements Filter {
         final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         final String pathInfo = httpServletRequest.getPathInfo();
-        if(!pathInfo.startsWith("/api") || pathInfo.endsWith("/user/auth")) {
+        if(!pathInfo.startsWith("/api") || pathInfo.endsWith("/user/authenticate") || pathInfo.endsWith("/user/password")) {
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }
@@ -48,7 +48,7 @@ public class AuthFilter implements Filter {
         if (tokenRegistry.isValidToken(authorizationHeader))
             filterChain.doFilter(servletRequest, servletResponse);
         else
-            httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     @Override
