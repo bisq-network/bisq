@@ -32,7 +32,7 @@ import bisq.core.dao.consensus.period.UserThreadPeriodService;
 import bisq.core.dao.consensus.vote.proposal.MyProposalService;
 import bisq.core.dao.consensus.vote.proposal.Proposal;
 import bisq.core.dao.consensus.vote.proposal.ProposalListService;
-import bisq.core.dao.consensus.vote.proposal.ProposalPayload;
+import bisq.core.dao.consensus.state.events.payloads.ProposalPayload;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
 import bisq.core.dao.consensus.vote.proposal.param.ParamService;
 import bisq.core.dao.presentation.state.StateServiceFacade;

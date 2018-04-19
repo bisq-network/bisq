@@ -22,7 +22,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.vote.proposal.ProposalPayload;
+import bisq.core.dao.consensus.state.events.payloads.ProposalPayload;
 import bisq.core.locale.Res;
 
 import javafx.geometry.Insets;
