@@ -30,16 +30,16 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.Vote;
-import bisq.core.dao.vote.myvote.MyVoteService;
-import bisq.core.dao.vote.proposal.MyProposalService;
-import bisq.core.dao.vote.proposal.ProposalList;
-import bisq.core.dao.vote.proposal.ProposalListService;
-import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.vote.BooleanVote;
+import bisq.core.dao.consensus.vote.Vote;
+import bisq.core.dao.consensus.vote.myvote.MyVoteService;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
+import bisq.core.dao.consensus.vote.proposal.ProposalList;
+import bisq.core.dao.consensus.vote.proposal.ProposalListService;
+import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -95,7 +95,7 @@ public class MyVotesView extends BaseProposalView {
                         ProposalService proposalService,
                         UserThreadPeriodService periodService,
                         BsqWalletService bsqWalletService,
-                        UserThreadStateService stateService,
+                        StateServiceFacade stateService,
                         ParamService paramService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,

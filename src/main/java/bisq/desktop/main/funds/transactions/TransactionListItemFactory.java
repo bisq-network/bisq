@@ -21,7 +21,7 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.state.UserThreadStateService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.trade.Tradable;
 
 import org.bitcoinj.core.Transaction;
@@ -35,12 +35,12 @@ import javax.annotation.Nullable;
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final BSFormatter formatter;
 
     @Inject
     TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                               UserThreadStateService stateService, BSFormatter formatter) {
+                               StateServiceFacade stateService, BSFormatter formatter) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;

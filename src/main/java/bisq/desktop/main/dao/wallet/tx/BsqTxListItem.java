@@ -25,9 +25,9 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.consensus.state.blockchain.Tx;
+import bisq.core.dao.consensus.state.blockchain.TxType;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
@@ -51,7 +51,7 @@ class BsqTxListItem {
     private final Optional<Tx> optionalTx;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final String txId;
@@ -71,7 +71,7 @@ class BsqTxListItem {
                   Optional<Tx> optionalTx,
                   BsqWalletService bsqWalletService,
                   BtcWalletService btcWalletService,
-                  UserThreadStateService stateService,
+                  StateServiceFacade stateService,
                   boolean isBurnedBsqTx,
                   Date date,
                   BsqFormatter bsqFormatter) {

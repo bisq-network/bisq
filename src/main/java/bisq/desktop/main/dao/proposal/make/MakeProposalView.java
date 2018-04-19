@@ -31,15 +31,15 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.proposal.MyProposalService;
-import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalConsensus;
-import bisq.core.dao.vote.proposal.ProposalType;
-import bisq.core.dao.vote.proposal.ValidationException;
-import bisq.core.dao.vote.proposal.compensation.CompensationRequestService;
-import bisq.core.dao.vote.proposal.generic.GenericProposalService;
-import bisq.core.dao.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
+import bisq.core.dao.consensus.vote.proposal.Proposal;
+import bisq.core.dao.consensus.vote.proposal.ProposalConsensus;
+import bisq.core.dao.consensus.vote.proposal.ProposalType;
+import bisq.core.dao.consensus.vote.proposal.ValidationException;
+import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestService;
+import bisq.core.dao.consensus.vote.proposal.generic.GenericProposalService;
+import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -86,7 +86,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final MyProposalService myProposalService;
     private final CompensationRequestService compensationRequestService;
     private final GenericProposalService genericProposalService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final ParamService paramService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -107,7 +107,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              MyProposalService myProposalService,
                              CompensationRequestService compensationRequestService,
                              GenericProposalService genericProposalService,
-                             UserThreadStateService stateService,
+                             StateServiceFacade stateService,
                              ParamService paramService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {

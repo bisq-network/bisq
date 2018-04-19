@@ -23,12 +23,12 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.proposal.MyProposalService;
-import bisq.core.dao.vote.proposal.ProposalListService;
-import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
+import bisq.core.dao.consensus.vote.proposal.ProposalListService;
+import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 
 import javax.inject.Inject;
 
@@ -45,7 +45,7 @@ public class ClosedProposalsView extends BaseProposalView {
                                 ProposalService proposalService,
                                 UserThreadPeriodService periodService,
                                 BsqWalletService bsqWalletService,
-                                UserThreadStateService stateService,
+                                StateServiceFacade stateService,
                                 ParamService paramService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {

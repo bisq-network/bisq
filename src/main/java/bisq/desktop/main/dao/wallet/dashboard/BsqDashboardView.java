@@ -26,9 +26,9 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.state.Block;
-import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.UserThreadStateService;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -60,7 +60,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
@@ -79,7 +79,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
-                             UserThreadStateService stateService,
+                             StateServiceFacade stateService,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
                              BsqFormatter bsqFormatter) {

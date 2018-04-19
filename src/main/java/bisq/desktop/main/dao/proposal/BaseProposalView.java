@@ -27,15 +27,15 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.period.Phase;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.proposal.MyProposalService;
-import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalListService;
-import bisq.core.dao.vote.proposal.ProposalPayload;
-import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
+import bisq.core.dao.consensus.vote.proposal.Proposal;
+import bisq.core.dao.consensus.vote.proposal.ProposalListService;
+import bisq.core.dao.consensus.vote.proposal.ProposalPayload;
+import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -73,7 +73,7 @@ import java.util.stream.Collectors;
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
-    protected final UserThreadStateService stateService;
+    protected final StateServiceFacade stateService;
     protected final ParamService paramService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
@@ -107,7 +107,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalListService proposalListService,
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
-                               UserThreadStateService stateService,
+                               StateServiceFacade stateService,
                                ParamService paramService,
                                UserThreadPeriodService periodService,
                                BsqFormatter bsqFormatter,

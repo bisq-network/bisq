@@ -23,16 +23,16 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.period.Phase;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.Block;
-import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.Vote;
-import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalService;
+import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.state.blockchain.Tx;
+import bisq.core.dao.consensus.vote.BooleanVote;
+import bisq.core.dao.consensus.vote.Vote;
+import bisq.core.dao.consensus.vote.proposal.Proposal;
+import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -61,7 +61,7 @@ public class ProposalListItem implements BlockListener {
     private final ProposalService proposalService;
     private final UserThreadPeriodService periodService;
     private final BsqWalletService bsqWalletService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     private final ChangeListener<Vote> voteResultChangeListener;
@@ -84,7 +84,7 @@ public class ProposalListItem implements BlockListener {
                      ProposalService proposalService,
                      UserThreadPeriodService periodService,
                      BsqWalletService bsqWalletService,
-                     UserThreadStateService stateService,
+                     StateServiceFacade stateService,
                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.proposalService = proposalService;

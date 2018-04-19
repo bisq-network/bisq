@@ -22,12 +22,12 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.state.Block;
-import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.vote.myvote.MyVote;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.state.blockchain.Tx;
+import bisq.core.dao.consensus.state.blockchain.TxOutput;
+import bisq.core.dao.consensus.vote.myvote.MyVote;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;
@@ -55,7 +55,7 @@ public class VoteListItem implements BlockListener {
     @Getter
     private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
@@ -75,7 +75,7 @@ public class VoteListItem implements BlockListener {
 
     VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
-                 UserThreadStateService stateService,
+                 StateServiceFacade stateService,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;

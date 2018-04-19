@@ -32,11 +32,11 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.state.Block;
-import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.state.blockchain.Tx;
+import bisq.core.dao.consensus.state.blockchain.TxType;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -88,7 +88,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -112,7 +112,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
-                      UserThreadStateService stateService,
+                      StateServiceFacade stateService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;

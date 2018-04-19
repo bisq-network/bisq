@@ -33,17 +33,17 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.period.Phase;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.UserThreadStateService;
-import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.blindvote.BlindVoteConsensus;
-import bisq.core.dao.vote.myvote.MyVoteService;
-import bisq.core.dao.vote.proposal.MyProposalService;
-import bisq.core.dao.vote.proposal.Proposal;
-import bisq.core.dao.vote.proposal.ProposalListService;
-import bisq.core.dao.vote.proposal.ProposalService;
-import bisq.core.dao.vote.proposal.param.ParamService;
+import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.vote.BooleanVote;
+import bisq.core.dao.consensus.vote.blindvote.BlindVoteConsensus;
+import bisq.core.dao.consensus.vote.myvote.MyVoteService;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
+import bisq.core.dao.consensus.vote.proposal.Proposal;
+import bisq.core.dao.consensus.vote.proposal.ProposalListService;
+import bisq.core.dao.consensus.vote.proposal.ProposalService;
+import bisq.core.dao.consensus.vote.proposal.param.ParamService;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
@@ -95,7 +95,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 UserThreadPeriodService periodService,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
-                                UserThreadStateService stateService,
+                                StateServiceFacade stateService,
                                 ParamService paramService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {

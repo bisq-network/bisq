@@ -22,11 +22,11 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.period.Phase;
-import bisq.core.dao.period.UserThreadPeriodService;
-import bisq.core.dao.state.Block;
-import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.UserThreadStateService;
+import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.consensus.period.UserThreadPeriodService;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -49,7 +49,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private final UserThreadPeriodService periodService;
-    private final UserThreadStateService stateService;
+    private final StateServiceFacade stateService;
     private Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
@@ -62,7 +62,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(UserThreadPeriodService periodService, UserThreadStateService stateService) {
+    private ProposalDashboardView(UserThreadPeriodService periodService, StateServiceFacade stateService) {
         this.periodService = periodService;
         this.stateService = stateService;
     }
