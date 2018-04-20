@@ -70,6 +70,11 @@ public class ApiV1 {
         return new UserResource(bisqProxy);
     }
 
+    @Path("version")
+    public VersionResource getVersionResource() {
+        return new VersionResource(bisqProxy);
+    }
+
     @Path("wallet")
     public WalletResource getWalletResource() {
         return new WalletResource(bisqProxy);
