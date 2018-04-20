@@ -23,8 +23,8 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.vote.proposal.ProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
+import bisq.core.dao.consensus.proposal.ProposalService;
+import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.proposal.MyProposalService;
 import bisq.core.dao.presentation.proposal.ProposalListService;

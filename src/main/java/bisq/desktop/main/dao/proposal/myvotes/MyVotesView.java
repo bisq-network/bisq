@@ -30,11 +30,11 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.consensus.proposal.BallotList;
+import bisq.core.dao.consensus.proposal.ProposalService;
+import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
-import bisq.core.dao.consensus.vote.proposal.BallotList;
-import bisq.core.dao.consensus.vote.proposal.ProposalService;
-import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.myvote.MyVoteService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.proposal.MyProposalService;
