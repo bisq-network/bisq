@@ -23,7 +23,6 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.proposal.ProposalService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.proposal.MyProposalService;
@@ -42,7 +41,6 @@ public class ClosedProposalsView extends BaseProposalView {
     @Inject
     private ClosedProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
-                                ProposalService proposalService,
                                 PeriodServiceFacade periodServiceFacade,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
@@ -50,7 +48,7 @@ public class ClosedProposalsView extends BaseProposalView {
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
-        super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
+        super(myProposalService, proposalListService, bsqWalletService, stateService,
                 periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
     }
 

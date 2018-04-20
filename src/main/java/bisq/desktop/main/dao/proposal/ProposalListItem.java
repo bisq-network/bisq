@@ -23,9 +23,8 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.ballot.Ballot;
-import bisq.core.dao.consensus.proposal.ProposalService;
+import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
@@ -59,7 +58,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BlockListener {
     @Getter
     private final Ballot ballot;
-    private final ProposalService proposalService;
     private final MyProposalService myProposalService;
     private final PeriodServiceFacade periodServiceFacade;
     private final BsqWalletService bsqWalletService;
@@ -83,14 +81,12 @@ public class ProposalListItem implements BlockListener {
     private Node actionNode;
 
     ProposalListItem(Ballot ballot,
-                     ProposalService proposalService,
                      MyProposalService myProposalService,
                      PeriodServiceFacade periodServiceFacade,
                      BsqWalletService bsqWalletService,
                      StateServiceFacade stateServiceFacade,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
-        this.proposalService = proposalService;
         this.myProposalService = myProposalService;
         this.periodServiceFacade = periodServiceFacade;
         this.bsqWalletService = bsqWalletService;

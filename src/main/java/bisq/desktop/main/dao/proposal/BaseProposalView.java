@@ -27,10 +27,9 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.ballot.Ballot;
+import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.Proposal;
-import bisq.core.dao.consensus.proposal.ProposalService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.proposal.MyProposalService;
@@ -77,7 +76,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected final PeriodServiceFacade periodServiceFacade;
     protected final ChangeParamService changeParamService;
     protected final ProposalListService proposalListService;
-    protected final ProposalService proposalService;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
     protected final BSFormatter btcFormatter;
@@ -105,7 +103,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     @Inject
     protected BaseProposalView(MyProposalService myProposalService,
                                ProposalListService proposalListService,
-                               ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                StateServiceFacade stateService,
                                PeriodServiceFacade periodServiceFacade,
@@ -114,7 +111,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                BSFormatter btcFormatter) {
         this.myProposalService = myProposalService;
         this.proposalListService = proposalListService;
-        this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
         this.periodServiceFacade = periodServiceFacade;
@@ -253,7 +249,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
         proposalListItems.setAll(list.stream()
                 .map(ballot -> new ProposalListItem(ballot,
-                        proposalService,
                         myProposalService,
                         periodServiceFacade,
                         bsqWalletService,

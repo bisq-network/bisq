@@ -33,10 +33,9 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.blindvote.BlindVoteConsensus;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.ballot.Ballot;
-import bisq.core.dao.consensus.proposal.ProposalService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.presentation.myvote.MyVoteService;
@@ -91,7 +90,6 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     @Inject
     private ActiveProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
-                                ProposalService proposalService,
                                 PeriodServiceFacade periodServiceFacade,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
@@ -100,7 +98,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
-        super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
+        super(myProposalService, proposalListService, bsqWalletService, stateService,
                 periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
     }
@@ -339,7 +337,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     private void updateStateAfterVote() {
         hideProposalDisplay();
-        proposalService.persist();
+        proposalListService.persist();
         proposalTableView.getSelectionModel().clearSelection();
     }
 
