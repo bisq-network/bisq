@@ -36,7 +36,7 @@ import bisq.core.dao.consensus.vote.proposal.MyProposalService;
 import bisq.core.dao.consensus.vote.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.vote.proposal.ProposalType;
 import bisq.core.dao.consensus.vote.proposal.ValidationException;
-import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestService;
+import bisq.core.dao.consensus.vote.proposal.compensation.CompensationService;
 import bisq.core.dao.consensus.vote.proposal.generic.GenericProposalService;
 import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
@@ -84,7 +84,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final P2PService p2PService;
     private final FeeService feeService;
     private final MyProposalService myProposalService;
-    private final CompensationRequestService compensationRequestService;
+    private final CompensationService compensationService;
     private final GenericProposalService genericProposalService;
     private final StateServiceFacade stateService;
     private final ChangeParamService changeParamService;
@@ -105,7 +105,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              P2PService p2PService,
                              FeeService feeService,
                              MyProposalService myProposalService,
-                             CompensationRequestService compensationRequestService,
+                             CompensationService compensationService,
                              GenericProposalService genericProposalService,
                              StateServiceFacade stateService,
                              ChangeParamService changeParamService,
@@ -116,7 +116,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         this.p2PService = p2PService;
         this.feeService = feeService;
         this.myProposalService = myProposalService;
-        this.compensationRequestService = compensationRequestService;
+        this.compensationService = compensationService;
         this.genericProposalService = genericProposalService;
         this.stateService = stateService;
         this.changeParamService = changeParamService;
@@ -216,7 +216,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                return compensationRequestService.makeTxAndGetCompensationRequest(proposalDisplay.nameTextField.getText(),
+                return compensationService.makeTxAndGetCompensationRequest(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),

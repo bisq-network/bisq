@@ -31,8 +31,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.vote.proposal.Proposal;
 import bisq.core.dao.consensus.vote.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.vote.proposal.ProposalType;
-import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestConsensus;
-import bisq.core.dao.consensus.vote.proposal.compensation.CompensationRequestProposal;
+import bisq.core.dao.consensus.vote.proposal.compensation.CompensationConsensus;
+import bisq.core.dao.consensus.vote.proposal.compensation.CompensationProposal;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -136,7 +136,7 @@ public class ProposalDisplay {
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                 //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
                 //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
-                bsqValidator.setMinValue(CompensationRequestConsensus.getMinCompensationRequestAmount());
+                bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
                 Objects.requireNonNull(requestedBsqTextField).setValidator(bsqValidator);
             }
             // TODO validator, addressTF
@@ -165,11 +165,11 @@ public class ProposalDisplay {
         linkHyperlinkWithIcon.setManaged(true);
         linkHyperlinkWithIcon.setText(proposal.getLink());
         linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
-        if (proposal instanceof CompensationRequestProposal) {
-            CompensationRequestProposal compensationRequestProposal = (CompensationRequestProposal) proposal;
-            Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationRequestProposal.getRequestedBsq()));
+        if (proposal instanceof CompensationProposal) {
+            CompensationProposal compensationProposal = (CompensationProposal) proposal;
+            Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
-                bsqAddressTextField.setText(compensationRequestProposal.getBsqAddress());
+                bsqAddressTextField.setText(compensationProposal.getBsqAddress());
         }
         if (txIdTextField != null)
             txIdTextField.setup(proposal.getTxId());
