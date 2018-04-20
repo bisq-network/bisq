@@ -316,7 +316,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     break;
                 case BREAK3:
                     break;
-                case ISSUANCE:
+                case VOTE_RESULT:
                     break;
                 case BREAK4:
                     break;

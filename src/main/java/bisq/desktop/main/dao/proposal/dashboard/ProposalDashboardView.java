@@ -102,7 +102,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK2, false),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.VOTE_REVEAL, true),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.ISSUANCE, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.VOTE_RESULT, false),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK4, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }

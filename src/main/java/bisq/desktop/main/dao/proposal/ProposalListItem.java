@@ -178,7 +178,7 @@ public class ProposalListItem implements BlockListener {
                 break;
             case BREAK3:
                 break;
-            case ISSUANCE:
+            case VOTE_RESULT:
                 break;
             case BREAK4:
                 break;
