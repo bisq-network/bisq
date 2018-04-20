@@ -223,11 +223,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                         bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
                         Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
             case GENERIC:
+                //TODO
+                throw new RuntimeException("Not implemented yet");
+                /*
                 return genericProposalService.makeTxAndGetGenericProposal(
                         proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
-                        proposalDisplay.linkInputTextField.getText());
+                        proposalDisplay.linkInputTextField.getText());*/
             case CHANGE_PARAM:
                 //TODO
                 throw new RuntimeException("Not implemented yet");
