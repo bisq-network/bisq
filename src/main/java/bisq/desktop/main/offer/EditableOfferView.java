@@ -952,7 +952,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
         nextButton.setOnAction(e -> {
             if (model.isPriceInRange()) {
-                if (DevEnv.DAO_TRADING_ACTIVATED)
+                if (DevEnv.isDaoTradingActivated())
                     showFeeOption();
                 else
                     onShowPayFundsScreen();
