@@ -25,7 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.period.PeriodStateChangeListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.state.blockchain.TxOutput;
-import bisq.core.dao.consensus.vote.myvote.MyVote;
+import bisq.core.dao.presentation.myvote.MyVote;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
