@@ -43,7 +43,7 @@ public class ClosedProposalsView extends BaseProposalView {
     private ClosedProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
-                                PeriodServiceFacade periodService,
+                                PeriodServiceFacade periodServiceFacade,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
                                 ChangeParamService changeParamService,
@@ -51,7 +51,7 @@ public class ClosedProposalsView extends BaseProposalView {
                                 BSFormatter btcFormatter) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                changeParamService, periodService, bsqFormatter, btcFormatter);
+                periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
     }
 
     @Override

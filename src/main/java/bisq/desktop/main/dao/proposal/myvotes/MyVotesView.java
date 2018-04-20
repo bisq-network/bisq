@@ -93,9 +93,9 @@ public class MyVotesView extends BaseProposalView {
     private MyVotesView(MyProposalService myProposalService,
                         ProposalListService proposalListService,
                         ProposalService proposalService,
-                        PeriodServiceFacade periodService,
                         BsqWalletService bsqWalletService,
                         StateServiceFacade stateService,
+                        PeriodServiceFacade periodServiceFacade,
                         ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
@@ -103,7 +103,7 @@ public class MyVotesView extends BaseProposalView {
                         Preferences preferences) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                changeParamService, periodService, bsqFormatter, btcFormatter);
+                periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
         this.preferences = preferences;
     }
@@ -130,7 +130,7 @@ public class MyVotesView extends BaseProposalView {
 
         voteListItems.clear();
         List<VoteListItem> items = myVoteService.getMyVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, bsqFormatter))
+                .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, periodServiceFacade, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }

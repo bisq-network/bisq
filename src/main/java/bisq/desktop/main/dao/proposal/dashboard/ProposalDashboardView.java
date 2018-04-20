@@ -22,9 +22,8 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.consensus.period.PeriodStateChangeListener;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
@@ -47,11 +46,10 @@ import java.util.List;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private final PeriodServiceFacade periodService;
-    private final StateServiceFacade stateService;
+    private final PeriodServiceFacade periodServiceFacade;
     private Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
@@ -64,9 +62,8 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(PeriodServiceFacade periodService, StateServiceFacade stateService) {
-        this.periodService = periodService;
-        this.stateService = stateService;
+    private ProposalDashboardView(PeriodServiceFacade periodServiceFacade, StateServiceFacade stateService) {
+        this.periodServiceFacade = periodServiceFacade;
     }
 
     @Override
@@ -112,7 +109,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void activate() {
         super.activate();
 
-        phaseSubscription = EasyBind.subscribe(periodService.phaseProperty(), phase -> {
+        phaseSubscription = EasyBind.subscribe(periodServiceFacade.phaseProperty(), phase -> {
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
             }
@@ -125,31 +122,27 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        stateService.addBlockListener(this);
+        periodServiceFacade.addPeriodStateChangeListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
-        UserThread.execute(() -> onChainHeightChanged(periodService.getChainHeight()));
+        UserThread.execute(() -> onChainHeightChanged(periodServiceFacade.getChainHeight()));
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        stateService.removeBlockListener(this);
+        periodServiceFacade.removePeriodStateChangeListener(this);
         phaseSubscription.unsubscribe();
     }
 
     @Override
-    public void onBlockAdded(Block block) {
-        onChainHeightChanged(block.getHeight());
-    }
-
-    private void onChainHeightChanged(int height) {
+    public void onChainHeightChanged(int height) {
         if (height > 0) {
             separatedPhaseBars.updateWidth();
             phaseBarsItems.forEach(item -> {
-                int firstBlock = periodService.getFirstBlockOfPhase(height, item.getPhase());
-                int lastBlock = periodService.getLastBlockOfPhase(height, item.getPhase());
-                final int duration = periodService.getDurationForPhase(item.getPhase(), periodService.getChainHeight());
+                int firstBlock = periodServiceFacade.getFirstBlockOfPhase(height, item.getPhase());
+                int lastBlock = periodServiceFacade.getLastBlockOfPhase(height, item.getPhase());
+                final int duration = periodServiceFacade.getDurationForPhase(item.getPhase(), periodServiceFacade.getChainHeight());
                 item.setPeriodRange(firstBlock, lastBlock, duration);
 
                 double progress = 0;

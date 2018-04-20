@@ -74,6 +74,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyProposalService myProposalService;
     protected final StateServiceFacade stateService;
+    protected final PeriodServiceFacade periodServiceFacade;
     protected final ChangeParamService changeParamService;
     protected final ProposalListService proposalListService;
     protected final ProposalService proposalService;
@@ -92,7 +93,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected ProposalListItem selectedProposalListItem;
     protected ListChangeListener<Ballot> proposalListChangeListener;
     protected ChangeListener<Phase> phaseChangeListener;
-    protected final PeriodServiceFacade periodService;
     protected Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
@@ -108,8 +108,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                ProposalService proposalService,
                                BsqWalletService bsqWalletService,
                                StateServiceFacade stateService,
+                               PeriodServiceFacade periodServiceFacade,
                                ChangeParamService changeParamService,
-                               PeriodServiceFacade periodService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
         this.myProposalService = myProposalService;
@@ -117,8 +117,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.proposalService = proposalService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
+        this.periodServiceFacade = periodServiceFacade;
         this.changeParamService = changeParamService;
-        this.periodService = periodService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -136,12 +136,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(periodService.phaseProperty(), this::onPhaseChanged);
+        phaseSubscription = EasyBind.subscribe(periodServiceFacade.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
-        periodService.phaseProperty().addListener(phaseChangeListener);
+        periodServiceFacade.phaseProperty().addListener(phaseChangeListener);
 
-        onPhaseChanged(periodService.phaseProperty().get());
+        onPhaseChanged(periodServiceFacade.phaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -153,7 +153,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        periodService.phaseProperty().removeListener(phaseChangeListener);
+        periodServiceFacade.phaseProperty().removeListener(phaseChangeListener);
 
         sortedList.comparatorProperty().unbind();
 
@@ -255,7 +255,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                 .map(ballot -> new ProposalListItem(ballot,
                         proposalService,
                         myProposalService,
-                        periodService,
+                        periodServiceFacade,
                         bsqWalletService,
                         stateService,
                         bsqFormatter))

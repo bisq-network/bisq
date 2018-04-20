@@ -26,8 +26,8 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.period.PeriodStateChangeListener;
+import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -57,10 +57,11 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final StateServiceFacade stateService;
+    private final StateServiceFacade stateServiceFacade;
+    private final PeriodServiceFacade periodServiceFacade;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
@@ -79,12 +80,14 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
-                             StateServiceFacade stateService,
+                             StateServiceFacade stateServiceFacade,
+                             PeriodServiceFacade periodServiceFacade,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
                              BsqFormatter bsqFormatter) {
         this.bsqBalanceUtil = bsqBalanceUtil;
-        this.stateService = stateService;
+        this.stateServiceFacade = stateServiceFacade;
+        this.periodServiceFacade = periodServiceFacade;
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
@@ -97,13 +100,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         addTitledGroupBg(root, ++gridRow, 11, Res.get("dao.wallet.dashboard.statistics"), Layout.GROUP_DISTANCE);
 
         addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
-                String.valueOf(stateService.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                String.valueOf(stateServiceFacade.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         Label label = new AutoTooltipLabel(Res.get("dao.wallet.dashboard.genesisTxId"));
         GridPane.setRowIndex(label, ++gridRow);
         root.getChildren().add(label);
-        hyperlinkWithIcon = new HyperlinkWithIcon(stateService.getGenesisTxId(), AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", stateService.getGenesisTxId())));
+        hyperlinkWithIcon = new HyperlinkWithIcon(stateServiceFacade.getGenesisTxId(), AwesomeIcon.EXTERNAL_LINK);
+        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", stateServiceFacade.getGenesisTxId())));
         GridPane.setRowIndex(hyperlinkWithIcon, gridRow);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));
@@ -129,10 +132,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        stateService.addBlockListener(this);
+        periodServiceFacade.addPeriodStateChangeListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
-        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + stateService.getGenesisTxId()));
+        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + stateServiceFacade.getGenesisTxId()));
 
         updateWithBsqBlockChainData();
         updatePrice();
@@ -141,42 +144,41 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        stateService.removeBlockListener(this);
+        periodServiceFacade.addPeriodStateChangeListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
         hyperlinkWithIcon.setOnAction(null);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BlockListener
+    // PeriodStateChangeListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(Block block) {
+    public void onChainHeightChanged(int chainHeight) {
         updateWithBsqBlockChainData();
     }
 
-
     private void updateWithBsqBlockChainData() {
-        final Coin issuedAmountFromGenesis = stateService.getGenesisTotalSupply();
+        final Coin issuedAmountFromGenesis = stateServiceFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        final Coin issuedAmountFromCompRequests = Coin.valueOf(stateService.getTotalIssuedAmountFromCompRequests());
+        final Coin issuedAmountFromCompRequests = Coin.valueOf(stateServiceFacade.getTotalIssuedAmountFromCompRequests());
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
-        final Coin burntFee = Coin.valueOf(stateService.getTotalBurntFee());
+        final Coin burntFee = Coin.valueOf(stateServiceFacade.getTotalBurntFee());
         final Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
-        allTxTextField.setText(String.valueOf(stateService.getTxs().size()));
-        utxoTextField.setText(String.valueOf(stateService.getUnspentTxOutputs().size()));
+        allTxTextField.setText(String.valueOf(stateServiceFacade.getTxs().size()));
+        utxoTextField.setText(String.valueOf(stateServiceFacade.getUnspentTxOutputs().size()));
         //spentTxTextField.setText(String.valueOf(stateService.getSpentTxOutputs().size()));
-        burntTxTextField.setText(String.valueOf(stateService.getFeeTxs().size()));
+        burntTxTextField.setText(String.valueOf(stateServiceFacade.getFeeTxs().size()));
     }
 
     private void updatePrice() {
-        final Coin issuedAmount = stateService.getGenesisTotalSupply();
+        final Coin issuedAmount = stateServiceFacade.getGenesisTotalSupply();
         final MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
         if (bsqMarketPrice != null) {
             long bsqPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));

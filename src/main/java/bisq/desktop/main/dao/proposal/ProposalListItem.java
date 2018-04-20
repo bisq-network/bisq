@@ -23,9 +23,8 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.consensus.period.PeriodStateChangeListener;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
@@ -56,12 +55,12 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalListItem implements BlockListener {
+public class ProposalListItem implements PeriodStateChangeListener {
     @Getter
     private final Ballot ballot;
     private final ProposalService proposalService;
     private final MyProposalService myProposalService;
-    private final PeriodServiceFacade periodService;
+    private final PeriodServiceFacade periodServiceFacade;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateService;
     private final BsqFormatter bsqFormatter;
@@ -85,16 +84,16 @@ public class ProposalListItem implements BlockListener {
     ProposalListItem(Ballot ballot,
                      ProposalService proposalService,
                      MyProposalService myProposalService,
-                     PeriodServiceFacade periodService,
+                     PeriodServiceFacade periodServiceFacade,
                      BsqWalletService bsqWalletService,
-                     StateServiceFacade stateService,
+                     StateServiceFacade stateServiceFacade,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
         this.proposalService = proposalService;
         this.myProposalService = myProposalService;
-        this.periodService = periodService;
+        this.periodServiceFacade = periodServiceFacade;
         this.bsqWalletService = bsqWalletService;
-        this.stateService = stateService;
+        this.stateService = stateServiceFacade;
         this.bsqFormatter = bsqFormatter;
 
 
@@ -113,17 +112,17 @@ public class ProposalListItem implements BlockListener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        stateService.addBlockListener(this);
+        periodServiceFacade.addPeriodStateChangeListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, ballot.getVote());
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
-            applyState(periodService.phaseProperty().get(), newValue);
+            applyState(periodServiceFacade.phaseProperty().get(), newValue);
         };
 
-        periodService.phaseProperty().addListener(phaseChangeListener);
+        periodServiceFacade.phaseProperty().addListener(phaseChangeListener);
         ballot.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
@@ -131,7 +130,7 @@ public class ProposalListItem implements BlockListener {
         actionButton.setText("");
         actionButton.setVisible(false);
         actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = periodService.isTxInPastCycle(ballot.getTxId(),
+        final boolean isTxInPastCycle = periodServiceFacade.isTxInPastCycle(ballot.getTxId(),
                 stateService.getChainHeight());
         switch (newValue) {
             case UNDEFINED:
@@ -196,7 +195,7 @@ public class ProposalListItem implements BlockListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(Block block) {
+    public void onChainHeightChanged(int chainHeight) {
         //TODO do we want that here???
         setupConfidence();
     }
@@ -247,12 +246,12 @@ public class ProposalListItem implements BlockListener {
     }
 
     public void cleanup() {
-        stateService.removeBlockListener(this);
+        periodServiceFacade.removePeriodStateChangeListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
-        periodService.phaseProperty().removeListener(phaseChangeListener);
+        periodServiceFacade.phaseProperty().removeListener(phaseChangeListener);
         ballot.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 

@@ -92,7 +92,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private ActiveProposalsView(MyProposalService myProposalService,
                                 ProposalListService proposalListService,
                                 ProposalService proposalService,
-                                PeriodServiceFacade periodService,
+                                PeriodServiceFacade periodServiceFacade,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
@@ -101,7 +101,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BSFormatter btcFormatter) {
 
         super(myProposalService, proposalListService, proposalService, bsqWalletService, stateService,
-                changeParamService, periodService, bsqFormatter, btcFormatter);
+                periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
     }
 
@@ -238,7 +238,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 cancelVoteButton = null;
             }
 
-            onPhaseChanged(periodService.phaseProperty().get());
+            onPhaseChanged(periodServiceFacade.phaseProperty().get());
         }
     }
 
@@ -270,7 +270,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         }
         if (selectedProposalListItem != null &&
                 proposalDisplay != null &&
-                !periodService.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
+                !periodServiceFacade.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
                         stateService.getChainHeight())) {
             final Ballot ballot = selectedProposalListItem.getBallot();
             switch (phase) {
