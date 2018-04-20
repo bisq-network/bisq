@@ -1,6 +1,6 @@
 package io.bisq.api;
 
-import io.bisq.api.service.v1.WithdrawFundsForm;
+import io.bisq.api.model.WithdrawFundsForm;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;

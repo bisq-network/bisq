@@ -1,4 +1,4 @@
-package io.bisq.api.service.v1;
+package io.bisq.api.model;
 
 import io.bisq.api.model.validation.NotNullItems;
 import org.hibernate.validator.constraints.NotEmpty;
