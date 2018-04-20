@@ -5,6 +5,7 @@ import io.bisq.api.model.Preferences;
 import io.bisq.api.model.PreferencesAvailableValues;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.validation.Valid;
 import javax.ws.rs.GET;
@@ -13,7 +14,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Api("preferences")
+@Api(value = "preferences", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 public class PreferencesResource {
 

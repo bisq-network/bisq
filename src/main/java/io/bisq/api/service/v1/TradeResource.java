@@ -8,6 +8,7 @@ import io.bisq.api.model.TradeList;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -23,7 +24,7 @@ import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
-@Api("trades")
+@Api(value = "trades", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 public class TradeResource {
 

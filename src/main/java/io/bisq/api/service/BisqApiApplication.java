@@ -124,11 +124,17 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
                 walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
         preferences.readPersisted();
         setupCors(environment);
+        setupAuth(environment);
         setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
+    }
+
+    private void setupAuth(Environment environment) {
+        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", new AuthFilter(walletService, injector.getInstance(TokenRegistry.class)));
+        auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
     private void setupHostAndPort(ApiConfiguration configuration, ApiEnvironment environment) {

@@ -6,6 +6,7 @@ import io.bisq.api.model.ArbitratorList;
 import io.bisq.api.model.ArbitratorRegistration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.Valid;
@@ -15,7 +16,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Api("arbitrators")
+@Api(value = "arbitrators", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 public class ArbitratorResource {
 
@@ -37,7 +38,7 @@ public class ArbitratorResource {
         bisqProxy.registerArbitrator(data.languageCodes);
     }
 
-    @ApiOperation("Find available arbitrators")
+    @ApiOperation(value = "Find available arbitrators")
     @GET
     public ArbitratorList find(@QueryParam("acceptedOnly") boolean acceptedOnly) {
         return toRestModel(bisqProxy.getArbitrators(acceptedOnly));

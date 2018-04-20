@@ -20,6 +20,7 @@ package io.bisq.api.app;
 import bisq.common.app.AppModule;
 import com.google.inject.Singleton;
 import io.bisq.api.service.BisqApiApplication;
+import io.bisq.api.service.TokenRegistry;
 import org.springframework.core.env.Environment;
 
 public class ApiModule extends AppModule {
@@ -33,6 +34,7 @@ public class ApiModule extends AppModule {
         // added for API usage
         bind(BisqApiApplication.class).in(Singleton.class);
         bind(MainViewModelHeadless.class).in(Singleton.class);
+        bind(TokenRegistry.class).in(Singleton.class);
         bind(ApiEnvironment.class).toInstance((ApiEnvironment) environment);
     }
 }

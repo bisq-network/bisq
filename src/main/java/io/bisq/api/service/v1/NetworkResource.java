@@ -5,6 +5,7 @@ import io.bisq.api.model.BitcoinNetworkStatus;
 import io.bisq.api.model.P2PNetworkStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,7 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 
-@Api("network")
+@Api(value = "network", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 public class NetworkResource {
 

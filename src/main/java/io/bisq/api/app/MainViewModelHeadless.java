@@ -503,32 +503,7 @@ public class MainViewModelHeadless {
                 () -> {
                     log.debug("walletsSetup.onInitialized");
                     numBtcPeers = walletsSetup.numPeersProperty().get();
-
-                    // We only check one as we apply encryption to all or none
-                    if (walletsManager.areWalletsEncrypted()) {
-                        if (p2pNetWorkReady.get())
-                            splashP2PNetworkAnimationVisible.set(false);
-
-                        throw new IllegalStateException("Wallet password not supported yet in headless mode!");
-//                        walletPasswordWindow
-//                                .onAesKey(aesKey -> {
-//                                    walletsManager.setAesKey(aesKey);
-//                                    if (preferences.isResyncSpvRequested()) {
-//                                        showFirstPopupIfResyncSPVRequested();
-//                                    } else {
-//                                        walletInitialized.set(true);
-//                                    }
-//                                })
-//                                .hideCloseButton()
-//                                .show();
-                    } else {
-                        if (preferences.isResyncSpvRequested()) {
-//                            TODO not sure how API should react to this
-//                            showFirstPopupIfResyncSPVRequested();
-                        } else {
-                            walletInitialized.set(true);
-                        }
-                    }
+                    walletInitialized.set(true);
                 },
                 walletServiceException::set);
     }

@@ -42,13 +42,12 @@
 
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>apache.org</id>
+            <url>https://repo.maven.apache.org/maven2</url>
         </repository>
         <repository>
-            <id>sonatype-oss-snapshot</id>
-            <snapshots/>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
         <repository>
             <id>jerady</id>

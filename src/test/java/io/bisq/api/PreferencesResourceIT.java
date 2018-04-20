@@ -25,6 +25,16 @@ public class PreferencesResourceIT {
 
     private static Preferences savedPreferences;
 
+    @InSequence
+    @Test
+    public void waitForAllServicesToBeReady() throws InterruptedException {
+        /**
+         * PaymentMethod initializes it's static values after all services get initialized
+         */
+        ApiTestHelper.waitForAllServicesToBeReady();
+    }
+
+    @InSequence(1)
     @Test
     public void getPreferencesAvailableValues_always_returns200() {
         given().
@@ -46,7 +56,7 @@ public class PreferencesResourceIT {
         ;
     }
 
-    @InSequence
+    @InSequence(1)
     @Test
     public void setPreferences_validPayload_returns200() {
         savedPreferences = new Preferences();
@@ -88,7 +98,7 @@ public class PreferencesResourceIT {
         ;
     }
 
-    @InSequence(1)
+    @InSequence(2)
     @Test
     public void getPreferences_always_returns200() {
         given().
