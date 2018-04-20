@@ -26,8 +26,8 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.consensus.period.PeriodStateChangeListener;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -57,11 +57,10 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
     private final StateServiceFacade stateServiceFacade;
-    private final PeriodServiceFacade periodServiceFacade;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
@@ -81,13 +80,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Inject
     private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
                              StateServiceFacade stateServiceFacade,
-                             PeriodServiceFacade periodServiceFacade,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
                              BsqFormatter bsqFormatter) {
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.stateServiceFacade = stateServiceFacade;
-        this.periodServiceFacade = periodServiceFacade;
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
@@ -132,7 +129,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        periodServiceFacade.addPeriodStateChangeListener(this);
+        stateServiceFacade.addBlockListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
         hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + stateServiceFacade.getGenesisTxId()));
@@ -144,18 +141,18 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        periodServiceFacade.addPeriodStateChangeListener(this);
+        stateServiceFacade.addBlockListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
         hyperlinkWithIcon.setOnAction(null);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // PeriodStateChangeListener
+    // StateServiceFacade.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChainHeightChanged(int chainHeight) {
+    public void onBlockAdded(Block block) {
         updateWithBsqBlockChainData();
     }
 

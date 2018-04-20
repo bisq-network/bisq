@@ -32,10 +32,10 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.consensus.period.PeriodStateChangeListener;
+import bisq.core.dao.consensus.state.Block;
+import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.state.blockchain.TxType;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -81,7 +81,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, PeriodStateChangeListener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BlockListener {
 
     private TableView<BsqTxListItem> tableView;
     private Pane rootParent;
@@ -89,7 +89,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateServiceFacade;
-    private final PeriodServiceFacade periodServiceFacade;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -102,7 +101,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private int gridRow = 0;
     private Label chainHeightLabel;
     private ProgressBar chainSyncIndicator;
-    private ChangeListener<Number> chainHeightChangedListener;
+    private ChangeListener<Number> walletChainHeightListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,14 +113,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
                       StateServiceFacade stateServiceFacade,
-                      PeriodServiceFacade periodServiceFacade,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.stateServiceFacade = stateServiceFacade;
-        this.periodServiceFacade = periodServiceFacade;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -167,7 +164,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         walletBsqTransactionsListener = change -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         //TODO do we want to get notified from wallet side?
-        chainHeightChangedListener = (observable, oldValue, newValue) -> onChainHeightChanged((int) newValue);
+        walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
 
     @Override
@@ -175,12 +172,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
         bsqWalletService.addBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().addListener(chainHeightChangedListener);
+        btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        periodServiceFacade.addPeriodStateChangeListener(this);
+        stateServiceFacade.addBlockListener(this);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -188,7 +185,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         }
 
         updateList();
-        onChainHeightChanged(periodServiceFacade.getChainHeight());
+        onUpdateAnyChainHeight();
         layout();
     }
 
@@ -198,8 +195,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().removeListener(chainHeightChangedListener);
-        periodServiceFacade.removePeriodStateChangeListener(this);
+        btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
+        stateServiceFacade.removeBlockListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
@@ -218,32 +215,38 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BlockListener
+    // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChainHeightChanged(int chainHeight) {
-        final int bsqWalletChainHeight = bsqWalletService.getChainHeightProperty().get();
-        final int bsqBlockChainHeight = periodServiceFacade.getChainHeight();
+    public void onBlockAdded(Block block) {
+        onUpdateAnyChainHeight();
+    }
+
+    // If chain height from wallet of from the BSQ blockchain parsing changed we update our state.
+    private void onUpdateAnyChainHeight() {
+        final int bsqBlockChainHeight = stateServiceFacade.getChainHeight();
+        final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
             chainSyncIndicator.setManaged(!synced);
             if (bsqBlockChainHeight > 0)
-                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletService.getBestChainHeight());
+                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletChainHeight);
 
-            if (synced)
+            if (synced) {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
                         bsqBlockChainHeight,
-                        bsqWalletService.getBestChainHeight()));
-            else
+                        bsqWalletChainHeight));
+            } else {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
                         bsqBlockChainHeight,
-                        bsqWalletService.getBestChainHeight()));
+                        bsqWalletChainHeight));
+            }
         } else {
             chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
                     bsqBlockChainHeight,
-                    bsqWalletService.getBestChainHeight()));
+                    bsqWalletChainHeight));
         }
         updateList();
     }

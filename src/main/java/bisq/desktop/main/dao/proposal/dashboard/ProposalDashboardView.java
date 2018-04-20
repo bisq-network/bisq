@@ -25,7 +25,6 @@ import bisq.desktop.util.Layout;
 import bisq.core.dao.consensus.period.PeriodStateChangeListener;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -45,6 +44,9 @@ import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
+// We use here PeriodStateChangeListener because we are interested in period changes not in the result of a completed
+// block. The event from the PeriodStateChangeListener is sent before parsing starts.
+// The event from the StateServiceFacade.Listener would notify after parsing a new block.
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
 
@@ -62,7 +64,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(PeriodServiceFacade periodServiceFacade, StateServiceFacade stateService) {
+    private ProposalDashboardView(PeriodServiceFacade periodServiceFacade) {
         this.periodServiceFacade = periodServiceFacade;
     }
 
@@ -125,7 +127,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         periodServiceFacade.addPeriodStateChangeListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
-        UserThread.execute(() -> onChainHeightChanged(periodServiceFacade.getChainHeight()));
+        UserThread.execute(() -> onPreParserChainHeightChanged(periodServiceFacade.getChainHeight()));
     }
 
     @Override
@@ -136,7 +138,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     }
 
     @Override
-    public void onChainHeightChanged(int height) {
+    public void onPreParserChainHeightChanged(int height) {
         if (height > 0) {
             separatedPhaseBars.updateWidth();
             phaseBarsItems.forEach(item -> {
