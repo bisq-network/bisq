@@ -29,7 +29,6 @@ public class WalletResource {
 
     @ApiOperation(value = "Get wallet details")
     @GET
-    @Path("/")
     public WalletDetails getWalletDetails() {
         return bisqProxy.getWalletDetails();
     }

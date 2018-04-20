@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -23,7 +22,6 @@ public class MarketResource {
 
     @ApiOperation("List markets")
     @GET
-    @Path("/")
     public MarketList find() {
         return bisqProxy.getMarketList();
     }
