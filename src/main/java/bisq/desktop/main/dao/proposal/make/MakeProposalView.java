@@ -32,7 +32,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.ValidationException;
-import bisq.core.dao.consensus.proposal.Ballot;
+import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.proposal.ProposalType;
 import bisq.core.dao.consensus.proposal.compensation.CompensationService;

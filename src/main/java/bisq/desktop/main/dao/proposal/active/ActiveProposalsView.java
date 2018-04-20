@@ -35,7 +35,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.blindvote.BlindVoteConsensus;
 import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.proposal.Ballot;
+import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.proposal.ProposalService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
