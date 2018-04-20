@@ -125,7 +125,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        periodService.addBlockListener(this);
+        stateService.addBlockListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
         UserThread.execute(() -> onChainHeightChanged(periodService.getChainHeight()));
@@ -134,7 +134,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     @Override
     protected void deactivate() {
         super.deactivate();
-        periodService.removeBlockListener(this);
+        stateService.removeBlockListener(this);
         phaseSubscription.unsubscribe();
     }
 
