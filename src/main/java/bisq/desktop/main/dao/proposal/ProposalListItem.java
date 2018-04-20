@@ -30,6 +30,7 @@ import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.consensus.vote.proposal.Ballot;
+import bisq.core.dao.consensus.vote.proposal.MyProposalService;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
@@ -59,6 +60,7 @@ public class ProposalListItem implements BlockListener {
     @Getter
     private final Ballot ballot;
     private final ProposalService proposalService;
+    private final MyProposalService myProposalService;
     private final PeriodServiceFacade periodService;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateService;
@@ -82,12 +84,14 @@ public class ProposalListItem implements BlockListener {
 
     ProposalListItem(Ballot ballot,
                      ProposalService proposalService,
+                     MyProposalService myProposalService,
                      PeriodServiceFacade periodService,
                      BsqWalletService bsqWalletService,
                      StateServiceFacade stateService,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
         this.proposalService = proposalService;
+        this.myProposalService = myProposalService;
         this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
@@ -133,7 +137,7 @@ public class ProposalListItem implements BlockListener {
             case UNDEFINED:
                 break;
             case PROPOSAL:
-                if (proposalService.isMine(ballot.getProposal())) {
+                if (myProposalService.isMine(ballot.getProposal())) {
                     actionButton.setVisible(!isTxInPastCycle);
                     actionButtonIconView.setVisible(actionButton.isVisible());
                     actionButton.setText(Res.get("shared.remove"));

@@ -252,8 +252,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalListItems.forEach(ProposalListItem::cleanup);
 
         proposalListItems.setAll(list.stream()
-                .map(proposal -> new ProposalListItem(proposal,
+                .map(ballot -> new ProposalListItem(ballot,
                         proposalService,
+                        myProposalService,
                         periodService,
                         bsqWalletService,
                         stateService,
