@@ -30,9 +30,9 @@ import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.consensus.vote.proposal.Ballot;
-import bisq.core.dao.consensus.vote.proposal.MyProposalService;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
+import bisq.core.dao.presentation.proposal.MyProposalService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -135,6 +135,7 @@ public class ProposalListItem implements BlockListener {
                 stateServiceFacade.getChainHeight());
         switch (newValue) {
             case UNDEFINED:
+                log.error("invalid state UNDEFINED");
                 break;
             case PROPOSAL:
                 if (myProposalService.isMine(ballot.getProposal())) {
@@ -182,6 +183,8 @@ public class ProposalListItem implements BlockListener {
                 break;
             case BREAK4:
                 break;
+            default:
+                log.error("invalid state " + newValue);
         }
         actionButton.setManaged(actionButton.isVisible());
 

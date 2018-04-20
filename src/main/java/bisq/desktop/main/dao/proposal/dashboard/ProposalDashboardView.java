@@ -146,7 +146,6 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
                 int lastBlock = periodServiceFacade.getLastBlockOfPhase(height, item.getPhase());
                 final int duration = periodServiceFacade.getDurationForPhase(item.getPhase(), periodServiceFacade.getChainHeight());
                 item.setPeriodRange(firstBlock, lastBlock, duration);
-
                 double progress = 0;
                 if (height >= firstBlock && height <= lastBlock) {
                     progress = (double) (height - firstBlock + 1) / (double) duration;

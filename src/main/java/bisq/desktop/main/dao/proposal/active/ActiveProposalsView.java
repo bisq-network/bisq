@@ -37,12 +37,12 @@ import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.blindvote.BlindVoteConsensus;
 import bisq.core.dao.consensus.vote.proposal.Ballot;
-import bisq.core.dao.consensus.vote.proposal.MyProposalService;
-import bisq.core.dao.consensus.vote.proposal.ProposalListService;
 import bisq.core.dao.consensus.vote.proposal.ProposalService;
 import bisq.core.dao.consensus.vote.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.myvote.MyVoteService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
+import bisq.core.dao.presentation.proposal.MyProposalService;
+import bisq.core.dao.presentation.proposal.ProposalListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -322,7 +322,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                     break;
                 case UNDEFINED:
                 default:
-                    log.warn("Undefined phase: " + phase);
+                    log.error("Undefined phase: " + phase);
                     break;
             }
         }
