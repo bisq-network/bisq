@@ -31,7 +31,6 @@ public class PaymentAccountResource {
 
     @ApiOperation(value = "Create payment account", notes = "Inspect models section at the bottom of the page for valid PaymentAccount sub-types schemas")
     @POST
-    @Path("/")
     public PaymentAccount create(@Valid PaymentAccount account) {
         final bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
         return PaymentAccountHelper.toRestModel(bisqProxy.addPaymentAccount(paymentAccount));
@@ -39,7 +38,6 @@ public class PaymentAccountResource {
 
     @ApiOperation("Get existing payment accounts")
     @GET
-    @Path("/")
     public PaymentAccountList find() {
         return bisqProxy.getAccountList();
     }

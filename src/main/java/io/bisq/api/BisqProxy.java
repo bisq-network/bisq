@@ -1,6 +1,7 @@
 package io.bisq.api;
 
 import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -59,10 +60,10 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * This class is a proxy for all bitsquare features the model will use.
- * <p/>
+ * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  * => this should be the common gateway to bisq used by all outward-facing API classes.
- * <p/>
+ * <p>
  * If the bisq code is refactored correctly, this class could become very light.
  */
 @Slf4j
@@ -847,6 +848,16 @@ public class BisqProxy {
             preferences.setWithdrawalTxFeeInBytes(update.withdrawalTxFee);
         }
         return getPreferences();
+    }
+
+    public VersionDetails getVersionDetails() {
+        final VersionDetails versionDetails = new VersionDetails();
+        versionDetails.application = Version.VERSION;
+        versionDetails.network = Version.P2P_NETWORK_VERSION;
+        versionDetails.p2PMessage = Version.getP2PMessageVersion();
+        versionDetails.localDB = Version.LOCAL_DB_VERSION;
+        versionDetails.tradeProtocol = Version.TRADE_PROTOCOL_VERSION;
+        return versionDetails;
     }
 
     public AuthResult authenticate(String password) {
