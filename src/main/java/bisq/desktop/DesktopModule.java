@@ -27,6 +27,7 @@ import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
 import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
 import bisq.desktop.main.offer.offerbook.OfferBook;
+import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -42,29 +43,27 @@ import org.springframework.core.env.Environment;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import javafx.stage.Stage;
-
 import java.util.ResourceBundle;
 
 public class DesktopModule extends AppModule {
 
-    private final Stage primaryStage;
 
-    public DesktopModule(Environment environment, Stage primaryStage) {
+    public DesktopModule(Environment environment) {
         super(environment);
-        this.primaryStage = primaryStage;
     }
 
     @Override
     protected void configure() {
         bind(InjectorViewFactory.class).in(Singleton.class);
         bind(ViewFactory.class).to(InjectorViewFactory.class);
+        bind(CachingViewLoader.class).in(Singleton.class);
 
         bind(ResourceBundle.class).toInstance(Res.getResourceBundle());
         bind(ViewLoader.class).to(FxmlViewLoader.class).in(Singleton.class);
         bind(CachingViewLoader.class).in(Singleton.class);
 
         bind(Navigation.class).in(Singleton.class);
+        bind(NotificationCenter.class).in(Singleton.class);
 
         bind(OfferBook.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
@@ -72,8 +71,6 @@ public class DesktopModule extends AppModule {
         bind(TorNetworkSettingsWindow.class).in(Singleton.class);
 
         bind(Transitions.class).in(Singleton.class);
-
-        bind(Stage.class).toInstance(primaryStage);
 
         bind(TradableRepository.class).in(Singleton.class);
         bind(TransactionListItemFactory.class).in(Singleton.class);

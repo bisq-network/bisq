@@ -18,11 +18,9 @@
 package bisq.desktop.app;
 
 import bisq.desktop.SystemTray;
-import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.debug.DebugView;
@@ -32,38 +30,25 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
-import bisq.desktop.setup.DesktopPersistedDataHost;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
-import bisq.core.offer.OpenOfferManager;
-import bisq.core.setup.CorePersistedDataHost;
-import bisq.core.setup.CoreSetup;
-import bisq.core.trade.TradeManager;
-
-import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.setup.CommonSetup;
+import bisq.common.setup.GracefulShutDownHandler;
+import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -71,7 +56,6 @@ import com.google.inject.name.Names;
 import org.reactfx.EventStreams;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -89,60 +73,56 @@ import javafx.scene.layout.StackPane;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Logger;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 import static bisq.desktop.util.Layout.INITIAL_SCENE_WIDTH;
 
-public class BisqApp extends Application {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
-
+@Slf4j
+public class BisqApp extends Application implements UncaughtExceptionHandler {
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
+    @Setter
+    private static Consumer<Application> appLaunchedHandler;
+    @Getter
+    private static Runnable shutDownHandler;
 
-    private static BisqEnvironment bisqEnvironment;
-    public static Runnable shutDownHandler;
-    private static Stage primaryStage;
-
-    protected static void setEnvironment(BisqEnvironment bisqEnvironment) {
-        BisqApp.bisqEnvironment = bisqEnvironment;
-    }
-
-    private BisqAppModule bisqAppModule;
+    @Setter
     private Injector injector;
+    @Setter
+    private GracefulShutDownHandler gracefulShutDownHandler;
+    private Stage stage;
     private boolean popupOpened;
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private boolean shutDownRequested;
 
+    public BisqApp() {
+        shutDownHandler = this::stop;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // JavaFx Application implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() {
-        UserThread.setExecutor(Platform::runLater);
-        UserThread.setTimerClass(UITimer.class);
-
-        shutDownHandler = this::stop;
-        CommonSetup.setup(this::showErrorPopup);
-        CoreSetup.setup(bisqEnvironment);
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     public void start(Stage stage) {
-        BisqApp.primaryStage = stage;
+        this.stage = stage;
 
+        appLaunchedHandler.accept(this);
+    }
+
+    public void startApplication() {
         try {
-            bisqAppModule = new BisqAppModule(bisqEnvironment, primaryStage);
-            injector = Guice.createInjector(bisqAppModule);
-            injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-
-            PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
-            PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
-
-            DevEnv.setup(injector);
-
             MainView mainView = loadMainView(injector);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
@@ -154,9 +134,73 @@ public class BisqApp extends Application {
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
             log.error("Error during app init", throwable);
-            showErrorPopup(throwable, false);
+            handleUncaughtException(throwable, false);
         }
     }
+
+    @Override
+    public void stop() {
+        if (!shutDownRequested) {
+            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
+                    .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
+                    .hideCloseButton()
+                    .useAnimation(false)
+                    .show();
+            UserThread.runAfter(() -> {
+                gracefulShutDownHandler.gracefulShutDown(() -> {
+                    log.debug("App shutdown complete");
+                });
+            }, 200, TimeUnit.MILLISECONDS);
+            shutDownRequested = true;
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UncaughtExceptionHandler implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        if (!shutDownRequested) {
+            if (scene == null) {
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice. throwable=" + throwable.toString());
+                scene = new Scene(new StackPane(), 1000, 650);
+                scene.getStylesheets().setAll(
+                        "/bisq/desktop/bisq.css",
+                        "/bisq/desktop/images.css");
+                stage.setScene(scene);
+                stage.show();
+            }
+            try {
+                try {
+                    if (!popupOpened) {
+                        String message = throwable.getMessage();
+                        popupOpened = true;
+                        if (message != null)
+                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
+                        else
+                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                    }
+                } catch (Throwable throwable3) {
+                    log.error("Error at displaying Throwable.");
+                    throwable3.printStackTrace();
+                }
+                if (doShutDown)
+                    stop();
+            } catch (Throwable throwable2) {
+                // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
+                log.error(throwable2.toString());
+                if (doShutDown)
+                    stop();
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Scene createAndConfigScene(MainView mainView, Injector injector) {
         Scene scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
@@ -170,19 +214,19 @@ public class BisqApp extends Application {
 
     private void setupStage(Scene scene) {
         // configure the system tray
-        SystemTray.create(primaryStage, shutDownHandler);
+        SystemTray.create(stage, shutDownHandler);
 
-        primaryStage.setOnCloseRequest(event -> {
+        stage.setOnCloseRequest(event -> {
             event.consume();
             stop();
         });
 
-
         // configure the primary stage
-        primaryStage.setTitle(bisqEnvironment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(1020);
-        primaryStage.setMinHeight(620);
+        String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
+        stage.setTitle(appName);
+        stage.setScene(scene);
+        stage.setMinWidth(1020);
+        stage.setMinHeight(620);
 
         // on windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
@@ -194,10 +238,10 @@ public class BisqApp extends Application {
         else
             iconPath = "/images/task_bar_icon_linux.png";
 
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        stage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
 
         // make the UI visible
-        primaryStage.show();
+        stage.show();
     }
 
     private MainView loadMainView(Injector injector) {
@@ -278,42 +322,6 @@ public class BisqApp extends Application {
         emptyWalletWindow.show();
     }
 
-    private void showErrorPopup(Throwable throwable, boolean doShutDown) {
-        if (!shutDownRequested) {
-            if (scene == null) {
-                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice. throwable=" + throwable.toString());
-                scene = new Scene(new StackPane(), 1000, 650);
-                scene.getStylesheets().setAll(
-                        "/bisq/desktop/bisq.css",
-                        "/bisq/desktop/images.css");
-                primaryStage.setScene(scene);
-                primaryStage.show();
-            }
-            try {
-                try {
-                    if (!popupOpened) {
-                        String message = throwable.getMessage();
-                        popupOpened = true;
-                        if (message != null)
-                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
-                        else
-                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
-                    }
-                } catch (Throwable throwable3) {
-                    log.error("Error at displaying Throwable.");
-                    throwable3.printStackTrace();
-                }
-                if (doShutDown)
-                    stop();
-            } catch (Throwable throwable2) {
-                // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
-                log.error(throwable2.toString());
-                if (doShutDown)
-                    stop();
-            }
-        }
-    }
-
     // Used for debugging trade process
     private void showDebugWindow(Scene scene, Injector injector) {
         ViewLoader viewLoader = injector.getInstance(ViewLoader.class);
@@ -325,8 +333,8 @@ public class BisqApp extends Application {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
-        stage.setY(primaryStage.getY());
+        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
+        stage.setY(this.stage.getY());
         stage.show();
     }
 
@@ -349,8 +357,8 @@ public class BisqApp extends Application {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
-        stage.setX(primaryStage.getX() + primaryStage.getWidth() + 10);
-        stage.setY(primaryStage.getY());
+        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
+        stage.setY(this.stage.getY());
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
@@ -366,61 +374,6 @@ public class BisqApp extends Application {
                     Utilities.getJVMArchitecture(),
                     osArchitecture))
                     .show();
-        }
-    }
-
-    @SuppressWarnings("CodeBlock2Expr")
-    @Override
-    public void stop() {
-        if (!shutDownRequested) {
-            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
-                    .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
-                    .hideCloseButton()
-                    .useAnimation(false)
-                    .show();
-            //noinspection CodeBlock2Expr
-            UserThread.runAfter(() -> {
-                gracefulShutDown(() -> {
-                    log.debug("App shutdown complete");
-                    System.exit(0);
-                });
-            }, 200, TimeUnit.MILLISECONDS);
-            shutDownRequested = true;
-        }
-    }
-
-    private void gracefulShutDown(ResultHandler resultHandler) {
-        try {
-            if (injector != null) {
-                injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(TradeManager.class).shutDown();
-                injector.getInstance(DaoSetup.class).shutDown();
-                //noinspection CodeBlock2Expr
-                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
-                    injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            bisqAppModule.close(injector);
-                            log.debug("Graceful shutdown completed");
-                            resultHandler.handleResult();
-                        });
-                        injector.getInstance(WalletsSetup.class).shutDown();
-                        injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(BsqWalletService.class).shutDown();
-                    });
-                });
-                // we wait max 20 sec.
-                UserThread.runAfter(() -> {
-                    log.warn("Timeout triggered resultHandler");
-                    resultHandler.handleResult();
-                }, 20);
-            } else {
-                log.warn("injector == null triggered resultHandler");
-                UserThread.runAfter(resultHandler::handleResult, 1);
-            }
-        } catch (Throwable t) {
-            log.error("App shutdown failed with exception");
-            t.printStackTrace();
-            System.exit(1);
         }
     }
 }

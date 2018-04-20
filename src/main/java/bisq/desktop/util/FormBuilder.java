@@ -1247,10 +1247,14 @@ public class FormBuilder {
     }
 
     public static Button getIconButton(GlyphIcons icon) {
+        return getIconButton(icon, "highlight");
+    }
+
+    public static Button getIconButton(GlyphIcons icon, String styleClass) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "","2em", null, ContentDisplay.CENTER);
             textIcon.setId("icon-button");
-            textIcon.getGraphic().getStyleClass().add("highlight");
+            textIcon.getGraphic().getStyleClass().add(styleClass);
             textIcon.setPrefWidth(20);
             textIcon.setPrefHeight(20);
             textIcon.setPadding(new Insets(0));

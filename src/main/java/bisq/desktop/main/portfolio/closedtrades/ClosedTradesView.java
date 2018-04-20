@@ -86,7 +86,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private final BSFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
-    private final Stage stage;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
@@ -95,7 +94,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
-                            Stage stage,
                             BSFormatter formatter,
                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
@@ -103,7 +101,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
-        this.stage = stage;
         this.preferences = preferences;
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -211,7 +208,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             };
 
             GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
-                    new ClosedTradableListItem(null), sortedList, stage);
+                    new ClosedTradableListItem(null), sortedList, (Stage) root.getScene().getWindow());
         });
     }
 

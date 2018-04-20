@@ -46,6 +46,8 @@ import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
 
+import javafx.stage.Stage;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -114,8 +116,8 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         paymentAccountsListView.setItems(model.getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(event -> addNewAccount());
-        exportButton.setOnAction(event -> model.dataModel.exportAccounts());
-        importButton.setOnAction(event -> model.dataModel.importAccounts());
+        exportButton.setOnAction(event -> model.dataModel.exportAccounts((Stage) root.getScene().getWindow()));
+        importButton.setOnAction(event -> model.dataModel.importAccounts((Stage) root.getScene().getWindow()));
     }
 
     @Override

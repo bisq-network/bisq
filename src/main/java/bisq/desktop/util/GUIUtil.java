@@ -463,7 +463,7 @@ public class GUIUtil {
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
                         preferences.setResyncSpvRequested(true);
-                        UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(BisqApp.getShutDownHandler()::run, 100, TimeUnit.MILLISECONDS);
                     })
                     .hideCloseButton()
                     .show();

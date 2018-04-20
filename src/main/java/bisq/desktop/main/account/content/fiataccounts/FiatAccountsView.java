@@ -17,6 +17,18 @@
 
 package bisq.desktop.main.account.content.fiataccounts;
 
+import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.Res;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountFactory;
+import bisq.core.payment.WesternUnionAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.util.validation.InputValidator;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -87,6 +99,8 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.stage.Stage;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -96,21 +110,20 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.TextAlignment;
-
-import javafx.geometry.VPos;
-
-import javafx.beans.value.ChangeListener;
-
-import javafx.collections.FXCollections;
-
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.bitcoinj.core.Coin;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addLabelListView;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
@@ -206,8 +219,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.setItems(model.getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(event -> addNewAccount());
-        exportButton.setOnAction(event -> model.dataModel.exportAccounts());
-        importButton.setOnAction(event -> model.dataModel.importAccounts());
+        exportButton.setOnAction(event -> model.dataModel.exportAccounts((Stage) root.getScene().getWindow()));
+        importButton.setOnAction(event -> model.dataModel.importAccounts((Stage) root.getScene().getWindow()));
     }
 
     @Override

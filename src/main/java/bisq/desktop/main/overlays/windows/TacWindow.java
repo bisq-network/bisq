@@ -96,7 +96,7 @@ public class TacWindow extends Overlay<TacWindow> {
         message(text);
         actionButtonText(Res.get("tacWindow.agree"));
         closeButtonText(Res.get("tacWindow.disagree"));
-        onClose(BisqApp.shutDownHandler::run);
+        onClose(BisqApp.getShutDownHandler()::run);
 
         super.show();
     }
