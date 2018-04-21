@@ -32,8 +32,8 @@ import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.Proposal;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyBallotListService;
 import bisq.core.dao.presentation.proposal.FilteredBallotListService;
+import bisq.core.dao.presentation.proposal.MyBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyBallotListService myBallotListService;
-    protected final StateServiceFacade stateService;
+    protected final StateServiceFacade stateServiceFacade;
     protected final PeriodServiceFacade periodServiceFacade;
     protected final ChangeParamService changeParamService;
     protected final FilteredBallotListService filteredBallotListService;
@@ -104,7 +104,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected BaseProposalView(MyBallotListService myBallotListService,
                                FilteredBallotListService filteredBallotListService,
                                BsqWalletService bsqWalletService,
-                               StateServiceFacade stateService,
+                               StateServiceFacade stateServiceFacade,
                                PeriodServiceFacade periodServiceFacade,
                                ChangeParamService changeParamService,
                                BsqFormatter bsqFormatter,
@@ -112,7 +112,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.myBallotListService = myBallotListService;
         this.filteredBallotListService = filteredBallotListService;
         this.bsqWalletService = bsqWalletService;
-        this.stateService = stateService;
+        this.stateServiceFacade = stateServiceFacade;
         this.periodServiceFacade = periodServiceFacade;
         this.changeParamService = changeParamService;
         this.bsqFormatter = bsqFormatter;
@@ -252,7 +252,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                         myBallotListService,
                         periodServiceFacade,
                         bsqWalletService,
-                        stateService,
+                        stateServiceFacade,
                         bsqFormatter))
                 .collect(Collectors.toSet()));
 
