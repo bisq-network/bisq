@@ -37,7 +37,7 @@ import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
-import bisq.core.dao.presentation.myvote.MyVoteServiceFacade;
+import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.proposal.FilteredBallotListService;
 import bisq.core.dao.presentation.proposal.MyBallotListService;
@@ -73,7 +73,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
-    private final MyVoteServiceFacade myVoteServiceFacade;
+    private final MyBlindVoteServiceFacade myBlindVoteServiceFacade;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
     private InputTextField stakeInputTextField;
@@ -90,7 +90,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private ActiveProposalsView(MyBallotListService myBallotListService,
                                 FilteredBallotListService filteredBallotListService,
                                 PeriodServiceFacade periodServiceFacade,
-                                MyVoteServiceFacade myVoteServiceFacade,
+                                MyBlindVoteServiceFacade myBlindVoteServiceFacade,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
                                 ChangeParamService changeParamService,
@@ -99,7 +99,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
         super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
                 periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
-        this.myVoteServiceFacade = myVoteServiceFacade;
+        this.myBlindVoteServiceFacade = myBlindVoteServiceFacade;
     }
 
     @Override
@@ -128,11 +128,11 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 // TODO verify stake
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin blindVoteFee = myVoteServiceFacade.getBlindVoteFee();
+                final Coin blindVoteFee = myBlindVoteServiceFacade.getBlindVoteFee();
                 Transaction dummyTx = null;
                 try {
                     // We create a dummy tx to get the mining blindVoteFee for confirmation popup
-                    dummyTx = myVoteServiceFacade.getDummyBlindVoteTx(stake, blindVoteFee);
+                    dummyTx = myBlindVoteServiceFacade.getDummyBlindVoteTx(stake, blindVoteFee);
                 } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
                     new Popup<>().warning(exception.toString()).show();
                 }
@@ -150,7 +150,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     private void publishBlindVote(Coin stake) {
         voteButtonBusyAnimation.play();
         voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
-        myVoteServiceFacade.publishBlindVote(stake,
+        myBlindVoteServiceFacade.publishBlindVote(stake,
                 () -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
