@@ -31,7 +31,7 @@ import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyProposalService;
+import bisq.core.dao.presentation.proposal.MyBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -58,7 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BlockListener {
     @Getter
     private final Ballot ballot;
-    private final MyProposalService myProposalService;
+    private final MyBallotListService myBallotListService;
     private final PeriodServiceFacade periodServiceFacade;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateServiceFacade;
@@ -81,13 +81,13 @@ public class ProposalListItem implements BlockListener {
     private Node actionNode;
 
     ProposalListItem(Ballot ballot,
-                     MyProposalService myProposalService,
+                     MyBallotListService myBallotListService,
                      PeriodServiceFacade periodServiceFacade,
                      BsqWalletService bsqWalletService,
                      StateServiceFacade stateServiceFacade,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
-        this.myProposalService = myProposalService;
+        this.myBallotListService = myBallotListService;
         this.periodServiceFacade = periodServiceFacade;
         this.bsqWalletService = bsqWalletService;
         this.stateServiceFacade = stateServiceFacade;
@@ -123,70 +123,72 @@ public class ProposalListItem implements BlockListener {
         ballot.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(Phase newValue, Vote vote) {
-        actionButton.setText("");
-        actionButton.setVisible(false);
-        actionButton.setOnAction(null);
-        final boolean isTxInPastCycle = periodServiceFacade.isTxInPastCycle(ballot.getTxId(),
-                stateServiceFacade.getChainHeight());
-        switch (newValue) {
-            case UNDEFINED:
-                log.error("invalid state UNDEFINED");
-                break;
-            case PROPOSAL:
-                if (myProposalService.isMine(ballot.getProposal())) {
-                    actionButton.setVisible(!isTxInPastCycle);
-                    actionButtonIconView.setVisible(actionButton.isVisible());
-                    actionButton.setText(Res.get("shared.remove"));
-                    actionButton.setGraphic(actionButtonIconView);
-                    actionButtonIconView.setId("image-remove");
-                    actionButton.setOnAction(e -> {
-                        if (onRemoveHandler != null)
-                            onRemoveHandler.run();
-                    });
-                    actionNode = actionButton;
-                }
-                break;
-            case BREAK1:
-                break;
-            case BLIND_VOTE:
-                if (!isTxInPastCycle) {
-                    actionNode = actionButtonIconView;
-                    actionButton.setVisible(false);
-                    if (ballot.getVote() != null) {
-                        actionButtonIconView.setVisible(true);
-                        if (vote instanceof BooleanVote) {
-                            if (((BooleanVote) vote).isAccepted()) {
-                                actionButtonIconView.setId("accepted");
+    public void applyState(Phase phase, Vote vote) {
+        if (phase != null) {
+            actionButton.setText("");
+            actionButton.setVisible(false);
+            actionButton.setOnAction(null);
+            final boolean isTxInPastCycle = periodServiceFacade.isTxInPastCycle(ballot.getTxId(),
+                    stateServiceFacade.getChainHeight());
+            switch (phase) {
+                case UNDEFINED:
+                    log.error("invalid state UNDEFINED");
+                    break;
+                case PROPOSAL:
+                    if (myBallotListService.isMine(ballot.getProposal())) {
+                        actionButton.setVisible(!isTxInPastCycle);
+                        actionButtonIconView.setVisible(actionButton.isVisible());
+                        actionButton.setText(Res.get("shared.remove"));
+                        actionButton.setGraphic(actionButtonIconView);
+                        actionButtonIconView.setId("image-remove");
+                        actionButton.setOnAction(e -> {
+                            if (onRemoveHandler != null)
+                                onRemoveHandler.run();
+                        });
+                        actionNode = actionButton;
+                    }
+                    break;
+                case BREAK1:
+                    break;
+                case BLIND_VOTE:
+                    if (!isTxInPastCycle) {
+                        actionNode = actionButtonIconView;
+                        actionButton.setVisible(false);
+                        if (ballot.getVote() != null) {
+                            actionButtonIconView.setVisible(true);
+                            if (vote instanceof BooleanVote) {
+                                if (((BooleanVote) vote).isAccepted()) {
+                                    actionButtonIconView.setId("accepted");
+                                } else {
+                                    actionButtonIconView.setId("rejected");
+                                }
                             } else {
-                                actionButtonIconView.setId("rejected");
+                                //TODO
                             }
                         } else {
-                            //TODO
+                            actionButtonIconView.setVisible(false);
                         }
-                    } else {
-                        actionButtonIconView.setVisible(false);
                     }
-                }
-                break;
-            case BREAK2:
-                break;
-            case VOTE_REVEAL:
-                break;
-            case BREAK3:
-                break;
-            case VOTE_RESULT:
-                break;
-            case BREAK4:
-                break;
-            default:
-                log.error("invalid state " + newValue);
-        }
-        actionButton.setManaged(actionButton.isVisible());
+                    break;
+                case BREAK2:
+                    break;
+                case VOTE_REVEAL:
+                    break;
+                case BREAK3:
+                    break;
+                case VOTE_RESULT:
+                    break;
+                case BREAK4:
+                    break;
+                default:
+                    log.error("invalid state " + phase);
+            }
+            actionButton.setManaged(actionButton.isVisible());
 
-        // Don't set managed as otherwise the update does not work (not sure why but probably table
-        // cell item issue)
-        //actionButtonIconView.setManaged(actionButtonIconView.isVisible());
+            // Don't set managed as otherwise the update does not work (not sure why but probably table
+            // cell item issue)
+            //actionButtonIconView.setManaged(actionButtonIconView.isVisible());
+        }
     }
 
 

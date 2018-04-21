@@ -32,8 +32,8 @@ import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.Proposal;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyProposalService;
-import bisq.core.dao.presentation.proposal.ProposalListService;
+import bisq.core.dao.presentation.proposal.MyBallotListService;
+import bisq.core.dao.presentation.proposal.FilteredBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -71,11 +71,11 @@ import java.util.stream.Collectors;
 @FxmlView
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
-    protected final MyProposalService myProposalService;
+    protected final MyBallotListService myBallotListService;
     protected final StateServiceFacade stateService;
     protected final PeriodServiceFacade periodServiceFacade;
     protected final ChangeParamService changeParamService;
-    protected final ProposalListService proposalListService;
+    protected final FilteredBallotListService filteredBallotListService;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
     protected final BSFormatter btcFormatter;
@@ -101,16 +101,16 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected BaseProposalView(MyProposalService myProposalService,
-                               ProposalListService proposalListService,
+    protected BaseProposalView(MyBallotListService myBallotListService,
+                               FilteredBallotListService filteredBallotListService,
                                BsqWalletService bsqWalletService,
                                StateServiceFacade stateService,
                                PeriodServiceFacade periodServiceFacade,
                                ChangeParamService changeParamService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
-        this.myProposalService = myProposalService;
-        this.proposalListService = proposalListService;
+        this.myBallotListService = myBallotListService;
+        this.filteredBallotListService = filteredBallotListService;
         this.bsqWalletService = bsqWalletService;
         this.stateService = stateService;
         this.periodServiceFacade = periodServiceFacade;
@@ -231,8 +231,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     }
 
     protected void onPhaseChanged(Phase phase) {
-        if (!phase.equals(this.currentPhase)) {
-            this.currentPhase = phase;
+        if (phase != null && !phase.equals(currentPhase)) {
+            currentPhase = phase;
             onSelectProposal(selectedProposalListItem);
         }
     }
@@ -246,10 +246,10 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected void doUpdateProposalList(List<Ballot> list) {
         proposalListItems.forEach(ProposalListItem::cleanup);
-
+        proposalListItems.clear();
         proposalListItems.setAll(list.stream()
                 .map(ballot -> new ProposalListItem(ballot,
-                        myProposalService,
+                        myBallotListService,
                         periodServiceFacade,
                         bsqWalletService,
                         stateService,

@@ -36,8 +36,8 @@ import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.presentation.myvote.MyVoteService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyProposalService;
-import bisq.core.dao.presentation.proposal.ProposalListService;
+import bisq.core.dao.presentation.proposal.MyBallotListService;
+import bisq.core.dao.presentation.proposal.FilteredBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -89,8 +89,8 @@ public class MyVotesView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyVotesView(MyProposalService myProposalService,
-                        ProposalListService proposalListService,
+    private MyVotesView(MyBallotListService myBallotListService,
+                        FilteredBallotListService filteredBallotListService,
                         BsqWalletService bsqWalletService,
                         StateServiceFacade stateService,
                         PeriodServiceFacade periodServiceFacade,
@@ -100,7 +100,7 @@ public class MyVotesView extends BaseProposalView {
                         MyVoteService myVoteService,
                         Preferences preferences) {
 
-        super(myProposalService, proposalListService, bsqWalletService, stateService,
+        super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
                 periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
         this.preferences = preferences;

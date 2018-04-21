@@ -40,8 +40,8 @@ import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.presentation.myvote.MyVoteService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyProposalService;
-import bisq.core.dao.presentation.proposal.ProposalListService;
+import bisq.core.dao.presentation.proposal.MyBallotListService;
+import bisq.core.dao.presentation.proposal.FilteredBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -88,8 +88,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveProposalsView(MyProposalService myProposalService,
-                                ProposalListService proposalListService,
+    private ActiveProposalsView(MyBallotListService myBallotListService,
+                                FilteredBallotListService filteredBallotListService,
                                 PeriodServiceFacade periodServiceFacade,
                                 MyVoteService myVoteService,
                                 BsqWalletService bsqWalletService,
@@ -98,7 +98,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
-        super(myProposalService, proposalListService, bsqWalletService, stateService,
+        super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
                 periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
         this.myVoteService = myVoteService;
     }
@@ -117,7 +117,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     protected void activate() {
         super.activate();
 
-        proposalListService.getActiveOrMyUnconfirmedBallots().addListener(proposalListChangeListener);
+        filteredBallotListService.getActiveOrMyUnconfirmedBallots().addListener(proposalListChangeListener);
         bsqWalletService.addBsqBalanceListener(this);
 
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
@@ -168,7 +168,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     protected void deactivate() {
         super.deactivate();
 
-        proposalListService.getActiveOrMyUnconfirmedBallots().removeListener(proposalListChangeListener);
+        filteredBallotListService.getActiveOrMyUnconfirmedBallots().removeListener(proposalListChangeListener);
         bsqWalletService.removeBsqBalanceListener(this);
     }
 
@@ -257,71 +257,73 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void onPhaseChanged(Phase phase) {
-        super.onPhaseChanged(phase);
+        if (phase != null) {
+            super.onPhaseChanged(phase);
 
-        changeVoteViewItemsVisibility(phase == Phase.BLIND_VOTE);
+            changeVoteViewItemsVisibility(phase == Phase.BLIND_VOTE);
 
-        if (removeButton != null) {
-            removeButton.setManaged(false);
-            removeButton.setVisible(false);
-            removeButton = null;
-        }
-        if (selectedProposalListItem != null &&
-                proposalDisplay != null &&
-                !periodServiceFacade.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
-                        stateService.getChainHeight())) {
-            final Ballot ballot = selectedProposalListItem.getBallot();
-            switch (phase) {
-                case PROPOSAL:
-                    if (myProposalService.isMine(ballot.getProposal())) {
-                        if (removeButton == null) {
-                            removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
-                            removeButton.setOnAction(event -> onRemove());
-                        } else {
-                            removeButton.setManaged(true);
-                            removeButton.setVisible(true);
+            if (removeButton != null) {
+                removeButton.setManaged(false);
+                removeButton.setVisible(false);
+                removeButton = null;
+            }
+            if (selectedProposalListItem != null &&
+                    proposalDisplay != null &&
+                    !periodServiceFacade.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
+                            stateService.getChainHeight())) {
+                final Ballot ballot = selectedProposalListItem.getBallot();
+                switch (phase) {
+                    case PROPOSAL:
+                        if (myBallotListService.isMine(ballot.getProposal())) {
+                            if (removeButton == null) {
+                                removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
+                                removeButton.setOnAction(event -> onRemove());
+                            } else {
+                                removeButton.setManaged(true);
+                                removeButton.setVisible(true);
+                            }
                         }
-                    }
-                    break;
-                case BREAK1:
-                    break;
-                case BLIND_VOTE:
-                    if (acceptButton == null) {
-                        Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
-                                        .incrementAndGetGridRow(),
-                                Res.get("dao.proposal.myVote.accept"),
-                                Res.get("dao.proposal.myVote.reject"),
-                                Res.get("dao.proposal.myVote.cancelVote"));
-                        acceptButton = tuple.first;
-                        acceptButton.setDefaultButton(false);
-                        rejectButton = tuple.second;
-                        cancelVoteButton = tuple.third;
-                        acceptButton.setOnAction(event -> onAccept());
-                        rejectButton.setOnAction(event -> onReject());
-                        cancelVoteButton.setOnAction(event -> onCancelVote());
-                    } else {
-                        acceptButton.setManaged(true);
-                        acceptButton.setVisible(true);
-                        rejectButton.setManaged(true);
-                        rejectButton.setVisible(true);
-                        cancelVoteButton.setManaged(true);
-                        cancelVoteButton.setVisible(true);
-                    }
-                    break;
-                case BREAK2:
-                    break;
-                case VOTE_REVEAL:
-                    break;
-                case BREAK3:
-                    break;
-                case VOTE_RESULT:
-                    break;
-                case BREAK4:
-                    break;
-                case UNDEFINED:
-                default:
-                    log.error("Undefined phase: " + phase);
-                    break;
+                        break;
+                    case BREAK1:
+                        break;
+                    case BLIND_VOTE:
+                        if (acceptButton == null) {
+                            Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
+                                            .incrementAndGetGridRow(),
+                                    Res.get("dao.proposal.myVote.accept"),
+                                    Res.get("dao.proposal.myVote.reject"),
+                                    Res.get("dao.proposal.myVote.cancelVote"));
+                            acceptButton = tuple.first;
+                            acceptButton.setDefaultButton(false);
+                            rejectButton = tuple.second;
+                            cancelVoteButton = tuple.third;
+                            acceptButton.setOnAction(event -> onAccept());
+                            rejectButton.setOnAction(event -> onReject());
+                            cancelVoteButton.setOnAction(event -> onCancelVote());
+                        } else {
+                            acceptButton.setManaged(true);
+                            acceptButton.setVisible(true);
+                            rejectButton.setManaged(true);
+                            rejectButton.setVisible(true);
+                            cancelVoteButton.setManaged(true);
+                            cancelVoteButton.setVisible(true);
+                        }
+                        break;
+                    case BREAK2:
+                        break;
+                    case VOTE_REVEAL:
+                        break;
+                    case BREAK3:
+                        break;
+                    case VOTE_RESULT:
+                        break;
+                    case BREAK4:
+                        break;
+                    case UNDEFINED:
+                    default:
+                        log.error("Undefined phase: " + phase);
+                        break;
+                }
             }
         }
     }
@@ -332,12 +334,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(proposalListService.getActiveOrMyUnconfirmedBallots());
+        doUpdateProposalList(filteredBallotListService.getActiveOrMyUnconfirmedBallots());
     }
 
     private void updateStateAfterVote() {
         hideProposalDisplay();
-        proposalListService.persist();
+        filteredBallotListService.persist();
         proposalTableView.getSelectionModel().clearSelection();
     }
 
@@ -349,7 +351,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onRemove() {
-        if (myProposalService.removeProposal(selectedProposalListItem.getBallot()))
+        if (myBallotListService.removeProposal(selectedProposalListItem.getBallot()))
             hideProposalDisplay();
         else
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
