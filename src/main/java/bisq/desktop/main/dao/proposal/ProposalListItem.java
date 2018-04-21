@@ -30,8 +30,8 @@ import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
+import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.MyBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 

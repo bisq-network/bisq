@@ -37,10 +37,10 @@ import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
+import bisq.core.dao.presentation.ballot.FilteredBallotListService;
+import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
 import bisq.core.dao.presentation.period.PeriodServiceFacade;
-import bisq.core.dao.presentation.proposal.FilteredBallotListService;
-import bisq.core.dao.presentation.proposal.MyBallotListService;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
