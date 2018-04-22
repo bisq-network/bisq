@@ -37,9 +37,9 @@ import bisq.core.dao.consensus.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.proposal.ProposalType;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.presentation.ballot.CompensationBallotFactory;
-import bisq.core.dao.presentation.ballot.GenericBallotFactory;
-import bisq.core.dao.presentation.ballot.MyBallotListService;
+import bisq.core.dao.consensus.ballot.CompensationBallotFactory;
+import bisq.core.dao.consensus.ballot.GenericBallotFactory;
+import bisq.core.dao.consensus.ballot.MyBallotListService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 

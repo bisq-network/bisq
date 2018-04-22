@@ -32,7 +32,7 @@ import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
-import bisq.core.dao.presentation.ballot.MyBallotListService;
+import bisq.core.dao.consensus.ballot.MyBallotListService;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
