@@ -28,11 +28,11 @@ import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -61,7 +61,7 @@ public class ProposalListItem implements BlockListener {
     private final MyBallotListService myBallotListService;
     private final PeriodService PeriodService;
     private final BsqWalletService bsqWalletService;
-    private final StateServiceFacade stateServiceFacade;
+    private final StateService stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     private final ChangeListener<Vote> voteResultChangeListener;
@@ -84,13 +84,13 @@ public class ProposalListItem implements BlockListener {
                      MyBallotListService myBallotListService,
                      PeriodService PeriodService,
                      BsqWalletService bsqWalletService,
-                     StateServiceFacade stateServiceFacade,
+                     StateService stateService,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
         this.myBallotListService = myBallotListService;
         this.PeriodService = PeriodService;
         this.bsqWalletService = bsqWalletService;
-        this.stateServiceFacade = stateServiceFacade;
+        this.stateService = stateService;
         this.bsqFormatter = bsqFormatter;
 
 
@@ -109,7 +109,7 @@ public class ProposalListItem implements BlockListener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        stateServiceFacade.addBlockListener(this);
+        stateService.addBlockListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, ballot.getVote());
@@ -129,7 +129,7 @@ public class ProposalListItem implements BlockListener {
             actionButton.setVisible(false);
             actionButton.setOnAction(null);
             final boolean isTxInPastCycle = PeriodService.isTxInPastCycle(ballot.getTxId(),
-                    stateServiceFacade.getChainHeight());
+                    stateService.getChainHeight());
             switch (phase) {
                 case UNDEFINED:
                     log.error("invalid state UNDEFINED");
@@ -204,7 +204,7 @@ public class ProposalListItem implements BlockListener {
 
 
     private void setupConfidence() {
-        final Tx tx = stateServiceFacade.getTxMap().get(ballot.getProposal().getTxId());
+        final Tx tx = stateService.getTxMap().get(ballot.getProposal().getTxId());
         if (tx != null) {
             final String txId = tx.getId();
 
@@ -248,7 +248,7 @@ public class ProposalListItem implements BlockListener {
     }
 
     public void cleanup() {
-        stateServiceFacade.removeBlockListener(this);
+        stateService.removeBlockListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);

@@ -34,9 +34,9 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.state.blockchain.TxType;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -88,7 +88,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private final StateServiceFacade stateServiceFacade;
+    private final StateService stateService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
@@ -112,13 +112,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(BsqFormatter bsqFormatter,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
-                      StateServiceFacade stateServiceFacade,
+                      StateService stateService,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
-        this.stateServiceFacade = stateServiceFacade;
+        this.stateService = stateService;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -177,7 +177,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        stateServiceFacade.addBlockListener(this);
+        stateService.addBlockListener(this);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -196,7 +196,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
-        stateServiceFacade.removeBlockListener(this);
+        stateService.removeBlockListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
 
@@ -225,7 +225,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     // If chain height from wallet of from the BSQ blockchain parsing changed we update our state.
     private void onUpdateAnyChainHeight() {
-        final int bsqBlockChainHeight = stateServiceFacade.getChainHeight();
+        final int bsqBlockChainHeight = stateService.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
@@ -258,13 +258,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> {
-                    final Optional<Tx> optionalTx = stateServiceFacade.getTx(transaction.getHashAsString());
+                    final Optional<Tx> optionalTx = stateService.getTx(transaction.getHashAsString());
                     return new BsqTxListItem(transaction,
                             optionalTx,
                             bsqWalletService,
                             btcWalletService,
-                            stateServiceFacade,
-                            stateServiceFacade.hasTxBurntFee(transaction.getHashAsString()),
+                            stateService,
+                            stateService.hasTxBurntFee(transaction.getHashAsString()),
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })
@@ -374,7 +374,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
                                         if (txType == TxType.COMPENSATION_REQUEST &&
                                                 optionalTx.isPresent() &&
-                                                stateServiceFacade.isIssuanceTx(optionalTx.get().getId())) {
+                                                stateService.isIssuanceTx(optionalTx.get().getId())) {
                                             if (field != null)
                                                 field.setOnAction(null);
 
@@ -536,11 +536,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
                                             final String txId = item.getOptionalTx().get().getId();
-                                            if (item.getOptionalTx().isPresent() && stateServiceFacade.isIssuanceTx(txId)) {
+                                            if (item.getOptionalTx().isPresent() && stateService.isIssuanceTx(txId)) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
-                                                final int issuanceBlockHeight = stateServiceFacade.getIssuanceBlockHeight(txId);
-                                                long blockTimeInSec = stateServiceFacade.getBlockTime(issuanceBlockHeight);
+                                                final int issuanceBlockHeight = stateService.getIssuanceBlockHeight(txId);
+                                                long blockTimeInSec = stateService.getBlockTime(issuanceBlockHeight);
                                                 final String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {

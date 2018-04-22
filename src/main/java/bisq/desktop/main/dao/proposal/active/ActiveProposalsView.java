@@ -37,11 +37,11 @@ import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.presentation.ballot.FilteredBallotListService;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
@@ -92,7 +92,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 PeriodService PeriodService,
                                 MyBlindVoteServiceFacade myBlindVoteServiceFacade,
                                 BsqWalletService bsqWalletService,
-                                StateServiceFacade stateService,
+                                StateService stateService,
                                 ChangeParamService changeParamService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
@@ -269,7 +269,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             if (selectedProposalListItem != null &&
                     proposalDisplay != null &&
                     !PeriodService.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
-                            stateServiceFacade.getChainHeight())) {
+                            stateService.getChainHeight())) {
                 final Ballot ballot = selectedProposalListItem.getBallot();
                 switch (phase) {
                     case PROPOSAL:

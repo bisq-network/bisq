@@ -33,12 +33,12 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.ballot.BallotList;
 import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.presentation.ballot.FilteredBallotListService;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -92,7 +92,7 @@ public class MyVotesView extends BaseProposalView {
     private MyVotesView(MyBallotListService myBallotListService,
                         FilteredBallotListService filteredBallotListService,
                         BsqWalletService bsqWalletService,
-                        StateServiceFacade stateService,
+                        StateService stateService,
                         PeriodService PeriodService,
                         ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
@@ -128,7 +128,7 @@ public class MyVotesView extends BaseProposalView {
 
         voteListItems.clear();
         List<VoteListItem> items = myBlindVoteServiceFacade.getMyVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, stateServiceFacade, PeriodService, bsqFormatter))
+                .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, PeriodService, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }

@@ -36,10 +36,10 @@ import bisq.core.dao.consensus.ballot.Ballot;
 import bisq.core.dao.consensus.proposal.ProposalConsensus;
 import bisq.core.dao.consensus.proposal.ProposalType;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.presentation.ballot.CompensationBallotFactory;
 import bisq.core.dao.presentation.ballot.GenericBallotFactory;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
-import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -86,7 +86,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final MyBallotListService myBallotListService;
     private final CompensationBallotFactory compensationBallotFactory;
     private final GenericBallotFactory genericBallotFactory;
-    private final StateServiceFacade stateService;
+    private final StateService stateService;
     private final ChangeParamService changeParamService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -107,7 +107,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              MyBallotListService myBallotListService,
                              CompensationBallotFactory compensationBallotFactory,
                              GenericBallotFactory genericBallotFactory,
-                             StateServiceFacade stateService,
+                             StateService stateService,
                              ChangeParamService changeParamService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {

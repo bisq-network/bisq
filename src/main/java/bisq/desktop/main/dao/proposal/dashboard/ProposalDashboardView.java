@@ -46,7 +46,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 // We use here PeriodStateChangeListener because we are interested in period changes not in the result of a completed
 // block. The event from the PeriodStateChangeListener is sent before parsing starts.
-// The event from the StateServiceFacade.Listener would notify after parsing a new block.
+// The event from the StateService.Listener would notify after parsing a new block.
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
 
