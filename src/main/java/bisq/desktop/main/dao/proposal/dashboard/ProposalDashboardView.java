@@ -127,7 +127,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         PeriodService.addPeriodStateChangeListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
-        UserThread.execute(() -> onPreParserChainHeightChanged(PeriodService.getChainHeight()));
+        UserThread.execute(() -> onChainHeightChanged(PeriodService.getChainHeight()));
     }
 
     @Override
@@ -138,7 +138,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     }
 
     @Override
-    public void onPreParserChainHeightChanged(int height) {
+    public void onChainHeightChanged(int height) {
         if (height > 0) {
             separatedPhaseBars.updateWidth();
             phaseBarsItems.forEach(item -> {

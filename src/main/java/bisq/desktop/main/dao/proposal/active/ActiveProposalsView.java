@@ -128,7 +128,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             voteButton.setOnAction(e -> {
                 // TODO verify stake
                 Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin blindVoteFee = myBlindVoteService.getBlindVoteFee();
+                final Coin blindVoteFee = myBlindVoteService.getBlindVoteFeeForCycle();
                 Transaction dummyTx = null;
                 try {
                     // We create a dummy tx to get the mining blindVoteFee for confirmation popup
