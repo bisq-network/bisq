@@ -31,13 +31,13 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.ballot.BallotList;
+import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
 import bisq.core.dao.presentation.ballot.FilteredBallotListService;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -93,7 +93,7 @@ public class MyVotesView extends BaseProposalView {
                         FilteredBallotListService filteredBallotListService,
                         BsqWalletService bsqWalletService,
                         StateServiceFacade stateService,
-                        PeriodServiceFacade periodServiceFacade,
+                        PeriodService PeriodService,
                         ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
@@ -101,7 +101,7 @@ public class MyVotesView extends BaseProposalView {
                         Preferences preferences) {
 
         super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
-                periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
+                PeriodService, changeParamService, bsqFormatter, btcFormatter);
         this.myBlindVoteServiceFacade = myBlindVoteServiceFacade;
         this.preferences = preferences;
     }
@@ -128,7 +128,7 @@ public class MyVotesView extends BaseProposalView {
 
         voteListItems.clear();
         List<VoteListItem> items = myBlindVoteServiceFacade.getMyVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, stateServiceFacade, periodServiceFacade, bsqFormatter))
+                .map(vote -> new VoteListItem(vote, bsqWalletService, stateServiceFacade, PeriodService, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }

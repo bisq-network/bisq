@@ -34,13 +34,13 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.ballot.Ballot;
+import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.presentation.ballot.FilteredBallotListService;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
 import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -89,7 +89,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     @Inject
     private ActiveProposalsView(MyBallotListService myBallotListService,
                                 FilteredBallotListService filteredBallotListService,
-                                PeriodServiceFacade periodServiceFacade,
+                                PeriodService PeriodService,
                                 MyBlindVoteServiceFacade myBlindVoteServiceFacade,
                                 BsqWalletService bsqWalletService,
                                 StateServiceFacade stateService,
@@ -98,7 +98,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                 BSFormatter btcFormatter) {
 
         super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
-                periodServiceFacade, changeParamService, bsqFormatter, btcFormatter);
+                PeriodService, changeParamService, bsqFormatter, btcFormatter);
         this.myBlindVoteServiceFacade = myBlindVoteServiceFacade;
     }
 
@@ -235,7 +235,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 cancelVoteButton = null;
             }
 
-            onPhaseChanged(periodServiceFacade.phaseProperty().get());
+            onPhaseChanged(PeriodService.phaseProperty().get());
         }
     }
 
@@ -268,7 +268,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
             }
             if (selectedProposalListItem != null &&
                     proposalDisplay != null &&
-                    !periodServiceFacade.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
+                    !PeriodService.isTxInPastCycle(selectedProposalListItem.getBallot().getTxId(),
                             stateServiceFacade.getChainHeight())) {
                 final Ballot ballot = selectedProposalListItem.getBallot();
                 switch (phase) {

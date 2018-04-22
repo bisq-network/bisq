@@ -28,12 +28,12 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.ballot.Ballot;
+import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.period.Phase;
 import bisq.core.dao.consensus.proposal.Proposal;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.presentation.ballot.FilteredBallotListService;
 import bisq.core.dao.presentation.ballot.MyBallotListService;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -73,7 +73,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final MyBallotListService myBallotListService;
     protected final StateServiceFacade stateServiceFacade;
-    protected final PeriodServiceFacade periodServiceFacade;
+    protected final PeriodService PeriodService;
     protected final ChangeParamService changeParamService;
     protected final FilteredBallotListService filteredBallotListService;
     protected final BsqWalletService bsqWalletService;
@@ -105,7 +105,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                FilteredBallotListService filteredBallotListService,
                                BsqWalletService bsqWalletService,
                                StateServiceFacade stateServiceFacade,
-                               PeriodServiceFacade periodServiceFacade,
+                               PeriodService PeriodService,
                                ChangeParamService changeParamService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
@@ -113,7 +113,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         this.filteredBallotListService = filteredBallotListService;
         this.bsqWalletService = bsqWalletService;
         this.stateServiceFacade = stateServiceFacade;
-        this.periodServiceFacade = periodServiceFacade;
+        this.PeriodService = PeriodService;
         this.changeParamService = changeParamService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -132,12 +132,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(periodServiceFacade.phaseProperty(), this::onPhaseChanged);
+        phaseSubscription = EasyBind.subscribe(PeriodService.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
-        periodServiceFacade.phaseProperty().addListener(phaseChangeListener);
+        PeriodService.phaseProperty().addListener(phaseChangeListener);
 
-        onPhaseChanged(periodServiceFacade.phaseProperty().get());
+        onPhaseChanged(PeriodService.phaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -149,7 +149,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        periodServiceFacade.phaseProperty().removeListener(phaseChangeListener);
+        PeriodService.phaseProperty().removeListener(phaseChangeListener);
 
         sortedList.comparatorProperty().unbind();
 
@@ -250,7 +250,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalListItems.setAll(list.stream()
                 .map(ballot -> new ProposalListItem(ballot,
                         myBallotListService,
-                        periodServiceFacade,
+                        PeriodService,
                         bsqWalletService,
                         stateServiceFacade,
                         bsqFormatter))

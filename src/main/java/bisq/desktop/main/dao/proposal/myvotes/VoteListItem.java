@@ -23,11 +23,11 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.myvote.MyVote;
+import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.state.Block;
 import bisq.core.dao.consensus.state.BlockListener;
 import bisq.core.dao.consensus.state.blockchain.Tx;
 import bisq.core.dao.consensus.state.blockchain.TxOutput;
-import bisq.core.dao.presentation.period.PeriodServiceFacade;
 import bisq.core.dao.presentation.state.StateServiceFacade;
 import bisq.core.locale.Res;
 
@@ -57,7 +57,7 @@ public class VoteListItem implements BlockListener {
     private final MyVote myVote;
     private final BsqWalletService bsqWalletService;
     private final StateServiceFacade stateServiceFacade;
-    private final PeriodServiceFacade periodServiceFacade;
+    private final PeriodService PeriodService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
@@ -78,12 +78,12 @@ public class VoteListItem implements BlockListener {
     VoteListItem(MyVote myVote,
                  BsqWalletService bsqWalletService,
                  StateServiceFacade stateServiceFacade,
-                 PeriodServiceFacade periodServiceFacade,
+                 PeriodService PeriodService,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
         this.bsqWalletService = bsqWalletService;
         this.stateServiceFacade = stateServiceFacade;
-        this.periodServiceFacade = periodServiceFacade;
+        this.PeriodService = PeriodService;
         this.bsqFormatter = bsqFormatter;
 
         txConfidenceIndicator = new TxConfidenceIndicator();
