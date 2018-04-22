@@ -31,14 +31,14 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.consensus.ballot.BallotList;
+import bisq.core.dao.consensus.ballot.FilteredBallotListService;
+import bisq.core.dao.consensus.ballot.MyBallotListService;
+import bisq.core.dao.consensus.myvote.MyBlindVoteService;
 import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.vote.BooleanVote;
 import bisq.core.dao.consensus.vote.Vote;
-import bisq.core.dao.consensus.ballot.FilteredBallotListService;
-import bisq.core.dao.consensus.ballot.MyBallotListService;
-import bisq.core.dao.presentation.myvote.MyBlindVoteServiceFacade;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
 
 @FxmlView
 public class MyVotesView extends BaseProposalView {
-    private final MyBlindVoteServiceFacade myBlindVoteServiceFacade;
+    private final MyBlindVoteService myBlindVoteService;
     private final Preferences preferences;
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
@@ -97,12 +97,12 @@ public class MyVotesView extends BaseProposalView {
                         ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
-                        MyBlindVoteServiceFacade myBlindVoteServiceFacade,
+                        MyBlindVoteService myBlindVoteService,
                         Preferences preferences) {
 
         super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
                 PeriodService, changeParamService, bsqFormatter, btcFormatter);
-        this.myBlindVoteServiceFacade = myBlindVoteServiceFacade;
+        this.myBlindVoteService = myBlindVoteService;
         this.preferences = preferences;
     }
 
@@ -127,7 +127,7 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = myBlindVoteServiceFacade.getMyVoteList().stream()
+        List<VoteListItem> items = myBlindVoteService.getMyVoteList().stream()
                 .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, PeriodService, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
