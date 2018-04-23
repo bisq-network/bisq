@@ -33,19 +33,19 @@ import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.ValidationException;
 import bisq.core.dao.consensus.ballot.Ballot;
-import bisq.core.dao.consensus.proposal.ProposalConsensus;
-import bisq.core.dao.consensus.proposal.ProposalType;
-import bisq.core.dao.consensus.proposal.param.ChangeParamService;
-import bisq.core.dao.consensus.state.StateService;
+import bisq.core.dao.consensus.ballot.BallotWithTransaction;
 import bisq.core.dao.consensus.ballot.CompensationBallotFactory;
 import bisq.core.dao.consensus.ballot.GenericBallotFactory;
 import bisq.core.dao.consensus.ballot.MyBallotListService;
+import bisq.core.dao.consensus.proposal.ProposalConsensus;
+import bisq.core.dao.consensus.proposal.ProposalService;
+import bisq.core.dao.consensus.proposal.ProposalType;
+import bisq.core.dao.consensus.proposal.param.ChangeParamService;
+import bisq.core.dao.consensus.state.StateService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
 import bisq.network.p2p.P2PService;
-
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -84,6 +84,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     private final P2PService p2PService;
     private final FeeService feeService;
     private final MyBallotListService myBallotListService;
+    private final ProposalService proposalService;
     private final CompensationBallotFactory compensationBallotFactory;
     private final GenericBallotFactory genericBallotFactory;
     private final StateService stateService;
@@ -105,6 +106,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                              P2PService p2PService,
                              FeeService feeService,
                              MyBallotListService myBallotListService,
+                             ProposalService proposalService,
                              CompensationBallotFactory compensationBallotFactory,
                              GenericBallotFactory genericBallotFactory,
                              StateService stateService,
@@ -116,6 +118,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         this.p2PService = p2PService;
         this.feeService = feeService;
         this.myBallotListService = myBallotListService;
+        this.proposalService = proposalService;
         this.compensationBallotFactory = compensationBallotFactory;
         this.genericBallotFactory = genericBallotFactory;
         this.stateService = stateService;
@@ -167,9 +170,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     private void publishProposalAndStoreBallot(ProposalType type) {
         try {
-            final Tuple2<Ballot, Transaction> tuple = getTuple(type);
-            Ballot ballot = tuple.first;
-            Transaction transaction = tuple.second;
+            final BallotWithTransaction ballotWithTransaction = getBallotWithTransaction(type);
+            Ballot ballot = ballotWithTransaction.getBallot();
+            Transaction transaction = ballotWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             final Coin fee = ProposalConsensus.getFee(changeParamService, stateService.getChainHeight());
@@ -198,9 +201,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     }
 
     private void publishProposalAndStoreBallot(Ballot ballot, Transaction transaction) {
-        myBallotListService.publishProposalAndStoreBallot(ballot,
+        proposalService.publishBallot(ballot,
                 transaction,
                 () -> {
+                    myBallotListService.storeBallot(ballot);
                     proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
                     new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
@@ -208,7 +212,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
-    private Tuple2<Ballot, Transaction> getTuple(ProposalType type)
+    private BallotWithTransaction getBallotWithTransaction(ProposalType type)
             throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
             WalletException, IOException {
 
@@ -216,7 +220,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                return compensationBallotFactory.getTuple(proposalDisplay.nameTextField.getText(),
+                return compensationBallotFactory.getBallotWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),

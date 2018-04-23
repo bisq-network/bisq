@@ -39,6 +39,7 @@ import bisq.core.dao.consensus.ballot.MyBallotListService;
 import bisq.core.dao.consensus.myvote.MyBlindVoteService;
 import bisq.core.dao.consensus.period.PeriodService;
 import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.consensus.proposal.ProposalService;
 import bisq.core.dao.consensus.proposal.param.ChangeParamService;
 import bisq.core.dao.consensus.state.StateService;
 import bisq.core.dao.consensus.vote.BooleanVote;
@@ -73,6 +74,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
+    private ProposalService proposalService;
     private final MyBlindVoteService myBlindVoteService;
 
     private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
@@ -88,6 +90,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Inject
     private ActiveProposalsView(MyBallotListService myBallotListService,
+                                ProposalService proposalService,
                                 FilteredBallotListService filteredBallotListService,
                                 PeriodService PeriodService,
                                 MyBlindVoteService myBlindVoteService,
@@ -99,6 +102,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
         super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
                 PeriodService, changeParamService, bsqFormatter, btcFormatter);
+        this.proposalService = proposalService;
         this.myBlindVoteService = myBlindVoteService;
     }
 
@@ -350,11 +354,13 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onRemove() {
-        if (myBallotListService.removeProposal(selectedProposalListItem.getBallot()))
+        final Ballot ballot = selectedProposalListItem.getBallot();
+        if (proposalService.removeProposal(ballot)) {
+            myBallotListService.removeBallot(ballot);
             hideProposalDisplay();
-        else
+        } else {
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
-
+        }
         proposalTableView.getSelectionModel().clearSelection();
     }
 
