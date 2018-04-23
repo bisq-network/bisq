@@ -2,6 +2,7 @@ package io.bisq.api;
 
 import io.bisq.api.model.Currency;
 import io.bisq.api.model.CurrencyList;
+import io.bisq.api.model.Preferences;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.jboss.arquillian.junit.Arquillian;
@@ -10,11 +11,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.isA;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.*;
 
 @RunWith(Arquillian.class)
 public class CurrencyResourceIT {
@@ -52,6 +55,52 @@ public class CurrencyResourceIT {
         Assert.assertTrue(usd.isPresent());
     }
 
+    @InSequence(1)
+    @Test
+    public void getPriceFeed_withoutAnyParams_returnsPricesForDefaultCurrencies() {
+        final Preferences preferences = given().
+                port(getAlicePort()).
+//
+        when().
+                        get("/api/v1/preferences").
+//
+        then().
+                        statusCode(200).
+                        extract().as(Preferences.class);
+        final List<String> defaultCodes = new ArrayList<>(preferences.cryptoCurrencies);
+        defaultCodes.addAll(preferences.fiatCurrencies);
+        final HashMap<String, Double> map = given().
+                port(getAlicePort()).
+//
+        when().
+                        get("/api/v1/currencies/prices").
+//
+        then().
+                        statusCode(200).
+                        and().body("prices.size()", greaterThan(0))
+                .extract().path("prices");
+        for (String code : map.keySet()) {
+            Assert.assertTrue("Response should contain only default currencies", defaultCodes.contains(code));
+        }
+    }
+
+    @InSequence(1)
+    @Test
+    public void getPriceFeed_withCurrencyCodesParam_returnsOnlyPricesForRelatedCurrencies() {
+        given().
+                port(getAlicePort()).
+                queryParam("currencyCodes", "PLN,XMR").
+//
+        when().
+                get("/api/v1/currencies/prices").
+//
+        then().
+                statusCode(200).
+                and().body("prices.size()", equalTo(2)).
+                and().body("prices.PLN", isA(Number.class)).
+                and().body("prices.XMR", isA(Number.class))
+        ;
+    }
 
     private int getAlicePort() {
         return alice.getBindPort(8080);
