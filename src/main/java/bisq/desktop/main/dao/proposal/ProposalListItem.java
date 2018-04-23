@@ -23,13 +23,11 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.ballot.Ballot;
-import bisq.core.dao.ballot.MyBallotListService;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.period.Phase;
 import bisq.core.dao.state.Block;
 import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.Vote;
@@ -58,10 +56,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ProposalListItem implements BlockListener {
     @Getter
     private final Ballot ballot;
-    private final MyBallotListService myBallotListService;
-    private final PeriodService PeriodService;
+    private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
-    private final StateService stateService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     private final ChangeListener<Vote> voteResultChangeListener;
@@ -81,16 +77,12 @@ public class ProposalListItem implements BlockListener {
     private Node actionNode;
 
     ProposalListItem(Ballot ballot,
-                     MyBallotListService myBallotListService,
-                     PeriodService PeriodService,
+                     DaoFacade daoFacade,
                      BsqWalletService bsqWalletService,
-                     StateService stateService,
                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
-        this.myBallotListService = myBallotListService;
-        this.PeriodService = PeriodService;
+        this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
-        this.stateService = stateService;
         this.bsqFormatter = bsqFormatter;
 
 
@@ -109,17 +101,17 @@ public class ProposalListItem implements BlockListener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        stateService.addBlockListener(this);
+        daoFacade.addBlockListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
             applyState(newValue, ballot.getVote());
         };
 
         voteResultChangeListener = (observable, oldValue, newValue) -> {
-            applyState(PeriodService.phaseProperty().get(), newValue);
+            applyState(daoFacade.phaseProperty().get(), newValue);
         };
 
-        PeriodService.phaseProperty().addListener(phaseChangeListener);
+        daoFacade.phaseProperty().addListener(phaseChangeListener);
         ballot.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
@@ -128,15 +120,12 @@ public class ProposalListItem implements BlockListener {
             actionButton.setText("");
             actionButton.setVisible(false);
             actionButton.setOnAction(null);
-            final boolean isTxInPastCycle = PeriodService.isTxInPastCycle(ballot.getTxId(),
-                    stateService.getChainHeight());
             switch (phase) {
                 case UNDEFINED:
                     log.error("invalid state UNDEFINED");
                     break;
                 case PROPOSAL:
-                    if (myBallotListService.isMine(ballot.getProposal())) {
-                        actionButton.setVisible(!isTxInPastCycle);
+                    if (daoFacade.isMyProposal(ballot.getProposal())) {
                         actionButtonIconView.setVisible(actionButton.isVisible());
                         actionButton.setText(Res.get("shared.remove"));
                         actionButton.setGraphic(actionButtonIconView);
@@ -151,23 +140,21 @@ public class ProposalListItem implements BlockListener {
                 case BREAK1:
                     break;
                 case BLIND_VOTE:
-                    if (!isTxInPastCycle) {
-                        actionNode = actionButtonIconView;
-                        actionButton.setVisible(false);
-                        if (ballot.getVote() != null) {
-                            actionButtonIconView.setVisible(true);
-                            if (vote instanceof BooleanVote) {
-                                if (((BooleanVote) vote).isAccepted()) {
-                                    actionButtonIconView.setId("accepted");
-                                } else {
-                                    actionButtonIconView.setId("rejected");
-                                }
+                    actionNode = actionButtonIconView;
+                    actionButton.setVisible(false);
+                    if (ballot.getVote() != null) {
+                        actionButtonIconView.setVisible(true);
+                        if (vote instanceof BooleanVote) {
+                            if (((BooleanVote) vote).isAccepted()) {
+                                actionButtonIconView.setId("accepted");
                             } else {
-                                //TODO
+                                actionButtonIconView.setId("rejected");
                             }
                         } else {
-                            actionButtonIconView.setVisible(false);
+                            //TODO
                         }
+                    } else {
+                        actionButtonIconView.setVisible(false);
                     }
                     break;
                 case BREAK2:
@@ -202,12 +189,12 @@ public class ProposalListItem implements BlockListener {
         setupConfidence();
     }
 
-
+    // TODO reuse from other item
     private void setupConfidence() {
-        final Tx tx = stateService.getTxMap().get(ballot.getProposal().getTxId());
-        if (tx != null) {
-            final String txId = tx.getId();
-
+        final String txId = ballot.getProposal().getTxId();
+        Optional<Tx> optionalTx = daoFacade.getTx(txId);
+        if (optionalTx.isPresent()) {
+            Tx tx = optionalTx.get();
             // We cache the walletTransaction once found
             if (walletTransaction == null) {
                 final Optional<Transaction> transactionOptional = bsqWalletService.isWalletTransaction(txId);
@@ -248,12 +235,12 @@ public class ProposalListItem implements BlockListener {
     }
 
     public void cleanup() {
-        stateService.removeBlockListener(this);
+        daoFacade.removeBlockListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
-        PeriodService.phaseProperty().removeListener(phaseChangeListener);
+        daoFacade.phaseProperty().removeListener(phaseChangeListener);
         ballot.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 

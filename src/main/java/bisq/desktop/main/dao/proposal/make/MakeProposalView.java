@@ -31,17 +31,12 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.ValidationException;
 import bisq.core.dao.ballot.Ballot;
 import bisq.core.dao.ballot.BallotWithTransaction;
-import bisq.core.dao.ballot.CompensationBallotFactory;
-import bisq.core.dao.ballot.GenericBallotFactory;
-import bisq.core.dao.ballot.MyBallotListService;
 import bisq.core.dao.proposal.ProposalConsensus;
-import bisq.core.dao.proposal.ProposalService;
 import bisq.core.dao.proposal.ProposalType;
-import bisq.core.dao.proposal.param.ChangeParamService;
-import bisq.core.dao.state.StateService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -71,25 +66,20 @@ import java.util.Objects;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> {
-
-    private ProposalDisplay proposalDisplay;
-    private Button createButton;
-
+    private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final FeeService feeService;
-    private final MyBallotListService myBallotListService;
-    private final ProposalService proposalService;
-    private final CompensationBallotFactory compensationBallotFactory;
-    private final GenericBallotFactory genericBallotFactory;
-    private final StateService stateService;
-    private final ChangeParamService changeParamService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
+
+    private ProposalDisplay proposalDisplay;
+    private Button createButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
     private ChangeListener<ProposalType> proposalTypeChangeListener;
     private ProposalType selectedProposalType;
@@ -100,28 +90,18 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MakeProposalView(BsqWalletService bsqWalletService,
+    private MakeProposalView(DaoFacade daoFacade,
+                             BsqWalletService bsqWalletService,
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              FeeService feeService,
-                             MyBallotListService myBallotListService,
-                             ProposalService proposalService,
-                             CompensationBallotFactory compensationBallotFactory,
-                             GenericBallotFactory genericBallotFactory,
-                             StateService stateService,
-                             ChangeParamService changeParamService,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
+        this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.feeService = feeService;
-        this.myBallotListService = myBallotListService;
-        this.proposalService = proposalService;
-        this.compensationBallotFactory = compensationBallotFactory;
-        this.genericBallotFactory = genericBallotFactory;
-        this.stateService = stateService;
-        this.changeParamService = changeParamService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -174,8 +154,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             Transaction transaction = ballotWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
-            final Coin fee = ProposalConsensus.getFee(changeParamService, stateService.getChainHeight());
-
+            final Coin fee = daoFacade.getProposalFee();
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> publishProposalAndStoreBallot(ballot, transaction));
 
@@ -200,10 +179,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     }
 
     private void publishProposalAndStoreBallot(Ballot ballot, Transaction transaction) {
-        proposalService.publishBallot(ballot,
+        daoFacade.publishBallot(ballot,
                 transaction,
                 () -> {
-                    myBallotListService.storeBallot(ballot);
                     proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
                     new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
@@ -219,7 +197,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                return compensationBallotFactory.getBallotWithTransaction(proposalDisplay.nameTextField.getText(),
+                return daoFacade.getCompensationBallotWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
@@ -277,7 +255,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     private void validateInputs() {
         // We check in proposalDisplay that no invalid input as allowed
-        checkArgument(ProposalConsensus.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()), "descriptionText must not be longer than " +
+        checkArgument(ProposalConsensus.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()),
+                "descriptionText must not be longer than " +
                 ProposalConsensus.getMaxLengthDescriptionText() + " chars");
 
         // TODO add more checks for all input fields

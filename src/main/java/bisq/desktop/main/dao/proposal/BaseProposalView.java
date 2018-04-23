@@ -27,14 +27,10 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.ballot.Ballot;
-import bisq.core.dao.ballot.FilteredBallotListService;
-import bisq.core.dao.ballot.MyBallotListService;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.period.Phase;
 import bisq.core.dao.proposal.Proposal;
-import bisq.core.dao.proposal.param.ChangeParamService;
-import bisq.core.dao.state.StateService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -71,11 +67,7 @@ import java.util.stream.Collectors;
 @FxmlView
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
-    protected final MyBallotListService myBallotListService;
-    protected final StateService stateService;
-    protected final PeriodService PeriodService;
-    protected final ChangeParamService changeParamService;
-    protected final FilteredBallotListService filteredBallotListService;
+    protected final DaoFacade daoFacade;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
     protected final BSFormatter btcFormatter;
@@ -101,20 +93,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected BaseProposalView(MyBallotListService myBallotListService,
-                               FilteredBallotListService filteredBallotListService,
+    protected BaseProposalView(DaoFacade daoFacade,
                                BsqWalletService bsqWalletService,
-                               StateService stateService,
-                               PeriodService PeriodService,
-                               ChangeParamService changeParamService,
                                BsqFormatter bsqFormatter,
                                BSFormatter btcFormatter) {
-        this.myBallotListService = myBallotListService;
-        this.filteredBallotListService = filteredBallotListService;
+        this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
-        this.stateService = stateService;
-        this.PeriodService = PeriodService;
-        this.changeParamService = changeParamService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -132,12 +116,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        phaseSubscription = EasyBind.subscribe(PeriodService.phaseProperty(), this::onPhaseChanged);
+        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
-        PeriodService.phaseProperty().addListener(phaseChangeListener);
+        daoFacade.phaseProperty().addListener(phaseChangeListener);
 
-        onPhaseChanged(PeriodService.phaseProperty().get());
+        onPhaseChanged(daoFacade.phaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -149,7 +133,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        PeriodService.phaseProperty().removeListener(phaseChangeListener);
+        daoFacade.phaseProperty().removeListener(phaseChangeListener);
 
         sortedList.comparatorProperty().unbind();
 
@@ -249,10 +233,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalListItems.clear();
         proposalListItems.setAll(list.stream()
                 .map(ballot -> new ProposalListItem(ballot,
-                        myBallotListService,
-                        PeriodService,
+                        daoFacade,
                         bsqWalletService,
-                        stateService,
                         bsqFormatter))
                 .collect(Collectors.toSet()));
 

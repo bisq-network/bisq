@@ -22,7 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.period.PeriodStateChangeListener;
 import bisq.core.dao.period.Phase;
 import bisq.core.locale.Res;
@@ -49,9 +49,9 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 // The event from the StateService.Listener would notify after parsing a new block.
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
+    private final DaoFacade daoFacade;
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private final PeriodService PeriodService;
     private Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
@@ -64,8 +64,8 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(PeriodService PeriodService) {
-        this.PeriodService = PeriodService;
+    private ProposalDashboardView(DaoFacade daoFacade) {
+        this.daoFacade = daoFacade;
     }
 
     @Override
@@ -111,7 +111,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void activate() {
         super.activate();
 
-        phaseSubscription = EasyBind.subscribe(PeriodService.phaseProperty(), phase -> {
+        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), phase -> {
             if (!phase.equals(this.currentPhase)) {
                 this.currentPhase = phase;
             }
@@ -124,16 +124,16 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        PeriodService.addPeriodStateChangeListener(this);
+        daoFacade.addPeriodStateChangeListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
-        UserThread.execute(() -> onChainHeightChanged(PeriodService.getChainHeight()));
+        UserThread.execute(() -> onChainHeightChanged(daoFacade.getChainHeight()));
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        PeriodService.removePeriodStateChangeListener(this);
+        daoFacade.removePeriodStateChangeListener(this);
         phaseSubscription.unsubscribe();
     }
 
@@ -142,9 +142,9 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         if (height > 0) {
             separatedPhaseBars.updateWidth();
             phaseBarsItems.forEach(item -> {
-                int firstBlock = PeriodService.getFirstBlockOfPhase(height, item.getPhase());
-                int lastBlock = PeriodService.getLastBlockOfPhase(height, item.getPhase());
-                final int duration = PeriodService.getDurationForPhase(item.getPhase(), PeriodService.getChainHeight());
+                int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());
+                int lastBlock = daoFacade.getLastBlockOfPhase(height, item.getPhase());
+                final int duration = daoFacade.getDurationForPhase(item.getPhase());
                 item.setPeriodRange(firstBlock, lastBlock, duration);
                 double progress = 0;
                 if (height >= firstBlock && height <= lastBlock) {

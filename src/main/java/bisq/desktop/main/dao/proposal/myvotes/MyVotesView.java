@@ -30,13 +30,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.ballot.BallotList;
-import bisq.core.dao.ballot.FilteredBallotListService;
-import bisq.core.dao.ballot.MyBallotListService;
-import bisq.core.dao.myvote.MyBlindVoteService;
-import bisq.core.dao.period.PeriodService;
-import bisq.core.dao.proposal.param.ChangeParamService;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.vote.BooleanVote;
 import bisq.core.dao.vote.Vote;
 import bisq.core.locale.Res;
@@ -74,7 +69,6 @@ import java.util.stream.Collectors;
 
 @FxmlView
 public class MyVotesView extends BaseProposalView {
-    private final MyBlindVoteService myBlindVoteService;
     private final Preferences preferences;
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
@@ -89,20 +83,13 @@ public class MyVotesView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyVotesView(MyBallotListService myBallotListService,
-                        FilteredBallotListService filteredBallotListService,
+    private MyVotesView(DaoFacade daoFacade,
                         BsqWalletService bsqWalletService,
-                        StateService stateService,
-                        PeriodService PeriodService,
-                        ChangeParamService changeParamService,
                         BsqFormatter bsqFormatter,
                         BSFormatter btcFormatter,
-                        MyBlindVoteService myBlindVoteService,
                         Preferences preferences) {
 
-        super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
-                PeriodService, changeParamService, bsqFormatter, btcFormatter);
-        this.myBlindVoteService = myBlindVoteService;
+        super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
         this.preferences = preferences;
     }
 
@@ -127,8 +114,8 @@ public class MyVotesView extends BaseProposalView {
         sortedList.comparatorProperty().bind(votesTableView.comparatorProperty());
 
         voteListItems.clear();
-        List<VoteListItem> items = myBlindVoteService.getMyVoteList().stream()
-                .map(vote -> new VoteListItem(vote, bsqWalletService, stateService, PeriodService, bsqFormatter))
+        List<VoteListItem> items = daoFacade.getMyVoteList().stream()
+                .map(vote -> new VoteListItem(vote, daoFacade, bsqWalletService, bsqFormatter))
                 .collect(Collectors.toList());
         voteListItems.addAll(items);
     }

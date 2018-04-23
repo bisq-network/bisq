@@ -25,8 +25,7 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.state.StateService;
-import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 
@@ -38,7 +37,6 @@ import org.bitcoinj.core.TransactionOutput;
 import javafx.scene.control.Tooltip;
 
 import java.util.Date;
-import java.util.Optional;
 
 import lombok.Data;
 
@@ -48,39 +46,35 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Data
 class BsqTxListItem {
     private final Transaction transaction;
-    private final Optional<Tx> optionalTx;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final StateService stateService;
+    private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final String txId;
+    private final boolean isBurnedBsqTx;
 
     private int confirmations = 0;
     private final String address;
     private final String direction;
     private Coin amount;
     private boolean received;
-    private boolean isBurnedBsqTx;
 
     private TxConfidenceIndicator txConfidenceIndicator;
     private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
     BsqTxListItem(Transaction transaction,
-                  Optional<Tx> optionalTx,
                   BsqWalletService bsqWalletService,
                   BtcWalletService btcWalletService,
-                  StateService stateService,
-                  boolean isBurnedBsqTx,
+                  DaoFacade daoFacade,
                   Date date,
                   BsqFormatter bsqFormatter) {
         this.transaction = transaction;
-        this.optionalTx = optionalTx;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.stateService = stateService;
-        this.isBurnedBsqTx = isBurnedBsqTx;
+        this.daoFacade = daoFacade;
+        this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getHashAsString());
         this.date = date;
         this.bsqFormatter = bsqFormatter;
 
@@ -165,13 +159,9 @@ class BsqTxListItem {
     }
 
     public TxType getTxType() {
-        if (optionalTx.isPresent()) {
-            Optional<TxType> optionalTxType = stateService.getTxType(optionalTx.get().getId());
-            if (optionalTxType.isPresent())
-                return optionalTxType.get();
-        }
-
-        return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
+        return daoFacade.getTx(txId)
+                .flatMap(tx -> daoFacade.getTxType(tx.getId()))
+                .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
     public void setAmount(Coin amount) {

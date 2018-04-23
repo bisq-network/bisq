@@ -22,11 +22,10 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.myvote.MyVote;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.Block;
 import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.locale.Res;
@@ -55,9 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 public class VoteListItem implements BlockListener {
     @Getter
     private final MyVote myVote;
+    private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
-    private final StateService stateService;
-    private final PeriodService PeriodService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
     @Getter
@@ -76,14 +74,12 @@ public class VoteListItem implements BlockListener {
     private StringProperty stakeAsStringProperty = new SimpleStringProperty("");
 
     VoteListItem(MyVote myVote,
+                 DaoFacade daoFacade,
                  BsqWalletService bsqWalletService,
-                 StateService stateService,
-                 PeriodService PeriodService,
                  BsqFormatter bsqFormatter) {
         this.myVote = myVote;
+        this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
-        this.stateService = stateService;
-        this.PeriodService = PeriodService;
         this.bsqFormatter = bsqFormatter;
 
         txConfidenceIndicator = new TxConfidenceIndicator();
@@ -92,7 +88,7 @@ public class VoteListItem implements BlockListener {
         txConfidenceIndicator.setProgress(-1);
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
-        stateService.addBlockListener(this);
+        daoFacade.addBlockListener(this);
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
@@ -111,13 +107,12 @@ public class VoteListItem implements BlockListener {
         setupConfidence();
     }
 
-
     private void setupConfidence() {
         calculateStake();
-        final Tx tx = stateService.getTxMap().get(myVote.getBlindVote().getTxId());
-        if (tx != null) {
-            final String txId = tx.getId();
-
+        final String txId = myVote.getBlindVote().getTxId();
+        Optional<Tx> optionalTx = daoFacade.getTx(txId);
+        if (optionalTx.isPresent()) {
+            Tx tx = optionalTx.get();
             // We cache the walletTransaction once found
             if (walletTransaction == null) {
                 final Optional<Transaction> transactionOptional = bsqWalletService.isWalletTransaction(txId);
@@ -153,7 +148,7 @@ public class VoteListItem implements BlockListener {
     private void calculateStake() {
         if (stake == 0) {
             String txId = myVote.getTxId();
-            stake = stateService.getUnspentBlindVoteStakeTxOutputs().stream()
+            stake = daoFacade.getUnspentBlindVoteStakeTxOutputs().stream()
                     .filter(txOutput -> txOutput.getTxId().equals(txId))
                     .filter(txOutput -> txOutput.getIndex() == 0)
                     .mapToLong(TxOutput::getValue)
@@ -171,7 +166,7 @@ public class VoteListItem implements BlockListener {
 
     public void cleanup() {
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
-        stateService.removeBlockListener(this);
+        daoFacade.removeBlockListener(this);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
     }

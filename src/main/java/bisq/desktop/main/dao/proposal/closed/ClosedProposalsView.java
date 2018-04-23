@@ -23,11 +23,7 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.ballot.FilteredBallotListService;
-import bisq.core.dao.ballot.MyBallotListService;
-import bisq.core.dao.period.PeriodService;
-import bisq.core.dao.proposal.param.ChangeParamService;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.DaoFacade;
 
 import javax.inject.Inject;
 
@@ -39,17 +35,12 @@ public class ClosedProposalsView extends BaseProposalView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedProposalsView(MyBallotListService myBallotListService,
-                                FilteredBallotListService filteredBallotListService,
-                                PeriodService PeriodService,
+    private ClosedProposalsView(DaoFacade daoFacade,
                                 BsqWalletService bsqWalletService,
-                                StateService stateService,
-                                ChangeParamService changeParamService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
 
-        super(myBallotListService, filteredBallotListService, bsqWalletService, stateService,
-                PeriodService, changeParamService, bsqFormatter, btcFormatter);
+        super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
     }
 
     @Override
@@ -63,18 +54,18 @@ public class ClosedProposalsView extends BaseProposalView {
     @Override
     protected void activate() {
         super.activate();
-        filteredBallotListService.getClosedBallots().addListener(proposalListChangeListener);
+        daoFacade.getClosedBallots().addListener(proposalListChangeListener);
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        filteredBallotListService.getClosedBallots().removeListener(proposalListChangeListener);
+        daoFacade.getClosedBallots().removeListener(proposalListChangeListener);
     }
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(filteredBallotListService.getClosedBallots());
+        doUpdateProposalList(daoFacade.getClosedBallots());
     }
 }
 
