@@ -24,6 +24,7 @@ public class VersionResourceIT {
         ApiTestHelper.waitForAllServicesToBeReady();
     }
 
+    @InSequence(1)
     @Test
     public void getVersionDetails_always_returns200() throws InterruptedException {
         final int alicePort = getAlicePort();
