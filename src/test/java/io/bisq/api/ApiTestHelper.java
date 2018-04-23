@@ -13,11 +13,14 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.spi.CubeOutput;
+import org.hamcrest.core.AnyOf;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 
 public final class ApiTestHelper {
@@ -72,6 +75,10 @@ public final class ApiTestHelper {
 //
         then().
                         extract().as(P2PNetworkStatus.class);
+    }
+
+    public static AnyOf<Object> isIntegerOrLong() {
+        return anyOf(instanceOf(Integer.class), instanceOf(Long.class));
     }
 
     public static ValidatableResponse registerArbitrator(int apiPort) throws InterruptedException {

@@ -18,10 +18,7 @@ import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.BuyerAsMakerTrade;
-import bisq.core.trade.SellerAsMakerTrade;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
+import bisq.core.trade.*;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.protocol.*;
@@ -370,6 +367,14 @@ public class BisqProxy {
         final ObservableList<Trade> tradableList = tradeManager.getTradableList();
         if (null != tradableList) return tradableList.sorted();
         return Collections.emptyList();
+    }
+
+    public List<ClosedTradableDetails> getClosedTradableList() {
+        final ClosedTradableConverter closedTradableConverter = injector.getInstance(ClosedTradableConverter.class);
+        return closedTradableManager.getClosedTradables().stream()
+                .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
+                .map(closedTradableConverter::convert)
+                .collect(toList());
     }
 
     public Trade getTrade(String tradeId) {

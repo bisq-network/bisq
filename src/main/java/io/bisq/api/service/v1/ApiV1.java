@@ -30,6 +30,11 @@ public class ApiV1 {
         return new ArbitratorResource(bisqProxy);
     }
 
+    @Path("closed-tradables")
+    public ClosedTradableResource getClosedTradableResource() {
+        return new ClosedTradableResource(bisqProxy);
+    }
+
     @Path("currencies")
     public CurrencyResource getCurrencyResource() {
         return new CurrencyResource(bisqProxy);

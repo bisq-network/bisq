@@ -20,22 +20,22 @@ import static org.hamcrest.Matchers.*;
 public class TradeResourceIT {
 
     @DockerContainer
-    private Container alice;
+    Container alice;
 
     @DockerContainer
-    private Container bob;
+    Container bob;
 
     @DockerContainer
-    private Container arbitrator;
+    Container arbitrator;
 
     @SuppressWarnings("unused")
     @DockerContainer(order = 4)
-    private Container seedNode;
+    Container seedNode;
 
     @DockerContainer
-    private Container bitcoin;
+    Container bitcoin;
 
-    private OfferResourceIT offerResourceIT = new OfferResourceIT();
+    OfferResourceIT offerResourceIT = new OfferResourceIT();
 
     private static String tradeId;
 
