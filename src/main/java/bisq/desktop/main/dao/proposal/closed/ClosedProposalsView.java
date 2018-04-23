@@ -23,11 +23,11 @@ import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.period.PeriodService;
-import bisq.core.dao.consensus.proposal.param.ChangeParamService;
-import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.consensus.ballot.FilteredBallotListService;
-import bisq.core.dao.consensus.ballot.MyBallotListService;
+import bisq.core.dao.ballot.FilteredBallotListService;
+import bisq.core.dao.ballot.MyBallotListService;
+import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.proposal.param.ChangeParamService;
+import bisq.core.dao.state.StateService;
 
 import javax.inject.Inject;
 

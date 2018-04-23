@@ -22,9 +22,9 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dao.consensus.period.PeriodService;
-import bisq.core.dao.consensus.period.PeriodStateChangeListener;
-import bisq.core.dao.consensus.period.Phase;
+import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.period.PeriodStateChangeListener;
+import bisq.core.dao.period.Phase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;

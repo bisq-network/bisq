@@ -23,16 +23,16 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.ballot.Ballot;
-import bisq.core.dao.consensus.period.PeriodService;
-import bisq.core.dao.consensus.period.Phase;
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
-import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.consensus.state.blockchain.Tx;
-import bisq.core.dao.consensus.vote.BooleanVote;
-import bisq.core.dao.consensus.vote.Vote;
-import bisq.core.dao.consensus.ballot.MyBallotListService;
+import bisq.core.dao.ballot.Ballot;
+import bisq.core.dao.ballot.MyBallotListService;
+import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.period.Phase;
+import bisq.core.dao.state.Block;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.vote.BooleanVote;
+import bisq.core.dao.vote.Vote;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;

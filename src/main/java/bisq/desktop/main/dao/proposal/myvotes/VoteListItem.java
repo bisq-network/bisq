@@ -22,13 +22,13 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.consensus.myvote.MyVote;
-import bisq.core.dao.consensus.period.PeriodService;
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
-import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.consensus.state.blockchain.Tx;
-import bisq.core.dao.consensus.state.blockchain.TxOutput;
+import bisq.core.dao.myvote.MyVote;
+import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.state.Block;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;

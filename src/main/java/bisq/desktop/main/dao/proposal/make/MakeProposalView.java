@@ -32,16 +32,16 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.ValidationException;
-import bisq.core.dao.consensus.ballot.Ballot;
-import bisq.core.dao.consensus.ballot.BallotWithTransaction;
-import bisq.core.dao.consensus.ballot.CompensationBallotFactory;
-import bisq.core.dao.consensus.ballot.GenericBallotFactory;
-import bisq.core.dao.consensus.ballot.MyBallotListService;
-import bisq.core.dao.consensus.proposal.ProposalConsensus;
-import bisq.core.dao.consensus.proposal.ProposalService;
-import bisq.core.dao.consensus.proposal.ProposalType;
-import bisq.core.dao.consensus.proposal.param.ChangeParamService;
-import bisq.core.dao.consensus.state.StateService;
+import bisq.core.dao.ballot.Ballot;
+import bisq.core.dao.ballot.BallotWithTransaction;
+import bisq.core.dao.ballot.CompensationBallotFactory;
+import bisq.core.dao.ballot.GenericBallotFactory;
+import bisq.core.dao.ballot.MyBallotListService;
+import bisq.core.dao.proposal.ProposalConsensus;
+import bisq.core.dao.proposal.ProposalService;
+import bisq.core.dao.proposal.ProposalType;
+import bisq.core.dao.proposal.param.ChangeParamService;
+import bisq.core.dao.state.StateService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -71,7 +71,6 @@ import java.util.Objects;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> {

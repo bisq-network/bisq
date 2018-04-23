@@ -25,9 +25,9 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.consensus.state.blockchain.Tx;
-import bisq.core.dao.consensus.state.blockchain.TxType;
+import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Coin;

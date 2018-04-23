@@ -32,11 +32,11 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.consensus.state.Block;
-import bisq.core.dao.consensus.state.BlockListener;
-import bisq.core.dao.consensus.state.StateService;
-import bisq.core.dao.consensus.state.blockchain.Tx;
-import bisq.core.dao.consensus.state.blockchain.TxType;
+import bisq.core.dao.state.Block;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 

@@ -21,7 +21,7 @@ import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.consensus.state.StateService;
+import bisq.core.dao.state.StateService;
 import bisq.core.trade.Tradable;
 
 import org.bitcoinj.core.Transaction;
