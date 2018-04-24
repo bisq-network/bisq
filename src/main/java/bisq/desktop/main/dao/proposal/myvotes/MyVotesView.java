@@ -31,9 +31,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.ballot.BallotList;
-import bisq.core.dao.vote.BooleanVote;
-import bisq.core.dao.vote.Vote;
+import bisq.core.dao.voting.ballot.BallotList;
+import bisq.core.dao.voting.vote.BooleanVote;
+import bisq.core.dao.voting.vote.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 

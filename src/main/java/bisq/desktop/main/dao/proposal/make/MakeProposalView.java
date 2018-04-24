@@ -32,11 +32,11 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.ballot.Ballot;
-import bisq.core.dao.ballot.BallotWithTransaction;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.proposal.ProposalConsensus;
-import bisq.core.dao.proposal.ProposalType;
+import bisq.core.dao.voting.ballot.Ballot;
+import bisq.core.dao.voting.ballot.BallotWithTransaction;
+import bisq.core.dao.voting.proposal.ProposalConsensus;
+import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
