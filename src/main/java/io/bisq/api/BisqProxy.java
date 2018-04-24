@@ -277,6 +277,10 @@ public class BisqProxy {
             return failFuture(futureResult, e);
         }
 
+        if (offer.getMakerNodeAddress().equals(p2PService.getAddress())) {
+            return failFuture(futureResult, new OfferTakerSameAsMakerException("Taker's address same as maker's"));
+        }
+
         // check the paymentAccountId is valid
         final PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
         if (paymentAccount == null) {

@@ -544,6 +544,30 @@ public class OfferResourceIT {
 
     @InSequence(12)
     @Test
+    public void takeOffer_takerSameAsMaker_returns428() {
+        final int alicePort = getAlicePort();
+
+        final TakeOffer payload = new TakeOffer();
+        payload.amount = 6250000;
+        payload.paymentAccountId = bobPaymentAccount.id;
+
+        final String offerId = createdOffer.id;
+
+        given().
+                port(alicePort).
+                body(payload).
+                contentType(ContentType.JSON).
+//
+        when().
+                post("/api/v1/offers/" + offerId + "/take").
+//
+        then().
+                statusCode(428)
+        ;
+    }
+
+    @InSequence(13)
+    @Test
     public void takeOffer_validPaymentMethodAndHasFunds_returnsTrade() {
         final int alicePort = getAlicePort();
         final int bobPort = getBobPort();
@@ -629,7 +653,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(13)
+    @InSequence(14)
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
@@ -648,7 +672,7 @@ public class OfferResourceIT {
         assertOfferExists(bobPort, createdOffer.id);
     }
 
-    @InSequence(14)
+    @InSequence(15)
     @Test
     public void cancelOffer_ownExistingOffer_returns200() throws Exception {
         final int alicePort = getAlicePort();
@@ -672,7 +696,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(15)
+    @InSequence(16)
     @Test
     public void cancelOffer_ownNonExistingOffer_returns404() throws Exception {
         final int alicePort = getAlicePort();
