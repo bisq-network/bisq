@@ -124,7 +124,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        daoFacade.addPeriodStateChangeListener(this);
+        daoFacade.addChainHeightListener(this);
 
         // We need to delay as otherwise the periodService has not been updated yet.
         UserThread.execute(() -> onChainHeightChanged(daoFacade.getChainHeight()));
@@ -133,10 +133,11 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     @Override
     protected void deactivate() {
         super.deactivate();
-        daoFacade.removePeriodStateChangeListener(this);
+        daoFacade.removeChainHeightListener(this);
         phaseSubscription.unsubscribe();
     }
 
+    // ChainHeightListener
     @Override
     public void onChainHeightChanged(int height) {
         if (height > 0) {
