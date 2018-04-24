@@ -99,11 +99,11 @@ public class OfferResourceIT {
                 contentType(ContentType.JSON).
 //
         when().
-                post("/api/v1/offers").
+                        post("/api/v1/offers").
 //
         then().
-                statusCode(expectedStatusCode)
-        ;
+                        statusCode(expectedStatusCode)
+                ;
     }
 
     @InSequence(2)
@@ -246,6 +246,26 @@ public class OfferResourceIT {
 
     @InSequence(5)
     @Test
+    public void createOffer_amountTooHigh_returns426() {
+        final int alicePort = getAlicePort();
+
+        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        offer.amount = 100000000;
+
+        given().
+                port(alicePort).
+                body(offer).
+                contentType(ContentType.JSON).
+//
+        when().
+                post("/api/v1/offers").
+//
+        then().
+                statusCode(426);
+    }
+
+    @InSequence(6)
+    @Test
     public void createOffer_validPayloadAndHasFunds_returnsOffer() {
         final int alicePort = getAlicePort();
 
@@ -299,7 +319,7 @@ public class OfferResourceIT {
                         extract().as(OfferDetail.class);
     }
 
-    @InSequence(6)
+    @InSequence(7)
     @Test
     public void listOffers_always_returnsOffers() {
         final int alicePort = getAlicePort();
@@ -352,7 +372,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(7)
+    @InSequence(8)
     @Test
     public void createOffer_validMarketPriceBasedOfferAndHasFunds_returnsOffer() throws Exception {
         final int alicePort = getAlicePort();
@@ -368,54 +388,53 @@ public class OfferResourceIT {
                 contentType(ContentType.JSON).
 //
         when().
-                        post("/api/v1/offers").
+                post("/api/v1/offers").
 //
         then().
-                        statusCode(200).
-                        and().body("acceptedCountryCodes", equalTo(alicePaymentAccount.acceptedCountries)).
-                        and().body("amount", equalTo(6250000)).
-                        and().body("arbitratorNodeAddresses", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
-                        and().body("baseCurrencyCode", equalTo("BTC")).
-                        and().body("bankId", equalTo(alicePaymentAccount.bic)).
-                        and().body("blockHeightAtOfferCreation", isA(Integer.class)).
-                        and().body("buyerSecurityDeposit", equalTo(offer.buyerSecurityDeposit.intValue())).
-                        and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
-                        and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
-                        and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
-                        and().body("date", isA(Long.class)).
-                        and().body("direction", equalTo(OfferPayload.Direction.BUY.name())).
-                        and().body("id", isA(String.class)).
-                        and().body("isCurrencyForMakerFeeBtc", equalTo(true)).
-                        and().body("isPrivateOffer", equalTo(false)).
-                        and().body("lowerClosePrice", equalTo(0)).
-                        and().body("makerFee", equalTo(12500)).
-                        and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
-                        and().body("marketPriceMargin", equalTo(.12f)).
-                        and().body("maxTradeLimit", equalTo(25000000)).
-                        and().body("maxTradePeriod", equalTo(518400000)).
-                        and().body("minAmount", equalTo(6250000)).
-                        and().body("offerFeePaymentTxId", isA(String.class)).
-                        and().body("ownerNodeAddress", equalTo(ApiTestHelper.getP2PNetworkStatus(alicePort).address)).
-                        and().body("paymentMethodId", equalTo(alicePaymentAccount.paymentMethod)).
-                        and().body("price", equalTo(0)).
-                        and().body("protocolVersion", equalTo(1)).
-                        and().body("sellerSecurityDeposit", equalTo(300000)).
-                        and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
+                statusCode(200).
+                and().body("acceptedCountryCodes", equalTo(alicePaymentAccount.acceptedCountries)).
+                and().body("amount", equalTo(6250000)).
+                and().body("arbitratorNodeAddresses", equalTo(ApiTestHelper.getAcceptedArbitrators(alicePort))).
+                and().body("baseCurrencyCode", equalTo("BTC")).
+                and().body("bankId", equalTo(alicePaymentAccount.bic)).
+                and().body("blockHeightAtOfferCreation", isA(Integer.class)).
+                and().body("buyerSecurityDeposit", equalTo(offer.buyerSecurityDeposit.intValue())).
+                and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
+                and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
+                and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
+                and().body("date", isA(Long.class)).
+                and().body("direction", equalTo(OfferPayload.Direction.BUY.name())).
+                and().body("id", isA(String.class)).
+                and().body("isCurrencyForMakerFeeBtc", equalTo(true)).
+                and().body("isPrivateOffer", equalTo(false)).
+                and().body("lowerClosePrice", equalTo(0)).
+                and().body("makerFee", equalTo(12500)).
+                and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
+                and().body("marketPriceMargin", equalTo(.12f)).
+                and().body("maxTradeLimit", equalTo(25000000)).
+                and().body("maxTradePeriod", equalTo(518400000)).
+                and().body("minAmount", equalTo(6250000)).
+                and().body("offerFeePaymentTxId", isA(String.class)).
+                and().body("ownerNodeAddress", equalTo(ApiTestHelper.getP2PNetworkStatus(alicePort).address)).
+                and().body("paymentMethodId", equalTo(alicePaymentAccount.paymentMethod)).
+                and().body("price", equalTo(0)).
+                and().body("protocolVersion", equalTo(1)).
+                and().body("sellerSecurityDeposit", equalTo(300000)).
+                and().body("state", equalTo(Offer.State.OFFER_FEE_PAID.name())).
                 and().body("txFee", isA(Integer.class)).
-                        and().body("upperClosePrice", equalTo(0)).
-                        and().body("useAutoClose", equalTo(false)).
-                        and().body("useMarketBasedPrice", equalTo(true)).
-                        and().body("useReOpenAfterAutoClose", equalTo(false)).
+                and().body("upperClosePrice", equalTo(0)).
+                and().body("useAutoClose", equalTo(false)).
+                and().body("useMarketBasedPrice", equalTo(true)).
+                and().body("useReOpenAfterAutoClose", equalTo(false)).
                 and().body("versionNr", isA(String.class));
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_offerNotFound_returns404status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template("non-existing-id", payload, 404);
     }
-
 
     private void takeOffer_template(String offerId, TakeOffer payload, int expectedStatusCode) {
         given().
@@ -431,21 +450,21 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_validPayloadButNoFunds_returns427status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template(createdOffer.id, payload, 427);
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_paymentAccountIdMissing_returns422status() {
         final TakeOffer payload = new TakeOffer(null, 1);
         takeOffer_template(createdOffer.id, payload, 422);
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_amountMissing_returns422() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
@@ -464,14 +483,14 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_paymentAccountNotFound_returns425() {
         final TakeOffer payload = new TakeOffer("non-existing-account", 1);
         takeOffer_template(createdOffer.id, payload, 425);
     }
 
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_incompatiblePaymentAccount_returns423() {
         final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
@@ -479,7 +498,7 @@ public class OfferResourceIT {
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_noArbitratorSelected_returns424() {
         ApiTestHelper.deselectAllArbitrators(getBobPort());
@@ -488,7 +507,7 @@ public class OfferResourceIT {
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
-    @InSequence(8)
+    @InSequence(9)
     @Test
     public void takeOffer_noOverlappingArbitrator_returnsXXX() throws Exception {
         final int bobPort = getBobPort();
@@ -505,7 +524,7 @@ public class OfferResourceIT {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void selectSameArbitratorAsInOffer() {
         final int bobPort = getBobPort();
@@ -514,7 +533,7 @@ public class OfferResourceIT {
         ApiTestHelper.selectArbitrator(bobPort, offer.arbitratorNodeAddresses.get(0));
     }
 
-    @InSequence(10)
+    @InSequence(11)
     @Test
     public void fundBobWallet() {
         ApiTestHelper.generateBlocks(bitcoin, 101);
@@ -523,7 +542,7 @@ public class OfferResourceIT {
         ApiTestHelper.generateBlocks(bitcoin, 1);
     }
 
-    @InSequence(11)
+    @InSequence(12)
     @Test
     public void takeOffer_validPaymentMethodAndHasFunds_returnsTrade() {
         final int alicePort = getAlicePort();
@@ -610,7 +629,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(12)
+    @InSequence(13)
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
@@ -629,7 +648,7 @@ public class OfferResourceIT {
         assertOfferExists(bobPort, createdOffer.id);
     }
 
-    @InSequence(13)
+    @InSequence(14)
     @Test
     public void cancelOffer_ownExistingOffer_returns200() throws Exception {
         final int alicePort = getAlicePort();
@@ -653,7 +672,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(14)
+    @InSequence(15)
     @Test
     public void cancelOffer_ownNonExistingOffer_returns404() throws Exception {
         final int alicePort = getAlicePort();

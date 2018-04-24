@@ -249,9 +249,11 @@ public class BisqProxy {
                 fundUsingBisqWallet,
                 transaction -> futureResult.complete(offer),
                 error -> {
-                    if (error.contains("Insufficient money")) {
+                    if (error.contains("Insufficient money"))
                         futureResult.completeExceptionally(new InsufficientMoneyException(error));
-                    } else
+                    else if (error.contains("Amount is larger"))
+                        futureResult.completeExceptionally(new AmountTooHighException(error));
+                    else
                         futureResult.completeExceptionally(new RuntimeException(error));
                 });
 
