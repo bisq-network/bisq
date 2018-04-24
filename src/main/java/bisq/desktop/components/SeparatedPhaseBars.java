@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.DaoPhase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -143,7 +143,7 @@ public class SeparatedPhaseBars extends HBox {
 
     @Getter
     public static class SeparatedPhaseBarsItem {
-        private final Phase phase;
+        private final DaoPhase.Phase phase;
         private final boolean showBlocks;
         private final IntegerProperty startBlockProperty = new SimpleIntegerProperty();
         private final IntegerProperty lastBlockProperty = new SimpleIntegerProperty();
@@ -154,7 +154,7 @@ public class SeparatedPhaseBars extends HBox {
         @Setter
         private Label titleLabel;
 
-        public SeparatedPhaseBarsItem(Phase phase, boolean showBlocks) {
+        public SeparatedPhaseBarsItem(DaoPhase.Phase phase, boolean showBlocks) {
             this.phase = phase;
             this.showBlocks = showBlocks;
         }

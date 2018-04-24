@@ -34,7 +34,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.vote.BooleanVote;
 import bisq.core.locale.Res;
@@ -241,11 +241,11 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     @Override
-    protected void onPhaseChanged(Phase phase) {
+    protected void onPhaseChanged(DaoPhase.Phase phase) {
         if (phase != null) {
             super.onPhaseChanged(phase);
 
-            changeVoteViewItemsVisibility(phase == Phase.BLIND_VOTE);
+            changeVoteViewItemsVisibility(phase == DaoPhase.Phase.BLIND_VOTE);
 
             if (removeButton != null) {
                 removeButton.setManaged(false);

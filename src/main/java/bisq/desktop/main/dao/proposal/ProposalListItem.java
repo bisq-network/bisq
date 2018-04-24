@@ -24,7 +24,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.DaoPhase;
 import bisq.core.dao.state.BlockListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
@@ -69,7 +69,7 @@ public class ProposalListItem implements BlockListener {
     private TxConfidenceListener txConfidenceListener;
     private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     private Transaction walletTransaction;
-    private ChangeListener<Phase> phaseChangeListener;
+    private ChangeListener<DaoPhase.Phase> phaseChangeListener;
     private AutoTooltipButton actionButton;
     private ImageView actionButtonIconView;
     @Setter
@@ -115,7 +115,7 @@ public class ProposalListItem implements BlockListener {
         ballot.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(Phase phase, Vote vote) {
+    public void applyState(DaoPhase.Phase phase, Vote vote) {
         if (phase != null) {
             actionButton.setText("");
             actionButton.setVisible(false);
@@ -218,7 +218,6 @@ public class ProposalListItem implements BlockListener {
                 int depth = bsqWalletService.getChainHeightProperty().get() - tx.getBlockHeight() + 1;
                 if (depth > 0)
                     updateConfidence(TransactionConfidence.ConfidenceType.BUILDING, depth, -1);
-                //log.error("name={}, id ={}, depth={}", compensationRequest.getPayload().getName(), compensationRequest.getPayload().getUid(), depth);
             }
 
             final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);

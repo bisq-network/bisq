@@ -23,7 +23,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.Phase;
+import bisq.core.dao.period.DaoPhase;
 import bisq.core.dao.state.ChainHeightListener;
 import bisq.core.locale.Res;
 
@@ -52,7 +52,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     private final DaoFacade daoFacade;
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private Phase currentPhase;
+    private DaoPhase.Phase currentPhase;
     private Subscription phaseSubscription;
     private GridPane gridPane;
     private int gridRow = 0;
@@ -96,14 +96,14 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
 
     private SeparatedPhaseBars createSeparatedPhaseBars() {
         phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.PROPOSAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK1, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BLIND_VOTE, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK2, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.VOTE_REVEAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.VOTE_RESULT, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(Phase.BREAK4, false));
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.PROPOSAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK1, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BLIND_VOTE, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_RESULT, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }
 
