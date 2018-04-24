@@ -921,7 +921,7 @@ public class BisqProxy {
         final List<FiatCurrency> fiatCurrencies = preferences.getFiatCurrencies();
         final List<CryptoCurrency> cryptoCurrencies = preferences.getCryptoCurrencies();
         final Stream<String> codesStream;
-        if (0 == codes.length)
+        if (null == codes || 0 == codes.length)
             codesStream = Stream.concat(fiatCurrencies.stream(), cryptoCurrencies.stream()).map(TradeCurrency::getCode);
         else
             codesStream = Arrays.asList(codes).stream();

@@ -29,7 +29,7 @@ public class CurrencyResource {
         return bisqProxy.getCurrencyList();
     }
 
-    @ApiOperation("List available currencies")
+    @ApiOperation(value = "Get market prices", notes = "If currencyCodes is not provided then currencies from preferences are used.")
     @GET
     @Path("/prices")
     public PriceFeed getPriceFeed(@QueryParam("currencyCodes") String currencyCodes) {
