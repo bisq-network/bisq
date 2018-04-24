@@ -137,8 +137,9 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
-    private InputTextField buyerSecurityDepositInputTextField, amountTextField, minAmountTextField,
-            fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
+    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField,
+            volumeTextField;
+    protected InputTextField amountTextField, minAmountTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
