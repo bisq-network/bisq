@@ -18,6 +18,8 @@ import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.*;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -912,6 +914,25 @@ public class BisqProxy {
             return new AuthResult(tokenRegistry.generateToken());
         }
         return null;
+    }
+
+    public PriceFeed getPriceFeed(String[] codes) {
+        final PriceFeedService priceFeedService = injector.getInstance(PriceFeedService.class);
+        final List<FiatCurrency> fiatCurrencies = preferences.getFiatCurrencies();
+        final List<CryptoCurrency> cryptoCurrencies = preferences.getCryptoCurrencies();
+        final Stream<String> codesStream;
+        if (null == codes || 0 == codes.length)
+            codesStream = Stream.concat(fiatCurrencies.stream(), cryptoCurrencies.stream()).map(TradeCurrency::getCode);
+        else
+            codesStream = Arrays.asList(codes).stream();
+        final List<MarketPrice> marketPrices = codesStream
+                .map(priceFeedService::getMarketPrice)
+                .filter(i -> null != i)
+                .collect(toList());
+        final PriceFeed priceFeed = new PriceFeed();
+        for (MarketPrice price : marketPrices)
+            priceFeed.prices.put(price.getCurrencyCode(), price.getPrice());
+        return priceFeed;
     }
 
     public enum WalletAddressPurpose {
