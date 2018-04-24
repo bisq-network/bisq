@@ -23,8 +23,8 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.PeriodStateChangeListener;
 import bisq.core.dao.period.Phase;
+import bisq.core.dao.state.ChainHeightListener;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -44,11 +44,11 @@ import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
-// We use here PeriodStateChangeListener because we are interested in period changes not in the result of a completed
-// block. The event from the PeriodStateChangeListener is sent before parsing starts.
+// We use here ChainHeightListener because we are interested in period changes not in the result of a completed
+// block. The event from the ChainHeightListener is sent before parsing starts.
 // The event from the StateService.Listener would notify after parsing a new block.
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements PeriodStateChangeListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
     private final DaoFacade daoFacade;
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
