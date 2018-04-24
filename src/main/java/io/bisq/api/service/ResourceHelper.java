@@ -12,6 +12,8 @@ public final class ResourceHelper {
     }
 
     public static Response.ResponseBuilder toValidationErrorResponse(Throwable cause, int status) {
-        return Response.status(status).entity(new ValidationErrorMessage(ImmutableList.of(cause.getMessage())));
+        final String message = cause.getMessage();
+        final ImmutableList<String> list = null == message ? ImmutableList.of() : ImmutableList.of(message);
+        return Response.status(status).entity(new ValidationErrorMessage(list));
     }
 }
