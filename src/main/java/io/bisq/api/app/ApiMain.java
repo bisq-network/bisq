@@ -23,6 +23,7 @@ import bisq.common.util.RestartUtil;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
+import io.bisq.api.BackupRestoreManager;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -74,8 +75,9 @@ public class ApiMain extends BisqExecutable {
         BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 
         // need to call that before BisqAppMain().execute(args)
-        BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
-
+        final String appDir = bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY);
+        BisqExecutable.initAppDir(appDir);
+        new BackupRestoreManager(appDir).restoreIfRequested();
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
         Thread.currentThread().setContextClassLoader(ApiMain.class.getClassLoader());

@@ -94,9 +94,15 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)
     private boolean useDevPrivilegeKeys = false;
 
+    private Runnable shutdown;
+
     @Override
     public String getName() {
         return "Bisq API";
+    }
+
+    public void setShutdown(Runnable shutdown) {
+        this.shutdown = shutdown;
     }
 
     @Override
@@ -121,7 +127,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration, Environment environment) {
         BisqProxy bisqProxy = new BisqProxy(injector, accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, user, feeService, preferences, bsqWalletService,
-                walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
+                walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys, shutdown);
         preferences.readPersisted();
         setupCors(environment);
         setupAuth(environment);

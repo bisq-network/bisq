@@ -1,5 +1,7 @@
 package io.bisq.api;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -13,14 +15,20 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+@Slf4j
 public class BackupManager {
 
     private Path appDataDirectoryPath;
 
+    public BackupManager(Path appDataDirectoryPath) {
+        this.appDataDirectoryPath = appDataDirectoryPath;
+    }
+
     public BackupManager(String appDataDirectory) {
-        this.appDataDirectoryPath = Paths.get(appDataDirectory);
+        this(Paths.get(appDataDirectory));
     }
 
     public String createBackup() throws IOException {
@@ -30,15 +38,14 @@ public class BackupManager {
 
         final String dateString = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         final String backupFilename = "backup-" + dateString + ".zip";
-        final Path backupFilePath = getBackupFilenameAndPath(backupFilename);
+        final Path backupFilePath = getBackupFilePath(backupFilename);
 
-        final Path relativeBackupDirPath = appDataDirectoryPath.relativize(backupDirectoryPath);
-        backup(appDataDirectoryPath, backupFilePath.toString(), path -> path.startsWith(relativeBackupDirPath));
+        backup(appDataDirectoryPath, backupFilePath.toString());
         return backupFilename;
     }
 
     @NotNull
-    private Path getBackupFilenameAndPath(String backupFilename) {
+    public Path getBackupFilePath(String backupFilename) {
         return getBackupDirectoryPath().resolve(backupFilename);
     }
 
@@ -56,21 +63,42 @@ public class BackupManager {
 
     public FileInputStream getBackup(String fileName) throws FileNotFoundException {
         try {
-            return new FileInputStream(getBackupFilenameAndPath(fileName).toFile());
+            return new FileInputStream(getBackupFilePath(fileName).toFile());
         } catch (FileNotFoundException e) {
             throw fileNotFound(fileName);
         }
     }
 
     public boolean removeBackup(String fileName) throws FileNotFoundException {
-        final File file = getBackupFilenameAndPath(fileName).toFile();
+        final File file = getBackupFilePath(fileName).toFile();
         if (!file.exists()) {
             throw fileNotFound(fileName);
         }
         return file.delete();
     }
 
-    private void backup(Path sourceDir, String outputZipFilename, Function<Path, Boolean> shouldSkip) throws IOException {
+    public void restore(String fileName) throws IOException {
+        try (ZipInputStream zipInputStream = new ZipInputStream(getBackup(fileName))) {
+            createBackup();
+            purgeAppDataDirectory();
+            ZipEntry zipEntry;
+            while (null != (zipEntry = zipInputStream.getNextEntry())) {
+                String zipEntryName = zipEntry.getName();
+                File newFile = appDataDirectoryPath.resolve(zipEntryName).toFile();
+                final File parentDirectory = newFile.getParentFile();
+                if (!parentDirectory.exists() && !parentDirectory.mkdirs())
+                    log.error("Problem restoring backup. Unable to create file: " + parentDirectory.getAbsolutePath());
+
+                IOUtils.copy(zipInputStream, new FileOutputStream(newFile));
+
+                zipInputStream.closeEntry();
+            }
+        }
+    }
+
+    private void backup(Path sourceDir, String outputZipFilename) throws IOException {
+        final Path relativeBackupDirPath = appDataDirectoryPath.relativize(getBackupDirectoryPath());
+        final Function<Path, Boolean> shouldSkip = path -> path.startsWith(relativeBackupDirPath);
         try (
                 FileOutputStream out = new FileOutputStream(outputZipFilename);
                 ZipOutputStream outputStream = new ZipOutputStream(out)
@@ -99,5 +127,26 @@ public class BackupManager {
     @NotNull
     private FileNotFoundException fileNotFound(String fileName) {
         return new FileNotFoundException("File not found: " + fileName);
+    }
+
+    private void purgeAppDataDirectory() throws IOException {
+        final Function<Path, Boolean> shouldSkip = path -> path.equals(appDataDirectoryPath) || path.startsWith(getBackupDirectoryPath());
+        Files.walkFileTree(appDataDirectoryPath, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                if (!shouldSkip.apply(dir))
+                    Files.delete(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path targetFile, BasicFileAttributes attributes) {
+                if (shouldSkip.apply(targetFile))
+                    return FileVisitResult.SKIP_SUBTREE;
+                if (!targetFile.toFile().delete())
+                    log.warn("Unable to purge data directory. Unable to delete file: " + targetFile);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }

@@ -1,6 +1,6 @@
 package io.bisq.api.service.v1;
 
-import io.bisq.api.BisqProxy;
+import io.bisq.api.*;
 import io.bisq.api.model.BackupList;
 import io.bisq.api.model.CreatedBackup;
 import io.swagger.annotations.Api;
@@ -49,6 +49,17 @@ public class BackupResource {
                     .build();
         } catch (FileNotFoundException e) {
             return toValidationErrorResponse(e, 404).type(MediaType.APPLICATION_JSON).build();
+        }
+    }
+
+    @ApiOperation(value = "Restore backup")
+    @POST
+    @Path("/{path}/restore")
+    public void restoreBackup(@PathParam("path") String fileName) throws IOException {
+        try {
+            bisqProxy.requestBackupRestore(fileName);
+        } catch (FileNotFoundException e) {
+            throw new io.bisq.api.NotFoundException(e.getMessage());
         }
     }
 

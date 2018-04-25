@@ -45,7 +45,9 @@ public class Api {
         try {
             PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
 
-            injector.getInstance(BisqApiApplication.class).run("server", "bisq-api.yml");
+            final BisqApiApplication bisqApiApplication = injector.getInstance(BisqApiApplication.class);
+            bisqApiApplication.setShutdown(this::shutDown);
+            bisqApiApplication.run("server", "bisq-api.yml");
             /*
             ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
             // copy encryption handling from MainViewModel - initWalletService()
