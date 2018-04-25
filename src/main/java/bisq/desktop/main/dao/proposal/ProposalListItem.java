@@ -29,8 +29,8 @@ import bisq.core.dao.state.BlockListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.vote.BooleanVote;
-import bisq.core.dao.voting.vote.Vote;
+import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;

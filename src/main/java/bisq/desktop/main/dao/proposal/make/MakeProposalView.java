@@ -35,8 +35,8 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.ValidationException;
 import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.BallotWithTransaction;
-import bisq.core.dao.voting.proposal.ProposalConsensus;
-import bisq.core.dao.voting.proposal.ProposalType;
+import bisq.core.dao.voting.ballot.proposal.ProposalConsensus;
+import bisq.core.dao.voting.ballot.proposal.ProposalType;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
