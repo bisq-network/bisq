@@ -20,7 +20,10 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.*;
+import bisq.core.trade.BuyerAsMakerTrade;
+import bisq.core.trade.SellerAsMakerTrade;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.protocol.*;
@@ -48,6 +51,9 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -88,6 +94,7 @@ public class BisqProxy {
     private MarketList marketList;
     @Getter
     private CurrencyList currencyList;
+    private BackupManager backupManager;
 
     public BisqProxy(Injector injector, AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, User user,
@@ -112,6 +119,9 @@ public class BisqProxy {
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+
+        final BisqEnvironment bisqEnvironment = injector.getInstance(BisqEnvironment.class);
+        backupManager = new BackupManager(bisqEnvironment.getAppDataDir());
     }
 
     public static CurrencyList calculateCurrencyList() {
@@ -939,6 +949,22 @@ public class BisqProxy {
         for (MarketPrice price : marketPrices)
             priceFeed.prices.put(price.getCurrencyCode(), price.getPrice());
         return priceFeed;
+    }
+
+    public String createBackup() throws IOException {
+        return backupManager.createBackup();
+    }
+
+    public FileInputStream getBackup(String fileName) throws FileNotFoundException {
+        return backupManager.getBackup(fileName);
+    }
+
+    public boolean removeBackup(String fileName) throws FileNotFoundException {
+        return backupManager.removeBackup(fileName);
+    }
+
+    public List<String> getBackupList() {
+        return backupManager.getBackupList();
     }
 
     public enum WalletAddressPurpose {

@@ -30,6 +30,11 @@ public class ApiV1 {
         return new ArbitratorResource(bisqProxy);
     }
 
+    @Path("backups")
+    public BackupResource getBackupResource() {
+        return new BackupResource(bisqProxy);
+    }
+
     @Path("closed-tradables")
     public ClosedTradableResource getClosedTradableResource() {
         return new ClosedTradableResource(bisqProxy);
