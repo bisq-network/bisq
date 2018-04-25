@@ -34,7 +34,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.DaoPhase;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
 import bisq.core.locale.Res;

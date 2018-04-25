@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.period.DaoPhase;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;

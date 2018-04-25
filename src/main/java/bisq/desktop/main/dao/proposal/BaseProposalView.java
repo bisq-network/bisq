@@ -28,7 +28,7 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.DaoPhase;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.proposal.Proposal;
 import bisq.core.locale.Res;

@@ -24,7 +24,7 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.DaoPhase;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.BlockListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;

@@ -23,7 +23,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.period.DaoPhase;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.ChainHeightListener;
 import bisq.core.locale.Res;
 
