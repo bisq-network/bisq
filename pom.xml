@@ -38,6 +38,7 @@
         <dropwizard.version>1.2.2</dropwizard.version>
         <bisq.version>${project.version}</bisq.version>
         <arquillian_universe.version>1.2.0.1</arquillian_universe.version>
+        <version.arquillian_cube>1.15.3</version.arquillian_cube>
     </properties>
 
     <repositories>
@@ -220,6 +221,11 @@
             <artifactId>arquillian-cube-docker</artifactId>
             <scope>test</scope>
             <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.arquillian.cube</groupId>
+            <artifactId>arquillian-cube-docker</artifactId>
+            <version>${version.arquillian_cube}</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
