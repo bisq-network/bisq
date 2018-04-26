@@ -145,10 +145,11 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
-            priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
+            priceCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
             waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel,
             buyerSecurityDepositBtcLabel, paymentAccountsLabel;
+    protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
@@ -1133,7 +1134,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(amountTextField);
-        Label amountBtcLabel = amountValueCurrencyBoxTuple.third;
+        amountBtcLabel = amountValueCurrencyBoxTuple.third;
         editOfferElements.add(amountBtcLabel);
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, model.getAmountDescription());
         amountDescriptionLabel = amountInputBoxTuple.first;
@@ -1263,7 +1264,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(minAmountTextField);
-        Label minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
+        minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
         editOfferElements.add(minAmountBtcLabel);
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox,

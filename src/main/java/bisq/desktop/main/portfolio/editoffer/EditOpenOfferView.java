@@ -83,7 +83,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
         // Lock amount field as it would require bigger changes to support increased amount values.
         amountTextField.setDisable(true);
+        amountBtcLabel.setDisable(true);
         minAmountTextField.setDisable(true);
+        minAmountBtcLabel.setDisable(true);
+        volumeTextField.setDisable(true);
+        volumeCurrencyLabel.setDisable(true);
 
         // Workaround to fix margin on top of amount group
         gridPane.setPadding(new Insets(-20, 25, -1, 25));
