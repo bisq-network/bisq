@@ -137,9 +137,8 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
-    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField,
-            volumeTextField;
-    protected InputTextField amountTextField, minAmountTextField;
+    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
+    protected InputTextField amountTextField, minAmountTextField, volumeTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
@@ -202,6 +201,10 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
 
+        doSetFocus();
+    }
+
+    protected void doSetFocus() {
         GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 

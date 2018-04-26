@@ -73,6 +73,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     }
 
     @Override
+    protected void doSetFocus() {
+        // Don't focus in any field before data was set
+    }
+
+    @Override
     protected void doActivate() {
         super.doActivate();
 
