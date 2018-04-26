@@ -95,15 +95,6 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
-        model.onStartEditOffer(errorMessage -> {
-            log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
-                    .onClose(() -> {
-                        close();
-                    })
-                    .show();
-        });
-
         model.isNextButtonDisabled.setValue(false);
         cancelButton.setDisable(false);
 
@@ -131,8 +122,18 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(OpenOffer openOffer) {
-        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
+        super.initWithData(openOffer.getOffer().getDirection(),
+                CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
         model.initWithData(openOffer);
+
+        model.onStartEditOffer(errorMessage -> {
+            log.error(errorMessage);
+            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
+                    .onClose(() -> {
+                        close();
+                    })
+                    .show();
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
