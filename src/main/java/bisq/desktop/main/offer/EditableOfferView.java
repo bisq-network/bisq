@@ -467,7 +467,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         }
     }
 
-    private void onPaymentAccountsComboBoxSelected() {
+    protected void onPaymentAccountsComboBoxSelected() {
         // Temporary deactivate handler as the payment account change can populate a new currency list and causes
         // unwanted selection events (item 0)
         currencyComboBox.setOnAction(null);

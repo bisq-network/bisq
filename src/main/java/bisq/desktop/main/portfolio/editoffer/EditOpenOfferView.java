@@ -83,7 +83,6 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
         addBindings();
 
-        hidePaymentGroup();
         hideOptionsGroup();
 
         // Lock amount field as it would require bigger changes to support increased amount values.
@@ -105,6 +104,10 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
         model.onInvalidateMarketPriceMargin();
         model.onInvalidatePrice();
+
+        // To force re-validation of payment account validation
+        onPaymentAccountsComboBoxSelected();
+        hidePaymentGroup();
     }
 
     @Override
