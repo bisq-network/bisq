@@ -17,60 +17,99 @@
 
 package bisq.desktop.app;
 
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
+import bisq.desktop.common.UITimer;
+import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.setup.DesktopPersistedDataHost;
+
 import bisq.core.app.BisqExecutable;
 
-import bisq.common.util.Utilities;
+import bisq.common.UserThread;
+import bisq.common.app.AppModule;
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.setup.CommonSetup;
 
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
+import com.google.inject.Injector;
 
-import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
-import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import javafx.application.Application;
+import javafx.application.Platform;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BisqAppMain extends BisqExecutable {
-
-    static {
-        Utilities.removeCryptographyRestrictions();
-    }
+    private BisqApp application;
 
     public static void main(String[] args) throws Exception {
-        // We don't want to do the full argument parsing here as that might easily change in update versions
-        // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        OptionParser parser = new OptionParser();
-        parser.allowsUnrecognizedOptions();
-        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
-        parser.accepts(AppOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
-                .withRequiredArg();
+        if (BisqExecutable.setupInitialOptionParser(args)) {
+            // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
+            // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
+            Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
 
-        OptionSet options;
-        try {
-            options = parser.parse(args);
-        } catch (OptionException ex) {
-            System.out.println("error: " + ex.getMessage());
-            System.out.println();
-            parser.printHelpOn(System.out);
-            System.exit(EXIT_FAILURE);
-            return;
+            new BisqAppMain().execute(args);
         }
-        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
+    }
 
-        // need to call that before bisqAppMain().execute(args)
-        initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
-        // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
-        // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-        Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // First synchronous execution tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        new BisqAppMain().execute(args);
+    @Override
+    protected void configUserThread() {
+        UserThread.setExecutor(Platform::runLater);
+        UserThread.setTimerClass(UITimer.class);
     }
 
     @Override
-    protected void doExecute(OptionSet options) {
-        BisqApp.setEnvironment(getBisqEnvironment(options));
-        javafx.application.Application.launch(BisqApp.class);
+    protected void launchApplication() {
+        BisqApp.setAppLaunchedHandler(application -> {
+            BisqAppMain.this.application = (BisqApp) application;
+            // Necessary to do the setup at this point to prevent Bouncy Castle errors
+            CommonSetup.setup(BisqAppMain.this.application);
+            // Map to user thread!
+            UserThread.execute(this::onApplicationLaunched);
+        });
+
+        Application.launch(BisqApp.class);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // As application is a JavaFX application we need to wait for onApplicationLaunched
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onApplicationLaunched() {
+        super.onApplicationLaunched();
+        application.setGracefulShutDownHandler(this);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // We continue with a series of synchronous execution tasks
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected AppModule getModule() {
+        return new BisqAppModule(bisqEnvironment);
+    }
+
+    @Override
+    protected void applyInjector() {
+        super.applyInjector();
+
+        application.setInjector(injector);
+        injector.getInstance(InjectorViewFactory.class).setInjector(injector);
+    }
+
+    @Override
+    protected void setupPersistedDataHosts(Injector injector) {
+        super.setupPersistedDataHosts(injector);
+        PersistedDataHost.apply(DesktopPersistedDataHost.getPersistedDataHosts(injector));
+    }
+
+    @Override
+    protected void startApplication() {
+        // We need to be in user thread! We mapped at launchApplication already...
+        application.startApplication();
     }
 }

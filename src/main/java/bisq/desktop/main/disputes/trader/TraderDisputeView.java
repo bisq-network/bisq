@@ -68,7 +68,6 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -138,7 +137,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final DisputeManager disputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
-    private final Stage stage;
     protected final BSFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
@@ -186,7 +184,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     public TraderDisputeView(DisputeManager disputeManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
-                             Stage stage,
                              BSFormatter formatter,
                              DisputeSummaryWindow disputeSummaryWindow,
                              PrivateNotificationManager privateNotificationManager,
@@ -197,7 +194,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
-        this.stage = stage;
         this.formatter = formatter;
         this.disputeSummaryWindow = disputeSummaryWindow;
         this.privateNotificationManager = privateNotificationManager;
@@ -560,7 +556,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             fileChooser.setTitle(Res.get("support.openFile", maxSizeInKB));
            /* if (Utilities.isUnix())
                 fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
-            File result = fileChooser.showOpenDialog(stage);
+            File result = fileChooser.showOpenDialog(root.getScene().getWindow());
             if (result != null) {
                 try {
                     URL url = result.toURI().toURL();
@@ -596,7 +592,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         fileChooser.setInitialFileName(attachment.getFileName());
        /* if (Utilities.isUnix())
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
-        File file = fileChooser.showSaveDialog(stage);
+        File file = fileChooser.showSaveDialog(root.getScene().getWindow());
         if (file != null) {
             try (FileOutputStream fileOutputStream = new FileOutputStream(file.getAbsolutePath())) {
                 fileOutputStream.write(attachment.getBytes());

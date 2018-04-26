@@ -15,33 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.app;
+package bisq.desktop.util.validation;
 
-import bisq.desktop.DesktopModule;
+import bisq.core.util.validation.InputValidator;
 
-import bisq.core.app.CoreModule;
-
-import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
-
-public class BisqAppModule extends AppModule {
-
-    public BisqAppModule(Environment environment) {
-        super(environment);
-    }
+public final class WeChatPayValidator extends InputValidator {
 
     @Override
-    protected void configure() {
-        install(coreModule());
-        install(desktopModule());
-    }
-
-    private CoreModule coreModule() {
-        return new CoreModule(environment);
-    }
-
-    private DesktopModule desktopModule() {
-        return new DesktopModule(environment);
+    public ValidationResult validate(String input) {
+        // TODO
+        return super.validate(input);
     }
 }

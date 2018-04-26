@@ -44,6 +44,7 @@ import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.VenmoForm;
+import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
@@ -66,6 +67,7 @@ import bisq.desktop.util.validation.SwishValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.VenmoValidator;
+import bisq.desktop.util.validation.WeChatPayValidator;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
@@ -84,6 +86,8 @@ import bisq.common.util.Tuple3;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+
+import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -113,9 +117,6 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
 
-    private ListView<PaymentAccount> paymentAccountsListView;
-    private ComboBox<PaymentMethod> paymentMethodComboBox;
-
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
     private final InputValidator inputValidator;
@@ -133,10 +134,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
-
+    private final WeChatPayValidator weChatPayValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
-
+    private ListView<PaymentAccount> paymentAccountsListView;
+    private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
     private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
@@ -162,6 +164,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
+                            WeChatPayValidator weChatPayValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
@@ -183,6 +186,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.chaseQuickPayValidator = chaseQuickPayValidator;
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
+        this.weChatPayValidator = weChatPayValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
@@ -204,8 +208,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.setItems(model.getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(event -> addNewAccount());
-        exportButton.setOnAction(event -> model.dataModel.exportAccounts());
-        importButton.setOnAction(event -> model.dataModel.importAccounts());
+        exportButton.setOnAction(event -> model.dataModel.exportAccounts((Stage) root.getScene().getWindow()));
+        importButton.setOnAction(event -> model.dataModel.importAccounts((Stage) root.getScene().getWindow()));
     }
 
     @Override
@@ -449,6 +453,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.WECHAT_PAY_ID:
+                return new WeChatPayForm(paymentAccount, accountAgeWitnessService, weChatPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
                 return new SwishForm(paymentAccount, accountAgeWitnessService, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:

@@ -391,7 +391,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
-        this.actionHandlerOptional = Optional.of(BisqApp.shutDownHandler::run);
+        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler()::run);
         //noinspection unchecked
         return (T) this;
     }

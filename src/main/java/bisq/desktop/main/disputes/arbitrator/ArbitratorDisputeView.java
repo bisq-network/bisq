@@ -37,18 +37,16 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
-import javafx.stage.Stage;
-
 @FxmlView
 public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
-    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
+    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
                                  P2PService p2PService, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(disputeManager, keyRing, tradeManager, stage, formatter,
+        super(disputeManager, keyRing, tradeManager, formatter,
                 disputeSummaryWindow, privateNotificationManager, contractWindow,
                 tradeDetailsWindow, p2PService, useDevPrivilegeKeys);
     }
