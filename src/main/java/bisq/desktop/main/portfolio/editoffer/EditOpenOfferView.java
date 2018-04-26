@@ -81,7 +81,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         hidePaymentGroup();
         hideOptionsGroup();
 
-        //workaround to fix margin on top of amount group
+        // Lock amount field as it would require bigger changes to support increased amount values.
+        amountTextField.setDisable(true);
+        minAmountTextField.setDisable(true);
+
+        // Workaround to fix margin on top of amount group
         gridPane.setPadding(new Insets(-20, 25, -1, 25));
 
         updateMarketPriceAvailable();

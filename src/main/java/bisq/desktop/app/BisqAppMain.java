@@ -64,6 +64,8 @@ public class BisqAppMain extends BisqExecutable {
     protected void launchApplication() {
         BisqApp.setAppLaunchedHandler(application -> {
             BisqAppMain.this.application = (BisqApp) application;
+            // Necessary to do the setup at this point to prevent Bouncy Castle errors
+            CommonSetup.setup(BisqAppMain.this.application);
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });
@@ -79,9 +81,7 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void onApplicationLaunched() {
         super.onApplicationLaunched();
-
         application.setGracefulShutDownHandler(this);
-        CommonSetup.setup(application);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
