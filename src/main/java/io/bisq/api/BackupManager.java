@@ -36,7 +36,7 @@ public class BackupManager {
         if (Files.notExists(backupDirectoryPath))
             Files.createDirectory(backupDirectoryPath);
 
-        final String dateString = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        final String dateString = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS").format(new Date());
         final String backupFilename = "backup-" + dateString + ".zip";
         final Path backupFilePath = getBackupFilePath(backupFilename);
 

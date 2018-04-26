@@ -190,8 +190,6 @@ public class BackupResourceIT {
 
         createBackup_always_returns200();
 
-        ApiTestHelper.waitForP2PMsgPropagation();  //this is just some wait, not necessarily for p2p
-
         given().
                 port(alicePort).
 //
@@ -217,7 +215,6 @@ public class BackupResourceIT {
                     and().body("walletAddresses[0].address", equalTo(walletAddress));
         } finally {
             cubeController.stop(ApiContainer.CUBE_ID);
-            ApiTestHelper.waitForAllServicesToBeReady();
             cubeController.destroy(ApiContainer.CUBE_ID);
         }
     }
