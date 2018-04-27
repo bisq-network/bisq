@@ -35,6 +35,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -131,6 +132,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
         preferences.readPersisted();
         setupCors(environment);
         setupAuth(environment);
+        environment.jersey().register(MultiPartFeature.class);
         setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));

@@ -6,12 +6,17 @@ import io.bisq.api.model.CreatedBackup;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
+import javax.validation.ValidationException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
 
 import static io.bisq.api.service.ResourceHelper.toValidationErrorResponse;
 
@@ -36,6 +41,19 @@ public class BackupResource {
     @POST
     public CreatedBackup createBackup() throws IOException {
         return new CreatedBackup(bisqProxy.createBackup());
+    }
+
+    @ApiOperation("Upload backup")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @POST
+    @Path("/upload")
+    public void uploadBackup(@FormDataParam("file") InputStream uploadedInputStream,
+                             @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+        try {
+            bisqProxy.uploadBackup(fileDetail.getFileName(), uploadedInputStream);
+        } catch (FileAlreadyExistsException e) {
+            throw new ValidationException(e.getMessage());
+        }
     }
 
     @Produces(MediaType.APPLICATION_OCTET_STREAM)

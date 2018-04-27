@@ -1,6 +1,8 @@
 package io.bisq.api;
 
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
+import org.apache.commons.io.IOUtils;
 import org.arquillian.cube.ContainerObjectFactory;
 import org.arquillian.cube.CubeController;
 import org.arquillian.cube.HostPort;
@@ -175,6 +177,46 @@ public class BackupResourceIT {
     }
 
     @InSequence(6)
+    @Test
+    public void uploadBackup_fileNameIsUnique_returns204() throws Exception {
+        final String fileName = "uploadBackup_fileNameIsUnique_returns204.txt";
+        final String fileContent = "Hello World!";
+        uploadBackupRequest(fileName, fileContent).statusCode(204);
+        final InputStream inputStream = given().
+                port(getAlicePort()).
+//
+        when().
+                        get("/api/v1/backups/" + fileName).
+//
+        then().
+                        statusCode(200).
+                        and().contentType(ContentType.BINARY.toString()).
+                        extract().asInputStream();
+        Assert.assertEquals(fileContent, IOUtils.toString(inputStream));
+    }
+
+    @InSequence(7)
+    @Test
+    public void uploadBackup_backupAlreadyExists_returns422() throws Exception {
+        final String fileName = "uploadBackup_backupAlreadyExists_returns422.txt";
+        final String fileContent = "Hello World!";
+        uploadBackupRequest(fileName, fileContent).statusCode(204);
+        uploadBackupRequest(fileName, fileContent).statusCode(422);
+    }
+
+    private ValidatableResponse uploadBackupRequest(String fileName, String fileContent) {
+        return given().
+                port(getAlicePort()).
+                multiPart("file", fileName, fileContent.getBytes()).
+                contentType("multipart/form-data").
+//
+        when().
+                        post("/api/v1/backups/upload").
+//
+        then();
+    }
+
+    @InSequence(8)
     @Test
     public void restore() throws Exception {
         final int alicePort = getAlicePort();

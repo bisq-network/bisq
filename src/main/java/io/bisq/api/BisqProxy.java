@@ -54,6 +54,7 @@ import javax.validation.ValidationException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -987,6 +988,10 @@ public class BisqProxy {
             }
             shutdown.run();
         }, "Shutdown before backup restore").start();
+    }
+
+    public void uploadBackup(String fileName, InputStream uploadedInputStream) throws IOException {
+        backupManager.saveBackup(fileName, uploadedInputStream);
     }
 
     public enum WalletAddressPurpose {

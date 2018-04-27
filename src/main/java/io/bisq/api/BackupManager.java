@@ -32,9 +32,7 @@ public class BackupManager {
     }
 
     public String createBackup() throws IOException {
-        final Path backupDirectoryPath = getBackupDirectoryPath();
-        if (Files.notExists(backupDirectoryPath))
-            Files.createDirectory(backupDirectoryPath);
+        makeSureBackupDirectoryExists();
 
         final String dateString = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS").format(new Date());
         final String backupFilename = "backup-" + dateString + ".zip";
@@ -96,6 +94,15 @@ public class BackupManager {
         }
     }
 
+    public void saveBackup(String backupFilename, InputStream inputStream) throws IOException {
+        final Path backupFilePath = getBackupFilePath(backupFilename);
+        final File file = backupFilePath.toFile();
+        if (file.exists())
+            throw new FileAlreadyExistsException("File already exists: " + backupFilename);
+        makeSureBackupDirectoryExists();
+        IOUtils.copy(inputStream, new FileOutputStream(file));
+    }
+
     private void backup(Path sourceDir, String outputZipFilename) throws IOException {
         final Path relativeBackupDirPath = appDataDirectoryPath.relativize(getBackupDirectoryPath());
         final Function<Path, Boolean> shouldSkip = path -> path.startsWith(relativeBackupDirPath);
@@ -127,6 +134,12 @@ public class BackupManager {
     @NotNull
     private FileNotFoundException fileNotFound(String fileName) {
         return new FileNotFoundException("File not found: " + fileName);
+    }
+
+    private void makeSureBackupDirectoryExists() throws IOException {
+        final Path backupDirectoryPath = getBackupDirectoryPath();
+        if (Files.notExists(backupDirectoryPath))
+            Files.createDirectory(backupDirectoryPath);
     }
 
     private void purgeAppDataDirectory() throws IOException {
