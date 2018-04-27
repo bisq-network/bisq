@@ -137,18 +137,18 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
     private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
-    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField,
-            volumeTextField;
-    protected InputTextField amountTextField, minAmountTextField;
+    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
+    protected InputTextField amountTextField, minAmountTextField, volumeTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
-            priceCurrencyLabel, volumeCurrencyLabel, priceDescriptionLabel,
+            priceCurrencyLabel, priceDescriptionLabel,
             volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
             waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel,
             buyerSecurityDepositBtcLabel, paymentAccountsLabel;
+    protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ImageView imageView, qrCodeImageView;
@@ -169,6 +169,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
     private InfoInputTextField marketBasedPriceInfoInputTextField;
+    protected TitledGroupBg amountTitledGroupBg;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -201,6 +202,10 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
 
+        doSetFocus();
+    }
+
+    protected void doSetFocus() {
         GUIUtil.focusWhenAddedToScene(amountTextField);
     }
 
@@ -463,7 +468,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         }
     }
 
-    private void onPaymentAccountsComboBoxSelected() {
+    protected void onPaymentAccountsComboBoxSelected() {
         // Temporary deactivate handler as the payment account change can populate a new currency list and causes
         // unwanted selection events (item 0)
         currencyComboBox.setOnAction(null);
@@ -911,8 +916,8 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 3);
+        amountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(amountTitledGroupBg, 3);
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);
@@ -1133,7 +1138,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(amountTextField);
-        Label amountBtcLabel = amountValueCurrencyBoxTuple.third;
+        amountBtcLabel = amountValueCurrencyBoxTuple.third;
         editOfferElements.add(amountBtcLabel);
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, model.getAmountDescription());
         amountDescriptionLabel = amountInputBoxTuple.first;
@@ -1263,7 +1268,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(minAmountTextField);
-        Label minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
+        minAmountBtcLabel = amountValueCurrencyBoxTuple.third;
         editOfferElements.add(minAmountBtcLabel);
 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox,
