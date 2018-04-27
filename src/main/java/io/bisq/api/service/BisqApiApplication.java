@@ -35,6 +35,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -94,9 +95,15 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)
     private boolean useDevPrivilegeKeys = false;
 
+    private Runnable shutdown;
+
     @Override
     public String getName() {
         return "Bisq API";
+    }
+
+    public void setShutdown(Runnable shutdown) {
+        this.shutdown = shutdown;
     }
 
     @Override
@@ -121,10 +128,11 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     public void run(ApiConfiguration configuration, Environment environment) {
         BisqProxy bisqProxy = new BisqProxy(injector, accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
                 offerBookService, p2PService, keyRing, user, feeService, preferences, bsqWalletService,
-                walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys);
+                walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys, shutdown);
         preferences.readPersisted();
         setupCors(environment);
         setupAuth(environment);
+        environment.jersey().register(MultiPartFeature.class);
         setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));

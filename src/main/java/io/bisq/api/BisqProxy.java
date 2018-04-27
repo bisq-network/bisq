@@ -20,7 +20,10 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.*;
+import bisq.core.trade.BuyerAsMakerTrade;
+import bisq.core.trade.SellerAsMakerTrade;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.protocol.*;
@@ -48,6 +51,10 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -82,17 +89,20 @@ public class BisqProxy {
     private FeeService feeService;
     private bisq.core.user.Preferences preferences;
     private BsqWalletService bsqWalletService;
+    private final Runnable shutdown;
     private final boolean useDevPrivilegeKeys;
     private WalletsSetup walletsSetup;
     @Getter
     private MarketList marketList;
     @Getter
     private CurrencyList currencyList;
+    private final BackupManager backupManager;
+    private final BackupRestoreManager backupRestoreManager;
 
     public BisqProxy(Injector injector, AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
                      OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, User user,
                      FeeService feeService, bisq.core.user.Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
-                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys) {
+                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys, Runnable shutdown) {
         this.injector = injector;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
@@ -106,12 +116,18 @@ public class BisqProxy {
         this.feeService = feeService;
         this.preferences = preferences;
         this.bsqWalletService = bsqWalletService;
+        this.shutdown = shutdown;
         this.marketList = calculateMarketList();
         this.currencyList = calculateCurrencyList();
         this.walletsSetup = walletsSetup;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+
+        final BisqEnvironment bisqEnvironment = injector.getInstance(BisqEnvironment.class);
+        final String appDataDir = bisqEnvironment.getAppDataDir();
+        backupManager = new BackupManager(appDataDir);
+        backupRestoreManager = new BackupRestoreManager(appDataDir);
     }
 
     public static CurrencyList calculateCurrencyList() {
@@ -939,6 +955,43 @@ public class BisqProxy {
         for (MarketPrice price : marketPrices)
             priceFeed.prices.put(price.getCurrencyCode(), price.getPrice());
         return priceFeed;
+    }
+
+    public String createBackup() throws IOException {
+        return backupManager.createBackup();
+    }
+
+    public FileInputStream getBackup(String fileName) throws FileNotFoundException {
+        return backupManager.getBackup(fileName);
+    }
+
+    public boolean removeBackup(String fileName) throws FileNotFoundException {
+        return backupManager.removeBackup(fileName);
+    }
+
+    public List<String> getBackupList() {
+        return backupManager.getBackupList();
+    }
+
+    public void requestBackupRestore(String fileName) throws IOException {
+        backupRestoreManager.requestRestore(fileName);
+        if (null == shutdown) {
+            log.warn("No shutdown mechanism provided! You have to restart the app manually.");
+            return;
+        }
+        log.info("Backup restore requested. Initiating shutdown.");
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            shutdown.run();
+        }, "Shutdown before backup restore").start();
+    }
+
+    public void uploadBackup(String fileName, InputStream uploadedInputStream) throws IOException {
+        backupManager.saveBackup(fileName, uploadedInputStream);
     }
 
     public enum WalletAddressPurpose {
