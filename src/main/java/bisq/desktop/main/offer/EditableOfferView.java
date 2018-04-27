@@ -169,6 +169,7 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
     private InfoInputTextField marketBasedPriceInfoInputTextField;
+    protected TitledGroupBg amountTitledGroupBg;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -915,8 +916,8 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 3);
+        amountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(amountTitledGroupBg, 3);
 
         imageView = new ImageView();
         imageView.setPickOnBounds(true);

@@ -70,6 +70,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         super.initialize();
 
         addConfirmEditGroup();
+        renameAmountGroup();
+    }
+
+    private void renameAmountGroup() {
+        amountTitledGroupBg.setText(Res.get("editOffer.setPrice"));
     }
 
     @Override
