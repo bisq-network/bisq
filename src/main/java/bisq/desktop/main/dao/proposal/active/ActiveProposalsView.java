@@ -101,7 +101,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     protected void activate() {
         super.activate();
 
-        daoFacade.getActiveOrMyUnconfirmedBallots().addListener(proposalListChangeListener);
+        daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
         bsqWalletService.addBsqBalanceListener(this);
 
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
@@ -152,7 +152,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     protected void deactivate() {
         super.deactivate();
 
-        daoFacade.getActiveOrMyUnconfirmedBallots().removeListener(proposalListChangeListener);
+        daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
         bsqWalletService.removeBsqBalanceListener(this);
     }
 

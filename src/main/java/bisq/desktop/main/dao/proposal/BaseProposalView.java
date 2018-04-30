@@ -29,7 +29,6 @@ import bisq.desktop.util.BsqFormatter;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 
@@ -81,7 +80,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected int gridRow = 0;
     protected GridPane detailsGridPane, gridPane;
     protected ProposalListItem selectedProposalListItem;
-    protected ListChangeListener<Ballot> proposalListChangeListener;
+    protected ListChangeListener<Proposal> proposalListChangeListener;
     protected ChangeListener<DaoPhase.Phase> phaseChangeListener;
     protected DaoPhase.Phase currentPhase;
     protected Subscription phaseSubscription;

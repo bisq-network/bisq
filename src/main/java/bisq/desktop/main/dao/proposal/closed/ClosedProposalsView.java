@@ -54,13 +54,13 @@ public class ClosedProposalsView extends BaseProposalView {
     @Override
     protected void activate() {
         super.activate();
-        daoFacade.getClosedBallots().addListener(proposalListChangeListener);
+        daoFacade.getClosedProposals().addListener(proposalListChangeListener);
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        daoFacade.getClosedBallots().removeListener(proposalListChangeListener);
+        daoFacade.getClosedProposals().removeListener(proposalListChangeListener);
     }
 
     @Override
