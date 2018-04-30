@@ -23,8 +23,8 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.ChainHeightListener;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
@@ -64,7 +64,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ProposalDashboardView(DaoFacade daoFacade) {
+    public ProposalDashboardView(DaoFacade daoFacade) {
         this.daoFacade = daoFacade;
     }
 
@@ -159,5 +159,4 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
         }
     }
-
 }

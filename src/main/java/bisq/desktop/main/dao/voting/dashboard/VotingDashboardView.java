@@ -17,15 +17,15 @@
 
 package bisq.desktop.main.dao.voting.dashboard;
 
-import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
+
+import bisq.core.dao.DaoFacade;
 
 import javax.inject.Inject;
 
-import javafx.scene.layout.GridPane;
-
 @FxmlView
-public class VotingDashboardView extends ActivatableView<GridPane, Void> {
+public class VotingDashboardView extends ProposalDashboardView {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -33,19 +33,23 @@ public class VotingDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VotingDashboardView() {
+    private VotingDashboardView(DaoFacade daoFacade) {
+        super(daoFacade);
     }
 
     @Override
     public void initialize() {
+        super.initialize();
     }
 
     @Override
     protected void activate() {
+        super.activate();
     }
 
     @Override
     protected void deactivate() {
+        super.deactivate();
     }
 }
 

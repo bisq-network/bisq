@@ -72,7 +72,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         proposalsTab.setClosable(false);
         votingTab.setClosable(false);
         //TODO
-        root.getTabs().addAll(proposalsTab/*, votingTab*/);
+        root.getTabs().addAll(proposalsTab, votingTab);
 
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq() || !DevEnv.isDaoPhase2Activated()) {
             votingTab.setDisable(true);
