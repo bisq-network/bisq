@@ -67,7 +67,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
 
-    private Button removeButton, acceptButton, rejectButton, cancelVoteButton, voteButton;
+    private Button removeButton, acceptButton, rejectButton, removeMyVoteButton, voteButton;
     private InputTextField stakeInputTextField;
     private List<Node> voteViewItems = new ArrayList<>();
     private BusyAnimation voteButtonBusyAnimation;
@@ -213,10 +213,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 rejectButton.setVisible(false);
                 rejectButton = null;
             }
-            if (cancelVoteButton != null) {
-                cancelVoteButton.setManaged(false);
-                cancelVoteButton.setVisible(false);
-                cancelVoteButton = null;
+            if (removeMyVoteButton != null) {
+                removeMyVoteButton.setManaged(false);
+                removeMyVoteButton.setVisible(false);
+                removeMyVoteButton = null;
             }
 
             onPhaseChanged(daoFacade.phaseProperty().get());
@@ -241,6 +241,12 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         // daoFacade.setVote(selectedProposalListItem.getProposal(), null);
         updateStateAfterVote();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ChainHeightListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     @Override
     protected void onPhaseChanged(DaoPhase.Phase phase) {
@@ -275,21 +281,22 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                         .incrementAndGetGridRow(),
                                 Res.get("dao.proposal.myVote.accept"),
                                 Res.get("dao.proposal.myVote.reject"),
-                                Res.get("dao.proposal.myVote.cancelVote"));
+                                Res.get("dao.proposal.myVote.removeMyVote"));
                         acceptButton = tuple.first;
                         acceptButton.setDefaultButton(false);
                         rejectButton = tuple.second;
-                        cancelVoteButton = tuple.third;
+                        removeMyVoteButton = tuple.third;
                         acceptButton.setOnAction(event -> onAccept());
                         rejectButton.setOnAction(event -> onReject());
-                        cancelVoteButton.setOnAction(event -> onCancelVote());
+                        removeMyVoteButton.setOnAction(event -> onCancelVote());
                     } else {
+                        //TODO prob. not possible code path
                         acceptButton.setManaged(true);
                         acceptButton.setVisible(true);
                         rejectButton.setManaged(true);
                         rejectButton.setVisible(true);
-                        cancelVoteButton.setManaged(true);
-                        cancelVoteButton.setVisible(true);
+                        removeMyVoteButton.setManaged(true);
+                        removeMyVoteButton.setVisible(true);
                     }
                     break;
                 case BREAK2:
@@ -378,8 +385,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                     ActiveProposalsView.this.selectedProposalListItem = item;
                                     ActiveProposalsView.this.onRemove();
                                 });
-                                //TODO
-                                // item.applyState(currentPhase, item.getProposal().getVoteResultProperty().get());
+                                item.applyState(currentPhase);
                             }
                         } else {
                             setGraphic(null);

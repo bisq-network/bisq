@@ -29,7 +29,6 @@ import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.locale.Res;
 
 import org.bitcoinj.core.Transaction;
@@ -59,7 +58,6 @@ public class ProposalListItem implements BlockListener {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final ChangeListener<Number> chainHeightListener;
-    private final ChangeListener<Vote> voteResultChangeListener;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
     @Getter
@@ -103,21 +101,13 @@ public class ProposalListItem implements BlockListener {
         daoFacade.addBlockListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> {
-            //TODO
-            //applyState(newValue, proposal.getVote());
-        };
-
-        voteResultChangeListener = (observable, oldValue, newValue) -> {
-            applyState(daoFacade.phaseProperty().get(), newValue);
+            applyState(newValue);
         };
 
         daoFacade.phaseProperty().addListener(phaseChangeListener);
-
-        //TODO
-        //proposal.getVoteResultProperty().addListener(voteResultChangeListener);
     }
 
-    public void applyState(DaoPhase.Phase phase, Vote vote) {
+    public void applyState(DaoPhase.Phase phase) {
         if (phase != null) {
             actionButton.setText("");
             actionButton.setVisible(false);
@@ -146,7 +136,7 @@ public class ProposalListItem implements BlockListener {
                     actionButton.setVisible(false);
 
                     //TODO
-                    /*if (proposal.getVote() != null) {
+                  /*  if (vote != null) {
                         actionButtonIconView.setVisible(true);
                         if (vote instanceof BooleanVote) {
                             if (((BooleanVote) vote).isAccepted()) {
@@ -245,9 +235,6 @@ public class ProposalListItem implements BlockListener {
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
 
         daoFacade.phaseProperty().removeListener(phaseChangeListener);
-
-        //TODO
-        // proposal.getVoteResultProperty().removeListener(voteResultChangeListener);
     }
 
     private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
