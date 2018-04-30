@@ -15,35 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.voting.active;
+package bisq.desktop.main.dao.voting.ballots;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.ActiveView;
-import bisq.desktop.main.dao.ListItem;
-import bisq.desktop.main.dao.proposal.ProposalListItem;
+import bisq.desktop.main.dao.voting.BallotListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.dao.voting.ballot.Ballot;
 
 import javax.inject.Inject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @FxmlView
-public class ActiveVotingView extends ActiveView {
+public class BallotsView extends ActiveView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveVotingView(DaoFacade daoFacade,
-                             BsqWalletService bsqWalletService,
-                             BsqFormatter bsqFormatter,
-                             BSFormatter btcFormatter) {
+    private BallotsView(DaoFacade daoFacade,
+                        BsqWalletService bsqWalletService,
+                        BsqFormatter bsqFormatter,
+                        BSFormatter btcFormatter) {
 
         super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
     }
@@ -53,14 +53,13 @@ public class ActiveVotingView extends ActiveView {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    protected List<Proposal> getProposalList() {
-        return daoFacade.getActiveOrMyUnconfirmedProposals();
-    }
 
     @Override
-    protected ListItem getListItem(Proposal proposal) {
-        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
+    protected void fillListItems() {
+        List<Ballot> list = daoFacade.getActiveOrMyUnconfirmedBallots();
+        proposalListItems.setAll(list.stream()
+                .map(ballot -> new BallotListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
     }
 }
 

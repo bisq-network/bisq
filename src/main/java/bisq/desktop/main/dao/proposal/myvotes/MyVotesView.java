@@ -17,66 +17,30 @@
 
 package bisq.desktop.main.dao.proposal.myvotes;
 
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.BaseProposalView;
-import bisq.desktop.main.dao.ListItem;
-import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.voting.ballot.BallotList;
-import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-
-import javafx.geometry.Insets;
-
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import javafx.beans.property.ReadOnlyObjectWrapper;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-
-import javafx.util.Callback;
-
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @FxmlView
-public class MyVotesView extends BaseProposalView {
+public class MyVotesView extends ActivatableView<GridPane, Void> /*extends BaseProposalView*/ {
     private final Preferences preferences;
+   /*
 
     private final ObservableList<VoteListItem> voteListItems = FXCollections.observableArrayList();
     private SortedList<VoteListItem> sortedList = new SortedList<>(voteListItems);
     private TableView<VoteListItem> votesTableView;
     private VoteListItem selectedVoteListItem;
     private Subscription selectedVoteSubscription;
-
+*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -89,11 +53,11 @@ public class MyVotesView extends BaseProposalView {
                         BSFormatter btcFormatter,
                         Preferences preferences) {
 
-        super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
+        // super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
         this.preferences = preferences;
     }
 
-    @Override
+   /* @Override
     public void initialize() {
         super.initialize();
 
@@ -123,7 +87,7 @@ public class MyVotesView extends BaseProposalView {
     private void onSelectVote(VoteListItem voteListItem) {
         selectedVoteListItem = voteListItem;
         changeProposalViewItemsVisibility(selectedVoteListItem != null);
-        updateProposalListItems();
+        updateListItems();
     }
 
     @Override
@@ -176,12 +140,12 @@ public class MyVotesView extends BaseProposalView {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /*  @Override
+    *//*  @Override
       protected void updateProposalList() {
           //TODO
           //if (selectedVoteListItem != null)
           //  doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
-      }*/
+      }*//*
     @Override
     protected List<Proposal> getProposalList() {
         //TODO
@@ -374,7 +338,7 @@ public class MyVotesView extends BaseProposalView {
                         if (item != null && !empty) {
                             actionButtonIconView = new ImageView();
                             //TODO
-                         /*   Vote vote = item.getProposal().getVote();
+                         *//*   Vote vote = item.getProposal().getVote();
                             if (vote instanceof BooleanVote) {
                                 if (((BooleanVote) vote).isAccepted()) {
                                     actionButtonIconView.setId("accepted");
@@ -383,7 +347,7 @@ public class MyVotesView extends BaseProposalView {
                                 }
                             } else {
                                 //TODO
-                            }*/
+                            }*//*
 
                             setGraphic(actionButtonIconView);
                         } else {
@@ -395,5 +359,5 @@ public class MyVotesView extends BaseProposalView {
         });
         actionColumn.setComparator(Comparator.comparing(ListItem::getConfirmations));
         tableView.getColumns().add(actionColumn);
-    }
+    }*/
 }

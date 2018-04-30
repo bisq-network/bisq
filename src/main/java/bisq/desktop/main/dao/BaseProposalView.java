@@ -63,7 +63,6 @@ import javafx.util.Callback;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @FxmlView
 public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
@@ -111,7 +110,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
         detailsGridPane = new GridPane();
 
-        proposalListChangeListener = c -> updateProposalListItems();
+        proposalListChangeListener = c -> updateListItems();
         phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
@@ -126,7 +125,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
-        updateProposalListItems();
+        updateListItems();
     }
 
     @Override
@@ -227,29 +226,16 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected List<Proposal> getProposalList();
-
-    protected void updateProposalListItems() {
-        List<Proposal> list = getProposalList();
+    protected void updateListItems() {
         proposalListItems.forEach(ListItem::cleanup);
         proposalListItems.clear();
-        proposalListItems.setAll(list.stream()
-                .map(proposal -> getListItem(proposal))
-                .collect(Collectors.toSet()));
+        fillListItems();
 
-        if (list.isEmpty())
+        if (proposalListItems.isEmpty())
             hideProposalDisplay();
     }
 
-    protected abstract ListItem getListItem(Proposal proposal);
-
-  /*  @NotNull
-    private ListItem getListItem(Proposal proposal) {
-        return new ListItem(proposal,
-                daoFacade,
-                bsqWalletService,
-                bsqFormatter);
-    }*/
+    abstract protected void fillListItems();
 
     protected void changeProposalViewItemsVisibility(boolean value) {
         proposalViewItems.forEach(node -> {

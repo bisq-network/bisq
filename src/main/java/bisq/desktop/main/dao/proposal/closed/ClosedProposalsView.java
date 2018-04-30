@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.proposal.closed;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.BaseProposalView;
-import bisq.desktop.main.dao.ListItem;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -31,6 +30,7 @@ import bisq.core.dao.voting.proposal.Proposal;
 import javax.inject.Inject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @FxmlView
 public class ClosedProposalsView extends BaseProposalView {
@@ -69,13 +69,11 @@ public class ClosedProposalsView extends BaseProposalView {
     }
 
     @Override
-    protected List<Proposal> getProposalList() {
-        return daoFacade.getClosedProposals();
-    }
-
-    @Override
-    protected ListItem getListItem(Proposal proposal) {
-        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
+    protected void fillListItems() {
+        List<Proposal> list = daoFacade.getClosedProposals();
+        proposalListItems.setAll(list.stream()
+                .map(proposal -> new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
     }
 }
 

@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.proposal.active;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.ActiveView;
-import bisq.desktop.main.dao.ListItem;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -31,6 +30,7 @@ import bisq.core.dao.voting.proposal.Proposal;
 import javax.inject.Inject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @FxmlView
 public class ActiveProposalsView extends ActiveView {
@@ -54,13 +54,11 @@ public class ActiveProposalsView extends ActiveView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected List<Proposal> getProposalList() {
-        return daoFacade.getActiveOrMyUnconfirmedProposals();
-    }
-
-    @Override
-    protected ListItem getListItem(Proposal proposal) {
-        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
+    protected void fillListItems() {
+        List<Proposal> list = daoFacade.getActiveOrMyUnconfirmedProposals();
+        proposalListItems.setAll(list.stream()
+                .map(proposal -> new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
     }
 }
 

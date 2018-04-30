@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
-<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.voting.active.ActiveVotingView"
+<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.voting.ballots.BallotsView"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
