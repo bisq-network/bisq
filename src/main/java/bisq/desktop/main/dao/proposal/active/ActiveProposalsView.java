@@ -35,7 +35,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.voting.ballot.proposal.Proposal;
+import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
