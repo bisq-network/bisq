@@ -33,10 +33,10 @@ import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.ValidationException;
-import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.ballot.BallotWithTransaction;
+import bisq.core.dao.voting.ballot.proposal.Proposal;
 import bisq.core.dao.voting.ballot.proposal.ProposalConsensus;
 import bisq.core.dao.voting.ballot.proposal.ProposalType;
+import bisq.core.dao.voting.ballot.proposal.ProposalWithTransaction;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 
@@ -147,16 +147,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
             createButton.setOnAction(null);
     }
 
-    private void publishProposalAndStoreBallot(ProposalType type) {
+    private void publishMyProposal(ProposalType type) {
         try {
-            final BallotWithTransaction ballotWithTransaction = getBallotWithTransaction(type);
-            Ballot ballot = ballotWithTransaction.getBallot();
+            final ProposalWithTransaction ballotWithTransaction = getBallotWithTransaction(type);
+            Proposal proposal = ballotWithTransaction.getProposal();
             Transaction transaction = ballotWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             final Coin fee = daoFacade.getProposalFee();
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> publishProposalAndStoreBallot(ballot, transaction));
+                    Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
@@ -178,8 +178,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         }
     }
 
-    private void publishProposalAndStoreBallot(Ballot ballot, Transaction transaction) {
-        daoFacade.publishBallot(ballot,
+    private void doPublishMyProposal(Proposal proposal, Transaction transaction) {
+        daoFacade.publishMyProposal(proposal,
                 transaction,
                 () -> {
                     proposalDisplay.clearForm();
@@ -189,7 +189,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
-    private BallotWithTransaction getBallotWithTransaction(ProposalType type)
+    private ProposalWithTransaction getBallotWithTransaction(ProposalType type)
             throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
             WalletException, IOException {
 
@@ -197,7 +197,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
         switch (type) {
             case COMPENSATION_REQUEST:
-                return daoFacade.getCompensationBallotWithTransaction(proposalDisplay.nameTextField.getText(),
+                return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
@@ -246,7 +246,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         createButton.setOnAction(event -> {
             // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                publishProposalAndStoreBallot(selectedProposalType);
+                publishMyProposal(selectedProposalType);
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }

@@ -191,14 +191,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalDisplayView.setManaged(false);
     }
 
-    protected void showProposalDisplay(Ballot ballot) {
+    protected void showProposalDisplay(Proposal proposal) {
         proposalDisplayView.setVisible(true);
         proposalDisplayView.setManaged(true);
 
-        proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, ballot.getType(),
+        proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
                 false, false);
         proposalDisplay.setEditable(false);
-        proposalDisplay.applyProposalPayload(ballot.getProposal());
+        proposalDisplay.applyProposalPayload(proposal);
     }
 
 
@@ -209,7 +209,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected void onSelectProposal(ProposalListItem item) {
         selectedProposalListItem = item;
         if (item != null)
-            showProposalDisplay(item.getBallot());
+            showProposalDisplay(item.getProposal());
         else
             hideProposalDisplay();
     }
@@ -228,11 +228,11 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     abstract protected void updateProposalList();
 
-    protected void doUpdateProposalList(List<Ballot> list) {
+    protected void doUpdateProposalList(List<Proposal> list) {
         proposalListItems.forEach(ProposalListItem::cleanup);
         proposalListItems.clear();
         proposalListItems.setAll(list.stream()
-                .map(ballot -> new ProposalListItem(ballot,
+                .map(proposal -> new ProposalListItem(proposal,
                         daoFacade,
                         bsqWalletService,
                         bsqFormatter))
@@ -273,14 +273,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getBallot().getProposal().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getBallot().getProposal().getCreationDate()));
+        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
@@ -298,14 +298,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getBallot().getProposal().getName());
+                                    setText(item.getProposal().getName());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator(Comparator.comparing(o2 -> o2.getBallot().getProposal().getName()));
+        nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
         tableView.getColumns().add(nameColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
@@ -322,14 +322,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getBallot().getProposal().getTitle());
+                                    setText(item.getProposal().getTitle());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getBallot().getProposal().getTitle()));
+        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getTitle()));
         tableView.getColumns().add(titleColumn);
 
         TableColumn<ProposalListItem, ProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
@@ -348,8 +348,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final Ballot ballot = item.getBallot();
-                                    final Proposal proposal = ballot.getProposal();
+                                    final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getShortId());
                                     field.setOnAction(event -> {
                                         new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposal).show();
@@ -365,7 +364,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                         };
                     }
                 });
-        uidColumn.setComparator(Comparator.comparing(o -> o.getBallot().getUid()));
+        uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
         tableView.getColumns().add(uidColumn);
     }
 

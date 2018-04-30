@@ -65,7 +65,7 @@ public class ClosedProposalsView extends BaseProposalView {
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(daoFacade.getClosedBallots());
+        doUpdateProposalList(daoFacade.getClosedProposals());
     }
 }
 

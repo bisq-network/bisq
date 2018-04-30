@@ -35,8 +35,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.proposal.Proposal;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
@@ -226,17 +225,21 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onAccept() {
-        daoFacade.setVote(selectedProposalListItem.getBallot(), new BooleanVote(true));
+        //TODO
+        // daoFacade.setVote(selectedProposalListItem.getProposal(), new BooleanVote(true));
         updateStateAfterVote();
     }
 
+
     private void onReject() {
-        daoFacade.setVote(selectedProposalListItem.getBallot(), new BooleanVote(false));
+        //TODO
+        // daoFacade.setVote(selectedProposalListItem.getProposal(), new BooleanVote(false));
         updateStateAfterVote();
     }
 
     private void onCancelVote() {
-        daoFacade.setVote(selectedProposalListItem.getBallot(), null);
+        //TODO
+        // daoFacade.setVote(selectedProposalListItem.getProposal(), null);
         updateStateAfterVote();
     }
 
@@ -253,10 +256,10 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                 removeButton = null;
             }
             if (selectedProposalListItem != null && proposalDisplay != null) {
-                final Ballot ballot = selectedProposalListItem.getBallot();
+                final Proposal proposal = selectedProposalListItem.getProposal();
                 switch (phase) {
                     case PROPOSAL:
-                        if (daoFacade.isMyProposal(ballot.getProposal())) {
+                        if (daoFacade.isMyProposal(proposal)) {
                             if (removeButton == null) {
                                 removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
                                 removeButton.setOnAction(event -> onRemove());
@@ -316,7 +319,7 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void updateProposalList() {
-        doUpdateProposalList(daoFacade.getActiveOrMyUnconfirmedBallots());
+        doUpdateProposalList(daoFacade.getActiveOrMyUnconfirmedProposals());
     }
 
     private void updateStateAfterVote() {
@@ -332,8 +335,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     }
 
     private void onRemove() {
-        final Ballot ballot = selectedProposalListItem.getBallot();
-        if (daoFacade.removeBallot(ballot)) {
+        final Proposal proposal = selectedProposalListItem.getProposal();
+        if (daoFacade.removeMyProposal(proposal)) {
             hideProposalDisplay();
         } else {
             new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
@@ -378,7 +381,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
                                     ActiveProposalsView.this.selectedProposalListItem = item;
                                     ActiveProposalsView.this.onRemove();
                                 });
-                                item.applyState(currentPhase, item.getBallot().getVoteResultProperty().get());
+                                //TODO
+                                // item.applyState(currentPhase, item.getProposal().getVoteResultProperty().get());
                             }
                         } else {
                             setGraphic(null);

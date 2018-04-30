@@ -32,8 +32,6 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.ballot.BallotList;
-import bisq.core.dao.voting.ballot.vote.BooleanVote;
-import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -178,8 +176,9 @@ public class MyVotesView extends BaseProposalView {
 
     @Override
     protected void updateProposalList() {
-        if (selectedVoteListItem != null)
-            doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
+        //TODO
+        //if (selectedVoteListItem != null)
+        //  doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
     }
 
 
@@ -363,7 +362,8 @@ public class MyVotesView extends BaseProposalView {
 
                         if (item != null && !empty) {
                             actionButtonIconView = new ImageView();
-                            Vote vote = item.getBallot().getVote();
+                            //TODO
+                         /*   Vote vote = item.getProposal().getVote();
                             if (vote instanceof BooleanVote) {
                                 if (((BooleanVote) vote).isAccepted()) {
                                     actionButtonIconView.setId("accepted");
@@ -372,7 +372,7 @@ public class MyVotesView extends BaseProposalView {
                                 }
                             } else {
                                 //TODO
-                            }
+                            }*/
 
                             setGraphic(actionButtonIconView);
                         } else {
