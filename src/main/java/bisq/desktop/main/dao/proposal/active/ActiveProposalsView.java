@@ -18,61 +18,22 @@
 package bisq.desktop.main.dao.proposal.active;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.dao.proposal.BaseProposalView;
+import bisq.desktop.main.dao.ActiveView;
+import bisq.desktop.main.dao.ListItem;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
-import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.locale.Res;
-
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-
-import javafx.beans.property.ReadOnlyObjectWrapper;
-
-import javafx.util.Callback;
-
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
-import static bisq.desktop.util.FormBuilder.*;
-
 @FxmlView
-public class ActiveProposalsView extends BaseProposalView implements BsqBalanceListener {
-
-    private Button removeButton, acceptButton, rejectButton, removeMyVoteButton, voteButton;
-    private InputTextField stakeInputTextField;
-    private List<Node> voteViewItems = new ArrayList<>();
-    private BusyAnimation voteButtonBusyAnimation;
-    private Label voteButtonInfoLabel;
-
+public class ActiveProposalsView extends ActiveView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -87,235 +48,6 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
     }
 
-    @Override
-    public void initialize() {
-        super.initialize();
-
-        createProposalsTableView();
-        createVoteView();
-        createProposalDisplay();
-    }
-
-    @Override
-    protected void activate() {
-        super.activate();
-
-        daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
-        bsqWalletService.addBsqBalanceListener(this);
-
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockedInBondsBalance());
-
-        if (voteButton != null) {
-            voteButton.setOnAction(e -> {
-                // TODO verify stake
-                Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-                final Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
-                Transaction dummyTx = null;
-                try {
-                    // We create a dummy tx to get the mining blindVoteFee for confirmation popup
-                    dummyTx = daoFacade.getDummyBlindVoteTx(stake, blindVoteFee);
-                } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
-                    new Popup<>().warning(exception.toString()).show();
-                }
-
-                if (dummyTx != null) {
-                    Coin miningFee = dummyTx.getFee();
-                    int txSize = dummyTx.bitcoinSerialize().length;
-                    GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                            Res.get("dao.blindVote"), () -> publishBlindVote(stake));
-                }
-            });
-        }
-    }
-
-    private void publishBlindVote(Coin stake) {
-        voteButtonBusyAnimation.play();
-        voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
-        daoFacade.publishBlindVote(stake,
-                () -> {
-                    voteButtonBusyAnimation.stop();
-                    voteButtonInfoLabel.setText("");
-                    new Popup().feedback(Res.get("dao.blindVote.success"))
-                            .show();
-                }, exception -> {
-                    voteButtonBusyAnimation.stop();
-                    voteButtonInfoLabel.setText("");
-                    new Popup<>().warning(exception.toString()).show();
-                });
-    }
-
-    @Override
-    protected void deactivate() {
-        super.deactivate();
-
-        daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
-        bsqWalletService.removeBsqBalanceListener(this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Create views
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private void createVoteView() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.votes.header"),
-                Layout.GROUP_DISTANCE - 20);
-        final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, gridRow,
-                Res.getWithCol("dao.proposal.myVote.stake"), Layout
-                        .FIRST_ROW_AND_GROUP_DISTANCE - 20);
-        stakeInputTextField = tuple2.second;
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow, Res.get("dao.proposal.myVote.button"));
-        voteButton = tuple.first;
-        voteButtonBusyAnimation = tuple.second;
-        voteButtonInfoLabel = tuple.third;
-
-        voteViewItems.add(titledGroupBg);
-        voteViewItems.add(tuple2.first);
-        voteViewItems.add(stakeInputTextField);
-        voteViewItems.add(voteButton);
-
-        changeVoteViewItemsVisibility(false);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin pendingBalance,
-                                 Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
-        stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
-                bsqFormatter.formatCoinWithCode(confirmedBalance)));
-    }
-
-    protected void onSelectProposal(ProposalListItem item) {
-        super.onSelectProposal(item);
-        if (item != null) {
-            if (removeButton != null) {
-                removeButton.setManaged(false);
-                removeButton.setVisible(false);
-                removeButton = null;
-            }
-            if (acceptButton != null) {
-                acceptButton.setManaged(false);
-                acceptButton.setVisible(false);
-                acceptButton = null;
-            }
-            if (rejectButton != null) {
-                rejectButton.setManaged(false);
-                rejectButton.setVisible(false);
-                rejectButton = null;
-            }
-            if (removeMyVoteButton != null) {
-                removeMyVoteButton.setManaged(false);
-                removeMyVoteButton.setVisible(false);
-                removeMyVoteButton = null;
-            }
-
-            onPhaseChanged(daoFacade.phaseProperty().get());
-        }
-    }
-
-    private void onAccept() {
-        //TODO
-        // daoFacade.setVote(selectedProposalListItem.getProposal(), new BooleanVote(true));
-        updateStateAfterVote();
-    }
-
-
-    private void onReject() {
-        //TODO
-        // daoFacade.setVote(selectedProposalListItem.getProposal(), new BooleanVote(false));
-        updateStateAfterVote();
-    }
-
-    private void onCancelVote() {
-        //TODO
-        // daoFacade.setVote(selectedProposalListItem.getProposal(), null);
-        updateStateAfterVote();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChainHeightListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    @Override
-    protected void onPhaseChanged(DaoPhase.Phase phase) {
-        super.onPhaseChanged(phase);
-
-        changeVoteViewItemsVisibility(phase == DaoPhase.Phase.BLIND_VOTE);
-
-        if (removeButton != null) {
-            removeButton.setManaged(false);
-            removeButton.setVisible(false);
-            removeButton = null;
-        }
-        if (selectedProposalListItem != null && proposalDisplay != null) {
-            final Proposal proposal = selectedProposalListItem.getProposal();
-            switch (phase) {
-                case PROPOSAL:
-                    if (daoFacade.isMyProposal(proposal)) {
-                        if (removeButton == null) {
-                            removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
-                            removeButton.setOnAction(event -> onRemove());
-                        } else {
-                            removeButton.setManaged(true);
-                            removeButton.setVisible(true);
-                        }
-                    }
-                    break;
-                case BREAK1:
-                    break;
-                case BLIND_VOTE:
-                    if (acceptButton == null) {
-                        Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
-                                        .incrementAndGetGridRow(),
-                                Res.get("dao.proposal.myVote.accept"),
-                                Res.get("dao.proposal.myVote.reject"),
-                                Res.get("dao.proposal.myVote.removeMyVote"));
-                        acceptButton = tuple.first;
-                        acceptButton.setDefaultButton(false);
-                        rejectButton = tuple.second;
-                        removeMyVoteButton = tuple.third;
-                        acceptButton.setOnAction(event -> onAccept());
-                        rejectButton.setOnAction(event -> onReject());
-                        removeMyVoteButton.setOnAction(event -> onCancelVote());
-                    } else {
-                        //TODO prob. not possible code path
-                        acceptButton.setManaged(true);
-                        acceptButton.setVisible(true);
-                        rejectButton.setManaged(true);
-                        rejectButton.setVisible(true);
-                        removeMyVoteButton.setManaged(true);
-                        removeMyVoteButton.setVisible(true);
-                    }
-                    break;
-                case BREAK2:
-                    break;
-                case VOTE_REVEAL:
-                    break;
-                case BREAK3:
-                    break;
-                case RESULT:
-                    break;
-                case BREAK4:
-                    break;
-                case UNDEFINED:
-                default:
-                    log.error("Undefined phase: " + phase);
-                    break;
-            }
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -326,81 +58,9 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         return daoFacade.getActiveOrMyUnconfirmedProposals();
     }
 
-    private void updateStateAfterVote() {
-        hideProposalDisplay();
-        proposalTableView.getSelectionModel().clearSelection();
-    }
-
-    private void changeVoteViewItemsVisibility(boolean value) {
-        voteViewItems.forEach(node -> {
-            node.setVisible(value);
-            node.setManaged(value);
-        });
-    }
-
-    private void onRemove() {
-        final Proposal proposal = selectedProposalListItem.getProposal();
-        if (daoFacade.removeMyProposal(proposal)) {
-            hideProposalDisplay();
-        } else {
-            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
-        }
-        proposalTableView.getSelectionModel().clearSelection();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // TableColumns
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    protected void createProposalColumns(TableView<ProposalListItem> tableView) {
-        super.createProposalColumns(tableView);
-        createConfidenceColumn(tableView);
-
-        TableColumn<ProposalListItem, ProposalListItem> actionColumn = new TableColumn<>();
-        actionColumn.setMinWidth(130);
-        actionColumn.setMaxWidth(actionColumn.getMinWidth());
-
-        actionColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-
-        actionColumn.setCellFactory(new Callback<TableColumn<ProposalListItem, ProposalListItem>,
-                TableCell<ProposalListItem, ProposalListItem>>() {
-
-            @Override
-            public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
-                    ProposalListItem> column) {
-                return new TableCell<ProposalListItem, ProposalListItem>() {
-                    Node node;
-
-                    @Override
-                    public void updateItem(final ProposalListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            if (node == null) {
-                                node = item.getActionNode();
-                                setGraphic(node);
-                                item.setOnRemoveHandler(() -> {
-                                    ActiveProposalsView.this.selectedProposalListItem = item;
-                                    ActiveProposalsView.this.onRemove();
-                                });
-                                item.applyState(currentPhase);
-                            }
-                        } else {
-                            setGraphic(null);
-                            if (node != null) {
-                                if (node instanceof Button)
-                                    ((Button) node).setOnAction(null);
-                                node = null;
-                            }
-                        }
-                    }
-                };
-            }
-        });
-        actionColumn.setComparator(Comparator.comparing(ProposalListItem::getConfirmations));
-        tableView.getColumns().add(actionColumn);
+    protected ListItem getListItem(Proposal proposal) {
+        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
     }
 }
 

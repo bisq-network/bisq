@@ -22,7 +22,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.proposal.BaseProposalView;
+import bisq.desktop.main.dao.BaseProposalView;
+import bisq.desktop.main.dao.ListItem;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -187,6 +188,11 @@ public class MyVotesView extends BaseProposalView {
         return null;// daoFacade.getActiveOrMyUnconfirmedProposals();
     }
 
+    @Override
+    protected ListItem getListItem(Proposal proposal) {
+        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TableColumns
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -343,26 +349,26 @@ public class MyVotesView extends BaseProposalView {
 
 
     @Override
-    protected void createProposalColumns(TableView<ProposalListItem> tableView) {
+    protected void createProposalColumns(TableView<ListItem> tableView) {
         super.createProposalColumns(tableView);
 
-        TableColumn<ProposalListItem, ProposalListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.votes.header"));
+        TableColumn<ListItem, ListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.votes.header"));
         actionColumn.setMinWidth(50);
         actionColumn.setMaxWidth(actionColumn.getMinWidth());
 
         actionColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
-        actionColumn.setCellFactory(new Callback<TableColumn<ProposalListItem, ProposalListItem>,
-                TableCell<ProposalListItem, ProposalListItem>>() {
+        actionColumn.setCellFactory(new Callback<TableColumn<ListItem, ListItem>,
+                TableCell<ListItem, ListItem>>() {
 
             @Override
-            public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
-                    ProposalListItem> column) {
-                return new TableCell<ProposalListItem, ProposalListItem>() {
+            public TableCell<ListItem, ListItem> call(TableColumn<ListItem,
+                    ListItem> column) {
+                return new TableCell<ListItem, ListItem>() {
                     ImageView actionButtonIconView;
 
                     @Override
-                    public void updateItem(final ProposalListItem item, boolean empty) {
+                    public void updateItem(final ListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -387,7 +393,7 @@ public class MyVotesView extends BaseProposalView {
                 };
             }
         });
-        actionColumn.setComparator(Comparator.comparing(ProposalListItem::getConfirmations));
+        actionColumn.setComparator(Comparator.comparing(ListItem::getConfirmations));
         tableView.getColumns().add(actionColumn);
     }
 }

@@ -18,7 +18,9 @@
 package bisq.desktop.main.dao.proposal.closed;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.proposal.BaseProposalView;
+import bisq.desktop.main.dao.BaseProposalView;
+import bisq.desktop.main.dao.ListItem;
+import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
@@ -69,6 +71,11 @@ public class ClosedProposalsView extends BaseProposalView {
     @Override
     protected List<Proposal> getProposalList() {
         return daoFacade.getClosedProposals();
+    }
+
+    @Override
+    protected ListItem getListItem(Proposal proposal) {
+        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
     }
 }
 
