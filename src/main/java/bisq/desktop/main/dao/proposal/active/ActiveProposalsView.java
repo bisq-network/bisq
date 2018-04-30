@@ -96,7 +96,6 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
         createProposalDisplay();
     }
 
-
     @Override
     protected void activate() {
         super.activate();
@@ -245,70 +244,68 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
 
     @Override
     protected void onPhaseChanged(DaoPhase.Phase phase) {
-        if (phase != null) {
-            super.onPhaseChanged(phase);
+        super.onPhaseChanged(phase);
 
-            changeVoteViewItemsVisibility(phase == DaoPhase.Phase.BLIND_VOTE);
+        changeVoteViewItemsVisibility(phase == DaoPhase.Phase.BLIND_VOTE);
 
-            if (removeButton != null) {
-                removeButton.setManaged(false);
-                removeButton.setVisible(false);
-                removeButton = null;
-            }
-            if (selectedProposalListItem != null && proposalDisplay != null) {
-                final Proposal proposal = selectedProposalListItem.getProposal();
-                switch (phase) {
-                    case PROPOSAL:
-                        if (daoFacade.isMyProposal(proposal)) {
-                            if (removeButton == null) {
-                                removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
-                                removeButton.setOnAction(event -> onRemove());
-                            } else {
-                                removeButton.setManaged(true);
-                                removeButton.setVisible(true);
-                            }
-                        }
-                        break;
-                    case BREAK1:
-                        break;
-                    case BLIND_VOTE:
-                        if (acceptButton == null) {
-                            Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
-                                            .incrementAndGetGridRow(),
-                                    Res.get("dao.proposal.myVote.accept"),
-                                    Res.get("dao.proposal.myVote.reject"),
-                                    Res.get("dao.proposal.myVote.cancelVote"));
-                            acceptButton = tuple.first;
-                            acceptButton.setDefaultButton(false);
-                            rejectButton = tuple.second;
-                            cancelVoteButton = tuple.third;
-                            acceptButton.setOnAction(event -> onAccept());
-                            rejectButton.setOnAction(event -> onReject());
-                            cancelVoteButton.setOnAction(event -> onCancelVote());
+        if (removeButton != null) {
+            removeButton.setManaged(false);
+            removeButton.setVisible(false);
+            removeButton = null;
+        }
+        if (selectedProposalListItem != null && proposalDisplay != null) {
+            final Proposal proposal = selectedProposalListItem.getProposal();
+            switch (phase) {
+                case PROPOSAL:
+                    if (daoFacade.isMyProposal(proposal)) {
+                        if (removeButton == null) {
+                            removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
+                            removeButton.setOnAction(event -> onRemove());
                         } else {
-                            acceptButton.setManaged(true);
-                            acceptButton.setVisible(true);
-                            rejectButton.setManaged(true);
-                            rejectButton.setVisible(true);
-                            cancelVoteButton.setManaged(true);
-                            cancelVoteButton.setVisible(true);
+                            removeButton.setManaged(true);
+                            removeButton.setVisible(true);
                         }
-                        break;
-                    case BREAK2:
-                        break;
-                    case VOTE_REVEAL:
-                        break;
-                    case BREAK3:
-                        break;
-                    case RESULT:
-                        break;
-                    case BREAK4:
-                        break;
-                    case UNDEFINED:
-                    default:
-                        log.error("Undefined phase: " + phase);
-                        break;
-                }
+                    }
+                    break;
+                case BREAK1:
+                    break;
+                case BLIND_VOTE:
+                    if (acceptButton == null) {
+                        Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(detailsGridPane, proposalDisplay
+                                        .incrementAndGetGridRow(),
+                                Res.get("dao.proposal.myVote.accept"),
+                                Res.get("dao.proposal.myVote.reject"),
+                                Res.get("dao.proposal.myVote.cancelVote"));
+                        acceptButton = tuple.first;
+                        acceptButton.setDefaultButton(false);
+                        rejectButton = tuple.second;
+                        cancelVoteButton = tuple.third;
+                        acceptButton.setOnAction(event -> onAccept());
+                        rejectButton.setOnAction(event -> onReject());
+                        cancelVoteButton.setOnAction(event -> onCancelVote());
+                    } else {
+                        acceptButton.setManaged(true);
+                        acceptButton.setVisible(true);
+                        rejectButton.setManaged(true);
+                        rejectButton.setVisible(true);
+                        cancelVoteButton.setManaged(true);
+                        cancelVoteButton.setVisible(true);
+                    }
+                    break;
+                case BREAK2:
+                    break;
+                case VOTE_REVEAL:
+                    break;
+                case BREAK3:
+                    break;
+                case RESULT:
+                    break;
+                case BREAK4:
+                    break;
+                case UNDEFINED:
+                default:
+                    log.error("Undefined phase: " + phase);
+                    break;
             }
         }
     }
@@ -318,8 +315,8 @@ public class ActiveProposalsView extends BaseProposalView implements BsqBalanceL
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void updateProposalList() {
-        doUpdateProposalList(daoFacade.getActiveOrMyUnconfirmedProposals());
+    protected List<Proposal> getProposalList() {
+        return daoFacade.getActiveOrMyUnconfirmedProposals();
     }
 
     private void updateStateAfterVote() {

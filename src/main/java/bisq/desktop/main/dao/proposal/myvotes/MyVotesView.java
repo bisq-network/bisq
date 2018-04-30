@@ -32,6 +32,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.ballot.BallotList;
+import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -121,7 +122,7 @@ public class MyVotesView extends BaseProposalView {
     private void onSelectVote(VoteListItem voteListItem) {
         selectedVoteListItem = voteListItem;
         changeProposalViewItemsVisibility(selectedVoteListItem != null);
-        updateProposalList();
+        updateProposalListItems();
     }
 
     @Override
@@ -174,13 +175,17 @@ public class MyVotesView extends BaseProposalView {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /*  @Override
+      protected void updateProposalList() {
+          //TODO
+          //if (selectedVoteListItem != null)
+          //  doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
+      }*/
     @Override
-    protected void updateProposalList() {
+    protected List<Proposal> getProposalList() {
         //TODO
-        //if (selectedVoteListItem != null)
-        //  doUpdateProposalList(selectedVoteListItem.getMyVote().getBallotList().getList());
+        return null;// daoFacade.getActiveOrMyUnconfirmedProposals();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TableColumns

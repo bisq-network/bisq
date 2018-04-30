@@ -109,7 +109,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
         detailsGridPane = new GridPane();
 
-        proposalListChangeListener = c -> updateProposalList();
+        proposalListChangeListener = c -> updateProposalListItems();
         phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
@@ -124,7 +124,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
-        updateProposalList();
+        updateProposalListItems();
     }
 
     @Override
@@ -207,8 +207,8 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected void onSelectProposal(ProposalListItem item) {
         selectedProposalListItem = item;
-        if (item != null)
-            showProposalDisplay(item.getProposal());
+        if (selectedProposalListItem != null)
+            showProposalDisplay(selectedProposalListItem.getProposal());
         else
             hideProposalDisplay();
     }
@@ -225,9 +225,10 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected void updateProposalList();
+    abstract protected List<Proposal> getProposalList();
 
-    protected void doUpdateProposalList(List<Proposal> list) {
+    protected void updateProposalListItems() {
+        List<Proposal> list = getProposalList();
         proposalListItems.forEach(ProposalListItem::cleanup);
         proposalListItems.clear();
         proposalListItems.setAll(list.stream()

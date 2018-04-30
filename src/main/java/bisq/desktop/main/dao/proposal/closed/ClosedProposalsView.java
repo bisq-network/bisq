@@ -24,8 +24,11 @@ import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.voting.proposal.Proposal;
 
 import javax.inject.Inject;
+
+import java.util.List;
 
 @FxmlView
 public class ClosedProposalsView extends BaseProposalView {
@@ -64,8 +67,8 @@ public class ClosedProposalsView extends BaseProposalView {
     }
 
     @Override
-    protected void updateProposalList() {
-        doUpdateProposalList(daoFacade.getClosedProposals());
+    protected List<Proposal> getProposalList() {
+        return daoFacade.getClosedProposals();
     }
 }
 

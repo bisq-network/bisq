@@ -32,6 +32,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.ChainHeightListener;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ValidationException;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
@@ -69,7 +71,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
-public class MakeProposalView extends ActivatableView<GridPane, Void> {
+public class MakeProposalView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
@@ -134,6 +136,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        daoFacade.addChainHeightListener(this);
+        onChainHeightChanged(daoFacade.getChainHeight());
+
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().addListener(proposalTypeChangeListener);
 
         if (createButton != null)
@@ -142,10 +147,26 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
+        daoFacade.removeChainHeightListener(this);
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(proposalTypeChangeListener);
         if (createButton != null)
             createButton.setOnAction(null);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ChainHeightListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onChainHeightChanged(int blockHeight) {
+        proposalTypeComboBox.setDisable(!daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void publishMyProposal(ProposalType type) {
         try {
@@ -257,10 +278,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
         // We check in proposalDisplay that no invalid input as allowed
         checkArgument(ProposalConsensus.isDescriptionSizeValid(proposalDisplay.descriptionTextArea.getText()),
                 "descriptionText must not be longer than " +
-                ProposalConsensus.getMaxLengthDescriptionText() + " chars");
+                        ProposalConsensus.getMaxLengthDescriptionText() + " chars");
 
         // TODO add more checks for all input fields
     }
-
 }
 
