@@ -88,7 +88,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
-import bisq.common.storage.CorruptedDataBaseFilesHandler;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -175,7 +175,7 @@ public class MainViewModel implements ViewModel {
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     final TorNetworkSettingsWindow torNetworkSettingsWindow;
-    private final CorruptedDataBaseFilesHandler corruptedDataBaseFilesHandler;
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
     private final BSFormatter formatter;
 
     // BTC network
@@ -250,7 +250,7 @@ public class MainViewModel implements ViewModel {
                          DaoSetup daoSetup, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         TorNetworkSettingsWindow torNetworkSettingsWindow, CorruptedDataBaseFilesHandler corruptedDataBaseFilesHandler,
+                         TorNetworkSettingsWindow torNetworkSettingsWindow, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -280,7 +280,7 @@ public class MainViewModel implements ViewModel {
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
-        this.corruptedDataBaseFilesHandler = corruptedDataBaseFilesHandler;
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
         this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
@@ -1269,7 +1269,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void checkForCorruptedDataBaseFiles() {
-        List<String> files = corruptedDataBaseFilesHandler.getCorruptedDatabaseFiles();
+        List<String> files = corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles();
 
         if (files.size() == 0)
             return;
