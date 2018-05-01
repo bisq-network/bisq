@@ -15,7 +15,7 @@
         <key>CFBundleName</key>
         <string>Bisq</string>
         <key>CFBundleIdentifier</key>
-        <string>io.bisq.Bisq</string>
+        <string>network.bisq.CAT</string>
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundlePackageType</key>
