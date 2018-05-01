@@ -250,8 +250,8 @@ public class MainViewModel implements ViewModel {
                          DaoSetup daoSetup, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         TorNetworkSettingsWindow torNetworkSettingsWindow, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler,
-                         BSFormatter formatter) {
+                         TorNetworkSettingsWindow torNetworkSettingsWindow,
+                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
