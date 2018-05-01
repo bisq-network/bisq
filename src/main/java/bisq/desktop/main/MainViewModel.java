@@ -1270,21 +1270,22 @@ public class MainViewModel implements ViewModel {
 
     private void checkForCorruptedDataBaseFiles() {
         List<String> files = corruptedDataBaseFilesHandler.getCorruptedDatabaseFiles();
-        if (!files.isEmpty()) {
-            if (files.size() > 1 || !files.get(0).equals("ViewPathAsString")) {
-                // show warning that some files has been corrupted
-                new Popup<>()
-                        .warning(Res.get("popup.warning.incompatibleDB",
-                                files.toString(),
-                                getAppDateDir()))
-                        .useShutDownButton()
-                        .show();
-            } else {
-                log.debug("We detected incompatible data base file for Navigation. " +
-                        "That is a minor issue happening with refactoring of UI classes " +
-                        "and we don't display a warning popup to the user.");
-            }
+
+        if (files.size() == 0)
+            return;
+
+        if (files.size() == 1 && files.get(0).equals("ViewPathAsString")) {
+            log.debug("We detected incompatible data base file for Navigation. " +
+                    "That is a minor issue happening with refactoring of UI classes " +
+                    "and we don't display a warning popup to the user.");
+            return;
         }
+
+        // show warning that some files have been corrupted
+        new Popup<>()
+                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), getAppDateDir()))
+                .useShutDownButton()
+                .show();
     }
 
     private void setupDevDummyPaymentAccounts() {
