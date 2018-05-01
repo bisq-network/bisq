@@ -88,6 +88,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.storage.CorruptedDataBaseFilesHandler;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -174,6 +175,7 @@ public class MainViewModel implements ViewModel {
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     final TorNetworkSettingsWindow torNetworkSettingsWindow;
+    private final CorruptedDataBaseFilesHandler corruptedDataBaseFilesHandler;
     private final BSFormatter formatter;
 
     // BTC network
@@ -248,7 +250,8 @@ public class MainViewModel implements ViewModel {
                          DaoSetup daoSetup, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
+                         TorNetworkSettingsWindow torNetworkSettingsWindow, CorruptedDataBaseFilesHandler corruptedDataBaseFilesHandler,
+                         BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -277,6 +280,7 @@ public class MainViewModel implements ViewModel {
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
+        this.corruptedDataBaseFilesHandler = corruptedDataBaseFilesHandler;
         this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
@@ -706,6 +710,8 @@ public class MainViewModel implements ViewModel {
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
+
+        checkForCorruptedDataBaseFiles();
 
         allBasicServicesInitialized = true;
     }
@@ -1259,6 +1265,25 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     });
+        }
+    }
+
+    private void checkForCorruptedDataBaseFiles() {
+        List<String> files = corruptedDataBaseFilesHandler.getCorruptedDatabaseFiles();
+        if (!files.isEmpty()) {
+            if (files.size() > 1 || !files.get(0).equals("ViewPathAsString")) {
+                // show warning that some files has been corrupted
+                new Popup<>()
+                        .warning(Res.get("popup.warning.incompatibleDB",
+                                files.toString(),
+                                getAppDateDir()))
+                        .useShutDownButton()
+                        .show();
+            } else {
+                log.debug("We detected incompatible data base file for Navigation. " +
+                        "That is a minor issue happening with refactoring of UI classes " +
+                        "and we don't display a warning popup to the user.");
+            }
         }
     }
 
