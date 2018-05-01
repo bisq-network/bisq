@@ -16,6 +16,9 @@ win64=build/vm/vm_shared_windows
 
 mkdir -p $linux32 $linux64 $win32 $win64
 
+# temp copy
+cp build/libs/bisq-desktop--SNAPSHOT.jar "build/libs/bisq-desktop.jar"
+
 cp build/libs/bisq-desktop.jar "deploy/Bisq-$version.jar"
 
 # copy app jar to VM shared folders
