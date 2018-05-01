@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import javafx.scene.layout.GridPane;
 
 @FxmlView
-public class MyVotesView extends ActivatableView<GridPane, Void> /*extends BaseProposalView*/ {
+public class MyVotesView extends ActivatableView<GridPane, Void> /*extends ItemsView*/ {
     private final Preferences preferences;
    /*
 

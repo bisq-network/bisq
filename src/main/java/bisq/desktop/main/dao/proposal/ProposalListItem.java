@@ -17,14 +17,18 @@
 
 package bisq.desktop.main.dao.proposal;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.dao.ListItem;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.locale.Res;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class ProposalListItem extends ListItem {
     private final Proposal proposal;
+    @Getter
+    private AutoTooltipButton actionButton;
 
     public ProposalListItem(Proposal proposal,
                             DaoFacade daoFacade,
@@ -41,12 +47,37 @@ public class ProposalListItem extends ListItem {
         super(daoFacade,
                 bsqWalletService,
                 bsqFormatter);
+
         this.proposal = proposal;
+
         init();
     }
 
     @Override
-    protected Proposal getProposal() {
+    protected void init() {
+        super.init();
+
+        actionButtonIconView.setId("image-remove");
+
+        actionButton = new AutoTooltipButton();
+        actionButton.setMinWidth(70);
+        actionButton.setText(Res.get("shared.remove"));
+        actionButton.setGraphic(actionButtonIconView);
+    }
+
+    @Override
+    public void applyState(DaoPhase.Phase phase) {
+        super.applyState(phase);
+
+        actionButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
+
+        final boolean myProposal = daoFacade.isMyProposal(proposal);
+        // actionButton.setVisible(myProposal);
+        // actionButton.setManaged(myProposal);
+    }
+
+    @Override
+    public Proposal getProposal() {
         return proposal;
     }
 }

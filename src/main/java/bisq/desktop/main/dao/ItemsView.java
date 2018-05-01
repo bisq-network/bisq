@@ -36,7 +36,6 @@ import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -51,21 +50,17 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 @FxmlView
-public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
+public abstract class ItemsView extends ActivatableView<GridPane, Void> {
 
     protected final DaoFacade daoFacade;
     protected final BsqWalletService bsqWalletService;
@@ -74,18 +69,17 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final ObservableList<ListItem> proposalListItems = FXCollections.observableArrayList();
     protected final SortedList<ListItem> sortedList = new SortedList<>(proposalListItems);
-    protected final List<Node> proposalViewItems = new ArrayList<>();
     protected TableView<ListItem> proposalTableView;
     protected Subscription selectedProposalSubscription;
     protected ProposalDisplay proposalDisplay;
     protected int gridRow = 0;
     protected GridPane detailsGridPane, gridPane;
-    protected ListItem selectedProposalListItem;
-    protected ListChangeListener<Proposal> proposalListChangeListener;
-    protected ChangeListener<DaoPhase.Phase> phaseChangeListener;
+    protected ListItem selectedListItem;
+
     protected DaoPhase.Phase currentPhase;
     protected Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
+    private boolean proposalDisplayInitialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,10 +87,10 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected BaseProposalView(DaoFacade daoFacade,
-                               BsqWalletService bsqWalletService,
-                               BsqFormatter bsqFormatter,
-                               BSFormatter btcFormatter) {
+    protected ItemsView(DaoFacade daoFacade,
+                        BsqWalletService bsqWalletService,
+                        BsqFormatter bsqFormatter,
+                        BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -109,19 +103,12 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         root.getStyleClass().add("vote-root");
 
         detailsGridPane = new GridPane();
-
-        proposalListChangeListener = c -> updateListItems();
-        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
     }
 
     @Override
     protected void activate() {
         phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(proposalTableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
-
-        daoFacade.phaseProperty().addListener(phaseChangeListener);
-
-        onPhaseChanged(daoFacade.phaseProperty().get());
 
         sortedList.comparatorProperty().bind(proposalTableView.comparatorProperty());
 
@@ -133,13 +120,11 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
-        daoFacade.phaseProperty().removeListener(phaseChangeListener);
-
         sortedList.comparatorProperty().unbind();
 
         proposalListItems.forEach(ListItem::cleanup);
         proposalTableView.getSelectionModel().clearSelection();
-        selectedProposalListItem = null;
+        selectedListItem = null;
     }
 
 
@@ -171,12 +156,9 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         root.getChildren().add(proposalTableView);
 
         proposalTableView.setItems(sortedList);
-
-        proposalViewItems.add(proposalsHeadline);
-        proposalViewItems.add(proposalTableView);
     }
 
-    protected void createProposalDisplay() {
+    protected void createEmptyProposalDisplay() {
         proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
@@ -186,12 +168,14 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     }
 
     protected void hideProposalDisplay() {
-        proposalDisplay.removeAllFields();
-        proposalDisplayView.setVisible(false);
-        proposalDisplayView.setManaged(false);
+        if (proposalDisplayInitialized) {
+            proposalDisplay.removeAllFields();
+            proposalDisplayView.setVisible(false);
+            proposalDisplayView.setManaged(false);
+        }
     }
 
-    protected void showProposalDisplay(Proposal proposal) {
+    protected void createAllFieldsOnProposalDisplay(Proposal proposal) {
         proposalDisplayView.setVisible(true);
         proposalDisplayView.setManaged(true);
 
@@ -199,6 +183,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                 false, false);
         proposalDisplay.setEditable(false);
         proposalDisplay.applyProposalPayload(proposal);
+        proposalDisplayInitialized = true;
     }
 
 
@@ -207,17 +192,19 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void onSelectProposal(ListItem item) {
-        selectedProposalListItem = item;
-        if (selectedProposalListItem != null)
-            showProposalDisplay(selectedProposalListItem.getProposal());
+        selectedListItem = item;
+        if (selectedListItem != null)
+            createAllFieldsOnProposalDisplay(selectedListItem.getProposal());
         else
             hideProposalDisplay();
+
+        onPhaseChanged(daoFacade.phaseProperty().get());
     }
 
     protected void onPhaseChanged(DaoPhase.Phase phase) {
         if (phase != null && !phase.equals(currentPhase)) {
             currentPhase = phase;
-            onSelectProposal(selectedProposalListItem);
+            onSelectProposal(selectedListItem);
         }
     }
 
@@ -229,6 +216,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected void updateListItems() {
         proposalListItems.forEach(ListItem::cleanup);
         proposalListItems.clear();
+
         fillListItems();
 
         if (proposalListItems.isEmpty())
@@ -236,13 +224,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     }
 
     abstract protected void fillListItems();
-
-    protected void changeProposalViewItemsVisibility(boolean value) {
-        proposalViewItems.forEach(node -> {
-            node.setVisible(value);
-            node.setManaged(value);
-        });
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

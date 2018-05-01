@@ -47,7 +47,7 @@ public class BallotListItem extends ListItem {
     }
 
     @Override
-    protected Proposal getProposal() {
+    public Proposal getProposal() {
         return ballot.getProposal();
     }
 }

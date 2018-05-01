@@ -176,21 +176,16 @@ public class ProposalDisplay {
     }
 
     public void clearForm() {
-        if (uidTextField != null)
-            uidTextField.clear();
-        nameTextField.clear();
-        titleTextField.clear();
-        descriptionTextArea.clear();
-        linkInputTextField.clear();
-        linkHyperlinkWithIcon.clear();
-        if (requestedBsqTextField != null)
-            requestedBsqTextField.clear();
-        if (bsqAddressTextField != null)
-            bsqAddressTextField.clear();
-        if (txIdTextField != null)
-            txIdTextField.cleanup();
-
-        descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
+        if (uidTextField != null) uidTextField.clear();
+        if (nameTextField != null) nameTextField.clear();
+        if (titleTextField != null) titleTextField.clear();
+        if (descriptionTextArea != null) descriptionTextArea.clear();
+        if (linkInputTextField != null) linkInputTextField.clear();
+        if (linkHyperlinkWithIcon != null) linkHyperlinkWithIcon.clear();
+        if (requestedBsqTextField != null) requestedBsqTextField.clear();
+        if (bsqAddressTextField != null) bsqAddressTextField.clear();
+        if (txIdTextField != null) txIdTextField.cleanup();
+        if (descriptionTextArea != null) descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
     }
 
     public void fillWithMock() {

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.dao;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.BsqFormatter;
 
@@ -34,7 +33,6 @@ import bisq.core.locale.Res;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
-import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 
@@ -44,7 +42,6 @@ import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,25 +50,22 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class ListItem implements BlockListener {
     @Getter
-    private final DaoFacade daoFacade;
-    private final BsqWalletService bsqWalletService;
-    private final BsqFormatter bsqFormatter;
+    protected final DaoFacade daoFacade;
+    protected final BsqWalletService bsqWalletService;
+    protected final BsqFormatter bsqFormatter;
 
-    private ChangeListener<Number> chainHeightListener;
+    protected ChangeListener<Number> chainHeightListener;
     @Getter
-    private TxConfidenceIndicator txConfidenceIndicator;
+    protected TxConfidenceIndicator txConfidenceIndicator;
     @Getter
-    private Integer confirmations = 0;
+    protected Integer confirmations = 0;
 
-    private TxConfidenceListener txConfidenceListener;
-    private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
-    private Transaction walletTransaction;
-    private ChangeListener<DaoPhase.Phase> phaseChangeListener;
-    private AutoTooltipButton actionButton;
-    private ImageView actionButtonIconView;
-    @Setter
-    private Runnable onRemoveHandler;
-    private Node actionNode;
+    protected TxConfidenceListener txConfidenceListener;
+    protected Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
+    protected Transaction walletTransaction;
+    protected ChangeListener<DaoPhase.Phase> phaseChangeListener;
+    protected ImageView actionButtonIconView;
+    // protected Node actionNode;
 
     protected ListItem(DaoFacade daoFacade,
                        BsqWalletService bsqWalletService,
@@ -81,7 +75,7 @@ public abstract class ListItem implements BlockListener {
         this.bsqFormatter = bsqFormatter;
     }
 
-    protected abstract Proposal getProposal();
+    public abstract Proposal getProposal();
 
     protected void init() {
         txConfidenceIndicator = new TxConfidenceIndicator();
@@ -91,8 +85,7 @@ public abstract class ListItem implements BlockListener {
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
-        actionButton = new AutoTooltipButton();
-        actionButton.setMinWidth(70);
+
         actionButtonIconView = new ImageView();
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
@@ -109,69 +102,6 @@ public abstract class ListItem implements BlockListener {
     }
 
     public void applyState(DaoPhase.Phase phase) {
-        if (phase != null) {
-            actionButton.setText("");
-            actionButton.setVisible(false);
-            actionButton.setOnAction(null);
-            switch (phase) {
-                case UNDEFINED:
-                    log.error("invalid state UNDEFINED");
-                    break;
-                case PROPOSAL:
-                    if (daoFacade.isMyProposal(getProposal())) {
-                        actionButtonIconView.setVisible(actionButton.isVisible());
-                        actionButton.setText(Res.get("shared.remove"));
-                        actionButton.setGraphic(actionButtonIconView);
-                        actionButtonIconView.setId("image-remove");
-                        actionButton.setOnAction(e -> {
-                            if (onRemoveHandler != null)
-                                onRemoveHandler.run();
-                        });
-                        actionNode = actionButton;
-                    }
-                    break;
-                case BREAK1:
-                    break;
-                case BLIND_VOTE:
-                    actionNode = actionButtonIconView;
-                    actionButton.setVisible(false);
-
-                    //TODO
-                  /*  if (vote != null) {
-                        actionButtonIconView.setVisible(true);
-                        if (vote instanceof BooleanVote) {
-                            if (((BooleanVote) vote).isAccepted()) {
-                                actionButtonIconView.setId("accepted");
-                            } else {
-                                actionButtonIconView.setId("rejected");
-                            }
-                        } else {
-                            //TODO
-                        }
-                    } else {
-                        actionButtonIconView.setVisible(false);
-                    }*/
-
-                    break;
-                case BREAK2:
-                    break;
-                case VOTE_REVEAL:
-                    break;
-                case BREAK3:
-                    break;
-                case RESULT:
-                    break;
-                case BREAK4:
-                    break;
-                default:
-                    log.error("invalid state " + phase);
-            }
-            actionButton.setManaged(actionButton.isVisible());
-
-            // Don't set managed as otherwise the update does not work (not sure why but probably table
-            // cell item issue)
-            //actionButtonIconView.setManaged(actionButtonIconView.isVisible());
-        }
     }
 
 
@@ -186,7 +116,7 @@ public abstract class ListItem implements BlockListener {
     }
 
     // TODO reuse from other item
-    private void setupConfidence() {
+    protected void setupConfidence() {
         final String txId = getProposal().getTxId();
         Optional<Tx> optionalTx = daoFacade.getTx(txId);
         if (optionalTx.isPresent()) {
@@ -222,7 +152,7 @@ public abstract class ListItem implements BlockListener {
         }
     }
 
-    private void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
+    protected void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
         if (confidence != null) {
             updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
             confirmations = depthInBlocks;
@@ -238,7 +168,7 @@ public abstract class ListItem implements BlockListener {
         daoFacade.phaseProperty().removeListener(phaseChangeListener);
     }
 
-    private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
+    protected void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
         switch (confidenceType) {
             case UNKNOWN:
                 tooltip.setText(Res.get("confidence.unknown"));
@@ -259,10 +189,6 @@ public abstract class ListItem implements BlockListener {
         }
 
         txConfidenceIndicator.setPrefSize(24, 24);
-    }
-
-    public Node getActionNode() {
-        return actionNode;
     }
 }
 

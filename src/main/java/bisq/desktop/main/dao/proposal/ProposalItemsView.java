@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.closed;
+package bisq.desktop.main.dao.proposal;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.proposal.ProposalItemsView;
+import bisq.desktop.main.dao.ItemsView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
@@ -28,17 +28,22 @@ import bisq.core.dao.voting.proposal.Proposal;
 
 import javax.inject.Inject;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @FxmlView
-public class ClosedProposalsView extends ProposalItemsView {
+public abstract class ProposalItemsView extends ItemsView {
+    protected ListChangeListener<Proposal> listChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ClosedProposalsView(DaoFacade daoFacade,
+    protected ProposalItemsView(DaoFacade daoFacade,
                                 BsqWalletService bsqWalletService,
                                 BsqFormatter bsqFormatter,
                                 BSFormatter btcFormatter) {
@@ -47,8 +52,38 @@ public class ClosedProposalsView extends ProposalItemsView {
     }
 
     @Override
-    protected ObservableList<Proposal> getProposals() {
-        return daoFacade.getClosedProposals();
+    public void initialize() {
+        super.initialize();
+
+        createProposalsTableView();
+        createEmptyProposalDisplay();
+
+        listChangeListener = c -> updateListItems();
     }
+
+    @Override
+    protected void activate() {
+        super.activate();
+
+        getProposals().addListener(listChangeListener);
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        getProposals().removeListener(listChangeListener);
+    }
+
+    @Override
+    protected void fillListItems() {
+        List<Proposal> list = getProposals();
+        proposalListItems.setAll(list.stream()
+                .map(proposal -> new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
+    }
+
+    abstract protected ObservableList<Proposal> getProposals();
+
 }
 
