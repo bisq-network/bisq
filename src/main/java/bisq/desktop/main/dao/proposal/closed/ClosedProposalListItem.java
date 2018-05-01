@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.voting;
+package bisq.desktop.main.dao.proposal.closed;
 
-import bisq.desktop.main.dao.ListItem;
+import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.proposal.Proposal;
 
 import lombok.EqualsAndHashCode;
@@ -32,22 +31,19 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class BallotListItem extends ListItem {
-    private final Ballot ballot;
+public class ClosedProposalListItem extends ProposalListItem {
 
-    public BallotListItem(Ballot ballot,
-                          DaoFacade daoFacade,
-                          BsqWalletService bsqWalletService,
-                          BsqFormatter bsqFormatter) {
-        super(daoFacade,
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    ClosedProposalListItem(Proposal proposal,
+                           DaoFacade daoFacade,
+                           BsqWalletService bsqWalletService,
+                           BsqFormatter bsqFormatter) {
+        super(proposal,
+                daoFacade,
                 bsqWalletService,
                 bsqFormatter);
-        this.ballot = ballot;
-        init();
-    }
-
-    @Override
-    public Proposal getProposal() {
-        return ballot.getProposal();
     }
 }

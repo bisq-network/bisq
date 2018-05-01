@@ -30,6 +30,9 @@ import javax.inject.Inject;
 
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @FxmlView
 public class ClosedProposalsView extends ProposalItemsView {
 
@@ -49,6 +52,14 @@ public class ClosedProposalsView extends ProposalItemsView {
     @Override
     protected ObservableList<Proposal> getProposals() {
         return daoFacade.getClosedProposals();
+    }
+
+    @Override
+    protected void fillListItems() {
+        List<Proposal> list = getProposals();
+        proposalBaseProposalListItems.setAll(list.stream()
+                .map(proposal -> new ClosedProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
     }
 }
 

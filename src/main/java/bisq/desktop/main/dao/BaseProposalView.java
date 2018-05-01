@@ -60,21 +60,21 @@ import javafx.util.Callback;
 import java.util.Comparator;
 
 @FxmlView
-public abstract class ItemsView extends ActivatableView<GridPane, Void> {
+public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
 
     protected final DaoFacade daoFacade;
     protected final BsqWalletService bsqWalletService;
     protected final BsqFormatter bsqFormatter;
     protected final BSFormatter btcFormatter;
 
-    protected final ObservableList<ListItem> proposalListItems = FXCollections.observableArrayList();
-    protected final SortedList<ListItem> sortedList = new SortedList<>(proposalListItems);
-    protected TableView<ListItem> proposalTableView;
+    protected final ObservableList<BaseProposalListItem> proposalBaseProposalListItems = FXCollections.observableArrayList();
+    protected final SortedList<BaseProposalListItem> sortedList = new SortedList<>(proposalBaseProposalListItems);
+    protected TableView<BaseProposalListItem> proposalTableView;
     protected Subscription selectedProposalSubscription;
     protected ProposalDisplay proposalDisplay;
     protected int gridRow = 0;
     protected GridPane detailsGridPane, gridPane;
-    protected ListItem selectedListItem;
+    protected BaseProposalListItem selectedBaseProposalListItem;
 
     protected DaoPhase.Phase currentPhase;
     protected Subscription phaseSubscription;
@@ -87,10 +87,10 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    protected ItemsView(DaoFacade daoFacade,
-                        BsqWalletService bsqWalletService,
-                        BsqFormatter bsqFormatter,
-                        BSFormatter btcFormatter) {
+    protected BaseProposalView(DaoFacade daoFacade,
+                               BsqWalletService bsqWalletService,
+                               BsqFormatter bsqFormatter,
+                               BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -122,9 +122,9 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
 
         sortedList.comparatorProperty().unbind();
 
-        proposalListItems.forEach(ListItem::cleanup);
+        proposalBaseProposalListItems.forEach(BaseProposalListItem::cleanup);
         proposalTableView.getSelectionModel().clearSelection();
-        selectedListItem = null;
+        selectedBaseProposalListItem = null;
     }
 
 
@@ -191,10 +191,10 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
     // Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void onSelectProposal(ListItem item) {
-        selectedListItem = item;
-        if (selectedListItem != null)
-            createAllFieldsOnProposalDisplay(selectedListItem.getProposal());
+    protected void onSelectProposal(BaseProposalListItem item) {
+        selectedBaseProposalListItem = item;
+        if (selectedBaseProposalListItem != null)
+            createAllFieldsOnProposalDisplay(selectedBaseProposalListItem.getProposal());
         else
             hideProposalDisplay();
 
@@ -204,7 +204,7 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
     protected void onPhaseChanged(DaoPhase.Phase phase) {
         if (phase != null && !phase.equals(currentPhase)) {
             currentPhase = phase;
-            onSelectProposal(selectedListItem);
+            onSelectProposal(selectedBaseProposalListItem);
         }
     }
 
@@ -214,12 +214,12 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void updateListItems() {
-        proposalListItems.forEach(ListItem::cleanup);
-        proposalListItems.clear();
+        proposalBaseProposalListItems.forEach(BaseProposalListItem::cleanup);
+        proposalBaseProposalListItems.clear();
 
         fillListItems();
 
-        if (proposalListItems.isEmpty())
+        if (proposalBaseProposalListItems.isEmpty())
             hideProposalDisplay();
     }
 
@@ -230,8 +230,8 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
     // TableColumns
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void createProposalColumns(TableView<ListItem> tableView) {
-        TableColumn<ListItem, ListItem> dateColumn = new AutoTooltipTableColumn<ListItem, ListItem>(Res.get("shared.dateTime")) {
+    protected void createProposalColumns(TableView<BaseProposalListItem> tableView) {
+        TableColumn<BaseProposalListItem, BaseProposalListItem> dateColumn = new AutoTooltipTableColumn<BaseProposalListItem, BaseProposalListItem>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(190);
                 setMaxWidth(190);
@@ -239,14 +239,14 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
         };
         dateColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem,
-                        ListItem>>() {
+                new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>, TableCell<BaseProposalListItem,
+                        BaseProposalListItem>>() {
                     @Override
-                    public TableCell<ListItem, ListItem> call(
-                            TableColumn<ListItem, ListItem> column) {
-                        return new TableCell<ListItem, ListItem>() {
+                    public TableCell<BaseProposalListItem, BaseProposalListItem> call(
+                            TableColumn<BaseProposalListItem, BaseProposalListItem> column) {
+                        return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                             @Override
-                            public void updateItem(final ListItem item, boolean empty) {
+                            public void updateItem(final BaseProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
@@ -261,17 +261,17 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
         tableView.getColumns().add(dateColumn);
         tableView.getSortOrder().add(dateColumn);
 
-        TableColumn<ListItem, ListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
+        TableColumn<BaseProposalListItem, BaseProposalListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         nameColumn.setCellFactory(
-                new Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem,
-                        ListItem>>() {
+                new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>, TableCell<BaseProposalListItem,
+                        BaseProposalListItem>>() {
                     @Override
-                    public TableCell<ListItem, ListItem> call(
-                            TableColumn<ListItem, ListItem> column) {
-                        return new TableCell<ListItem, ListItem>() {
+                    public TableCell<BaseProposalListItem, BaseProposalListItem> call(
+                            TableColumn<BaseProposalListItem, BaseProposalListItem> column) {
+                        return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                             @Override
-                            public void updateItem(final ListItem item, boolean empty) {
+                            public void updateItem(final BaseProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getProposal().getName());
@@ -284,18 +284,18 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
         nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
         tableView.getColumns().add(nameColumn);
 
-        TableColumn<ListItem, ListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
+        TableColumn<BaseProposalListItem, BaseProposalListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
         titleColumn.setPrefWidth(100);
         titleColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         titleColumn.setCellFactory(
-                new Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem,
-                        ListItem>>() {
+                new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>, TableCell<BaseProposalListItem,
+                        BaseProposalListItem>>() {
                     @Override
-                    public TableCell<ListItem, ListItem> call(
-                            TableColumn<ListItem, ListItem> column) {
-                        return new TableCell<ListItem, ListItem>() {
+                    public TableCell<BaseProposalListItem, BaseProposalListItem> call(
+                            TableColumn<BaseProposalListItem, BaseProposalListItem> column) {
+                        return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                             @Override
-                            public void updateItem(final ListItem item, boolean empty) {
+                            public void updateItem(final BaseProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getProposal().getTitle());
@@ -308,20 +308,20 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
         titleColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getTitle()));
         tableView.getColumns().add(titleColumn);
 
-        TableColumn<ListItem, ListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
+        TableColumn<BaseProposalListItem, BaseProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         uidColumn.setCellFactory(
-                new Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem,
-                        ListItem>>() {
+                new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>, TableCell<BaseProposalListItem,
+                        BaseProposalListItem>>() {
 
                     @Override
-                    public TableCell<ListItem, ListItem> call(TableColumn<ListItem,
-                            ListItem> column) {
-                        return new TableCell<ListItem, ListItem>() {
+                    public TableCell<BaseProposalListItem, BaseProposalListItem> call(TableColumn<BaseProposalListItem,
+                            BaseProposalListItem> column) {
+                        return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                             private HyperlinkWithIcon field;
 
                             @Override
-                            public void updateItem(final ListItem item, boolean empty) {
+                            public void updateItem(final BaseProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
@@ -344,23 +344,23 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
         tableView.getColumns().add(uidColumn);
     }
 
-    protected void createConfidenceColumn(TableView<ListItem> tableView) {
-        TableColumn<ListItem, ListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
+    protected void createConfidenceColumn(TableView<BaseProposalListItem> tableView) {
+        TableColumn<BaseProposalListItem, BaseProposalListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
         confidenceColumn.setMinWidth(130);
         confidenceColumn.setMaxWidth(confidenceColumn.getMinWidth());
 
         confidenceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
-        confidenceColumn.setCellFactory(new Callback<TableColumn<ListItem, ListItem>,
-                TableCell<ListItem, ListItem>>() {
+        confidenceColumn.setCellFactory(new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>,
+                TableCell<BaseProposalListItem, BaseProposalListItem>>() {
 
             @Override
-            public TableCell<ListItem, ListItem> call(TableColumn<ListItem,
-                    ListItem> column) {
-                return new TableCell<ListItem, ListItem>() {
+            public TableCell<BaseProposalListItem, BaseProposalListItem> call(TableColumn<BaseProposalListItem,
+                    BaseProposalListItem> column) {
+                return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    public void updateItem(final BaseProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -372,7 +372,7 @@ public abstract class ItemsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
-        confidenceColumn.setComparator(Comparator.comparing(ListItem::getConfirmations));
+        confidenceColumn.setComparator(Comparator.comparing(BaseProposalListItem::getConfirmations));
         tableView.getColumns().add(confidenceColumn);
     }
 }

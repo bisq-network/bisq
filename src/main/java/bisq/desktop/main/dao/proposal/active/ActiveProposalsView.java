@@ -18,9 +18,8 @@
 package bisq.desktop.main.dao.proposal.active;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.ListItem;
+import bisq.desktop.main.dao.BaseProposalListItem;
 import bisq.desktop.main.dao.proposal.ProposalItemsView;
-import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -45,6 +44,8 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 
@@ -98,8 +99,20 @@ public class ActiveProposalsView extends ProposalItemsView {
         }
     }
 
-    protected void onRemove() {
-        final Proposal proposal = selectedListItem.getProposal();
+    @Override
+    protected void fillListItems() {
+        List<Proposal> list = getProposals();
+        proposalBaseProposalListItems.setAll(list.stream()
+                .map(proposal -> new ActiveProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                .collect(Collectors.toSet()));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onRemove() {
+        final Proposal proposal = selectedBaseProposalListItem.getProposal();
         if (daoFacade.removeMyProposal(proposal)) {
             hideProposalDisplay();
         } else {
@@ -114,41 +127,40 @@ public class ActiveProposalsView extends ProposalItemsView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void createProposalColumns(TableView<ListItem> tableView) {
+    protected void createProposalColumns(TableView<BaseProposalListItem> tableView) {
         super.createProposalColumns(tableView);
         createConfidenceColumn(tableView);
 
-        TableColumn<ListItem, ListItem> actionColumn = new TableColumn<>();
+        TableColumn<BaseProposalListItem, BaseProposalListItem> actionColumn = new TableColumn<>();
         actionColumn.setMinWidth(130);
         actionColumn.setMaxWidth(actionColumn.getMinWidth());
 
         actionColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
-        actionColumn.setCellFactory(new Callback<TableColumn<ListItem, ListItem>,
-                TableCell<ListItem, ListItem>>() {
+        actionColumn.setCellFactory(new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>,
+                TableCell<BaseProposalListItem, BaseProposalListItem>>() {
 
             @Override
-            public TableCell<ListItem, ListItem> call(TableColumn<ListItem,
-                    ListItem> column) {
-                return new TableCell<ListItem, ListItem>() {
+            public TableCell<BaseProposalListItem, BaseProposalListItem> call(TableColumn<BaseProposalListItem,
+                    BaseProposalListItem> column) {
+                return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                     Button button;
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    public void updateItem(final BaseProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            ProposalListItem proposalListItem = (ProposalListItem) item;
-
-                            proposalListItem.applyState(currentPhase);
+                            ActiveProposalListItem activeProposalListItem = (ActiveProposalListItem) item;
                             if (button == null) {
-                                button = proposalListItem.getActionButton();
-                                setGraphic(button);
+                                button = activeProposalListItem.getActionButton();
                                 button.setOnAction(e -> {
-                                    ActiveProposalsView.this.selectedListItem = item;
+                                    ActiveProposalsView.this.selectedBaseProposalListItem = item;
                                     ActiveProposalsView.this.onRemove();
                                 });
+                                setGraphic(button);
                             }
+                            activeProposalListItem.onPhase(currentPhase);
                         } else {
                             setGraphic(null);
                             if (button != null) {
@@ -160,7 +172,7 @@ public class ActiveProposalsView extends ProposalItemsView {
                 };
             }
         });
-        actionColumn.setComparator(Comparator.comparing(ListItem::getConfirmations));
+        actionColumn.setComparator(Comparator.comparing(BaseProposalListItem::getConfirmations));
         tableView.getColumns().add(actionColumn);
     }
 }

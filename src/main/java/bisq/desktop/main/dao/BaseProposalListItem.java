@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public abstract class ListItem implements BlockListener {
+public abstract class BaseProposalListItem implements BlockListener {
     @Getter
     protected final DaoFacade daoFacade;
     protected final BsqWalletService bsqWalletService;
@@ -64,18 +64,55 @@ public abstract class ListItem implements BlockListener {
     protected Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
     protected Transaction walletTransaction;
     protected ChangeListener<DaoPhase.Phase> phaseChangeListener;
-    protected ImageView actionButtonIconView;
-    // protected Node actionNode;
+    @Getter
+    protected ImageView imageView;
 
-    protected ListItem(DaoFacade daoFacade,
-                       BsqWalletService bsqWalletService,
-                       BsqFormatter bsqFormatter) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected BaseProposalListItem(DaoFacade daoFacade,
+                                   BsqWalletService bsqWalletService,
+                                   BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BlockListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBlockAdded(Block block) {
+        setupConfidence();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onPhase(DaoPhase.Phase phase) {
+    }
+
+    public void cleanup() {
+        daoFacade.removeBlockListener(this);
+        bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
+        if (txConfidenceListener != null)
+            bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
+
+        daoFacade.phaseProperty().removeListener(phaseChangeListener);
+    }
+
     public abstract Proposal getProposal();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void init() {
         txConfidenceIndicator = new TxConfidenceIndicator();
@@ -86,7 +123,7 @@ public abstract class ListItem implements BlockListener {
         txConfidenceIndicator.setTooltip(tooltip);
 
 
-        actionButtonIconView = new ImageView();
+        imageView = new ImageView();
 
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
@@ -94,29 +131,18 @@ public abstract class ListItem implements BlockListener {
 
         daoFacade.addBlockListener(this);
 
-        phaseChangeListener = (observable, oldValue, newValue) -> {
-            applyState(newValue);
-        };
+        phaseChangeListener = (observable, oldValue, newValue) -> onPhase(newValue);
 
         daoFacade.phaseProperty().addListener(phaseChangeListener);
     }
 
-    public void applyState(DaoPhase.Phase phase) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Listener
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onBlockAdded(Block block) {
-        //TODO do we want that here???
-        setupConfidence();
-    }
 
     // TODO reuse from other item
-    protected void setupConfidence() {
+    private void setupConfidence() {
         final String txId = getProposal().getTxId();
         Optional<Tx> optionalTx = daoFacade.getTx(txId);
         if (optionalTx.isPresent()) {
@@ -152,23 +178,14 @@ public abstract class ListItem implements BlockListener {
         }
     }
 
-    protected void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
+    private void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
         if (confidence != null) {
             updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
             confirmations = depthInBlocks;
         }
     }
 
-    public void cleanup() {
-        daoFacade.removeBlockListener(this);
-        bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
-        if (txConfidenceListener != null)
-            bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
-
-        daoFacade.phaseProperty().removeListener(phaseChangeListener);
-    }
-
-    protected void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
+    private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
         switch (confidenceType) {
             case UNKNOWN:
                 tooltip.setText(Res.get("confidence.unknown"));

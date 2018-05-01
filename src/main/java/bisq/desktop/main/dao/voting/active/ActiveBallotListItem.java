@@ -15,39 +15,45 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal;
+package bisq.desktop.main.dao.voting.active;
 
 import bisq.desktop.main.dao.BaseProposalListItem;
 import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.voting.ballot.Ballot;
+import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.dao.voting.proposal.Proposal;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public abstract class ProposalListItem extends BaseProposalListItem {
-    protected final Proposal proposal;
+public class ActiveBallotListItem extends BaseProposalListItem {
+    @Getter
+    private final Ballot ballot;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected ProposalListItem(Proposal proposal,
-                               DaoFacade daoFacade,
-                               BsqWalletService bsqWalletService,
-                               BsqFormatter bsqFormatter) {
+    public ActiveBallotListItem(Ballot ballot,
+                                DaoFacade daoFacade,
+                                BsqWalletService bsqWalletService,
+                                BsqFormatter bsqFormatter) {
         super(daoFacade,
                 bsqWalletService,
                 bsqFormatter);
 
-        this.proposal = proposal;
+        this.ballot = ballot;
 
         init();
     }
@@ -58,7 +64,33 @@ public abstract class ProposalListItem extends BaseProposalListItem {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void init() {
+        super.init();
+    }
+
+    @Override
+    public void onPhase(DaoPhase.Phase phase) {
+        super.onPhase(phase);
+
+        final Vote vote = ballot.getVote();
+        if (vote != null) {
+            imageView.setVisible(true);
+            if (vote instanceof BooleanVote) {
+                if (((BooleanVote) vote).isAccepted()) {
+                    imageView.setId("accepted");
+                } else {
+                    imageView.setId("rejected");
+                }
+            } else {
+                //TODO
+            }
+        } else {
+            imageView.setVisible(false);
+        }
+    }
+
+    @Override
     public Proposal getProposal() {
-        return proposal;
+        return ballot.getProposal();
     }
 }

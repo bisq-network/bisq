@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.proposal;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.ItemsView;
+import bisq.desktop.main.dao.BaseProposalView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 
@@ -31,11 +31,8 @@ import javax.inject.Inject;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @FxmlView
-public abstract class ProposalItemsView extends ItemsView {
+public abstract class ProposalItemsView extends BaseProposalView {
     protected ListChangeListener<Proposal> listChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,15 +72,6 @@ public abstract class ProposalItemsView extends ItemsView {
         getProposals().removeListener(listChangeListener);
     }
 
-    @Override
-    protected void fillListItems() {
-        List<Proposal> list = getProposals();
-        proposalListItems.setAll(list.stream()
-                .map(proposal -> new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
-                .collect(Collectors.toSet()));
-    }
-
     abstract protected ObservableList<Proposal> getProposals();
-
 }
 

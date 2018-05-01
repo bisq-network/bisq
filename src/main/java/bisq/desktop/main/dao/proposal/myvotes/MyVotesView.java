@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import javafx.scene.layout.GridPane;
 
 @FxmlView
-public class MyVotesView extends ActivatableView<GridPane, Void> /*extends ItemsView*/ {
+public class MyVotesView extends ActivatableView<GridPane, Void> /*extends BaseProposalView*/ {
     private final Preferences preferences;
    /*
 
@@ -153,8 +153,8 @@ public class MyVotesView extends ActivatableView<GridPane, Void> /*extends Items
     }
 
     @Override
-    protected ListItem getListItem(Proposal proposal) {
-        return new ProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
+    protected BaseProposalListItem getListItem(Proposal proposal) {
+        return new ActiveProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -313,26 +313,26 @@ public class MyVotesView extends ActivatableView<GridPane, Void> /*extends Items
 
 
     @Override
-    protected void createProposalColumns(TableView<ListItem> tableView) {
+    protected void createProposalColumns(TableView<BaseProposalListItem> tableView) {
         super.createProposalColumns(tableView);
 
-        TableColumn<ListItem, ListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.votes.header"));
+        TableColumn<BaseProposalListItem, BaseProposalListItem> actionColumn = new TableColumn<>(Res.get("dao.proposal.votes.header"));
         actionColumn.setMinWidth(50);
         actionColumn.setMaxWidth(actionColumn.getMinWidth());
 
         actionColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
-        actionColumn.setCellFactory(new Callback<TableColumn<ListItem, ListItem>,
-                TableCell<ListItem, ListItem>>() {
+        actionColumn.setCellFactory(new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>,
+                TableCell<BaseProposalListItem, BaseProposalListItem>>() {
 
             @Override
-            public TableCell<ListItem, ListItem> call(TableColumn<ListItem,
-                    ListItem> column) {
-                return new TableCell<ListItem, ListItem>() {
+            public TableCell<BaseProposalListItem, BaseProposalListItem> call(TableColumn<BaseProposalListItem,
+                    BaseProposalListItem> column) {
+                return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
                     ImageView actionButtonIconView;
 
                     @Override
-                    public void updateItem(final ListItem item, boolean empty) {
+                    public void updateItem(final BaseProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -357,7 +357,7 @@ public class MyVotesView extends ActivatableView<GridPane, Void> /*extends Items
                 };
             }
         });
-        actionColumn.setComparator(Comparator.comparing(ListItem::getConfirmations));
+        actionColumn.setComparator(Comparator.comparing(BaseProposalListItem::getConfirmations));
         tableView.getColumns().add(actionColumn);
     }*/
 }

@@ -27,7 +27,7 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.voting.ballots.BallotsView;
+import bisq.desktop.main.dao.voting.active.ActiveBallotsView;
 import bisq.desktop.main.dao.voting.dashboard.VotingDashboardView;
 
 import bisq.core.locale.Res;
@@ -82,7 +82,7 @@ public class VotingView extends ActivatableViewAndModel {
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 VotingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         ballots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.ballots"),
-                BallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                ActiveBallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, ballots);
     }
 
@@ -96,7 +96,7 @@ public class VotingView extends ActivatableViewAndModel {
         if (viewPath.size() == 3 && viewPath.indexOf(VotingView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = BallotsView.class;
+                selectedViewClass = ActiveBallotsView.class;
 
             loadView(selectedViewClass);
 
@@ -119,7 +119,7 @@ public class VotingView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof VotingDashboardView) dashboard.setSelected(true);
-        else if (view instanceof BallotsView) ballots.setSelected(true);
+        else if (view instanceof ActiveBallotsView) ballots.setSelected(true);
     }
 
     public Class<? extends View> getSelectedViewClass() {
