@@ -57,6 +57,8 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         this.openOffer = openOffer;
         this.initialState = openOffer.getState();
         this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
+
+        this.allowAmountUpdate = false;
     }
 
     public void populateData() {

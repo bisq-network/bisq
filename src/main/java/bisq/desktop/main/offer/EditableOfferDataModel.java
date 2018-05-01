@@ -134,6 +134,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     private boolean marketPriceAvailable;
     private int feeTxSize = 260; // size of typical tx with 1 input
     private int feeTxSizeEstimationRecursionCounter;
+    protected boolean allowAmountUpdate = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -652,7 +653,8 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         if (volume.get() != null &&
                 price.get() != null &&
                 !volume.get().isZero() &&
-                !price.get().isZero()) {
+                !price.get().isZero() &&
+                allowAmountUpdate) {
             try {
                 amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
                 calculateTotalToPay();

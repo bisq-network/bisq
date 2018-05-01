@@ -70,6 +70,16 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         super.initialize();
 
         addConfirmEditGroup();
+        renameAmountGroup();
+    }
+
+    private void renameAmountGroup() {
+        amountTitledGroupBg.setText(Res.get("editOffer.setPrice"));
+    }
+
+    @Override
+    protected void doSetFocus() {
+        // Don't focus in any field before data was set
     }
 
     @Override
@@ -78,12 +88,15 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
 
         addBindings();
 
-        hidePaymentGroup();
         hideOptionsGroup();
 
         // Lock amount field as it would require bigger changes to support increased amount values.
         amountTextField.setDisable(true);
+        amountBtcLabel.setDisable(true);
         minAmountTextField.setDisable(true);
+        minAmountBtcLabel.setDisable(true);
+        volumeTextField.setDisable(true);
+        volumeCurrencyLabel.setDisable(true);
 
         // Workaround to fix margin on top of amount group
         gridPane.setPadding(new Insets(-20, 25, -1, 25));
@@ -91,20 +104,15 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         updateMarketPriceAvailable();
         updateElementsWithDirection();
 
-        model.onStartEditOffer(errorMessage -> {
-            log.error(errorMessage);
-            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
-                    .onClose(() -> {
-                        close();
-                    })
-                    .show();
-        });
-
         model.isNextButtonDisabled.setValue(false);
         cancelButton.setDisable(false);
 
         model.onInvalidateMarketPriceMargin();
         model.onInvalidatePrice();
+
+        // To force re-validation of payment account validation
+        onPaymentAccountsComboBoxSelected();
+        hidePaymentGroup();
     }
 
     @Override
@@ -127,8 +135,18 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(OpenOffer openOffer) {
-        super.initWithData(openOffer.getOffer().getDirection(), CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
+        super.initWithData(openOffer.getOffer().getDirection(),
+                CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
         model.initWithData(openOffer);
+
+        model.onStartEditOffer(errorMessage -> {
+            log.error(errorMessage);
+            new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
+                    .onClose(() -> {
+                        close();
+                    })
+                    .show();
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
