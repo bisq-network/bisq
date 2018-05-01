@@ -69,8 +69,8 @@ public class ActiveBallotListItem extends BaseProposalListItem {
     }
 
     @Override
-    public void onPhase(DaoPhase.Phase phase) {
-        super.onPhase(phase);
+    public void onPhaseChanged(DaoPhase.Phase phase) {
+        super.onPhaseChanged(phase);
 
         final Vote vote = ballot.getVote();
         if (vote != null) {

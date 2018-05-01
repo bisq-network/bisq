@@ -95,7 +95,7 @@ public abstract class BaseProposalListItem implements BlockListener {
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onPhase(DaoPhase.Phase phase) {
+    public void onPhaseChanged(DaoPhase.Phase phase) {
     }
 
     public void cleanup() {
@@ -131,7 +131,7 @@ public abstract class BaseProposalListItem implements BlockListener {
 
         daoFacade.addBlockListener(this);
 
-        phaseChangeListener = (observable, oldValue, newValue) -> onPhase(newValue);
+        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
 
         daoFacade.phaseProperty().addListener(phaseChangeListener);
     }

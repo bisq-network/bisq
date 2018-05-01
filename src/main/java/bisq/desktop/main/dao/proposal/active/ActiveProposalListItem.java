@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class ActiveProposalListItem extends ProposalListItem {
     @Getter
-    private AutoTooltipButton actionButton;
+    private AutoTooltipButton removeButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,20 +65,20 @@ public class ActiveProposalListItem extends ProposalListItem {
 
         imageView.setId("image-remove");
 
-        actionButton = new AutoTooltipButton();
-        actionButton.setMinWidth(70);
-        actionButton.setText(Res.get("shared.remove"));
-        actionButton.setGraphic(imageView);
+        removeButton = new AutoTooltipButton();
+        removeButton.setMinWidth(70);
+        removeButton.setText(Res.get("shared.remove"));
+        removeButton.setGraphic(imageView);
     }
 
     @Override
-    public void onPhase(DaoPhase.Phase phase) {
-        super.onPhase(phase);
+    public void onPhaseChanged(DaoPhase.Phase phase) {
+        super.onPhaseChanged(phase);
 
-        actionButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
+        removeButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
 
         final boolean myProposal = daoFacade.isMyProposal(proposal);
-        actionButton.setVisible(myProposal);
-        actionButton.setManaged(myProposal);
+        removeButton.setVisible(myProposal);
+        removeButton.setManaged(myProposal);
     }
 }

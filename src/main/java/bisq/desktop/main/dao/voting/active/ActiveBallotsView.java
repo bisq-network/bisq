@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.voting.active;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.BaseProposalListItem;
 import bisq.desktop.main.dao.BaseProposalView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -294,7 +293,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createVoteView() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1,
+        addTitledGroupBg(root, ++gridRow, 1,
                 Res.get("dao.proposal.votes.header"), Layout.GROUP_DISTANCE - 20);
         final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, gridRow,
                 Res.getWithCol("dao.proposal.myVote.stake"), Layout.FIRST_ROW_AND_GROUP_DISTANCE - 20);
@@ -341,7 +340,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
                                 imageView = activeBallotListItem.getImageView();
                                 setGraphic(imageView);
                             }
-                            activeBallotListItem.onPhase(currentPhase);
+                            activeBallotListItem.onPhaseChanged(currentPhase);
                         } else {
                             setGraphic(null);
                             if (imageView != null)

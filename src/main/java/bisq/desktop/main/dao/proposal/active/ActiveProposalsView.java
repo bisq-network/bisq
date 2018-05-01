@@ -107,6 +107,21 @@ public class ActiveProposalsView extends ProposalItemsView {
                 .collect(Collectors.toSet()));
     }
 
+
+    @Override
+    public void onPhaseChanged(DaoPhase.Phase phase) {
+        super.onPhaseChanged(phase);
+
+        if (removeButton != null) {
+            removeButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
+            if (selectedBaseProposalListItem != null && selectedBaseProposalListItem.getProposal() != null) {
+                final boolean myProposal = daoFacade.isMyProposal(selectedBaseProposalListItem.getProposal());
+                removeButton.setVisible(myProposal);
+                removeButton.setManaged(myProposal);
+            }
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -153,14 +168,14 @@ public class ActiveProposalsView extends ProposalItemsView {
                         if (item != null && !empty) {
                             ActiveProposalListItem activeProposalListItem = (ActiveProposalListItem) item;
                             if (button == null) {
-                                button = activeProposalListItem.getActionButton();
+                                button = activeProposalListItem.getRemoveButton();
                                 button.setOnAction(e -> {
                                     ActiveProposalsView.this.selectedBaseProposalListItem = item;
                                     ActiveProposalsView.this.onRemove();
                                 });
                                 setGraphic(button);
                             }
-                            activeProposalListItem.onPhase(currentPhase);
+                            activeProposalListItem.onPhaseChanged(currentPhase);
                         } else {
                             setGraphic(null);
                             if (button != null) {
