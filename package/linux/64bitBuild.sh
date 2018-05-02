@@ -9,6 +9,7 @@ set -e
 version=0.7.0
 
 dir="/media/sf_vm_shared_ubuntu"
+linux_user="bisq"
 
 # Note: fakeroot needs to be installed on linux
 $JAVA_HOME/bin/javapackager \
@@ -44,7 +45,7 @@ $JAVA_HOME/bin/javapackager \
 # uncomment because the build VM does not support alien
 #sudo alien -r -c -k deploy/bundles/bisq-$version.deb
 
-cp "deploy/bundles/bisq-$version.deb" "/home/mk/Desktop/Bisq-64bit-$version.deb"
+cp "deploy/bundles/bisq-$version.deb" "/home/$linux_user/Desktop/Bisq-64bit-$version.deb"
 mv "deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
 #mv "bisq-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.rpm"
 rm -r deploy/
