@@ -45,7 +45,6 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
-import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
@@ -126,8 +125,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             MainView mainView = loadMainView(injector);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
-
-            setDatabaseCorruptionHandler(mainView);
 
             checkForCorrectOSArchitecture();
 
@@ -248,16 +245,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
         return (MainView) viewLoader.load(MainView.class);
     }
-
-    private void setDatabaseCorruptionHandler(MainView mainView) {
-        Storage.setDatabaseCorruptionHandler((String fileName) -> {
-            corruptedDatabaseFiles.add(fileName);
-            if (mainView != null)
-                mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-        });
-        mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-    }
-
 
     private void addSceneKeyEventHandler(Scene scene, Injector injector) {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
