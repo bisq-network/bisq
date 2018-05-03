@@ -48,6 +48,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
     private final BSFormatter formatter;
@@ -98,11 +100,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
-        spreadColumn.setComparator((o1, o2) -> {
-            Long spreadO1 = o1.priceSpread != null ? o1.priceSpread.getValue() : 0;
-            Long spreadO2 = o2.priceSpread != null ? o2.priceSpread.getValue() : 0;
-            return spreadO1.compareTo(spreadO2);
-        });
+        spreadColumn.setComparator(Comparator.comparingDouble(o -> o.percentageValue));
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
