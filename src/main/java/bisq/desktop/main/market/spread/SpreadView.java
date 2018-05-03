@@ -95,11 +95,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         tableView.getColumns().add(spreadColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        currencyColumn.setComparator((o1, o2) -> CurrencyUtil.getNameByCode(o1.currencyCode).compareTo(CurrencyUtil.getNameByCode(o2.currencyCode)));
+        currencyColumn.setComparator(Comparator.comparing(o -> CurrencyUtil.getNameByCode(o.currencyCode)));
         numberOfOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfOffers).compareTo(o2.numberOfOffers));
         numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
-        totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
+        totalAmountColumn.setComparator(Comparator.comparing(o -> o.totalAmount));
         spreadColumn.setComparator(Comparator.comparingDouble(o -> o.percentageValue));
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
