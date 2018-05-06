@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath files('gradle/witness/gradle-witness.jar')
     }
 }
@@ -12,6 +12,7 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'witness'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'network.bisq'
 version = '-SNAPSHOT'

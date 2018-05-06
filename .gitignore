@@ -26,3 +26,4 @@ build
 desktop.ini
 */target/*
 *.class
+deploy
