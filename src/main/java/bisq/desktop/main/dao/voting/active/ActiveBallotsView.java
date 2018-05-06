@@ -33,6 +33,8 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
@@ -71,7 +73,7 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ActiveBallotsView extends BaseProposalView implements BsqBalanceListener {
+public class ActiveBallotsView extends BaseProposalView implements BsqBalanceListener, BlockListener {
     private Button acceptButton, rejectButton, removeMyVoteButton, voteButton;
     private InputTextField stakeInputTextField;
     private BusyAnimation voteButtonBusyAnimation;
@@ -115,6 +117,10 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
                 bsqWalletService.getLockedInBondsBalance());
 
         voteButton.setOnAction(e -> onVote());
+
+        daoFacade.addBlockListener(this);
+
+        updateButtons();
     }
 
 
@@ -140,6 +146,15 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
                 bsqFormatter.formatCoinWithCode(confirmedBalance)));
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BlockListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBlockAdded(Block block) {
+        updateButtons();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -151,6 +166,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
         proposalBaseProposalListItems.setAll(list.stream()
                 .map(ballot -> new ActiveBallotListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
                 .collect(Collectors.toSet()));
+        updateButtons();
     }
 
     @Override
@@ -276,15 +292,13 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     }
 
     private void updateButtons() {
-        if (selectedBaseProposalListItem != null && proposalDisplay != null) {
-            final boolean isBlindVotePhase = daoFacade.phaseProperty().get() == DaoPhase.Phase.BLIND_VOTE;
-            stakeInputTextField.setDisable(!isBlindVotePhase);
-            voteButton.setDisable(!isBlindVotePhase);
+        final boolean isBlindVotePhase = daoFacade.phaseProperty().get() == DaoPhase.Phase.BLIND_VOTE;
+        stakeInputTextField.setDisable(!isBlindVotePhase);
+        voteButton.setDisable(!isBlindVotePhase);
 
-            acceptButton.setDisable(!isBlindVotePhase);
-            rejectButton.setDisable(!isBlindVotePhase);
-            removeMyVoteButton.setDisable(!isBlindVotePhase);
-        }
+        if (acceptButton != null) acceptButton.setDisable(!isBlindVotePhase);
+        if (rejectButton != null) rejectButton.setDisable(!isBlindVotePhase);
+        if (removeMyVoteButton != null) removeMyVoteButton.setDisable(!isBlindVotePhase);
     }
 
 

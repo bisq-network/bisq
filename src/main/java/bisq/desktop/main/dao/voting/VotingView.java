@@ -28,6 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.voting.active.ActiveBallotsView;
+import bisq.desktop.main.dao.voting.closed.ClosedBallotsView;
 import bisq.desktop.main.dao.voting.dashboard.VotingDashboardView;
 
 import bisq.core.locale.Res;
@@ -51,7 +52,7 @@ public class VotingView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, ballots;
+    private MenuItem dashboard, activeBallots, closedBallots;
     private Navigation.Listener listener;
 
     @FXML
@@ -81,15 +82,18 @@ public class VotingView extends ActivatableViewAndModel {
         final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, VotingView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 VotingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
-        ballots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.ballots"),
+        activeBallots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.activeBallots"),
                 ActiveBallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, ballots);
+        closedBallots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.closedBallots"),
+                ClosedBallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
+        leftVBox.getChildren().addAll(dashboard, activeBallots, closedBallots);
     }
 
     @Override
     protected void activate() {
         dashboard.activate();
-        ballots.activate();
+        activeBallots.activate();
+        closedBallots.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -111,7 +115,8 @@ public class VotingView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
 
         dashboard.deactivate();
-        ballots.deactivate();
+        activeBallots.deactivate();
+        closedBallots.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -119,7 +124,8 @@ public class VotingView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof VotingDashboardView) dashboard.setSelected(true);
-        else if (view instanceof ActiveBallotsView) ballots.setSelected(true);
+        else if (view instanceof ActiveBallotsView) activeBallots.setSelected(true);
+        else if (view instanceof ClosedBallotsView) closedBallots.setSelected(true);
     }
 
     public Class<? extends View> getSelectedViewClass() {
