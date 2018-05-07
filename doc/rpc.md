@@ -20,7 +20,7 @@ For mainnet:
 --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=8332 --rpcBlockNotificationPort=4159
 
 If you use mainnet it is recommended to use a Bitcoin node with no funds in the wallet to avoid security risks when
-enabling rpc or take sufficient precautions from your network setup.
+enabling RPC or take sufficient precautions from your network setup.
 
 In the bitcoin.conf file you need to set txindex=1.
 That causes a re-index of the whole data base which takes considerable time with a
@@ -31,6 +31,6 @@ If you want to dump the blockchain data to json add: --dumpBlockchainData=true (
 If you use RegTest in development environment you need to create the genesis transaction.
 Create one Bitcoin transaction from Bitcoin Core to one or 2 Bisq instances using the BSQ receive addresses from those apps (1 tx with 2 or more outputs to the Bisq app).
 If you copy the BSQ address and use that in Bitcoin Core you need to remove the "B" at the beginning. This is only for protection to mix up BTC and BSQ addresses but without the B it is a native Bitcoin address.
-Create one block with the debug commandline inside Bitcoin Core (generate 1). Look up the block height in the info screen in the debug window.
+Create one block with the debug command line inside Bitcoin Core (generate 1). Look up the block height in the info screen in the debug window.
 Set the block height and transaction ID at BsqBlockChain.BTC_REG_TEST_GENESIS_TX_ID and BsqBlockChain.BTC_REG_TEST_GENESIS_BLOCK_HEIGHT.
 Restart the Bisq apps. After that the app will recognize the received Bitcoin as BSQ.
