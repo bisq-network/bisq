@@ -1,6 +1,7 @@
 package io.bisq.api.service.v1;
 
-import io.bisq.api.*;
+import io.bisq.api.BisqProxy;
+import io.bisq.api.NotFoundException;
 import io.bisq.api.model.BackupList;
 import io.bisq.api.model.CreatedBackup;
 import io.swagger.annotations.Api;
@@ -77,7 +78,7 @@ public class BackupResource {
         try {
             bisqProxy.requestBackupRestore(fileName);
         } catch (FileNotFoundException e) {
-            throw new io.bisq.api.NotFoundException(e.getMessage());
+            throw new NotFoundException(e.getMessage());
         }
     }
 
