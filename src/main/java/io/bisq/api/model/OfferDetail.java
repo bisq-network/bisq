@@ -7,6 +7,7 @@ import bisq.network.p2p.NodeAddress;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -22,6 +23,7 @@ public class OfferDetail {
     public String counterCurrencyCode;
     public String countryCode;
     public String currencyCode;
+    public Map<String, String> extraDataMap;
     public Date date;
     public OfferPayload.Direction direction;
     public String hashOfChallenge;
@@ -92,6 +94,7 @@ public class OfferDetail {
         this.isPrivateOffer = offerPayload.isPrivateOffer();
         this.hashOfChallenge = offerPayload.getHashOfChallenge();
         this.protocolVersion = offerPayload.getProtocolVersion();
+        this.extraDataMap = offerPayload.getExtraDataMap();
     }
 }
 
