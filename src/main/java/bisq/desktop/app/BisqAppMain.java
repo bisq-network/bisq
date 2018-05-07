@@ -28,12 +28,21 @@ import bisq.common.app.AppModule;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 import com.google.inject.Injector;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
+
+
+
+import io.bisq.api.app.ApiEnvironment;
+import io.bisq.api.app.ApiOptionCustomizer;
+import io.bisq.api.service.BisqApiApplication;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
@@ -53,6 +62,17 @@ public class BisqAppMain extends BisqExecutable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void customizeOptionParsing(OptionParser parser) {
+        super.customizeOptionParsing(parser);
+        ApiOptionCustomizer.customizeOptionParsing(parser);
+    }
+
+    @Override
+    protected void setupEnvironment(OptionSet options) {
+        bisqEnvironment = new ApiEnvironment(options);
+    }
 
     @Override
     protected void configUserThread() {
@@ -111,5 +131,7 @@ public class BisqAppMain extends BisqExecutable {
     protected void startApplication() {
         // We need to be in user thread! We mapped at launchApplication already...
         application.startApplication();
+        if (((ApiEnvironment) bisqEnvironment).isApiEnabled())
+            injector.getInstance(BisqApiApplication.class).run();
     }
 }

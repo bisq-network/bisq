@@ -25,6 +25,10 @@ import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;
 
+
+
+import io.bisq.api.app.ApiModule;
+
 public class BisqAppModule extends AppModule {
 
     public BisqAppModule(Environment environment) {
@@ -35,6 +39,11 @@ public class BisqAppModule extends AppModule {
     protected void configure() {
         install(coreModule());
         install(desktopModule());
+        install(apiModule());
+    }
+
+    private ApiModule apiModule() {
+        return new ApiModule(environment);
     }
 
     private CoreModule coreModule() {
