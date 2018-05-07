@@ -291,6 +291,7 @@ public class OfferResourceIT {
                         and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                         and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
                         and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
+                        and().body("extraDataMap.accountAgeWitnessHash", isA(String.class)).
                         and().body("date", isA(Long.class)).
                         and().body("direction", equalTo(OfferPayload.Direction.BUY.name())).
                         and().body("id", isA(String.class)).
