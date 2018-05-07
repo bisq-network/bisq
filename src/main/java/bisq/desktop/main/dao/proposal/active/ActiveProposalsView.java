@@ -17,9 +17,14 @@
 
 package bisq.desktop.main.dao.proposal.active;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.BaseProposalListItem;
+import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.proposal.ProposalItemsView;
+import bisq.desktop.main.dao.voting.VotingView;
+import bisq.desktop.main.dao.voting.active.ActiveBallotsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
@@ -51,8 +56,9 @@ import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 
 @FxmlView
 public class ActiveProposalsView extends ProposalItemsView {
+    private final Navigation navigation;
 
-    private Button removeButton;
+    private Button button;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +69,11 @@ public class ActiveProposalsView extends ProposalItemsView {
     private ActiveProposalsView(DaoFacade daoFacade,
                                 BsqWalletService bsqWalletService,
                                 BsqFormatter bsqFormatter,
-                                BSFormatter btcFormatter) {
+                                BSFormatter btcFormatter,
+                                Navigation navigation) {
 
         super(daoFacade, bsqWalletService, bsqFormatter, btcFormatter);
+        this.navigation = navigation;
     }
 
 
@@ -83,19 +91,18 @@ public class ActiveProposalsView extends ProposalItemsView {
     protected void createAllFieldsOnProposalDisplay(Proposal proposal) {
         super.createAllFieldsOnProposalDisplay(proposal);
 
-        removeButton = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.active.remove"));
-        removeButton.setOnAction(event -> onRemove());
-        removeButton.setDisable(daoFacade.phaseProperty().get() != DaoPhase.Phase.PROPOSAL);
-
+        button = addButtonAfterGroup(detailsGridPane, proposalDisplay.incrementAndGetGridRow(), "");
+        button.setOnAction(event -> onButtonClick());
+        onPhaseChanged(daoFacade.phaseProperty().get());
     }
 
     @Override
     protected void hideProposalDisplay() {
         super.hideProposalDisplay();
 
-        if (removeButton != null) {
-            removeButton.setManaged(false);
-            removeButton.setVisible(false);
+        if (button != null) {
+            button.setManaged(false);
+            button.setVisible(false);
         }
     }
 
@@ -112,28 +119,42 @@ public class ActiveProposalsView extends ProposalItemsView {
     public void onPhaseChanged(DaoPhase.Phase phase) {
         super.onPhaseChanged(phase);
 
-        if (removeButton != null) {
-            removeButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
-            if (selectedBaseProposalListItem != null && selectedBaseProposalListItem.getProposal() != null) {
-                final boolean myProposal = daoFacade.isMyProposal(selectedBaseProposalListItem.getProposal());
-                removeButton.setVisible(myProposal);
-                removeButton.setManaged(myProposal);
+        if (button != null) {
+            if (phase == DaoPhase.Phase.PROPOSAL) {
+                if (selectedBaseProposalListItem != null && selectedBaseProposalListItem.getProposal() != null) {
+                    button.setText(Res.get("dao.proposal.active.remove"));
+                    final boolean isMyProposal = daoFacade.isMyProposal(selectedBaseProposalListItem.getProposal());
+                    button.setVisible(isMyProposal);
+                    button.setManaged(isMyProposal);
+                }
+            } else if (phase == DaoPhase.Phase.BLIND_VOTE) {
+                button.setText(Res.get("dao.proposal.active.vote"));
+                button.setVisible(true);
+                button.setManaged(true);
+            } else {
+                button.setVisible(false);
+                button.setManaged(false);
             }
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onRemove() {
-        final Proposal proposal = selectedBaseProposalListItem.getProposal();
-        if (daoFacade.removeMyProposal(proposal)) {
-            hideProposalDisplay();
-        } else {
-            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
+    private void onButtonClick() {
+        if (daoFacade.phaseProperty().get() == DaoPhase.Phase.PROPOSAL) {
+            final Proposal proposal = selectedBaseProposalListItem.getProposal();
+            if (daoFacade.removeMyProposal(proposal)) {
+                hideProposalDisplay();
+            } else {
+                new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
+            }
+            proposalTableView.getSelectionModel().clearSelection();
+        } else if (daoFacade.phaseProperty().get() == DaoPhase.Phase.BLIND_VOTE) {
+            navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, ActiveBallotsView.class);
         }
-        proposalTableView.getSelectionModel().clearSelection();
     }
 
 
@@ -168,10 +189,10 @@ public class ActiveProposalsView extends ProposalItemsView {
                         if (item != null && !empty) {
                             ActiveProposalListItem activeProposalListItem = (ActiveProposalListItem) item;
                             if (button == null) {
-                                button = activeProposalListItem.getRemoveButton();
+                                button = activeProposalListItem.getButton();
                                 button.setOnAction(e -> {
                                     ActiveProposalsView.this.selectedBaseProposalListItem = item;
-                                    ActiveProposalsView.this.onRemove();
+                                    ActiveProposalsView.this.onButtonClick();
                                 });
                                 setGraphic(button);
                             }

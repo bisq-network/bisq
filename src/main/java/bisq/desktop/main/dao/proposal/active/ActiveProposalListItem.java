@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public class ActiveProposalListItem extends ProposalListItem {
     @Getter
-    private AutoTooltipButton removeButton;
+    private AutoTooltipButton button;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,22 +63,30 @@ public class ActiveProposalListItem extends ProposalListItem {
     protected void init() {
         super.init();
 
-        imageView.setId("image-remove");
-
-        removeButton = new AutoTooltipButton();
-        removeButton.setMinWidth(70);
-        removeButton.setText(Res.get("shared.remove"));
-        removeButton.setGraphic(imageView);
+        button = new AutoTooltipButton();
+        button.setMinWidth(70);
+        onPhaseChanged(daoFacade.phaseProperty().get());
     }
 
     @Override
     public void onPhaseChanged(DaoPhase.Phase phase) {
         super.onPhaseChanged(phase);
 
-        removeButton.setDisable(phase != DaoPhase.Phase.PROPOSAL);
-
-        final boolean myProposal = daoFacade.isMyProposal(proposal);
-        removeButton.setVisible(myProposal);
-        removeButton.setManaged(myProposal);
+        if (phase == DaoPhase.Phase.PROPOSAL) {
+            imageView.setId("image-remove");
+            button.setGraphic(imageView);
+            button.setText(Res.get("dao.proposal.active.remove"));
+            final boolean isMyProposal = daoFacade.isMyProposal(proposal);
+            button.setVisible(isMyProposal);
+            button.setManaged(isMyProposal);
+        } else if (phase == DaoPhase.Phase.BLIND_VOTE) {
+            button.setGraphic(null);
+            button.setText(Res.get("dao.proposal.active.vote"));
+            button.setVisible(true);
+            button.setManaged(true);
+        } else {
+            button.setVisible(false);
+            button.setManaged(false);
+        }
     }
 }
