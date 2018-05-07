@@ -37,12 +37,14 @@ public class OfferBuilder {
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final User user;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private boolean marketPriceAvailable;
 
     @Inject
-    public OfferBuilder(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService, KeyRing keyRing, P2PService p2PService, Preferences preferences, PriceFeedService priceFeedService, User user) {
+    public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService, BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService, KeyRing keyRing, P2PService p2PService, Preferences preferences, PriceFeedService priceFeedService, User user) {
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
@@ -76,8 +78,10 @@ public class OfferBuilder {
         Market market = new Market(marketPair);
         // if right side is fiat, then left is base currency.
         // else right side is base currency.
-        String baseCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getLsymbol() : market.getRsymbol();
-        String counterCurrencyCode = CurrencyUtil.isFiatCurrency(market.getRsymbol()) ? market.getRsymbol() : market.getLsymbol();
+        final String currencyCode = market.getRsymbol();
+        final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
+        String baseCurrencyCode = !isFiatCurrency ? currencyCode : market.getLsymbol();
+        String counterCurrencyCode = !isFiatCurrency ? market.getLsymbol() : currencyCode;
 
         Optional<PaymentAccount> optionalAccount = getPaymentAccounts().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
@@ -113,6 +117,11 @@ public class OfferBuilder {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = null;
+        if (isFiatCurrency) {
+            extraDataMap = new HashMap<>();
+            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+        }
 
         // COPIED from CreateDataOfferModel /////////////////////////////
 
