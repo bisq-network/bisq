@@ -5,6 +5,8 @@ import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.storage.FileUtil;
+import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
@@ -37,6 +39,8 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccountHelper;
 import io.bisq.api.service.TokenRegistry;
@@ -45,12 +49,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
+import java.io.File;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -277,8 +287,8 @@ public class BisqProxy {
     }
 
     @NotNull
-    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Exception ex) {
-        futureResult.completeExceptionally(ex);
+    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Throwable throwable) {
+        futureResult.completeExceptionally(throwable);
         return futureResult;
     }
 
@@ -992,6 +1002,47 @@ public class BisqProxy {
 
     public void uploadBackup(String fileName, InputStream uploadedInputStream) throws IOException {
         backupManager.saveBackup(fileName, uploadedInputStream);
+    }
+
+    public SeedWords getSeedWords(String password) {
+        final DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        final LocalDate walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
+
+        DeterministicSeed seed = keyChainSeed;
+        if (keyChainSeed.isEncrypted()) {
+            if (null == password)
+                throw new UnauthorizedException();
+            final KeyParameter aesKey = getAESKey(password);
+            if (!isWalletPasswordValid(aesKey))
+                throw new UnauthorizedException();
+            seed = walletsManager.getDecryptedSeed(aesKey, btcWalletService.getKeyChainSeed(), btcWalletService.getKeyCrypter());
+        }
+
+        return new SeedWords(seed.getMnemonicCode(), walletCreationDate.toString());
+    }
+
+    public CompletableFuture<Void> restoreWalletFromSeedWords(List<String> mnemonicCode, String walletCreationDate, String password) {
+        if (btcWalletService.isEncrypted() && (null == password || !isWalletPasswordValid(password)))
+            throw new UnauthorizedException();
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+        final long date = walletCreationDate != null ? LocalDate.parse(walletCreationDate).atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
+        final DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", date);
+//        TODO this logic comes from GUIUtils
+        final File storageDir = injector.getInstance(Key.get(File.class, Names.named(Storage.STORAGE_DIR)));
+        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+        try {
+            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
+        } catch (Throwable t) {
+            return failFuture(futureResult, t);
+        }
+        walletsManager.restoreSeedWords(
+                seed,
+                () -> futureResult.complete(null),
+                throwable -> failFuture(futureResult, throwable));
+        if (null != shutdown)
+            futureResult.thenRunAsync(shutdown::run);
+        return futureResult;
     }
 
     public enum WalletAddressPurpose {
