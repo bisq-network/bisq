@@ -11,7 +11,7 @@ linux64=build/vm/vm_shared_ubuntu
 win32=build/vm/vm_shared_windows_32bit
 win64=build/vm/vm_shared_windows
 macOS=build/vm/vm_shared_macosx
-gpg_user="christoph.atteneder@gmail.com"
+gpg_user="manfred@bitsquare.io"
 
 rm -r $target_dir
 
