@@ -21,7 +21,7 @@ cp build/libs/bisq-desktop.jar "deploy/Bisq-$version.jar"
 # copy app jar to VM shared folders
 cp build/libs/bisq-desktop.jar "$linux32/Bisq-$version.jar"
 cp build/libs/bisq-desktop.jar "$linux64/Bisq-$version.jar"
-# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
+# On Windows we don't add the version nr as it would keep multiple versions of jar files in app dir
 cp build/libs/bisq-desktop.jar "$win32/Bisq.jar"
 cp build/libs/bisq-desktop.jar "$win64/Bisq.jar"
 

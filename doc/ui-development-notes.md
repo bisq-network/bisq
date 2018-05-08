@@ -1,4 +1,4 @@
-## UI Architecure pattern:
+## UI Architecture pattern:
 We use a variant of the **Presentation Model** pattern which has some similarities with the **Model View ViewModel** 
 (MVVM used in Silverlight and WPF) as we use data bindings, though there are differences in the way the view and 
 the "code behind" is organized (due to different framework features/support).  
@@ -25,7 +25,7 @@ For prototyping the UI we stick first with a more rapid development style approa
 * View/CB is responsible for the visual representation. No logic. No state.
 * Presentation model holds the view/CB state.
 * Presentation model handles view specific logic.
-* Presentation model does validation of user in put and formatting of domain data.
+* Presentation model does validation of user input and formatting of domain data.
 * Model is the domain specific representation of the view. It holds domain data and handles domain logic.
 
 

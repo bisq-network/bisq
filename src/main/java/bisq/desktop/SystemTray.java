@@ -106,7 +106,7 @@ public class SystemTray {
             BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
             TrayIcon trayIcon = new TrayIcon(trayIconImage);
             // On Windows and Linux the icon needs to be scaled
-            // On OSX we get the correct size from the provided image
+            // On macOS we get the correct size from the provided image
             if (!Utilities.isOSX()) {
                 int trayIconWidth = trayIcon.getSize().width;
                 trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
