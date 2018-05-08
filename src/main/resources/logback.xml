@@ -11,4 +11,5 @@
     </root>
 
     <logger name="com.neemre.btcdcli4j" level="WARN"/>
+    <logger name="org.hibernate.validator.internal.engine.constraintvalidation" level="INFO"/>
 </configuration>
