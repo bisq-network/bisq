@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.proposal.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
+import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -31,17 +32,24 @@ import bisq.common.UserThread;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 // We use here ChainHeightListener because we are interested in period changes not in the result of a completed
@@ -50,6 +58,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
     private final DaoFacade daoFacade;
+    private final BSFormatter formatter;
 
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private DaoPhase.Phase currentPhase;
@@ -57,6 +66,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     private GridPane gridPane;
     private int gridRow = 0;
     private SeparatedPhaseBars separatedPhaseBars;
+    private TextField currentPhaseTextField, currentBlockHeightTextField, proposalTextField, blindVoteTextField, voteRevealTextField, voteResultTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,8 +74,9 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalDashboardView(DaoFacade daoFacade) {
+    public ProposalDashboardView(DaoFacade daoFacade, BSFormatter formatter) {
         this.daoFacade = daoFacade;
+        this.formatter = formatter;
     }
 
     @Override
@@ -81,16 +92,35 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         AnchorPane.setRightAnchor(gridPane, 10d);
         AnchorPane.setLeftAnchor(gridPane, 10d);
         AnchorPane.setTopAnchor(gridPane, 10d);
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHalignment(HPos.RIGHT);
+        columnConstraints1.setHgrow(Priority.SOMETIMES);
+        columnConstraints1.setMinWidth(200);
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
         topAnchorPane.getChildren().add(gridPane);
 
-        // Add phase info
-        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.proposal.active.phase.header"));
+        // cycle bar
+        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.cycle.headline"));
         separatedPhaseBars = createSeparatedPhaseBars();
         GridPane.setColumnSpan(separatedPhaseBars, 2);
         GridPane.setColumnIndex(separatedPhaseBars, 0);
         GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
         GridPane.setRowIndex(separatedPhaseBars, gridRow);
         gridPane.getChildren().add(separatedPhaseBars);
+
+        addTitledGroupBg(gridPane, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
+        currentBlockHeightTextField = addLabelTextField(gridPane, gridRow, Res.get("dao.cycle.currentBlockHeight"),
+                "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currentPhaseTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
+        proposalTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
+        blindVoteTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
+        voteRevealTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
+        voteResultTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
+
+        addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("dao.cycle.info.headline"), Layout.GROUP_DISTANCE);
+        addMultilineLabel(gridPane, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 
 
@@ -158,5 +188,21 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
                 item.getProgressProperty().set(progress);
             });
         }
+
+        currentBlockHeightTextField.setText(String.valueOf(daoFacade.getChainHeight()));
+        currentPhaseTextField.setText(Res.get("dao.phase." + daoFacade.phaseProperty().get().name()));
+        proposalTextField.setText(getPhaseDuration(height, DaoPhase.Phase.PROPOSAL));
+        blindVoteTextField.setText(getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE));
+        voteRevealTextField.setText(getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL));
+        voteResultTextField.setText(getPhaseDuration(height, DaoPhase.Phase.RESULT));
+    }
+
+    private String getPhaseDuration(int height, DaoPhase.Phase phase) {
+        final long start = daoFacade.getFirstBlockOfPhase(height, phase);
+        final long end = daoFacade.getLastBlockOfPhase(height, phase);
+        long now = new Date().getTime();
+        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L));
+        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L));
+        return Res.get("dao.cycle.phaseDuration", start, end, startDateTime, endDateTime);
     }
 }

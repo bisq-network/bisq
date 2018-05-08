@@ -43,7 +43,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SeparatedPhaseBars extends HBox {
+public class SeparatedPhaseBars extends VBox {
 
     private int totalDuration;
     private List<SeparatedPhaseBarsItem> items;
@@ -51,46 +51,33 @@ public class SeparatedPhaseBars extends HBox {
 
     public SeparatedPhaseBars(List<SeparatedPhaseBarsItem> items) {
         this.items = items;
-        setSpacing(0);
+        setSpacing(10);
 
-        addLabels();
+        HBox titlesBars = new HBox();
+        titlesBars.setSpacing(5);
+        getChildren().add(titlesBars);
+
+        HBox progressBars = new HBox();
+        progressBars.setSpacing(5);
+        getChildren().add(progressBars);
 
         items.forEach(item -> {
             Label titleLabel = new Label(Res.get("dao.phase.short." + item.phase));
+            titleLabel.setMinWidth(10);
+            titleLabel.setEllipsisString("");
+            titleLabel.setAlignment(Pos.CENTER);
             item.setTitleLabel(titleLabel);
-
-            Label startLabel = new Label();
-            item.startBlockProperty.addListener((observable, oldValue, newValue) -> {
-                startLabel.setText(String.valueOf((int) newValue));
-            });
-            startLabel.setVisible(item.isShowBlocks());
-            AnchorPane startLabelPane = new AnchorPane();
-            AnchorPane.setLeftAnchor(startLabel, 0d);
-            startLabelPane.getChildren().add(startLabel);
-
-            Label endLabel = new Label();
-            item.lastBlockProperty.addListener((observable, oldValue, newValue) -> {
-                endLabel.setText(String.valueOf((int) newValue));
-            });
-            endLabel.setVisible(item.isShowBlocks());
-            AnchorPane endLabelPane = new AnchorPane();
-            AnchorPane.setRightAnchor(endLabel, 0d);
-            endLabelPane.getChildren().add(endLabel);
+            titlesBars.getChildren().addAll(titleLabel);
 
             ProgressBar progressBar = new ProgressBar();
             progressBar.setMinHeight(9);
             progressBar.setMaxHeight(9);
-            progressBar.setMaxWidth(Double.MAX_VALUE);
+            progressBar.setMinWidth(10);
             progressBar.setStyle("-fx-accent: -bs-green;");
             progressBar.progressProperty().bind(item.progressProperty);
             progressBar.setOpacity(item.isShowBlocks() ? 1 : 0.25);
-
-            VBox vBox = new VBox();
-            vBox.setSpacing(5);
-            vBox.getChildren().addAll(titleLabel, progressBar, startLabelPane, endLabelPane);
-            vBox.setAlignment(Pos.CENTER);
-            getChildren().add(vBox);
-            item.setVBox(vBox);
+            progressBars.getChildren().add(progressBar);
+            item.setProgressBar(progressBar);
         });
 
         widthProperty().addListener((observable, oldValue, newValue) -> {
@@ -131,12 +118,13 @@ public class SeparatedPhaseBars extends HBox {
 
     private void updateWidth(double availableWidth) {
         totalDuration = items.stream().mapToInt(SeparatedPhaseBarsItem::getDuration).sum();
-        availableWidth -= vBoxLabels.getWidth();
+        // availableWidth -= vBoxLabels.getWidth();
         if (availableWidth > 0 && totalDuration > 0) {
             final double finalAvailableWidth = availableWidth;
             items.forEach(item -> {
                 final double width = (double) item.duration / (double) totalDuration * finalAvailableWidth;
-                item.getVBox().setPrefWidth(width);
+                item.getProgressBar().setPrefWidth(width);
+                item.getTitleLabel().setPrefWidth(width);
             });
         }
     }
@@ -150,9 +138,11 @@ public class SeparatedPhaseBars extends HBox {
         private final DoubleProperty progressProperty = new SimpleDoubleProperty();
         private int duration;
         @Setter
-        private javafx.scene.layout.VBox VBox;
+        private javafx.scene.layout.VBox progressVBox;
         @Setter
         private Label titleLabel;
+        @Setter
+        private ProgressBar progressBar;
 
         public SeparatedPhaseBarsItem(DaoPhase.Phase phase, boolean showBlocks) {
             this.phase = phase;
