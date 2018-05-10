@@ -11,7 +11,8 @@ linux64=build/vm/vm_shared_ubuntu
 win32=build/vm/vm_shared_windows_32bit
 win64=build/vm/vm_shared_windows
 macOS=build/vm/vm_shared_macosx
-gpg_user="manfred@bitsquare.io"
+
+# Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
 
 rm -r $target_dir
 
@@ -55,11 +56,11 @@ cp "$win64/bundles/$exe" "$target_dir/$exe64"
 cd "$target_dir"
 
 
-gpg --digest-algo SHA256 --local-user $gpg_user --output $dmg.asc --detach-sig --armor $dmg
-gpg --digest-algo SHA256 --local-user $gpg_user --output $deb64.asc --detach-sig --armor $deb64
-gpg --digest-algo SHA256 --local-user $gpg_user --output $deb32.asc --detach-sig --armor $deb32
-gpg --digest-algo SHA256 --local-user $gpg_user --output $exe64.asc --detach-sig --armor $exe64
-gpg --digest-algo SHA256 --local-user $gpg_user --output $exe32.asc --detach-sig --armor $exe32
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $dmg.asc --detach-sig --armor $dmg
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb64.asc --detach-sig --armor $deb64
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb32.asc --detach-sig --armor $deb32
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe64.asc --detach-sig --armor $exe64
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe32.asc --detach-sig --armor $exe32
 
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}
