@@ -1,4 +1,4 @@
-:: Invoke from bisq home directory
+:: Invoke from Bisq home directory
 :: edit iss file -> AppVersion
 :: edit -> -BappVersion and -srcfiles
 

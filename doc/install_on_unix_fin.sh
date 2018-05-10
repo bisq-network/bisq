@@ -10,7 +10,7 @@ JAVA_HOME=/usr/lib/jvm/java-8-oracle
 # and add JAVA_HOME to .bashrc
 # export JAVA_HOME=/usr/lib/jvm/java-8-oracle
 
-echo "Install bisq"
+echo "Install Bisq"
 cd ~/bisq
 ./gradlew build
 cd ..

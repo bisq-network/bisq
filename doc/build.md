@@ -103,7 +103,7 @@ If you want to build the binaries check out the build scripts under the package 
 DAO full node
 -----------------
 If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and
-use dedicated program arguments for the bisq node.
+use dedicated program arguments for the Bisq node.
 See https://github.com/bisq-network/bisq-desktop/blob/master/doc/rpc.md for more details.
 
 

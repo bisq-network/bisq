@@ -11,7 +11,7 @@ version=0.7.0
 dir="/media/sf_vm_shared_ubuntu"
 linux_user="bisq"
 
-# Note: fakeroot needs to be installed on linux
+# Note: fakeroot needs to be installed on Linux
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -Bruntime="$JAVA_HOME/jre" \
