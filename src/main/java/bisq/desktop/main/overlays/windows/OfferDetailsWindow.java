@@ -228,9 +228,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), paymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
-            String paymentMethodLabel = Res.getWithCol("shared.paymentMethod");
+            String methodWithBankId = method + bankId;
+            String paymentMethodLabel = Res.get("shared.paymentMethod");
             if (isNationalBanks || isSpecificBanks || isSepa) {
-                String methodWithBankId = method + bankId;
                 if (BankUtil.isBankIdRequired(offer.getCountryCode()))
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
@@ -239,8 +239,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offerersBankName"),
                             methodWithBankId);
+            }
+            if (paymentMethod.equals(PaymentMethod.CASH_DEPOSIT)) {
+                addLabelTextField(gridPane, ++rowIndex,
+                        paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
+                        methodWithBankId);
             } else {
-                addLabelTextField(gridPane, ++rowIndex, paymentMethodLabel, method);
+                addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"), method);
             }
         }
         if (showAcceptedBanks) {
