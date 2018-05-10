@@ -10,7 +10,7 @@ version="0.7.0"
 
 ./gradlew shadowJar
 
-EXE_JAR=build/libs/bisq-desktop--SNAPSHOT-all.jar
+EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
 
 linux32=build/vm/vm_shared_ubuntu14_32bit
 linux64=build/vm/vm_shared_ubuntu
