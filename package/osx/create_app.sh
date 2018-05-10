@@ -36,7 +36,7 @@ echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
-    -Bmac.CFBundleIdentifier=bisq \
+    -Bmac.CFBundleIdentifier=io.bisq \
     -Bmac.CFBundleName=Bisq \
     -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
