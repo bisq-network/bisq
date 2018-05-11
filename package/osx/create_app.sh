@@ -29,10 +29,16 @@ cp $EXE_JAR "$win32/Bisq.jar"
 cp $EXE_JAR "$win64/Bisq.jar"
 
 # Copy packager scripts to VM. No need to checkout the source as we only are interested in the build scripts.
-cp -r package/linux "$linux32/linux"
-cp -r package/linux "$linux64/linux"
-cp -r package/windows "$win32/windows"
-cp -r package/windows "$win64/windows"
+mkdir -p "$linux32/package/linux"
+mkdir -p "$linux64/package/linux"
+mkdir -p "$win32/package/windows"
+mkdir -p "$win64/package/windows"
+
+cp -r package/linux "$linux32/package/linux"
+cp -r package/linux "$linux64/package/linux"
+cp -r package/windows "$win32/package/windows"
+cp -r package/windows "$win64/package/windows"
+
 
 if [ -z "$JAVA_HOME" ]; then
     JAVA_HOME=$(/usr/libexec/java_home)
