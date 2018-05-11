@@ -176,7 +176,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
@@ -199,7 +199,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         // userLanguage
         //noinspection unchecked
-        userLanguageComboBox = addLabelComboBox(root, ++gridRow,
+        userLanguageComboBox = addLabelComboBox(root, gridRow,
                 Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
 
         // userCountry
