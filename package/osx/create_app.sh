@@ -8,7 +8,7 @@ set -e
 
 version="0.7.0"
 
-./gradlew shadowJar
+./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core shadowJar
 
 EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
 
