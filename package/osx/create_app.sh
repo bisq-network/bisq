@@ -28,6 +28,19 @@ cp $EXE_JAR "$linux64/Bisq-$version.jar"
 cp $EXE_JAR "$win32/Bisq.jar"
 cp $EXE_JAR "$win64/Bisq.jar"
 
+# copy bouncycastle jars to VM shared folders
+bc_lib1=bcpg-jdk15on-1.56.jar
+cp build/app/lib/$bc_lib1 "$linux32/$bc_lib1"
+cp build/app/lib/$bc_lib1 "$linux64/$bc_lib1"
+cp build/app/lib/$bc_lib1 "$win32/$bc_lib1"
+cp build/app/lib/$bc_lib1 "$win64/$bc_lib1"
+
+bc_lib2=bcprov-jdk15on-1.56.jar
+cp build/app/lib/$bc_lib2 "$linux32/$bc_lib2"
+cp build/app/lib/$bc_lib2 "$linux64/$bc_lib2"
+cp build/app/lib/$bc_lib2 "$win32/$bc_lib2"
+cp build/app/lib/$bc_lib2 "$win64/$bc_lib2"
+
 # Copy packager scripts to VM. No need to checkout the source as we only are interested in the build scripts.
 mkdir -p "$linux32/package/linux"
 mkdir -p "$linux64/package/linux"
@@ -58,6 +71,8 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "deploy/Bisq-$version.jar" \
+    -srcfiles "deploy/$bc_lib1" \
+    -srcfiles "deploy/$bc_lib2" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 

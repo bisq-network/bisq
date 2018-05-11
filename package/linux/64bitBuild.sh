@@ -26,6 +26,8 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "$dir/Bisq-$version.jar" \
+    -srcfiles "$dir/bcpg-jdk15on-1.56.jar" \
+    -srcfiles "$dir/bcprov-jdk15on-1.56.jar" \
     -srcfiles package/linux/LICENSE \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
