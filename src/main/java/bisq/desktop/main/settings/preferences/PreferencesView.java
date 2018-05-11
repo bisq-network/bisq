@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.settings.preferences;
 
-import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
@@ -92,7 +91,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
+    // private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
@@ -182,7 +181,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         // selectBaseCurrencyNetwork
         //noinspection unchecked
-        selectBaseCurrencyNetworkComboBox = addLabelComboBox(root, gridRow,
+       /* selectBaseCurrencyNetworkComboBox = addLabelComboBox(root, gridRow,
                 Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
 
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
@@ -196,12 +195,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             public BaseCurrencyNetwork fromString(String string) {
                 return null;
             }
-        });
+        });*/
 
         // userLanguage
         //noinspection unchecked
         userLanguageComboBox = addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("shared.language")).second;
+                Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
 
         // userCountry
         //noinspection unchecked
@@ -482,9 +481,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                     .filter(e -> !e.isDash())
                     .filter(BaseCurrencyNetwork::isMainnet)
                     .collect(Collectors.toList());
-        selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
+       /* selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
+        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());*/
 
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
@@ -646,12 +645,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
     }
 
-    private void onSelectNetwork() {
+   /* private void onSelectNetwork() {
         if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
-    }
+    }*/
 
-    private void selectNetwork() {
+   /* private void selectNetwork() {
         new Popup().warning(Res.get("settings.net.needRestart"))
                 .onAction(() -> {
                     bisqEnvironment.saveBaseCryptoNetwork(selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
@@ -661,14 +660,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 .closeButtonText(Res.get("shared.cancel"))
                 .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
                 .show();
-    }
+    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void deactivateGeneralOptions() {
-        selectBaseCurrencyNetworkComboBox.setOnAction(null);
+        // selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);

@@ -6,7 +6,7 @@ mkdir -p deploy
 set -e
 
 # Edit version
-version=0.6.7
+version=0.7.0
 
 dir="/media/sf_vm_shared_ubuntu"
 
@@ -26,8 +26,6 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "$dir/Bisq-$version.jar" \
-    -srcfiles "$dir/bcpg-jdk15on.jar" \
-    -srcfiles "$dir/bcprov-jdk15on.jar" \
     -srcfiles package/linux/LICENSE \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
@@ -44,7 +42,7 @@ $JAVA_HOME/bin/javapackager \
 # uncomment because the build VM does not support alien
 #sudo alien -r -c -k deploy/bundles/bisq-$version.deb
 
-cp "deploy/bundles/bisq-$version.deb" "/home/mk/Desktop/Bisq-64bit-$version.deb"
+cp "deploy/bundles/bisq-$version.deb" "/home/$USER/Desktop/Bisq-64bit-$version.deb"
 mv "deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
 #mv "bisq-$version-1.x86_64.rpm" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.rpm"
 rm -r deploy/

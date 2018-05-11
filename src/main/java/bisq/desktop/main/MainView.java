@@ -47,7 +47,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -103,26 +102,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blur() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer);
+        transitions.blur(MainView.rootContainer);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurLight() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurUltraLight() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void darken() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
+        transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
     }
 
     public static void removeEffect() {

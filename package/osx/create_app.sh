@@ -1,13 +1,16 @@
 #!/bin/bash
 
-cd ../../
+cd $(dirname $0)/../../
+
 mkdir -p deploy
 
 set -e
 
-version="0.6.7"
+version="0.7.0"
 
-./gradlew build
+./gradlew shadowJar
+
+EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
 
 linux32=build/vm/vm_shared_ubuntu14_32bit
 linux64=build/vm/vm_shared_ubuntu
@@ -16,14 +19,14 @@ win64=build/vm/vm_shared_windows
 
 mkdir -p $linux32 $linux64 $win32 $win64
 
-cp build/libs/bisq-desktop.jar "deploy/Bisq-$version.jar"
+cp $EXE_JAR "deploy/Bisq-$version.jar"
 
 # copy app jar to VM shared folders
-cp build/libs/bisq-desktop.jar "$linux32/Bisq-$version.jar"
-cp build/libs/bisq-desktop.jar "$linux64/Bisq-$version.jar"
-# On Windows we don't add the version nr as it would keep multiple versions of jar files in app dir
-cp build/libs/bisq-desktop.jar "$win32/Bisq.jar"
-cp build/libs/bisq-desktop.jar "$win64/Bisq.jar"
+cp $EXE_JAR "$linux32/Bisq-$version.jar"
+cp $EXE_JAR "$linux64/Bisq-$version.jar"
+# At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
+cp $EXE_JAR "$win32/Bisq.jar"
+cp $EXE_JAR "$win64/Bisq.jar"
 
 if [ -z "$JAVA_HOME" ]; then
     JAVA_HOME=$(/usr/libexec/java_home)
@@ -33,7 +36,7 @@ echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
-    -Bmac.CFBundleIdentifier=bisq \
+    -Bmac.CFBundleIdentifier=io.bisq \
     -Bmac.CFBundleName=Bisq \
     -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
