@@ -27,3 +27,4 @@ desktop.ini
 */target/*
 *.class
 deploy
+releases/*
