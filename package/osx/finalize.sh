@@ -10,7 +10,9 @@ linux32=build/vm/vm_shared_ubuntu14_32bit
 linux64=build/vm/vm_shared_ubuntu
 win32=build/vm/vm_shared_windows_32bit
 win64=build/vm/vm_shared_windows
-macOS=build/vm/vm_shared_macosx
+
+#macOS=build/vm/vm_shared_macosx
+macOS=deploy
 
 # Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
 
@@ -18,17 +20,14 @@ rm -r $target_dir
 
 mkdir -p $target_dir
 
-# new signing key
-#cp "$target_dir/../7D20BB32.asc" "$target_dir/"
-
 # sig key mkarrer
-cp "$target_dir/../F379A1C6.asc" "$target_dir/"
+cp "$target_dir/../../package/F379A1C6.asc" "$target_dir/"
 # sig key cbeams
-cp "$target_dir/../5BC5ED73.asc" "$target_dir/"
+cp "$target_dir/../../package/5BC5ED73.asc" "$target_dir/"
 # sig key Christoph Atteneder
-cp "$target_dir/../29CDFD3B.asc" "$target_dir/"
+cp "$target_dir/../../package/29CDFD3B.asc" "$target_dir/"
 # signing key
-cp "$target_dir/../signingkey.asc" "$target_dir/"
+cp "$target_dir/../../package/signingkey.asc" "$target_dir/"
 
 dmg="Bisq-$version.dmg"
 cp "$macOS/$dmg" "$target_dir/"
@@ -68,6 +67,7 @@ gpg --digest-algo SHA256 --verify $deb32{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe32{.asc*,}
 
-#cp -r $target_dir /Users/dev/vm_shared_windows_32bit/
+mkdir ../../build/vm/vm_shared_windows_32bit/$version
+cp -r . ../../build/vm/vm_shared_windows_32bit/$version
 
 open "."
