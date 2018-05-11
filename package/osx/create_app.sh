@@ -8,7 +8,7 @@ set -e
 
 version="0.7.0"
 
-./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core shadowJar
+./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
 
 EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
 
@@ -42,15 +42,20 @@ cp build/app/lib/$bc_lib2 "$win32/$bc_lib2"
 cp build/app/lib/$bc_lib2 "$win64/$bc_lib2"
 
 # Copy packager scripts to VM. No need to checkout the source as we only are interested in the build scripts.
-mkdir -p "$linux32/package/linux"
-mkdir -p "$linux64/package/linux"
-mkdir -p "$win32/package/windows"
-mkdir -p "$win64/package/windows"
+rm -rf "$linux32/package"
+rm -rf "$linux64/package"
+rm -rf "$win32/package"
+rm -rf "$win64/package"
 
-cp -r package/linux "$linux32/package/linux"
-cp -r package/linux "$linux64/package/linux"
-cp -r package/windows "$win32/package/windows"
-cp -r package/windows "$win64/package/windows"
+mkdir -p "$linux32/package"
+mkdir -p "$linux64/package"
+mkdir -p "$win32/package"
+mkdir -p "$win64/package"
+
+cp -r package/linux "$linux32/package"
+cp -r package/linux "$linux64/package"
+cp -r package/windows "$win32/package"
+cp -r package/windows "$win64/package"
 
 
 if [ -z "$JAVA_HOME" ]; then
@@ -71,8 +76,8 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "deploy/Bisq-$version.jar" \
-    -srcfiles "deploy/$bc_lib1" \
-    -srcfiles "deploy/$bc_lib2" \
+    -srcfiles "build/app/lib//$bc_lib1" \
+    -srcfiles "build/app/lib//$bc_lib2" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
