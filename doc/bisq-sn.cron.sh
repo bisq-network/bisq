@@ -1,5 +1,5 @@
 #!/bin/sh
-# Restart bisq seed node daemons whose resident memory (RSS)
+# Restart Bisq seed node daemons whose resident memory (RSS)
 # is over MAX_RSS_MiB.
 #
 # Scripts in the INITDIR must contain a ``SN_ADDRESS=<host:port>``
@@ -13,7 +13,7 @@ MAX_RSS_MiB=400
 PIDDIR=/var/run/bisq-sn
 INITDIR=/etc/init.d
 
-# Restart de daemon with the given address.
+# Restart the daemon with the given address.
 restart() {
     rcscript=$(grep -El "^SN_ADDRESS=['\"]?$1['\"]?" $INITDIR/*)
     if [ "$rcscript" ]; then

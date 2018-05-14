@@ -35,15 +35,18 @@ public class SpreadItem {
     @Nullable
     public final Price priceSpread;
     public final String percentage;
+    public final double percentageValue;
     public final Coin totalAmount;
 
-    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers, @Nullable Price priceSpread, String percentage, Coin totalAmount) {
+    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers,
+                      @Nullable Price priceSpread, String percentage, double percentageValue, Coin totalAmount) {
         this.currencyCode = currencyCode;
         this.numberOfBuyOffers = numberOfBuyOffers;
         this.numberOfSellOffers = numberOfSellOffers;
         this.numberOfOffers = numberOfOffers;
         this.priceSpread = priceSpread;
         this.percentage = percentage;
+        this.percentageValue = percentageValue;
         this.totalAmount = totalAmount;
     }
 }

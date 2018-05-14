@@ -1,4 +1,4 @@
-Contributing to bisq
+Contributing to Bisq
 ============================
 
 Pull requests

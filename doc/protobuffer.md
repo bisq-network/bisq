@@ -6,25 +6,25 @@ NOTE: this doc is out of date and should probably be deleted. Protobuffer stuff 
 
 Protobuffer is installed automatically via the Gradle build.
 
-## Why protobuffer?
+## Why Protobuffer?
 
 There are a number of reasons why protobuffer was chosen, here are some of them:
 * avoids java serialisation security issues
 * smaller in size than java serialisation (less network usage)
-* All P2P network messages are described in a clear protobuffer schema
+* All P2P network messages are described in a clear Protobuffer schema
 * allows to evolve your schema in a backward compatible way
 * can generate code in many languages, making alternative bisq clients or monitoring tools easier
 
-## Which classes are transformed to protobuffer?
+## Which classes are transformed to Protobuffer?
 
 All classes in the 'wire' module. This module contains the following classes:
 
 * classes sent over the wire (P2P network)
 * classes serialized to disk
 
-## Where are the protobuffer related files?
+## Where are the Protobuffer related files?
 
-The protobuffer schema file(s), generated classes and domain classes are in the 'wire' module.
+The Protobuffer schema file(s), generated classes and domain classes are in the 'wire' module.
 Look for *.proto for the schema files.
 
 ## How is serialisation done (Java -> Protobuffer)
@@ -36,7 +36,7 @@ Some interfaces have a 'toProtobuf' method to force all extending classes to imp
 Some interfaces have a 'toProtobuf' method to force all extending classes to implement that method.
 
 
-## If fields are not filled in, what are protobuffer's default values?
+## If fields are not filled in, what are Protobuffer's default values?
 
 Read this very carefully:
 
@@ -82,7 +82,7 @@ https://ruedigermoeller.github.io/fast-serialization/
 * Try to use value objects for data which gets serialized with PB
 * Use toProto and a static fromProto in the class which gets serialized
 * Use proto as name for the PB param in the fromProto method
-* If a constructor is used only for PB make it private and put it to the PB section, so its clear it is used only in that context
+* If a constructor is used only for PB make it private and put it to the PB section, so it's clear it is used only in that context
 * Use same name for classes and fields in PB definition as in the java code base
 * Use final
 * Use Lombok Annotations

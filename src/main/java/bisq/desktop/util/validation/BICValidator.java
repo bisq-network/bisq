@@ -58,7 +58,7 @@ public final class BICValidator extends InputValidator {
 
         input = input.toUpperCase(Locale.ROOT);
 
-        // ensure Bank and Contry code to be letters only
+        // ensure Bank and Country code to be letters only
         for (int k = 0; k < 6; k++) {
             if (!Character.isLetter(input.charAt(k)))
                 return new ValidationResult(false, Res.get("validation.bic.letters"));
@@ -69,6 +69,10 @@ public final class BICValidator extends InputValidator {
         if (ch == '0' || ch == '1' || input.charAt(7) == 'O')
             return new ValidationResult(false, Res.get("validation.bic.invalidLocationCode"));
 
+        if (input.startsWith("REVO"))
+            return new ValidationResult(false, Res.get("validation.bic.sepaRevolutBic"));
+
+
         // check complete for 8 char BIC
         if (input.length() == 8)
             return new ValidationResult(true);
@@ -77,6 +81,7 @@ public final class BICValidator extends InputValidator {
         if (input.charAt(8) == 'X')
             if (input.charAt(9) != 'X' || input.charAt(10) != 'X')
                 return new ValidationResult(false, Res.get("validation.bic.invalidBranchCode"));
+
         return new ValidationResult(true);
     }
 

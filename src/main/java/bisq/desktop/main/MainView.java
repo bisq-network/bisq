@@ -47,7 +47,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -83,8 +82,6 @@ import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
@@ -105,26 +102,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blur() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer);
+        transitions.blur(MainView.rootContainer);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurLight() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurUltraLight() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void darken() {
-        if (!DevEnv.STRESS_TEST_MODE)
-            transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
+        transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
     }
 
     public static void removeEffect() {
@@ -149,7 +142,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
-    private List<String> persistedFilesCorrupted;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
 
     @SuppressWarnings("WeakerAccess")
@@ -312,21 +304,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if (newValue) {
                 navigation.navigateToPreviousVisitedView();
 
-                if (!persistedFilesCorrupted.isEmpty()) {
-                    if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("ViewPathAsString")) {
-                        // show warning that some files has been corrupted
-                        new Popup<>()
-                                .warning(Res.get("popup.warning.incompatibleDB",
-                                        persistedFilesCorrupted.toString(),
-                                        model.getAppDateDir()))
-                                .useShutDownButton()
-                                .show();
-                    } else {
-                        log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
-                                "and we don't display a warning popup to the user.");
-                    }
-                }
-
                 transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
             }
         });
@@ -462,10 +439,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             label.setText("");
             label.setTooltip(null);
         }
-    }
-
-    public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
-        this.persistedFilesCorrupted = persistedFilesCorrupted;
     }
 
     private VBox createSplashScreen() {

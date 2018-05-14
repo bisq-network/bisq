@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath files('gradle/witness/gradle-witness.jar')
     }
 }
@@ -12,13 +12,20 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'witness'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'network.bisq'
-version = '-SNAPSHOT'
+version = '0.7.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
+
+jar {
+    manifest.attributes(
+        'Class-Path': 'bcpg-jdk15on-1.56.jar bcprov-jdk15on-1.56.jar'
+    )
+}
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

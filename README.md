@@ -18,7 +18,7 @@ Status
 ------
 Bisq has released the beta version on the 27th of April 2016. It is operational since that time without any major incident.
 Please follow the current development state at our [road map]( https://bisq.network/roadmap).
-For the latest version checkout our [releases page](https://github.com/bisq-network/exchange/releases) at Github.
+For the latest version checkout our [releases page](https://github.com/bisq-network/exchange/releases) at GitHub.
 
 Building from source
 --------------------
