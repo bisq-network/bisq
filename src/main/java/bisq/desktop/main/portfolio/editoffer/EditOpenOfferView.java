@@ -20,12 +20,9 @@ package bisq.desktop.main.portfolio.editoffer;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.EditableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
@@ -33,7 +30,6 @@ import bisq.desktop.util.Transitions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.util.Tuple3;
@@ -175,10 +171,8 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         confirmButton.setPadding(new Insets(0, 20, 0, 20));
         confirmButton.setGraphicTextGap(10);
 
-
         busyAnimation = editOfferTuple.second;
         Label spinnerInfoLabel = editOfferTuple.third;
-
 
         cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
@@ -186,9 +180,7 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
         cancelButton.setOnAction(event -> close());
 
         confirmButton.setOnAction(e -> {
-
             if (model.isPriceInRange()) {
-
                 model.isNextButtonDisabled.setValue(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
@@ -196,16 +188,8 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
                 //edit offer
                 model.onPublishOffer(() -> {
                     log.debug("Edit offer was successful");
-
-                    String key = "ShowOpenOffersAfterEditing";
-
-                    if (DontShowAgainLookup.showAgain(key))
-                        //noinspection unchecked
-                        new Popup<>().feedback(Res.get("editOffer.success"))
-                                .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                                .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class))
-                                .dontShowAgainId(key)
-                                .show();
+                    //noinspection unchecked
+                    new Popup<>().feedback(Res.get("editOffer.success")).show();
                     spinnerInfoLabel.setText("");
                     close();
                 }, (message) -> {

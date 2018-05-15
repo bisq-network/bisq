@@ -64,6 +64,8 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
@@ -105,10 +107,6 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-
-
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 @FxmlView
 public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookViewModel> {
@@ -471,10 +469,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (model.isBootstrapped())
-            offerActionHandler.onTakeOffer(offer);
-        else
+        if (model.isBootstrapped()) {
+            if (offer.getDirection() == OfferPayload.Direction.SELL &&
+                    offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
+                new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
+                        .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
+                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                        .show();
+            } else {
+                offerActionHandler.onTakeOffer(offer);
+            }
+        } else {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        }
     }
 
     private void onRemoveOpenOffer(Offer offer) {

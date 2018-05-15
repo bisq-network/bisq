@@ -154,6 +154,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             Price spread = null;
             String percentage = "";
+            double percentageValue = 0;
             Price bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
             Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
@@ -180,11 +181,11 @@ class SpreadViewModel extends ActivatableViewModel {
                         BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
                                 .multiply(BigDecimal.valueOf(precision));
                         // We multiply with 10000 because we use precision of 2 at % (100.00%)
-                        double result = BigDecimal.valueOf(spread.getValue())
+                        percentageValue = BigDecimal.valueOf(spread.getValue())
                                 .multiply(BigDecimal.valueOf(10000))
                                 .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
                                 .doubleValue() / 10000;
-                        percentage = formatter.formatPercentagePrice(result);
+                        percentage = formatter.formatPercentagePrice(percentageValue);
                     }
                 } catch (Throwable t) {
                     try {
@@ -210,7 +211,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
             spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
-                    uniqueOffers.size(), spread, percentage, totalAmount));
+                    uniqueOffers.size(), spread, percentage, percentageValue, totalAmount));
         }
 
         maxPlacesForAmount.set(formatAmount(totalAmount, false).length());

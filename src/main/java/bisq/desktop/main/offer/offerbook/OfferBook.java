@@ -21,8 +21,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.trade.TradeManager;
 
-import bisq.common.app.Log;
-
 import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
@@ -81,7 +79,6 @@ public class OfferBook {
                     }
 
                     offerBookListItems.add(offerBookListItem);
-                    Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
                 } else {
                     log.debug("We have the exact same offer already in our list and ignore the onAdded call. ID={}", offer.getId());
                 }
@@ -98,10 +95,7 @@ public class OfferBook {
                 Optional<OfferBookListItem> candidateToRemove = offerBookListItems.stream()
                         .filter(item -> item.getOffer().getId().equals(offer.getId()))
                         .findAny();
-                if (candidateToRemove.isPresent()) {
-                    offerBookListItems.remove(candidateToRemove.get());
-                    Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
-                }
+                candidateToRemove.ifPresent(offerBookListItems::remove);
             }
         });
     }
@@ -118,8 +112,6 @@ public class OfferBook {
             offerBookListItems.addAll(offerBookService.getOffers().stream()
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
-
-            Log.logIfStressTests("OfferPayload filled: No. of offers = " + offerBookListItems.size());
 
             log.debug("offerBookListItems.size " + offerBookListItems.size());
             fillOfferCountMaps();

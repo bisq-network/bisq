@@ -88,6 +88,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -174,12 +175,13 @@ public class MainViewModel implements ViewModel {
     private final ClosedTradableManager closedTradableManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     final TorNetworkSettingsWindow torNetworkSettingsWindow;
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
     private final BSFormatter formatter;
 
     // BTC network
     final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
     @SuppressWarnings("ConstantConditions")
-    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
+    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(-1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     private final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
@@ -248,7 +250,8 @@ public class MainViewModel implements ViewModel {
                          DaoSetup daoSetup, EncryptionService encryptionService,
                          KeyRing keyRing, BisqEnvironment bisqEnvironment, FailedTradesManager failedTradesManager,
                          ClosedTradableManager closedTradableManager, AccountAgeWitnessService accountAgeWitnessService,
-                         TorNetworkSettingsWindow torNetworkSettingsWindow, BSFormatter formatter) {
+                         TorNetworkSettingsWindow torNetworkSettingsWindow,
+                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler, BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
@@ -277,6 +280,7 @@ public class MainViewModel implements ViewModel {
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
         this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
@@ -706,6 +710,8 @@ public class MainViewModel implements ViewModel {
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
+
+        checkForCorruptedDataBaseFiles();
 
         allBasicServicesInitialized = true;
     }
@@ -1260,6 +1266,26 @@ public class MainViewModel implements ViewModel {
                                 .show();
                     });
         }
+    }
+
+    private void checkForCorruptedDataBaseFiles() {
+        List<String> files = corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles();
+
+        if (files.size() == 0)
+            return;
+
+        if (files.size() == 1 && files.get(0).equals("ViewPathAsString")) {
+            log.debug("We detected incompatible data base file for Navigation. " +
+                    "That is a minor issue happening with refactoring of UI classes " +
+                    "and we don't display a warning popup to the user.");
+            return;
+        }
+
+        // show warning that some files have been corrupted
+        new Popup<>()
+                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), getAppDateDir()))
+                .useShutDownButton()
+                .show();
     }
 
     private void setupDevDummyPaymentAccounts() {

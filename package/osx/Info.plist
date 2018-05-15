@@ -22,7 +22,7 @@
         <string>APPL</string>
         <key>CFBundleShortVersionString</key>
         <string>1</string>
-        <!--  CFBundleSignature exists only for compatibility with Classic Mac OS apps and documents. Modern Mac OS X apps don't need to worry about assigning a Bundle Signature.-->
+        <!--  CFBundleSignature exists only for compatibility with Classic macOS apps and documents. Modern macOS apps don't need to worry about assigning a Bundle Signature.-->
         <key>CFBundleSignature</key>
         <string>????</string>
         <key>LSApplicationCategoryType</key>
@@ -30,7 +30,7 @@
         <key>CFBundleVersion</key>
         <string>1</string>
         <key>NSHumanReadableCopyright</key>
-        <string>Copyright (C) 2015</string>
+        <string>Copyright (C) 2018</string>
         <key>NSHighResolutionCapable</key>
         <string>true</string>
         <key>JVMRuntime</key>
@@ -40,7 +40,7 @@
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
-        <string>shaded.jar</string>
+        <string>Bisq-0.7.0.jar</string>
         <key>JVMPreferencesID</key>
         <string>bisq</string>
         <key>JVMOptions</key>

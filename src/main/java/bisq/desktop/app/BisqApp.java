@@ -45,7 +45,6 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
-import bisq.common.storage.Storage;
 import bisq.common.util.Profiler;
 import bisq.common.util.Utilities;
 
@@ -127,8 +126,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
-            setDatabaseCorruptionHandler(mainView);
-
             checkForCorrectOSArchitecture();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
@@ -164,7 +161,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
-                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice. throwable=" + throwable.toString());
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in Guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
                         "/bisq/desktop/bisq.css",
@@ -228,7 +225,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.setMinWidth(1020);
         stage.setMinHeight(620);
 
-        // on windows the title icon is also used as task bar icon in a larger size
+        // on Windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
         String iconPath;
         if (Utilities.isOSX())
@@ -248,16 +245,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         CachingViewLoader viewLoader = injector.getInstance(CachingViewLoader.class);
         return (MainView) viewLoader.load(MainView.class);
     }
-
-    private void setDatabaseCorruptionHandler(MainView mainView) {
-        Storage.setDatabaseCorruptionHandler((String fileName) -> {
-            corruptedDatabaseFiles.add(fileName);
-            if (mainView != null)
-                mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-        });
-        mainView.setPersistedFilesCorrupted(corruptedDatabaseFiles);
-    }
-
 
     private void addSceneKeyEventHandler(Scene scene, Injector injector) {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {

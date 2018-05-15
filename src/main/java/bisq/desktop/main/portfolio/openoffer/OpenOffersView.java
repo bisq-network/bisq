@@ -473,6 +473,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = getIconButton(MaterialDesignIcon.DELETE_FOREVER, "delete");
+                                        button.setTooltip(new Tooltip(Res.get("shared.removeOffer")));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
@@ -505,6 +506,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = getIconButton(MaterialDesignIcon.PENCIL);
+                                        button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
