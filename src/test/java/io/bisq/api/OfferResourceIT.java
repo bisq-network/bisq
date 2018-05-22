@@ -1,13 +1,11 @@
 package io.bisq.api;
 
-import io.bisq.api.model.OfferDetail;
-import io.bisq.api.model.OfferToCreate;
-import io.bisq.api.model.PriceType;
-import io.bisq.api.model.TakeOffer;
-import io.bisq.api.model.payment.SepaPaymentAccount;
+import bisq.core.btc.AddressEntry;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
+import io.bisq.api.model.*;
+import io.bisq.api.model.payment.SepaPaymentAccount;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
@@ -22,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -430,7 +429,36 @@ public class OfferResourceIT {
                 and().body("versionNr", isA(String.class));
     }
 
+    /**
+     * Although this test is for WalletResource it is located here to reuse state that is expensive to restore elsewhere
+     */
     @InSequence(9)
+    @Test
+    public void withdrawFunds_fromOfferFundingAddress_returns422() throws Exception {
+        final List<WalletAddress> btcWalletAddresses = ApiTestHelper.getBtcWalletAddresses(getAlicePort()).walletAddresses;
+        final WalletAddress walletAddress = btcWalletAddresses.stream().filter(address -> AddressEntry.Context.OFFER_FUNDING.equals(address.context)).findFirst().get();
+        final WithdrawFundsForm data = new WithdrawFundsForm();
+        data.amount = 50000000;
+        data.feeExcluded = true;
+        data.sourceAddresses = Collections.singletonList(walletAddress.address);
+        data.targetAddress = walletAddress.address;
+
+        given().
+                port(getAlicePort()).
+                body(data).
+                contentType(ContentType.JSON).
+//
+        when().
+                post("/api/v1/wallet/withdraw").
+//
+        then().
+                statusCode(422).
+                body("errors[0]", equalTo("Funds can be withdrawn only from addresses with context AVAILABLE and TRADE_PAYOUT")).
+                body("errors.size()", equalTo(1))
+        ;
+    }
+
+    @InSequence(10)
     @Test
     public void takeOffer_offerNotFound_returns404status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
@@ -451,21 +479,21 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_validPayloadButNoFunds_returns427status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template(createdOffer.id, payload, 427);
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_paymentAccountIdMissing_returns422status() {
         final TakeOffer payload = new TakeOffer(null, 1);
         takeOffer_template(createdOffer.id, payload, 422);
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_amountMissing_returns422() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
@@ -484,14 +512,14 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_paymentAccountNotFound_returns425() {
         final TakeOffer payload = new TakeOffer("non-existing-account", 1);
         takeOffer_template(createdOffer.id, payload, 425);
     }
 
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_incompatiblePaymentAccount_returns423() {
         final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
@@ -499,7 +527,7 @@ public class OfferResourceIT {
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_noArbitratorSelected_returns424() {
         ApiTestHelper.deselectAllArbitrators(getBobPort());
@@ -508,7 +536,7 @@ public class OfferResourceIT {
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
-    @InSequence(9)
+    @InSequence(10)
     @Test
     public void takeOffer_noOverlappingArbitrator_returnsXXX() throws Exception {
         final int bobPort = getBobPort();
@@ -525,7 +553,7 @@ public class OfferResourceIT {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @InSequence(10)
+    @InSequence(11)
     @Test
     public void selectSameArbitratorAsInOffer() {
         final int bobPort = getBobPort();
@@ -534,7 +562,7 @@ public class OfferResourceIT {
         ApiTestHelper.selectArbitrator(bobPort, offer.arbitratorNodeAddresses.get(0));
     }
 
-    @InSequence(11)
+    @InSequence(12)
     @Test
     public void fundBobWallet() {
         ApiTestHelper.generateBlocks(bitcoin, 101);
@@ -543,7 +571,7 @@ public class OfferResourceIT {
         ApiTestHelper.generateBlocks(bitcoin, 1);
     }
 
-    @InSequence(12)
+    @InSequence(13)
     @Test
     public void takeOffer_takerSameAsMaker_returns428() {
         final int alicePort = getAlicePort();
@@ -567,7 +595,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(13)
+    @InSequence(14)
     @Test
     public void takeOffer_validPaymentMethodAndHasFunds_returnsTrade() {
         final int alicePort = getAlicePort();
@@ -654,7 +682,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(14)
+    @InSequence(15)
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
@@ -673,7 +701,7 @@ public class OfferResourceIT {
         assertOfferExists(bobPort, createdOffer.id);
     }
 
-    @InSequence(15)
+    @InSequence(16)
     @Test
     public void cancelOffer_ownExistingOffer_returns200() throws Exception {
         final int alicePort = getAlicePort();
@@ -697,7 +725,7 @@ public class OfferResourceIT {
         ;
     }
 
-    @InSequence(16)
+    @InSequence(17)
     @Test
     public void cancelOffer_ownNonExistingOffer_returns404() throws Exception {
         final int alicePort = getAlicePort();

@@ -1,10 +1,7 @@
 package io.bisq.api;
 
 import com.github.javafaker.Faker;
-import io.bisq.api.model.ArbitratorList;
-import io.bisq.api.model.OfferDetail;
-import io.bisq.api.model.P2PNetworkStatus;
-import io.bisq.api.model.WalletDetails;
+import io.bisq.api.model.*;
 import io.bisq.api.model.payment.PaymentAccount;
 import io.bisq.api.model.payment.SepaPaymentAccount;
 import bisq.core.locale.CountryUtil;
@@ -165,6 +162,19 @@ public final class ApiTestHelper {
                         statusCode(200)
                 .extract().body().jsonPath().getString("address");
     }
+
+    public static WalletAddressList getBtcWalletAddresses(int apiPort) {
+        return given().
+                port(apiPort).
+//
+        when().
+                        get("/api/v1/wallet/addresses").
+//
+        then().
+                        statusCode(200)
+                .extract().body().as(WalletAddressList.class);
+    }
+
 
     public static void sendFunds(Container bitcoin, String walletAddress, double amount) {
         final CubeOutput cubeOutput = bitcoin.exec("bitcoin-cli", "-regtest", "sendtoaddress", walletAddress, "" + amount);

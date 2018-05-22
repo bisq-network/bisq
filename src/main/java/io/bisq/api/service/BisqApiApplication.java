@@ -1,24 +1,9 @@
 package io.bisq.api.service;
 
-import bisq.common.crypto.KeyRing;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
-import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
-import bisq.network.p2p.P2PService;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.name.Named;
 import io.bisq.api.BisqProxy;
 import io.bisq.api.app.ApiEnvironment;
 import io.bisq.api.health.CurrencyListHealthCheck;
@@ -47,53 +32,10 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     Injector injector;
 
     @Inject
-    AccountAgeWitnessService accountAgeWitnessService;
-
-    @Inject
-    ArbitratorManager arbitratorManager;
-
-    @Inject
     BtcWalletService walletService;
 
     @Inject
-    WalletsSetup walletsSetup;
-
-    @Inject
-    TradeManager tradeManager;
-
-    @Inject
-    ClosedTradableManager closedTradableManager;
-
-    @Inject
-    FailedTradesManager failedTradesManager;
-
-    @Inject
-    OpenOfferManager openOfferManager;
-
-    @Inject
-    OfferBookService offerBookService;
-
-    @Inject
-    P2PService p2PService;
-
-    @Inject
-    KeyRing keyRing;
-
-    @Inject
-    User user;
-
-    @Inject
-    FeeService feeService;
-
-    @Inject
-    private Preferences preferences;
-
-    @Inject
-    private BsqWalletService bsqWalletService;
-
-    @Inject(optional = true)
-    @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)
-    private boolean useDevPrivilegeKeys = false;
+    Preferences preferences;
 
     private Runnable shutdown;
 
@@ -126,9 +68,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
-        BisqProxy bisqProxy = new BisqProxy(injector, accountAgeWitnessService, arbitratorManager, walletService, tradeManager, openOfferManager,
-                offerBookService, p2PService, keyRing, user, feeService, preferences, bsqWalletService,
-                walletsSetup, closedTradableManager, failedTradesManager, useDevPrivilegeKeys, shutdown);
+        BisqProxy bisqProxy = new BisqProxy(injector, shutdown);
         preferences.readPersisted();
         setupCors(environment);
         setupAuth(environment);

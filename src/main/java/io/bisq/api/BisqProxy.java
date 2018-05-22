@@ -8,6 +8,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
+import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
@@ -56,17 +57,14 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.annotation.Nullable;
 import javax.validation.ValidationException;
-import java.io.File;
+import java.io.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,30 +107,27 @@ public class BisqProxy {
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
 
-    public BisqProxy(Injector injector, AccountAgeWitnessService accountAgeWitnessService, ArbitratorManager arbitratorManager, BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
-                     OfferBookService offerBookService, P2PService p2PService, KeyRing keyRing, User user,
-                     FeeService feeService, bisq.core.user.Preferences preferences, BsqWalletService bsqWalletService, WalletsSetup walletsSetup,
-                     ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager, boolean useDevPrivilegeKeys, Runnable shutdown) {
+    public BisqProxy(Injector injector, Runnable shutdown) {
         this.injector = injector;
-        this.accountAgeWitnessService = accountAgeWitnessService;
-        this.arbitratorManager = arbitratorManager;
-        this.btcWalletService = btcWalletService;
-        this.tradeManager = tradeManager;
-        this.openOfferManager = openOfferManager;
-        this.offerBookService = offerBookService;
-        this.p2PService = p2PService;
-        this.keyRing = keyRing;
-        this.user = user;
-        this.feeService = feeService;
-        this.preferences = preferences;
-        this.bsqWalletService = bsqWalletService;
+        this.accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
+        this.arbitratorManager = injector.getInstance(ArbitratorManager.class);
+        this.btcWalletService = injector.getInstance(BtcWalletService.class);
+        this.tradeManager = injector.getInstance(TradeManager.class);
+        this.openOfferManager = injector.getInstance(OpenOfferManager.class);
+        this.offerBookService = injector.getInstance(OfferBookService.class);
+        this.p2PService = injector.getInstance(P2PService.class);
+        this.keyRing = injector.getInstance(KeyRing.class);
+        this.user = injector.getInstance(User.class);
+        this.feeService = injector.getInstance(FeeService.class);
+        this.preferences = injector.getInstance(bisq.core.user.Preferences.class);
+        this.bsqWalletService = injector.getInstance(BsqWalletService.class);
         this.shutdown = shutdown;
         this.marketList = calculateMarketList();
         this.currencyList = calculateCurrencyList();
-        this.walletsSetup = walletsSetup;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
-        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+        this.walletsSetup = injector.getInstance(WalletsSetup.class);
+        this.closedTradableManager = injector.getInstance(ClosedTradableManager.class);
+        this.failedTradesManager = injector.getInstance(FailedTradesManager.class);
+        this.useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
 
         final BisqEnvironment bisqEnvironment = injector.getInstance(BisqEnvironment.class);
         final String appDataDir = bisqEnvironment.getAppDataDir();
@@ -558,7 +553,22 @@ public class BisqProxy {
         return walletAddressList;
     }
 
-    public void withdrawFunds(Set<String> sourceAddresses, Coin amountAsCoin, boolean feeExcluded, String targetAddress) throws AddressEntryException, InsufficientFundsException, AmountTooLowException {
+    public void withdrawFunds(Set<String> sourceAddresses, Coin amountAsCoin, boolean feeExcluded, String targetAddress)
+            throws AddressEntryException, InsufficientFundsException, AmountTooLowException {
+        // get all address entries
+        final List<AddressEntry> sourceAddressEntries = sourceAddresses.stream()
+                .filter(address -> null != address)
+                .map(address -> btcWalletService.getAddressEntryListAsImmutableList().stream().filter(addressEntry -> address.equals(addressEntry.getAddressString())).findFirst().orElse(null))
+                .filter(item -> null != item)
+                .collect(Collectors.toList());
+        // this filter matches all unauthorized address types
+        Predicate<AddressEntry> filterNotAllowedAddressEntries = addressEntry -> !(AddressEntry.Context.AVAILABLE.equals(addressEntry.getContext())
+                || AddressEntry.Context.TRADE_PAYOUT.equals(addressEntry.getContext()));
+        // check if there are any unauthorized address types
+        if (sourceAddressEntries.stream().anyMatch(filterNotAllowedAddressEntries)) {
+            throw new ValidationException("Funds can be withdrawn only from addresses with context AVAILABLE and TRADE_PAYOUT");
+        }
+
         Coin sendersAmount;
         // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
         Transaction feeEstimationTransaction;
@@ -579,10 +589,7 @@ public class BisqProxy {
         sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
         Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
 
-        final Coin totalAvailableAmountOfSelectedItems = sourceAddresses.stream()
-                .filter(address -> null != address)
-                .map(address -> btcWalletService.getAddressEntryListAsImmutableList().stream().filter(addressEntry -> address.equals(addressEntry.getAddressString())).findFirst().orElse(null))
-                .filter(item -> null != item)
+        final Coin totalAvailableAmountOfSelectedItems = sourceAddressEntries.stream()
                 .map(address -> btcWalletService.getBalanceForAddress(address.getAddress()))
                 .reduce(Coin.ZERO, Coin::add);
 
