@@ -25,7 +25,7 @@ jobs:
     - stage: integration
       script:
         docker-compose build;
-        mvn dependency:resolve -P integration compile exec:java -Dexec.mainClass="io.bisq.api.app.ApiMain" -Dexec.args="--help";
+        mvn dependency:resolve -P integration compile exec:java -Dexec.mainClass="network.bisq.api.app.ApiMain" -Dexec.args="--help";
         docker volume create m2;
         docker container create -v m2:/m2 --name m2helperContainer busybox;
         docker cp ~/.m2/repository m2helperContainer:/m2/;

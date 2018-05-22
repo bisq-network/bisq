@@ -41,7 +41,7 @@ This step needs to be done before you can start the API with UI or headless:
 The following command will start a GUI Bisq instance on
 Bitcoin mainnet (meaning you can lose real BTC):
 
-    mvn compile exec:java -Dexec.mainClass="io.bisq.api.app.BisqApiWithUIMain"
+    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain"
 
 
 ## Getting started: headless
@@ -49,7 +49,7 @@ Bitcoin mainnet (meaning you can lose real BTC):
 The following command will start a headless Bisq instance on
 Bitcoin mainnet (meaning you can lose real BTC):
 
-    mvn compile exec:java -Dexec.mainClass="io.bisq.api.app.ApiMain"
+    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.ApiMain"
 
 
 ## Developing
@@ -59,7 +59,7 @@ See below on how to pass Bisq arguments to enable REGTEST mode.
 All regular Bisq arguments can be used.
 
     mvn compile exec:java \
-        -Dexec.mainClass="io.bisq.api.app.BisqApiWithUIMain" \
+        -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain" \
         -Dexec.args="--baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
 
 
@@ -86,7 +86,7 @@ You might also pass program args: `apiPort` and `apiHost`.
 
 
     mvn compile exec:java \
-        -Dexec.mainClass="io.bisq.api.app.BisqApiWithUIMain" \
+        -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain" \
         -Dexec.args="--apiPort=8000 --apiHost=localhost"
 
 

@@ -1,1 +1,1 @@
-io.bisq.api.arquillian.CubeLoggerExtension
+network.bisq.api.arquillian.CubeLoggerExtension
