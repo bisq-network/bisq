@@ -89,6 +89,7 @@ public class BSFormatterTest {
         assertEquals("1 hour, 0 minutes, 0 seconds", formatter.formatDurationAsWords(oneHour, true));
         assertEquals("1 hour, 0 minutes, 1 second", formatter.formatDurationAsWords(oneHour + oneSecond, true));
         assertEquals("1 hour, 0 minutes, 2 seconds", formatter.formatDurationAsWords(oneHour + oneSecond * 2, true));
+        assertEquals("2 days, 21 hours, 28 minutes", formatter.formatDurationAsWords(oneDay * 2 + oneHour * 21 + oneMinute * 28));
         assertEquals("", formatter.formatDurationAsWords(0));
         assertTrue(formatter.formatDurationAsWords(0).isEmpty());
     }

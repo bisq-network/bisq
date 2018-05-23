@@ -571,10 +571,10 @@ public class BSFormatter {
 
         String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : "";
 
-        duration = StringUtils.replaceOnce(duration, "1 " + seconds, "1 " + second);
-        duration = StringUtils.replaceOnce(duration, "1 " + minutes, "1 " + minute);
-        duration = StringUtils.replaceOnce(duration, "1 " + hours, "1 " + hour);
-        duration = StringUtils.replaceOnce(duration, "1 " + days, "1 " + day);
+        duration = StringUtils.replacePattern(duration, "^1 " + seconds + "|\\b1 " + seconds, "1 " + second);
+        duration = StringUtils.replacePattern(duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
+        duration = StringUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
+        duration = StringUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
         return duration.trim();
     }
 
