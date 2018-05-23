@@ -102,12 +102,6 @@ public final class AccountNrValidator extends BankValidator {
                 } else {
                     return super.validate(null);
                 }
-            case "AR":
-                length = 13;
-                if (isNumberWithFixedLength(input, length))
-                    return super.validate(input);
-                else
-                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             default:
                 return super.validate(input);
         }
