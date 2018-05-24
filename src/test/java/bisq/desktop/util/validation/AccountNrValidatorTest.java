@@ -24,6 +24,6 @@ public class AccountNrValidatorTest {
         AccountNrValidator validator = new AccountNrValidator("AR");
 
         assertTrue(validator.validate("4009041813520").isValid);
-        assertFalse(validator.validate("40090418135201").isValid);
+        assertTrue(validator.validate("035-005198/5").isValid);
     }
 }

@@ -52,6 +52,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+
 import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
@@ -234,6 +237,7 @@ abstract class BankForm extends PaymentMethodForm {
     private boolean useHolderID;
     private final Runnable closeHandler;
     private ComboBox<TradeCurrency> currencyComboBox;
+    private boolean accountNrInputTextFieldEdited;
 
     BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
              GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
@@ -288,6 +292,7 @@ abstract class BankForm extends PaymentMethodForm {
 
     @Override
     public void addFormForAddAccount() {
+        accountNrInputTextFieldEdited = false;
         gridRowFrom = gridRow + 1;
 
         Tuple3<Label, ComboBox, ComboBox> tuple3 = addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
@@ -346,6 +351,9 @@ abstract class BankForm extends PaymentMethodForm {
                 branchIdInputTextField.setText("");
                 nationalAccountIdInputTextField.setText("");
                 accountNrInputTextField.setText("");
+                accountNrInputTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue) accountNrInputTextFieldEdited = true;
+                });
                 accountTypeComboBox.getSelectionModel().clearSelection();
                 accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
 
@@ -617,7 +625,7 @@ abstract class BankForm extends PaymentMethodForm {
             if (BankUtil.isNationalAccountIdRequired(countryCode)) {
                 String nationalAccountId = nationalAccountIdInputTextField.getText();
 
-                if (countryCode.equals("AR") && nationalAccountId.length() == 22) {
+                if (countryCode.equals("AR") && nationalAccountId.length() == 22 && !accountNrInputTextFieldEdited) {
                     branchIdInputTextField.setText(nationalAccountId.substring(3,7));
                     accountNrInputTextField.setText(nationalAccountId.substring(8,21));
                 }
