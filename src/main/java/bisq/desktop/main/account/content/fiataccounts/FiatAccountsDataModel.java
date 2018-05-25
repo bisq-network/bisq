@@ -44,7 +44,9 @@ import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class FiatAccountsDataModel extends ActivatableDataModel {
@@ -79,6 +81,22 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     protected void activate() {
         user.getPaymentAccountsAsObservable().addListener(setChangeListener);
         fillAndSortPaymentAccounts();
+
+        final Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
+        if (paymentAccounts != null) {
+
+            paymentAccounts.stream()
+                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.VENMO_ID) ||
+                            paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_APP_ID))
+                    .forEach(paymentAccount -> {
+                        // We try to clean up Venmo and CashApp accounts to be able to remove the code for those in
+                        // later releases without breaking the persisted protobuffer data base files.
+                        if (onDeleteAccount(paymentAccount)) {
+                            log.info("We deleted a blocked Venmo or CashApp account. paymentAccount name={}",
+                                    paymentAccount.getAccountName());
+                        }
+                    });
+        }
     }
 
     private void fillAndSortPaymentAccounts() {
@@ -87,7 +105,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
-            paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+            paymentAccounts.sort(Comparator.comparing(PaymentAccount::getCreationDate));
         }
     }
 
@@ -129,14 +147,10 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
-                .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
-                .findAny()
-                .isPresent();
+                .anyMatch(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));
         isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
-                .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
-                        paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
-                .findAny()
-                .isPresent();
+                .anyMatch(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
+                        paymentAccount.getId().equals(t.getTakerPaymentAccountId()));
         if (!isPaymentAccountUsed)
             user.removePaymentAccount(paymentAccount);
         return isPaymentAccountUsed;
