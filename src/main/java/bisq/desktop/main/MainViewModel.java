@@ -48,7 +48,7 @@ import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOffer;
@@ -1294,7 +1294,7 @@ public class MainViewModel implements ViewModel {
             perfectMoneyAccount.init();
             perfectMoneyAccount.setAccountNr("dummy_" + new Random().nextInt(100));
             perfectMoneyAccount.setAccountName("PerfectMoney dummy");// Don't translate only for dev
-            perfectMoneyAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
+            perfectMoneyAccount.setSelectedTradeCurrency(new FiatCurrency("USD"));
             user.addPaymentAccount(perfectMoneyAccount);
 
             if (p2PService.isBootstrapped()) {
