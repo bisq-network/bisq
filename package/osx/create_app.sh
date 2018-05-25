@@ -12,6 +12,16 @@ version="0.7.0"
 
 EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
 
+echo SHA 256 before stripping jar file:
+shasum -a256 $EXE_JAR | awk '{print $1}'
+
+# We make a deterministic jar by stripping out comments with date, etc.
+java -jar ./package/osx/tools-1.0.jar $EXE_JAR
+
+echo SHA 256 after stripping jar file to get a deterministic jar:
+shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
+
+
 linux32=build/vm/vm_shared_ubuntu14_32bit
 linux64=build/vm/vm_shared_ubuntu
 win32=build/vm/vm_shared_windows_32bit
@@ -76,19 +86,8 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "deploy/Bisq-$version.jar" \
-    -srcfiles "build/app/lib//$bc_lib1" \
-    -srcfiles "build/app/lib//$bc_lib2" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
-
-
-# TODO <Class-Path>lib/bcpg-jdk15on.jar lib/bcprov-jdk15on.jar</Class-Path> not included in build
-# when we have support for security manager we use that
-#     \
-#    -BjvmOptions=-Djava.security.manager \
-#    -BjvmOptions=-Djava.security.debug=failure \
-#    -BjvmOptions=-Djava.security.policy=file:bisq.policy
-#     -srcfiles "core/src/main/resources/bisq.policy" \
 
 rm "deploy/Bisq.html"
 rm "deploy/Bisq.jnlp"
