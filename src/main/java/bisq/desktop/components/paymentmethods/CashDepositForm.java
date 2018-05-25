@@ -249,6 +249,7 @@ public class CashDepositForm extends PaymentMethodForm {
     private boolean useHolderID;
     private ComboBox<TradeCurrency> currencyComboBox;
     private final EmailValidator emailValidator;
+    private boolean accountNrInputTextFieldEdited;
 
 
     public CashDepositForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
@@ -318,6 +319,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
     @Override
     public void addFormForAddAccount() {
+        accountNrInputTextFieldEdited = false;
         gridRowFrom = gridRow + 1;
 
         Tuple3<Label, ComboBox, ComboBox> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
@@ -375,6 +377,9 @@ public class CashDepositForm extends PaymentMethodForm {
                 branchIdInputTextField.setText("");
                 nationalAccountIdInputTextField.setText("");
                 accountNrInputTextField.setText("");
+                accountNrInputTextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue) accountNrInputTextFieldEdited = true;
+                });
                 accountTypeComboBox.getSelectionModel().clearSelection();
                 accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
 
@@ -662,7 +667,7 @@ public class CashDepositForm extends PaymentMethodForm {
             if (BankUtil.isNationalAccountIdRequired(countryCode)) {
                 String nationalAccountId = nationalAccountIdInputTextField.getText();
 
-                if (countryCode.equals("AR") && nationalAccountId.length() == 22) {
+                if (countryCode.equals("AR") && nationalAccountId.length() == 22 && !accountNrInputTextFieldEdited) {
                     branchIdInputTextField.setText(nationalAccountId.substring(3,7));
                     accountNrInputTextField.setText(nationalAccountId.substring(8,21));
                 }
