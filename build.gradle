@@ -21,10 +21,9 @@ sourceCompatibility = 1.8
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 
-jar {
-    manifest.attributes(
-        'Class-Path': 'bcpg-jdk15on-1.56.jar bcprov-jdk15on-1.56.jar'
-    )
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }
 
 tasks.withType(JavaCompile) {
