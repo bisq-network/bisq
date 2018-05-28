@@ -516,8 +516,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         closeTicketButton.setOnAction(e -> {
             if (dispute.getDepositTxSerialized() != null) {
                 try {
-                    AddressEntry arbitratorAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
-                    disputeResult.setArbitratorPubKey(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getPubKey());
+                    AddressEntry arbitratorAddressEntry = walletService.getArbitratorAddressEntry();
+                    disputeResult.setArbitratorPubKey(walletService.getArbitratorAddressEntry().getPubKey());
 
                    /* byte[] depositTxSerialized,
                     Coin buyerPayoutAmount,

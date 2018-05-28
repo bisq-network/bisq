@@ -61,7 +61,7 @@ public class VerifyTask extends Task<List<BisqInstaller.VerifyDescriptor>> {
      * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
      */
     @Override
-    protected List<BisqInstaller.VerifyDescriptor> call() throws IOException {
+    protected List<BisqInstaller.VerifyDescriptor> call() {
         log.debug("VerifyTask started...");
         Optional<BisqInstaller.FileDescriptor> installer = fileDescriptors.stream()
                 .filter(fileDescriptor -> BisqInstaller.DownloadType.INSTALLER.equals(fileDescriptor.getType()))
