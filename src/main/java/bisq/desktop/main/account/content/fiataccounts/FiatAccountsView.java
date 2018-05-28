@@ -353,6 +353,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getAllValues().stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VENMO_ID))
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.CASH_APP_ID))
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
