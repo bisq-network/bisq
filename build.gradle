@@ -40,9 +40,11 @@ repositories {
 }
 
 dependencies {
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'network.bisq:bisq-core:-SNAPSHOT'
     compile 'network.bisq:bisq-p2p:-SNAPSHOT'
-    compile 'network.bisq:bisq-common:-SNAPSHOT'
+    compile 'network.bisq:bisq-http-api:-SNAPSHOT'
+    compile 'network.bisq:bisq-grpc:-SNAPSHOT'
     compile 'org.controlsfx:controlsfx:8.0.6_20'
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
@@ -105,7 +107,7 @@ dependencyVerification {
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
         'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
-        'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
+        /*'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',*/ // seems grpc uses diff. version of org.apache.commons
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
         'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
         'commons-codec:commons-codec:ad19d2601c3abf0b946b5c3a4113e226a8c1e3305e395b90013b78dd94a723ce',

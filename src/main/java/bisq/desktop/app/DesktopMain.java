@@ -21,6 +21,7 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.core.app.BisqDaemon;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -35,9 +36,18 @@ import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+
+
+import bisq.httpapi.BisqHttpApi;
+
 @Slf4j
 public class DesktopMain extends BisqExecutable {
     private BisqApp application;
+    private BisqDaemon bisqDaemon;
+    @Nullable
+    private BisqHttpApi bisqHttpApi;
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
@@ -69,8 +79,11 @@ public class DesktopMain extends BisqExecutable {
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });
-
+        bisqDaemon = new BisqDaemon();
         Application.launch(BisqApp.class);
+
+        if (runeWithHttpApi())
+            bisqHttpApi = new BisqHttpApi(bisqDaemon);
     }
 
 
@@ -82,6 +95,9 @@ public class DesktopMain extends BisqExecutable {
     protected void onApplicationLaunched() {
         super.onApplicationLaunched();
         application.setGracefulShutDownHandler(this);
+
+
+        application.setDaemon(bisqDaemon);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +113,11 @@ public class DesktopMain extends BisqExecutable {
     protected void applyInjector() {
         super.applyInjector();
 
+        bisqDaemon.setInjector(injector);
         application.setInjector(injector);
+        if (runeWithHttpApi())
+            bisqHttpApi.setInjector(injector);
+
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
     }
 
@@ -110,6 +130,17 @@ public class DesktopMain extends BisqExecutable {
     @Override
     protected void startApplication() {
         // We need to be in user thread! We mapped at launchApplication already...
+        bisqDaemon.startApplication();
         application.startApplication();
+        if (runeWithHttpApi())
+            bisqHttpApi.startApplication();
+    }
+
+    private boolean runeWithHttpApi() {
+        return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
+    }
+
+    private boolean runeWithGrpcApi() {
+        return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
     }
 }

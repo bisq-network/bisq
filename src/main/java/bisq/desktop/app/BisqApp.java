@@ -34,6 +34,7 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.app.BisqDaemon;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -98,6 +99,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private Scene scene;
     private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private boolean shutDownRequested;
+    private BisqDaemon daemon;
 
     public BisqApp() {
         shutDownHandler = this::stop;
@@ -111,6 +113,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     // NOTE: This method is not called on the JavaFX Application Thread.
     @Override
     public void init() {
+    }
+
+    public void setDaemon(BisqDaemon daemon) {
+        this.daemon = daemon;
     }
 
     @Override
