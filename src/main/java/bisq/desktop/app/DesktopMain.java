@@ -72,18 +72,22 @@ public class DesktopMain extends BisqExecutable {
 
     @Override
     protected void launchApplication() {
+        bisqDaemon = new BisqDaemon();
+        if (runWithHttpApi())
+            bisqHttpApi = new BisqHttpApi(bisqDaemon);
+
         BisqApp.setAppLaunchedHandler(application -> {
             DesktopMain.this.application = (BisqApp) application;
+
+            DesktopMain.this.application.setDaemon(bisqDaemon);
+
             // Necessary to do the setup at this point to prevent Bouncy Castle errors
             CommonSetup.setup(DesktopMain.this.application);
             // Map to user thread!
             UserThread.execute(this::onApplicationLaunched);
         });
-        bisqDaemon = new BisqDaemon();
-        Application.launch(BisqApp.class);
 
-        if (runeWithHttpApi())
-            bisqHttpApi = new BisqHttpApi(bisqDaemon);
+        Application.launch(BisqApp.class);
     }
 
 
@@ -96,8 +100,6 @@ public class DesktopMain extends BisqExecutable {
         super.onApplicationLaunched();
         application.setGracefulShutDownHandler(this);
 
-
-        application.setDaemon(bisqDaemon);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +117,7 @@ public class DesktopMain extends BisqExecutable {
 
         bisqDaemon.setInjector(injector);
         application.setInjector(injector);
-        if (runeWithHttpApi())
+        if (bisqHttpApi != null)
             bisqHttpApi.setInjector(injector);
 
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
@@ -132,15 +134,15 @@ public class DesktopMain extends BisqExecutable {
         // We need to be in user thread! We mapped at launchApplication already...
         bisqDaemon.startApplication();
         application.startApplication();
-        if (runeWithHttpApi())
+        if (bisqHttpApi != null)
             bisqHttpApi.startApplication();
     }
 
-    private boolean runeWithHttpApi() {
+    private boolean runWithHttpApi() {
         return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
     }
 
-    private boolean runeWithGrpcApi() {
+    private boolean runWithGrpcApi() {
         return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
     }
 }
