@@ -22,7 +22,6 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.BtcAddressValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -31,6 +30,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
 
