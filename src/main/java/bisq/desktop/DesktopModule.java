@@ -22,6 +22,7 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.main.MarketPricePresentation;
 import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
 import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
@@ -69,6 +70,7 @@ public class DesktopModule extends AppModule {
         bind(BSFormatter.class).in(Singleton.class);
         bind(BsqFormatter.class).in(Singleton.class);
         bind(TorNetworkSettingsWindow.class).in(Singleton.class);
+        bind(MarketPricePresentation.class).in(Singleton.class);
 
         bind(Transitions.class).in(Singleton.class);
 
