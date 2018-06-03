@@ -621,13 +621,10 @@ public class MainViewModel implements ViewModel {
 
         PaymentMethod.onAllServicesInitialized();
 
-        // disputeManager
         disputeManager.onAllServicesInitialized();
-
 
         initTradeManager();
 
-        // btcWalletService
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -637,7 +634,6 @@ public class MainViewModel implements ViewModel {
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
-        removeOffersWithoutAccountAgeWitness();
 
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue, false));
@@ -1117,27 +1113,6 @@ public class MainViewModel implements ViewModel {
                     log.warn(message);
                     new Popup<>().warning(message).show();
                 });
-    }
-
-    private void removeOffersWithoutAccountAgeWitness() {
-        if (new Date().after(AccountAgeWitnessService.FULL_ACTIVATION)) {
-            openOfferManager.getObservableList().stream()
-                    .filter(e -> CurrencyUtil.isFiatCurrency(e.getOffer().getCurrencyCode()))
-                    .filter(e -> !e.getOffer().getAccountAgeWitnessHashAsHex().isPresent())
-                    .forEach(e -> {
-                        new Popup<>().warning(Res.get("popup.warning.offerWithoutAccountAgeWitness", e.getId()))
-                                .actionButtonText(Res.get("popup.warning.offerWithoutAccountAgeWitness.confirm"))
-                                .onAction(() -> {
-                                    openOfferManager.removeOffer(e.getOffer(),
-                                            () -> {
-                                                log.info("Offer with ID {} is removed", e.getId());
-                                            },
-                                            log::error);
-                                })
-                                .hideCloseButton()
-                                .show();
-                    });
-        }
     }
 
     private void checkForCorruptedDataBaseFiles() {
