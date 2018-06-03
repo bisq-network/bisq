@@ -29,12 +29,12 @@ import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.app.AppModule;
 

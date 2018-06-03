@@ -26,7 +26,6 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
@@ -36,6 +35,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 

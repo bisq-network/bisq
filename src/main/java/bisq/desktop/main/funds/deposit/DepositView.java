@@ -27,7 +27,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -37,6 +36,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;

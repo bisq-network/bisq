@@ -26,8 +26,6 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -40,6 +38,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;

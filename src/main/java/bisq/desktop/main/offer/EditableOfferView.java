@@ -45,8 +45,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
@@ -59,6 +57,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -70,6 +70,8 @@ import org.bitcoinj.core.Coin;
 
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -119,10 +121,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
-
-
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 public abstract class EditableOfferView<M extends EditableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
     protected final Navigation navigation;

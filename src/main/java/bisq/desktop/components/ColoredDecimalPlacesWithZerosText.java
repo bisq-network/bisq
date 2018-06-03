@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.util.GUIUtil;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.util.Tuple2;
 
@@ -34,12 +34,12 @@ public class ColoredDecimalPlacesWithZerosText extends HBox {
 
         if (numberOfZerosToColorize <= 0) {
             getChildren().addAll(new Text(number));
-        } else if (number.contains(GUIUtil.RANGE_SEPARATOR)) {
-            String[] splitNumber = number.split(GUIUtil.RANGE_SEPARATOR);
+        } else if (number.contains(BSFormatter.RANGE_SEPARATOR)) {
+            String[] splitNumber = number.split(BSFormatter.RANGE_SEPARATOR);
             Tuple2<Label, Label> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
 
-            getChildren().add(new Text(GUIUtil.RANGE_SEPARATOR));
+            getChildren().add(new Text(BSFormatter.RANGE_SEPARATOR));
 
             numbers = getSplittedNumberNodes(splitNumber[1], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);

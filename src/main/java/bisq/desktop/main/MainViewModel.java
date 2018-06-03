@@ -27,7 +27,6 @@ import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.Alert;
@@ -40,6 +39,7 @@ import bisq.core.app.SetupUtils;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.AddressEntry;
+import bisq.core.btc.BalanceModel;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
@@ -57,6 +57,9 @@ import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.presentation.BalancePresentation;
+import bisq.core.presentation.DisputePresentation;
+import bisq.core.presentation.TradePresentation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -68,6 +71,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
@@ -89,7 +93,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
@@ -137,7 +140,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -189,9 +191,6 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty isPriceAvailable = new SimpleBooleanProperty(false);
     final BooleanProperty newVersionAvailableProperty = new SimpleBooleanProperty(false);
     final IntegerProperty marketPriceUpdated = new SimpleIntegerProperty(0);
-    final StringProperty availableBalance = new SimpleStringProperty();
-    final StringProperty reservedBalance = new SimpleStringProperty();
-    final StringProperty lockedBalance = new SimpleStringProperty();
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
 
@@ -206,13 +205,15 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    final StringProperty numPendingTradesAsString = new SimpleStringProperty();
-    final BooleanProperty showPendingTradesNotification = new SimpleBooleanProperty();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
+    private final BalanceModel balanceModel;
+    private final BalancePresentation balancePresentation;
+    private final TradePresentation tradePresentation;
+    private final DisputePresentation disputePresentation;
     final PriceFeedService priceFeedService;
     private final User user;
     private int numBtcPeers = 0;
@@ -236,7 +237,11 @@ public class MainViewModel implements ViewModel {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public MainViewModel(WalletsManager walletsManager, WalletsSetup walletsSetup,
-                         BtcWalletService btcWalletService, PriceFeedService priceFeedService,
+                         BtcWalletService btcWalletService, BalanceModel balanceModel,
+                         BalancePresentation balancePresentation,
+                         TradePresentation tradePresentation,
+                         DisputePresentation disputePresentation,
+                         PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
@@ -250,6 +255,10 @@ public class MainViewModel implements ViewModel {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
+        this.balanceModel = balanceModel;
+        this.balancePresentation = balancePresentation;
+        this.tradePresentation = tradePresentation;
+        this.disputePresentation = disputePresentation;
         this.priceFeedService = priceFeedService;
         this.user = user;
         this.arbitratorManager = arbitratorManager;
@@ -617,9 +626,7 @@ public class MainViewModel implements ViewModel {
 
         // tradeManager
         tradeManager.onAllServicesInitialized();
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
-        onTradesChanged();
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
         // We handle the trade period here as we display a global popup if we reached dispute time
         tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
         tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
@@ -634,12 +641,12 @@ public class MainViewModel implements ViewModel {
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
-                updateBalance();
+                balanceModel.updateBalance();
             }
         });
 
-        openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
+        openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
         removeOffersWithoutAccountAgeWitness();
 
@@ -674,7 +681,7 @@ public class MainViewModel implements ViewModel {
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
-        updateBalance();
+        balanceModel.updateBalance();
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
             setupDevDummyPaymentAccounts();
@@ -1114,60 +1121,6 @@ public class MainViewModel implements ViewModel {
                 });
     }
 
-    private void updateBalance() {
-        // Without delaying to the next cycle it does not update.
-        // Seems order of events we are listening on causes that...
-        UserThread.execute(() -> {
-            updateAvailableBalance();
-            updateReservedBalance();
-            updateLockedBalance();
-        });
-    }
-
-    private void updateAvailableBalance() {
-        Coin totalAvailableBalance = Coin.valueOf(tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).getValue())
-                .sum());
-        String value = formatter.formatCoinWithCode(totalAvailableBalance);
-        // If we get full precision the BTC postfix breaks layout so we omit it
-        if (value.length() > 11)
-            value = formatter.formatCoin(totalAvailableBalance);
-        availableBalance.set(value);
-    }
-
-    private void updateReservedBalance() {
-        Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
-                .map(openOffer -> {
-                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-                    if (addressEntryOptional.isPresent()) {
-                        Address address = addressEntryOptional.get().getAddress();
-                        return btcWalletService.getBalanceForAddress(address);
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(e -> e != null)
-                .mapToLong(Coin::getValue)
-                .sum());
-
-        reservedBalance.set(formatter.formatCoinWithCode(sum));
-    }
-
-    private void updateLockedBalance() {
-        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
-        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
-        Coin sum = Coin.valueOf(lockedTrades
-                .mapToLong(trade -> {
-                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                    if (addressEntryOptional.isPresent())
-                        return addressEntryOptional.get().getCoinLockedInMultiSig().getValue();
-                    else
-                        return 0;
-                })
-                .sum());
-        lockedBalance.set(formatter.formatCoinWithCode(sum));
-    }
-
     private void checkForLockedUpFunds() {
         Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
                 .filter(Trade::hasFailed)
@@ -1193,16 +1146,6 @@ public class MainViewModel implements ViewModel {
                     log.warn(message);
                     new Popup<>().warning(message).show();
                 });
-    }
-
-    private void onTradesChanged() {
-        long numPendingTrades = tradeManager.getTradableList().size();
-        if (numPendingTrades > 0)
-            numPendingTradesAsString.set(String.valueOf(numPendingTrades));
-        if (numPendingTrades > 9)
-            numPendingTradesAsString.set("★");
-
-        showPendingTradesNotification.set(numPendingTrades > 0);
     }
 
     private void removeOffersWithoutAccountAgeWitness() {
@@ -1294,11 +1237,31 @@ public class MainViewModel implements ViewModel {
         return Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + postFix;
     }
 
-    StringProperty getNumOpenDisputesAsString() {
-        return disputeManager.getNumOpenDisputesAsString();
+    StringProperty getNumOpenDisputes() {
+        return disputePresentation.getNumOpenDisputes();
     }
 
     BooleanProperty getShowOpenDisputesNotification() {
-        return disputeManager.getShowOpenDisputesNotification();
+        return disputePresentation.getShowOpenDisputesNotification();
+    }
+
+    BooleanProperty getShowPendingTradesNotification() {
+        return tradePresentation.getShowPendingTradesNotification();
+    }
+
+    StringProperty getNumPendingTrades() {
+        return tradePresentation.getNumPendingTrades();
+    }
+
+    StringProperty getAvailableBalance() {
+        return balancePresentation.getAvailableBalance();
+    }
+
+    StringProperty getReservedBalance() {
+        return balancePresentation.getReservedBalance();
+    }
+
+    StringProperty getLockedBalance() {
+        return balancePresentation.getLockedBalance();
     }
 }

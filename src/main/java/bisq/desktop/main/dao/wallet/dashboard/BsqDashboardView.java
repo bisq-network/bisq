@@ -22,7 +22,6 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -35,6 +34,7 @@ import bisq.core.monetary.Price;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.MathUtils;
 

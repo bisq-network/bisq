@@ -19,7 +19,6 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -30,6 +29,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Utils;
 

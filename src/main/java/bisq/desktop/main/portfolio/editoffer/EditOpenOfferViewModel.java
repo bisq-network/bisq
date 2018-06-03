@@ -19,8 +19,6 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.EditableOfferViewModel;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -32,6 +30,8 @@ import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 

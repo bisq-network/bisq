@@ -23,14 +23,14 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.offer.EditableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple3;
 

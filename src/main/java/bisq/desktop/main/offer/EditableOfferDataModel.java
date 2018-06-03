@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.AddressEntry;
@@ -51,6 +49,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 

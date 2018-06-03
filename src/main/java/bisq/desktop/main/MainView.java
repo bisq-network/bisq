@@ -37,13 +37,13 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -236,13 +236,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
-        availableBalanceBox.first.textProperty().bind(model.availableBalance);
+        availableBalanceBox.first.textProperty().bind(model.getAvailableBalance());
 
         Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
-        reservedBalanceBox.first.textProperty().bind(model.reservedBalance);
+        reservedBalanceBox.first.textProperty().bind(model.getReservedBalance());
 
         Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
-        lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
+        lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
 
         HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
                 reservedBalanceBox.second, lockedBalanceBox.second,
@@ -672,7 +672,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private void setupNotificationIcon(Pane buttonHolder) {
         Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.numPendingTradesAsString);
+        label.textProperty().bind(model.getNumPendingTrades());
         label.relocate(5, 1);
         label.setId("nav-alert-label");
 
@@ -684,13 +684,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.setMouseTransparent(true);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
         notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.showPendingTradesNotification);
+        notification.visibleProperty().bind(model.getShowPendingTradesNotification());
         buttonHolder.getChildren().add(notification);
     }
 
     private void setupDisputesIcon(Pane buttonHolder) {
         Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.getNumOpenDisputesAsString());
+        label.textProperty().bind(model.getNumOpenDisputes());
         label.relocate(5, 1);
         label.setId("nav-alert-label");
 

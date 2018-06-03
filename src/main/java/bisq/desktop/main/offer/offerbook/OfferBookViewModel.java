@@ -22,7 +22,6 @@ import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.WalletsSetup;
@@ -48,6 +47,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -179,9 +179,9 @@ class OfferBookViewModel extends ActivatableViewModel {
                 final OfferBookListItem item = highestAmountOffer.get();
                 if (!item.getOffer().isRange() && containsRangeAmount) {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(), false)
-                            .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
+                            .length() * 2 + BSFormatter.RANGE_SEPARATOR.length());
                     maxPlacesForVolume.set(formatVolume(item.getOffer(), false)
-                            .length() * 2 + GUIUtil.RANGE_SEPARATOR.length());
+                            .length() * 2 + BSFormatter.RANGE_SEPARATOR.length());
                 } else {
                     maxPlacesForAmount.set(formatAmount(item.getOffer(), false).length());
                     maxPlacesForVolume.set(formatVolume(item.getOffer(), false).length());

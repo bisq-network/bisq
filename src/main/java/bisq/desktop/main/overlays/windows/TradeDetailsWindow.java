@@ -20,7 +20,6 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.DisputeManager;
@@ -30,6 +29,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Utils;
 

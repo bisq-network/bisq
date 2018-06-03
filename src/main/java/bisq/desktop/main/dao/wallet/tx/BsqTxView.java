@@ -24,7 +24,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -39,6 +38,7 @@ import bisq.core.dao.blockchain.vo.Tx;
 import bisq.core.dao.blockchain.vo.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
