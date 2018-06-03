@@ -87,7 +87,6 @@ import bisq.common.Clock;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
@@ -631,14 +630,17 @@ public class MainViewModel implements ViewModel {
                 balanceModel.updateBalance();
             }
         });
+        balanceModel.updateBalance();
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
+
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue, false));
-        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
         displayAlertIfPresent(alertManager.alertMessageProperty().get(), false);
+
+        privateNotificationManager.privateNotificationProperty().addListener((observable, oldValue, newValue) -> displayPrivateNotification(newValue));
 
         p2PService.onAllServicesInitialized();
 
@@ -666,7 +668,7 @@ public class MainViewModel implements ViewModel {
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
-        balanceModel.updateBalance();
+
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
             setupDevDummyPaymentAccounts();
@@ -687,8 +689,6 @@ public class MainViewModel implements ViewModel {
                         .show();
             }
         });
-
-        checkIfOpenOffersMatchTradeProtocolVersion();
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
@@ -841,25 +841,6 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
-    }
-
-    private void checkIfOpenOffersMatchTradeProtocolVersion() {
-        List<OpenOffer> outDatedOffers = openOfferManager.getObservableList()
-                .stream()
-                .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
-                .collect(Collectors.toList());
-        if (!outDatedOffers.isEmpty()) {
-            String offers = outDatedOffers.stream()
-                    .map(e -> e.getId() + "\n")
-                    .collect(Collectors.toList()).toString()
-                    .replace("[", "").replace("]", "");
-            new Popup<>()
-                    .warning(Res.get("popup.warning.oldOffers.msg", offers))
-                    .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
-                    .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
-                    .useShutDownButton()
-                    .show();
-        }
     }
 
 
