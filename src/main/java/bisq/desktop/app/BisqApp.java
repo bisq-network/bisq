@@ -69,8 +69,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -96,7 +94,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private Stage stage;
     private boolean popupOpened;
     private Scene scene;
-    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private boolean shutDownRequested;
 
     public BisqApp() {
