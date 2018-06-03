@@ -186,57 +186,6 @@ public class MainViewModel implements ViewModel {
         bisqSetup.start(this::onSetupComplete);
     }
 
-    private void onSetupComplete() {
-        // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
-        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
-            if (newValue) {
-                tradeManager.applyTradePeriodState();
-
-                tradeManager.getTradableList().forEach(trade -> {
-                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                    String key;
-                    switch (trade.getTradePeriodState()) {
-                        case FIRST_HALF:
-                            break;
-                        case SECOND_HALF:
-                            key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                        case TRADE_PERIOD_OVER:
-                            key = "displayTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                    }
-                });
-            }
-        });
-
-        setupP2PNumPeersWatcher();
-        setupBtcNumPeersWatcher();
-
-        marketPricePresentation.setup();
-
-        if (DevEnv.isDevMode()) {
-            preferences.setShowOwnOffersInOfferBook(true);
-            setupDevDummyPaymentAccounts();
-        }
-
-        getShowAppScreen().set(true);
-    }
-
     private void setupHandlers() {
         bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
             //noinspection FunctionalExpressionCanBeFolded
@@ -303,6 +252,7 @@ public class MainViewModel implements ViewModel {
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show());
+        bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
             new Popup<>()
@@ -315,6 +265,57 @@ public class MainViewModel implements ViewModel {
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
+    }
+
+    private void onSetupComplete() {
+        // We handle the trade period here as we display a global popup if we reached dispute time
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                tradeManager.applyTradePeriodState();
+
+                tradeManager.getTradableList().forEach(trade -> {
+                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                    String key;
+                    switch (trade.getTradePeriodState()) {
+                        case FIRST_HALF:
+                            break;
+                        case SECOND_HALF:
+                            key = "displayHalfTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                        case TRADE_PERIOD_OVER:
+                            key = "displayTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                    }
+                });
+            }
+        });
+
+        setupP2PNumPeersWatcher();
+        setupBtcNumPeersWatcher();
+
+        marketPricePresentation.setup();
+
+        if (DevEnv.isDevMode()) {
+            preferences.setShowOwnOffersInOfferBook(true);
+            setupDevDummyPaymentAccounts();
+        }
+
+        getShowAppScreen().set(true);
     }
 
 
@@ -453,7 +454,6 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MainView delegate getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     BooleanProperty getNewVersionAvailableProperty() {
         return bisqSetup.getNewVersionAvailableProperty();
