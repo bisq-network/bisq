@@ -135,7 +135,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -624,13 +623,7 @@ public class MainViewModel implements ViewModel {
 
         initTradeManager();
 
-        btcWalletService.addBalanceListener(new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                balanceModel.updateBalance();
-            }
-        });
-        balanceModel.updateBalance();
+        initWallet();
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
@@ -690,12 +683,28 @@ public class MainViewModel implements ViewModel {
             }
         });
 
+        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
+            new Popup<>()
+                    .warning(Res.get("popup.warning.incompatibleDB", files.toString(), getAppDateDir()))
+                    .useShutDownButton()
+                    .show();
+        });
+
+        allBasicServicesInitialized = true;
+    }
+
+    private void initWallet() {
+        btcWalletService.addBalanceListener(new BalanceListener() {
+            @Override
+            public void onBalanceChanged(Coin balance, Transaction tx) {
+                balanceModel.updateBalance();
+            }
+        });
+
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
 
-        checkForCorruptedDataBaseFiles();
-
-        allBasicServicesInitialized = true;
+        balanceModel.updateBalance();
     }
 
     private void initTradeManager() {
@@ -1070,23 +1079,9 @@ public class MainViewModel implements ViewModel {
     }
 
     private void checkForLockedUpFunds() {
-        Set<String> tradesIdSet = tradeManager.getLockedTradesStream()
-                .filter(Trade::hasFailed)
-                .map(Trade::getId)
-                .collect(Collectors.toSet());
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
-                .map(e -> {
-                    log.warn("We found a closed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
-                })
-                .collect(Collectors.toSet()));
-
         btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradesIdSet.contains(e.getOfferId()) && e.getContext() == AddressEntry.Context.MULTI_SIG)
+                .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
+                        e.getContext() == AddressEntry.Context.MULTI_SIG)
                 .forEach(e -> {
                     final Coin balance = e.getCoinLockedInMultiSig();
                     final String message = Res.get("popup.warning.lockedUpFunds",
@@ -1094,26 +1089,6 @@ public class MainViewModel implements ViewModel {
                     log.warn(message);
                     new Popup<>().warning(message).show();
                 });
-    }
-
-    private void checkForCorruptedDataBaseFiles() {
-        List<String> files = corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles();
-
-        if (files.size() == 0)
-            return;
-
-        if (files.size() == 1 && files.get(0).equals("ViewPathAsString")) {
-            log.debug("We detected incompatible data base file for Navigation. " +
-                    "That is a minor issue happening with refactoring of UI classes " +
-                    "and we don't display a warning popup to the user.");
-            return;
-        }
-
-        // show warning that some files have been corrupted
-        new Popup<>()
-                .warning(Res.get("popup.warning.incompatibleDB", files.toString(), getAppDateDir()))
-                .useShutDownButton()
-                .show();
     }
 
     private void setupDevDummyPaymentAccounts() {
