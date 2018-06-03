@@ -624,20 +624,10 @@ public class MainViewModel implements ViewModel {
         // disputeManager
         disputeManager.onAllServicesInitialized();
 
-        // tradeManager
-        tradeManager.onAllServicesInitialized();
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
-        // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
-        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
-            if (newValue)
-                applyTradePeriodState();
-        });
-        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
-                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
-                .show());
 
-        // walletService
+        initTradeManager();
+
+        // btcWalletService
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -646,7 +636,6 @@ public class MainViewModel implements ViewModel {
         });
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
         removeOffersWithoutAccountAgeWitness();
 
@@ -711,6 +700,53 @@ public class MainViewModel implements ViewModel {
         checkForCorruptedDataBaseFiles();
 
         allBasicServicesInitialized = true;
+    }
+
+    private void initTradeManager() {
+        // tradeManager
+        tradeManager.onAllServicesInitialized();
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
+
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
+                .show());
+
+        // We handle the trade period here as we display a global popup if we reached dispute time
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                tradeManager.applyTradePeriodState();
+
+                tradeManager.getTradableList().forEach(trade -> {
+                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                    String key;
+                    switch (trade.getTradePeriodState()) {
+                        case FIRST_HALF:
+                            break;
+                        case SECOND_HALF:
+                            key = "displayHalfTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                        case TRADE_PERIOD_OVER:
+                            key = "displayTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                    }
+                });
+            }
+        });
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
@@ -842,71 +878,6 @@ public class MainViewModel implements ViewModel {
         // Delay that as we want to know what is the current path of the navigation which is set
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // States
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyTradePeriodState() {
-        updateTradePeriodState();
-        clock.addListener(new Clock.Listener() {
-            @Override
-            public void onSecondTick() {
-            }
-
-            @Override
-            public void onMinuteTick() {
-                updateTradePeriodState();
-            }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
-        });
-    }
-
-    private void updateTradePeriodState() {
-        tradeManager.getTradableList().forEach(trade -> {
-            if (!trade.isPayoutPublished()) {
-                Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
-                if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
-                    Date now = new Date();
-                    if (now.after(maxTradePeriodDate))
-                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    else if (now.after(halfTradePeriodDate))
-                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
-
-                    String key;
-                    switch (trade.getTradePeriodState()) {
-                        case FIRST_HALF:
-                            break;
-                        case SECOND_HALF:
-                            key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                        case TRADE_PERIOD_OVER:
-                            key = "displayTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                    }
-                }
-            }
-        });
     }
 
 
