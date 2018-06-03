@@ -38,7 +38,6 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.SetupUtils;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
@@ -142,8 +141,6 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 public class MainViewModel implements ViewModel {
     private static final long STARTUP_TIMEOUT_MINUTES = 4;
@@ -211,8 +208,6 @@ public class MainViewModel implements ViewModel {
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
     final BooleanProperty showPendingTradesNotification = new SimpleBooleanProperty();
-    final StringProperty numOpenDisputesAsString = new SimpleStringProperty();
-    final BooleanProperty showOpenDisputesNotification = new SimpleBooleanProperty();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
 
@@ -619,11 +614,6 @@ public class MainViewModel implements ViewModel {
 
         // disputeManager
         disputeManager.onAllServicesInitialized();
-        disputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) change -> {
-            change.next();
-            onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
-        });
-        onDisputesChangeListener(disputeManager.getDisputesAsObservableList(), null);
 
         // tradeManager
         tradeManager.onAllServicesInitialized();
@@ -1205,38 +1195,6 @@ public class MainViewModel implements ViewModel {
                 });
     }
 
-
-    private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
-        if (removedList != null) {
-            removedList.stream().forEach(dispute -> {
-                String id = dispute.getId();
-                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
-                    disputeIsClosedSubscriptionsMap.remove(id);
-                }
-            });
-        }
-        addedList.stream().forEach(dispute -> {
-            String id = dispute.getId();
-            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                    isClosed -> {
-                        // We get event before list gets updated, so we execute on next frame
-                        UserThread.execute(() -> {
-                            int openDisputes = disputeManager.getDisputesAsObservableList().stream()
-                                    .filter(e -> !e.isClosed())
-                                    .collect(Collectors.toList()).size();
-                            if (openDisputes > 0)
-                                numOpenDisputesAsString.set(String.valueOf(openDisputes));
-                            if (openDisputes > 9)
-                                numOpenDisputesAsString.set("★");
-
-                            showOpenDisputesNotification.set(openDisputes > 0);
-                        });
-                    });
-            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-        });
-    }
-
     private void onTradesChanged() {
         long numPendingTrades = tradeManager.getTradableList().size();
         if (numPendingTrades > 0)
@@ -1334,5 +1292,13 @@ public class MainViewModel implements ViewModel {
         else
             postFix = "";
         return Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + postFix;
+    }
+
+    StringProperty getNumOpenDisputesAsString() {
+        return disputeManager.getNumOpenDisputesAsString();
+    }
+
+    BooleanProperty getShowOpenDisputesNotification() {
+        return disputeManager.getShowOpenDisputesNotification();
     }
 }

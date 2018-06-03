@@ -690,7 +690,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private void setupDisputesIcon(Pane buttonHolder) {
         Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.numOpenDisputesAsString);
+        label.textProperty().bind(model.getNumOpenDisputesAsString());
         label.relocate(5, 1);
         label.setId("nav-alert-label");
 
@@ -702,7 +702,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.setMouseTransparent(true);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
         notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.showOpenDisputesNotification);
+        notification.visibleProperty().bind(model.getShowOpenDisputesNotification());
         buttonHolder.getChildren().add(notification);
     }
 
