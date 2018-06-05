@@ -67,7 +67,15 @@ dependencies {
 build.dependsOn installDist
 installDist.destinationDir = file('build/app')
 
-// generated with `./gradlew -q calculateChecksums | grep -v network.bisq:bisq-`
+// To update the `dependencyVerification` block below:
+//
+// 1. Remove the block entirely
+// 2. Replace the block with the following command:
+//
+//    ./gradlew -q calculateChecksums | grep -v network.bisq:bisq- >> build.gradle
+//
+// 3. Run `git diff` to verify that expected hashes have changed
+// 4. Commit the changes
 dependencyVerification {
     verify = [
         'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
