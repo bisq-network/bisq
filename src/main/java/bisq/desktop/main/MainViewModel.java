@@ -713,6 +713,13 @@ public class MainViewModel implements ViewModel {
 
         checkForCorruptedDataBaseFiles();
 
+        String bitcoinLocalhostNodeKey = "bitcoinLocalhostNode";
+        if (bisqEnvironment.isBitcoinLocalhostNodeRunning() && preferences.showAgain(bitcoinLocalhostNodeKey)) {
+            new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                    .dontShowAgainId(bitcoinLocalhostNodeKey)
+                    .show();
+        }
+
         allBasicServicesInitialized = true;
     }
 
