@@ -84,18 +84,20 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
         final Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
         if (paymentAccounts != null) {
-
+            // We try to clean up Venmo and CashApp accounts to be able to remove the code for those in
+            // later releases without breaking the persisted protobuffer data base files.
+            List<PaymentAccount> toRemove = new ArrayList<>();
             paymentAccounts.stream()
                     .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.VENMO_ID) ||
                             paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_APP_ID))
-                    .forEach(paymentAccount -> {
-                        // We try to clean up Venmo and CashApp accounts to be able to remove the code for those in
-                        // later releases without breaking the persisted protobuffer data base files.
-                        if (onDeleteAccount(paymentAccount)) {
-                            log.info("We deleted a blocked Venmo or CashApp account. paymentAccount name={}",
-                                    paymentAccount.getAccountName());
-                        }
-                    });
+                    .forEach(toRemove::add);
+
+            toRemove.forEach(paymentAccount -> {
+                if (onDeleteAccount(paymentAccount)) {
+                    log.info("We deleted a blocked Venmo or CashApp account. paymentAccount name={}",
+                            paymentAccount.getAccountName());
+                }
+            });
         }
     }
 
