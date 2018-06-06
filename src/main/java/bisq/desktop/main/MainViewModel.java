@@ -252,6 +252,10 @@ public class MainViewModel implements ViewModel {
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show());
+        bisqSetup.setDisplayLocalhostHandler(key ->
+                new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                        .dontShowAgainId(key)
+                        .show());
         bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
 
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
