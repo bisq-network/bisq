@@ -82,7 +82,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MainViewModel implements ViewModel {
+public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteListener {
     private final BisqSetup bisqSetup;
     private final WalletsSetup walletsSetup;
     private final User user;
@@ -108,7 +108,6 @@ public class MainViewModel implements ViewModel {
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-
 
     final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
@@ -173,18 +172,94 @@ public class MainViewModel implements ViewModel {
         BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void start() {
         setupHandlers();
-
-        bisqSetup.start(this::onSetupComplete);
+        bisqSetup.addBisqSetupCompleteListener(this);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BisqSetupCompleteListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onSetupComplete() {
+        // We handle the trade period here as we display a global popup if we reached dispute time
+        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
+        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
+            if (newValue) {
+                tradeManager.applyTradePeriodState();
+
+                tradeManager.getTradableList().forEach(trade -> {
+                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                    String key;
+                    switch (trade.getTradePeriodState()) {
+                        case FIRST_HALF:
+                            break;
+                        case SECOND_HALF:
+                            key = "displayHalfTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                        case TRADE_PERIOD_OVER:
+                            key = "displayTradePeriodOver" + trade.getId();
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        .show();
+                            }
+                            break;
+                    }
+                });
+            }
+        });
+
+        setupP2PNumPeersWatcher();
+        setupBtcNumPeersWatcher();
+
+        marketPricePresentation.setup();
+
+        if (DevEnv.isDevMode()) {
+            preferences.setShowOwnOffersInOfferBook(true);
+            setupDevDummyPaymentAccounts();
+        }
+
+        getShowAppScreen().set(true);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UI handlers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // After showAppScreen is set and splash screen is faded out
+    void onSplashScreenRemoved() {
+        isSplashScreenRemoved.set(true);
+
+        // Delay that as we want to know what is the current path of the navigation which is set
+        // in MainView showAppScreen handler
+        notificationCenter.onAllServicesAndViewsInitialized();
+    }
+
+    void onOpenDownloadWindow() {
+        bisqSetup.displayAlertIfPresent(user.getDisplayedAlert(), true);
+    }
+
+    void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
+        marketPricePresentation.setPriceFeedComboBoxItem(item);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupHandlers() {
         bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
@@ -270,84 +345,6 @@ public class MainViewModel implements ViewModel {
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
     }
-
-    private void onSetupComplete() {
-        // We handle the trade period here as we display a global popup if we reached dispute time
-        tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
-        tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
-            if (newValue) {
-                tradeManager.applyTradePeriodState();
-
-                tradeManager.getTradableList().forEach(trade -> {
-                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                    String key;
-                    switch (trade.getTradePeriodState()) {
-                        case FIRST_HALF:
-                            break;
-                        case SECOND_HALF:
-                            key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                        case TRADE_PERIOD_OVER:
-                            key = "displayTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                    }
-                });
-            }
-        });
-
-        setupP2PNumPeersWatcher();
-        setupBtcNumPeersWatcher();
-
-        marketPricePresentation.setup();
-
-        if (DevEnv.isDevMode()) {
-            preferences.setShowOwnOffersInOfferBook(true);
-            setupDevDummyPaymentAccounts();
-        }
-
-        getShowAppScreen().set(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // UI handlers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // After showAppScreen is set and splash screen is faded out
-    void onSplashScreenRemoved() {
-        isSplashScreenRemoved.set(true);
-
-        // Delay that as we want to know what is the current path of the navigation which is set
-        // in MainView showAppScreen handler
-        notificationCenter.onAllServicesAndViewsInitialized();
-    }
-
-    void onOpenDownloadWindow() {
-        bisqSetup.displayAlertIfPresent(user.getDisplayedAlert(), true);
-    }
-
-    void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        marketPricePresentation.setPriceFeedComboBoxItem(item);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupP2PNumPeersWatcher() {
         p2PService.getNumConnectedPeers().addListener((observable, oldValue, newValue) -> {

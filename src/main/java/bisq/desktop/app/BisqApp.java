@@ -34,7 +34,6 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqDaemon;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -96,7 +95,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private boolean popupOpened;
     private Scene scene;
     private boolean shutDownRequested;
-    private BisqDaemon daemon;
 
     public BisqApp() {
         shutDownHandler = this::stop;
@@ -112,10 +110,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     public void init() {
     }
 
-    public void setDaemon(BisqDaemon daemon) {
-        this.daemon = daemon;
-    }
-
     @Override
     public void start(Stage stage) {
         this.stage = stage;
@@ -123,9 +117,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         appLaunchedHandler.accept(this);
     }
 
-    public void startApplication() {
+    public void startApplication(Runnable onUiReadyHandler) {
         try {
             MainView mainView = loadMainView(injector);
+            mainView.setOnUiReadyHandler(onUiReadyHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
