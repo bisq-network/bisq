@@ -21,11 +21,11 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.offer.EditableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import com.google.inject.Inject;
 

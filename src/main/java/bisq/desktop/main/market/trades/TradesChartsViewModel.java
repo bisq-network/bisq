@@ -23,7 +23,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
@@ -37,6 +36,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.util.MathUtils;
 

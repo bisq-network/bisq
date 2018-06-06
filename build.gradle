@@ -40,7 +40,6 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'network.bisq:bisq-core:-SNAPSHOT'
     compile 'network.bisq:bisq-p2p:-SNAPSHOT'
     compile 'network.bisq:bisq-http-api:-SNAPSHOT'

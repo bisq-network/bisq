@@ -25,7 +25,6 @@ import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelection
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -37,6 +36,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple3;

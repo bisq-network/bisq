@@ -24,7 +24,6 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -38,6 +37,7 @@ import bisq.core.dao.vote.result.BooleanVoteResult;
 import bisq.core.dao.vote.result.VoteResult;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 

@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.util.BSFormatter;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 

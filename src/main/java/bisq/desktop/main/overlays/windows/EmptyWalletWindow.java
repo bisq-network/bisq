@@ -21,7 +21,6 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -30,6 +29,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 

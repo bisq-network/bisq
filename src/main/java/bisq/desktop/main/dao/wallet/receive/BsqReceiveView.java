@@ -21,11 +21,11 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 

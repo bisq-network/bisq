@@ -17,9 +17,8 @@
 
 package bisq.desktop.main.settings.network;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;

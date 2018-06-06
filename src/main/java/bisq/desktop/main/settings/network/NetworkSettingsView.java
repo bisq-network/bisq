@@ -26,7 +26,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.BisqEnvironment;
@@ -36,6 +35,7 @@ import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;

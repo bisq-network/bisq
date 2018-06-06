@@ -23,7 +23,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.blockchain.BsqBlockChain;
@@ -34,6 +33,7 @@ import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalPayload;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.UserThread;
 

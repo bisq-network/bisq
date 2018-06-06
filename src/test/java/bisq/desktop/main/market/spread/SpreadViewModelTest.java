@@ -21,9 +21,9 @@ package bisq.desktop.main.market.spread;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.BSFormatter;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

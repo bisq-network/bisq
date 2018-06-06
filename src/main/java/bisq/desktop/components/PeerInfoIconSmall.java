@@ -1,11 +1,10 @@
 package bisq.desktop.components;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 

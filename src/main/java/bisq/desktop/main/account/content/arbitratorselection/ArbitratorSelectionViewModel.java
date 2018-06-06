@@ -18,13 +18,13 @@
 package bisq.desktop.main.account.content.arbitratorselection;
 
 import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
