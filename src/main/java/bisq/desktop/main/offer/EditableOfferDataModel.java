@@ -411,12 +411,12 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return offer;
     }
 
-    // This works only if have already funds in the wallet
+    // This works only if we have already funds in the wallet
     public void estimateTxSize() {
         txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-        Address fundingAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+        Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
         Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-        Address changeAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+        Address changeAddress = btcWalletService.getFreshAddressEntry().getAddress();
 
         Coin reservedFundsForOffer = getSecurityDeposit();
         if (!isBuyOffer())

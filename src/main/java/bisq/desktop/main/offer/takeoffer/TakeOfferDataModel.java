@@ -327,13 +327,13 @@ class TakeOfferDataModel extends OfferDataModel {
     // and if funds get higher (if tx get larger) the user would get confused (adding small inputs would increase total required funds).
     // So that would require more thoughts how to deal with all those cases.
     public void estimateTxSize() {
-        Address fundingAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+        Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
             txFeeFromFeeService = getTxFeeBySize(feeTxSize);
 
             Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-            Address changeAddress = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+            Address changeAddress = btcWalletService.getFreshAddressEntry().getAddress();
 
             Coin reservedFundsForOffer = getSecurityDeposit().add(txFeeFromFeeService).add(txFeeFromFeeService);
             if (isBuyOffer())

@@ -155,7 +155,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     void onRegister(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         updateDisableStates();
         if (allDataValid) {
-            AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
+            AddressEntry arbitratorDepositAddressEntry = walletService.getArbitratorAddressEntry();
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
             // TODO not impl in UI
             String emailAddress = null;

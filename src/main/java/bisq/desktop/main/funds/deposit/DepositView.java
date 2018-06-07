@@ -144,7 +144,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         usageColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.usage")));
 
         // trigger creation of at least 1 savings address
-        walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
+        walletService.getFreshAddressEntry();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.deposit.noAddresses")));
@@ -217,7 +217,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
             if (hasUnUsedAddress) {
                 new Popup<>().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
-                AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
+                AddressEntry newSavingsAddressEntry = walletService.getFreshAddressEntry();
                 updateList();
                 observableList.stream()
                         .filter(depositListItem -> depositListItem.getAddressString().equals(newSavingsAddressEntry.getAddressString()))

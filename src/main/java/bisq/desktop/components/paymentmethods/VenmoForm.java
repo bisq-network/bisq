@@ -40,6 +40,8 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
+// Removed due too high chargeback risk
+@Deprecated
 public class VenmoForm extends PaymentMethodForm {
     private final VenmoAccount account;
     private final VenmoValidator validator;

@@ -28,6 +28,8 @@ cp "$target_dir/../../package/5BC5ED73.asc" "$target_dir/"
 cp "$target_dir/../../package/29CDFD3B.asc" "$target_dir/"
 # signing key
 cp "$target_dir/../../package/signingkey.asc" "$target_dir/"
+# hash of jar file
+cp "deploy/Bisq-$version.jar.txt" "$target_dir/"
 
 dmg="Bisq-$version.dmg"
 cp "$macOS/$dmg" "$target_dir/"
@@ -54,13 +56,14 @@ cp "$win64/bundles/$exe" "$target_dir/$exe64"
 
 cd "$target_dir"
 
-
+echo Create signatures
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $dmg.asc --detach-sig --armor $dmg
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb64.asc --detach-sig --armor $deb64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb32.asc --detach-sig --armor $deb32
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe64.asc --detach-sig --armor $exe64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe32.asc --detach-sig --armor $exe32
 
+echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $deb32{.asc*,}

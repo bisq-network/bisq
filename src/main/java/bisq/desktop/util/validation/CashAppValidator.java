@@ -20,6 +20,8 @@ package bisq.desktop.util.validation;
 
 import bisq.core.util.validation.InputValidator;
 
+// Removed due too high chargeback risk
+@Deprecated
 public final class CashAppValidator extends InputValidator {
 
     @Override

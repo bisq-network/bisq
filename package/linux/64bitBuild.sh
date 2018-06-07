@@ -26,20 +26,10 @@ $JAVA_HOME/bin/javapackager \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "$dir/Bisq-$version.jar" \
-    -srcfiles "$dir/bcpg-jdk15on-1.56.jar" \
-    -srcfiles "$dir/bcprov-jdk15on-1.56.jar" \
     -srcfiles package/linux/LICENSE \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
     -outfile Bisq
-
-# when we have support for security manager we use that
-#     \
-#    -BjvmOptions=-Djava.security.manager \
-#    -BjvmOptions=-Djava.security.debug=failure \
-#    -BjvmOptions=-Djava.security.policy=file:bisq.policy
-#     -srcfiles "core/src/main/resources/bisq.policy" \
-
 
 # uncomment because the build VM does not support alien
 #sudo alien -r -c -k deploy/bundles/bisq-$version.deb

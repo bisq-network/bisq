@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.Alert;
+import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
@@ -46,12 +47,18 @@ import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -73,8 +80,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public DisplayUpdateDownloadWindow(Alert alert) {
-        this.type = Type.Attention;
         this.alert = alert;
+
+        this.type = Type.Attention;
     }
 
     public void show() {
@@ -213,7 +221,8 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
                         List<BisqInstaller.FileDescriptor> downloadResults = downloadTask.getValue();
                         Optional<BisqInstaller.FileDescriptor> downloadFailed = downloadResults.stream()
-                                .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus())).findFirst();
+                                .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus()))
+                                .findFirst();
                         downloadedFilesLabel.getStyleClass().removeAll("error-text", "success-text");
                         if (downloadResults == null || downloadResults.isEmpty() || downloadFailed.isPresent()) {
                             showErrorMessage(downloadButton, statusLabel, downloadFailedString);
@@ -221,6 +230,11 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                         } else {
                             log.debug("Download completed successfully.");
                             downloadedFilesLabel.getStyleClass().add("success-text");
+
+                            downloadTask.getFileDescriptors().stream()
+                                    .filter(fileDescriptor -> fileDescriptor.getType() == BisqInstaller.DownloadType.JAR_HASH)
+                                    .findFirst()
+                                    .ifPresent(this::copyJarHashToDataDir);
 
                             verifyTask = installer.verify(downloadResults);
                             verifiedSigLabel.setOpacity(1);
@@ -269,6 +283,32 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                 showErrorMessage(downloadButton, statusLabel, (Res.get("displayUpdateDownloadWindow.installer.failed")));
             }
         });
+    }
+
+    private void copyJarHashToDataDir(BisqInstaller.FileDescriptor fileDescriptor) {
+        StringBuilder sb = new StringBuilder();
+        final File sourceFile = fileDescriptor.getSaveFile();
+        try (Scanner scanner = new Scanner(new FileReader(sourceFile))) {
+            while (scanner.hasNext()) {
+                sb.append(scanner.next());
+            }
+            scanner.close();
+            final String hashOfJar = sb.toString();
+
+            Path path = Paths.get(BisqEnvironment.getStaticAppDataDir(), fileDescriptor.getFileName());
+            final String target = path.toString();
+            try (PrintWriter writer = new PrintWriter(target, "UTF-8")) {
+                writer.println(hashOfJar);
+                writer.close();
+                log.info("Copied hash of jar from {} to {}", sourceFile.getAbsolutePath(), target);
+            } catch (Exception e) {
+                log.error(e.toString());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            log.error(e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Override

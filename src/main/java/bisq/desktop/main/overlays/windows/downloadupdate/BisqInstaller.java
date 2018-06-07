@@ -71,14 +71,20 @@ public class BisqInstaller {
 
         // Get installer filename on all platforms
         FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
+
         // tells us which key was used for signing
         FileDescriptor signingKeyDescriptor = getSigningKeyDescriptor(partialUrl);
+
+        // Hash of jar file inside of the binary
+        FileDescriptor jarHashDescriptor = getJarHashDescriptor(version, partialUrl);
+
         List<FileDescriptor> keyFileDescriptors = getKeyFileDescriptors();
         List<FileDescriptor> sigFileDescriptors = getSigFileDescriptors(installerFileDescriptor, keyFileDescriptors);
 
         List<FileDescriptor> allFiles = Lists.newArrayList();
-        allFiles.addAll(Lists.newArrayList(installerFileDescriptor));
-        allFiles.addAll(Lists.newArrayList(signingKeyDescriptor));
+        allFiles.add(installerFileDescriptor);
+        allFiles.add(signingKeyDescriptor);
+        allFiles.add(jarHashDescriptor);
         allFiles.addAll(keyFileDescriptors);
         allFiles.addAll(sigFileDescriptors);
 
@@ -229,6 +235,16 @@ public class BisqInstaller {
                 .build();
     }
 
+    @NotNull
+    private FileDescriptor getJarHashDescriptor(String version, String partialUrl) {
+        String fileName = "Bisq-" + version + ".jar.txt";
+        return FileDescriptor.builder()
+                .type(DownloadType.JAR_HASH)
+                .fileName(fileName)
+                .id(fileName)
+                .loadUrl(partialUrl.concat(fileName))
+                .build();
+    }
 
     /**
      * The files containing the gpg keys of the bisq signers.
@@ -330,7 +346,8 @@ public class BisqInstaller {
         KEY,
         SIG,
         SIGNING_KEY,
-        MISC
+        MISC,
+        JAR_HASH
     }
 }
 
