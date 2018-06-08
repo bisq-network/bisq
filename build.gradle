@@ -1,5 +1,6 @@
 buildscript {
     repositories {
+        mavenLocal()
         jcenter()
     }
     dependencies {
@@ -33,6 +34,7 @@ tasks.withType(JavaCompile) {
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 repositories {
+    mavenLocal()
     jcenter()
     maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
@@ -109,13 +111,15 @@ dependencyVerification {
         'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
         'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
-        'network.bisq.btcd-cli4j:btcd-cli4j-daemon:300e2fb9500398f4c5cec6ae07d16d07570dbe0eb9944061eb67ab7db18fa72c',
-        'network.bisq.btcd-cli4j:btcd-cli4j-core:63baeecea21940670e054bba6b041959e49fa094a496c141b9da55401ee4a8e7',
+        'network.bisq.btcd-cli4j:btcd-cli4j-daemon:cf19fddccfd9c5302498dfdb29a7fead8faff04912285bfdaacad1fd7a27f646',
+        'network.bisq.btcd-cli4j:btcd-cli4j-core:cc063c3a501ee6dd6f2e2e98ce59e82d720a52522acc1ec0751434dece4851e4',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
         'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
         'org.fxmisc.easybind:easybind:666af296dda6de68751668a62661571b5238ac6f1c07c8a204fc6f902b222aaf',
+        'com.github.bisq-network.bitcoinj:bitcoinj-core:05c94cc68f1524ed08f5aa815f5f09d99a3aae5ab277527d7729ee74d0aece13',
+        'com.lambdaworks:scrypt:9a82d218099fb14c10c0e86e7eefeebd8c104de920acdc47b8b4b7a686fb73b4',
         'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
         'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
         'javax.inject:javax.inject:91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff',
@@ -127,18 +131,16 @@ dependencyVerification {
         'com.cedricwalter:tor-binary-windows:9487a735dadcadc6ede5ffad36a911c2d4a484f996be93d71094f26591b8c29e',
         'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',
         'org.apache.httpcomponents:httpcore:d7f853dee87680b07293d30855b39b9eb56c1297bd16ff1cd6f19ddb8fa745fb',
+        'com.madgag.spongycastle:core:8d6240b974b0aca4d3da9c7dd44d42339d8a374358aca5fc98e50a995764511f',
+        'net.jcip:jcip-annotations:be5805392060c71474bf6c9a67a099471274d30b83eef84bfc4e0889a4f1dcc0',
+        'org.bitcoinj:orchid:f836325cfa0466a011cb755c9b0fee6368487a2352eb45f4306ad9e4c18de080',
+        'com.squareup.okhttp:okhttp:b4c943138fcef2bcc9d2006b2250c4aabbedeafc5947ed7c0af7fd103ceb2707',
         'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
         'com.cedricwalter:tor-binary-geoip:7fc7b5ebf80d65ec53d97dd8d3878b8d2c85dc04f3943e5e85e7ba641655492b',
         'com.github.JesusMcCloud:jtorctl:c6ef92e46074d8d26db718ce0fe4b64b8cf7b934b7377d164c5d613b4cd7b847',
         'org.apache.commons:commons-compress:a778bbd659722889245fc52a0ec2873fbbb89ec661bc1ad3dc043c0757c784c4',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
-        'org.objenesis:objenesis:5e168368fbc250af3c79aa5fef0c3467a2d64e5a7bd74005f25d8399aeb0708d',
-        'com.github.bisq-network.bitcoinj:bitcoinj-core:05c94cc68f1524ed08f5aa815f5f09d99a3aae5ab277527d7729ee74d0aece13',
-        'com.lambdaworks:scrypt:9a82d218099fb14c10c0e86e7eefeebd8c104de920acdc47b8b4b7a686fb73b4',
-        'com.madgag.spongycastle:core:8d6240b974b0aca4d3da9c7dd44d42339d8a374358aca5fc98e50a995764511f',
-        'net.jcip:jcip-annotations:be5805392060c71474bf6c9a67a099471274d30b83eef84bfc4e0889a4f1dcc0',
-        'org.bitcoinj:orchid:f836325cfa0466a011cb755c9b0fee6368487a2352eb45f4306ad9e4c18de080',
-        'com.squareup.okhttp:okhttp:b4c943138fcef2bcc9d2006b2250c4aabbedeafc5947ed7c0af7fd103ceb2707',
         'com.squareup.okio:okio:114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266',
+        'org.objenesis:objenesis:5e168368fbc250af3c79aa5fef0c3467a2d64e5a7bd74005f25d8399aeb0708d',
     ]
 }
