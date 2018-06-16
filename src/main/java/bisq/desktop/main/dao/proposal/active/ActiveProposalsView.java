@@ -26,14 +26,14 @@ import bisq.desktop.main.dao.proposal.ProposalItemsView;
 import bisq.desktop.main.dao.voting.VotingView;
 import bisq.desktop.main.dao.voting.active.ActiveBallotsView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 

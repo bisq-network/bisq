@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.voting.active;
 
 import bisq.desktop.main.dao.BaseProposalListItem;
-import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
@@ -27,6 +26,7 @@ import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
 import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.util.BsqFormatter;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

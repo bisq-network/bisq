@@ -18,12 +18,12 @@
 package bisq.desktop.main.dao.proposal;
 
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import javafx.geometry.Insets;
 

@@ -18,12 +18,12 @@
 package bisq.desktop.components;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

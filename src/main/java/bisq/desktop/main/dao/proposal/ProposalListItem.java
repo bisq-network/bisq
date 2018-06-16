@@ -18,11 +18,11 @@
 package bisq.desktop.main.dao.proposal;
 
 import bisq.desktop.main.dao.BaseProposalListItem;
-import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.util.BsqFormatter;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

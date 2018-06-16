@@ -29,7 +29,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
@@ -38,6 +37,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 

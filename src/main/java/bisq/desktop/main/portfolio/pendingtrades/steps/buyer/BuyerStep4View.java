@@ -28,10 +28,8 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.BtcAddressValidator;
 
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.AddressEntryException;
@@ -40,7 +38,9 @@ import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.CoinUtil;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;

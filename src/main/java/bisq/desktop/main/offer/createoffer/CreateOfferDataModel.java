@@ -18,7 +18,6 @@
 package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.main.offer.EditableOfferDataModel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -30,6 +29,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 

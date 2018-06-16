@@ -17,12 +17,11 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 

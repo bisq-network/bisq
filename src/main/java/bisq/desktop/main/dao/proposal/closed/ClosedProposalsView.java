@@ -19,12 +19,12 @@ package bisq.desktop.main.dao.proposal.closed;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.proposal.ProposalItemsView;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 

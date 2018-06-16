@@ -18,7 +18,6 @@
 package bisq.desktop.main.funds.locked;
 
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
@@ -26,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

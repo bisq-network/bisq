@@ -25,7 +25,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
@@ -42,6 +41,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;

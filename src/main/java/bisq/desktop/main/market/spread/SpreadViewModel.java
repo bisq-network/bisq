@@ -21,7 +21,6 @@ import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
@@ -31,6 +30,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

@@ -21,7 +21,6 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -35,6 +34,7 @@ import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.util.BsqFormatter;
 
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
