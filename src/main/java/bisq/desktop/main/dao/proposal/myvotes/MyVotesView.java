@@ -19,19 +19,12 @@ package bisq.desktop.main.dao.proposal.myvotes;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.proposal.ProposalListItem;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 

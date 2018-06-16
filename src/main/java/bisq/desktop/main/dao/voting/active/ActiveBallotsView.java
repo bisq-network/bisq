@@ -23,8 +23,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.dao.BaseProposalListItem;
 import bisq.desktop.main.dao.BaseProposalView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -40,6 +38,8 @@ import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;

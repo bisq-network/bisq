@@ -21,8 +21,6 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.proposal.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -41,7 +39,8 @@ import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.ProposalWithTransaction;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 

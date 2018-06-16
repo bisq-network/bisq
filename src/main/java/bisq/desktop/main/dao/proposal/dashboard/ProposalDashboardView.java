@@ -20,13 +20,13 @@ package bisq.desktop.main.dao.proposal.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.SeparatedPhaseBars;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.ChainHeightListener;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 
