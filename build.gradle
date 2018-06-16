@@ -111,6 +111,8 @@ dependencyVerification {
         'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
         'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
+        'network.bisq.btcd-cli4j:btcd-cli4j-daemon:cf19fddccfd9c5302498dfdb29a7fead8faff04912285bfdaacad1fd7a27f646',
+        'network.bisq.btcd-cli4j:btcd-cli4j-core:cc063c3a501ee6dd6f2e2e98ce59e82d720a52522acc1ec0751434dece4851e4',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
