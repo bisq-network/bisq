@@ -19,7 +19,6 @@ package bisq.desktop.main.market.trades;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.market.trades.charts.CandleData;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.FiatCurrency;
 import bisq.core.monetary.Price;
@@ -28,6 +27,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;

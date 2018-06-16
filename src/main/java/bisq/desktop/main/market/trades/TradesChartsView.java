@@ -25,7 +25,6 @@ import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
@@ -35,6 +34,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;

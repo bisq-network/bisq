@@ -18,13 +18,13 @@
 package bisq.desktop.main.funds.reserved;
 
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

@@ -19,9 +19,9 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import com.google.inject.Inject;
 

@@ -18,7 +18,6 @@
 package bisq.desktop.main.funds.deposit;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.AddressEntry;
@@ -26,6 +25,7 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 
@@ -30,6 +29,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;

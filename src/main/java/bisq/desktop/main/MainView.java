@@ -37,13 +37,13 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -82,6 +82,7 @@ import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
@@ -95,6 +96,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
     private Label versionLabel;
+    @Setter
+    private Runnable onUiReadyHandler;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -229,20 +232,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 priceComboBox.getSelectionModel().select(newValue);
 
         };
-        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListener);
+        model.getSelectedPriceFeedComboBoxItemProperty().addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.priceFeedComboBoxItems);
 
         HBox.setMargin(marketPriceBox.second, new Insets(0, 0, 0, 0));
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
-        availableBalanceBox.first.textProperty().bind(model.availableBalance);
+        availableBalanceBox.first.textProperty().bind(model.getAvailableBalance());
 
         Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
-        reservedBalanceBox.first.textProperty().bind(model.reservedBalance);
+        reservedBalanceBox.first.textProperty().bind(model.getReservedBalance());
 
         Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
-        lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
+        lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
 
         HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
                 reservedBalanceBox.second, lockedBalanceBox.second,
@@ -300,7 +303,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         root.getChildren().addAll(baseApplicationContainer, splashScreen);
 
-        model.showAppScreen.addListener((ov, oldValue, newValue) -> {
+        model.getShowAppScreen().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
                 navigation.navigateToPreviousVisitedView();
 
@@ -309,7 +312,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(model::start);
+        UserThread.execute(() -> onUiReadyHandler.run());
     }
 
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
@@ -366,16 +369,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.getStyleClass().add("hidden-icon-button");
         HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
-        btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
+        btcAverageIconButton.setVisible(model.getIsFiatCurrencyPriceFeedSelected().get());
         btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
-        btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
-        btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
+        btcAverageIconButton.visibleProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
+        btcAverageIconButton.managedProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
         btcAverageIconButton.setOnMouseEntered(e -> {
                     String res = Res.get("mainView.marketPrice.tooltip",
                             "https://bitcoinaverage.com",
                             "",
-                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()),
-                            model.priceFeedService.getProviderNodeAddress());
+                            formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                            model.getPriceFeedService().getProviderNodeAddress());
                     btcAverageIconButton.setTooltip(
                             new Tooltip(res)
                     );
@@ -390,17 +393,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.getStyleClass().add("hidden-icon-button");
         HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
-        poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
+        poloniexIconButton.setVisible(model.getIsCryptoCurrencyPriceFeedSelected().get());
         poloniexIconButton.setManaged(poloniexIconButton.isVisible());
-        poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
-        poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
+        poloniexIconButton.visibleProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
+        poloniexIconButton.managedProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
         poloniexIconButton.setOnMouseEntered(e -> {
             String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
             String res = Res.get("mainView.marketPrice.tooltip",
                     "https://poloniex.com",
                     altcoinExtra,
-                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()),
-                    model.priceFeedService.getProviderNodeAddress());
+                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
+                    model.getPriceFeedService().getProviderNodeAddress());
             poloniexIconButton.setTooltip(
                     new Tooltip(res)
             );
@@ -410,7 +413,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
 
-        model.marketPriceUpdated.addListener((observable, oldValue, newValue) -> {
+        model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
             updateMarketPriceLabel(label);
         });
 
@@ -425,8 +428,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void updateMarketPriceLabel(Label label) {
-        if (model.isPriceAvailable.get()) {
-            if (model.isExternallyProvidedPrice.get()) {
+        if (model.getIsPriceAvailable().get()) {
+            if (model.getIsExternallyProvidedPrice().get()) {
                 label.setText(Res.get("mainView.marketPrice.provider"));
                 label.setTooltip(null);
             } else {
@@ -453,16 +456,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         // createBitcoinInfoBox
         btcSplashInfo = new AutoTooltipLabel();
-        btcSplashInfo.textProperty().bind(model.btcInfo);
+        btcSplashInfo.textProperty().bind(model.getBtcInfo());
         walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
             btcSplashInfo.setId("splash-error-state-msg");
             btcSplashInfo.getStyleClass().add("error-text");
         };
-        model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
+        model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
         btcSyncIndicator.setPrefWidth(120);
-        btcSyncIndicator.progressProperty().bind(model.btcSyncProgress);
+        btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
 
         ImageView btcSyncIcon = new ImageView();
         btcSyncIcon.setVisible(false);
@@ -476,7 +479,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             btcSyncIndicator.setVisible(false);
             btcSyncIndicator.setManaged(false);
         };
-        model.btcSplashSyncIconId.addListener(btcSyncIconIdListener);
+        model.getBtcSplashSyncIconId().addListener(btcSyncIconIdListener);
 
 
         HBox blockchainSyncBox = new HBox();
@@ -492,7 +495,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setWrapText(true);
         splashP2PNetworkLabel.setMaxWidth(500);
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
-        splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
+        splashP2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
         splashP2PNetworkBusyAnimation = new BusyAnimation();
 
@@ -501,18 +504,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
                 splashP2PNetworkLabel.getStyleClass().add("error-text");
                 splashP2PNetworkBusyAnimation.stop();
-            } else if (model.splashP2PNetworkAnimationVisible.get()) {
+            } else if (model.getSplashP2PNetworkAnimationVisible().get()) {
                 splashP2PNetworkBusyAnimation.play();
             }
         };
-        model.p2pNetworkWarnMsg.addListener(splashP2PNetworkErrorMsgListener);
+        model.getP2pNetworkWarnMsg().addListener(splashP2PNetworkErrorMsgListener);
 
 
         Button showTorNetworkSettingsButton = new AutoTooltipButton(Res.get("settings.net.openTorSettingsButton"));
         showTorNetworkSettingsButton.setVisible(false);
         showTorNetworkSettingsButton.setManaged(false);
         showTorNetworkSettingsButton.setOnAction(e -> {
-            model.torNetworkSettingsWindow.show();
+            model.getTorNetworkSettingsWindow().show();
         });
 
         ImageView splashP2PNetworkIcon = new ImageView();
@@ -534,10 +537,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             // if we can connect in 10 sec. we know that tor is working
             showTorNetworkSettingsTimer.stop();
         };
-        model.p2PNetworkIconId.addListener(splashP2PNetworkIconIdListener);
+        model.getP2PNetworkIconId().addListener(splashP2PNetworkIconIdListener);
 
         splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setIsRunning(newValue);
-        model.splashP2PNetworkAnimationVisible.addListener(splashP2PNetworkVisibleListener);
+        model.getSplashP2PNetworkAnimationVisible().addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
@@ -550,12 +553,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private void disposeSplashScreen() {
-        model.walletServiceErrorMsg.removeListener(walletServiceErrorMsgListener);
-        model.btcSplashSyncIconId.removeListener(btcSyncIconIdListener);
+        model.getWalletServiceErrorMsg().removeListener(walletServiceErrorMsgListener);
+        model.getBtcSplashSyncIconId().removeListener(btcSyncIconIdListener);
 
-        model.p2pNetworkWarnMsg.removeListener(splashP2PNetworkErrorMsgListener);
-        model.p2PNetworkIconId.removeListener(splashP2PNetworkIconIdListener);
-        model.splashP2PNetworkAnimationVisible.removeListener(splashP2PNetworkVisibleListener);
+        model.getP2pNetworkWarnMsg().removeListener(splashP2PNetworkErrorMsgListener);
+        model.getP2PNetworkIconId().removeListener(splashP2PNetworkIconIdListener);
+        model.getSplashP2PNetworkAnimationVisible().removeListener(splashP2PNetworkVisibleListener);
 
         btcSplashInfo.textProperty().unbind();
         btcSyncIndicator.progressProperty().unbind();
@@ -578,14 +581,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // BTC
         Label btcInfoLabel = new AutoTooltipLabel();
         btcInfoLabel.setId("footer-pane");
-        btcInfoLabel.textProperty().bind(model.btcInfo);
+        btcInfoLabel.textProperty().bind(model.getBtcInfo());
 
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(120);
         blockchainSyncIndicator.setMaxHeight(10);
-        blockchainSyncIndicator.progressProperty().bind(model.btcSyncProgress);
+        blockchainSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
 
-        model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
+        model.getWalletServiceErrorMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
                 btcInfoLabel.getStyleClass().add("error-text");
@@ -600,7 +603,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        model.btcSyncProgress.addListener((ov, oldValue, newValue) -> {
+        model.getBtcSyncProgress().addListener((ov, oldValue, newValue) -> {
             if ((double) newValue >= 1) {
                 blockchainSyncIndicator.setVisible(false);
                 blockchainSyncIndicator.setManaged(false);
@@ -624,11 +627,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
         });
         setBottomAnchor(versionLabel, 7d);
-        model.newVersionAvailableProperty.addListener((observable, oldValue, newValue) -> {
+        model.getNewVersionAvailableProperty().addListener((observable, oldValue, newValue) -> {
             versionLabel.getStyleClass().removeAll("version-new", "version");
             if (newValue) {
                 versionLabel.getStyleClass().add("version-new");
-                versionLabel.setOnMouseClicked(e -> model.openDownloadWindow());
+                versionLabel.setOnMouseClicked(e -> model.onOpenDownloadWindow());
                 versionLabel.setText("v" + Version.VERSION + " " + Res.get("mainView.version.update"));
             } else {
                 versionLabel.getStyleClass().add("version");
@@ -642,15 +645,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         p2PNetworkLabel.setId("footer-pane");
         setRightAnchor(p2PNetworkLabel, 33d);
         setBottomAnchor(p2PNetworkLabel, 7d);
-        p2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
+        p2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
         ImageView p2PNetworkIcon = new ImageView();
         setRightAnchor(p2PNetworkIcon, 10d);
         setBottomAnchor(p2PNetworkIcon, 7d);
         p2PNetworkIcon.setOpacity(0.4);
-        p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
-        p2PNetworkLabel.idProperty().bind(model.p2pNetworkLabelId);
-        model.p2pNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
+        p2PNetworkIcon.idProperty().bind(model.getP2PNetworkIconId());
+        p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
+        model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
@@ -659,7 +662,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        model.bootstrapComplete.addListener((observable, oldValue, newValue) -> {
+        model.getUpdatedDataReceived().addListener((observable, oldValue, newValue) -> {
             p2PNetworkIcon.setOpacity(1);
         });
 
@@ -672,7 +675,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private void setupNotificationIcon(Pane buttonHolder) {
         Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.numPendingTradesAsString);
+        label.textProperty().bind(model.getNumPendingTrades());
         label.relocate(5, 1);
         label.setId("nav-alert-label");
 
@@ -684,13 +687,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.setMouseTransparent(true);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
         notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.showPendingTradesNotification);
+        notification.visibleProperty().bind(model.getShowPendingTradesNotification());
         buttonHolder.getChildren().add(notification);
     }
 
     private void setupDisputesIcon(Pane buttonHolder) {
         Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.numOpenDisputesAsString);
+        label.textProperty().bind(model.getNumOpenDisputes());
         label.relocate(5, 1);
         label.setId("nav-alert-label");
 
@@ -702,7 +705,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         notification.setMouseTransparent(true);
         notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
         notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.showOpenDisputesNotification);
+        notification.visibleProperty().bind(model.getShowOpenDisputesNotification());
         buttonHolder.getChildren().add(notification);
     }
 

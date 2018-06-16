@@ -33,6 +33,8 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
@@ -109,7 +111,6 @@ public class GUIUtil {
     public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
     public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
     public final static int AMOUNT_DECIMALS = 4;
-    public final static String RANGE_SEPARATOR = " - ";
 
     private static FeeService feeService;
 

@@ -69,8 +69,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -96,7 +94,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private Stage stage;
     private boolean popupOpened;
     private Scene scene;
-    private final List<String> corruptedDatabaseFiles = new ArrayList<>();
     private boolean shutDownRequested;
 
     public BisqApp() {
@@ -120,13 +117,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         appLaunchedHandler.accept(this);
     }
 
-    public void startApplication() {
+    public void startApplication(Runnable onUiReadyHandler) {
         try {
             MainView mainView = loadMainView(injector);
+            mainView.setOnUiReadyHandler(onUiReadyHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
-
-            checkForCorrectOSArchitecture();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
@@ -349,18 +345,5 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.setWidth(200);
         stage.setHeight(100);
         stage.show();
-    }
-
-    private void checkForCorrectOSArchitecture() {
-        if (!Utilities.isCorrectOSArchitecture()) {
-            String osArchitecture = Utilities.getOSArchitecture();
-            // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
-            // Needs at least more testing on different machines...
-            new Popup<>().warning(Res.get("popup.warning.wrongVersion",
-                    osArchitecture,
-                    Utilities.getJVMArchitecture(),
-                    osArchitecture))
-                    .show();
-        }
     }
 }

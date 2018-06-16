@@ -20,7 +20,6 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -29,6 +28,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple3;

@@ -17,12 +17,11 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.trade.Tradable;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Transaction;
 

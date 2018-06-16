@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import bisq.desktop.util.BSFormatter;
-
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
@@ -43,6 +41,7 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.BSFormatter;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
