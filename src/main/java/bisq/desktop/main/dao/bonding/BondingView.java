@@ -28,6 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.Lock.LockupBSQView;
+import bisq.desktop.main.dao.bonding.unlock.UnlockBSQView;
 
 import bisq.core.locale.Res;
 
@@ -51,6 +52,7 @@ public class BondingView extends ActivatableViewAndModel {
     private final Navigation navigation;
 
     private MenuItem lockupBSQ;
+    private MenuItem unlockBSQ;
     private Navigation.Listener listener;
 
     @FXML
@@ -80,11 +82,16 @@ public class BondingView extends ActivatableViewAndModel {
         final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, bisq.desktop.main.dao.bonding.BondingView.class);
         lockupBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.lockupBSQ"),
                 LockupBSQView.class, AwesomeIcon.LIST_UL, baseNavPath);
-        leftVBox.getChildren().addAll(lockupBSQ);
+        unlockBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.unlockBSQ"),
+                UnlockBSQView.class, AwesomeIcon.LIST_UL, baseNavPath);
+        leftVBox.getChildren().addAll(lockupBSQ, unlockBSQ);
     }
 
     @Override
     protected void activate() {
+        lockupBSQ.activate();
+        unlockBSQ.activate();
+
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(BondingView.class) == 2 ||
@@ -105,6 +112,7 @@ public class BondingView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
 
         lockupBSQ.deactivate();
+        unlockBSQ.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -112,9 +120,6 @@ public class BondingView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof LockupBSQView) lockupBSQ.setSelected(true);
-    }
-
-    public Class<? extends View> getSelectedViewClass() {
-        return selectedViewClass;
+        else if (view instanceof UnlockBSQView) unlockBSQ.setSelected(true);
     }
 }

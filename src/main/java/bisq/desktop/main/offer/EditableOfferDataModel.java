@@ -539,7 +539,8 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     public void onUpdateBalances(Coin confirmedBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
+                                 Coin lockedInBondsBalance,
+                                 Coin unlockingBondsBalance) {
         updateBalance();
     }
 

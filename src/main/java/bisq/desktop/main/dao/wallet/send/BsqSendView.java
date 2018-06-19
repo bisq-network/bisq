@@ -131,7 +131,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
+                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                        bsqWalletService.getUnlockingBondsBalance());
         };
 
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
@@ -215,7 +216,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         bsqWalletService.addBsqBalanceListener(this);
         onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
+                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
     }
 
     @Override
@@ -230,7 +232,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     public void onUpdateBalances(Coin confirmedBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
+                                 Coin lockedInBondsBalance,
+                                 Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(confirmedBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;

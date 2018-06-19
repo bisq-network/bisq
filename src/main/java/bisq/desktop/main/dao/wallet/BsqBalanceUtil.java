@@ -83,7 +83,8 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getPendingBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockedInBondsBalance());
+                bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
         bsqWalletService.addBsqBalanceListener(this);
     }
 
@@ -96,11 +97,16 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     public void onUpdateBalances(Coin confirmedBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
+                                 Coin lockedInBondsBalance,
+                                 Coin unlockingBondsBalance) {
         confirmedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(confirmedBalance));
         pendingBalanceTextField.setText(bsqFormatter.formatCoinWithCode(pendingBalance));
         lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
-        final Coin total = confirmedBalance.add(pendingBalance).add(lockedForVotingBalance).add(lockedInBondsBalance);
+        final Coin total = confirmedBalance
+                .add(pendingBalance)
+                .add(lockedForVotingBalance)
+                .add(lockedInBondsBalance)
+                .add(unlockingBondsBalance);
         totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(total));
     }
 }

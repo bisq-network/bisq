@@ -37,23 +37,17 @@ import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcastException;
-import bisq.core.btc.wallet.TxBroadcastTimeoutException;
-import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.param.Param;
 import bisq.core.locale.Res;
-import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -131,14 +125,14 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
+                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                        bsqWalletService.getUnlockingBondsBalance());
         };
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
 
         lockupButton.setOnAction((event) -> {
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                Address lockupAddress = bsqWalletService.getUnusedAddress();
                 Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
                 int lockupTime = Integer.parseInt(timeInputTextField.getText());
                 try {
@@ -187,7 +181,8 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         bsqWalletService.addBsqBalanceListener(this);
         onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance());
+                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
     }
 
     @Override
@@ -201,7 +196,8 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
     public void onUpdateBalances(Coin confirmedBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
+                                 Coin lockedInBondsBalance,
+                                 Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(confirmedBalance);
         boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid;
         lockupButton.setDisable(!isValid);
