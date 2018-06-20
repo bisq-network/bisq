@@ -714,7 +714,7 @@ public class MainViewModel implements ViewModel {
         checkForCorruptedDataBaseFiles();
 
         String bitcoinLocalhostNodeKey = "bitcoinLocalhostNode";
-        if (bisqEnvironment.isBitcoinLocalhostNodeRunning() && preferences.showAgain(bitcoinLocalhostNodeKey)) {
+        if (bisqEnvironment.isBitcoinLocalhostNodeRunning() && preferences.showAgain(bitcoinLocalhostNodeKey) && !DevEnv.isDevMode()) {
             new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
                     .dontShowAgainId(bitcoinLocalhostNodeKey)
                     .show();
