@@ -95,7 +95,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class EditableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
-    private final Preferences preferences;
+    protected final Preferences preferences;
     protected final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;

@@ -49,14 +49,21 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {
-        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
+    EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService,
+                           BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing,
+                           P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager,
+                           AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
+                           FeeService feeService, BSFormatter formatter) {
+        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService,
+                priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
     }
 
     public void initWithData(OpenOffer openOffer) {
         this.openOffer = openOffer;
         this.initialState = openOffer.getState();
         this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
+        // select the current offer payment account as default payment account
+        preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
 
         this.allowAmountUpdate = false;
     }
