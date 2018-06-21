@@ -51,6 +51,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.network.MessageState;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -111,7 +112,7 @@ public class BuyerStep2View extends TradeStepView {
                                 busyAnimation.play();
                                 confirmButton.setDisable(true);
                                 statusLabel.setText(Res.get("shared.sendingConfirmation"));
-
+                                model.setMessageStateProperty(MessageState.SENT);
                                 timeoutTimer = UserThread.runAfter(() -> {
                                     busyAnimation.stop();
                                     confirmButton.setDisable(false);
@@ -121,16 +122,19 @@ public class BuyerStep2View extends TradeStepView {
                             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.stop();
                                 statusLabel.setText(Res.get("shared.messageArrived"));
+                                model.setMessageStateProperty(MessageState.ARRIVED);
                                 break;
                             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.stop();
                                 statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                                model.setMessageStateProperty(MessageState.STORED_IN_MAILBOX);
                                 break;
                             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
                                 // We get a popup and the trade closed, so we dont need to show anything here
                                 busyAnimation.stop();
                                 confirmButton.setDisable(false);
                                 statusLabel.setText("");
+                                model.setMessageStateProperty(MessageState.FAILED);
                                 break;
                             default:
                                 log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());

@@ -21,8 +21,13 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
+import bisq.core.network.MessageState;
+
+import javafx.beans.value.ChangeListener;
 
 public class BuyerStep3View extends TradeStepView {
+    private final ChangeListener<MessageState> messageStateChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -30,7 +35,25 @@ public class BuyerStep3View extends TradeStepView {
 
     public BuyerStep3View(PendingTradesViewModel model) {
         super(model);
+
+        messageStateChangeListener = (observable, oldValue, newValue) -> {
+            infoLabel.setText(getInfoText());
+        };
     }
+
+    @Override
+    public void activate() {
+        super.activate();
+
+        model.getMessageStateProperty().addListener(messageStateChangeListener);
+    }
+
+    public void deactivate() {
+        super.deactivate();
+
+        model.getMessageStateProperty().removeListener(messageStateChangeListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
@@ -43,8 +66,10 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
-        return Res.get("portfolio.pending.step3_buyer.wait.info", model.dataModel.getCurrencyCode());
+        MessageState messageState = model.getMessageStateProperty().get();
+        return Res.get("portfolio.pending.step3_buyer.wait.info", model.dataModel.getCurrencyCode(), Res.get("message.state." + messageState.name()));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning
