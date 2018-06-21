@@ -131,9 +131,9 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(OpenOffer openOffer) {
+        model.initWithData(openOffer);
         super.initWithData(openOffer.getOffer().getDirection(),
                 CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
-        model.initWithData(openOffer);
 
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
