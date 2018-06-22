@@ -88,6 +88,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.proto.ProtobufferException;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import org.bitcoinj.core.Address;
@@ -807,7 +808,7 @@ public class MainViewModel implements ViewModel {
                     } else {
                         throw new CryptoException("Payload not correct after decryption");
                     }
-                } catch (CryptoException e) {
+                } catch (CryptoException | ProtobufferException e) {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
