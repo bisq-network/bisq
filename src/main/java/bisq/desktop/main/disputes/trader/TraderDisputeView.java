@@ -943,6 +943,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         }*/
 
                         private void showMailboxIcon() {
+                            //TODO
+                            log.error("showMailboxIcon");
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
                             statusIcon.setTooltip(new Tooltip(Res.get("support.savedInMailbox")));
@@ -950,6 +952,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         }
 
                         private void showArrivedIcon() {
+                            log.error("showArrivedIcon");
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.OK, "14");
                             statusIcon.setTooltip(new Tooltip(Res.get("support.arrived")));
