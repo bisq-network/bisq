@@ -157,8 +157,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private VBox messagesInputBox;
     private BusyAnimation sendMsgBusyAnimation;
     private Label sendMsgInfoLabel;
-    private ChangeListener<Boolean> arrivedPropertyListener;
-    private ChangeListener<Boolean> storedInMailboxPropertyListener;
+    private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
+    private ChangeListener<String> sendMessageErrorPropertyListener;
     @Nullable
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
@@ -488,6 +488,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (disputeCommunicationMessage != null) {
             disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
             disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+            disputeCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
 
         disputeCommunicationMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
@@ -510,8 +511,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null && disputeCommunicationMessage.arrivedProperty() != null)
-            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
         storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);
@@ -520,8 +519,19 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null)
+        sendMessageErrorPropertyListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                sendMsgInfoLabel.setVisible(true);
+                sendMsgInfoLabel.setManaged(true);
+                sendMsgInfoLabel.setText(Res.get("support.sendMessageError", newValue));
+                hideSendMsgInfo(timer);
+            }
+        };
+        if (disputeCommunicationMessage != null) {
+            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
             disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+            disputeCommunicationMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
+        }
     }
 
     private void hideSendMsgInfo(Timer timer) {
@@ -797,7 +807,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 arrow.setManaged(!message.isSystemMessage());
                                 statusHBox.setVisible(false);
 
-                                headerLabel.getStyleClass().removeAll("message-header", "success-text",
+                                headerLabel.getStyleClass().removeAll("message-header", "my-message-header", "success-text",
                                         "highlight-static");
                                 messageLabel.getStyleClass().removeAll("my-message", "message");
                                 copyIcon.getStyleClass().removeAll("my-message", "message");
@@ -945,10 +955,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 icon = AwesomeIcon.OK_SIGN;
                                 text = Res.get("support.acknowledged");
 
-                            } else if (message.errorMessageProperty().get() != null) {
+                            } else if (message.ackErrorProperty().get() != null) {
                                 visible = true;
                                 icon = AwesomeIcon.EXCLAMATION_SIGN;
-                                text = Res.get("support.error", message.errorMessageProperty().get());
+                                text = Res.get("support.error", message.ackErrorProperty().get());
                                 statusIcon.setTextFill(Paint.valueOf("#dd0000"));
                                 statusInfoLabel.setTextFill(Paint.valueOf("#dd0000"));
                             } else if (message.arrivedProperty().get()) {
