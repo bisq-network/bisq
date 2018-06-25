@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.bonding.unlock;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
@@ -29,6 +28,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
