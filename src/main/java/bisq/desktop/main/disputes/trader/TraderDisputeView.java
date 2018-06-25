@@ -744,7 +744,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 @Override
                 public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                     return new ListCell<DisputeCommunicationMessage>() {
-                        public ChangeListener<Boolean> sendMsgBusyAnimationListener;
+                        ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new AutoTooltipLabel();
@@ -817,6 +817,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     bg.setId("message-bubble-green");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
+                                    message.addWeakMessageStateListener(() -> updateMsgState(message));
+                                    updateMsgState(message);
                                 } else if (isMyMsg) {
                                     headerLabel.getStyleClass().add("my-message-header");
                                     bg.setId("message-bubble-blue");
@@ -859,6 +861,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(copyIcon, padding);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding);
+                                    AnchorPane.clearConstraints(statusHBox);
+                                    AnchorPane.setLeftAnchor(statusHBox, padding);
                                 } else if (senderIsTrader) {
                                     AnchorPane.setLeftAnchor(headerLabel, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(bg, border + arrowWidth);
