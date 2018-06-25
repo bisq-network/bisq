@@ -30,6 +30,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -61,9 +62,6 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
     public void initWithData(OpenOffer openOffer) {
         this.openOffer = openOffer;
         this.initialState = openOffer.getState();
-        this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
-        // select the current offer payment account as default payment account
-        preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
 
         this.allowAmountUpdate = false;
     }
@@ -77,6 +75,11 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
         if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
+    }
+
+    @Override
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return null;
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
