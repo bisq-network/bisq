@@ -89,6 +89,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -245,6 +247,8 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         fillPaymentAccounts();
 
         PaymentAccount account;
+
+        @Nullable
         PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
