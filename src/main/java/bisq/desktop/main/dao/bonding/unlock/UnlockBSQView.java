@@ -38,7 +38,6 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BlockListener;
 import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
