@@ -245,7 +245,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         fillPaymentAccounts();
 
         PaymentAccount account;
-        PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
+        PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
                 user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
@@ -284,6 +284,10 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         updateBalance();
 
         return true;
+    }
+
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return preferences.getSelectedPaymentAccountForCreateOffer();
     }
 
     void onTabSelected(boolean isSelected) {
