@@ -153,7 +153,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
         addLockTimeColumn();
         addUnlockColumn();
 
-        lockedTxs.setPredicate(item -> item.isLocked());
+        lockedTxs.setPredicate(item -> item.isLockedAndUnspent());
         walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
         parentHeightListener = (observable, oldValue, newValue) -> layout();

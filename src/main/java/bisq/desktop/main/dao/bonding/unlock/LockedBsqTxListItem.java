@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -78,7 +79,7 @@ class LockedBsqTxListItem {
         this.date = date;
         this.bsqFormatter = bsqFormatter;
 
-        txId = transaction.getHashAsString();
+        this.txId = transaction.getHashAsString();
 
         setupConfidence(bsqWalletService);
 
@@ -122,12 +123,19 @@ class LockedBsqTxListItem {
         }
     }
 
-    public boolean isLocked() {
-        return getTxType() == TxType.LOCK_UP;
+    public boolean isLockedAndUnspent() {
+        return !isSpent() && getTxType() == TxType.LOCK_UP;
     }
 
     public void cleanup() {
         bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
+    }
+
+    public boolean isSpent() {
+        Optional<TxOutput> optionalTxOutput = stateService.getLockedTxOutput(txId);
+        if (optionalTxOutput.isPresent())
+            return !stateService.isUnspent(optionalTxOutput.get());
+        return true;
     }
 
     public TxType getTxType() {
