@@ -290,6 +290,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return true;
     }
 
+    @Nullable
     protected PaymentAccount getPreselectedPaymentAccount() {
         return preferences.getSelectedPaymentAccountForCreateOffer();
     }

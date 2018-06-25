@@ -44,6 +44,8 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import javax.annotation.Nullable;
+
 class EditOpenOfferDataModel extends EditableOfferDataModel {
 
     private OpenOffer openOffer;
@@ -63,6 +65,7 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
     }
 
     @Override
+    @Nullable
     protected PaymentAccount getPreselectedPaymentAccount() {
         return null;
     }
