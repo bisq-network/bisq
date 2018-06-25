@@ -33,6 +33,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.SearchComboBox;
 import bisq.desktop.components.TextFieldWithCopyIcon;
+import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
 
@@ -44,6 +45,8 @@ import bisq.common.util.Tuple4;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -74,16 +77,7 @@ import javafx.geometry.VPos;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-
-import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
-
 public class FormBuilder {
-    private static final Logger log = LoggerFactory.getLogger(FormBuilder.class);
     public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
     public static final String FONTAWESOME_ICONS = "FontAwesome";
 
@@ -210,6 +204,27 @@ public class FormBuilder {
 
         return new Tuple2<>(label, textField);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + TextFieldWithIcon
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public static Tuple2<Label, TextFieldWithIcon> addLabelTextFieldWithIcon(GridPane gridPane, int rowIndex, String title, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
+
+        TextFieldWithIcon textFieldWithIcon = new TextFieldWithIcon();
+        textFieldWithIcon.setMouseTransparent(true);
+        textFieldWithIcon.setFocusTraversable(false);
+        GridPane.setRowIndex(textFieldWithIcon, rowIndex);
+        GridPane.setColumnIndex(textFieldWithIcon, 1);
+        GridPane.setMargin(textFieldWithIcon, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(textFieldWithIcon);
+
+        return new Tuple2<>(label, textFieldWithIcon);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     //  HyperlinkWithIcon
@@ -873,6 +888,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + InfoTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     public static Tuple2<Label, InfoTextField> addLabelInfoTextfield(GridPane gridPane, int rowIndex, String labelText,
                                                                      String fieldText) {
         return addLabelInfoTextfield(gridPane, rowIndex, labelText, fieldText, 0);
