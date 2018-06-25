@@ -30,6 +30,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -49,14 +50,18 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {
-        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
+    EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService,
+                           BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing,
+                           P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager,
+                           AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
+                           FeeService feeService, BSFormatter formatter) {
+        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService,
+                priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
     }
 
     public void initWithData(OpenOffer openOffer) {
         this.openOffer = openOffer;
         this.initialState = openOffer.getState();
-        this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
 
         this.allowAmountUpdate = false;
     }
@@ -70,6 +75,11 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
         if (offer.isUseMarketBasedPrice()) setMarketPriceMargin(offer.getMarketPriceMargin());
+    }
+
+    @Override
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return null;
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {

@@ -95,7 +95,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class EditableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
-    private final Preferences preferences;
+    protected final Preferences preferences;
     protected final User user;
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -245,7 +245,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         fillPaymentAccounts();
 
         PaymentAccount account;
-        PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
+        PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
                 user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
@@ -284,6 +284,10 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         updateBalance();
 
         return true;
+    }
+
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return preferences.getSelectedPaymentAccountForCreateOffer();
     }
 
     void onTabSelected(boolean isSelected) {
