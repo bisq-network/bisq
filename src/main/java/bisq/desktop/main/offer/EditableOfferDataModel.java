@@ -51,6 +51,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -649,7 +650,8 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
                 !amount.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                volume.set(price.get().getVolumeByAmount(amount.get()));
+                final Volume volumeByAmount = price.get().getVolumeByAmount(amount.get());
+                volume.set(CoinUtil.roundVolume(volumeByAmount));
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -721,7 +723,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     }
 
     protected void setVolume(Volume volume) {
-        this.volume.set(volume);
+        this.volume.set(CoinUtil.roundVolume(volume));
     }
 
     void setBuyerSecurityDeposit(Coin buyerSecurityDeposit) {
