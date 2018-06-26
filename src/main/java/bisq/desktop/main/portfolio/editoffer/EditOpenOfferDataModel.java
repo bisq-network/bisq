@@ -29,6 +29,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -42,6 +43,8 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
+
+import javax.annotation.Nullable;
 
 class EditOpenOfferDataModel extends EditableOfferDataModel {
 
@@ -59,6 +62,12 @@ class EditOpenOfferDataModel extends EditableOfferDataModel {
         this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
 
         this.allowAmountUpdate = false;
+    }
+
+    @Override
+    @Nullable
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return null;
     }
 
     public void populateData() {
