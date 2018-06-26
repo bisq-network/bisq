@@ -30,6 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
@@ -315,6 +316,8 @@ public class SellerStep3View extends TradeStepView {
                 message = message + Res.get("portfolio.pending.step3_seller.cash", part);
             else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
                 message = message + Res.get("portfolio.pending.step3_seller.westernUnion", part);
+            else if (paymentAccountPayload instanceof MoneyGramAccountPayload)
+                message = message + Res.get("portfolio.pending.step3_seller.moneyGram", part);
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {

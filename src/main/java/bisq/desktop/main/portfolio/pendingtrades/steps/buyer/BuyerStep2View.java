@@ -29,6 +29,7 @@ import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
+import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
@@ -54,6 +55,7 @@ import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
@@ -249,6 +251,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.CASH_DEPOSIT_ID:
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.MONEY_GRAM_ID:
+                gridRow = MoneyGramForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.WESTERN_UNION_ID:
                 gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -333,6 +338,24 @@ public class BuyerStep2View extends TradeStepView {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.westernUnionMTCNInfo.msg", email))
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .actionButtonText(Res.get("shared.yes"))
+                            .closeButtonText(Res.get("shared.no"))
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key)
+                            .show();
+                } else {
+                    showConfirmPaymentStartedPopup();
+                }
+            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof MoneyGramAccountPayload) {
+                //noinspection UnusedAssignment
+                //noinspection ConstantConditions
+                String key = "moneyGramMTCNSent";
+                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                    String email = ((MoneyGramAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
+                    Popup popup = new Popup<>();
+                    popup.headLine(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.headline"))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.msg", email))
                             .onAction(this::showConfirmPaymentStartedPopup)
                             .actionButtonText(Res.get("shared.yes"))
                             .closeButtonText(Res.get("shared.no"))
@@ -431,6 +454,15 @@ public class BuyerStep2View extends TradeStepView {
                 final String email = ((WesternUnionAccountPayload) paymentAccountPayload).getEmail();
                 final String extra = Res.get("portfolio.pending.step2_buyer.westernUnion.extra", email);
                 message += Res.get("portfolio.pending.step2_buyer.westernUnion",
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        extra;
+            } else if (paymentAccountPayload instanceof MoneyGramAccountPayload) {
+                final String email = ((MoneyGramAccountPayload) paymentAccountPayload).getEmail();
+                final String extra = Res.get("portfolio.pending.step2_buyer.moneyGram.extra", email);
+                message += Res.get("portfolio.pending.step2_buyer.moneyGram",
                         amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n" +
