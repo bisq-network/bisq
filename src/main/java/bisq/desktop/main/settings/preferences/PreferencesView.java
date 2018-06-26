@@ -40,6 +40,7 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 
@@ -95,11 +96,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
-    private final BisqEnvironment bisqEnvironment;
+    private final ReferralIdService referralIdService;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -117,7 +118,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener;
+    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
@@ -127,12 +128,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(Preferences preferences, FeeService feeService,
-                           BisqEnvironment bisqEnvironment, BSFormatter formatter) {
+    public PreferencesView(Preferences preferences, FeeService feeService, ReferralIdService referralIdService,
+                           BSFormatter formatter) {
         super();
         this.preferences = preferences;
         this.feeService = feeService;
-        this.bisqEnvironment = bisqEnvironment;
+        this.referralIdService = referralIdService;
         this.formatter = formatter;
     }
 
@@ -176,7 +177,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
@@ -298,6 +299,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue)
                         .replace(":9999", "").replace(".onion", "")
                         .split(",")));
+
+        // referralId
+        referralIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId")).second;
+        referralIdListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue))
+                referralIdService.setReferralId(newValue);
+        };
     }
 
     private void initializeDisplayCurrencies() {
@@ -496,7 +504,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
-
+        referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<String>() {
@@ -574,6 +582,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
         useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
+        referralIdInputTextField.textProperty().addListener(referralIdListener);
     }
 
     private Coin getTxFeeForWithdrawalPerByte() {
@@ -678,6 +687,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
         useCustomFeeCheckbox.selectedProperty().removeListener(useCustomFeeCheckboxListener);
+        referralIdInputTextField.textProperty().removeListener(referralIdListener);
     }
 
     private void deactivateDisplayCurrencies() {

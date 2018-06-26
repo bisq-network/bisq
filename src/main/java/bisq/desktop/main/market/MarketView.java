@@ -28,31 +28,62 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.market.spread.SpreadView;
 import bisq.desktop.main.market.trades.TradesChartsView;
+import bisq.desktop.main.offer.offerbook.OfferBook;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferPayload;
+import bisq.core.trade.statistics.TradeStatistics2;
+
+import bisq.network.p2p.P2PService;
+
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Joiner;
+
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @FxmlView
 public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
     Tab offerBookTab, tradesTab, spreadTab;
     private final ViewLoader viewLoader;
+    private final P2PService p2PService;
+    private final OfferBook offerBook;
+    private final BSFormatter formatter;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
+
 
     @Inject
-    public MarketView(CachingViewLoader viewLoader, Navigation navigation) {
+    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, BSFormatter formatter,
+                      Navigation navigation) {
         this.viewLoader = viewLoader;
+        this.p2PService = p2PService;
+        this.offerBook = offerBook;
+        this.formatter = formatter;
         this.navigation = navigation;
     }
 
@@ -78,6 +109,22 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                 //noinspection unchecked
                 navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
         };
+
+        keyEventEventHandler = keyEvent -> {
+            if (Utilities.isCtrlPressed(KeyCode.T, keyEvent)) {
+                String allTradesWithReferralId = getAllTradesWithReferralId();
+                new Popup<>().message(StringUtils.abbreviate(allTradesWithReferralId, 600))
+                        .actionButtonText(Res.get("shared.copyToClipboard"))
+                        .onAction(() -> Utilities.copyToClipboard(allTradesWithReferralId))
+                        .show();
+            } else if (Utilities.isCtrlPressed(KeyCode.O, keyEvent)) {
+                String allOffersWithReferralId = getAllOffersWithReferralId();
+                new Popup<>().message(StringUtils.abbreviate(allOffersWithReferralId, 600))
+                        .actionButtonText(Res.get("shared.copyToClipboard"))
+                        .onAction(() -> Utilities.copyToClipboard(allOffersWithReferralId))
+                        .show();
+            }
+        };
     }
 
     @Override
@@ -94,12 +141,21 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         else
             //noinspection unchecked
             navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
+
+        if (root.getScene() != null) {
+            scene = root.getScene();
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        }
     }
 
     @Override
     protected void deactivate() {
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
+
+        // root.getScene() is null already so we used a field property
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -119,4 +175,49 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         root.getSelectionModel().select(tab);
     }
 
+    private String getAllTradesWithReferralId() {
+        // We don't use the list from the tradeStatisticsManager as that has filtered the duplicates but we want to get
+        // all items of both traders in case the referral ID was only set by one trader.
+        // If both traders had set it the tradeStatistics is only delivered once.
+        // If both traders used a differnet refferral ID then we would get 2 objects.
+        List<String> list = p2PService.getP2PDataStorage().getPersistableNetworkPayloadList().getMap().values().stream()
+                .filter(e -> e instanceof TradeStatistics2)
+                .map(e -> (TradeStatistics2) e)
+                .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
+                .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .map(trade -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Trade ID: ").append(trade.getOfferId()).append("\n")
+                            .append("Date: ").append(formatter.formatDateTime(trade.getTradeDate())).append("\n")
+                            .append("Market: ").append(formatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(formatter.formatPrice(trade.getTradePrice())).append("\n")
+                            .append("Amount: ").append(formatter.formatCoin(trade.getTradeAmount())).append("\n")
+                            .append("Volume: ").append(formatter.formatVolume(trade.getTradeVolume())).append("\n")
+                            .append("Payment method: ").append(Res.get(trade.getOfferPaymentMethod())).append("\n")
+                            .append("ReferralID: ").append(trade.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                    return sb.toString();
+                })
+                .collect(Collectors.toList());
+        return Joiner.on("\n\n").join(list);
+    }
+
+    private String getAllOffersWithReferralId() {
+        List<String> list = offerBook.getOfferBookListItems().stream()
+                .map(offerBookListItem -> offerBookListItem.getOffer())
+                .filter(offer -> offer.getOfferPayload().getExtraDataMap() != null)
+                .filter(offer -> offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .map(offer -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Offer ID: ").append(offer.getId()).append("\n")
+                            .append("Type: ").append(offer.getDirection().name()).append("\n")
+                            .append("Market: ").append(formatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(formatter.formatPrice(offer.getPrice())).append("\n")
+                            .append("Amount: ").append(formatter.formatAmount(offer)).append(" BTC\n")
+                            .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")
+                            .append("ReferralID: ").append(offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                    return sb.toString();
+                })
+                .collect(Collectors.toList());
+        return Joiner.on("\n\n").join(list);
+    }
 }
