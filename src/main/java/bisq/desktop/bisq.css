@@ -1316,6 +1316,13 @@ textfield */
     -fx-font-size: 0.846em;
 }
 
+.my-message-header {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+    -fx-font-size: 0.846em;
+}
+
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * DAO                                                                                                              *

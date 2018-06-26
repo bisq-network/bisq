@@ -30,6 +30,7 @@ import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
+import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
@@ -72,6 +73,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.WesternUnionAccount;
@@ -247,6 +249,13 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                                 .show();
                     } else if (paymentAccount instanceof WesternUnionAccount) {
                         new Popup<>().information(Res.get("payment.westernUnion.info"))
+                                .width(700)
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .actionButtonText(Res.get("shared.iUnderstand"))
+                                .onAction(() -> doSaveNewAccount(paymentAccount))
+                                .show();
+                    } else if (paymentAccount instanceof MoneyGramAccount) {
+                        new Popup<>().information(Res.get("payment.moneyGram.info"))
                                 .width(700)
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .actionButtonText(Res.get("shared.iUnderstand"))
@@ -467,6 +476,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new InteracETransferForm(paymentAccount, accountAgeWitnessService, interacETransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderForm(paymentAccount, accountAgeWitnessService, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.MONEY_GRAM_ID:
+                return new MoneyGramForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WESTERN_UNION_ID:
                 return new WesternUnionForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:

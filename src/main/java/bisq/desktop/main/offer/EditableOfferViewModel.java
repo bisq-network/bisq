@@ -221,7 +221,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
                         amount.set("0.0001");
-                        price.set("11029");
+                        price.set("6700");
                         break;
                     case "LTC":
                         amount.set("50");
