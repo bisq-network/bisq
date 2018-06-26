@@ -59,7 +59,7 @@ public class AwesomeFontDemo extends Application {
             root.getChildren().add(button);
         }
 
-        primaryStage.setScene(new Scene(root, 900, 850));
+        primaryStage.setScene(new Scene(root, 1200, 950));
         primaryStage.show();
     }
 }
