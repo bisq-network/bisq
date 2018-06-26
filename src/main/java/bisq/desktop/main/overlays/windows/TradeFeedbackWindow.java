@@ -56,7 +56,7 @@ public class TradeFeedbackWindow extends Overlay<TradeFeedbackWindow> {
     protected void addMessage() {
         super.addMessage();
 
-        HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, "Bisq survey",
+        HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, "https://bisq.network/survey",
                 "https://bisq.network/survey");
         GridPane.setMargin(survey, new Insets(-6, 0, 10, -4));
 
@@ -70,7 +70,7 @@ public class TradeFeedbackWindow extends Overlay<TradeFeedbackWindow> {
         GridPane.setColumnSpan(messageLabel2, 2);
         gridPane.getChildren().add(messageLabel2);
 
-        HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, "Bisq Forum",
+        HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, "https://bisq.community",
                 "https://bisq.community", 40);
         GridPane.setMargin(forum, new Insets(-6, 0, 10, -4));
 
