@@ -57,7 +57,7 @@ public class TradeFeedbackWindow extends Overlay<TradeFeedbackWindow> {
         super.addMessage();
 
         HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, "Bisq survey",
-                "http://survey.io/survey/87c4f");
+                "https://bisq.network/survey");
         GridPane.setMargin(survey, new Insets(-6, 0, 10, -4));
 
         AutoTooltipLabel messageLabel2 = new AutoTooltipLabel(Res.get("tradeFeedbackWindow.msg.part2"));
