@@ -157,8 +157,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private VBox messagesInputBox;
     private BusyAnimation sendMsgBusyAnimation;
     private Label sendMsgInfoLabel;
-    private ChangeListener<Boolean> arrivedPropertyListener;
-    private ChangeListener<Boolean> storedInMailboxPropertyListener;
+    private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
+    private ChangeListener<String> sendMessageErrorPropertyListener;
     @Nullable
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
@@ -488,6 +488,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (disputeCommunicationMessage != null) {
             disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
             disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+            disputeCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
 
         disputeCommunicationMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
@@ -510,8 +511,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null && disputeCommunicationMessage.arrivedProperty() != null)
-            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
         storedInMailboxPropertyListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);
@@ -520,8 +519,19 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null)
+        sendMessageErrorPropertyListener = (observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                sendMsgInfoLabel.setVisible(true);
+                sendMsgInfoLabel.setManaged(true);
+                sendMsgInfoLabel.setText(Res.get("support.sendMessageError", newValue));
+                hideSendMsgInfo(timer);
+            }
+        };
+        if (disputeCommunicationMessage != null) {
+            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
             disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+            disputeCommunicationMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
+        }
     }
 
     private void hideSendMsgInfo(Timer timer) {
@@ -734,7 +744,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 @Override
                 public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                     return new ListCell<DisputeCommunicationMessage>() {
-                        public ChangeListener<Boolean> sendMsgBusyAnimationListener;
+                        ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
                         final Label headerLabel = new AutoTooltipLabel();
@@ -743,6 +753,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         final HBox attachmentsBox = new HBox();
                         final AnchorPane messageAnchorPane = new AnchorPane();
                         final Label statusIcon = new Label();
+                        final Label statusInfoLabel = new Label();
+                        final HBox statusHBox = new HBox();
                         final double arrowWidth = 15d;
                         final double attachmentsBoxHeight = 20d;
                         final double border = 10d;
@@ -756,25 +768,26 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
                             statusIcon.getStyleClass().add("small-text");
+                            statusInfoLabel.getStyleClass().add("small-text");
+                            statusInfoLabel.setPadding(new Insets(3, 0, 0, 0));
                             copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
-                            messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
-                            messageLabel.setOnMouseClicked(event -> {
-                                if (2 > event.getClickCount()) {
-                                    return;
-                                }
-                                GUIUtil.showSelectableTextModal(headerLabel.getText(), messageLabel.getText());
-                            });
+                            statusHBox.setSpacing(5);
+                            statusHBox.getChildren().addAll(statusIcon, statusInfoLabel);
+                            messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusHBox);
                         }
 
                         @Override
-                        public void updateItem(final DisputeCommunicationMessage item, boolean empty) {
-                            super.updateItem(item, empty);
-
-                            if (item != null && !empty) {
+                        public void updateItem(final DisputeCommunicationMessage message, boolean empty) {
+                            super.updateItem(message, empty);
+                            if (message != null && !empty) {
                                 copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
+                                messageLabel.setOnMouseClicked(event -> {
+                                    if (2 > event.getClickCount()) {
+                                        return;
+                                    }
+                                    GUIUtil.showSelectableTextModal(headerLabel.getText(), messageLabel.getText());
+                                });
 
-                               /* messageAnchorPane.prefWidthProperty().bind(EasyBind.map(messageListView.widthProperty(),
-                                        w -> (double) w - padding - GUIUtil.getScrollbarWidth(messageListView)));*/
                                 if (!messageAnchorPane.prefWidthProperty().isBound())
                                     messageAnchorPane.prefWidthProperty()
                                             .bind(messageListView.widthProperty().subtract(padding + GUIUtil.getScrollbarWidth(messageListView)));
@@ -787,25 +800,27 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.setTopAnchor(copyIcon, 25d);
                                 AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
-                                boolean senderIsTrader = item.isSenderIsTrader();
+                                boolean senderIsTrader = message.isSenderIsTrader();
                                 boolean isMyMsg = isTrader ? senderIsTrader : !senderIsTrader;
 
-                                arrow.setVisible(!item.isSystemMessage());
-                                arrow.setManaged(!item.isSystemMessage());
-                                statusIcon.setVisible(false);
+                                arrow.setVisible(!message.isSystemMessage());
+                                arrow.setManaged(!message.isSystemMessage());
+                                statusHBox.setVisible(false);
 
-                                headerLabel.getStyleClass().removeAll("message-header", "success-text",
+                                headerLabel.getStyleClass().removeAll("message-header", "my-message-header", "success-text",
                                         "highlight-static");
                                 messageLabel.getStyleClass().removeAll("my-message", "message");
                                 copyIcon.getStyleClass().removeAll("my-message", "message");
 
-                                if (item.isSystemMessage()) {
+                                if (message.isSystemMessage()) {
                                     headerLabel.getStyleClass().addAll("message-header", "success-text");
                                     bg.setId("message-bubble-green");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
+                                    message.addWeakMessageStateListener(() -> updateMsgState(message));
+                                    updateMsgState(message);
                                 } else if (isMyMsg) {
-                                    headerLabel.getStyleClass().add("highlight-static");
+                                    headerLabel.getStyleClass().add("my-message-header");
                                     bg.setId("message-bubble-blue");
                                     messageLabel.getStyleClass().add("my-message");
                                     copyIcon.getStyleClass().add("my-message");
@@ -818,22 +833,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         sendMsgBusyAnimation.isRunningProperty().removeListener(sendMsgBusyAnimationListener);
 
                                     sendMsgBusyAnimationListener = (observable, oldValue, newValue) -> {
-                                        if (!newValue) {
-                                            if (item.arrivedProperty().get())
-                                                showArrivedIcon();
-                                            else if (item.storedInMailboxProperty().get())
-                                                showMailboxIcon();
-                                        }
+                                        if (!newValue)
+                                            updateMsgState(message);
                                     };
-                                    sendMsgBusyAnimation.isRunningProperty().addListener(sendMsgBusyAnimationListener);
 
-                                    if (item.arrivedProperty().get())
-                                        showArrivedIcon();
-                                    else if (item.storedInMailboxProperty().get())
-                                        showMailboxIcon();
-                                    //TODO show that icon on error
-                                    /*else if (sendMsgProgressIndicator.getProgress() == 0)
-                                        showNotArrivedIcon();*/
+                                    sendMsgBusyAnimation.isRunningProperty().addListener(sendMsgBusyAnimationListener);
+                                    message.addWeakMessageStateListener(() -> updateMsgState(message));
+                                    updateMsgState(message);
                                 } else {
                                     headerLabel.getStyleClass().add("message-header");
                                     bg.setId("message-bubble-grey");
@@ -845,7 +851,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         arrow.setId("bubble_arrow_grey_left");
                                 }
 
-                                if (item.isSystemMessage()) {
+                                if (message.isSystemMessage()) {
                                     AnchorPane.setLeftAnchor(headerLabel, padding);
                                     AnchorPane.setRightAnchor(headerLabel, padding);
                                     AnchorPane.setLeftAnchor(bg, border);
@@ -855,6 +861,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(copyIcon, padding);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding);
+                                    AnchorPane.clearConstraints(statusHBox);
+                                    AnchorPane.setLeftAnchor(statusHBox, padding);
                                 } else if (senderIsTrader) {
                                     AnchorPane.setLeftAnchor(headerLabel, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(bg, border + arrowWidth);
@@ -865,7 +873,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(copyIcon, padding);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding + arrowWidth);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding);
-                                    AnchorPane.setRightAnchor(statusIcon, padding);
+                                    AnchorPane.clearConstraints(statusHBox);
+                                    AnchorPane.setRightAnchor(statusHBox, padding);
                                 } else {
                                     AnchorPane.setRightAnchor(headerLabel, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(bg, border);
@@ -876,14 +885,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     AnchorPane.setRightAnchor(copyIcon, padding + arrowWidth);
                                     AnchorPane.setLeftAnchor(attachmentsBox, padding);
                                     AnchorPane.setRightAnchor(attachmentsBox, padding + arrowWidth);
-                                    AnchorPane.setLeftAnchor(statusIcon, padding);
+                                    AnchorPane.clearConstraints(statusHBox);
+                                    AnchorPane.setLeftAnchor(statusHBox, padding);
                                 }
-
-                                AnchorPane.setBottomAnchor(statusIcon, 7d);
-                                headerLabel.setText(formatter.formatDateTime(new Date(item.getDate())));
-                                messageLabel.setText(item.getMessage());
+                                AnchorPane.setBottomAnchor(statusHBox, 7d);
+                                headerLabel.setText(formatter.formatDateTime(new Date(message.getDate())));
+                                messageLabel.setText(message.getMessage());
                                 attachmentsBox.getChildren().clear();
-                                if (item.getAttachments() != null && item.getAttachments().size() > 0) {
+                                if (message.getAttachments() != null && message.getAttachments().size() > 0) {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
                                     attachmentsBox.getChildren().add(new AutoTooltipLabel(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
@@ -892,7 +901,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                         else
                                             getStyleClass().add("message");
                                     }});
-                                    item.getAttachments().stream().forEach(attachment -> {
+                                    message.getAttachments().forEach(attachment -> {
                                         final Label icon = new Label();
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
@@ -927,33 +936,56 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.clearConstraints(arrow);
                                 AnchorPane.clearConstraints(messageLabel);
                                 AnchorPane.clearConstraints(copyIcon);
-                                AnchorPane.clearConstraints(statusIcon);
+                                AnchorPane.clearConstraints(statusHBox);
                                 AnchorPane.clearConstraints(attachmentsBox);
 
                                 copyIcon.setOnMouseClicked(null);
+                                messageLabel.setOnMouseClicked(null);
                                 setGraphic(null);
                             }
                         }
 
-                      /*  private void showNotArrivedIcon() {
-                            statusIcon.setVisible(true);
-                            AwesomeDude.setIcon(statusIcon, AwesomeIcon.WARNING_SIGN, "14");
-                            Tooltip.install(statusIcon, new Tooltip("Message did not arrive. Please try to send again."));
-                            statusIcon.setTextFill(Paint.valueOf("#dd0000"));
-                        }*/
-
-                        private void showMailboxIcon() {
-                            statusIcon.setVisible(true);
-                            AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
-                            statusIcon.setTooltip(new Tooltip(Res.get("support.savedInMailbox")));
+                        private void updateMsgState(DisputeCommunicationMessage message) {
+                            boolean visible;
+                            AwesomeIcon icon = null;
+                            String text = null;
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
-                        }
+                            statusInfoLabel.setTextFill(Paint.valueOf("#0f87c3"));
+                            statusHBox.setOpacity(1);
+                            log.debug("updateMsgState msg-{}, ack={}, arrived={}", message.getMessage(),
+                                    message.acknowledgedProperty().get(), message.arrivedProperty().get());
+                            if (message.acknowledgedProperty().get()) {
+                                visible = true;
+                                icon = AwesomeIcon.OK_SIGN;
+                                text = Res.get("support.acknowledged");
 
-                        private void showArrivedIcon() {
-                            statusIcon.setVisible(true);
-                            AwesomeDude.setIcon(statusIcon, AwesomeIcon.OK, "14");
-                            statusIcon.setTooltip(new Tooltip(Res.get("support.arrived")));
-                            statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
+                            } else if (message.ackErrorProperty().get() != null) {
+                                visible = true;
+                                icon = AwesomeIcon.EXCLAMATION_SIGN;
+                                text = Res.get("support.error", message.ackErrorProperty().get());
+                                statusIcon.setTextFill(Paint.valueOf("#dd0000"));
+                                statusInfoLabel.setTextFill(Paint.valueOf("#dd0000"));
+                            } else if (message.arrivedProperty().get()) {
+                                visible = true;
+                                icon = AwesomeIcon.OK;
+                                text = Res.get("support.arrived");
+                                statusHBox.setOpacity(0.5);
+                            } else if (message.storedInMailboxProperty().get()) {
+                                visible = true;
+                                icon = AwesomeIcon.ENVELOPE;
+                                text = Res.get("support.savedInMailbox");
+                                statusHBox.setOpacity(0.5);
+                            } else {
+                                visible = false;
+                                log.debug("updateMsgState called but no msg state available. message={}", message);
+                            }
+
+                            statusHBox.setVisible(visible);
+                            if (visible) {
+                                AwesomeDude.setIcon(statusIcon, icon, "14");
+                                statusIcon.setTooltip(new Tooltip(text));
+                                statusInfoLabel.setText(text);
+                            }
                         }
                     };
                 }

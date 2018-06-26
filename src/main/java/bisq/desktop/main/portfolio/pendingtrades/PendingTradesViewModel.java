@@ -25,6 +25,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcAddressValidator;
 
 import bisq.core.locale.Res;
+import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentMethod;
@@ -52,12 +53,15 @@ import javafx.beans.property.SimpleObjectProperty;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
-    private Subscription tradeStateSubscription;
+
+    @Getter
     @Nullable
     private Trade trade;
 
@@ -90,6 +94,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
+    @Getter
+    private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+    private Subscription tradeStateSubscription;
+    private Subscription messageStateSubscription;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -115,8 +124,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.clock = clock;
     }
 
+
     @Override
-    protected void activate() {
+    protected void deactivate() {
+        if (tradeStateSubscription != null) {
+            tradeStateSubscription.unsubscribe();
+            tradeStateSubscription = null;
+        }
+
+        if (messageStateSubscription != null) {
+            messageStateSubscription.unsubscribe();
+            messageStateSubscription = null;
+        }
     }
 
     // Don't set own listener as we need to control the order of the calls
@@ -126,19 +145,35 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             sellerState.set(SellerState.UNDEFINED);
             buyerState.set(BuyerState.UNDEFINED);
         }
+
+        if (messageStateSubscription != null) {
+            messageStateSubscription.unsubscribe();
+            messageStateProperty.set(MessageState.UNDEFINED);
+        }
+
         if (selectedItem != null) {
             this.trade = selectedItem.getTrade();
             tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), this::onTradeStateChanged);
+
+            messageStateSubscription = EasyBind.subscribe(trade.getProcessModel().getPaymentStartedMessageStateProperty(), this::onMessageStateChanged);
         }
     }
 
-    @Override
-    protected void deactivate() {
-        if (tradeStateSubscription != null) {
-            tradeStateSubscription.unsubscribe();
-            tradeStateSubscription = null;
+    public void setMessageStateProperty(MessageState messageState) {
+        if (messageStateProperty.get() == MessageState.ACKNOWLEDGED) {
+            log.warn("We have already an ACKNOWLEDGED message received. " +
+                    "We would not expect any other message after that. Received messageState={}", messageState);
+            return;
         }
+
+        if (trade != null)
+            trade.getProcessModel().setPaymentStartedMessageState(messageState);
     }
+
+    private void onMessageStateChanged(MessageState messageState) {
+        messageStateProperty.set(messageState);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

@@ -24,7 +24,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.Transitions;
 
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
@@ -566,7 +565,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     if (!finalPeersDispute.isClosed())
                         UserThread.runAfter(() ->
                                         new Popup<>().attention(Res.get("disputeSummaryWindow.close.closePeer")).show(),
-                                Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
+                                200, TimeUnit.MILLISECONDS);
 
                     hide();
 
