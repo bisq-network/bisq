@@ -24,7 +24,6 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
@@ -99,7 +98,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     final PriceFeedService priceFeedService;
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
-    private final WalletsSetup walletsSetup;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     final BSFormatter formatter;
@@ -143,7 +141,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                               PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager,
                               FilterManager filterManager,
-                              WalletsSetup walletsSetup,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               BSFormatter formatter) {
@@ -157,7 +154,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
-        this.walletsSetup = walletsSetup;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.formatter = formatter;
@@ -191,19 +187,15 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             final Optional<OfferBookListItem> highestPriceOffer = filteredItems.stream()
                     .filter(o -> o.getOffer().getPrice() != null)
-                    .max(Comparator.comparingLong(o -> o.getOffer().getPrice().getValue()));
+                    .max(Comparator.comparingLong(o -> o.getOffer().getPrice() != null ? o.getOffer().getPrice().getValue() : 0));
 
-            if (highestPriceOffer.isPresent()) {
-                maxPlacesForPrice.set(formatPrice(highestPriceOffer.get().getOffer(), false).length());
-            }
+            highestPriceOffer.ifPresent(offerBookListItem -> maxPlacesForPrice.set(formatPrice(offerBookListItem.getOffer(), false).length()));
 
             final Optional<OfferBookListItem> highestMarketPriceMarginOffer = filteredItems.stream()
                     .filter(o -> o.getOffer().isUseMarketBasedPrice())
                     .max(Comparator.comparing(o -> new DecimalFormat("#0.00").format(o.getOffer().getMarketPriceMargin() * 100).length()));
 
-            if (highestMarketPriceMarginOffer.isPresent()) {
-                maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(highestMarketPriceMarginOffer.get().getOffer(), false).length());
-            }
+            highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer(), false).length()));
         };
     }
 
@@ -497,7 +489,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+        return user.getPaymentAccounts() != null && PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
     boolean hasPaymentAccountForCurrency() {
@@ -542,7 +534,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
+        return preferences.getIgnoreTradersList().stream().anyMatch(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()));
     }
 
     boolean isOfferBanned(Offer offer) {
@@ -563,7 +555,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        final long myTradeLimit = accountOptional.isPresent() ? accountAgeWitnessService.getMyTradeLimit(accountOptional.get(), offer.getCurrencyCode()) : 0L;
+        final long myTradeLimit = accountOptional.map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount, offer.getCurrencyCode())).orElse(0L);
         final long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",

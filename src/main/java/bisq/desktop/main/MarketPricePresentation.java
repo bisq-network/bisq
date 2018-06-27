@@ -57,10 +57,13 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+
 public class MarketPricePresentation {
     private final Preferences preferences;
     private final BSFormatter formatter;
     private final PriceFeedService priceFeedService;
+    @Getter
     private final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> marketPriceBinding;

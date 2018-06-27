@@ -230,7 +230,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         };
         model.getSelectedPriceFeedComboBoxItemProperty().addListener(selectedPriceFeedItemListener);
-        priceComboBox.setItems(model.priceFeedComboBoxItems);
+        priceComboBox.setItems(model.getPriceFeedComboBoxItems());
 
         HBox.setMargin(marketPriceBox.second, new Insets(0, 0, 0, 0));
 
