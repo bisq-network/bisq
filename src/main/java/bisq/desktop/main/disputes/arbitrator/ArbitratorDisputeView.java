@@ -22,12 +22,12 @@ import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 

@@ -18,12 +18,12 @@
 package bisq.desktop.main.funds.withdrawal;
 
 import bisq.desktop.components.AutoTooltipLabel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

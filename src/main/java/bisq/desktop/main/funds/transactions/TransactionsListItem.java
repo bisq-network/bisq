@@ -18,7 +18,6 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.BisqEnvironment;
@@ -33,6 +32,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

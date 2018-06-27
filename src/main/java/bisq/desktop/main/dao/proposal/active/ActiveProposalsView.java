@@ -23,7 +23,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.proposal.BaseProposalView;
 import bisq.desktop.main.dao.proposal.ProposalListItem;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BsqFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
@@ -38,6 +37,7 @@ import bisq.core.dao.vote.proposal.Proposal;
 import bisq.core.dao.vote.proposal.ProposalService;
 import bisq.core.dao.vote.result.BooleanVoteResult;
 import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.crypto.CryptoException;
 import bisq.common.util.Tuple2;

@@ -22,7 +22,6 @@ import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -35,6 +34,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;

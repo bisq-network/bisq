@@ -19,13 +19,13 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.util.BSFormatter;
 
 import com.google.inject.Inject;
 

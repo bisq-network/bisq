@@ -48,7 +48,6 @@ import bisq.desktop.components.paymentmethods.VenmoForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -79,6 +78,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
