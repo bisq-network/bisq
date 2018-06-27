@@ -95,7 +95,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class EditableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
+public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
@@ -145,11 +145,11 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EditableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                                  Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
-                                  PriceFeedService priceFeedService, FilterManager filterManager,
-                                  AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
-                                  FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
+    public MutableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+                                 Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                                 PriceFeedService priceFeedService, FilterManager filterManager,
+                                 AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
+                                 FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -251,11 +251,10 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
 
         PaymentAccount account;
 
-        @Nullable
         PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
+                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId() == lastSelectedPaymentAccount.getId())) {
             account = lastSelectedPaymentAccount;
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
@@ -293,7 +292,6 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         return true;
     }
 
-    @Nullable
     protected PaymentAccount getPreselectedPaymentAccount() {
         return preferences.getSelectedPaymentAccountForCreateOffer();
     }

@@ -20,7 +20,7 @@ package bisq.desktop.main.portfolio.editoffer;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.main.offer.EditableOfferView;
+import bisq.desktop.main.offer.MutableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.Transitions;
@@ -46,7 +46,7 @@ import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
 
 @FxmlView
-public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel> {
+public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
     private BusyAnimation busyAnimation;
     private Button confirmButton;
@@ -57,7 +57,7 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private EditOpenOfferView(EditOpenOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    private EditOfferView(EditOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model, navigation, preferences, transitions, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
@@ -130,10 +130,11 @@ public class EditOpenOfferView extends EditableOfferView<EditOpenOfferViewModel>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(OpenOffer openOffer) {
-        super.initWithData(openOffer.getOffer().getDirection(),
+    public void applyOpenOffer(OpenOffer openOffer) {
+        model.applyOpenOffer(openOffer);
+
+        initWithData(openOffer.getOffer().getDirection(),
                 CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get());
-        model.initWithData(openOffer);
 
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
