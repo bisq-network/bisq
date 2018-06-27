@@ -122,7 +122,7 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public abstract class EditableOfferView<M extends EditableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
+public abstract class MutableOfferView<M extends MutableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
     protected final Navigation navigation;
     private final Preferences preferences;
     private final Transitions transitions;
@@ -173,8 +173,8 @@ public abstract class EditableOfferView<M extends EditableOfferViewModel> extend
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public EditableOfferView(M model, Navigation navigation, Preferences preferences, Transitions transitions,
-                             OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public MutableOfferView(M model, Navigation navigation, Preferences preferences, Transitions transitions,
+                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
