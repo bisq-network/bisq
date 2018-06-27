@@ -19,7 +19,7 @@ package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.main.offer.EditableOfferViewModel;
+import bisq.desktop.main.offer.MutableOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -37,7 +37,7 @@ import bisq.network.p2p.P2PService;
 
 import com.google.inject.Inject;
 
-class CreateOfferViewModel extends EditableOfferViewModel<CreateOfferDataModel> implements ViewModel {
+class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> implements ViewModel {
 
     @Inject
     public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {

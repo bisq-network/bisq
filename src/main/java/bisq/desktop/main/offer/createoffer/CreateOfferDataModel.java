@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.desktop.main.offer.EditableOfferDataModel;
+import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -43,7 +43,7 @@ import com.google.inject.Inject;
  * Note that the create offer domain has a deeper scope in the application domain (TradeManager).
  * That model is just responsible for the domain specific parts displayed needed in that UI element.
  */
-class CreateOfferDataModel extends EditableOfferDataModel {
+class CreateOfferDataModel extends MutableOfferDataModel {
 
     @Inject
     public CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
