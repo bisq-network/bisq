@@ -30,11 +30,11 @@ import bisq.desktop.main.market.spread.SpreadView;
 import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.BSFormatter;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 
