@@ -72,7 +72,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.Date;
@@ -108,9 +107,6 @@ public class MainViewModel implements ViewModel {
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-
-
-    final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
@@ -557,5 +553,9 @@ public class MainViewModel implements ViewModel {
 
     IntegerProperty getMarketPriceUpdated() {
         return marketPricePresentation.getMarketPriceUpdated();
+    }
+
+    public ObservableList<PriceFeedComboBoxItem> getPriceFeedComboBoxItems() {
+        return marketPricePresentation.getPriceFeedComboBoxItems();
     }
 }
