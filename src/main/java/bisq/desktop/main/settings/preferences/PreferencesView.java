@@ -505,6 +505,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
         referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
+        referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<String>() {
