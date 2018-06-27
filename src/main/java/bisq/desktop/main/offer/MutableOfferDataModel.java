@@ -254,7 +254,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId() == lastSelectedPaymentAccount.getId())) {
+                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId()))) {
             account = lastSelectedPaymentAccount;
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
