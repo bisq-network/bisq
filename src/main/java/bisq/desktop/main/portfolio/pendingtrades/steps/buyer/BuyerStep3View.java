@@ -35,7 +35,7 @@ import javafx.beans.value.ChangeListener;
 
 public class BuyerStep3View extends TradeStepView {
     private final ChangeListener<MessageState> messageStateChangeListener;
-    private TextFieldWithIcon textFieldWithIconWithIcon;
+    private TextFieldWithIcon textFieldWithIcon;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ public class BuyerStep3View extends TradeStepView {
     protected void addInfoBlock() {
         FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 2, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
         infoLabel = FormBuilder.addMultilineLabel(gridPane, gridRow, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        textFieldWithIconWithIcon = FormBuilder.addLabelTextFieldWithIcon(gridPane, ++gridRow,
+        textFieldWithIcon = FormBuilder.addLabelTextFieldWithIcon(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_buyer.wait.msgStateInfo.label"), 0).second;
     }
 
@@ -90,31 +90,31 @@ public class BuyerStep3View extends TradeStepView {
 
     private void updateMessageStateInfo() {
         MessageState messageState = model.getMessageStateProperty().get();
-        textFieldWithIconWithIcon.setText(Res.get("message.state." + messageState.name()));
-        Label iconLabel = textFieldWithIconWithIcon.getIconLabel();
+        textFieldWithIcon.setText(Res.get("message.state." + messageState.name()));
+        Label iconLabel = textFieldWithIcon.getIconLabel();
         switch (messageState) {
             case UNDEFINED:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.QUESTION);
+                textFieldWithIcon.setIcon(AwesomeIcon.QUESTION);
                 iconLabel.setTextFill(Paint.valueOf("#e9a20a"));
                 break;
             case SENT:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.ARROW_RIGHT);
+                textFieldWithIcon.setIcon(AwesomeIcon.ARROW_RIGHT);
                 iconLabel.setTextFill(Paint.valueOf("#afe193"));
                 break;
             case ARRIVED:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.OK);
+                textFieldWithIcon.setIcon(AwesomeIcon.OK);
                 iconLabel.setTextFill(Paint.valueOf("#0793ad"));
                 break;
             case STORED_IN_MAILBOX:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.ENVELOPE_ALT);
+                textFieldWithIcon.setIcon(AwesomeIcon.ENVELOPE_ALT);
                 iconLabel.setTextFill(Paint.valueOf("#91B6E9"));
                 break;
             case ACKNOWLEDGED:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.OK_SIGN);
+                textFieldWithIcon.setIcon(AwesomeIcon.OK_SIGN);
                 iconLabel.setTextFill(Paint.valueOf("#009900"));
                 break;
             case FAILED:
-                textFieldWithIconWithIcon.setIcon(AwesomeIcon.EXCLAMATION_SIGN);
+                textFieldWithIcon.setIcon(AwesomeIcon.EXCLAMATION_SIGN);
                 iconLabel.setTextFill(Paint.valueOf("#dd0000"));
                 break;
         }
