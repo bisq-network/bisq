@@ -45,7 +45,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import com.google.inject.Inject;
 

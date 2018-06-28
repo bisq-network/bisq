@@ -77,14 +77,6 @@ import javafx.geometry.VPos;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-
-import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
-
 public class FormBuilder {
     public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
     public static final String FONTAWESOME_ICONS = "FontAwesome";
