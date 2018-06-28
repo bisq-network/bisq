@@ -45,7 +45,6 @@ dependencies {
     compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'network.bisq:bisq-core:-SNAPSHOT'
     compile 'network.bisq:bisq-p2p:-SNAPSHOT'
-    compile 'network.bisq:bisq-http-api:-SNAPSHOT'
     compile 'network.bisq:bisq-grpc:-SNAPSHOT'
     compile 'org.controlsfx:controlsfx:8.0.6_20'
     compile 'org.reactfx:reactfx:2.0-M3'
