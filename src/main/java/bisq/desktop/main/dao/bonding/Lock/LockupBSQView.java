@@ -28,24 +28,19 @@ import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.param.Param;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -84,16 +79,12 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
 
     @Inject
     private LockupBSQView(BsqWalletService bsqWalletService,
-                          BtcWalletService btcWalletService,
-                          WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
                           P2PService p2PService,
                           BsqFormatter bsqFormatter,
-                          BSFormatter btcFormatter,
                           Navigation navigation,
                           BsqBalanceUtil bsqBalanceUtil,
                           BsqValidator bsqValidator,
-                          BsqAddressValidator bsqAddressValidator,
                           DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
@@ -118,7 +109,7 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         amountInputTextField.setValidator(bsqValidator);
         timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"), Layout.GRID_GAP).second;
         timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
-                Param.LOCKTIME_MIN.getDefaultValue(), Param.LOCKTIME_MAX.getDefaultValue()));
+                Param.LOCK_TIME_MIN.getDefaultValue(), Param.LOCK_TIME_MAX.getDefaultValue()));
         // TODO: add some int validator
 //        timeInputTextField.setValidator(bsqValidator);
 

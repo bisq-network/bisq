@@ -124,7 +124,7 @@ class LockedBsqTxListItem {
     }
 
     public boolean isLockedAndUnspent() {
-        return !isSpent() && getTxType() == TxType.LOCK_UP;
+        return !isSpent() && getTxType() == TxType.LOCKUP;
     }
 
     public void cleanup() {

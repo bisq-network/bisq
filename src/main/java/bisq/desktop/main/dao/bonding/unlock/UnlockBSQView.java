@@ -101,7 +101,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
     private final Navigation navigation;
 
     private int gridRow = 0;
-    private boolean synched;
+    private boolean synced;
     private LockedBsqTxListItem selectedItem;
 
     private final ObservableList<LockedBsqTxListItem> observableList = FXCollections.observableArrayList();
@@ -403,7 +403,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {
-            synched = bsqWalletChainHeight == bsqBlockChainHeight;
+            synced = bsqWalletChainHeight == bsqBlockChainHeight;
         }
         updateList();
     }

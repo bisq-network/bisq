@@ -77,6 +77,8 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         lockedInBondsBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
         lockedInBondsBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
+        // TODO add unlockinBondsBalanceTextField
+
         totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
         totalBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
