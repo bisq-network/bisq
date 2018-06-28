@@ -41,13 +41,12 @@ import javax.annotation.Nullable;
 
 
 import bisq.grpc.BisqGrpcServer;
-import bisq.httpapi.BisqHttpApiServer;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
-    @Nullable
-    private BisqHttpApiServer bisqHttpApiServer;
+    /*  @Nullable
+      private BisqHttpApiServer bisqHttpApiServer;*/
     @Nullable
     private BisqGrpcServer bisqGrpcServer;
 
@@ -132,10 +131,10 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-        if (runWithHttpApi()) {
+       /* if (runWithHttpApi()) {
             final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
             bisqHttpApiServer = new BisqHttpApiServer(bisqFacade);
-        }
+        }*/
 
         if (runWithGrpcApi()) {
             final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
