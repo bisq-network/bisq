@@ -27,10 +27,9 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.bonding.Lock.LockupBSQView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
+import bisq.desktop.main.dao.bonding.lockup.LockupBSQView;
 import bisq.desktop.main.dao.bonding.unlock.UnlockBSQView;
-import bisq.desktop.main.dao.voting.dashboard.VotingDashboardView;
 
 import bisq.core.locale.Res;
 
