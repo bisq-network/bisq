@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.bonding.Lock;
+package bisq.desktop.main.dao.bonding.lockup;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
