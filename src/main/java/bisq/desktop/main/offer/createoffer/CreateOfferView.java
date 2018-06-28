@@ -19,7 +19,7 @@ package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.offer.EditableOfferView;
+import bisq.desktop.main.offer.MutableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.Transitions;
 
@@ -30,7 +30,7 @@ import bisq.core.util.BsqFormatter;
 import com.google.inject.Inject;
 
 @FxmlView
-public class CreateOfferView extends EditableOfferView<CreateOfferViewModel> {
+public class CreateOfferView extends MutableOfferView<CreateOfferViewModel> {
 
     @Inject
     public CreateOfferView(CreateOfferViewModel model, Navigation navigation, Preferences preferences, Transitions transitions, OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {

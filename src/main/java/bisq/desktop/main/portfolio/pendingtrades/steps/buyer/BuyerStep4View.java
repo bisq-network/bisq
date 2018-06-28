@@ -24,6 +24,7 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.TradeFeedbackWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
@@ -284,19 +285,38 @@ public class BuyerStep4View extends TradeStepView {
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void handleTradeCompleted() {
-        if (!DevEnv.isDevMode()) {
-            String key = "tradeCompleteWithdrawCompletedInfo";
-            //noinspection unchecked
-            new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
-                    .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
-                    .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
-                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
-                    .dontShowAgainId(key)
-                    .show();
-        }
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
         model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+
+        openTradeFeedbackWindow();
+    }
+
+    private void openTradeFeedbackWindow() {
+        String key = "feedbackPopupAfterTrade";
+        if (!DevEnv.isDevMode() && preferences.showAgain(key)) {
+            UserThread.runAfter(() -> {
+                new TradeFeedbackWindow()
+                        .dontShowAgainId(key)
+                        .onAction(this::showNavigateToClosedTradesViewPopup)
+                        .show();
+            }, 500, TimeUnit.MILLISECONDS);
+        } else {
+            showNavigateToClosedTradesViewPopup();
+        }
+    }
+
+    private void showNavigateToClosedTradesViewPopup() {
+        if (!DevEnv.isDevMode()) {
+            UserThread.runAfter(() -> {
+                new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
+                        .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
+                        .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
+                        .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
+                        .dontShowAgainId("tradeCompleteWithdrawCompletedInfo")
+                        .show();
+            }, 500, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void validateWithdrawAddress() {

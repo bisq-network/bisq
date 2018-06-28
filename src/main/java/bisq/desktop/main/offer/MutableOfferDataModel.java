@@ -47,6 +47,7 @@ import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
@@ -85,13 +86,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class EditableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
+public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
     protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
@@ -104,6 +108,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
+    private final ReferralIdService referralIdService;
     private final BSFormatter formatter;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -140,11 +145,11 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EditableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                                  Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
-                                  PriceFeedService priceFeedService, FilterManager filterManager,
-                                  AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
-                                  FeeService feeService, BSFormatter formatter) {
+    public MutableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+                                 Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                                 PriceFeedService priceFeedService, FilterManager filterManager,
+                                 AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
+                                 FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -158,6 +163,7 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
+        this.referralIdService = referralIdService;
         this.formatter = formatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
@@ -244,10 +250,11 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         fillPaymentAccounts();
 
         PaymentAccount account;
-        PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
+
+        PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
+                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId()))) {
             account = lastSelectedPaymentAccount;
         } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
@@ -283,6 +290,10 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         updateBalance();
 
         return true;
+    }
+
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return preferences.getSelectedPaymentAccountForCreateOffer();
     }
 
     void onTabSelected(boolean isSelected) {
@@ -347,11 +358,17 @@ public abstract class EditableOfferDataModel extends OfferDataModel implements B
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
+        Map<String, String> extraDataMap = null;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             extraDataMap = new HashMap<>();
             final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
             extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+        }
+
+        if (referralIdService.getOptionalReferralId().isPresent()) {
+            if (extraDataMap == null)
+                extraDataMap = new HashMap<>();
+            extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
         }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();

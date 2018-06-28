@@ -18,19 +18,24 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 
-import bisq.desktop.main.offer.EditableOfferDataModel;
+import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
@@ -40,25 +45,41 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import com.google.inject.Inject;
 
-class EditOpenOfferDataModel extends EditableOfferDataModel {
+class EditOfferDataModel extends MutableOfferDataModel {
 
+    private final CorePersistenceProtoResolver corePersistenceProtoResolver;
     private OpenOffer openOffer;
     private OpenOffer.State initialState;
 
     @Inject
-    EditOpenOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, BSFormatter formatter) {
-        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, formatter);
+    EditOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter, CorePersistenceProtoResolver corePersistenceProtoResolver) {
+        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, referralIdService, formatter);
+        this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 
-    public void initWithData(OpenOffer openOffer) {
+    public void applyOpenOffer(OpenOffer openOffer) {
         this.openOffer = openOffer;
         this.initialState = openOffer.getState();
-        this.paymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
+        final PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
+        final TradeCurrency selectedTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get();
+
+        this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
+
+        if (paymentAccount.getSingleTradeCurrency() != null)
+            paymentAccount.setSingleTradeCurrency(selectedTradeCurrency);
+        else
+            paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
 
         this.allowAmountUpdate = false;
+    }
+
+    @Override
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        return paymentAccount;
     }
 
     public void populateData() {

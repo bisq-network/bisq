@@ -31,8 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -61,10 +59,8 @@ public class CurrencyList extends ObservableListWrapper<CurrencyListItem> {
 
     private List<CurrencyListItem> getPartitionedSortedItems(List<TradeCurrency> currencies) {
         Map<TradeCurrency, Integer> tradesPerCurrency = countTrades(currencies);
-
-        Comparator<CurrencyListItem> comparator = getComparator();
-        Queue<CurrencyListItem> fiatCurrencies = new PriorityQueue<>(comparator);
-        Queue<CurrencyListItem> cryptoCurrencies = new PriorityQueue<>(comparator);
+        List<CurrencyListItem> fiatCurrencies = new ArrayList<>();
+        List<CurrencyListItem> cryptoCurrencies = new ArrayList<>();
 
         for (Map.Entry<TradeCurrency, Integer> entry : tradesPerCurrency.entrySet()) {
             TradeCurrency currency = entry.getKey();
@@ -80,7 +76,11 @@ public class CurrencyList extends ObservableListWrapper<CurrencyListItem> {
             }
         }
 
-        List<CurrencyListItem> result = Lists.newLinkedList();
+        Comparator<CurrencyListItem> comparator = getComparator();
+        fiatCurrencies.sort(comparator);
+        cryptoCurrencies.sort(comparator);
+
+        List<CurrencyListItem> result = new ArrayList<>();
         result.addAll(fiatCurrencies);
         result.addAll(cryptoCurrencies);
 

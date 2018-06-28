@@ -18,7 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.EditableOfferViewModel;
+import bisq.desktop.main.offer.MutableOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -40,10 +40,10 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
-class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataModel> {
+class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
 
     @Inject
-    public EditOpenOfferViewModel(EditOpenOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public EditOfferViewModel(EditOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
     }
 
@@ -53,8 +53,8 @@ class EditOpenOfferViewModel extends EditableOfferViewModel<EditOpenOfferDataMod
         dataModel.populateData();
     }
 
-    public void initWithData(OpenOffer openOffer) {
-        dataModel.initWithData(openOffer);
+    public void applyOpenOffer(OpenOffer openOffer) {
+        dataModel.applyOpenOffer(openOffer);
     }
 
     public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {

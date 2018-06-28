@@ -80,7 +80,7 @@ import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> extends ActivatableWithDataModel<M> {
+public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> extends ActivatableWithDataModel<M> {
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
     private final SecurityDepositValidator securityDepositValidator;
@@ -174,20 +174,20 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public EditableOfferViewModel(M dataModel,
-                                  FiatVolumeValidator fiatVolumeValidator,
-                                  FiatPriceValidator fiatPriceValidator,
-                                  AltcoinValidator altcoinValidator,
-                                  BtcValidator btcValidator,
-                                  BsqValidator bsqValidator,
-                                  SecurityDepositValidator securityDepositValidator,
-                                  P2PService p2PService,
-                                  WalletsSetup walletsSetup,
-                                  PriceFeedService priceFeedService,
-                                  Navigation navigation,
-                                  Preferences preferences,
-                                  BSFormatter btcFormatter,
-                                  BsqFormatter bsqFormatter) {
+    public MutableOfferViewModel(M dataModel,
+                                 FiatVolumeValidator fiatVolumeValidator,
+                                 FiatPriceValidator fiatPriceValidator,
+                                 AltcoinValidator altcoinValidator,
+                                 BtcValidator btcValidator,
+                                 BsqValidator bsqValidator,
+                                 SecurityDepositValidator securityDepositValidator,
+                                 P2PService p2PService,
+                                 WalletsSetup walletsSetup,
+                                 PriceFeedService priceFeedService,
+                                 Navigation navigation,
+                                 Preferences preferences,
+                                 BSFormatter btcFormatter,
+                                 BsqFormatter bsqFormatter) {
         super(dataModel);
 
         this.fiatVolumeValidator = fiatVolumeValidator;
@@ -221,7 +221,7 @@ public abstract class EditableOfferViewModel<M extends EditableOfferDataModel> e
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
                         amount.set("0.0001");
-                        price.set("11029");
+                        price.set("6700");
                         break;
                     case "LTC":
                         amount.set("50");

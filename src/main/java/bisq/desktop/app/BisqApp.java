@@ -244,7 +244,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
     private void addSceneKeyEventHandler(Scene scene, Injector injector) {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-            Utilities.isAltOrCtrlPressed(KeyCode.W, keyEvent);
             if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
                     Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
                 stop();

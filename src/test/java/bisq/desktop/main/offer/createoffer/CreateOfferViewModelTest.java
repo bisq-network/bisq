@@ -98,7 +98,7 @@ public class CreateOfferViewModelTest {
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, null, null, feeService, bsFormatter);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, null, null, feeService, null, bsFormatter);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 

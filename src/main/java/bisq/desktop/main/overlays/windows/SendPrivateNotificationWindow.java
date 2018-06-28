@@ -131,29 +131,31 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         Button sendButton = new AutoTooltipButton(Res.get("sendPrivateNotificationWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
+                PrivateNotificationPayload privateNotification = new PrivateNotificationPayload(alertMessageTextArea.getText());
                 if (!sendPrivateNotificationHandler.handle(
-                        new PrivateNotificationPayload(alertMessageTextArea.getText()),
+                        privateNotification,
                         pubKeyRing,
                         nodeAddress,
                         keyInputTextField.getText(),
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.info("PrivateNotificationMessage arrived at peer.");
+                                log.info("PrivateNotificationPayload arrived at peer {}.", nodeAddress);
                                 new Popup<>().feedback(Res.get("shared.messageArrived"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.info("PrivateNotificationMessage was stored in mailbox.");
+                                log.info("PrivateNotificationPayload stored in mailbox for peer {}.", nodeAddress);
                                 new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                log.error("sendEncryptedMailboxMessage failed. message=" + message);
+                                log.error("PrivateNotificationPayload failed: Peer {}, errorMessage={}", nodeAddress,
+                                        errorMessage);
                                 new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }

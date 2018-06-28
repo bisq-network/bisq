@@ -78,6 +78,8 @@ public abstract class TradeStepView extends AnchorPane {
     private Subscription txIdSubscription;
     private Clock.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
+    protected Label infoLabel;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -144,6 +146,9 @@ public abstract class TradeStepView extends AnchorPane {
         });
 
         model.clock.addListener(clockListener);
+
+        if (infoLabel != null)
+            infoLabel.setText(getInfoText());
     }
 
     public void deactivate() {
@@ -211,7 +216,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected void addInfoBlock() {
         FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
-        FormBuilder.addMultilineLabel(gridPane, gridRow, getInfoText(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        infoLabel = FormBuilder.addMultilineLabel(gridPane, gridRow, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 
     protected String getInfoText() {

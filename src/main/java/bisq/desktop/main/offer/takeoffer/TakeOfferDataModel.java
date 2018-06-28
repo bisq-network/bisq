@@ -213,8 +213,8 @@ class TakeOfferDataModel extends OfferDataModel {
                 calculateTotalToPay();
                 log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
             } else {
-                log.warn("We received the tx fee respnse after we have shown the funding screen and ignore that " +
-                        "to avoid that the total funds to pay changes due cahnged tx fees.");
+                log.debug("We received the tx fee response after we have shown the funding screen and ignore that " +
+                        "to avoid that the total funds to pay changes due changed tx fees.");
             }
         }, null);
 

@@ -26,7 +26,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
-import bisq.desktop.main.portfolio.editoffer.EditOpenOfferView;
+import bisq.desktop.main.portfolio.editoffer.EditOfferView;
 import bisq.desktop.main.portfolio.failedtrades.FailedTradesView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
@@ -64,7 +64,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final FailedTradesManager failedTradesManager;
-    private EditOpenOfferView editOpenOfferView;
+    private EditOfferView editOfferView;
     private boolean editOpenOfferViewOpen;
     private OpenOffer openOffer;
     private OpenOffersView openOffersView;
@@ -102,11 +102,11 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                 navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
             else if (newValue == editOpenOfferTab) {
                 //noinspection unchecked
-                navigation.navigateTo(MainView.class, PortfolioView.class, EditOpenOfferView.class);
+                navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
             }
 
             if (oldValue != null && oldValue == editOpenOfferTab)
-                editOpenOfferView.onTabSelected(false);
+                editOfferView.onTabSelected(false);
 
         };
 
@@ -120,9 +120,9 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     private void onEditOpenOfferRemoved() {
         editOpenOfferViewOpen = false;
-        if (editOpenOfferView != null) {
-            editOpenOfferView.onClose();
-            editOpenOfferView = null;
+        if (editOfferView != null) {
+            editOfferView.onClose();
+            editOfferView = null;
         }
 
         //noinspection unchecked
@@ -156,8 +156,8 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
             navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == editOpenOfferTab) {
             //noinspection unchecked
-            navigation.navigateTo(MainView.class, PortfolioView.class, EditOpenOfferView.class);
-            if (editOpenOfferView != null) editOpenOfferView.onTabSelected(true);
+            navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
+            if (editOfferView != null) editOfferView.onTabSelected(true);
         }
     }
 
@@ -185,19 +185,19 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
             currentTab = closedTradesTab;
         } else if (view instanceof FailedTradesView) {
             currentTab = failedTradesTab;
-        } else if (view instanceof EditOpenOfferView) {
+        } else if (view instanceof EditOfferView) {
             if (openOffer != null) {
-                if (editOpenOfferView == null) {
-                    editOpenOfferView = (EditOpenOfferView) view;
-                    editOpenOfferView.initWithData(openOffer);
+                if (editOfferView == null) {
+                    editOfferView = (EditOfferView) view;
+                    editOfferView.applyOpenOffer(openOffer);
                     editOpenOfferTab = new Tab(Res.get("portfolio.tab.editOpenOffer"));
-                    editOpenOfferView.setCloseHandler(() -> {
+                    editOfferView.setCloseHandler(() -> {
                         root.getTabs().remove(editOpenOfferTab);
                     });
                     root.getTabs().add(editOpenOfferTab);
                 }
                 if (currentTab != editOpenOfferTab)
-                    editOpenOfferView.onTabSelected(true);
+                    editOfferView.onTabSelected(true);
 
                 currentTab = editOpenOfferTab;
             } else {
@@ -218,7 +218,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
             if (!editOpenOfferViewOpen) {
                 editOpenOfferViewOpen = true;
                 PortfolioView.this.openOffer = openOffer;
-                navigation.navigateTo(MainView.class, PortfolioView.this.getClass(), EditOpenOfferView.class);
+                navigation.navigateTo(MainView.class, PortfolioView.this.getClass(), EditOfferView.class);
             } else {
                 log.error("You have already a \"Edit Offer\" tab open.");
             }

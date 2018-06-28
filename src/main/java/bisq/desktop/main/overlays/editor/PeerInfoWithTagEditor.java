@@ -28,6 +28,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import javafx.animation.Interpolator;
@@ -59,6 +60,7 @@ import javafx.collections.ObservableList;
 import javafx.util.Duration;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -194,9 +196,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
-                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), useDevPrivilegeKeys)
-                        .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
-                        .show();
+                // We need to close first our current popup and the open delayed the new one,
+                // otherwise the text input handler does not work.
+                doClose();
+                UserThread.runAfter(() -> {
+                    new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), useDevPrivilegeKeys)
+                            .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
+                            .show();
+                }, 100, TimeUnit.MILLISECONDS);
             }
         };
     }
