@@ -436,8 +436,6 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
         bsqBalanceUtil.deactivate();
         bsqWalletService.removeBsqBalanceListener(this);
 
-
-        bsqBalanceUtil.deactivate();
         lockedTxs.predicateProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);

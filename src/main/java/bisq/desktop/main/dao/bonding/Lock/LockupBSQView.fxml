@@ -22,8 +22,9 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.bonding.Lock.LockupBSQView"
+          hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"
           xmlns:fx="http://javafx.com/fxml">
 
     <columnConstraints>
