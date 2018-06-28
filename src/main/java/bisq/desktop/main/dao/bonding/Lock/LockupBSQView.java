@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.wallet.send;
+package bisq.desktop.main.dao.bonding.Lock;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
@@ -35,22 +35,19 @@ import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcastException;
-import bisq.core.btc.wallet.TxBroadcastTimeoutException;
-import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.voting.proposal.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -64,23 +61,20 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+public class LockupBSQView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
-    private final BtcWalletService btcWalletService;
-    private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
     private final Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
-    private final BsqAddressValidator bsqAddressValidator;
+    private final DaoFacade daoFacade;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
-    private Button sendButton;
-    private InputTextField receiversAddressInputTextField;
+    private InputTextField timeInputTextField;
+    private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
 
 
@@ -89,44 +83,44 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqSendView(BsqWalletService bsqWalletService,
-                        BtcWalletService btcWalletService,
-                        WalletsManager walletsManager,
-                        WalletsSetup walletsSetup,
-                        P2PService p2PService,
-                        BsqFormatter bsqFormatter,
-                        BSFormatter btcFormatter,
-                        Navigation navigation,
-                        BsqBalanceUtil bsqBalanceUtil,
-                        BsqValidator bsqValidator,
-                        BsqAddressValidator bsqAddressValidator) {
+    private LockupBSQView(BsqWalletService bsqWalletService,
+                          BtcWalletService btcWalletService,
+                          WalletsManager walletsManager,
+                          WalletsSetup walletsSetup,
+                          P2PService p2PService,
+                          BsqFormatter bsqFormatter,
+                          BSFormatter btcFormatter,
+                          Navigation navigation,
+                          BsqBalanceUtil bsqBalanceUtil,
+                          BsqValidator bsqValidator,
+                          BsqAddressValidator bsqAddressValidator,
+                          DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
-        this.btcWalletService = btcWalletService;
-        this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
         this.navigation = navigation;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
-        this.bsqAddressValidator = bsqAddressValidator;
+        this.daoFacade = daoFacade;
     }
 
     @Override
     public void initialize() {
+        // TODO: Show balance locked up in bonds
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.bonding.lock.lockBSQ"), Layout.GROUP_DISTANCE);
 
-        receiversAddressInputTextField = addLabelInputTextField(root, gridRow,
-                Res.get("dao.wallet.send.receiverAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
-        receiversAddressInputTextField.setValidator(bsqAddressValidator);
-
-        amountInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount")).second;
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Restrictions.getMinNonDustOutput().value));
+        amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", Restrictions.getMinNonDustOutput().value));
         amountInputTextField.setValidator(bsqValidator);
+        timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"), Layout.GRID_GAP).second;
+        timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
+                Param.LOCKTIME_MIN.getDefaultValue(), Param.LOCKTIME_MAX.getDefaultValue()));
+        // TODO: add some int validator
+//        timeInputTextField.setValidator(bsqValidator);
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
@@ -135,55 +129,27 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         bsqWalletService.getUnlockingBondsBalance());
         };
 
-        sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
+        lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
 
-        sendButton.setOnAction((event) -> {
-            // TODO break up in methods
+        lockupButton.setOnAction((event) -> {
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
-                Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+                Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+                int lockupTime = Integer.parseInt(timeInputTextField.getText());
                 try {
-                    Transaction preparedSendTx = bsqWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
-                    Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
-                    Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-                    Coin miningFee = signedTx.getFee();
-                    int txSize = signedTx.bitcoinSerialize().length;
-                    new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
-                            .confirmation(Res.get("dao.wallet.send.sendFunds.details",
-                                    bsqFormatter.formatCoinWithCode(receiverAmount),
-                                    receiversAddressInputTextField.getText(),
-                                    btcFormatter.formatCoinWithCode(miningFee),
-                                    CoinUtil.getFeePerByte(miningFee, txSize),
-                                    txSize / 1000d,
-                                    bsqFormatter.formatCoinWithCode(receiverAmount)))
+                    new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
+                            .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
+                                    bsqFormatter.formatCoinWithCode(lockupAmount),
+                                    lockupTime
+                            ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                walletsManager.publishAndCommitBsqTx(txWithBtcFee, new TxBroadcaster.Callback() {
-                                    @Override
-                                    public void onSuccess(Transaction transaction) {
-                                        log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
-                                    }
-
-                                    @Override
-                                    public void onTimeout(TxBroadcastTimeoutException exception) {
-                                        //TODO handle
-                                        new Popup<>().warning(exception.toString());
-                                    }
-
-                                    @Override
-                                    public void onTxMalleability(TxMalleabilityException exception) {
-                                        //TODO handle
-                                        new Popup<>().warning(exception.toString());
-                                    }
-
-                                    @Override
-                                    public void onFailure(TxBroadcastException exception) {
-                                        //TODO handle
-                                        new Popup<>().warning(exception.toString());
-                                    }
-                                });
-
-                                receiversAddressInputTextField.setText("");
+                                daoFacade.publishLockupTx(lockupAmount,
+                                        lockupTime,
+                                        () -> {
+                                            new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                        },
+                                        errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+                                );
                                 amountInputTextField.setText("");
                             })
                             .closeButtonText(Res.get("shared.cancel"))
@@ -212,7 +178,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     @Override
     protected void activate() {
         bsqBalanceUtil.activate();
-        receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         bsqWalletService.addBsqBalanceListener(this);
         onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
@@ -223,7 +188,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        receiversAddressInputTextField.focusedProperty().removeListener(focusOutListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
         bsqWalletService.removeBsqBalanceListener(this);
     }
@@ -235,9 +199,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(confirmedBalance);
-        boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
-                bsqValidator.validate(amountInputTextField.getText()).isValid;
-        sendButton.setDisable(!isValid);
+        boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid;
+        lockupButton.setDisable(!isValid);
     }
 }
-

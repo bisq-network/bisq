@@ -114,7 +114,8 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getPendingBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockedInBondsBalance());
+                bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
 
         voteButton.setOnAction(e -> onVote());
 
@@ -141,7 +142,8 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     public void onUpdateBalances(Coin confirmedBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance) {
+                                 Coin lockedInBondsBalance,
+                                 Coin unlockingBondsBalance) {
         stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
                 bsqFormatter.formatCoinWithCode(confirmedBalance)));
     }
