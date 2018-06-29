@@ -133,7 +133,7 @@ class TransactionsListItem {
                             txFeeForBsqPayment = true;
 
                             //
-                            final Optional<TxType> txTypeOptional = daoFacade.getTxType(txId);
+                            final Optional<TxType> txTypeOptional = daoFacade.getOptionalTxType(txId);
                             if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
                                 details = Res.get("funds.tx.proposal");
                         } else {

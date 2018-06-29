@@ -140,7 +140,7 @@ class LockedBsqTxListItem {
 
     public TxType getTxType() {
         return daoFacade.getTx(txId)
-                .flatMap(tx -> daoFacade.getTxType(tx.getId()))
+                .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
