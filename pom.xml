@@ -100,32 +100,19 @@
     <dependencies>
         <dependency>
             <groupId>network.bisq</groupId>
-            <artifactId>bisq-desktop</artifactId>
-            <version>e9e656f85b</version>
-        </dependency>
-        <!--TODO once bisq-desktop is released and depends on non-snapshots we can get rid of following bisq-network dependencies-->
-        <dependency>
-            <groupId>network.bisq</groupId>
             <artifactId>bisq-core</artifactId>
-            <version>834be82e2c</version>
+            <version>e7ec316390a11dce2d1d87ca7f891d4deeae2ff9</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-p2p</artifactId>
-            <version>44f0ef776e3</version>
+            <version>787e009008b845df5f22da8762d5f2f3807086ec</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-common</artifactId>
-            <version>707c3e836b</version>
+            <version>c129214ff0191cf5655a55e0fd4ad2670881afca</version>
         </dependency>
-        <!-- enable this to test with locally built bisq-exchange
-        <dependency>
-            <groupId>io.bisq</groupId>
-            <artifactId>gui</artifactId>
-            <version>${bisq.version}</version>
-        </dependency>
-        -->
         <dependency>
             <!--force proper guava version since one of arquillian dependencies forces 18.0-->
             <groupId>com.google.guava</groupId>

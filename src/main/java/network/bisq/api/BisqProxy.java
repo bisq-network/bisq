@@ -1,5 +1,39 @@
 package network.bisq.api;
 
+import com.google.common.util.concurrent.FutureCallback;
+
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
+import javafx.collections.ObservableList;
+
+import org.jetbrains.annotations.NotNull;
+
+import org.spongycastle.crypto.params.KeyParameter;
+
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
@@ -12,10 +46,29 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.btc.*;
-import bisq.core.btc.wallet.*;
-import bisq.core.locale.*;
-import bisq.core.offer.*;
+import bisq.core.btc.AddressEntry;
+import bisq.core.btc.AddressEntryException;
+import bisq.core.btc.BitcoinNodes;
+import bisq.core.btc.InsufficientFundsException;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferBookService;
+import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
@@ -29,45 +82,58 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.trade.protocol.*;
+import bisq.core.trade.protocol.BuyerAsMakerProtocol;
+import bisq.core.trade.protocol.BuyerAsTakerProtocol;
+import bisq.core.trade.protocol.SellerAsMakerProtocol;
+import bisq.core.trade.protocol.SellerAsTakerProtocol;
+import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
 import bisq.core.util.validation.InputValidator;
-import bisq.desktop.util.validation.BtcAddressValidator;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import network.bisq.api.model.*;
-import network.bisq.api.model.Currency;
-import network.bisq.api.model.payment.PaymentAccountHelper;
-import network.bisq.api.service.TokenRegistry;
-import javafx.collections.ObservableList;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.*;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.Wallet;
-import org.jetbrains.annotations.NotNull;
-import org.spongycastle.crypto.params.KeyParameter;
-
-import javax.annotation.Nullable;
-import javax.validation.ValidationException;
-import java.io.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.validation.ValidationException;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import network.bisq.api.model.AuthResult;
+import network.bisq.api.model.BitcoinNetworkStatus;
+import network.bisq.api.model.ClosedTradableConverter;
+import network.bisq.api.model.ClosedTradableDetails;
+import network.bisq.api.model.Currency;
+import network.bisq.api.model.CurrencyList;
+import network.bisq.api.model.Market;
+import network.bisq.api.model.MarketList;
+import network.bisq.api.model.P2PNetworkConnection;
+import network.bisq.api.model.P2PNetworkStatus;
+import network.bisq.api.model.PaymentAccountList;
+import network.bisq.api.model.Preferences;
+import network.bisq.api.model.PreferencesAvailableValues;
+import network.bisq.api.model.PriceFeed;
+import network.bisq.api.model.SeedWords;
+import network.bisq.api.model.VersionDetails;
+import network.bisq.api.model.WalletAddress;
+import network.bisq.api.model.WalletAddressList;
+import network.bisq.api.model.WalletDetails;
+import network.bisq.api.model.WalletTransaction;
+import network.bisq.api.model.WalletTransactionList;
+import network.bisq.api.model.payment.PaymentAccountHelper;
+import network.bisq.api.service.TokenRegistry;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.Wallet;
 
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -731,7 +797,7 @@ public class BisqProxy {
         if (null == registrationKey) {
             throw new RuntimeException("Missing registration key");
         }
-        AddressEntry arbitratorDepositAddressEntry = btcWalletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
+        AddressEntry arbitratorDepositAddressEntry = btcWalletService.getArbitratorAddressEntry();
         String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
         Arbitrator arbitrator = new Arbitrator(
                 p2PService.getAddress(),
@@ -789,7 +855,7 @@ public class BisqProxy {
     }
 
     public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
-        final AddressEntry entry = btcWalletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
+        final AddressEntry entry = btcWalletService.getFreshAddressEntry();
         return convertAddressEntryToWalletAddress(entry, btcWalletService);
     }
 

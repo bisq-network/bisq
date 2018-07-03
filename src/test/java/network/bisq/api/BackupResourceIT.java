@@ -1,5 +1,18 @@
 package network.bisq.api;
 
+import java.io.InputStream;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.apache.commons.io.IOUtils;
@@ -16,22 +29,11 @@ import org.arquillian.cube.spi.CubeOutput;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import static network.bisq.api.RegexMatcher.matchesRegex;
 import static io.restassured.RestAssured.given;
+import static network.bisq.api.RegexMatcher.matchesRegex;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class BackupResourceIT {
@@ -276,7 +278,7 @@ public class BackupResourceIT {
     }
 
     private void removeAllBackups() {
-        final CubeOutput cubeOutput = alice.exec("rm", APP_DIR_VOLUME_HOST_PATH + "/backup", "-rf");
+        final CubeOutput cubeOutput = alice.exec("rm", APP_DIR_VOLUME_HOST_PATH + "/backup*", "-rf");
         assertEquals("Command 'rm backup/*' should succeed", "", cubeOutput.getError());
     }
 

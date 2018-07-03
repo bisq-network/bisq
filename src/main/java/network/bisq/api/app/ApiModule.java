@@ -17,8 +17,10 @@
 
 package network.bisq.api.app;
 
-import bisq.common.app.AppModule;
 import com.google.inject.Singleton;
+
+import bisq.common.app.AppModule;
+import network.bisq.api.BtcAddressValidator;
 import network.bisq.api.service.BisqApiApplication;
 import network.bisq.api.service.TokenRegistry;
 import org.springframework.core.env.Environment;
@@ -33,7 +35,7 @@ public class ApiModule extends AppModule {
     protected void configure() {
         // added for API usage
         bind(BisqApiApplication.class).in(Singleton.class);
-        bind(MainViewModelHeadless.class).in(Singleton.class);
+        bind(BtcAddressValidator.class);
         bind(TokenRegistry.class).in(Singleton.class);
         bind(ApiEnvironment.class).toInstance((ApiEnvironment) environment);
     }
