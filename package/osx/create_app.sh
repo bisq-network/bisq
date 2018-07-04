@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="0.7.0"
+version="0.7.1"
 
 ./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
 
