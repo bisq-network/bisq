@@ -133,9 +133,10 @@ class LockedBsqTxListItem {
 
     public boolean isSpent() {
         Optional<TxOutput> optionalTxOutput = stateService.getLockedTxOutput(txId);
-        if (optionalTxOutput.isPresent())
-            return !stateService.isUnspent(optionalTxOutput.get());
-        return true;
+        if (!optionalTxOutput.isPresent())
+            return true;
+
+        return !stateService.isUnspent(optionalTxOutput.get().getKey());
     }
 
     public TxType getTxType() {
