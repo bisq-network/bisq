@@ -90,7 +90,7 @@ class LockedBsqTxListItem {
 
         //TODO SQ: use DaoFacade instead of direct access to stateService
         Optional<Integer> opLockTime = stateService.getLockTime(transaction.getHashAsString());
-        lockTime = opLockTime.isPresent() ? opLockTime.get() : -1;
+        lockTime = opLockTime.orElse(-1);
 
         button = new AutoTooltipButton();
         button.setMinWidth(70);
