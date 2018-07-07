@@ -88,6 +88,7 @@ class LockedBsqTxListItem {
 
         amount = bsqWalletService.getValueLockedUpInBond(transaction);
 
+        //TODO SQ: use DaoFacade instead of direct access to stateService
         Optional<Integer> opLockTime = stateService.getLockTime(transaction.getHashAsString());
         lockTime = opLockTime.isPresent() ? opLockTime.get() : -1;
 

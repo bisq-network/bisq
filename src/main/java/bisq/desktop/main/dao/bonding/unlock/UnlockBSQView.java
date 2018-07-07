@@ -322,6 +322,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
             }
 
             Coin unlockAmount = Coin.valueOf(lockedTxOutput.get().getValue());
+            //TODO SQ: use DaoFacade instead of direct access to stateService
             Optional<Integer> opLockTime = stateService.getLockTime(selectedItem.getTxId());
             int lockTime = opLockTime.isPresent() ? opLockTime.get() : -1;
 
