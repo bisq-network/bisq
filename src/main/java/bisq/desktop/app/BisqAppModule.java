@@ -19,7 +19,7 @@ package bisq.desktop.app;
 
 import bisq.desktop.DesktopModule;
 
-import bisq.core.app.CoreModule;
+import bisq.core.CoreModule;
 
 import bisq.common.app.AppModule;
 

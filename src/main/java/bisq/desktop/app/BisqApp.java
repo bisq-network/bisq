@@ -117,9 +117,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         appLaunchedHandler.accept(this);
     }
 
-    public void startApplication() {
+    public void startApplication(Runnable onUiReadyHandler) {
         try {
             MainView mainView = loadMainView(injector);
+            mainView.setOnUiReadyHandler(onUiReadyHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 

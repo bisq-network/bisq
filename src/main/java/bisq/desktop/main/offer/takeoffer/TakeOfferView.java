@@ -763,7 +763,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void showNextStepAfterAmountIsSet() {
-        if (DevEnv.DAO_TRADING_ACTIVATED)
+        if (DevEnv.isDaoTradingActivated())
             showFeeOption();
         else
             onShowPayFundsScreen();

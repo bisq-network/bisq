@@ -69,8 +69,8 @@ public class MoneyGramForm extends PaymentMethodForm {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
                 payload.getHolderName());
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                       Res.getWithCol("payment.bank.country"),
-                       CountryUtil.getNameAndCode(((MoneyGramAccountPayload) paymentAccountPayload).getCountryCode()));
+                Res.getWithCol("payment.bank.country"),
+                CountryUtil.getNameAndCode(((MoneyGramAccountPayload) paymentAccountPayload).getCountryCode()));
         if (BankUtil.isStateRequired(payload.getCountryCode()))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
                     payload.getState());
