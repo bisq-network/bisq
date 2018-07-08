@@ -170,9 +170,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void publishMyProposal(ProposalType type) {
         try {
-            final ProposalWithTransaction ballotWithTransaction = getBallotWithTransaction(type);
-            Proposal proposal = ballotWithTransaction.getProposal();
-            Transaction transaction = ballotWithTransaction.getTransaction();
+            final ProposalWithTransaction proposalWithTransaction = getProposalWithTransaction(type);
+            Proposal proposal = proposalWithTransaction.getProposal();
+            Transaction transaction = proposalWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             final Coin fee = daoFacade.getProposalFee();
@@ -210,7 +210,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
-    private ProposalWithTransaction getBallotWithTransaction(ProposalType type)
+    private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
             WalletException, IOException {
 
