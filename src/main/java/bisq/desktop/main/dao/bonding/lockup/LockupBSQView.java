@@ -35,7 +35,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.voting.proposal.param.Param;
+import bisq.core.dao.state.ext.Param;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
