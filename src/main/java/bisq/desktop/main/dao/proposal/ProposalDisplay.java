@@ -32,10 +32,13 @@ import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
+import bisq.core.dao.voting.proposal.param.Param;
+import bisq.core.dao.voting.proposal.param.ParamProposal;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.BsqFormatter;
 
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
@@ -47,7 +50,10 @@ import javafx.geometry.HPos;
 
 import javafx.beans.value.ChangeListener;
 
-import java.util.Objects;
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
+
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +70,9 @@ public class ProposalDisplay {
     private BsqWalletService bsqWalletService;
     public InputTextField uidTextField, nameTextField, titleTextField, linkInputTextField;
     @Nullable
-    public InputTextField requestedBsqTextField, bsqAddressTextField;
+    public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
+    @Nullable
+    public ComboBox<Param> paramComboBox;
     private int gridRow;
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
@@ -96,12 +104,16 @@ public class ProposalDisplay {
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
         int rowSpan;
+
+        boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
+                proposalType == ProposalType.CHANGE_PARAM;
+        ;
         if (isMakeProposalScreen) {
-            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 7 : 5;
+            rowSpan = hasAddedFields ? 7 : 5;
         } else if (showDetails) {
-            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 8 : 6;
+            rowSpan = hasAddedFields ? 8 : 6;
         } else {
-            rowSpan = proposalType == ProposalType.COMPENSATION_REQUEST ? 5 : 4;
+            rowSpan = hasAddedFields ? 5 : 4;
         }
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
@@ -117,7 +129,8 @@ public class ProposalDisplay {
 
         titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("dao.proposal.title")).second;
 
-        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"), Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
+        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"),
+                Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
         descriptionTextArea.setMaxHeight(42); // for 2 lines
         descriptionTextArea.setMinHeight(descriptionTextArea.getMaxHeight());
         if (isMakeProposalScreen)
@@ -129,23 +142,44 @@ public class ProposalDisplay {
         linkHyperlinkWithIcon.setManaged(false);
         linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
 
-        if (proposalType == ProposalType.COMPENSATION_REQUEST) {
-            requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
+        switch (proposalType) {
+            case COMPENSATION_REQUEST:
+                requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
+                if (feeService != null) {
+                    BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
+                    //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
+                    //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
+                    bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
+                    requestedBsqTextField.setValidator(bsqValidator);
+                }
+                // TODO validator, addressTF
+                if (showDetails) {
+                    bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
+                            Res.get("dao.proposal.display.bsqAddress")).second;
+                    bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+                    bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
+                }
+                break;
+            case GENERIC:
+                break;
+            case CHANGE_PARAM:
+                paramComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("dao.proposal.display.paramComboBox.label")).second;
+                paramComboBox.setItems(FXCollections.observableArrayList(Param.values()));
+                paramComboBox.setConverter(new StringConverter<Param>() {
+                    @Override
+                    public String toString(Param param) {
+                        return param.name();
+                    }
 
-            if (feeService != null) {
-                BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-                //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
-                //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
-                bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
-                Objects.requireNonNull(requestedBsqTextField).setValidator(bsqValidator);
-            }
-            // TODO validator, addressTF
-            if (showDetails) {
-                bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.bsqAddress")).second;
-                Objects.requireNonNull(bsqAddressTextField).setText("B" + bsqWalletService.getUnusedAddress().toBase58());
-                bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
-            }
+                    @Override
+                    public Param fromString(String string) {
+                        return null;
+                    }
+                });
+                paramValueTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.paramValue")).second;
+                break;
+            case REMOVE_ALTCOIN:
+                break;
         }
 
         if (!isMakeProposalScreen && showDetails)
@@ -167,9 +201,13 @@ public class ProposalDisplay {
         linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         if (proposal instanceof CompensationProposal) {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
-            Objects.requireNonNull(requestedBsqTextField).setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
+            requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
                 bsqAddressTextField.setText(compensationProposal.getBsqAddress());
+        } else if (proposal instanceof ParamProposal) {
+            ParamProposal paramProposal = (ParamProposal) proposal;
+            paramComboBox.getSelectionModel().select(paramProposal.getParam());
+            paramValueTextField.setText(String.valueOf(paramProposal.getParamValue()));
         }
         if (txIdTextField != null)
             txIdTextField.setup(proposal.getTxId());
@@ -184,6 +222,8 @@ public class ProposalDisplay {
         if (linkHyperlinkWithIcon != null) linkHyperlinkWithIcon.clear();
         if (requestedBsqTextField != null) requestedBsqTextField.clear();
         if (bsqAddressTextField != null) bsqAddressTextField.clear();
+        if (paramComboBox != null) paramComboBox.getSelectionModel().clearSelection();
+        if (paramValueTextField != null) paramValueTextField.clear();
         if (txIdTextField != null) txIdTextField.cleanup();
         if (descriptionTextArea != null) descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
     }
@@ -198,6 +238,11 @@ public class ProposalDisplay {
             requestedBsqTextField.setText("14000");
         if (bsqAddressTextField != null)
             bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+
+        if (paramComboBox != null)
+            paramComboBox.getSelectionModel().select(8); // PROPOSAL_FEE
+        if (paramValueTextField != null)
+            paramValueTextField.setText("333");
     }
 
     public void setEditable(boolean isEditable) {
@@ -209,6 +254,11 @@ public class ProposalDisplay {
             requestedBsqTextField.setEditable(isEditable);
         if (bsqAddressTextField != null)
             bsqAddressTextField.setEditable(isEditable);
+
+        if (paramComboBox != null)
+            paramComboBox.setEditable(isEditable);
+        if (paramValueTextField != null)
+            paramValueTextField.setEditable(isEditable);
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);

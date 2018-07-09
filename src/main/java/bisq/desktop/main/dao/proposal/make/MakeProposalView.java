@@ -37,6 +37,7 @@ import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.ProposalWithTransaction;
+import bisq.core.dao.voting.proposal.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.BSFormatter;
@@ -63,12 +64,12 @@ import javafx.util.StringConverter;
 import java.io.IOException;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
@@ -218,12 +219,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
         switch (type) {
             case COMPENSATION_REQUEST:
+                checkNotNull(proposalDisplay.requestedBsqTextField,
+                        "proposalDisplay.requestedBsqTextField must not be null");
+                checkNotNull(proposalDisplay.bsqAddressTextField,
+                        "proposalDisplay.bsqAddressTextField must not be null");
                 return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bsqFormatter.parseToCoin(Objects.requireNonNull(proposalDisplay.requestedBsqTextField).getText()),
-                        Objects.requireNonNull(proposalDisplay.bsqAddressTextField).getText());
+                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()),
+                        proposalDisplay.bsqAddressTextField.getText());
             case GENERIC:
                 //TODO
                 throw new RuntimeException("Not implemented yet");
@@ -234,8 +239,26 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());*/
             case CHANGE_PARAM:
-                //TODO
-                throw new RuntimeException("Not implemented yet");
+                Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
+                if (selectedParam == null)
+                    throw new ValidationException("selectedParam is null");
+                String paramValueAsString = proposalDisplay.paramValueTextField.getText();
+                if (paramValueAsString == null || paramValueAsString.isEmpty())
+                    throw new ValidationException("paramValue is null or empty");
+                long paramValue;
+                try {
+                    paramValue = Long.valueOf(paramValueAsString);
+                } catch (Throwable t) {
+                    throw new ValidationException("paramValue is not a long value", t);
+                }
+                //TODO add more custom param validation
+
+                return daoFacade.getParamProposalWithTransaction(proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.titleTextField.getText(),
+                        proposalDisplay.descriptionTextArea.getText(),
+                        proposalDisplay.linkInputTextField.getText(),
+                        selectedParam,
+                        paramValue);
             case REMOVE_ALTCOIN:
                 //TODO
                 throw new RuntimeException("Not implemented yet");
