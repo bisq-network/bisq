@@ -107,13 +107,17 @@ public class ProposalDisplay {
 
         boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
                 proposalType == ProposalType.CHANGE_PARAM;
-        ;
         if (isMakeProposalScreen) {
             rowSpan = hasAddedFields ? 7 : 5;
         } else if (showDetails) {
             rowSpan = hasAddedFields ? 8 : 6;
         } else {
-            rowSpan = hasAddedFields ? 5 : 4;
+            if (proposalType == ProposalType.COMPENSATION_REQUEST)
+                rowSpan = 5;
+            else if (proposalType == ProposalType.CHANGE_PARAM)
+                rowSpan = 6;
+            else
+                rowSpan = 4;
         }
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
@@ -256,7 +260,7 @@ public class ProposalDisplay {
             bsqAddressTextField.setEditable(isEditable);
 
         if (paramComboBox != null)
-            paramComboBox.setEditable(isEditable);
+            paramComboBox.setDisable(!isEditable);
         if (paramValueTextField != null)
             paramValueTextField.setEditable(isEditable);
 
