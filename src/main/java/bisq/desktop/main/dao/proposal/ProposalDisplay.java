@@ -32,8 +32,8 @@ import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
+import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.dao.voting.proposal.param.Param;
-import bisq.core.dao.voting.proposal.param.ParamProposal;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.util.BsqFormatter;
@@ -204,10 +204,10 @@ public class ProposalDisplay {
             requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
                 bsqAddressTextField.setText(compensationProposal.getBsqAddress());
-        } else if (proposal instanceof ParamProposal) {
-            ParamProposal paramProposal = (ParamProposal) proposal;
-            paramComboBox.getSelectionModel().select(paramProposal.getParam());
-            paramValueTextField.setText(String.valueOf(paramProposal.getParamValue()));
+        } else if (proposal instanceof ChangeParamProposal) {
+            ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
+            paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
+            paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
         }
         if (txIdTextField != null)
             txIdTextField.setup(proposal.getTxId());
