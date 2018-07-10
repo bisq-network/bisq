@@ -34,7 +34,7 @@ Staying in Touch
 Contact the team and keep up to date using any of the following:
 
  - The [Bisq website](https://bisq.network)
- - GitHub [Issues](https://github.com/bisq-network/exchange/issues)
+ - GitHub [Issues](https://github.com/bisq-network/bisq-desktop/issues)
  - The [Bisq forum]( https://bisq.community)
  - The [#bisq](https://webchat.freenode.net/?channels=bisq) IRC channel on Freenode
  - Our [contributor mailing list](https://lists.bisq.network/listinfo/bisq-contrib)
