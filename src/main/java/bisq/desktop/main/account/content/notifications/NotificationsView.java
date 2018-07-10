@@ -54,7 +54,7 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     private Button webCamButton;
     private Button wipeOutButton;
     private Button devButton;
-    private ChangeListener<Boolean> useSoundCheckBoxListener;
+    private ChangeListener<Boolean> useSoundCheckBoxListener, tradeCheckBoxListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +73,6 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        mobileNotificationService.init();
-
         FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
         webCamButton = FormBuilder.addLabelButton(root, gridRow, Res.get("account.notifications.webcam.label"), Res.get("account.notifications.webcam.title"), Layout.FIRST_ROW_DISTANCE).second;
         webCamButton.setDefaultButton(true);
@@ -113,7 +111,11 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         tradeCheckBox = FormBuilder.addLabelCheckBox(root, gridRow, Res.get("account.notifications.trade.label"),
                 Res.get("account.notifications.checkbox.title"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-
+        tradeCheckBox.setSelected(preferences.isUseTradeNotifications());
+        tradeCheckBoxListener = (observable, oldValue, newValue) -> {
+            mobileNotificationService.getUseTradeNotificationsProperty().set(newValue);
+            preferences.setUseTradeNotifications(newValue);
+        };
         marketCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow, Res.get("account.notifications.market.label"),
                 Res.get("account.notifications.checkbox.title")).second;
 
@@ -148,12 +150,14 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         tokenInputTextField.textProperty().addListener(tokenInputTextFieldListener);
+        tradeCheckBox.selectedProperty().addListener(tradeCheckBoxListener);
         useSoundCheckBox.selectedProperty().addListener(useSoundCheckBoxListener);
     }
 
     @Override
     protected void deactivate() {
         tokenInputTextField.textProperty().removeListener(tokenInputTextFieldListener);
+        tradeCheckBox.selectedProperty().removeListener(tradeCheckBoxListener);
         useSoundCheckBox.selectedProperty().removeListener(useSoundCheckBoxListener);
     }
 
@@ -167,8 +171,9 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         wipeOutButton.setDisable(disable);
         tradeCheckBox.setDisable(disable);
         useSoundCheckBox.setDisable(disable);
-        marketCheckBox.setDisable(disable);
-        priceCheckBox.setDisable(disable);
+        // not impl yet. so keep it inactive
+        marketCheckBox.setDisable(true);
+        priceCheckBox.setDisable(true);
         devButton.setDisable(disable);
     }
 }
