@@ -82,6 +82,7 @@ import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
@@ -95,6 +96,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
     private Label versionLabel;
+    @Setter
+    private Runnable onUiReadyHandler;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -309,7 +312,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         // Delay a bit to give time for rendering the splash screen
-        UserThread.execute(model::start);
+        UserThread.execute(() -> onUiReadyHandler.run());
     }
 
     private Tuple2<TextField, VBox> getBalanceBox(String text) {

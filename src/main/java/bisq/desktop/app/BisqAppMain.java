@@ -64,6 +64,7 @@ public class BisqAppMain extends BisqExecutable {
     protected void launchApplication() {
         BisqApp.setAppLaunchedHandler(application -> {
             BisqAppMain.this.application = (BisqApp) application;
+
             // Necessary to do the setup at this point to prevent Bouncy Castle errors
             CommonSetup.setup(BisqAppMain.this.application);
             // Map to user thread!
@@ -110,6 +111,13 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void startApplication() {
         // We need to be in user thread! We mapped at launchApplication already...
-        application.startApplication();
+
+        // Once the UI is ready we get onApplicationStarted called and start the setup there
+        application.startApplication(this::onApplicationStarted);
+    }
+
+    @Override
+    protected void onApplicationStarted() {
+        super.onApplicationStarted();
     }
 }
