@@ -315,7 +315,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
 
     private void onButtonClick() {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            Optional<TxOutput> lockedTxOutput = stateService.getLockedTxOutput(selectedItem.getTxId());
+            Optional<TxOutput> lockedTxOutput = stateService.getLockupTxOutput(selectedItem.getTxId());
             if (!lockedTxOutput.isPresent()) {
                 log.warn("Locked output not found, txId = ", selectedItem.getTxId());
                 return;

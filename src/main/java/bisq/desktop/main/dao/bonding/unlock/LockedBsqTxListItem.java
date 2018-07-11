@@ -133,7 +133,7 @@ class LockedBsqTxListItem {
     }
 
     public boolean isSpent() {
-        Optional<TxOutput> optionalTxOutput = stateService.getLockedTxOutput(txId);
+        Optional<TxOutput> optionalTxOutput = stateService.getLockupTxOutput(txId);
         if (!optionalTxOutput.isPresent())
             return true;
 
