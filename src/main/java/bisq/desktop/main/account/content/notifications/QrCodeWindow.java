@@ -8,8 +8,8 @@ import java.awt.FlowLayout;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 
-import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 
@@ -49,20 +49,23 @@ public class QrCodeWindow extends JFrame {
             }
         });
 
-        List<Webcam> webcams = Webcam.getWebcams();
-        webcam = webcams.get(0);
-        Dimension[] sizes = webcam.getViewSizes();
-        webcam.setViewSize(sizes[sizes.length - 1]);
-
-        panel = new WebcamPanel(webcam);
-        add(panel);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
         executor.execute(this::doRun);
     }
 
     private void doRun() {
+        try {
+            webcam = Webcam.getDefault(1000); // one second timeout - the default is too long
+            Dimension[] sizes = webcam.getViewSizes();
+            webcam.setViewSize(sizes[sizes.length - 1]);
+            panel = new WebcamPanel(webcam);
+            add(panel);
+            pack();
+            setLocationRelativeTo(null);
+            setVisible(true);
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
         // check 10 times a second for the QR code
         boolean run = true;
         while (run) {
@@ -75,7 +78,7 @@ public class QrCodeWindow extends JFrame {
             Result result = null;
             BufferedImage image;
 
-            if (webcam.isOpen()) {
+            if (webcam != null && webcam.isOpen()) {
                 if ((image = webcam.getImage()) == null)
                     continue;
 
