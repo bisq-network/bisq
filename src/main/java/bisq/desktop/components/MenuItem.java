@@ -19,9 +19,6 @@ package bisq.desktop.components;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.View;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.proposal.ProposalView;
 import bisq.desktop.util.Colors;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -36,16 +33,28 @@ import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+
 public class MenuItem extends AutoTooltipToggleButton {
 
     private final ChangeListener<Boolean> selectedPropertyChangeListener;
     private final ChangeListener<Boolean> disablePropertyChangeListener;
     private final Navigation navigation;
     private final Class<? extends View> viewClass;
+    private final List<Class<? extends View>> baseNavPath;
 
-    public MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass, AwesomeIcon awesomeIcon) {
+    public MenuItem(Navigation navigation,
+                    ToggleGroup toggleGroup,
+                    String title,
+                    Class<? extends View> viewClass,
+                    AwesomeIcon awesomeIcon,
+                    List<Class<? extends View>> baseNavPath) {
         this.navigation = navigation;
         this.viewClass = viewClass;
+        this.baseNavPath = baseNavPath;
 
         setToggleGroup(toggleGroup);
         setText(title);
@@ -86,11 +95,20 @@ public class MenuItem extends AutoTooltipToggleButton {
 
     public void activate() {
         //noinspection unchecked
-        setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, ProposalView.class, viewClass));
+        setOnAction((event) -> navigation.navigateTo(getNavPathClasses()));
         selectedProperty().addListener(selectedPropertyChangeListener);
         disableProperty().addListener(disablePropertyChangeListener);
     }
 
+
+    @NotNull
+    private Class<? extends View>[] getNavPathClasses() {
+        List<Class<? extends View>> list = new ArrayList<>(baseNavPath);
+        list.add(viewClass);
+        Class<? extends View>[] array = new Class[list.size()];
+        list.toArray(array);
+        return array;
+    }
     public void deactivate() {
         setOnAction(null);
         selectedProperty().removeListener(selectedPropertyChangeListener);

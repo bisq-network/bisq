@@ -20,7 +20,6 @@ package bisq.desktop.main.portfolio.pendingtrades;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.BtcAddressValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
@@ -32,6 +31,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
 

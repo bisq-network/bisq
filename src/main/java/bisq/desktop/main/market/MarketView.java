@@ -29,6 +29,7 @@ import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.market.spread.SpreadView;
 import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.offerbook.OfferBook;
+import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
@@ -179,8 +180,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         // We don't use the list from the tradeStatisticsManager as that has filtered the duplicates but we want to get
         // all items of both traders in case the referral ID was only set by one trader.
         // If both traders had set it the tradeStatistics is only delivered once.
-        // If both traders used a differnet refferral ID then we would get 2 objects.
-        List<String> list = p2PService.getP2PDataStorage().getPersistableNetworkPayloadList().getMap().values().stream()
+        // If both traders used a different referral ID then we would get 2 objects.
+        List<String> list = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
@@ -203,7 +204,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private String getAllOffersWithReferralId() {
         List<String> list = offerBook.getOfferBookListItems().stream()
-                .map(offerBookListItem -> offerBookListItem.getOffer())
+                .map(OfferBookListItem::getOffer)
                 .filter(offer -> offer.getOfferPayload().getExtraDataMap() != null)
                 .filter(offer -> offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
                 .map(offer -> {

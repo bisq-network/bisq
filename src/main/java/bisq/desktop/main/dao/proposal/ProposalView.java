@@ -25,6 +25,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
+import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.proposal.active.ActiveProposalsView;
 import bisq.desktop.main.dao.proposal.closed.ClosedProposalsView;
@@ -44,6 +45,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+
+import java.util.Arrays;
+import java.util.List;
 
 @FxmlView
 public class ProposalView extends ActivatableViewAndModel {
@@ -78,18 +82,19 @@ public class ProposalView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
+        final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, ProposalView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
-                ProposalDashboardView.class, AwesomeIcon.DASHBOARD);
+                ProposalDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
-                MakeProposalView.class, AwesomeIcon.EDIT);
+                MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
         active = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"),
-                ActiveProposalsView.class, AwesomeIcon.LIST_UL);
+                ActiveProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
         myVotes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.myVotes"),
-                MyVotesView.class, AwesomeIcon.THUMBS_UP);
+                MyVotesView.class, AwesomeIcon.THUMBS_UP, baseNavPath);
         votes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.votes"),
-                VotesView.class, AwesomeIcon.THUMBS_UP_ALT);
+                VotesView.class, AwesomeIcon.THUMBS_UP_ALT, baseNavPath);
         closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"),
-                ClosedProposalsView.class, AwesomeIcon.LIST_ALT);
+                ClosedProposalsView.class, AwesomeIcon.LIST_ALT, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, make, active, myVotes, votes, closed);
     }
 

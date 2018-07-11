@@ -34,6 +34,8 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
+import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -542,5 +544,22 @@ public class GUIUtil {
         for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end, childByRowMap.size()); i++) {
             childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
         }
+    }
+
+    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
+                                           BSFormatter btcFormatter, String type,
+                                           Runnable actionHandler) {
+        new Popup<>().headLine(Res.get("dao.feeTx.confirm", type))
+                .confirmation(Res.get("dao.feeTx.confirm.details",
+                        type,
+                        bsqFormatter.formatCoinWithCode(fee),
+                        btcFormatter.formatCoinWithCode(miningFee),
+                        CoinUtil.getFeePerByte(miningFee, txSize),
+                        txSize / 1000d,
+                        type))
+                .actionButtonText(Res.get("shared.yes"))
+                .onAction(actionHandler::run)
+                .closeButtonText(Res.get("shared.cancel"))
+                .show();
     }
 }

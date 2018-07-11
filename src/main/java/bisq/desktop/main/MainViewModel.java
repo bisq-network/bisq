@@ -81,7 +81,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MainViewModel implements ViewModel {
+public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteListener {
     private final BisqSetup bisqSetup;
     private final WalletsSetup walletsSetup;
     private final User user;
@@ -169,105 +169,18 @@ public class MainViewModel implements ViewModel {
         BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void start() {
         setupHandlers();
-
-        bisqSetup.start(this::onSetupComplete);
+        bisqSetup.addBisqSetupCompleteListener(this);
     }
 
-    private void setupHandlers() {
-        bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
-            //noinspection FunctionalExpressionCanBeFolded
-            tacWindow.onAction(acceptedHandler::run).show();
-        }, 1));
 
-        bisqSetup.setCryptoSetupFailedHandler(msg -> {
-            UserThread.execute(() -> new Popup<>().warning(msg)
-                    .useShutDownButton()
-                    .useReportBugButton()
-                    .show());
-        });
-        bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
-            if (show)
-                torNetworkSettingsWindow.show();
-            else
-                torNetworkSettingsWindow.hide();
-        });
-        bisqSetup.setSpvFileCorruptedHandler(msg -> {
-            new Popup<>().warning(msg)
-                    .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
-                    .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
-                    .show();
-        });
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BisqSetupCompleteListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        bisqSetup.setChainFileLockedExceptionHandler(msg -> {
-            new Popup<>().warning(msg)
-                    .useShutDownButton()
-                    .show();
-        });
-        bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().warning(msg).show());
-        bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
-        bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
-                .onAesKey(aesKeyHandler::accept)
-                .hideCloseButton()
-                .show());
-
-        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert)
-                .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
-                .onAction(() -> {
-                    preferences.dontShowAgain(key, false); // update later
-                })
-                .closeButtonText(Res.get("shared.cancel"))
-                .onClose(() -> {
-                    preferences.dontShowAgain(key, true); // ignore update
-                })
-                .show());
-        bisqSetup.setDisplayAlertHandler(alert -> new DisplayAlertMessageWindow()
-                .alertMessage(alert)
-                .onClose(() -> {
-                    user.setDisplayedAlert(alert);
-                })
-                .show());
-        bisqSetup.setDisplayPrivateNotificationHandler(privateNotification ->
-                new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
-                        .attention(privateNotification.getMessage())
-                        .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
-                        .onClose(privateNotificationManager::removePrivateNotification)
-                        .useIUnderstandButton()
-                        .show());
-        bisqSetup.setDaoSetupErrorHandler(errorMessage -> new Popup<>().error(errorMessage).show());
-        bisqSetup.setDisplaySecurityRecommendationHandler(key ->
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
-                        .information(Res.get("popup.securityRecommendation.msg"))
-                        .dontShowAgainId(key)
-                        .show());
-        bisqSetup.setDisplayLocalhostHandler(key ->
-                new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
-                        .dontShowAgainId(key)
-                        .show());
-        bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
-
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
-            new Popup<>()
-                    .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
-                            bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
-                    .useShutDownButton()
-                    .show();
-        });
-
-        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
-                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
-                .show());
-    }
-
-    private void onSetupComplete() {
+    @Override
+    public void onSetupComplete() {
         // We handle the trade period here as we display a global popup if we reached dispute time
         tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
         tradesAndUIReady.subscribe((observable, oldValue, newValue) -> {
@@ -344,6 +257,95 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void setupHandlers() {
+        bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
+            //noinspection FunctionalExpressionCanBeFolded
+            tacWindow.onAction(acceptedHandler::run).show();
+        }, 1));
+
+        bisqSetup.setCryptoSetupFailedHandler(msg -> {
+            UserThread.execute(() -> new Popup<>().warning(msg)
+                    .useShutDownButton()
+                    .useReportBugButton()
+                    .show());
+        });
+        bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
+            if (show)
+                torNetworkSettingsWindow.show();
+            else
+                torNetworkSettingsWindow.hide();
+        });
+        bisqSetup.setSpvFileCorruptedHandler(msg -> {
+            new Popup<>().warning(msg)
+                    .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                    .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
+                    .show();
+        });
+
+        bisqSetup.setChainFileLockedExceptionHandler(msg -> {
+            new Popup<>().warning(msg)
+                    .useShutDownButton()
+                    .show();
+        });
+        bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().warning(msg).show());
+        bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
+        bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
+                .onAesKey(aesKeyHandler::accept)
+                .hideCloseButton()
+                .show());
+
+        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert)
+                .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
+                .onAction(() -> {
+                    preferences.dontShowAgain(key, false); // update later
+                })
+                .closeButtonText(Res.get("shared.cancel"))
+                .onClose(() -> {
+                    preferences.dontShowAgain(key, true); // ignore update
+                })
+                .show());
+        bisqSetup.setDisplayAlertHandler(alert -> new DisplayAlertMessageWindow()
+                .alertMessage(alert)
+                .onClose(() -> {
+                    user.setDisplayedAlert(alert);
+                })
+                .show());
+        bisqSetup.setDisplayPrivateNotificationHandler(privateNotification ->
+                new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
+                        .attention(privateNotification.getMessage())
+                        .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
+                        .onClose(privateNotificationManager::removePrivateNotification)
+                        .useIUnderstandButton()
+                        .show());
+        bisqSetup.setDaoSetupErrorHandler(errorMessage -> new Popup<>().error(errorMessage).show());
+        bisqSetup.setDisplaySecurityRecommendationHandler(key ->
+                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                        .information(Res.get("popup.securityRecommendation.msg"))
+                        .dontShowAgainId(key)
+                        .show());
+        bisqSetup.setDisplayLocalhostHandler(key -> {
+            if (!DevEnv.isDevMode()) {
+                new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        });
+
+        bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
+
+        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
+            new Popup<>()
+                    .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
+                            bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                    .useShutDownButton()
+                    .show();
+        });
+
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+                .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
+                .show());
+    }
 
     private void setupP2PNumPeersWatcher() {
         p2PService.getNumConnectedPeers().addListener((observable, oldValue, newValue) -> {

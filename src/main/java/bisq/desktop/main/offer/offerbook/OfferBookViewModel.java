@@ -534,7 +534,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream().anyMatch(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()));
+        return preferences.getIgnoreTradersList().stream()
+                .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()));
     }
 
     boolean isOfferBanned(Offer offer) {
@@ -555,7 +556,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
-        final long myTradeLimit = accountOptional.map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount, offer.getCurrencyCode())).orElse(0L);
+        final long myTradeLimit = accountOptional
+                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount, offer.getCurrencyCode()))
+                .orElse(0L);
         final long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",

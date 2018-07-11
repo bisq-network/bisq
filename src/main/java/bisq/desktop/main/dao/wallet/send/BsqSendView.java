@@ -50,16 +50,10 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
-
-import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
@@ -159,7 +153,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     bsqFormatter.formatCoinWithCode(receiverAmount)))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                walletsManager.publishAndCommitBsqTx(txWithBtcFee, new FutureCallback<Transaction>() {
+                                // TODO not updated to TxBroadcaster changes because not in sync with voting branch anyway
+                               /* walletsManager.publishAndCommitBsqTx(txWithBtcFee, new FutureCallback<Transaction>() {
                                     @Override
                                     public void onSuccess(@Nullable Transaction transaction) {
                                         if (transaction != null) {
@@ -172,7 +167,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                         log.error(t.toString());
                                         new Popup<>().warning(t.toString());
                                     }
-                                });
+                                });*/
 
                                 receiversAddressInputTextField.setText("");
                                 amountInputTextField.setText("");
