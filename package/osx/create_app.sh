@@ -6,11 +6,11 @@ mkdir -p deploy
 
 set -e
 
-version="0.7.0"
+version="0.7.1"
 
 ./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
 
-EXE_JAR=build/libs/bisq-desktop-0.7.0-all.jar
+EXE_JAR=build/libs/bisq-desktop-$version-all.jar
 
 echo SHA 256 before stripping jar file:
 shasum -a256 $EXE_JAR | awk '{print $1}'
@@ -40,17 +40,17 @@ cp $EXE_JAR "$win32/Bisq.jar"
 cp $EXE_JAR "$win64/Bisq.jar"
 
 # copy bouncycastle jars to VM shared folders
-bc_lib1=bcpg-jdk15on-1.56.jar
-cp build/app/lib/$bc_lib1 "$linux32/$bc_lib1"
-cp build/app/lib/$bc_lib1 "$linux64/$bc_lib1"
-cp build/app/lib/$bc_lib1 "$win32/$bc_lib1"
-cp build/app/lib/$bc_lib1 "$win64/$bc_lib1"
+# bc_lib1=bcpg-jdk15on-1.56.jar
+# cp build/app/lib/$bc_lib1 "$linux32/$bc_lib1"
+# cp build/app/lib/$bc_lib1 "$linux64/$bc_lib1"
+# cp build/app/lib/$bc_lib1 "$win32/$bc_lib1"
+# cp build/app/lib/$bc_lib1 "$win64/$bc_lib1"
 
-bc_lib2=bcprov-jdk15on-1.56.jar
-cp build/app/lib/$bc_lib2 "$linux32/$bc_lib2"
-cp build/app/lib/$bc_lib2 "$linux64/$bc_lib2"
-cp build/app/lib/$bc_lib2 "$win32/$bc_lib2"
-cp build/app/lib/$bc_lib2 "$win64/$bc_lib2"
+# bc_lib2=bcprov-jdk15on-1.56.jar
+# cp build/app/lib/$bc_lib2 "$linux32/$bc_lib2"
+# cp build/app/lib/$bc_lib2 "$linux64/$bc_lib2"
+# cp build/app/lib/$bc_lib2 "$win32/$bc_lib2"
+# cp build/app/lib/$bc_lib2 "$win64/$bc_lib2"
 
 # Copy packager scripts to VM. No need to checkout the source as we only are interested in the build scripts.
 rm -rf "$linux32/package"
@@ -77,7 +77,7 @@ echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
-    -Bmac.CFBundleIdentifier=io.bisq \
+    -Bmac.CFBundleIdentifier=io.bisq.CAT \
     -Bmac.CFBundleName=Bisq \
     -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \

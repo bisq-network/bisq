@@ -16,7 +16,7 @@ apply plugin: 'witness'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'network.bisq'
-version = '0.7.0-SNAPSHOT'
+version = '0.7.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
