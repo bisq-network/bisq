@@ -130,8 +130,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
-                onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                        bsqWalletService.getAvailableNonBsqBalance(),
+                        bsqWalletService.getPendingBalance(),
+                        bsqWalletService.getLockedForVotingBalance(),
+                        bsqWalletService.getLockedInBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
         };
 
@@ -215,8 +218,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
     }
 
@@ -229,12 +235,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin pendingBalance,
+    public void onUpdateBalances(Coin availableBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin unverifiedBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendButton.setDisable(!isValid);

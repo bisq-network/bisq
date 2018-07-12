@@ -206,6 +206,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     @Override
     public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,

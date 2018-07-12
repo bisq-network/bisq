@@ -115,8 +115,11 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
-                onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                        bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+                onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                        bsqWalletService.getAvailableNonBsqBalance(),
+                        bsqWalletService.getPendingBalance(),
+                        bsqWalletService.getLockedForVotingBalance(),
+                        bsqWalletService.getLockedInBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
         };
 
@@ -171,8 +174,11 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         bsqBalanceUtil.activate();
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
     }
 
@@ -185,6 +191,7 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
 
     @Override
     public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,

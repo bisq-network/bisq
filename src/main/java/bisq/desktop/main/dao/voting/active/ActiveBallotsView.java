@@ -112,6 +112,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
         daoFacade.getActiveOrMyUnconfirmedBallots().addListener(listChangeListener);
 
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getPendingBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockedInBondsBalance(),
@@ -140,6 +141,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
 
     @Override
     public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,

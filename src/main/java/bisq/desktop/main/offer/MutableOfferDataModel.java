@@ -551,8 +551,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin pendingBalance,
+    public void onUpdateBalances(Coin availableBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin unverifiedBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {

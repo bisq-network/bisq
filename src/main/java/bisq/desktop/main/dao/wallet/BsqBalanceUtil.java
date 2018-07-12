@@ -33,7 +33,6 @@ import javafx.scene.layout.GridPane;
 
 import javafx.geometry.Pos;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
@@ -45,7 +44,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     private final BsqFormatter bsqFormatter;
 
     // Displaying general BSQ info
-    private TextField confirmedBalanceTextField, pendingBalanceTextField, lockedForVoteBalanceTextField,
+    private TextField availableBalanceTextField, availableNonBsqBalanceTextField, unverifiedBalanceTextField, lockedForVoteBalanceTextField,
             lockedInBondsBalanceTextField, totalBalanceTextField;
 
     // Displaying bond dashboard info
@@ -59,36 +58,29 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public int addGroup(GridPane gridPane, int gridRow) {
-        addTitledGroupBg(gridPane, gridRow, 5, Res.get("shared.balance"));
-        confirmedBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
+        addTitledGroupBg(gridPane, gridRow, 6, Res.get("shared.balance"));
+        availableBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
-        confirmedBalanceTextField.setMouseTransparent(false);
-        confirmedBalanceTextField.setMaxWidth(150);
-        confirmedBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+        availableBalanceTextField.setMouseTransparent(false);
 
-        pendingBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
-        pendingBalanceTextField.setMouseTransparent(false);
-        pendingBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
-        pendingBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+        availableNonBsqBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.availableNonBsqBalance")).second;
+        availableNonBsqBalanceTextField.setMouseTransparent(false);
+
+        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
+        unverifiedBalanceTextField.setMouseTransparent(false);
 
         lockedForVoteBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared" +
                 ".lockedForVoteBalance")).second;
         lockedForVoteBalanceTextField.setMouseTransparent(false);
-        lockedForVoteBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
-        lockedForVoteBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
         lockedInBondsBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol(
                 "shared.lockedInBonds")).second;
         lockedInBondsBalanceTextField.setMouseTransparent(false);
-        lockedInBondsBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
-        lockedInBondsBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
         // TODO add unlockinBondsBalanceTextField
 
         totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
-        totalBalanceTextField.setMaxWidth(confirmedBalanceTextField.getMaxWidth());
-        totalBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
         return gridRow;
     }
@@ -112,6 +104,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
     public void activate() {
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getPendingBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockedInBondsBalance(),
@@ -125,13 +118,15 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin pendingBalance,
+    public void onUpdateBalances(Coin availableBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin unverifiedBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
-        confirmedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(confirmedBalance));
-        pendingBalanceTextField.setText(bsqFormatter.formatCoinWithCode(pendingBalance));
+        availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
+        availableNonBsqBalanceTextField.setText(bsqFormatter.formatSatoshi(availableNonBsqBalance.value));
+        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
         lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
         lockedInBondsBalanceTextField.setText(bsqFormatter.formatCoinWithCode(
                 lockedInBondsBalance.add(unlockingBondsBalance)));
@@ -141,8 +136,8 @@ public class BsqBalanceUtil implements BsqBalanceListener {
             unlockingAmountTextField.setText(bsqFormatter.formatCoinWithCode(unlockingBondsBalance));
         }
 
-        final Coin total = confirmedBalance
-                .add(pendingBalance)
+        final Coin total = availableBalance
+                .add(unverifiedBalance)
                 .add(lockedForVotingBalance)
                 .add(lockedInBondsBalance)
                 .add(unlockingBondsBalance);

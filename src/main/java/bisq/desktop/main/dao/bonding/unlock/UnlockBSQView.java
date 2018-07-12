@@ -373,8 +373,11 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
     protected void activate() {
         bsqBalanceUtil.activate();
         bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(), bsqWalletService.getPendingBalance(),
-                bsqWalletService.getLockedForVotingBalance(), bsqWalletService.getLockedInBondsBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
 
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
@@ -451,6 +454,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
 
     @Override
     public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
