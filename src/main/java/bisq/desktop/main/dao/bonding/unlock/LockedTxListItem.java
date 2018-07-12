@@ -56,7 +56,7 @@ class LockedTxListItem {
     private final String txId;
 
     private int confirmations = 0;
-    private Coin amount;
+    private Coin amount = Coin.ZERO;
     private int lockTime;
     private AutoTooltipButton button;
 
@@ -86,7 +86,8 @@ class LockedTxListItem {
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
 
-        amount = bsqWalletService.getValueLockedUpInBond(transaction);
+        stateService.getLockupTxOutput(transaction.getHashAsString()).ifPresent(
+                out -> amount = Coin.valueOf(out.getValue()));
 
         //TODO SQ: use DaoFacade instead of direct access to stateService
         Optional<Integer> opLockTime = stateService.getLockTime(transaction.getHashAsString());
