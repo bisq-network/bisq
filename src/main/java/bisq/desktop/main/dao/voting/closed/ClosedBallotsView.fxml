@@ -22,12 +22,13 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.voting.closed.ClosedBallotsView"
-          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0"
+          AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="20.0"
           xmlns:fx="http://javafx.com/fxml">
-
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="160.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 </GridPane>
+

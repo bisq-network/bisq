@@ -33,12 +33,8 @@ import bisq.common.UserThread;
 import javax.inject.Inject;
 
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
@@ -63,7 +59,6 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private DaoPhase.Phase currentPhase;
     private Subscription phaseSubscription;
-    private GridPane gridPane;
     private int gridRow = 0;
     private SeparatedPhaseBars separatedPhaseBars;
     private TextField currentPhaseTextField, currentBlockHeightTextField, proposalTextField, blindVoteTextField, voteRevealTextField, voteResultTextField;
@@ -81,46 +76,26 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
 
     @Override
     public void initialize() {
-        root.getStyleClass().add("compensation-root");
-        AnchorPane topAnchorPane = new AnchorPane();
-        root.getChildren().add(topAnchorPane);
-
-        gridPane = new GridPane();
-        gridPane.setHgap(5);
-        gridPane.setVgap(5);
-        AnchorPane.setBottomAnchor(gridPane, 10d);
-        AnchorPane.setRightAnchor(gridPane, 10d);
-        AnchorPane.setLeftAnchor(gridPane, 10d);
-        AnchorPane.setTopAnchor(gridPane, 10d);
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-        columnConstraints1.setMinWidth(200);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
-        topAnchorPane.getChildren().add(gridPane);
-
         // cycle bar
-        addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.cycle.headline"));
+        addTitledGroupBg(root, gridRow, 1, Res.get("dao.cycle.headline"));
         separatedPhaseBars = createSeparatedPhaseBars();
         GridPane.setColumnSpan(separatedPhaseBars, 2);
         GridPane.setColumnIndex(separatedPhaseBars, 0);
         GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
         GridPane.setRowIndex(separatedPhaseBars, gridRow);
-        gridPane.getChildren().add(separatedPhaseBars);
+        root.getChildren().add(separatedPhaseBars);
 
-        addTitledGroupBg(gridPane, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
-        currentBlockHeightTextField = addLabelTextField(gridPane, gridRow, Res.get("dao.cycle.currentBlockHeight"),
+        addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
+        currentBlockHeightTextField = addLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
                 "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currentPhaseTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
-        proposalTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
-        blindVoteTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
-        voteRevealTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
-        voteResultTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
+        currentPhaseTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
+        proposalTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
+        blindVoteTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
+        voteRevealTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
+        voteResultTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
 
-        addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("dao.cycle.info.headline"), Layout.GROUP_DISTANCE);
-        addMultilineLabel(gridPane, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.cycle.info.headline"), Layout.GROUP_DISTANCE);
+        addMultilineLabel(root, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 
 

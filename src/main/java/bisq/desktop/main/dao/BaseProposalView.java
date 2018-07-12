@@ -147,6 +147,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         proposalTableView = new TableView<>();
         proposalTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         proposalTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        proposalTableView.setPrefHeight(200);
 
         createProposalColumns(proposalTableView);
         GridPane.setRowIndex(proposalTableView, gridRow);

@@ -65,9 +65,7 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
@@ -109,8 +107,7 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
 
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private ChangeListener<Number> walletChainHeightListener;
-    private final DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
-    private ChangeListener<Number> parentHeightListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -148,15 +145,15 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
 
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPrefHeight(300);
         addTxIdColumn();
         addAmountColumn();
         addLockTimeColumn();
         addUnlockColumn();
 
-        lockedTxs.setPredicate(item -> item.isLockedAndUnspent());
+        lockedTxs.setPredicate(LockedBsqTxListItem::isLockedAndUnspent);
         walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
-        parentHeightListener = (observable, oldValue, newValue) -> layout();
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -388,14 +385,8 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
 
         daoFacade.addBlockListener(this);
 
-        if (root.getParent() instanceof Pane) {
-            rootParent = (Pane) root.getParent();
-            rootParent.heightProperty().addListener(parentHeightListener);
-        }
-
         updateList();
         onUpdateAnyChainHeight();
-        layout();
     }
 
     @Override
@@ -431,10 +422,6 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
         observableList.setAll(items);
     }
 
-    private void layout() {
-        GUIUtil.fillAvailableHeight(root, tableView, initialOccupiedHeight);
-    }
-
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
@@ -447,9 +434,6 @@ public class UnlockBSQView extends ActivatableView<GridPane, Void> implements Bs
         daoFacade.removeBlockListener(this);
 
         observableList.forEach(LockedBsqTxListItem::cleanup);
-
-        if (rootParent != null)
-            rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
     @Override

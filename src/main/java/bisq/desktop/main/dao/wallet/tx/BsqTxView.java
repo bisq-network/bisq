@@ -60,9 +60,7 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
@@ -93,9 +91,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
-    private final DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
     private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
-    private ChangeListener<Number> parentHeightListener;
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
@@ -161,7 +157,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
-        parentHeightListener = (observable, oldValue, newValue) -> layout();
         //TODO do we want to get notified from wallet side?
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
@@ -178,14 +173,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         daoFacade.addBlockListener(this);
 
-        if (root.getParent() instanceof Pane) {
-            rootParent = (Pane) root.getParent();
-            rootParent.heightProperty().addListener(parentHeightListener);
-        }
-
         updateList();
         onUpdateAnyChainHeight();
-        layout();
     }
 
     @Override
@@ -198,9 +187,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         daoFacade.removeBlockListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
-
-        if (rootParent != null)
-            rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
 
@@ -268,10 +254,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 })
                 .collect(Collectors.toList());
         observableList.setAll(items);
-    }
-
-    private void layout() {
-        GUIUtil.fillAvailableHeight(root, tableView, initialOccupiedHeight);
     }
 
     private void addDateColumn() {
