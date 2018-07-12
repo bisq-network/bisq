@@ -45,7 +45,7 @@ import lombok.Data;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Data
-class LockedBsqTxListItem {
+class LockedTxListItem {
     private final Transaction transaction;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -64,13 +64,13 @@ class LockedBsqTxListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
-    LockedBsqTxListItem(Transaction transaction,
-                        BsqWalletService bsqWalletService,
-                        BtcWalletService btcWalletService,
-                        DaoFacade daoFacade,
-                        StateService stateService,
-                        Date date,
-                        BsqFormatter bsqFormatter) {
+    LockedTxListItem(Transaction transaction,
+                     BsqWalletService bsqWalletService,
+                     BtcWalletService btcWalletService,
+                     DaoFacade daoFacade,
+                     StateService stateService,
+                     Date date,
+                     BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -132,6 +132,7 @@ class LockedBsqTxListItem {
         bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
+    // TODO SQ use daoFacade
     public boolean isSpent() {
         Optional<TxOutput> optionalTxOutput = stateService.getLockupTxOutput(txId);
         if (!optionalTxOutput.isPresent())

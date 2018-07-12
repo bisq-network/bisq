@@ -28,8 +28,8 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
-import bisq.desktop.main.dao.bonding.lockup.LockupBSQView;
-import bisq.desktop.main.dao.bonding.unlock.UnlockBSQView;
+import bisq.desktop.main.dao.bonding.lockup.LockupView;
+import bisq.desktop.main.dao.bonding.unlock.UnlockView;
 
 import bisq.core.locale.Res;
 
@@ -83,9 +83,9 @@ public class BondingView extends ActivatableViewAndModel {
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         lockupBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.lockupBSQ"),
-                LockupBSQView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                LockupView.class, AwesomeIcon.LIST_UL, baseNavPath);
         unlockBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.unlockBSQ"),
-                UnlockBSQView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                UnlockView.class, AwesomeIcon.LIST_UL, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, lockupBSQ, unlockBSQ);
     }
 
@@ -100,7 +100,7 @@ public class BondingView extends ActivatableViewAndModel {
         if (viewPath.size() == 3 && viewPath.indexOf(BondingView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = LockupBSQView.class;
+                selectedViewClass = LockupView.class;
 
             loadView(selectedViewClass);
 
@@ -124,7 +124,7 @@ public class BondingView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof BondingDashboardView) dashboard.setSelected(true);
-        else if (view instanceof LockupBSQView) lockupBSQ.setSelected(true);
-        else if (view instanceof UnlockBSQView) unlockBSQ.setSelected(true);
+        else if (view instanceof LockupView) lockupBSQ.setSelected(true);
+        else if (view instanceof UnlockView) unlockBSQ.setSelected(true);
     }
 }

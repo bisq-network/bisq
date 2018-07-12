@@ -113,7 +113,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
 
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());

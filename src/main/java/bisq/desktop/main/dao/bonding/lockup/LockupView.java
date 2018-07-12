@@ -35,9 +35,10 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.ext.Param;
+import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.validation.IntegerValidator;
 
 import bisq.network.p2p.P2PService;
 
@@ -56,7 +57,7 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class LockupBSQView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+public class LockupView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
@@ -65,6 +66,7 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
+    private final IntegerValidator integerValidator;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
@@ -78,14 +80,14 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private LockupBSQView(BsqWalletService bsqWalletService,
-                          WalletsSetup walletsSetup,
-                          P2PService p2PService,
-                          BsqFormatter bsqFormatter,
-                          Navigation navigation,
-                          BsqBalanceUtil bsqBalanceUtil,
-                          BsqValidator bsqValidator,
-                          DaoFacade daoFacade) {
+    private LockupView(BsqWalletService bsqWalletService,
+                       WalletsSetup walletsSetup,
+                       P2PService p2PService,
+                       BsqFormatter bsqFormatter,
+                       Navigation navigation,
+                       BsqBalanceUtil bsqBalanceUtil,
+                       BsqValidator bsqValidator,
+                       DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -94,6 +96,15 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
+
+
+        integerValidator = new IntegerValidator();
+        // In the UI we don't allow 0 as that would mean that the tx gets spent
+        // in the same block as the unspent tx and we don't support unconfirmed txs in the DAO. Technically though 0
+        // works as well.
+        integerValidator.setMinValue(BondingConsensus.getMinLockTime());
+        // Max value is max of a short int as we use only 2 bytes in the opReturn for the lockTime
+        integerValidator.setMaxValue(BondingConsensus.getMaxLockTime());
     }
 
     @Override
@@ -105,19 +116,18 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
 
         amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", Restrictions.getMinNonDustOutput().value));
+        amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
         timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"), Layout.GRID_GAP).second;
         timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
-                Param.LOCK_TIME_MIN.getDefaultValue(), Param.LOCK_TIME_MAX.getDefaultValue()));
-        // TODO: add some int validator
-//        timeInputTextField.setValidator(bsqValidator);
+                String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
+        timeInputTextField.setValidator(integerValidator);
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
                 onUpdateBalances(bsqWalletService.getAvailableBalance(),
                         bsqWalletService.getAvailableNonBsqBalance(),
-                        bsqWalletService.getPendingBalance(),
+                        bsqWalletService.getUnverifiedBalance(),
                         bsqWalletService.getLockedForVotingBalance(),
                         bsqWalletService.getLockedInBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
@@ -145,6 +155,7 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
                                         errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
                                 );
                                 amountInputTextField.setText("");
+                                timeInputTextField.setText("");
                             })
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
@@ -176,7 +187,7 @@ public class LockupBSQView extends ActivatableView<GridPane, Void> implements Bs
         bsqWalletService.addBsqBalanceListener(this);
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());

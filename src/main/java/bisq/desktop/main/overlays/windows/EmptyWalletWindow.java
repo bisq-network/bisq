@@ -156,7 +156,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             addressInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address")).second;
         } else {
             addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
-                    bsqFormatter.formatSatoshi(bsqWalletService.getAvailableNonBsqBalance().value), 10);
+                    bsqFormatter.formatBtcSatoshi(bsqWalletService.getAvailableNonBsqBalance().value), 10);
         }
         closeButton = new AutoTooltipButton(Res.get("shared.cancel"));
         closeButton.setOnAction(e -> {

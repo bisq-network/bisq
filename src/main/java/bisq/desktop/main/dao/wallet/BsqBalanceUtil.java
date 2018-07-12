@@ -31,8 +31,6 @@ import javax.inject.Inject;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Pos;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
@@ -91,13 +89,9 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         lockedAmountTextField = addLabelTextField(gridPane, gridRow, Res.get("dao.bonding.dashboard.lockedAmount"),
                 Layout.FIRST_ROW_DISTANCE + Layout.GROUP_DISTANCE).second;
         lockedAmountTextField.setMouseTransparent(false);
-        lockedAmountTextField.setMaxWidth(150);
-        lockedAmountTextField.setAlignment(Pos.CENTER_RIGHT);
 
         unlockingAmountTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.bonding.dashboard.unlockingAmount")).second;
         unlockingAmountTextField.setMouseTransparent(false);
-        unlockingAmountTextField.setMaxWidth(150);
-        unlockingAmountTextField.setAlignment(Pos.CENTER_RIGHT);
 
         return gridRow;
     }
@@ -105,7 +99,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     public void activate() {
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getPendingBalance(),
+                bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockedInBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
@@ -125,7 +119,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
         availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        availableNonBsqBalanceTextField.setText(bsqFormatter.formatSatoshi(availableNonBsqBalance.value));
+        availableNonBsqBalanceTextField.setText(bsqFormatter.formatBtcSatoshi(availableNonBsqBalance.value));
         unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
         lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
         lockedInBondsBalanceTextField.setText(bsqFormatter.formatCoinWithCode(

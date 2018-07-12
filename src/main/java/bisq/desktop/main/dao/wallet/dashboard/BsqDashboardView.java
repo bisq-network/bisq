@@ -67,8 +67,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private int gridRow = 0;
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, availableAmountTextField,
-            burntAmountTextField, allTxTextField,
-            burntTxTextField/*, spentTxTextField*/,
+            burntAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
+            totalUnlockedAmountTextField, allTxTextField,
+            burntTxTextField,
             utxoTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
     private HyperlinkWithIcon hyperlinkWithIcon;
@@ -95,7 +96,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 11, Res.get("dao.wallet.dashboard.statistics"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 14, Res.get("dao.wallet.dashboard.statistics"), Layout.GROUP_DISTANCE);
 
         addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
                 String.valueOf(daoFacade.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -114,12 +115,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         compRequestIssueAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
         availableAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
         burntAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
+        totalLockedUpAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalLockedUpAmount")).second;
+        totalUnlockingAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
+        totalUnlockedAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
 
         allTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.allTx")).second;
         utxoTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
-        // spentTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.spentTxo")).second;
         burntTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntTx")).second;
-
         priceTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.price")).second;
         marketCapTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
 
@@ -158,26 +160,31 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updateWithBsqBlockChainData() {
-        final Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
+        Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        final Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmountFromCompRequests());
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmountFromCompRequests());
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
-        final Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
-        final Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
+        Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
+        Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockedUpAmount());
+        Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
+        Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
+        Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
+        totalLockedUpAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalLockedUpAmount));
+        totalUnlockingAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockingAmount));
+        totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
-        //spentTxTextField.setText(String.valueOf(stateService.getSpentTxOutputs().size()));
         burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
     }
 
     private void updatePrice() {
-        final Coin issuedAmount = daoFacade.getGenesisTotalSupply();
-        final MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
+        Coin issuedAmount = daoFacade.getGenesisTotalSupply();
+        MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
         if (bsqMarketPrice != null) {
             long bsqPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
             priceTextField.setText(bsqFormatter.formatPrice(Price.valueOf("BSQ", bsqPrice)) + " BSQ/BTC");
