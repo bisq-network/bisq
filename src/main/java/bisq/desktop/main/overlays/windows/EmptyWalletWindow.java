@@ -25,16 +25,18 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -44,7 +46,6 @@ import javax.inject.Inject;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
@@ -68,13 +69,16 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final BSFormatter formatter;
+    private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
+    private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     private final OpenOfferManager openOfferManager;
 
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
     private TextField balanceTextField;
-    private WalletService walletService;
+    private boolean isBtc;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,19 +90,25 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                              OpenOfferManager openOfferManager,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
-                             BSFormatter formatter) {
+                             BtcWalletService btcWalletService,
+                             BsqWalletService bsqWalletService,
+                             BSFormatter btcFormatter,
+                             BsqFormatter bsqFormatter) {
         this.walletPasswordWindow = walletPasswordWindow;
         this.openOfferManager = openOfferManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
-        this.formatter = formatter;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         type = Type.Instruction;
     }
 
     public void show() {
         if (headLine == null)
-            headLine = Res.get("emptyWalletWindow.headline");
+            headLine = Res.get("emptyWalletWindow.headline", getCurrency());
 
         width = 700;
         createGridPane();
@@ -107,6 +117,10 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         addContent();
         applyStyles();
         display();
+    }
+
+    private String getCurrency() {
+        return isBtc ? "BTC" : "BSQ";
     }
 
 
@@ -126,44 +140,64 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         }
     }
 
+    public void setIsBtc(boolean isBtc) {
+        this.isBtc = isBtc;
+    }
+
     private void addContent() {
-        addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
+        if (isBtc)
+            addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
 
-        Coin totalBalance = walletService.getAvailableBalance();
+        Coin totalBalance = getWalletService().getAvailableBalance();
         balanceTextField = addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
-                formatter.formatCoinWithCode(totalBalance), 10).second;
+                getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
-        addressInputTextField = tuple.second;
-        emptyWalletButton = new AutoTooltipButton(Res.get("emptyWalletWindow.button"));
-        boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
-        emptyWalletButton.setDefaultButton(isBalanceSufficient);
-        emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
-        emptyWalletButton.setOnAction(e -> {
-            if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
-                if (walletService.isEncrypted()) {
-                    walletPasswordWindow
-                            .onAesKey(this::doEmptyWallet)
-                            .onClose(this::blurAgain)
-                            .show();
-                } else {
-                    doEmptyWallet(null);
-                }
-            }
-        });
-
+        if (isBtc) {
+            addressInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address")).second;
+        } else {
+            addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
+                    bsqWalletService.getBtcBalance().value + " Satoshi", 10);
+        }
         closeButton = new AutoTooltipButton(Res.get("shared.cancel"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
         });
-        closeButton.setDefaultButton(!isBalanceSufficient);
+
+        if (isBtc) {
+            emptyWalletButton = new AutoTooltipButton(Res.get("emptyWalletWindow.button"));
+            boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
+            emptyWalletButton.setDefaultButton(isBalanceSufficient);
+            emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
+            emptyWalletButton.setOnAction(e -> {
+                if (addressInputTextField.getText().length() > 0 && isBalanceSufficient) {
+                    if (getWalletService().isEncrypted()) {
+                        walletPasswordWindow
+                                .onAesKey(this::doEmptyWallet)
+                                .onClose(this::blurAgain)
+                                .show();
+                    } else {
+                        doEmptyWallet(null);
+                    }
+                }
+            });
+
+            closeButton.setDefaultButton(!isBalanceSufficient);
+        } else {
+            closeButton.setDefaultButton(true);
+            closeButton.setText(Res.get("shared.close"));
+        }
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(emptyWalletButton, closeButton);
+
+        if (isBtc)
+            hBox.getChildren().addAll(emptyWalletButton, closeButton);
+        else
+            hBox.getChildren().addAll(closeButton);
+
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
@@ -188,11 +222,11 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         emptyWalletButton.setDisable(true);
         openOfferManager.removeAllOpenOffers(() -> {
             try {
-                walletService.emptyWallet(addressInputTextField.getText(),
+                getWalletService().emptyWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
                             closeButton.setText(Res.get("shared.close"));
-                            balanceTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
+                            balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
                             onClose(() -> UserThread.runAfter(() -> new Popup<>()
@@ -212,7 +246,11 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         });
     }
 
-    public void setWalletService(WalletService walletService) {
-        this.walletService = walletService;
+    private WalletService getWalletService() {
+        return isBtc ? btcWalletService : bsqWalletService;
+    }
+
+    private BSFormatter getFormatter() {
+        return isBtc ? btcFormatter : bsqFormatter;
     }
 }
