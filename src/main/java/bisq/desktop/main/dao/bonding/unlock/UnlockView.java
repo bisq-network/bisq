@@ -91,7 +91,10 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
+
+    //TODO SQ stateService should not be used outside in desktop
     private final StateService stateService;
+
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final Navigation navigation;
@@ -317,7 +320,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
             Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
             Optional<Integer> opLockTime = daoFacade.getLockTime(selectedItem.getTxId());
-            int lockTime = opLockTime.isPresent() ? opLockTime.get() : -1;
+            int lockTime = opLockTime.orElse(-1);
 
             try {
                 new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
@@ -337,6 +340,8 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } catch (Throwable t) {
+                //TODO SQ conde analysis of intellij says that the following is always false, but don't understand why...
+                // but mostly they are right ;-)
                 if (t instanceof InsufficientMoneyException) {
                     final Coin missingCoin = ((InsufficientMoneyException) t).missing;
                     final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";

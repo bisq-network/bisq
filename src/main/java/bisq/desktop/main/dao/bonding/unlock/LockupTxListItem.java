@@ -50,7 +50,10 @@ class LockupTxListItem {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
+
+    //TODO SQ stateService should not be used outside in desktop
     private final StateService stateService;
+
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final String txId;
@@ -86,8 +89,9 @@ class LockupTxListItem {
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
 
-        stateService.getLockupTxOutput(transaction.getHashAsString()).ifPresent(
-                out -> amount = Coin.valueOf(out.getValue()));
+        //TODO SQ use daoFacade
+        stateService.getLockupTxOutput(transaction.getHashAsString())
+                .ifPresent(out -> amount = Coin.valueOf(out.getValue()));
 
         Optional<Integer> opLockTime = daoFacade.getLockTime(transaction.getHashAsString());
         lockTime = opLockTime.orElse(-1);
@@ -134,10 +138,9 @@ class LockupTxListItem {
 
     public boolean isSpent() {
         Optional<TxOutput> optionalTxOutput = daoFacade.getLockupTxOutput(txId);
-        if (!optionalTxOutput.isPresent())
-            return true;
+        return optionalTxOutput.map(txOutput -> !stateService.isUnspent(txOutput.getKey()))
+                .orElse(true);
 
-        return !stateService.isUnspent(optionalTxOutput.get().getKey());
     }
 
     public TxType getTxType() {
