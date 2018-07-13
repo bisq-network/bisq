@@ -60,7 +60,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Tab selectedTab;
-    Tab arbitratorRegistrationTab;
+    private Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private AccountSettingsView accountSettingsView;
     private Scene scene;
