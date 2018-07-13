@@ -167,7 +167,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
 
         Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
-        Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockedUpAmount());
+        Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);

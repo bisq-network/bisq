@@ -142,7 +142,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         bsqWalletService.getAvailableNonBsqBalance(),
                         bsqWalletService.getUnverifiedBalance(),
                         bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockedInBondsBalance(),
+                        bsqWalletService.getLockupBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
         };
 
@@ -164,7 +164,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getLockupBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
     }
 
@@ -182,7 +182,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance,
+                                 Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(availableBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
@@ -215,7 +215,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         bsqWalletService.getAvailableNonBsqBalance(),
                         bsqWalletService.getUnverifiedBalance(),
                         bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockedInBondsBalance(),
+                        bsqWalletService.getLockupBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
         };
 

@@ -195,7 +195,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                  Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance,
+                                 Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
         updateList();
     }

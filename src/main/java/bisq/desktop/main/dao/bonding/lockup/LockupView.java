@@ -109,7 +109,6 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
     @Override
     public void initialize() {
-        // TODO: Show balance locked up in bonds
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.bonding.lock.lockBSQ"), Layout.GROUP_DISTANCE);
@@ -129,7 +128,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                         bsqWalletService.getAvailableNonBsqBalance(),
                         bsqWalletService.getUnverifiedBalance(),
                         bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockedInBondsBalance(),
+                        bsqWalletService.getLockupBondsBalance(),
                         bsqWalletService.getUnlockingBondsBalance());
         };
 
@@ -189,7 +188,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockedInBondsBalance(),
+                bsqWalletService.getLockupBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
     }
 
@@ -205,7 +204,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                                  Coin availableNonBsqBalance,
                                  Coin pendingBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockedInBondsBalance,
+                                 Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(confirmedBalance);
         boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid;

@@ -45,7 +45,7 @@ import lombok.Data;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Data
-class LockedTxListItem {
+class LockupTxListItem {
     private final Transaction transaction;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -64,7 +64,7 @@ class LockedTxListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
-    LockedTxListItem(Transaction transaction,
+    LockupTxListItem(Transaction transaction,
                      BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService,
                      DaoFacade daoFacade,
@@ -89,8 +89,7 @@ class LockedTxListItem {
         stateService.getLockupTxOutput(transaction.getHashAsString()).ifPresent(
                 out -> amount = Coin.valueOf(out.getValue()));
 
-        //TODO SQ: use DaoFacade instead of direct access to stateService
-        Optional<Integer> opLockTime = stateService.getLockTime(transaction.getHashAsString());
+        Optional<Integer> opLockTime = daoFacade.getLockTime(transaction.getHashAsString());
         lockTime = opLockTime.orElse(-1);
 
         button = new AutoTooltipButton();
@@ -125,7 +124,7 @@ class LockedTxListItem {
         }
     }
 
-    public boolean isLockedAndUnspent() {
+    public boolean isLockupAndUnspent() {
         return !isSpent() && getTxType() == TxType.LOCKUP;
     }
 
@@ -133,9 +132,8 @@ class LockedTxListItem {
         bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
-    // TODO SQ use daoFacade
     public boolean isSpent() {
-        Optional<TxOutput> optionalTxOutput = stateService.getLockupTxOutput(txId);
+        Optional<TxOutput> optionalTxOutput = daoFacade.getLockupTxOutput(txId);
         if (!optionalTxOutput.isPresent())
             return true;
 
