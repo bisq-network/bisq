@@ -45,7 +45,7 @@ import lombok.Data;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Data
-class LockedTxListItem {
+class LockupTxListItem {
     private final Transaction transaction;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -64,7 +64,7 @@ class LockedTxListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
-    LockedTxListItem(Transaction transaction,
+    LockupTxListItem(Transaction transaction,
                      BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService,
                      DaoFacade daoFacade,
@@ -124,7 +124,7 @@ class LockedTxListItem {
         }
     }
 
-    public boolean isLockedAndUnspent() {
+    public boolean isLockupAndUnspent() {
         return !isSpent() && getTxType() == TxType.LOCKUP;
     }
 
