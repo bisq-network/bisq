@@ -310,16 +310,14 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
     private void onButtonClick() {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            // TODO SQ use daoFacade
-            Optional<TxOutput> lockedTxOutput = stateService.getLockupTxOutput(selectedItem.getTxId());
+            Optional<TxOutput> lockedTxOutput = daoFacade.getLockupTxOutput(selectedItem.getTxId());
             if (!lockedTxOutput.isPresent()) {
                 log.warn("Locked output not found, txId = ", selectedItem.getTxId());
                 return;
             }
 
             Coin unlockAmount = Coin.valueOf(lockedTxOutput.get().getValue());
-            //TODO SQ: use DaoFacade instead of direct access to stateService
-            Optional<Integer> opLockTime = stateService.getLockTime(selectedItem.getTxId());
+            Optional<Integer> opLockTime = daoFacade.getLockTime(selectedItem.getTxId());
             int lockTime = opLockTime.isPresent() ? opLockTime.get() : -1;
 
             try {
