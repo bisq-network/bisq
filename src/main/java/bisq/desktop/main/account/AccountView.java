@@ -49,7 +49,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 
 @FxmlView
-public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
+public class AccountView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab accountSettingsTab;
@@ -67,8 +67,8 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     private EventHandler<KeyEvent> keyEventEventHandler;
 
     @Inject
-    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
-        super(model);
+    private AccountView(CachingViewLoader viewLoader, Navigation navigation) {
+        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

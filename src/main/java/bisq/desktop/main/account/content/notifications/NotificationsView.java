@@ -20,6 +20,7 @@ package bisq.desktop.main.account.content.notifications;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.WebCamWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
@@ -55,6 +56,8 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     private Button wipeOutButton;
     private Button devButton;
     private ChangeListener<Boolean> useSoundCheckBoxListener, tradeCheckBoxListener;
+    private WebCamWindow webCamWindow;
+    private QrCodeReader qrCodeReader;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -74,12 +77,26 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
-        webCamButton = FormBuilder.addLabelButton(root, gridRow, Res.get("account.notifications.webcam.label"), Res.get("account.notifications.webcam.title"), Layout.FIRST_ROW_DISTANCE).second;
+        webCamButton = FormBuilder.addLabelButton(root, gridRow, Res.get("account.notifications.webcam.label"),
+                Res.get("account.notifications.webcam.title"), Layout.FIRST_ROW_DISTANCE).second;
         webCamButton.setDefaultButton(true);
 
         webCamButton.setOnAction((event) -> {
             webCamButton.setDisable(true);
-            new QrCodeWindow(this::applyKeyAndToken);
+            new WebCamLauncher(webCam -> {
+                webCamWindow = new WebCamWindow(webCam.getViewSize().width, webCam.getViewSize().height)
+                        .onClose(() -> {
+                            webCamButton.setDisable(false);
+                            qrCodeReader.close();
+                        });
+                webCamWindow.show();
+
+                qrCodeReader = new QrCodeReader(webCam, webCamWindow.getImageView(), qrCode -> {
+                    webCamWindow.hide();
+                    webCamButton.setDisable(false);
+                    tokenInputTextField.setText(qrCode);
+                });
+            });
         });
 
         tokenInputTextField = FormBuilder.addLabelInputTextField(root, ++gridRow, Res.get("account.notifications.email.label")).second;
