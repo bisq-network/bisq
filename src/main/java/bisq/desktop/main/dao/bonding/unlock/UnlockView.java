@@ -36,7 +36,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
@@ -92,9 +91,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-    //TODO SQ stateService should not be used outside in desktop
-    private final StateService stateService;
-
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final Navigation navigation;
@@ -122,7 +118,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                        BsqValidator bsqValidator,
                        DaoFacade daoFacade,
                        Preferences preferences,
-                       StateService stateService,
                        WalletsSetup walletsSetup,
                        P2PService p2PService,
                        Navigation navigation) {
@@ -133,7 +128,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
         this.preferences = preferences;
-        this.stateService = stateService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.navigation = navigation;
@@ -415,7 +409,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
-                            stateService,
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })
