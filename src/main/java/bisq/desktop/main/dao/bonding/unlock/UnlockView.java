@@ -22,10 +22,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BsqValidator;
@@ -46,7 +43,6 @@ import bisq.core.util.BsqFormatter;
 import bisq.network.p2p.P2PService;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -334,21 +330,9 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } catch (Throwable t) {
-                //TODO SQ conde analysis of intellij says that the following is always false, but don't understand why...
-                // but mostly they are right ;-)
-                if (t instanceof InsufficientMoneyException) {
-                    final Coin missingCoin = ((InsufficientMoneyException) t).missing;
-                    final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-                    //noinspection unchecked
-                    new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
-                            .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-                            .show();
-                } else {
-                    log.error(t.toString());
-                    t.printStackTrace();
-                    new Popup<>().warning(t.getMessage()).show();
-                }
+                log.error(t.toString());
+                t.printStackTrace();
+                new Popup<>().warning(t.getMessage()).show();
             }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
