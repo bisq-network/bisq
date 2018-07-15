@@ -117,8 +117,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_DISTANCE).second;
         proposalTypeComboBox.setConverter(new StringConverter<ProposalType>() {
             @Override
-            public String toString(ProposalType object) {
-                return Res.get(object.name());
+            public String toString(ProposalType proposalType) {
+                return Res.get("dao.proposal.type." + proposalType.name());
             }
 
             @Override

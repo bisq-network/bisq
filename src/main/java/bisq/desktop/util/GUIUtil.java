@@ -96,6 +96,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -541,8 +542,14 @@ public class GUIUtil {
             childByRowMap.get(rowIndex).add(child);
         });
 
-        for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end, childByRowMap.size()); i++) {
-            childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
+        for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end + 1, childByRowMap.size()); i++) {
+            List<Node> nodes = childByRowMap.get(i);
+            if (nodes != null) {
+                nodes.stream()
+                        .filter(Objects::nonNull)
+                        .filter(node -> gridPane.getChildren().contains(node))
+                        .forEach(node -> gridPane.getChildren().remove(node));
+            }
         }
     }
 

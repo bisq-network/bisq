@@ -274,7 +274,7 @@ public class ProposalDisplay {
     public void removeAllFields() {
         if (gridRow > 0) {
             clearForm();
-            GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow + 1);
+            GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow);
             gridRow = gridRowStartIndex;
         }
     }

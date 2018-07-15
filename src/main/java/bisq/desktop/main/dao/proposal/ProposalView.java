@@ -31,8 +31,6 @@ import bisq.desktop.main.dao.proposal.active.ActiveProposalsView;
 import bisq.desktop.main.dao.proposal.closed.ClosedProposalsView;
 import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
 import bisq.desktop.main.dao.proposal.make.MakeProposalView;
-import bisq.desktop.main.dao.proposal.myvotes.MyVotesView;
-import bisq.desktop.main.dao.proposal.votes.VotesView;
 
 import bisq.core.locale.Res;
 
@@ -55,7 +53,7 @@ public class ProposalView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, make, active, myVotes, votes, closed;
+    private MenuItem dashboard, make, active, closed;
     private Navigation.Listener listener;
 
     @FXML
@@ -89,13 +87,9 @@ public class ProposalView extends ActivatableViewAndModel {
                 MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
         active = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.active"),
                 ActiveProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
-        myVotes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.myVotes"),
-                MyVotesView.class, AwesomeIcon.THUMBS_UP, baseNavPath);
-        votes = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.votes"),
-                VotesView.class, AwesomeIcon.THUMBS_UP_ALT, baseNavPath);
         closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"),
                 ClosedProposalsView.class, AwesomeIcon.LIST_ALT, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, make, active, myVotes, votes, closed);
+        leftVBox.getChildren().addAll(dashboard, make, active, closed);
     }
 
     @Override
@@ -103,8 +97,6 @@ public class ProposalView extends ActivatableViewAndModel {
         dashboard.activate();
         make.activate();
         active.activate();
-        myVotes.activate();
-        votes.activate();
         closed.activate();
 
         navigation.addListener(listener);
@@ -129,8 +121,6 @@ public class ProposalView extends ActivatableViewAndModel {
         dashboard.deactivate();
         make.deactivate();
         active.deactivate();
-        myVotes.deactivate();
-        votes.deactivate();
         closed.deactivate();
     }
 
@@ -141,8 +131,6 @@ public class ProposalView extends ActivatableViewAndModel {
         if (view instanceof ProposalDashboardView) dashboard.setSelected(true);
         else if (view instanceof MakeProposalView) make.setSelected(true);
         else if (view instanceof ActiveProposalsView) active.setSelected(true);
-        else if (view instanceof MyVotesView) myVotes.setSelected(true);
-        else if (view instanceof VotesView) votes.setSelected(true);
         else if (view instanceof ClosedProposalsView) closed.setSelected(true);
     }
 

@@ -373,6 +373,14 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-green;
 }
 
+.dao-accepted-icon {
+    -fx-text-fill: -bs-green;
+}
+
+.dao-rejected-icon {
+    -fx-text-fill: -bs-error-red;
+}
+
 .version {
     -fx-text-fill: black;
     -fx-underline: false;

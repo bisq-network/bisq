@@ -98,20 +98,6 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         addMultilineLabel(root, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
     }
 
-
-    private SeparatedPhaseBars createSeparatedPhaseBars() {
-        phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.PROPOSAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK1, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BLIND_VOTE, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
-        return new SeparatedPhaseBars(phaseBarsItems);
-    }
-
     @Override
     protected void activate() {
         super.activate();
@@ -170,6 +156,19 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         blindVoteTextField.setText(getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE));
         voteRevealTextField.setText(getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL));
         voteResultTextField.setText(getPhaseDuration(height, DaoPhase.Phase.RESULT));
+    }
+
+    private SeparatedPhaseBars createSeparatedPhaseBars() {
+        phaseBarsItems = Arrays.asList(
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.PROPOSAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK1, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BLIND_VOTE, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false),
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
+        return new SeparatedPhaseBars(phaseBarsItems);
     }
 
     private String getPhaseDuration(int height, DaoPhase.Phase phase) {
