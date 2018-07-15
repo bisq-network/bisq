@@ -24,11 +24,14 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.locale.Res;
 
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
+
+import javafx.beans.value.ChangeListener;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
 
     @Getter
     private ImageView imageView = new ImageView();
+    private ChangeListener<Image> listener;
 
 
     public WebCamWindow(double width, double height) {
@@ -57,7 +61,6 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
         addCloseButton();
         applyStyles();
         display();
-
     }
 
     private void addContent() {
@@ -71,5 +74,22 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
         GridPane.setRowIndex(imageView, rowIndex);
         GridPane.setColumnSpan(imageView, 2);
         gridPane.getChildren().add(imageView);
+    }
+
+    @Override
+    protected void addCloseButton() {
+        super.addCloseButton();
+
+        closeButton.setVisible(false);
+        listener = (observable, oldValue, newValue) -> closeButton.setVisible(newValue != null);
+        imageView.imageProperty().addListener(listener);
+    }
+
+    @Override
+    public void hide() {
+        super.hide();
+
+        if (listener != null)
+            imageView.imageProperty().removeListener(listener);
     }
 }

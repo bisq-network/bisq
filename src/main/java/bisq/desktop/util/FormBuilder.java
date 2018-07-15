@@ -947,7 +947,7 @@ public class FormBuilder {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Label  + Button
+    // Label + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle) {
@@ -965,6 +965,26 @@ public class FormBuilder {
         GridPane.setMargin(button, new Insets(top, 0, 0, 0));
         return new Tuple2<>(label, button);
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + Button + Button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, Button, Button> addLabel2Buttons(GridPane gridPane, int rowIndex, String labelText, String title1, String title2, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelText, top);
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button1 = new AutoTooltipButton(title1);
+        button1.setDefaultButton(true);
+        Button button2 = new AutoTooltipButton(title2);
+        hBox.getChildren().addAll(button1, button2);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple3<>(label, button1, button2);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button
