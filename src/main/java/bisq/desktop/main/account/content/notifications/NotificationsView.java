@@ -32,9 +32,13 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.notifications.MobileMessage;
-import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.MobileNotificationValidator;
+import bisq.core.notifications.alerts.DisputeMsgEvents;
+import bisq.core.notifications.alerts.MyOfferTakenEvents;
+import bisq.core.notifications.alerts.TradeEvents;
+import bisq.core.notifications.alerts.market.MarketAlerts;
+import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -58,17 +62,17 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.util.StringConverter;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 @FxmlView
 public class NotificationsView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
-    private User user;
-    private PriceFeedService priceFeedService;
+    private final User user;
+    private final PriceFeedService priceFeedService;
     private final MobileNotificationValidator mobileNotificationValidator;
     private final MobileNotificationService mobileNotificationService;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     private WebCamWindow webCamWindow;
     private QrCodeReader qrCodeReader;
@@ -88,7 +92,7 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
 
     private TradeCurrency selectedPriceAlertTradeCurrency;
     private int gridRow = 0;
-    private int testMsgButtonClicked = 1;
+    private int testMsgCounter = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -233,17 +237,42 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                 Res.get("account.notifications.testMsg.title")).second;
         testMsgButton.setDefaultButton(false);
         testMsgButton.setOnAction(event -> {
-            MobileMessageType mobileMessageType = MobileMessageType.values()[testMsgButtonClicked];
-            MobileMessage message = new MobileMessage("Test notification",
-                    "Test " + mobileMessageType.name() + " message - " + new Random().nextInt(1000),
-                    "Test txId",
-                    mobileMessageType);
-            testMsgButtonClicked++;
-            // we don't want to send the ERASE and SETUP_CONFIRMATION msg
-            if (testMsgButtonClicked >= MobileMessageType.values().length - 1)
-                testMsgButtonClicked = 1;
+            MobileMessage message = null;
+            List<MobileMessage> messages = null;
+            switch (testMsgCounter) {
+                case 0:
+                    message = MyOfferTakenEvents.getTestMsg();
+                    break;
+                case 1:
+                    messages = TradeEvents.getTestMsgs();
+                    break;
+                case 2:
+                    message = DisputeMsgEvents.getTestMsg();
+                    break;
+                case 3:
+                    message = PriceAlert.getTestMsg();
+                    break;
+                case 4:
+                default:
+                    message = MarketAlerts.getTestMsg();
+                    break;
+            }
+            testMsgCounter++;
+            if (testMsgCounter > 4)
+                testMsgCounter = 0;
+
             try {
-                mobileNotificationService.sendMessage(message, useSoundCheckBox.isSelected());
+                if (message != null) {
+                    mobileNotificationService.sendMessage(message, useSoundCheckBox.isSelected());
+                } else if (messages != null) {
+                    messages.forEach(msg -> {
+                        try {
+                            mobileNotificationService.sendMessage(msg, useSoundCheckBox.isSelected());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
             } catch (Exception e) {
                 new Popup<>().error(e.toString()).show();
             }
