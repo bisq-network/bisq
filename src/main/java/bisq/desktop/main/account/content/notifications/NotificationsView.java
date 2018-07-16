@@ -46,6 +46,7 @@ import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -64,6 +65,7 @@ import javafx.util.StringConverter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @FxmlView
 public class NotificationsView extends ActivatableView<GridPane, Void> {
@@ -209,6 +211,12 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                     reset();
                     tokenInputTextField.setText(qrCode);
                     updatePriceAlertInputs();
+
+                    if (!mobileNotificationService.getMobileModel().isContentAvailable())
+                        UserThread.runAfter(() -> new Popup<>()
+                                .warning(Res.get("account.notifications.isContentAvailable.warning",
+                                        mobileNotificationService.getMobileModel().getDescriptor()))
+                                .show(), 300, TimeUnit.MILLISECONDS);
                 });
             });
         });
