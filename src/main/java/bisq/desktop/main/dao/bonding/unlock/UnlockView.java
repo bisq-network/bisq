@@ -22,10 +22,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BsqValidator;
@@ -36,7 +33,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BlockListener;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
@@ -47,7 +43,6 @@ import bisq.core.util.BsqFormatter;
 import bisq.network.p2p.P2PService;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -92,9 +87,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-    //TODO SQ stateService should not be used outside in desktop
-    private final StateService stateService;
-
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final Navigation navigation;
@@ -122,7 +114,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                        BsqValidator bsqValidator,
                        DaoFacade daoFacade,
                        Preferences preferences,
-                       StateService stateService,
                        WalletsSetup walletsSetup,
                        P2PService p2PService,
                        Navigation navigation) {
@@ -133,7 +124,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
         this.preferences = preferences;
-        this.stateService = stateService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.navigation = navigation;
@@ -340,21 +330,9 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } catch (Throwable t) {
-                //TODO SQ conde analysis of intellij says that the following is always false, but don't understand why...
-                // but mostly they are right ;-)
-                if (t instanceof InsufficientMoneyException) {
-                    final Coin missingCoin = ((InsufficientMoneyException) t).missing;
-                    final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-                    //noinspection unchecked
-                    new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
-                            .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-                            .show();
-                } else {
-                    log.error(t.toString());
-                    t.printStackTrace();
-                    new Popup<>().warning(t.getMessage()).show();
-                }
+                log.error(t.toString());
+                t.printStackTrace();
+                new Popup<>().warning(t.getMessage()).show();
             }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
@@ -415,7 +393,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
-                            stateService,
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })

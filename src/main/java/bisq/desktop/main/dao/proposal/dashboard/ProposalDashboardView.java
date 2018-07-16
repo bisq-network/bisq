@@ -50,7 +50,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 // We use here ChainHeightListener because we are interested in period changes not in the result of a completed
 // block. The event from the ChainHeightListener is sent before parsing starts.
-// The event from the StateService.Listener would notify after parsing a new block.
+// The event from the ChainHeightListener would notify after parsing a new block.
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
     private final DaoFacade daoFacade;

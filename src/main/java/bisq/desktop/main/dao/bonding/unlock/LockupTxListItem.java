@@ -25,7 +25,6 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.StateService;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
@@ -51,9 +50,6 @@ class LockupTxListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
 
-    //TODO SQ stateService should not be used outside in desktop
-    private final StateService stateService;
-
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final String txId;
@@ -71,14 +67,12 @@ class LockupTxListItem {
                      BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService,
                      DaoFacade daoFacade,
-                     StateService stateService,
                      Date date,
                      BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.daoFacade = daoFacade;
-        this.stateService = stateService;
         this.date = date;
         this.bsqFormatter = bsqFormatter;
 
@@ -89,8 +83,7 @@ class LockupTxListItem {
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
 
-        //TODO SQ use daoFacade
-        stateService.getLockupTxOutput(transaction.getHashAsString())
+        daoFacade.getLockupTxOutput(transaction.getHashAsString())
                 .ifPresent(out -> amount = Coin.valueOf(out.getValue()));
 
         Optional<Integer> opLockTime = daoFacade.getLockTime(transaction.getHashAsString());
@@ -138,7 +131,7 @@ class LockupTxListItem {
 
     public boolean isSpent() {
         Optional<TxOutput> optionalTxOutput = daoFacade.getLockupTxOutput(txId);
-        return optionalTxOutput.map(txOutput -> !stateService.isUnspent(txOutput.getKey()))
+        return optionalTxOutput.map(txOutput -> !daoFacade.isUnspent(txOutput.getKey()))
                 .orElse(true);
 
     }
