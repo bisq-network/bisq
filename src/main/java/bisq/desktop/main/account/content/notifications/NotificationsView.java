@@ -212,11 +212,13 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                     tokenInputTextField.setText(qrCode);
                     updatePriceAlertInputs();
 
-                    if (!mobileNotificationService.getMobileModel().isContentAvailable())
-                        UserThread.runAfter(() -> new Popup<>()
-                                .warning(Res.get("account.notifications.isContentAvailable.warning",
-                                        mobileNotificationService.getMobileModel().getDescriptor()))
-                                .show(), 300, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(() -> {
+                        if (!mobileNotificationService.getMobileModel().isContentAvailable())
+                            new Popup<>()
+                                    .warning(Res.get("account.notifications.isContentAvailable.warning",
+                                            mobileNotificationService.getMobileModel().getDescriptor()))
+                                    .show();
+                    }, 600, TimeUnit.MILLISECONDS);
                 });
             });
         });
