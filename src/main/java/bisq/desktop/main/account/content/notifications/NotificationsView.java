@@ -32,6 +32,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.notifications.MobileMessage;
+import bisq.core.notifications.MobileModel;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.MobileNotificationValidator;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
@@ -212,13 +213,15 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                     tokenInputTextField.setText(qrCode);
                     updatePriceAlertInputs();
 
-                    UserThread.runAfter(() -> {
-                        if (!mobileNotificationService.getMobileModel().isContentAvailable())
+                    if (mobileNotificationService.getMobileModel().getOs() != MobileModel.OS.ANDROID &&
+                            !mobileNotificationService.getMobileModel().isContentAvailable()) {
+                        UserThread.runAfter(() -> {
                             new Popup<>()
                                     .warning(Res.get("account.notifications.isContentAvailable.warning",
                                             mobileNotificationService.getMobileModel().getDescriptor()))
                                     .show();
-                    }, 600, TimeUnit.MILLISECONDS);
+                        }, 600, TimeUnit.MILLISECONDS);
+                    }
                 });
             });
         });
