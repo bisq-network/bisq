@@ -56,6 +56,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -150,10 +151,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
+        GridPane.setVgrow(vBox, Priority.ALWAYS);
         GridPane.setRowIndex(vBox, ++gridRow);
         GridPane.setColumnSpan(vBox, 2);
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
         vBox.getChildren().addAll(tableView, hBox);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
@@ -362,9 +365,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             if (field != null)
                                                 field.setOnAction(null);
 
-                                            if (txType == TxType.TRANSFER_BSQ) {
-                                                if (item.getAmount().isZero())
-                                                    labelString = Res.get("funds.tx.direction.self");
+                                            if (txType == TxType.TRANSFER_BSQ &&
+                                                    item.getAmount().isZero() &&
+                                                    item.getTxType() != TxType.UNLOCK) {
+                                                labelString = Res.get("funds.tx.direction.self");
                                             }
 
                                             label = new AutoTooltipLabel(labelString);
@@ -481,6 +485,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     boolean doRotate = false;
                                     switch (txType) {
                                         case UNDEFINED_TX_TYPE:
+                                            awesomeIcon = AwesomeIcon.REMOVE_CIRCLE;
+                                            style = "dao-tx-type-unverified-icon";
+                                            break;
                                         case UNVERIFIED:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;
                                             style = "dao-tx-type-unverified-icon";
@@ -495,8 +502,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             break;
                                         case TRANSFER_BSQ:
                                             if (item.getAmount().isZero()) {
-                                                awesomeIcon = AwesomeIcon.EXCHANGE;
-                                                style = "dao-tx-type-default-icon";
+                                                awesomeIcon = AwesomeIcon.RETWEET;
+                                                style = "dao-tx-type-self-icon";
                                             } else {
                                                 awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
                                                 doRotate = item.isReceived();
@@ -507,8 +514,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             }
                                             break;
                                         case PAY_TRADE_FEE:
-                                            awesomeIcon = AwesomeIcon.TICKET;
-                                            style = "dao-tx-type-default-icon";
+                                            awesomeIcon = AwesomeIcon.LEAF;
+                                            style = "dao-tx-type-trade-fee-icon";
                                             break;
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
@@ -521,17 +528,25 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 final String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {
-                                                awesomeIcon = AwesomeIcon.FILE;
-                                                style = "dao-tx-type-fee-icon";
+                                                awesomeIcon = AwesomeIcon.SHARE;
+                                                style = "dao-tx-type-proposal-fee-icon";
                                             }
                                             break;
                                         case BLIND_VOTE:
-                                            awesomeIcon = AwesomeIcon.THUMBS_UP;
+                                            awesomeIcon = AwesomeIcon.EYE_CLOSE;
                                             style = "dao-tx-type-vote-icon";
                                             break;
                                         case VOTE_REVEAL:
-                                            awesomeIcon = AwesomeIcon.LIGHTBULB;
+                                            awesomeIcon = AwesomeIcon.EYE_OPEN;
                                             style = "dao-tx-type-vote-reveal-icon";
+                                            break;
+                                        case LOCKUP:
+                                            awesomeIcon = AwesomeIcon.LOCK;
+                                            style = "dao-tx-type-lockup-icon";
+                                            break;
+                                        case UNLOCK:
+                                            awesomeIcon = AwesomeIcon.UNLOCK;
+                                            style = "dao-tx-type-unlock-icon";
                                             break;
                                         default:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;

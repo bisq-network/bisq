@@ -85,7 +85,7 @@ public class VotingView extends ActivatableViewAndModel {
         activeBallots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.activeBallots"),
                 ActiveBallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
         closedBallots = new MenuItem(navigation, toggleGroup, Res.get("dao.voting.menuItem.closedBallots"),
-                ClosedBallotsView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                ClosedBallotsView.class, AwesomeIcon.LIST_ALT, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, activeBallots, closedBallots);
     }
 

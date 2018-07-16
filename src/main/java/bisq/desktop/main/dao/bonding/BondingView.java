@@ -83,9 +83,9 @@ public class BondingView extends ActivatableViewAndModel {
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         lockupBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.lockupBSQ"),
-                LockupView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                LockupView.class, AwesomeIcon.LOCK, baseNavPath);
         unlockBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.unlockBSQ"),
-                UnlockView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                UnlockView.class, AwesomeIcon.UNLOCK, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, lockupBSQ, unlockBSQ);
     }
 

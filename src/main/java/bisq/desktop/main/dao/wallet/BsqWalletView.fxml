@@ -28,11 +28,10 @@
           AnchorPane.topAnchor="20"/>
 
     <ScrollPane fx:id="scrollPane"
-                fitToWidth="true" hbarPolicy="NEVER"
+                fitToWidth="true" fitToHeight="true"
                 AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="270.0"
                 AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <AnchorPane fx:id="content" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+        <AnchorPane fx:id="content"/>
     </ScrollPane>
 
 </AnchorPane>
