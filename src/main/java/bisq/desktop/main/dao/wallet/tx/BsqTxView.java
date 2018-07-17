@@ -519,13 +519,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             break;
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
-                                            final String txId = item.getTxId();
+                                            String txId = item.getTxId();
                                             if (daoFacade.isIssuanceTx(txId)) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
-                                                final int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
+                                                int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTimeInSec = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                final String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
+                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.SHARE;

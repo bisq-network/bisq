@@ -28,8 +28,6 @@ import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 
-import bisq.common.UserThread;
-
 import javax.inject.Inject;
 
 import javafx.scene.control.TextField;
@@ -117,8 +115,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         });
         daoFacade.addChainHeightListener(this);
 
-        // We need to delay as otherwise the periodService has not been updated yet.
-        UserThread.execute(() -> onChainHeightChanged(daoFacade.getChainHeight()));
+        onChainHeightChanged(daoFacade.getChainHeight());
     }
 
     @Override
@@ -132,7 +129,6 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     @Override
     public void onChainHeightChanged(int height) {
         if (height > 0) {
-            separatedPhaseBars.updateWidth();
             phaseBarsItems.forEach(item -> {
                 int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());
                 int lastBlock = daoFacade.getLastBlockOfPhase(height, item.getPhase());
@@ -148,6 +144,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
                 }
                 item.getProgressProperty().set(progress);
             });
+            separatedPhaseBars.updateWidth();
         }
 
         currentBlockHeightTextField.setText(String.valueOf(daoFacade.getChainHeight()));

@@ -20,8 +20,6 @@ package bisq.desktop.components;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 
-import bisq.common.UserThread;
-
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.AnchorPane;
@@ -83,7 +81,6 @@ public class SeparatedPhaseBars extends VBox {
         widthProperty().addListener((observable, oldValue, newValue) -> {
             updateWidth((double) newValue);
         });
-        UserThread.execute(() -> updateWidth(getWidth()));
     }
 
     public void updateWidth() {
@@ -117,15 +114,16 @@ public class SeparatedPhaseBars extends VBox {
     }
 
     private void updateWidth(double availableWidth) {
-        totalDuration = items.stream().mapToInt(SeparatedPhaseBarsItem::getDuration).sum();
-        // availableWidth -= vBoxLabels.getWidth();
-        if (availableWidth > 0 && totalDuration > 0) {
-            final double finalAvailableWidth = availableWidth;
-            items.forEach(item -> {
-                final double width = (double) item.duration / (double) totalDuration * finalAvailableWidth;
-                item.getProgressBar().setPrefWidth(width);
-                item.getTitleLabel().setPrefWidth(width);
-            });
+        if (availableWidth > 0) {
+            totalDuration = items.stream().mapToInt(SeparatedPhaseBarsItem::getDuration).sum();
+            if (totalDuration > 0) {
+                final double finalAvailableWidth = availableWidth;
+                items.forEach(item -> {
+                    final double width = (double) item.duration / (double) totalDuration * finalAvailableWidth;
+                    item.getProgressBar().setPrefWidth(width);
+                    item.getTitleLabel().setPrefWidth(width);
+                });
+            }
         }
     }
 
