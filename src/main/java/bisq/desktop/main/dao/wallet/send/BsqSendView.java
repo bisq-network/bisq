@@ -94,6 +94,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private TitledGroupBg btcTitledGroupBg;
     private Label receiversBtcAddressLabel;
     private Label btcAmountLabel;
+    private ChangeListener<String> inputTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -138,13 +139,9 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
-                onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                        bsqWalletService.getAvailableNonBsqBalance(),
-                        bsqWalletService.getUnverifiedBalance(),
-                        bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockupBondsBalance(),
-                        bsqWalletService.getUnlockingBondsBalance());
+                onUpdateBalances();
         };
+        inputTextFieldListener = (observable, oldValue, newValue) -> onUpdateBalances();
 
         setSendBtcGroupVisibleState(false);
     }
@@ -153,13 +150,23 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     protected void activate() {
         setSendBtcGroupVisibleState(false);
         bsqBalanceUtil.activate();
+
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
-
         receiversBtcAddressInputTextField.focusedProperty().addListener(focusOutListener);
         btcAmountInputTextField.focusedProperty().addListener(focusOutListener);
 
+        receiversAddressInputTextField.textProperty().addListener(inputTextFieldListener);
+        amountInputTextField.textProperty().addListener(inputTextFieldListener);
+        receiversBtcAddressInputTextField.textProperty().addListener(inputTextFieldListener);
+        btcAmountInputTextField.textProperty().addListener(inputTextFieldListener);
+
         bsqWalletService.addBsqBalanceListener(this);
+
+        onUpdateBalances();
+    }
+
+    private void onUpdateBalances() {
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
@@ -172,8 +179,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
+
         receiversAddressInputTextField.focusedProperty().removeListener(focusOutListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
+        receiversBtcAddressInputTextField.focusedProperty().removeListener(focusOutListener);
+        btcAmountInputTextField.focusedProperty().removeListener(focusOutListener);
+
+        receiversAddressInputTextField.textProperty().removeListener(inputTextFieldListener);
+        amountInputTextField.textProperty().removeListener(inputTextFieldListener);
+        receiversBtcAddressInputTextField.textProperty().removeListener(inputTextFieldListener);
+        btcAmountInputTextField.textProperty().removeListener(inputTextFieldListener);
+
         bsqWalletService.removeBsqBalanceListener(this);
     }
 
@@ -211,12 +227,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
-                onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                        bsqWalletService.getAvailableNonBsqBalance(),
-                        bsqWalletService.getUnverifiedBalance(),
-                        bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockupBondsBalance(),
-                        bsqWalletService.getUnlockingBondsBalance());
+                onUpdateBalances();
         };
 
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));

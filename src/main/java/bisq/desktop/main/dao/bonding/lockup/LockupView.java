@@ -66,13 +66,14 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
-    private final IntegerValidator integerValidator;
+    private final IntegerValidator timeInputTextFieldValidator;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
+    private ChangeListener<String> inputTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,14 +98,9 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
 
-
-        integerValidator = new IntegerValidator();
-        // In the UI we don't allow 0 as that would mean that the tx gets spent
-        // in the same block as the unspent tx and we don't support unconfirmed txs in the DAO. Technically though 0
-        // works as well.
-        integerValidator.setMinValue(BondingConsensus.getMinLockTime());
-        // Max value is max of a short int as we use only 2 bytes in the opReturn for the lockTime
-        integerValidator.setMaxValue(BondingConsensus.getMaxLockTime());
+        timeInputTextFieldValidator = new IntegerValidator();
+        timeInputTextFieldValidator.setMinValue(BondingConsensus.getMinLockTime());
+        timeInputTextFieldValidator.setMaxValue(BondingConsensus.getMaxLockTime());
     }
 
     @Override
@@ -117,85 +113,71 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
+
         timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"), Layout.GRID_GAP).second;
         timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
-        timeInputTextField.setValidator(integerValidator);
-
-        focusOutListener = (observable, oldValue, newValue) -> {
-            if (!newValue)
-                onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                        bsqWalletService.getAvailableNonBsqBalance(),
-                        bsqWalletService.getUnverifiedBalance(),
-                        bsqWalletService.getLockedForVotingBalance(),
-                        bsqWalletService.getLockupBondsBalance(),
-                        bsqWalletService.getUnlockingBondsBalance());
-        };
+        timeInputTextField.setValidator(timeInputTextFieldValidator);
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
-
         lockupButton.setOnAction((event) -> {
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
                 int lockupTime = Integer.parseInt(timeInputTextField.getText());
-                try {
-                    new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
-                            .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
-                                    bsqFormatter.formatCoinWithCode(lockupAmount),
-                                    lockupTime
-                            ))
-                            .actionButtonText(Res.get("shared.yes"))
-                            .onAction(() -> {
-                                daoFacade.publishLockupTx(lockupAmount,
-                                        lockupTime,
-                                        () -> {
-                                            new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                        },
-                                        errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
-                                );
-                                amountInputTextField.setText("");
-                                timeInputTextField.setText("");
-                            })
-                            .closeButtonText(Res.get("shared.cancel"))
-                            .show();
-                } catch (Throwable t) {
-                    if (t instanceof InsufficientMoneyException) {
-                        final Coin missingCoin = ((InsufficientMoneyException) t).missing;
-                        final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-                        //noinspection unchecked
-                        new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
-                                .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                                .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-                                .show();
-                    } else {
-                        log.error(t.toString());
-                        t.printStackTrace();
-                        new Popup<>().warning(t.getMessage()).show();
-                    }
-                }
+                new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
+                        .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
+                                bsqFormatter.formatCoinWithCode(lockupAmount),
+                                lockupTime
+                        ))
+                        .actionButtonText(Res.get("shared.yes"))
+                        .onAction(() -> {
+                            daoFacade.publishLockupTx(lockupAmount,
+                                    lockupTime,
+                                    () -> {
+                                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                                    },
+                                    this::handleError
+                            );
+                            amountInputTextField.setText("");
+                            timeInputTextField.setText("");
+                        })
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
+
+        focusOutListener = (observable, oldValue, newValue) -> {
+            if (!newValue) {
+                updateButtonState();
+                onUpdateBalances();
+            }
+        };
+        inputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
     }
 
     @Override
     protected void activate() {
         bsqBalanceUtil.activate();
+
+        amountInputTextField.textProperty().addListener(inputTextFieldListener);
+        timeInputTextField.textProperty().addListener(inputTextFieldListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
+
         bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getUnverifiedBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockupBondsBalance(),
-                bsqWalletService.getUnlockingBondsBalance());
+
+        onUpdateBalances();
     }
 
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
+
+        amountInputTextField.textProperty().removeListener(inputTextFieldListener);
+        timeInputTextField.textProperty().removeListener(inputTextFieldListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
+
         bsqWalletService.removeBsqBalanceListener(this);
     }
 
@@ -209,5 +191,35 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         bsqValidator.setAvailableBalance(confirmedBalance);
         boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid;
         lockupButton.setDisable(!isValid);
+    }
+
+    private void onUpdateBalances() {
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getUnverifiedBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockupBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
+    }
+
+    private void updateButtonState() {
+        lockupButton.setDisable(!bsqValidator.validate(amountInputTextField.getText()).isValid ||
+                !timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid);
+    }
+
+    private void handleError(Throwable throwable) {
+        if (throwable instanceof InsufficientMoneyException) {
+            final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
+            final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
+            //noinspection unchecked
+            new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
+                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                    .show();
+        } else {
+            log.error(throwable.toString());
+            throwable.printStackTrace();
+            new Popup<>().warning(throwable.toString()).show();
+        }
     }
 }

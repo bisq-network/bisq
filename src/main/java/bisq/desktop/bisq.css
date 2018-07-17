@@ -334,7 +334,7 @@ bg color of non edit textFields: fafafa
 
 .dao-tx-type-invalid-icon,
 .dao-tx-type-invalid-icon:hover {
-    -fx-text-fill: #ffac00;
+    -fx-text-fill: #ff4500;
 }
 
 .dao-tx-type-self-icon,
@@ -379,7 +379,7 @@ bg color of non edit textFields: fafafa
 
 .dao-tx-type-lockup-icon,
 .dao-tx-type-lockup-icon:hover {
-    -fx-text-fill: #7f2c36;
+    -fx-text-fill: #203e7f;
 }
 
 .dao-tx-type-unlock-icon,
