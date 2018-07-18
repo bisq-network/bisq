@@ -254,7 +254,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                 amountInputTextField.setText("");
                             });
                 } catch (Throwable t) {
-                    hanldeError(t);
+                    handleError(t);
                 }
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
@@ -317,7 +317,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                 btcAmountInputTextField.setText("");
                             });
                 } catch (Throwable t) {
-                    hanldeError(t);
+                    handleError(t);
                 }
             } else {
                 GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
@@ -325,7 +325,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         });
     }
 
-    private void hanldeError(Throwable t) {
+    private void handleError(Throwable t) {
         if (t instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) t).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";

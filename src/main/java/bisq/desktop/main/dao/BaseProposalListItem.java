@@ -157,8 +157,7 @@ public abstract class BaseProposalListItem implements BsqStateListener {
     private void setupConfidence() {
         final String txId = getProposal().getTxId();
         Optional<Tx> optionalTx = daoFacade.getTx(txId);
-        if (optionalTx.isPresent()) {
-            Tx tx = optionalTx.get();
+        optionalTx.ifPresent(tx -> {
             // We cache the walletTransaction once found
             if (walletTransaction == null) {
                 final Optional<Transaction> transactionOptional = bsqWalletService.isWalletTransaction(txId);
@@ -177,7 +176,7 @@ public abstract class BaseProposalListItem implements BsqStateListener {
                     bsqWalletService.addTxConfidenceListener(txConfidenceListener);
                 }
             } else {
-                // tx from other users, we dont get confidence updates but as we have the bsq tx we can calculate it
+                // tx from other users, we don't get confidence updates but as we have the bsq tx we can calculate it
                 // we get setupConfidence called at each new block from above listener so no need to register a new listener
                 int depth = bsqWalletService.getChainHeightProperty().get() - tx.getBlockHeight() + 1;
                 if (depth > 0)
@@ -187,7 +186,7 @@ public abstract class BaseProposalListItem implements BsqStateListener {
             final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
             if (confidence != null)
                 updateConfidence(confidence, confidence.getDepthInBlocks());
-        }
+        });
     }
 
     private void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {

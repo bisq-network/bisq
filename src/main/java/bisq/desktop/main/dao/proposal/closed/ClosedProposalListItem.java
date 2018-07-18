@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class ClosedProposalListItem extends ProposalListItem {
+class ClosedProposalListItem extends ProposalListItem {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle

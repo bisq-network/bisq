@@ -15,16 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.active;
+package bisq.desktop.main.dao.voting;
 
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.main.dao.proposal.ProposalListItem;
+import bisq.desktop.main.dao.BaseProposalListItem;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.voting.ballot.Ballot;
+import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import lombok.EqualsAndHashCode;
@@ -35,23 +36,26 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class ActiveProposalListItem extends ProposalListItem {
+public class BaseBallotListItem extends BaseProposalListItem {
     @Getter
-    private AutoTooltipButton button;
+    private final Ballot ballot;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    ActiveProposalListItem(Proposal proposal,
-                           DaoFacade daoFacade,
-                           BsqWalletService bsqWalletService,
-                           BsqFormatter bsqFormatter) {
-        super(proposal,
-                daoFacade,
+    protected BaseBallotListItem(Ballot ballot,
+                                 DaoFacade daoFacade,
+                                 BsqWalletService bsqWalletService,
+                                 BsqFormatter bsqFormatter) {
+        super(daoFacade,
                 bsqWalletService,
                 bsqFormatter);
+
+        this.ballot = ballot;
+
+        init();
     }
 
 
@@ -62,32 +66,31 @@ public class ActiveProposalListItem extends ProposalListItem {
     @Override
     protected void init() {
         super.init();
-
-        button = new AutoTooltipButton();
-        button.setMinWidth(70);
-        onPhaseChanged(daoFacade.phaseProperty().get());
     }
 
     @Override
     public void onPhaseChanged(DaoPhase.Phase phase) {
         super.onPhaseChanged(phase);
 
-        //noinspection IfCanBeSwitch
-        if (phase == DaoPhase.Phase.PROPOSAL) {
-            imageView.setId("image-remove");
-            button.setGraphic(imageView);
-            button.setText(Res.get("dao.proposal.active.remove"));
-            final boolean isMyProposal = daoFacade.isMyProposal(proposal);
-            button.setVisible(isMyProposal);
-            button.setManaged(isMyProposal);
-        } else if (phase == DaoPhase.Phase.BLIND_VOTE) {
-            button.setGraphic(null);
-            button.setText(Res.get("dao.proposal.active.vote"));
-            button.setVisible(true);
-            button.setManaged(true);
+        final Vote vote = ballot.getVote();
+        if (vote != null) {
+            imageView.setVisible(true);
+            if (vote instanceof BooleanVote) {
+                if (((BooleanVote) vote).isAccepted()) {
+                    imageView.setId("accepted");
+                } else {
+                    imageView.setId("rejected");
+                }
+            }/* else {
+                // not impl.
+            }*/
         } else {
-            button.setVisible(false);
-            button.setManaged(false);
+            imageView.setVisible(false);
         }
+    }
+
+    @Override
+    public Proposal getProposal() {
+        return ballot.getProposal();
     }
 }

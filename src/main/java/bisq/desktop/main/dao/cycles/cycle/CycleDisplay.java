@@ -72,7 +72,6 @@ public class CycleDisplay {
 
     private int gridRow;
     private int gridRowStartIndex;
-    private TableView<CycleListItem> tableView;
 
 
     private final ObservableList<CycleListItem> itemList = FXCollections.observableArrayList();
@@ -123,7 +122,7 @@ public class CycleDisplay {
         GridPane.setColumnSpan(headline, 2);
         gridPane.getChildren().add(headline);
 
-        tableView = new TableView<>();
+        TableView<CycleListItem> tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPrefHeight(200);
@@ -388,6 +387,7 @@ public class CycleDisplay {
         gridRow = gridRowStartIndex;
     }
 
+    @SuppressWarnings("Duplicates")
     public ScrollPane getView() {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);

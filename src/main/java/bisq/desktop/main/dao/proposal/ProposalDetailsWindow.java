@@ -27,16 +27,12 @@ import bisq.core.util.BsqFormatter;
 
 import javafx.geometry.Insets;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 
 public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
-    protected static final Logger log = LoggerFactory.getLogger(ProposalDetailsWindow.class);
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private Proposal proposal;
+    private final Proposal proposal;
     private ProposalDisplay proposalDisplay;
 
 

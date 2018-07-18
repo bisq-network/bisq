@@ -252,6 +252,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         proposalDisplay.descriptionTextArea.getText(),
                         proposalDisplay.linkInputTextField.getText());*/
             case CHANGE_PARAM:
+                checkNotNull(proposalDisplay.paramComboBox, "proposalDisplay.paramComboBox must no tbe null");
+                checkNotNull(proposalDisplay.paramValueTextField, "proposalDisplay.paramValueTextField must no tbe null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
                     throw new ValidationException("selectedParam is null");

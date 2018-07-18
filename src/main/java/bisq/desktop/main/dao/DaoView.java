@@ -50,7 +50,16 @@ import javafx.beans.value.ChangeListener;
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab bsqWalletTab, proposalsTab, votingTab, resultsTab, bondingTab;
+    private
+    Tab bsqWalletTab;
+    @FXML
+    private Tab proposalsTab;
+    @FXML
+    private Tab votingTab;
+    @FXML
+    private Tab resultsTab;
+    @FXML
+    private Tab bondingTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

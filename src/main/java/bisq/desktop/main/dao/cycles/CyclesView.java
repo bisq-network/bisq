@@ -84,7 +84,6 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     private final ObservableList<CyclesListItem> itemList = FXCollections.observableArrayList();
     private final SortedList<CyclesListItem> sortedList = new SortedList<>(itemList);
     private ChangeListener<CyclesListItem> selectedItemListener;
-    private CyclesListItem selectedItem;
 
     private GridPane resultGridPane;
     private CycleDisplay proposalsDisplay;
@@ -163,9 +162,8 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onCycleListItemSelected(CyclesListItem item) {
-        selectedItem = item;
-        if (selectedItem != null)
-            createAllFieldsOnResultDisplay(selectedItem);
+        if (item != null)
+            createAllFieldsOnResultDisplay(item);
         else
             hideResultDisplay();
 

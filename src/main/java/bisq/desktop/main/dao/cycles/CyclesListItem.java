@@ -30,7 +30,7 @@ import java.util.Date;
 import lombok.Getter;
 
 public class CyclesListItem {
-    private BsqFormatter bsqFormatter;
+    private final BsqFormatter bsqFormatter;
     @Getter
     private CycleResult cycleResult;
 

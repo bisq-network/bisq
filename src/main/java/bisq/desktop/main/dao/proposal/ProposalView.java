@@ -114,6 +114,7 @@ public class ProposalView extends ActivatableViewAndModel {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void deactivate() {
         navigation.removeListener(listener);
@@ -132,10 +133,6 @@ public class ProposalView extends ActivatableViewAndModel {
         else if (view instanceof MakeProposalView) make.setSelected(true);
         else if (view instanceof ActiveProposalsView) active.setSelected(true);
         else if (view instanceof ClosedProposalsView) closed.setSelected(true);
-    }
-
-    public Class<? extends View> getSelectedViewClass() {
-        return selectedViewClass;
     }
 }
 

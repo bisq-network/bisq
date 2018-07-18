@@ -68,16 +68,16 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     protected final BSFormatter btcFormatter;
 
     protected final ObservableList<BaseProposalListItem> proposalBaseProposalListItems = FXCollections.observableArrayList();
-    protected final SortedList<BaseProposalListItem> sortedList = new SortedList<>(proposalBaseProposalListItems);
+    private final SortedList<BaseProposalListItem> sortedList = new SortedList<>(proposalBaseProposalListItems);
     protected TableView<BaseProposalListItem> proposalTableView;
-    protected Subscription selectedProposalSubscription;
+    private Subscription selectedProposalSubscription;
     protected ProposalDisplay proposalDisplay;
     protected int gridRow = 0;
     protected GridPane detailsGridPane, gridPane;
     protected BaseProposalListItem selectedBaseProposalListItem;
 
     protected DaoPhase.Phase currentPhase;
-    protected Subscription phaseSubscription;
+    private Subscription phaseSubscription;
     private ScrollPane proposalDisplayView;
     private boolean proposalDisplayInitialized;
 
@@ -137,7 +137,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         createProposalsTableView(Res.get("dao.proposal.active.header"), -10);
     }
 
-    protected void createProposalsTableView(String header, double top) {
+    private void createProposalsTableView(String header, double top) {
         TableGroupHeadline proposalsHeadline = new TableGroupHeadline(header);
         GridPane.setRowIndex(proposalsHeadline, ++gridRow);
         GridPane.setMargin(proposalsHeadline, new Insets(top, -10, -10, -10));

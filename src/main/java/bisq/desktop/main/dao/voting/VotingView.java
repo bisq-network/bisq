@@ -127,8 +127,4 @@ public class VotingView extends ActivatableViewAndModel {
         else if (view instanceof ActiveBallotsView) activeBallots.setSelected(true);
         else if (view instanceof ClosedBallotsView) closedBallots.setSelected(true);
     }
-
-    public Class<? extends View> getSelectedViewClass() {
-        return selectedViewClass;
-    }
 }

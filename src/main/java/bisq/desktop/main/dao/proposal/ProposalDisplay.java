@@ -61,14 +61,18 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProposalDisplay {
     private final GridPane gridPane;
     private final int maxLengthDescriptionText;
-    private BsqFormatter bsqFormatter;
-    private BsqWalletService bsqWalletService;
-    public InputTextField uidTextField, nameTextField, titleTextField, linkInputTextField;
+    private final BsqFormatter bsqFormatter;
+    private final BsqWalletService bsqWalletService;
+    private InputTextField uidTextField;
+    public InputTextField nameTextField;
+    public InputTextField titleTextField;
+    public InputTextField linkInputTextField;
     @Nullable
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
@@ -78,8 +82,8 @@ public class ProposalDisplay {
     private HyperlinkWithIcon linkHyperlinkWithIcon;
     @Nullable
     private TxIdTextField txIdTextField;
-    private FeeService feeService;
-    private ChangeListener<String> descriptionTextAreaListener;
+    private final FeeService feeService;
+    private final ChangeListener<String> descriptionTextAreaListener;
     private int gridRowStartIndex;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, @Nullable FeeService feeService) {
@@ -112,6 +116,7 @@ public class ProposalDisplay {
         } else if (showDetails) {
             rowSpan = hasAddedFields ? 8 : 6;
         } else {
+            //noinspection IfCanBeSwitch
             if (proposalType == ProposalType.COMPENSATION_REQUEST)
                 rowSpan = 5;
             else if (proposalType == ProposalType.CHANGE_PARAM)
@@ -148,18 +153,21 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+
                 requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
                 if (feeService != null) {
                     BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                     //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
                     //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
                     bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
+                    checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
                     requestedBsqTextField.setValidator(bsqValidator);
                 }
                 // TODO validator, addressTF
                 if (showDetails) {
                     bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
                             Res.get("dao.proposal.display.bsqAddress")).second;
+                    checkNotNull(bsqAddressTextField, "bsqAddressTextField must no tbe null");
                     bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
                     bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
                 }
@@ -167,7 +175,9 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case CHANGE_PARAM:
+                checkNotNull(gridPane, "gridPane must no tbe null");
                 paramComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("dao.proposal.display.paramComboBox.label")).second;
+                checkNotNull(paramComboBox, "paramComboBox must no tbe null");
                 paramComboBox.setItems(FXCollections.observableArrayList(Param.values()));
                 paramComboBox.setConverter(new StringConverter<Param>() {
                     @Override
@@ -205,12 +215,15 @@ public class ProposalDisplay {
         linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         if (proposal instanceof CompensationProposal) {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
+            checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
             requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
                 bsqAddressTextField.setText(compensationProposal.getBsqAddress());
         } else if (proposal instanceof ChangeParamProposal) {
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
+            checkNotNull(paramComboBox, "paramComboBox must no tbe null");
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
+            checkNotNull(paramValueTextField, "paramValueTextField must no tbe null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
         }
         if (txIdTextField != null)
@@ -283,7 +296,7 @@ public class ProposalDisplay {
         return ++gridRow;
     }
 
-
+    @SuppressWarnings("Duplicates")
     public ScrollPane getView() {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);

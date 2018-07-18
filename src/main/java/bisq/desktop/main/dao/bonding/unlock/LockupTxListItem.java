@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.bonding.unlock;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.GUIUtil;
+import bisq.desktop.main.dao.BaseBsqTxListItem;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -32,27 +32,23 @@ import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-
-import javafx.scene.control.Tooltip;
 
 import java.util.Date;
 import java.util.Optional;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-class LockupTxListItem {
-    private final Transaction transaction;
-    private final BsqWalletService bsqWalletService;
+class LockupTxListItem extends BaseBsqTxListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
 
     private final BsqFormatter bsqFormatter;
     private final Date date;
-    private final String txId;
 
     private int confirmations = 0;
     private Coin amount = Coin.ZERO;
@@ -69,16 +65,12 @@ class LockupTxListItem {
                      DaoFacade daoFacade,
                      Date date,
                      BsqFormatter bsqFormatter) {
-        this.transaction = transaction;
-        this.bsqWalletService = bsqWalletService;
+        super(transaction, bsqWalletService);
+
         this.btcWalletService = btcWalletService;
         this.daoFacade = daoFacade;
         this.date = date;
         this.bsqFormatter = bsqFormatter;
-
-        this.txId = transaction.getHashAsString();
-
-        setupConfidence(bsqWalletService);
 
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
@@ -96,40 +88,11 @@ class LockupTxListItem {
         button.setManaged(true);
     }
 
-    private void setupConfidence(BsqWalletService bsqWalletService) {
-        txConfidenceIndicator = new TxConfidenceIndicator();
-        txConfidenceIndicator.setId("funds-confidence");
-        Tooltip tooltip = new Tooltip();
-        txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefSize(24, 24);
-        txConfidenceIndicator.setTooltip(tooltip);
-
-        txConfidenceListener = new TxConfidenceListener(txId) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence, tooltip);
-            }
-        };
-        bsqWalletService.addTxConfidenceListener(txConfidenceListener);
-        updateConfidence(bsqWalletService.getConfidenceForTxId(txId), tooltip);
-    }
-
-    private void updateConfidence(TransactionConfidence confidence, Tooltip tooltip) {
-        if (confidence != null) {
-            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-            confirmations = confidence.getDepthInBlocks();
-        }
-    }
-
     public boolean isLockupAndUnspent() {
         return !isSpent() && getTxType() == TxType.LOCKUP;
     }
 
-    public void cleanup() {
-        bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
-    }
-
-    public boolean isSpent() {
+    private boolean isSpent() {
         Optional<TxOutput> optionalTxOutput = daoFacade.getLockupTxOutput(txId);
         return optionalTxOutput.map(txOutput -> !daoFacade.isUnspent(txOutput.getKey()))
                 .orElse(true);
@@ -140,9 +103,5 @@ class LockupTxListItem {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
-    }
-
-    public void setAmount(Coin amount) {
-        this.amount = amount;
     }
 }

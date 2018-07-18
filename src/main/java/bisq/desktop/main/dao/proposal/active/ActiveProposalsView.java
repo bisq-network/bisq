@@ -116,10 +116,11 @@ public class ActiveProposalsView extends ProposalItemsView {
 
 
     @Override
-    public void onPhaseChanged(DaoPhase.Phase phase) {
+    protected void onPhaseChanged(DaoPhase.Phase phase) {
         super.onPhaseChanged(phase);
 
         if (button != null) {
+            //noinspection IfCanBeSwitch,IfCanBeSwitch,IfCanBeSwitch
             if (phase == DaoPhase.Phase.PROPOSAL) {
                 if (selectedBaseProposalListItem != null && selectedBaseProposalListItem.getProposal() != null) {
                     button.setText(Res.get("dao.proposal.active.remove"));

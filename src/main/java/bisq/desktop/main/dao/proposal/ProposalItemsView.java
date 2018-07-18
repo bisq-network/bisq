@@ -33,7 +33,7 @@ import javafx.collections.ObservableList;
 
 @FxmlView
 public abstract class ProposalItemsView extends BaseProposalView {
-    protected ListChangeListener<Proposal> listChangeListener;
+    private ListChangeListener<Proposal> listChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle

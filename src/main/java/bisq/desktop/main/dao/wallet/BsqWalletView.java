@@ -126,6 +126,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void deactivate() {
         navigation.removeListener(listener);

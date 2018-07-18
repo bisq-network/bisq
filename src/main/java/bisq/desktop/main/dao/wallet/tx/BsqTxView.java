@@ -331,6 +331,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
+                                //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);

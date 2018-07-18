@@ -75,7 +75,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
                 "shared.lockedInBonds")).second;
         lockedInBondsBalanceTextField.setMouseTransparent(false);
 
-        // TODO add unlockinBondsBalanceTextField
+        // TODO add unlockingBondsBalanceTextField
 
         totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);

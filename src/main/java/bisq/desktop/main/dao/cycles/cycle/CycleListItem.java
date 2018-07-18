@@ -31,7 +31,7 @@ import lombok.Getter;
 
 public class CycleListItem {
     private final ProposalVoteResult proposalVoteResult;
-    private BsqFormatter bsqFormatter;
+    private final BsqFormatter bsqFormatter;
     @Getter
     private EvaluatedProposal evaluatedProposal;
 

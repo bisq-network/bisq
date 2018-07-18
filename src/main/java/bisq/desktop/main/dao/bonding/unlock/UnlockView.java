@@ -90,7 +90,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final P2PService p2PService;
 
     private int gridRow = 0;
-    private boolean synced;
     private LockupTxListItem selectedItem;
 
     private final ObservableList<LockupTxListItem> observableList = FXCollections.observableArrayList();
@@ -140,7 +139,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
         lockupTxs.setPredicate(LockupTxListItem::isLockupAndUnspent);
         walletBsqTransactionsListener = change -> updateList();
-        walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
+        walletChainHeightListener = (observable, oldValue, newValue) -> updateList();
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
@@ -171,7 +170,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         daoFacade.addBsqStateListener(this);
 
         updateList();
-        onUpdateAnyChainHeight();
     }
 
     @Override
@@ -218,7 +216,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
     @Override
     public void onParseTxsComplete(Block block) {
-        onUpdateAnyChainHeight();
+        updateList();
     }
 
     @Override
@@ -249,6 +247,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                             public void updateItem(final LockupTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
+                                //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
@@ -418,15 +417,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private void openTxInBlockExplorer(LockupTxListItem item) {
         if (item.getTxId() != null)
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
-    }
-
-    private void onUpdateAnyChainHeight() {
-        final int bsqBlockChainHeight = daoFacade.getChainHeight();
-        final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
-        if (bsqWalletChainHeight > 0) {
-            synced = bsqWalletChainHeight == bsqBlockChainHeight;
-        }
-        updateList();
     }
 
     private void updateList() {

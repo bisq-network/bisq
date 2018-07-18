@@ -25,20 +25,15 @@ import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
 
 import javafx.geometry.Insets;
 
-import javafx.beans.value.ChangeListener;
-
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
-public class CycleDetailsWindow extends Overlay<CycleDetailsWindow> {
+class CycleDetailsWindow extends Overlay<CycleDetailsWindow> {
 
     private final BsqFormatter bsqFormatter;
-    private ChangeListener<Number> changeListener;
-    private TextArea textArea;
-    private EvaluatedProposal evaluatedProposal;
+    private final EvaluatedProposal evaluatedProposal;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

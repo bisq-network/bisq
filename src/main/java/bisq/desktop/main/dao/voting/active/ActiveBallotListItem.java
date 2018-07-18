@@ -17,80 +17,33 @@
 
 package bisq.desktop.main.dao.voting.active;
 
-import bisq.desktop.main.dao.BaseProposalListItem;
+import bisq.desktop.main.dao.voting.BaseBallotListItem;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.ballot.vote.BooleanVote;
-import bisq.core.dao.voting.ballot.vote.Vote;
-import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.util.BsqFormatter;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class ActiveBallotListItem extends BaseProposalListItem {
-    @Getter
-    private final Ballot ballot;
-
+class ActiveBallotListItem extends BaseBallotListItem {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ActiveBallotListItem(Ballot ballot,
-                                DaoFacade daoFacade,
-                                BsqWalletService bsqWalletService,
-                                BsqFormatter bsqFormatter) {
-        super(daoFacade,
+    ActiveBallotListItem(Ballot ballot,
+                         DaoFacade daoFacade,
+                         BsqWalletService bsqWalletService,
+                         BsqFormatter bsqFormatter) {
+        super(ballot,
+                daoFacade,
                 bsqWalletService,
                 bsqFormatter);
-
-        this.ballot = ballot;
-
-        init();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected void init() {
-        super.init();
-    }
-
-    @Override
-    public void onPhaseChanged(DaoPhase.Phase phase) {
-        super.onPhaseChanged(phase);
-
-        final Vote vote = ballot.getVote();
-        if (vote != null) {
-            imageView.setVisible(true);
-            if (vote instanceof BooleanVote) {
-                if (((BooleanVote) vote).isAccepted()) {
-                    imageView.setId("accepted");
-                } else {
-                    imageView.setId("rejected");
-                }
-            } else {
-                //TODO
-            }
-        } else {
-            imageView.setVisible(false);
-        }
-    }
-
-    @Override
-    public Proposal getProposal() {
-        return ballot.getProposal();
     }
 }
