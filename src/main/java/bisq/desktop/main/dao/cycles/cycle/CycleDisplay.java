@@ -184,6 +184,7 @@ public class CycleDisplay {
                                 // cycleDetailsWindow.show(item.getEvaluatedProposal())
                                 if (item != null && !empty) {
                                     field = new Hyperlink(item.getProposalId());
+
                                     //TODO setId or getStyleClass.add does not apply color...
                                     //field.getStyleClass().add(item.getColorStyleClass());
                                     //field.setId(item.getColorStyleClass());
@@ -230,8 +231,10 @@ public class CycleDisplay {
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    if (field != null)
-                                        field.setOnAction(null);
+
+                                    //TODO does get called on active items somehow...
+                                    //if (field != null)
+                                    //    field.setOnAction(null);
                                 }
                             }
                         };
@@ -263,8 +266,9 @@ public class CycleDisplay {
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
-                                    if (field != null)
-                                        field.setOnAction(null);
+                                    //TODO does get called on active items somehow...
+                                    //if (field != null)
+                                    //    field.setOnAction(null);
                                 }
                             }
                         };

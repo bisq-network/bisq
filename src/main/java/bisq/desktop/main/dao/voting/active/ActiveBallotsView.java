@@ -25,6 +25,7 @@ import bisq.desktop.main.dao.BaseProposalView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
@@ -58,6 +59,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ListChangeListener;
 
@@ -79,6 +81,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     private BusyAnimation voteButtonBusyAnimation;
     private Label voteButtonInfoLabel;
     private ListChangeListener<Ballot> listChangeListener;
+    private ChangeListener<String> stakeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +105,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
         createVoteView();
         createEmptyProposalDisplay();
 
+        stakeListener = (observable, oldValue, newValue) -> updateButtons();
         listChangeListener = c -> updateListItems();
     }
 
@@ -109,8 +113,9 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     protected void activate() {
         super.activate();
 
+        stakeInputTextField.textProperty().addListener(stakeListener);
+        daoFacade.getValidAndConfirmedBallots().addListener(listChangeListener);
         bsqWalletService.addBsqBalanceListener(this);
-        daoFacade.getActiveOrMyUnconfirmedBallots().addListener(listChangeListener);
 
         onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
@@ -131,7 +136,8 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     protected void deactivate() {
         super.deactivate();
 
-        daoFacade.getActiveOrMyUnconfirmedBallots().removeListener(listChangeListener);
+        stakeInputTextField.textProperty().removeListener(stakeListener);
+        daoFacade.getValidAndConfirmedBallots().removeListener(listChangeListener);
         bsqWalletService.removeBsqBalanceListener(this);
     }
 
@@ -180,7 +186,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
 
     @Override
     protected void fillListItems() {
-        List<Ballot> list = daoFacade.getActiveOrMyUnconfirmedBallots();
+        List<Ballot> list = daoFacade.getValidAndConfirmedBallots();
         proposalBaseProposalListItems.setAll(list.stream()
                 .map(ballot -> new ActiveBallotListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
                 .collect(Collectors.toSet()));
@@ -312,7 +318,8 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
     private void updateButtons() {
         final boolean isBlindVotePhase = daoFacade.phaseProperty().get() == DaoPhase.Phase.BLIND_VOTE;
         stakeInputTextField.setDisable(!isBlindVotePhase);
-        voteButton.setDisable(!isBlindVotePhase);
+        voteButton.setDisable(!isBlindVotePhase &&
+                stakeInputTextField.getValidator().validate(stakeInputTextField.getText()).isValid);
 
         if (acceptButton != null) acceptButton.setDisable(!isBlindVotePhase);
         if (rejectButton != null) rejectButton.setDisable(!isBlindVotePhase);
@@ -330,6 +337,8 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
         final Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, gridRow,
                 Res.getWithCol("dao.proposal.myVote.stake"), Layout.FIRST_ROW_AND_GROUP_DISTANCE - 20);
         stakeInputTextField = tuple2.second;
+        stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
+
         Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
                 Res.get("dao.proposal.myVote.button"));
         voteButton = tuple.first;

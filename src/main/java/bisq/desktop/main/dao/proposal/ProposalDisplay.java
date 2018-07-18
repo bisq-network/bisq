@@ -28,6 +28,7 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
@@ -87,6 +88,11 @@ public class ProposalDisplay {
     private TxIdTextField txIdTextField;
     private final ChangeListener<String> descriptionTextAreaListener;
     private int gridRowStartIndex;
+
+
+    // TODO get that warning at closing the window...
+    // javafx.scene.CssStyleHelper calculateValue
+    // WARNING: Could not resolve '-fx-accent' while resolving lookups for '-fx-text-fill' from rule '*.hyperlink' in stylesheet file:/Users/dev/idea/bisq/desktop/out/production/resources/bisq/desktop/bisq.css
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                            DaoFacade daoFacade) {
@@ -200,7 +206,6 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.display.txId"), "").second;
 
         proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
-        proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee()));
     }
 
     public void applyProposalPayload(Proposal proposal) {
@@ -228,8 +233,15 @@ public class ProposalDisplay {
             checkNotNull(paramValueTextField, "paramValueTextField must no tbe null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
         }
-        if (txIdTextField != null)
+        int chainHeight;
+        if (txIdTextField != null) {
             txIdTextField.setup(proposal.getTxId());
+
+            chainHeight = daoFacade.getChainHeight();
+        } else {
+            chainHeight = daoFacade.getTx(proposal.getTxId()).map(Tx::getBlockHeight).orElse(0);
+        }
+        proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(chainHeight)));
     }
 
     public void clearForm() {

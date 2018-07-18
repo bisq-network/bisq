@@ -187,7 +187,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Transaction transaction = proposalWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
-            final Coin fee = daoFacade.getProposalFee();
+            final Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 

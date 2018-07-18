@@ -78,7 +78,7 @@ public class CycleListItem {
     }
 
     public String getColorStyle() {
-        return evaluatedProposal.isAccepted() ? "-fx-text-fill: -bs-green" : "-fx-text-fill: -bs-error-red";
+        return evaluatedProposal.isAccepted() ? "-fx-text-fill: -bs-green;" : "-fx-text-fill: -bs-error-red;";
     }
 
     public String getIssuance() {
