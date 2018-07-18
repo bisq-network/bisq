@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.bonding.unlock;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.main.dao.BaseBsqTxListItem;
+import bisq.desktop.main.dao.TxConfidenceListItem;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -43,14 +43,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-class LockupTxListItem extends BaseBsqTxListItem {
+class LockupTxListItem extends TxConfidenceListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
 
     private final BsqFormatter bsqFormatter;
     private final Date date;
 
-    private int confirmations = 0;
     private Coin amount = Coin.ZERO;
     private int lockTime;
     private AutoTooltipButton button;

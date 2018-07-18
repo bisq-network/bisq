@@ -32,19 +32,18 @@ import lombok.Data;
 
 
 @Data
-public class BaseBsqTxListItem {
+public class TxConfidenceListItem {
     protected final BsqWalletService bsqWalletService;
     protected final String txId;
     protected int confirmations = 0;
     protected TxConfidenceIndicator txConfidenceIndicator;
     protected TxConfidenceListener txConfidenceListener;
 
-    protected BaseBsqTxListItem(Transaction transaction,
-                                BsqWalletService bsqWalletService) {
+    protected TxConfidenceListItem(Transaction transaction,
+                                   BsqWalletService bsqWalletService) {
         this.bsqWalletService = bsqWalletService;
 
         txId = transaction.getHashAsString();
-
         setupConfidence(bsqWalletService);
     }
 

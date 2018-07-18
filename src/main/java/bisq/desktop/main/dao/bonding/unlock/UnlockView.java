@@ -228,6 +228,74 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void onButtonClick() {
+        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(selectedItem.getTxId());
+            if (!lockupTxOutput.isPresent()) {
+                log.warn("Lockup output not found, txId = ", selectedItem.getTxId());
+                return;
+            }
+
+            Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
+            Optional<Integer> opLockTime = daoFacade.getLockTime(selectedItem.getTxId());
+            int lockTime = opLockTime.orElse(-1);
+
+            try {
+                new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
+                        .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
+                                bsqFormatter.formatCoinWithCode(unlockAmount),
+                                lockTime
+                        ))
+                        .actionButtonText(Res.get("shared.yes"))
+                        .onAction(() -> {
+                            daoFacade.publishUnlockTx(selectedItem.getTxId(),
+                                    () -> {
+                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                    },
+                                    errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+                            );
+                        })
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+            } catch (Throwable t) {
+                log.error(t.toString());
+                t.printStackTrace();
+                new Popup<>().warning(t.getMessage()).show();
+            }
+        } else {
+            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
+        }
+        log.info("unlock tx: {}", selectedItem.getTxId());
+    }
+
+    private void openTxInBlockExplorer(LockupTxListItem item) {
+        if (item.getTxId() != null)
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
+    }
+
+    private void updateList() {
+        observableList.forEach(LockupTxListItem::cleanup);
+
+        // copy list to avoid ConcurrentModificationException
+        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
+        List<LockupTxListItem> items = walletTransactions.stream()
+                .map(transaction -> {
+                    return new LockupTxListItem(transaction,
+                            bsqWalletService,
+                            btcWalletService,
+                            daoFacade,
+                            transaction.getUpdateTime(),
+                            bsqFormatter);
+                })
+                .collect(Collectors.toList());
+        observableList.setAll(items);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Table columns
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void addTxIdColumn() {
         TableColumn<LockupTxListItem, LockupTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
 
@@ -372,68 +440,5 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         });
         unlockColumn.setComparator(Comparator.comparing(LockupTxListItem::getConfirmations));
         tableView.getColumns().add(unlockColumn);
-    }
-
-    private void onButtonClick() {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(selectedItem.getTxId());
-            if (!lockupTxOutput.isPresent()) {
-                log.warn("Lockup output not found, txId = ", selectedItem.getTxId());
-                return;
-            }
-
-            Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
-            Optional<Integer> opLockTime = daoFacade.getLockTime(selectedItem.getTxId());
-            int lockTime = opLockTime.orElse(-1);
-
-            try {
-                new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
-                        .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
-                                bsqFormatter.formatCoinWithCode(unlockAmount),
-                                lockTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            daoFacade.publishUnlockTx(selectedItem.getTxId(),
-                                    () -> {
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    },
-                                    errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
-                            );
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } catch (Throwable t) {
-                log.error(t.toString());
-                t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
-            }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-        }
-        log.info("unlock tx: {}", selectedItem.getTxId());
-    }
-
-    private void openTxInBlockExplorer(LockupTxListItem item) {
-        if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
-    }
-
-    private void updateList() {
-        observableList.forEach(LockupTxListItem::cleanup);
-
-        // copy list to avoid ConcurrentModificationException
-        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
-        List<LockupTxListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                    return new LockupTxListItem(transaction,
-                            bsqWalletService,
-                            btcWalletService,
-                            daoFacade,
-                            transaction.getUpdateTime(),
-                            bsqFormatter);
-                })
-                .collect(Collectors.toList());
-        observableList.setAll(items);
     }
 }

@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.main.dao.BaseBsqTxListItem;
+import bisq.desktop.main.dao.TxConfidenceListItem;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -37,19 +37,20 @@ import java.util.Date;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Data
-class BsqTxListItem extends BaseBsqTxListItem {
+class BsqTxListItem extends TxConfidenceListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final boolean isBurnedBsqTx;
 
-    private int confirmations = 0;
     private final String address;
     private final String direction;
     private Coin amount;
