@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.cycles;
+package bisq.desktop.main.dao.results;
 
 
 import bisq.desktop.common.model.Activatable;
@@ -24,8 +24,8 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.cycles.cycle.CycleDisplay;
-import bisq.desktop.main.dao.cycles.model.CycleResult;
+import bisq.desktop.main.dao.results.model.ResultsOfCycle;
+import bisq.desktop.main.dao.results.proposal.ProposalResultDisplay;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
@@ -68,7 +68,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> implements BsqStateListener {
+public class ResultsView extends ActivatableViewAndModel<GridPane, Activatable> implements BsqStateListener {
     private final DaoFacade daoFacade;
     // TODO use daoFacade once dev work completed
     private final BsqStateService bsqStateService;
@@ -79,14 +79,14 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     private final BsqFormatter bsqFormatter;
 
     private int gridRow = 0;
-    private TableView<CyclesListItem> tableView;
+    private TableView<ResultsListItem> tableView;
 
-    private final ObservableList<CyclesListItem> itemList = FXCollections.observableArrayList();
-    private final SortedList<CyclesListItem> sortedList = new SortedList<>(itemList);
-    private ChangeListener<CyclesListItem> selectedItemListener;
+    private final ObservableList<ResultsListItem> itemList = FXCollections.observableArrayList();
+    private final SortedList<ResultsListItem> sortedList = new SortedList<>(itemList);
+    private ChangeListener<ResultsListItem> selectedItemListener;
 
     private GridPane resultGridPane;
-    private CycleDisplay proposalsDisplay;
+    private ProposalResultDisplay proposalsDisplay;
     private ScrollPane resultDisplayView;
     private boolean resultDisplayInitialized;
 
@@ -96,13 +96,13 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CyclesView(DaoFacade daoFacade,
-                       BsqStateService bsqStateService,
-                       CycleService cycleService,
-                       VoteResultService voteResultService,
-                       ProposalService proposalService,
-                       BsqWalletService bsqWalletService,
-                       BsqFormatter bsqFormatter) {
+    private ResultsView(DaoFacade daoFacade,
+                        BsqStateService bsqStateService,
+                        CycleService cycleService,
+                        VoteResultService voteResultService,
+                        ProposalService proposalService,
+                        BsqWalletService bsqWalletService,
+                        BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.bsqStateService = bsqStateService;
         this.cycleService = cycleService;
@@ -161,7 +161,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onCycleListItemSelected(CyclesListItem item) {
+    private void onCycleListItemSelected(ResultsListItem item) {
         if (item != null)
             createAllFieldsOnResultDisplay(item);
         else
@@ -198,7 +198,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     }
 
     private void createResultDisplay() {
-        proposalsDisplay = new CycleDisplay(resultGridPane, bsqWalletService, daoFacade, bsqFormatter);
+        proposalsDisplay = new ProposalResultDisplay(resultGridPane, bsqWalletService, daoFacade, bsqFormatter);
         resultDisplayView = proposalsDisplay.getView();
         GridPane.setMargin(resultDisplayView, new Insets(10, -10, 0, -10));
         GridPane.setRowIndex(resultDisplayView, ++gridRow);
@@ -231,13 +231,13 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                 .map(e -> e.getTime() * 1000)
                 .orElse(0L);
         int cycleIndex = cycleService.getCycleIndex(cycle);
-        CycleResult cycleResult = new CycleResult(cycle,
+        ResultsOfCycle resultsOfCycle = new ResultsOfCycle(cycle,
                 cycleIndex,
                 cycleStartTime,
                 proposalsForCycle,
                 evaluatedProposalsForCycle);
-        CyclesListItem cyclesListItem = new CyclesListItem(cycleResult, bsqFormatter);
-        itemList.add(cyclesListItem);
+        ResultsListItem resultsListItem = new ResultsListItem(resultsOfCycle, bsqFormatter);
+        itemList.add(resultsListItem);
     }
 
     private void hideResultDisplay() {
@@ -248,11 +248,11 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
         }
     }
 
-    private void createAllFieldsOnResultDisplay(CyclesListItem cyclesListItem) {
+    private void createAllFieldsOnResultDisplay(ResultsListItem resultsListItem) {
         resultDisplayView.setVisible(true);
         resultDisplayView.setManaged(true);
 
-        proposalsDisplay.createAllFields(0, cyclesListItem.getCycleResult());
+        proposalsDisplay.createAllFields(0, resultsListItem.getResultsOfCycle());
         resultDisplayInitialized = true;
     }
 
@@ -261,19 +261,19 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     // TableColumns
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createColumns(TableView<CyclesListItem> tableView) {
-        TableColumn<CyclesListItem, CyclesListItem> cycleColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.cycle"));
+    private void createColumns(TableView<ResultsListItem> tableView) {
+        TableColumn<ResultsListItem, ResultsListItem> cycleColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.cycle"));
         cycleColumn.setMinWidth(160);
         cycleColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         cycleColumn.setCellFactory(
-                new Callback<TableColumn<CyclesListItem, CyclesListItem>, TableCell<CyclesListItem,
-                        CyclesListItem>>() {
+                new Callback<TableColumn<ResultsListItem, ResultsListItem>, TableCell<ResultsListItem,
+                        ResultsListItem>>() {
                     @Override
-                    public TableCell<CyclesListItem, CyclesListItem> call(
-                            TableColumn<CyclesListItem, CyclesListItem> column) {
-                        return new TableCell<CyclesListItem, CyclesListItem>() {
+                    public TableCell<ResultsListItem, ResultsListItem> call(
+                            TableColumn<ResultsListItem, ResultsListItem> column) {
+                        return new TableCell<ResultsListItem, ResultsListItem>() {
                             @Override
-                            public void updateItem(final CyclesListItem item, boolean empty) {
+                            public void updateItem(final ResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getCycle());
@@ -283,22 +283,22 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                         };
                     }
                 });
-        cycleColumn.setComparator(Comparator.comparing(CyclesListItem::getCycleStartTime));
+        cycleColumn.setComparator(Comparator.comparing(ResultsListItem::getCycleStartTime));
         tableView.getColumns().add(cycleColumn);
 
-        TableColumn<CyclesListItem, CyclesListItem> proposalsColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.numProposals"));
+        TableColumn<ResultsListItem, ResultsListItem> proposalsColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.numProposals"));
         proposalsColumn.setMinWidth(90);
         proposalsColumn.setMaxWidth(90);
         proposalsColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         proposalsColumn.setCellFactory(
-                new Callback<TableColumn<CyclesListItem, CyclesListItem>, TableCell<CyclesListItem,
-                        CyclesListItem>>() {
+                new Callback<TableColumn<ResultsListItem, ResultsListItem>, TableCell<ResultsListItem,
+                        ResultsListItem>>() {
                     @Override
-                    public TableCell<CyclesListItem, CyclesListItem> call(
-                            TableColumn<CyclesListItem, CyclesListItem> column) {
-                        return new TableCell<CyclesListItem, CyclesListItem>() {
+                    public TableCell<ResultsListItem, ResultsListItem> call(
+                            TableColumn<ResultsListItem, ResultsListItem> column) {
+                        return new TableCell<ResultsListItem, ResultsListItem>() {
                             @Override
-                            public void updateItem(final CyclesListItem item, boolean empty) {
+                            public void updateItem(final ResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getNumProposals());
@@ -308,22 +308,22 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                         };
                     }
                 });
-        proposalsColumn.setComparator(Comparator.comparing(CyclesListItem::getNumProposals));
+        proposalsColumn.setComparator(Comparator.comparing(ResultsListItem::getNumProposals));
         tableView.getColumns().add(proposalsColumn);
 
-        TableColumn<CyclesListItem, CyclesListItem> votesColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.numVotes"));
+        TableColumn<ResultsListItem, ResultsListItem> votesColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.numVotes"));
         votesColumn.setMinWidth(70);
         votesColumn.setMaxWidth(70);
         votesColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         votesColumn.setCellFactory(
-                new Callback<TableColumn<CyclesListItem, CyclesListItem>, TableCell<CyclesListItem,
-                        CyclesListItem>>() {
+                new Callback<TableColumn<ResultsListItem, ResultsListItem>, TableCell<ResultsListItem,
+                        ResultsListItem>>() {
                     @Override
-                    public TableCell<CyclesListItem, CyclesListItem> call(
-                            TableColumn<CyclesListItem, CyclesListItem> column) {
-                        return new TableCell<CyclesListItem, CyclesListItem>() {
+                    public TableCell<ResultsListItem, ResultsListItem> call(
+                            TableColumn<ResultsListItem, ResultsListItem> column) {
+                        return new TableCell<ResultsListItem, ResultsListItem>() {
                             @Override
-                            public void updateItem(final CyclesListItem item, boolean empty) {
+                            public void updateItem(final ResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getNumVotesAsString());
@@ -333,20 +333,20 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                         };
                     }
                 });
-        votesColumn.setComparator(Comparator.comparing(CyclesListItem::getNumProposals));
+        votesColumn.setComparator(Comparator.comparing(ResultsListItem::getNumProposals));
         tableView.getColumns().add(votesColumn);
 
-        TableColumn<CyclesListItem, CyclesListItem> stakeColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.stake"));
+        TableColumn<ResultsListItem, ResultsListItem> stakeColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.stake"));
         stakeColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         stakeColumn.setCellFactory(
-                new Callback<TableColumn<CyclesListItem, CyclesListItem>, TableCell<CyclesListItem,
-                        CyclesListItem>>() {
+                new Callback<TableColumn<ResultsListItem, ResultsListItem>, TableCell<ResultsListItem,
+                        ResultsListItem>>() {
                     @Override
-                    public TableCell<CyclesListItem, CyclesListItem> call(
-                            TableColumn<CyclesListItem, CyclesListItem> column) {
-                        return new TableCell<CyclesListItem, CyclesListItem>() {
+                    public TableCell<ResultsListItem, ResultsListItem> call(
+                            TableColumn<ResultsListItem, ResultsListItem> column) {
+                        return new TableCell<ResultsListItem, ResultsListItem>() {
                             @Override
-                            public void updateItem(final CyclesListItem item, boolean empty) {
+                            public void updateItem(final ResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getStake());
@@ -356,20 +356,20 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                         };
                     }
                 });
-        stakeColumn.setComparator(Comparator.comparing(CyclesListItem::getNumProposals));
+        stakeColumn.setComparator(Comparator.comparing(ResultsListItem::getNumProposals));
         tableView.getColumns().add(stakeColumn);
 
-        TableColumn<CyclesListItem, CyclesListItem> issuanceColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.issuance"));
+        TableColumn<ResultsListItem, ResultsListItem> issuanceColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.results.table.header.issuance"));
         issuanceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         issuanceColumn.setCellFactory(
-                new Callback<TableColumn<CyclesListItem, CyclesListItem>, TableCell<CyclesListItem,
-                        CyclesListItem>>() {
+                new Callback<TableColumn<ResultsListItem, ResultsListItem>, TableCell<ResultsListItem,
+                        ResultsListItem>>() {
                     @Override
-                    public TableCell<CyclesListItem, CyclesListItem> call(
-                            TableColumn<CyclesListItem, CyclesListItem> column) {
-                        return new TableCell<CyclesListItem, CyclesListItem>() {
+                    public TableCell<ResultsListItem, ResultsListItem> call(
+                            TableColumn<ResultsListItem, ResultsListItem> column) {
+                        return new TableCell<ResultsListItem, ResultsListItem>() {
                             @Override
-                            public void updateItem(final CyclesListItem item, boolean empty) {
+                            public void updateItem(final ResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getIssuance());
@@ -379,7 +379,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                         };
                     }
                 });
-        issuanceColumn.setComparator(Comparator.comparing(CyclesListItem::getNumProposals));
+        issuanceColumn.setComparator(Comparator.comparing(ResultsListItem::getNumProposals));
         tableView.getColumns().add(issuanceColumn);
     }
 }

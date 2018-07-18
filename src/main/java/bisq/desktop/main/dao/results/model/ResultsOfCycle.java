@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.cycles.model;
+package bisq.desktop.main.dao.results.model;
 
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.voting.proposal.Proposal;
@@ -27,7 +27,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class CycleResult {
+public class ResultsOfCycle {
     private final Cycle cycle;
     private final int cycleIndex;
     private final int numVotes, numAcceptedVotes, numRejectedVotes;
@@ -42,11 +42,11 @@ public class CycleResult {
     // Proposals which ended up in voting
     private final List<EvaluatedProposal> evaluatedProposals;
 
-    public CycleResult(Cycle cycle,
-                       int cycleIndex,
-                       long cycleStartTime,
-                       List<Proposal> proposals,
-                       List<EvaluatedProposal> evaluatedProposals) {
+    public ResultsOfCycle(Cycle cycle,
+                          int cycleIndex,
+                          long cycleStartTime,
+                          List<Proposal> proposals,
+                          List<EvaluatedProposal> evaluatedProposals) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
         this.cycleStartTime = cycleStartTime;

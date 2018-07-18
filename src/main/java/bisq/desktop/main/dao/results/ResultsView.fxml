@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.geometry.Insets?>
-<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.cycles.CyclesView"
+<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.results.ResultsView"
           hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"

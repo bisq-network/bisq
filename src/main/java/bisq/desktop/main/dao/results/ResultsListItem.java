@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.cycles;
+package bisq.desktop.main.dao.results;
 
-import bisq.desktop.main.dao.cycles.model.CycleResult;
+import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.locale.Res;
@@ -29,37 +29,37 @@ import java.util.Date;
 
 import lombok.Getter;
 
-public class CyclesListItem {
+public class ResultsListItem {
     private final BsqFormatter bsqFormatter;
     @Getter
-    private CycleResult cycleResult;
+    private ResultsOfCycle resultsOfCycle;
 
-    public CyclesListItem(CycleResult cycleResult,
-                          BsqFormatter bsqFormatter) {
-        this.cycleResult = cycleResult;
+    public ResultsListItem(ResultsOfCycle resultsOfCycle,
+                           BsqFormatter bsqFormatter) {
+        this.resultsOfCycle = resultsOfCycle;
         this.bsqFormatter = bsqFormatter;
     }
 
     public String getCycle() {
-        int displayIndex = cycleResult.getCycleIndex() + 1;
-        String dateTime = bsqFormatter.formatDateTime(new Date(cycleResult.getCycleStartTime()));
+        int displayIndex = resultsOfCycle.getCycleIndex() + 1;
+        String dateTime = bsqFormatter.formatDateTime(new Date(resultsOfCycle.getCycleStartTime()));
         return Res.get("dao.results.results.table.item.cycle", displayIndex, dateTime);
     }
 
     public String getNumProposals() {
-        return String.valueOf(cycleResult.getEvaluatedProposals().size());
+        return String.valueOf(resultsOfCycle.getEvaluatedProposals().size());
     }
 
     public String getNumVotesAsString() {
-        return String.valueOf(cycleResult.getNumVotes());
+        return String.valueOf(resultsOfCycle.getNumVotes());
     }
 
     public String getStake() {
-        return bsqFormatter.formatCoinWithCode(Coin.valueOf(cycleResult.getTotalStake()));
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(resultsOfCycle.getTotalStake()));
     }
 
     public String getIssuance() {
-        long totalIssuance = cycleResult.getEvaluatedProposals().stream()
+        long totalIssuance = resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(e -> e.getProposal() instanceof CompensationProposal)
                 .map(e -> (CompensationProposal) e.getProposal())
                 .mapToLong(e -> e.getRequestedBsq().value)
@@ -68,6 +68,6 @@ public class CyclesListItem {
     }
 
     public Long getCycleStartTime() {
-        return cycleResult.getCycleStartTime();
+        return resultsOfCycle.getCycleStartTime();
     }
 }

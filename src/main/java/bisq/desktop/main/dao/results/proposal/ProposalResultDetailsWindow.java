@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.cycles.cycle;
+package bisq.desktop.main.dao.results.proposal;
 
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
@@ -30,7 +30,7 @@ import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
-class CycleDetailsWindow extends Overlay<CycleDetailsWindow> {
+class ProposalResultDetailsWindow extends Overlay<ProposalResultDetailsWindow> {
 
     private final BsqFormatter bsqFormatter;
     private final EvaluatedProposal evaluatedProposal;
@@ -40,7 +40,7 @@ class CycleDetailsWindow extends Overlay<CycleDetailsWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public CycleDetailsWindow(BsqFormatter bsqFormatter, EvaluatedProposal evaluatedProposal) {
+    public ProposalResultDetailsWindow(BsqFormatter bsqFormatter, EvaluatedProposal evaluatedProposal) {
         this.bsqFormatter = bsqFormatter;
         this.evaluatedProposal = evaluatedProposal;
         type = Type.Confirmation;

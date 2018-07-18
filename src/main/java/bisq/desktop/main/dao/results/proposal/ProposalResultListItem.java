@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.cycles.cycle;
+package bisq.desktop.main.dao.results.proposal;
 
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
@@ -29,13 +29,13 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import lombok.Getter;
 
-public class CycleListItem {
+public class ProposalResultListItem {
     private final ProposalVoteResult proposalVoteResult;
     private final BsqFormatter bsqFormatter;
     @Getter
     private EvaluatedProposal evaluatedProposal;
 
-    public CycleListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+    public ProposalResultListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
         proposalVoteResult = evaluatedProposal.getProposalVoteResult();
         this.bsqFormatter = bsqFormatter;

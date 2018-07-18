@@ -26,8 +26,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.bonding.BondingView;
-import bisq.desktop.main.dao.cycles.CyclesView;
 import bisq.desktop.main.dao.proposal.ProposalView;
+import bisq.desktop.main.dao.results.ResultsView;
 import bisq.desktop.main.dao.voting.VotingView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
@@ -126,7 +126,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             } else if (newValue == resultsTab) {
                 //noinspection unchecked
-                navigation.navigateTo(MainView.class, DaoView.class, CyclesView.class);
+                navigation.navigateTo(MainView.class, DaoView.class, ResultsView.class);
             } else if (newValue == bondingTab) {
                 //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
@@ -152,7 +152,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             else if (selectedItem == resultsTab)
                 //noinspection unchecked
-                navigation.navigateTo(MainView.class, DaoView.class, CyclesView.class);
+                navigation.navigateTo(MainView.class, DaoView.class, ResultsView.class);
             else if (selectedItem == bondingTab)
                 //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
@@ -174,7 +174,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             selectedTab = proposalsTab;
         } else if (view instanceof VotingView) {
             selectedTab = votingTab;
-        } else if (view instanceof CyclesView) {
+        } else if (view instanceof ResultsView) {
             selectedTab = resultsTab;
         } else if (view instanceof BondingView) {
             selectedTab = bondingTab;
