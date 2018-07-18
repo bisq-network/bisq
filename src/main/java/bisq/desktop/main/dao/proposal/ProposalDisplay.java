@@ -33,6 +33,7 @@ import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalType;
+import bisq.core.dao.voting.proposal.burnbond.BurnBondProposal;
 import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
@@ -53,6 +54,7 @@ import javafx.geometry.HPos;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
@@ -82,6 +84,7 @@ public class ProposalDisplay {
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
+    public ComboBox<String> burnBondComboBox;
     @Getter
     private int gridRow;
     public TextArea descriptionTextArea;
@@ -121,7 +124,7 @@ public class ProposalDisplay {
         int rowSpan;
 
         boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
-                proposalType == ProposalType.CHANGE_PARAM;
+                proposalType == ProposalType.CHANGE_PARAM || proposalType == ProposalType.BURN_BOND;
         if (isMakeProposalScreen) {
             rowSpan = hasAddedFields ? 8 : 6;
         } else if (showDetails) {
@@ -132,6 +135,8 @@ public class ProposalDisplay {
                 rowSpan = 6;
             else if (proposalType == ProposalType.CHANGE_PARAM)
                 rowSpan = 7;
+            else if (proposalType == ProposalType.BURN_BOND)
+                rowSpan = 6;
             else
                 rowSpan = 5;
         }
@@ -201,6 +206,13 @@ public class ProposalDisplay {
                 break;
             case REMOVE_ALTCOIN:
                 break;
+            case BURN_BOND:
+                burnBondComboBox = addLabelComboBox(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.burnBondComboBox.label")).second;
+                ObservableList<String> burnableBonds = FXCollections.observableArrayList();
+                burnableBonds.addAll("bond1", "bond2", "bond3");
+                burnBondComboBox.setItems(burnableBonds);
+                break;
         }
 
         if (!isMakeProposalScreen && showDetails)
@@ -232,10 +244,14 @@ public class ProposalDisplay {
                 bsqAddressTextField.setText(compensationProposal.getBsqAddress());
         } else if (proposal instanceof ChangeParamProposal) {
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-            checkNotNull(paramComboBox, "paramComboBox must no tbe null");
+            checkNotNull(paramComboBox, "paramComboBox must not be null");
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
             checkNotNull(paramValueTextField, "paramValueTextField must no tbe null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
+        } else if (proposal instanceof BurnBondProposal) {
+            BurnBondProposal burnBondProposal = (BurnBondProposal) proposal;
+            checkNotNull(burnBondComboBox, "burnBondComboBox must not be null");
+            burnBondComboBox.getSelectionModel().select(burnBondProposal.getBondId());
         }
         int chainHeight;
         if (txIdTextField != null) {
@@ -258,6 +274,7 @@ public class ProposalDisplay {
         if (bsqAddressTextField != null) bsqAddressTextField.clear();
         if (paramComboBox != null) paramComboBox.getSelectionModel().clearSelection();
         if (paramValueTextField != null) paramValueTextField.clear();
+        if (burnBondComboBox != null) burnBondComboBox.getSelectionModel().clearSelection();
         if (txIdTextField != null) txIdTextField.cleanup();
         if (descriptionTextArea != null) descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
     }
@@ -293,6 +310,9 @@ public class ProposalDisplay {
             paramComboBox.setDisable(!isEditable);
         if (paramValueTextField != null)
             paramValueTextField.setEditable(isEditable);
+
+        if (burnBondComboBox != null)
+            burnBondComboBox.setDisable(!isEditable);
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);

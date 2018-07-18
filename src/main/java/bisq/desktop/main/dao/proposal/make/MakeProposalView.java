@@ -282,6 +282,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case REMOVE_ALTCOIN:
                 //TODO
                 throw new RuntimeException("Not implemented yet");
+            case BURN_BOND:
+                String bondId = proposalDisplay.burnBondComboBox.getSelectionModel().getSelectedItem();
+                if (bondId == null || bondId.isEmpty())
+                    throw new ValidationException("Invalid bond id, null or empty");
+
+                return daoFacade.getBurnBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.titleTextField.getText(),
+                        proposalDisplay.descriptionTextArea.getText(),
+                        proposalDisplay.linkInputTextField.getText(),
+                        bondId);
             default:
                 final String msg = "Undefined ProposalType " + selectedProposalType;
                 log.error(msg);
