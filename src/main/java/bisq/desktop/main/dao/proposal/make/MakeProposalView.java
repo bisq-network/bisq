@@ -78,7 +78,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
-    private final FeeService feeService;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -105,7 +104,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
-        this.feeService = feeService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -291,7 +289,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             proposalDisplay = null;
         }
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, feeService);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, daoFacade);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE,
                     selectedProposalType, true, true);
             proposalDisplay.fillWithMock();

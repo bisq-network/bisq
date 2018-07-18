@@ -160,7 +160,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
     }
 
     protected void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, null);
+        proposalDisplay = new ProposalDisplay(detailsGridPane, bsqFormatter, bsqWalletService, daoFacade);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(10, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
@@ -328,7 +328,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getShortId());
                                     field.setOnAction(event -> {
-                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposal).show();
+                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposal, daoFacade).show();
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

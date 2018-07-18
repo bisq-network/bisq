@@ -21,6 +21,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -33,6 +34,8 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final Proposal proposal;
+    private final DaoFacade daoFacade;
+
     private ProposalDisplay proposalDisplay;
 
 
@@ -40,10 +43,12 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProposalDetailsWindow(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, Proposal proposal) {
+    public ProposalDetailsWindow(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, Proposal proposal,
+                                 DaoFacade daoFacade) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.proposal = proposal;
+        this.daoFacade = daoFacade;
 
         type = Type.Confirmation;
         width = 950;
@@ -52,7 +57,7 @@ public class ProposalDetailsWindow extends Overlay<ProposalDetailsWindow> {
     public void show() {
         createGridPane();
 
-        proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, bsqWalletService, null);
+        proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, bsqWalletService, daoFacade);
         proposalDisplay.createAllFields(Res.get("dao.proposal.details"), 1, Layout.GROUP_DISTANCE,
                 proposal.getType(), false, true);
 

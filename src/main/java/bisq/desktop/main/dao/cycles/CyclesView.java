@@ -198,7 +198,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
     }
 
     private void createResultDisplay() {
-        proposalsDisplay = new CycleDisplay(resultGridPane, bsqWalletService, bsqFormatter);
+        proposalsDisplay = new CycleDisplay(resultGridPane, bsqWalletService, daoFacade, bsqFormatter);
         resultDisplayView = proposalsDisplay.getView();
         GridPane.setMargin(resultDisplayView, new Insets(10, -10, 0, -10));
         GridPane.setRowIndex(resultDisplayView, ++gridRow);

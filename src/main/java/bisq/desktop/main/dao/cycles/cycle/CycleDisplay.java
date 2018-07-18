@@ -26,6 +26,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -68,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CycleDisplay {
     private final GridPane gridPane;
     private final BsqWalletService bsqWalletService;
+    private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
 
     private int gridRow;
@@ -78,9 +80,10 @@ public class CycleDisplay {
     private final SortedList<CycleListItem> sortedList = new SortedList<>(itemList);
 
 
-    public CycleDisplay(GridPane gridPane, BsqWalletService bsqWalletService, BsqFormatter bsqFormatter) {
+    public CycleDisplay(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter) {
         this.gridPane = gridPane;
         this.bsqWalletService = bsqWalletService;
+        this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -187,7 +190,8 @@ public class CycleDisplay {
                                     field.setStyle(item.getColorStyle());
                                     field.setOnAction(event -> new ProposalDetailsWindow(bsqFormatter,
                                             bsqWalletService,
-                                            item.getEvaluatedProposal().getProposal())
+                                            item.getEvaluatedProposal().getProposal(),
+                                            daoFacade)
                                             .show());
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

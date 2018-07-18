@@ -76,7 +76,7 @@ public class ActiveProposalListItem extends ProposalListItem {
         if (phase == DaoPhase.Phase.PROPOSAL) {
             imageView.setId("image-remove");
             button.setGraphic(imageView);
-            button.setText(Res.get("dao.proposal.active.remove"));
+            button.setText(Res.get("shared.remove"));
             final boolean isMyProposal = daoFacade.isMyProposal(proposal);
             button.setVisible(isMyProposal);
             button.setManaged(isMyProposal);

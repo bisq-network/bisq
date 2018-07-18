@@ -27,6 +27,7 @@ import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
@@ -35,12 +36,12 @@ import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.locale.Res;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.util.BsqFormatter;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -69,7 +70,9 @@ public class ProposalDisplay {
     private final int maxLengthDescriptionText;
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
+    private DaoFacade daoFacade;
     private InputTextField uidTextField;
+    private TextField proposalFeeTextField;
     public InputTextField nameTextField;
     public InputTextField titleTextField;
     public InputTextField linkInputTextField;
@@ -82,15 +85,15 @@ public class ProposalDisplay {
     private HyperlinkWithIcon linkHyperlinkWithIcon;
     @Nullable
     private TxIdTextField txIdTextField;
-    private final FeeService feeService;
     private final ChangeListener<String> descriptionTextAreaListener;
     private int gridRowStartIndex;
 
-    public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, @Nullable FeeService feeService) {
+    public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
+                           DaoFacade daoFacade) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.feeService = feeService;
+        this.daoFacade = daoFacade;
 
         maxLengthDescriptionText = ProposalConsensus.getMaxLengthDescriptionText();
 
@@ -112,17 +115,17 @@ public class ProposalDisplay {
         boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
                 proposalType == ProposalType.CHANGE_PARAM;
         if (isMakeProposalScreen) {
-            rowSpan = hasAddedFields ? 7 : 5;
-        } else if (showDetails) {
             rowSpan = hasAddedFields ? 8 : 6;
+        } else if (showDetails) {
+            rowSpan = hasAddedFields ? 9 : 7;
         } else {
             //noinspection IfCanBeSwitch
             if (proposalType == ProposalType.COMPENSATION_REQUEST)
-                rowSpan = 5;
-            else if (proposalType == ProposalType.CHANGE_PARAM)
                 rowSpan = 6;
+            else if (proposalType == ProposalType.CHANGE_PARAM)
+                rowSpan = 7;
             else
-                rowSpan = 4;
+                rowSpan = 5;
         }
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
@@ -155,14 +158,10 @@ public class ProposalDisplay {
             case COMPENSATION_REQUEST:
 
                 requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
-                if (feeService != null) {
-                    BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-                    //TODO should we use the BSQ or a BTC validator? Technically it is BTC at that stage...
-                    //bsqValidator.setMinValue(feeService.getCreateCompensationRequestFee());
-                    bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
-                    checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
-                    requestedBsqTextField.setValidator(bsqValidator);
-                }
+                BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
+                bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
+                checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
+                requestedBsqTextField.setValidator(bsqValidator);
                 // TODO validator, addressTF
                 if (showDetails) {
                     bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
@@ -199,6 +198,9 @@ public class ProposalDisplay {
         if (!isMakeProposalScreen && showDetails)
             txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "").second;
+
+        proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
+        proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee()));
     }
 
     public void applyProposalPayload(Proposal proposal) {
