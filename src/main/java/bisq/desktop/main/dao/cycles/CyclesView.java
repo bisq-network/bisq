@@ -29,8 +29,9 @@ import bisq.desktop.main.dao.cycles.model.CycleResult;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.ChainHeightListener;
+import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.state.period.CycleService;
 import bisq.core.dao.voting.proposal.Proposal;
@@ -67,7 +68,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> implements ChainHeightListener {
+public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> implements BsqStateListener {
     private final DaoFacade daoFacade;
     // TODO use daoFacade once dev work completed
     private final StateService stateService;
@@ -114,7 +115,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
 
     @Override
     public void initialize() {
-        daoFacade.addChainHeightListener(this);
+        daoFacade.addBsqStateListener(this);
 
         resultGridPane = new GridPane();
         createResultsTable();
@@ -136,12 +137,24 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChainHeightListener
+    // BsqStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChainHeightChanged(int blockHeight) {
+    public void onNewBlockHeight(int blockHeight) {
         fillCycleList();
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
     }
 
 

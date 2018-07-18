@@ -31,7 +31,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ballot.Ballot;
@@ -73,12 +73,13 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class ActiveBallotsView extends BaseProposalView implements BsqBalanceListener, BlockListener {
+public class ActiveBallotsView extends BaseProposalView implements BsqBalanceListener, BsqStateListener {
     private Button acceptButton, rejectButton, removeMyVoteButton, voteButton;
     private InputTextField stakeInputTextField;
     private BusyAnimation voteButtonBusyAnimation;
     private Label voteButtonInfoLabel;
     private ListChangeListener<Ballot> listChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -120,7 +121,7 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
 
         voteButton.setOnAction(e -> onVote());
 
-        daoFacade.addBlockListener(this);
+        daoFacade.addBsqStateListener(this);
 
         updateButtons();
     }
@@ -150,13 +151,26 @@ public class ActiveBallotsView extends BaseProposalView implements BsqBalanceLis
                 bsqFormatter.formatCoinWithCode(confirmedBalance)));
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BlockListener
+    // BsqStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(Block block) {
+    public void onNewBlockHeight(int blockHeight) {
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
         updateButtons();
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
     }
 
 

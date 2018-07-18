@@ -30,7 +30,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.ChainHeightListener;
+import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.voting.ValidationException;
@@ -72,7 +73,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
-public class MakeProposalView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
+public class MakeProposalView extends ActivatableView<GridPane, Void> implements BsqStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
@@ -137,8 +138,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void activate() {
-        daoFacade.addChainHeightListener(this);
-        onChainHeightChanged(daoFacade.getChainHeight());
+        daoFacade.addBsqStateListener(this);
+        onNewBlockHeight(daoFacade.getChainHeight());
 
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().addListener(proposalTypeChangeListener);
 
@@ -148,7 +149,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void deactivate() {
-        daoFacade.removeChainHeightListener(this);
+        daoFacade.removeBsqStateListener(this);
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(proposalTypeChangeListener);
         if (createButton != null)
             createButton.setOnAction(null);
@@ -156,12 +157,24 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // ChainHeightListener
+    // BsqStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChainHeightChanged(int blockHeight) {
+    public void onNewBlockHeight(int height) {
         proposalTypeComboBox.setDisable(!daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
     }
 
 

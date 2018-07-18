@@ -22,7 +22,7 @@ import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public abstract class BaseProposalListItem implements BlockListener {
+public abstract class BaseProposalListItem implements BsqStateListener {
     @Getter
     protected final DaoFacade daoFacade;
     protected final BsqWalletService bsqWalletService;
@@ -82,24 +82,36 @@ public abstract class BaseProposalListItem implements BlockListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BlockListener
+    // BsqStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(Block block) {
+    public void onNewBlockHeight(int blockHeight) {
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
         setupConfidence();
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onPhaseChanged(DaoPhase.Phase phase) {
     }
 
     public void cleanup() {
-        daoFacade.removeBlockListener(this);
+        daoFacade.removeBsqStateListener(this);
         bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
         if (txConfidenceListener != null)
             bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
@@ -129,7 +141,7 @@ public abstract class BaseProposalListItem implements BlockListener {
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
 
-        daoFacade.addBlockListener(this);
+        daoFacade.addBsqStateListener(this);
 
         phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
 

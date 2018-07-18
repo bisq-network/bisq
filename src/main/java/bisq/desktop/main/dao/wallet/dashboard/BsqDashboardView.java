@@ -26,7 +26,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -57,7 +57,7 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BlockListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
     private final DaoFacade daoFacade;
@@ -132,7 +132,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     protected void activate() {
         bsqBalanceUtil.activate();
 
-        daoFacade.addBlockListener(this);
+        daoFacade.addBsqStateListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
         hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + daoFacade.getGenesisTxId()));
@@ -144,20 +144,37 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     @Override
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
-        daoFacade.removeBlockListener(this);
+        daoFacade.removeBsqStateListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
         hyperlinkWithIcon.setOnAction(null);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BlockListener
+    // BsqStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onBlockAdded(Block block) {
+    public void onNewBlockHeight(int blockHeight) {
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
         updateWithBsqBlockChainData();
     }
+
+    @Override
+    public void onParseBlockChainComplete() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateWithBsqBlockChainData() {
         Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();

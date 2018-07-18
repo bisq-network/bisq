@@ -23,7 +23,8 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.ChainHeightListener;
+import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -50,7 +51,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 // block. The event from the ChainHeightListener is sent before parsing starts.
 // The event from the ChainHeightListener would notify after parsing a new block.
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements ChainHeightListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
     private final DaoFacade daoFacade;
     private final BSFormatter formatter;
 
@@ -113,21 +114,46 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
             });
 
         });
-        daoFacade.addChainHeightListener(this);
+        daoFacade.addBsqStateListener(this);
 
-        onChainHeightChanged(daoFacade.getChainHeight());
+        applyData(daoFacade.getChainHeight());
     }
 
     @Override
     protected void deactivate() {
         super.deactivate();
-        daoFacade.removeChainHeightListener(this);
+        daoFacade.removeBsqStateListener(this);
         phaseSubscription.unsubscribe();
     }
 
-    // ChainHeightListener
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public void onChainHeightChanged(int height) {
+    public void onNewBlockHeight(int height) {
+        applyData(height);
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyData(int height) {
         if (height > 0) {
             phaseBarsItems.forEach(item -> {
                 int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());

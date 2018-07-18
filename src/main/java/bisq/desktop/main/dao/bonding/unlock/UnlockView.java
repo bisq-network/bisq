@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.dao.bonding.unlock;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
@@ -32,7 +31,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BlockListener;
+import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
@@ -76,7 +75,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BlockListener {
+public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
     private TableView<LockupTxListItem> tableView;
 
     private final BsqWalletService bsqWalletService;
@@ -89,7 +88,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
-    private final Navigation navigation;
 
     private int gridRow = 0;
     private boolean synced;
@@ -115,8 +113,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                        DaoFacade daoFacade,
                        Preferences preferences,
                        WalletsSetup walletsSetup,
-                       P2PService p2PService,
-                       Navigation navigation) {
+                       P2PService p2PService) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -126,8 +123,8 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         this.preferences = preferences;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
-        this.navigation = navigation;
     }
+
 
     @Override
     public void initialize() {
@@ -152,8 +149,86 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
         vBox.getChildren().addAll(tableView);
         root.getChildren().add(vBox);
-
     }
+
+    @Override
+    protected void activate() {
+        bsqBalanceUtil.activate();
+        bsqWalletService.addBsqBalanceListener(this);
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getUnverifiedBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockupBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
+
+        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
+        bsqWalletService.addBsqBalanceListener(this);
+        btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
+
+        tableView.setItems(lockupTxs);
+
+        daoFacade.addBsqStateListener(this);
+
+        updateList();
+        onUpdateAnyChainHeight();
+    }
+
+    @Override
+    protected void deactivate() {
+        bsqBalanceUtil.deactivate();
+        bsqWalletService.removeBsqBalanceListener(this);
+
+        lockupTxs.predicateProperty().unbind();
+        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
+        bsqWalletService.removeBsqBalanceListener(this);
+        btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
+        daoFacade.removeBsqStateListener(this);
+
+        observableList.forEach(LockupTxListItem::cleanup);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBalanceListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onUpdateBalances(Coin confirmedBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin pendingBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockupBondsBalance,
+                                 Coin unlockingBondsBalance) {
+        bsqValidator.setAvailableBalance(confirmedBalance);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onNewBlockHeight(int blockHeight) {
+    }
+
+    @Override
+    public void onEmptyBlockAdded(Block block) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+        onUpdateAnyChainHeight();
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addTxIdColumn() {
         TableColumn<LockupTxListItem, LockupTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
@@ -345,34 +420,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
     }
 
-    @Override
-    protected void activate() {
-        bsqBalanceUtil.activate();
-        bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getUnverifiedBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockupBondsBalance(),
-                bsqWalletService.getUnlockingBondsBalance());
-
-        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
-        bsqWalletService.addBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
-
-        tableView.setItems(lockupTxs);
-
-        daoFacade.addBlockListener(this);
-
-        updateList();
-        onUpdateAnyChainHeight();
-    }
-
-    @Override
-    public void onBlockAdded(Block block) {
-        onUpdateAnyChainHeight();
-    }
-
     private void onUpdateAnyChainHeight() {
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
@@ -398,29 +445,5 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                 })
                 .collect(Collectors.toList());
         observableList.setAll(items);
-    }
-
-    @Override
-    protected void deactivate() {
-        bsqBalanceUtil.deactivate();
-        bsqWalletService.removeBsqBalanceListener(this);
-
-        lockupTxs.predicateProperty().unbind();
-        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
-        bsqWalletService.removeBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
-        daoFacade.removeBlockListener(this);
-
-        observableList.forEach(LockupTxListItem::cleanup);
-    }
-
-    @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
-                                 Coin lockedForVotingBalance,
-                                 Coin lockupBondsBalance,
-                                 Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
     }
 }
