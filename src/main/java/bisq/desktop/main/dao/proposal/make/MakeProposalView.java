@@ -66,6 +66,8 @@ import java.io.IOException;
 
 import java.util.Arrays;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
@@ -85,6 +87,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private Button createButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
     private ChangeListener<ProposalType> proposalTypeChangeListener;
+    @Nullable
     private ProposalType selectedProposalType;
 
 
@@ -128,6 +131,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         proposalTypeComboBox.setPromptText(Res.get("shared.select"));
         proposalTypeChangeListener = (observable, oldValue, newValue) -> {
             selectedProposalType = newValue;
+            removeProposalDisplay();
             addProposalDisplay();
         };
 
@@ -160,7 +164,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void onNewBlockHeight(int height) {
-        proposalTypeComboBox.setDisable(!daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
+        boolean isProposalPhase = daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL);
+        proposalTypeComboBox.setDisable(!isProposalPhase);
+        if (!isProposalPhase)
+            proposalTypeComboBox.getSelectionModel().clearSelection();
     }
 
     @Override
@@ -283,11 +290,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private void addProposalDisplay() {
-        // TODO need to update removed fields when switching.
-        if (proposalDisplay != null) {
-            proposalDisplay.removeAllFields();
-            proposalDisplay = null;
-        }
         if (selectedProposalType != null) {
             proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, daoFacade);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE,
@@ -296,6 +298,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
             createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
             setCreateButtonHandler();
+        }
+    }
+
+    private void removeProposalDisplay() {
+        if (proposalDisplay != null) {
+            proposalDisplay.removeAllFields();
+            GUIUtil.removeChildrenFromGridPaneRows(root, 1, proposalDisplay.getGridRow());
+            proposalDisplay = null;
         }
     }
 

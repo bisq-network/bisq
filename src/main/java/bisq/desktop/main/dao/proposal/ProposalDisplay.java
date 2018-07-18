@@ -58,6 +58,7 @@ import javafx.util.StringConverter;
 
 import java.util.UUID;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -81,6 +82,7 @@ public class ProposalDisplay {
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
+    @Getter
     private int gridRow;
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
@@ -206,6 +208,8 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.display.txId"), "").second;
 
         proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
+        if (isMakeProposalScreen)
+            proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
     }
 
     public void applyProposalPayload(Proposal proposal) {
@@ -236,7 +240,6 @@ public class ProposalDisplay {
         int chainHeight;
         if (txIdTextField != null) {
             txIdTextField.setup(proposal.getTxId());
-
             chainHeight = daoFacade.getChainHeight();
         } else {
             chainHeight = daoFacade.getTx(proposal.getTxId()).map(Tx::getBlockHeight).orElse(0);
