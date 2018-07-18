@@ -30,7 +30,7 @@ import bisq.desktop.main.dao.cycles.model.CycleResult;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.StateService;
+import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.state.period.CycleService;
@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> implements BsqStateListener {
     private final DaoFacade daoFacade;
     // TODO use daoFacade once dev work completed
-    private final StateService stateService;
+    private final BsqStateService bsqStateService;
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
     private final ProposalService proposalService;
@@ -98,14 +98,14 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
 
     @Inject
     private CyclesView(DaoFacade daoFacade,
-                       StateService stateService,
+                       BsqStateService bsqStateService,
                        CycleService cycleService,
                        VoteResultService voteResultService,
                        ProposalService proposalService,
                        BsqWalletService bsqWalletService,
                        BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
-        this.stateService = stateService;
+        this.bsqStateService = bsqStateService;
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
         this.proposalService = proposalService;
@@ -215,7 +215,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
 
     private void fillCycleList() {
         itemList.clear();
-        stateService.getCycles().forEach(this::addCycleListItem);
+        bsqStateService.getCycles().forEach(this::addCycleListItem);
         Collections.reverse(itemList);
     }
 
@@ -229,7 +229,7 @@ public class CyclesView extends ActivatableViewAndModel<GridPane, Activatable> i
                 .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                 .collect(Collectors.toList());
 
-        long cycleStartTime = stateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+        long cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
                 .map(e -> e.getTime() * 1000)
                 .orElse(0L);
         int cycleIndex = cycleService.getCycleIndex(cycle);
