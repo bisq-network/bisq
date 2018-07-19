@@ -26,14 +26,14 @@ import bisq.core.util.BsqFormatter;
 import java.util.List;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data
 public class ResultsOfCycle {
     private final Cycle cycle;
     private final int cycleIndex;
     private final int numVotes, numAcceptedVotes, numRejectedVotes;
-    private final long stakeOfAcceptedVotes;
-    private final long stakeOfRejectedVotes;
     private BsqFormatter bsqFormatter;
     private long cycleStartTime;
 
@@ -67,15 +67,5 @@ public class ResultsOfCycle {
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
                 .sum();
-        stakeOfAcceptedVotes = evaluatedProposals.stream()
-                .mapToLong(e -> e.getProposalVoteResult().getStakeOfAcceptedVotes())
-                .sum();
-        stakeOfRejectedVotes = evaluatedProposals.stream()
-                .mapToLong(e -> e.getProposalVoteResult().getStakeOfRejectedVotes())
-                .sum();
-    }
-
-    public long getTotalStake() {
-        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
     }
 }

@@ -299,7 +299,7 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
                 proposalsForCycle,
                 evaluatedProposalsForCycle,
                 decryptedVotesForCycle);
-        ResultsListItem resultsListItem = new ResultsListItem(resultsOfCycle, bsqFormatter);
+        ResultsListItem resultsListItem = new ResultsListItem(resultsOfCycle, bsqStateService, bsqFormatter);
         itemList.add(resultsListItem);
     }
 

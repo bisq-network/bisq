@@ -77,6 +77,7 @@ public class VotesPerProposalTableView extends BaseResultsTableView<VotesPerProp
 
     @Override
     protected void fillList() {
+        //TODO move to domain
         Map<String, EvaluatedProposalWithDecryptedVote> map = resultsOfCycle.getEvaluatedProposals().stream()
                 .collect(Collectors.toMap(EvaluatedProposal::getProposalTxId,
                         EvaluatedProposalWithDecryptedVote::new));

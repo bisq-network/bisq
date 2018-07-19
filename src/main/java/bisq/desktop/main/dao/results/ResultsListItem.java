@@ -19,24 +19,31 @@ package bisq.desktop.main.dao.results;
 
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 
+import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
+import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import lombok.Getter;
 
 public class ResultsListItem {
+    private final BsqStateService bsqStateService;
     private final BsqFormatter bsqFormatter;
     @Getter
     private ResultsOfCycle resultsOfCycle;
 
     public ResultsListItem(ResultsOfCycle resultsOfCycle,
+                           BsqStateService bsqStateService,
                            BsqFormatter bsqFormatter) {
         this.resultsOfCycle = resultsOfCycle;
+        this.bsqStateService = bsqStateService;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -55,11 +62,20 @@ public class ResultsListItem {
     }
 
     public String getStake() {
-        return bsqFormatter.formatCoinWithCode(Coin.valueOf(resultsOfCycle.getTotalStake()));
+        //TODO move to domain
+        Map<String, Long> map = new HashMap<>();
+        resultsOfCycle.getDecryptedVotesForCycle()
+                .forEach(decryptedVote -> {
+                    decryptedVote.getBallotList().stream().forEach(ballot -> {
+                        map.putIfAbsent(decryptedVote.getBlindVoteTxId(), decryptedVote.getStake() + decryptedVote.getMerit(bsqStateService));
+                    });
+                });
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(map.values().stream().mapToLong(e -> e).sum()));
     }
 
     public String getIssuance() {
         long totalIssuance = resultsOfCycle.getEvaluatedProposals().stream()
+                .filter(EvaluatedProposal::isAccepted)
                 .filter(e -> e.getProposal() instanceof CompensationProposal)
                 .map(e -> (CompensationProposal) e.getProposal())
                 .mapToLong(e -> e.getRequestedBsq().value)
