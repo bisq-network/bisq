@@ -69,6 +69,7 @@ import javafx.stage.StageStyle;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
@@ -568,5 +569,16 @@ public class GUIUtil {
                 .onAction(actionHandler::run)
                 .closeButtonText(Res.get("shared.cancel"))
                 .show();
+    }
+
+    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minHeight) {
+        int size = tableView.getItems().size();
+        if (size > 0) {
+            int height = Math.max(minHeight, size * rowHeight + headerHeight);
+            tableView.setMaxHeight(height);
+            tableView.setMinHeight(height);
+        } else {
+            log.warn("setFitToRowsForTableView should be called after the table is filled");
+        }
     }
 }

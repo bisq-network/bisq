@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results.proposal;
+package bisq.desktop.main.dao.results;
 
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
@@ -30,7 +30,7 @@ import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
-class ProposalResultDetailsWindow extends Overlay<ProposalResultDetailsWindow> {
+public class ProposalResultsDetailsWindow extends Overlay<ProposalResultsDetailsWindow> {
 
     private final BsqFormatter bsqFormatter;
     private final EvaluatedProposal evaluatedProposal;
@@ -40,7 +40,7 @@ class ProposalResultDetailsWindow extends Overlay<ProposalResultDetailsWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProposalResultDetailsWindow(BsqFormatter bsqFormatter, EvaluatedProposal evaluatedProposal) {
+    public ProposalResultsDetailsWindow(BsqFormatter bsqFormatter, EvaluatedProposal evaluatedProposal) {
         this.bsqFormatter = bsqFormatter;
         this.evaluatedProposal = evaluatedProposal;
         type = Type.Confirmation;
@@ -68,10 +68,10 @@ class ProposalResultDetailsWindow extends Overlay<ProposalResultDetailsWindow> {
     }
 
     private void addContent() {
-        addTitledGroupBg(gridPane, ++rowIndex, 5, Res.get("dao.results.result.detail.header"));
+        addTitledGroupBg(gridPane, ++rowIndex, 5, Res.get("dao.results.proposals.detail.header"));
 
         //TODO impl
-        //addLabelTextField(gridPane, rowIndex, Res.get("dao.results.result.detail.header"), evaluatedProposal.getProposal().getName(), Layout.FIRST_ROW_DISTANCE);
+        //addLabelTextField(gridPane, rowIndex, Res.get("dao.results.proposals.detail.header"), evaluatedProposal.getProposal().getName(), Layout.FIRST_ROW_DISTANCE);
 
 
         Button closeButton = FormBuilder.addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));

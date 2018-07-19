@@ -26,7 +26,11 @@ import javafx.scene.control.Label;
 
 import javafx.geometry.Insets;
 
+import lombok.Getter;
+
 public class HyperlinkWithIcon extends Hyperlink {
+    @Getter
+    private final Label icon;
 
     public HyperlinkWithIcon(String text) {
         this(text, AwesomeIcon.INFO_SIGN);
@@ -36,7 +40,7 @@ public class HyperlinkWithIcon extends Hyperlink {
 
         super(text);
 
-        Label icon = new Label();
+        icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);

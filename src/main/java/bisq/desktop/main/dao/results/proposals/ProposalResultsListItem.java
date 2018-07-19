@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results.proposal;
+package bisq.desktop.main.dao.results.proposals;
 
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
@@ -29,13 +29,13 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import lombok.Getter;
 
-public class ProposalResultListItem {
+public class ProposalResultsListItem {
     private final ProposalVoteResult proposalVoteResult;
     private final BsqFormatter bsqFormatter;
     @Getter
     private EvaluatedProposal evaluatedProposal;
 
-    public ProposalResultListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+    public ProposalResultsListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
         proposalVoteResult = evaluatedProposal.getProposalVoteResult();
         this.bsqFormatter = bsqFormatter;
@@ -50,19 +50,19 @@ public class ProposalResultListItem {
     }
 
     public String getAccepted() {
-        return Res.get("dao.results.result.table.item.votes",
+        return Res.get("dao.results.proposals.table.item.votes",
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getStakeOfAcceptedVotes())),
                 String.valueOf(proposalVoteResult.getNumAcceptedVotes()));
     }
 
     public String getRejected() {
-        return Res.get("dao.results.result.table.item.votes",
+        return Res.get("dao.results.proposals.table.item.votes",
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getStakeOfRejectedVotes())),
                 String.valueOf(proposalVoteResult.getNumRejectedVotes()));
     }
 
     public String getThreshold() {
-        return (proposalVoteResult.getThreshold() / 100D) + "%";
+        return proposalVoteResult.getThreshold() > 0 ? (proposalVoteResult.getThreshold() / 100D) + "%" : "";
     }
 
     public String getQuorum() {
@@ -70,7 +70,7 @@ public class ProposalResultListItem {
     }
 
     public AwesomeIcon getIcon() {
-        return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.BAN_CIRCLE;
+        return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.REMOVE_SIGN;
     }
 
     public String getColorStyleClass() {

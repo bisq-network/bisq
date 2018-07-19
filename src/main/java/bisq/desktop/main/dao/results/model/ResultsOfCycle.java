@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.results.model;
 
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.dao.voting.voteresult.DecryptedVote;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.util.BsqFormatter;
 
@@ -42,16 +43,20 @@ public class ResultsOfCycle {
     // Proposals which ended up in voting
     private final List<EvaluatedProposal> evaluatedProposals;
 
+    private final List<DecryptedVote> decryptedVotesForCycle;
+
     public ResultsOfCycle(Cycle cycle,
                           int cycleIndex,
                           long cycleStartTime,
                           List<Proposal> proposals,
-                          List<EvaluatedProposal> evaluatedProposals) {
+                          List<EvaluatedProposal> evaluatedProposals,
+                          List<DecryptedVote> decryptedVotesForCycle) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
         this.cycleStartTime = cycleStartTime;
         this.proposals = proposals;
         this.evaluatedProposals = evaluatedProposals;
+        this.decryptedVotesForCycle = decryptedVotesForCycle;
 
         numVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes())

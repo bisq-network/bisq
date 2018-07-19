@@ -17,11 +17,7 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.geometry.Insets?>
-<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.results.ResultsView"
+<!--<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.results.ResultsView"
           hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
@@ -34,4 +30,16 @@
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
-</GridPane>
+</GridPane>-->
+
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<AnchorPane fx:id="root" fx:controller="bisq.desktop.main.dao.results.ResultsView"
+            xmlns:fx="http://javafx.com/fxml">
+
+    <ScrollPane fx:id="scrollPane" fitToWidth="true" fitToHeight="true"
+                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    </ScrollPane>
+
+</AnchorPane>

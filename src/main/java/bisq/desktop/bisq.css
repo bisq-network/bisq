@@ -395,6 +395,10 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-error-red;
 }
 
+.dao-ignored-icon {
+    -fx-text-fill: -bs-medium-grey;
+}
+
 .version {
     -fx-text-fill: black;
     -fx-underline: false;
@@ -1354,4 +1358,3 @@ textfield */
 .compensation-root {
     -fx-background-insets: 0, 0 0 0 0
 }
-
