@@ -26,6 +26,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
+import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
@@ -256,6 +257,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.WESTERN_UNION_ID:
                 gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.F2F_ID:
+                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",

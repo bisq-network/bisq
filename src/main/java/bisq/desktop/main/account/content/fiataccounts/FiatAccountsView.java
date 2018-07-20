@@ -27,6 +27,7 @@ import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
@@ -56,6 +57,7 @@ import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.CashAppValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
+import bisq.desktop.util.validation.F2FValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
@@ -137,6 +139,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WeChatPayValidator weChatPayValidator;
+    private final F2FValidator f2FValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private ListView<PaymentAccount> paymentAccountsListView;
@@ -167,6 +170,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             WeChatPayValidator weChatPayValidator,
+                            F2FValidator f2FValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
@@ -189,6 +193,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.weChatPayValidator = weChatPayValidator;
+        this.f2FValidator = f2FValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
@@ -482,6 +487,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new WesternUnionForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
                 return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.F2F_ID:
+                return new F2FForm(paymentAccount, accountAgeWitnessService, f2FValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;
