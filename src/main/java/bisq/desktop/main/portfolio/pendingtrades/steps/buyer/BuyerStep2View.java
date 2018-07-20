@@ -56,6 +56,7 @@ import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -75,6 +76,8 @@ import javafx.scene.layout.GridPane;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
 
@@ -259,7 +262,8 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.F2F_ID:
-                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
+                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer());
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
@@ -270,7 +274,8 @@ public class BuyerStep2View extends TradeStepView {
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
 
-        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload))
+        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
+                !(paymentAccountPayload instanceof F2FAccountPayload))
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
@@ -447,7 +452,7 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n" +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
                         tradeId + paddedId +
                         assign +
@@ -460,7 +465,7 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.westernUnion",
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n" +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof MoneyGramAccountPayload) {
@@ -469,23 +474,29 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.moneyGram",
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n" +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n" +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
                         tradeId + paddedId +
                         assign +
                         refTextWarn;
+            } else if (paymentAccountPayload instanceof F2FAccountPayload) {
+                //noinspection UnusedAssignment
+                message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + "\n\n" +
+                        copyPaste;
             } else {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n" +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste + "\n\n" +
                         tradeId + paddedId +
                         assign +

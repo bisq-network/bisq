@@ -29,6 +29,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Region;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.F2FAccount;
@@ -60,19 +61,19 @@ public class F2FForm extends PaymentMethodForm {
     private InputTextField cityInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountPayload paymentAccountPayload) {
+                                      PaymentAccountPayload paymentAccountPayload, Offer offer) {
         F2FAccountPayload f2fAccountPayload = (F2FAccountPayload) paymentAccountPayload;
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.country"),
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.country"),
                 CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()));
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
-                f2fAccountPayload.getContact());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
+                offer.getF2FCity());
+        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.getWithCol("payment.f2f.extra"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
-        textArea.setText(f2fAccountPayload.getExtraInfo());
+        textArea.setText(offer.getF2FExtraInfo());
         return gridRow;
     }
 
@@ -192,15 +193,16 @@ public class F2FForm extends PaymentMethodForm {
 
         cityInputTextField = addLabelInputTextField(gridPane, ++gridRow,
                 Res.getWithCol("payment.f2f.city")).second;
+        cityInputTextField.setPromptText(Res.get("payment.f2f.city.prompt"));
         cityInputTextField.setValidator(f2fValidator);
-
         cityInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             f2fAccount.setCity(newValue);
             updateFromInputs();
         });
 
         extraTextArea = addLabelTextArea(gridPane, ++gridRow,
-                Res.getWithCol("payment.f2f.extra"), "").second;
+                Res.getWithCol("payment.f2f.optionalExtra"), "").second;
+        extraTextArea.setPromptText(Res.get("payment.f2f.extra.prompt"));
         extraTextArea.setPrefHeight(60);
         //extraTextArea.setValidator(f2fValidator);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -239,7 +241,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccount.getContact());
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra", f2fAccount.getExtraInfo()), "").second;
+        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);

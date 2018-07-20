@@ -50,6 +50,7 @@ import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AliPayValidator;
@@ -75,6 +76,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.F2FAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
@@ -236,41 +238,51 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         Coin maxTradeLimitAsCoin = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin("USD");
         Coin maxTradeLimitSecondMonth = maxTradeLimitAsCoin.divide(2L);
         Coin maxTradeLimitFirstMonth = maxTradeLimitAsCoin.divide(4L);
-        new Popup<>().information(Res.get("payment.limits.info",
-                formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
-                formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
-                formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
-                .width(700)
-                .closeButtonText(Res.get("shared.cancel"))
-                .actionButtonText(Res.get("shared.iUnderstand"))
-                .onAction(() -> {
-                    final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
-                    if (paymentAccount instanceof ClearXchangeAccount) {
-                        new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
-                                .width(900)
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .actionButtonText(Res.get("shared.iConfirm"))
-                                .onAction(() -> doSaveNewAccount(paymentAccount))
-                                .show();
-                    } else if (paymentAccount instanceof WesternUnionAccount) {
-                        new Popup<>().information(Res.get("payment.westernUnion.info"))
-                                .width(700)
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .actionButtonText(Res.get("shared.iUnderstand"))
-                                .onAction(() -> doSaveNewAccount(paymentAccount))
-                                .show();
-                    } else if (paymentAccount instanceof MoneyGramAccount) {
-                        new Popup<>().information(Res.get("payment.moneyGram.info"))
-                                .width(700)
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .actionButtonText(Res.get("shared.iUnderstand"))
-                                .onAction(() -> doSaveNewAccount(paymentAccount))
-                                .show();
-                    } else {
-                        doSaveNewAccount(paymentAccount);
-                    }
-                })
-                .show();
+        if (paymentAccount instanceof F2FAccount) {
+            new Popup<>().information(Res.get("payment.f2f.info"))
+                    .width(700)
+                    .closeButtonText(Res.get("payment.f2f.info.openURL"))
+                    .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/#f2f"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else {
+            new Popup<>().information(Res.get("payment.limits.info",
+                    formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
+                    formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
+                    formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                    .width(700)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> {
+                        final String currencyName = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName();
+                        if (paymentAccount instanceof ClearXchangeAccount) {
+                            new Popup<>().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                                    .width(900)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof WesternUnionAccount) {
+                            new Popup<>().information(Res.get("payment.westernUnion.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof MoneyGramAccount) {
+                            new Popup<>().information(Res.get("payment.moneyGram.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else {
+                            doSaveNewAccount(paymentAccount);
+                        }
+                    })
+                    .show();
+        }
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
