@@ -283,9 +283,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 //TODO
                 throw new RuntimeException("Not implemented yet");
             case BURN_BOND:
-                String bondId = proposalDisplay.burnBondComboBox.getSelectionModel().getSelectedItem();
-                if (bondId == null || bondId.isEmpty())
-                    throw new ValidationException("Invalid bond id, null or empty");
+                byte[] bondId = proposalDisplay.burnBondComboBox.getSelectionModel().getSelectedItem();
+                if (bondId == null || bondId.length == 0)
+                    throw new ValidationException("Invalid bond id, null or zero length");
 
                 return daoFacade.getBurnBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.titleTextField.getText(),

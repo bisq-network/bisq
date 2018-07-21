@@ -40,6 +40,8 @@ import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.util.Utilities;
+
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -84,7 +86,7 @@ public class ProposalDisplay {
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
-    public ComboBox<String> burnBondComboBox;
+    public ComboBox<byte[]> burnBondComboBox;
     @Getter
     private int gridRow;
     public TextArea descriptionTextArea;
@@ -209,9 +211,22 @@ public class ProposalDisplay {
             case BURN_BOND:
                 burnBondComboBox = addLabelComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.burnBondComboBox.label")).second;
-                ObservableList<String> burnableBonds = FXCollections.observableArrayList();
-                burnableBonds.addAll("bond1", "bond2", "bond3");
+                ObservableList<byte[]> burnableBonds =
+                        FXCollections.observableArrayList(daoFacade.getLockupAndUnlockingBondIds());
+//                burnableBonds.addAll("bond1", "bond2", "bond3");
                 burnBondComboBox.setItems(burnableBonds);
+                burnBondComboBox.setConverter(new StringConverter<byte[]>() {
+                    @Override
+                    public String toString(byte[] id) {
+                        return Utilities.bytesAsHexString(id);
+                    }
+
+                    @Override
+                    public byte[] fromString(String string) {
+                        return null;
+                    }
+                });
+
                 break;
         }
 
