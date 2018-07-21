@@ -36,11 +36,10 @@ import bisq.core.app.BisqSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
-import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.presentation.BalancePresentation;
 import bisq.core.presentation.DisputePresentation;
 import bisq.core.presentation.TradePresentation;
@@ -425,20 +424,19 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     private void setupDevDummyPaymentAccounts() {
         if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
-            PerfectMoneyAccount perfectMoneyAccount = new PerfectMoneyAccount();
-            perfectMoneyAccount.init();
-            perfectMoneyAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-            perfectMoneyAccount.setAccountName("PerfectMoney dummy");// Don't translate only for dev
-            perfectMoneyAccount.setSelectedTradeCurrency(new FiatCurrency("USD"));
-            user.addPaymentAccount(perfectMoneyAccount);
+            AliPayAccount aliPayAccount = new AliPayAccount();
+            aliPayAccount.init();
+            aliPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
+            aliPayAccount.setAccountName("AliPayAccount dummy");// Don't translate only for dev
+            user.addPaymentAccount(aliPayAccount);
 
             if (p2PService.isBootstrapped()) {
-                accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
+                accountAgeWitnessService.publishMyAccountAgeWitness(aliPayAccount.getPaymentAccountPayload());
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onUpdatedDataReceived() {
-                        accountAgeWitnessService.publishMyAccountAgeWitness(perfectMoneyAccount.getPaymentAccountPayload());
+                        accountAgeWitnessService.publishMyAccountAgeWitness(aliPayAccount.getPaymentAccountPayload());
                     }
                 });
             }
