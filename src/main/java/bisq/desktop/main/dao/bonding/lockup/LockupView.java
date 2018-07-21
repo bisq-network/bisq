@@ -44,6 +44,8 @@ import bisq.core.util.validation.StringValidator;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -60,6 +62,7 @@ import javafx.collections.FXCollections;
 import javafx.util.StringConverter;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addLabelComboBox;
@@ -153,7 +156,10 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
         bondIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.bondId"), Layout.GRID_GAP).second;
         bondIdInputTextField.setPromptText(Res.get("dao.bonding.lock.setBondId"));
-        bondIdInputTextField.setValidator(bondIdValidator);
+
+        // TODO atm it does not make sense to validate as we dont use real data
+        // data should get derived anyway sfrom human readable sources
+        //bondIdInputTextField.setValidator(bondIdValidator);
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
@@ -161,12 +167,12 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
                 int lockupTime = Integer.parseInt(timeInputTextField.getText());
                 LockupType type = lockupTypeComboBox.getValue();
-                // TODO get hash of something
-//                byte[] bytes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
-                byte[] bytes = bondIdInputTextField.getText().getBytes();
-                if (type != LockupType.BONDED_ROLE)
-                    bytes = null;
-                final byte[] hash = bytes;
+                //TODO use mapping to human readable input
+                Optional<byte[]> hashOfBondId;
+                if (type == LockupType.BONDED_ROLE)
+                    hashOfBondId = Optional.of(Utilities.decodeFromHex(bondIdInputTextField.getText()));
+                else
+                    hashOfBondId = Optional.empty();
 
                 new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
                         .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
@@ -178,7 +184,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                             daoFacade.publishLockupTx(lockupAmount,
                                     lockupTime,
                                     type,
-                                    hash,
+                                    hashOfBondId,
                                     () -> {
                                         new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                                     },

@@ -86,6 +86,7 @@ public class ProposalDisplay {
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
+    @Nullable
     public ComboBox<byte[]> confiscateBondComboBox;
     @Getter
     private int gridRow;
@@ -175,13 +176,13 @@ public class ProposalDisplay {
                 requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                 bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
-                checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
+                checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 requestedBsqTextField.setValidator(bsqValidator);
                 // TODO validator, addressTF
                 if (showDetails) {
                     bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
                             Res.get("dao.proposal.display.bsqAddress")).second;
-                    checkNotNull(bsqAddressTextField, "bsqAddressTextField must no tbe null");
+                    checkNotNull(bsqAddressTextField, "bsqAddressTextField must not be null");
                     bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
                     bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
                 }
@@ -189,9 +190,9 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case CHANGE_PARAM:
-                checkNotNull(gridPane, "gridPane must no tbe null");
+                checkNotNull(gridPane, "gridPane must not be null");
                 paramComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("dao.proposal.display.paramComboBox.label")).second;
-                checkNotNull(paramComboBox, "paramComboBox must no tbe null");
+                checkNotNull(paramComboBox, "paramComboBox must not be null");
                 paramComboBox.setItems(FXCollections.observableArrayList(Param.values()));
                 paramComboBox.setConverter(new StringConverter<Param>() {
                     @Override
@@ -211,13 +212,13 @@ public class ProposalDisplay {
             case CONFISCATE_BOND:
                 confiscateBondComboBox = addLabelComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label")).second;
-                ObservableList<byte[]> confiscatableBonds =
+                ObservableList<byte[]> lockupAndUnlockingBondIds =
                         FXCollections.observableArrayList(daoFacade.getLockupAndUnlockingBondIds());
-//                confiscatableBonds.addAll("bond1", "bond2", "bond3");
-                confiscateBondComboBox.setItems(confiscatableBonds);
+                confiscateBondComboBox.setItems(lockupAndUnlockingBondIds);
                 confiscateBondComboBox.setConverter(new StringConverter<byte[]>() {
                     @Override
                     public String toString(byte[] id) {
+                        //TODO map to some human readable data source
                         return Utilities.bytesAsHexString(id);
                     }
 
@@ -253,7 +254,7 @@ public class ProposalDisplay {
         linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         if (proposal instanceof CompensationProposal) {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
-            checkNotNull(requestedBsqTextField, "requestedBsqTextField must no tbe null");
+            checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
             requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
             if (bsqAddressTextField != null)
                 bsqAddressTextField.setText(compensationProposal.getBsqAddress());
@@ -261,12 +262,12 @@ public class ProposalDisplay {
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
             checkNotNull(paramComboBox, "paramComboBox must not be null");
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
-            checkNotNull(paramValueTextField, "paramValueTextField must no tbe null");
+            checkNotNull(paramValueTextField, "paramValueTextField must not be null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-            confiscateBondComboBox.getSelectionModel().select(confiscateBondProposal.getBondId());
+            confiscateBondComboBox.getSelectionModel().select(confiscateBondProposal.getHashOfBondId());
         }
         int chainHeight;
         if (txIdTextField != null) {
