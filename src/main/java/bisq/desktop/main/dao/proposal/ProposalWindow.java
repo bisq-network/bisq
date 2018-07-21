@@ -15,43 +15,58 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results;
+package bisq.desktop.main.dao.proposal;
 
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
-import bisq.core.dao.voting.voteresult.EvaluatedProposal;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
-import javafx.scene.control.Button;
-
 import javafx.geometry.Insets;
 
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 
-public class ProposalResultsDetailsWindow extends Overlay<ProposalResultsDetailsWindow> {
-
+public class ProposalWindow extends Overlay<ProposalWindow> {
     private final BsqFormatter bsqFormatter;
-    private final EvaluatedProposal evaluatedProposal;
+    private final BsqWalletService bsqWalletService;
+    private final Proposal proposal;
+    private final DaoFacade daoFacade;
+
+    private ProposalDisplay proposalDisplay;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProposalResultsDetailsWindow(BsqFormatter bsqFormatter, EvaluatedProposal evaluatedProposal) {
+    public ProposalWindow(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService, Proposal proposal,
+                          DaoFacade daoFacade) {
         this.bsqFormatter = bsqFormatter;
-        this.evaluatedProposal = evaluatedProposal;
+        this.bsqWalletService = bsqWalletService;
+        this.proposal = proposal;
+        this.daoFacade = daoFacade;
+
         type = Type.Confirmation;
+        width = 950;
     }
 
-    @Override
     public void show() {
-        rowIndex = -1;
-        width = 850;
         createGridPane();
-        addContent();
+
+        proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, bsqWalletService, daoFacade);
+        proposalDisplay.createAllFields(Res.get("dao.proposal.details"), 1, Layout.GROUP_DISTANCE,
+                proposal.getType(), false, true);
+
+        proposalDisplay.setEditable(false);
+        proposalDisplay.applyProposalPayload(proposal);
+
+        closeButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.close"));
+        closeButton.setOnAction(e -> doClose());
+
         display();
     }
 
@@ -61,23 +76,14 @@ public class ProposalResultsDetailsWindow extends Overlay<ProposalResultsDetails
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void createGridPane() {
-        super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
-        gridPane.getStyleClass().add("grid-pane");
+    protected void cleanup() {
+        proposalDisplay.clearForm();
     }
 
-    private void addContent() {
-        addTitledGroupBg(gridPane, ++rowIndex, 5, Res.get("dao.results.proposals.detail.header"));
-
-        //TODO impl
-        //addLabelTextField(gridPane, rowIndex, Res.get("dao.results.proposals.detail.header"), evaluatedProposal.getProposal().getName(), Layout.FIRST_ROW_DISTANCE);
-
-
-        Button closeButton = FormBuilder.addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-        closeButton.setOnAction(e -> {
-            closeHandlerOptional.ifPresent(Runnable::run);
-            hide();
-        });
+    @Override
+    protected void createGridPane() {
+        super.createGridPane();
+        gridPane.setPadding(new Insets(-10, 40, 30, 40));
+        gridPane.getStyleClass().add("grid-pane");
     }
 }

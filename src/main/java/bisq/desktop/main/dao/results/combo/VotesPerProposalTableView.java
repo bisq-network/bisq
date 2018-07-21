@@ -18,8 +18,8 @@
 package bisq.desktop.main.dao.results.combo;
 
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.main.dao.proposal.ProposalWindow;
 import bisq.desktop.main.dao.results.BaseResultsTableView;
-import bisq.desktop.main.dao.results.ProposalResultsDetailsWindow;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 import bisq.desktop.util.GUIUtil;
 
@@ -78,15 +78,15 @@ public class VotesPerProposalTableView extends BaseResultsTableView<VotesPerProp
     @Override
     protected void fillList() {
         //TODO move to domain
-        Map<String, EvaluatedProposalWithDecryptedVote> map = resultsOfCycle.getEvaluatedProposals().stream()
+        Map<String, EvaluatedProposalWithDecryptedVotes> map = resultsOfCycle.getEvaluatedProposals().stream()
                 .collect(Collectors.toMap(EvaluatedProposal::getProposalTxId,
-                        EvaluatedProposalWithDecryptedVote::new));
+                        EvaluatedProposalWithDecryptedVotes::new));
 
         resultsOfCycle.getDecryptedVotesForCycle()
                 .forEach(decryptedVote -> {
                     decryptedVote.getBallotList().stream().forEach(ballot -> {
-                        EvaluatedProposalWithDecryptedVote evaluatedProposalWithDecryptedVote = map.get(ballot.getProposalTxId());
-                        evaluatedProposalWithDecryptedVote.addDecryptedVote(decryptedVote);
+                        EvaluatedProposalWithDecryptedVotes evaluatedProposalWithDecryptedVotes = map.get(ballot.getProposalTxId());
+                        evaluatedProposalWithDecryptedVotes.addDecryptedVote(decryptedVote);
                     });
                 });
 
@@ -128,8 +128,11 @@ public class VotesPerProposalTableView extends BaseResultsTableView<VotesPerProp
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     hyperlinkWithIcon = new Hyperlink(item.getProposalInfo());
-                                    hyperlinkWithIcon.setOnAction(event -> new ProposalResultsDetailsWindow(bsqFormatter,
-                                            item.getEvaluatedProposalWithDecryptedVote().getEvaluatedProposal()).show());
+                                    hyperlinkWithIcon.setOnAction(event -> new ProposalWindow(bsqFormatter,
+                                            bsqWalletService,
+                                            item.getEvaluatedProposalWithDecryptedVotes().getEvaluatedProposal().getProposal(),
+                                            daoFacade)
+                                            .show());
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
 
                                     setGraphic(hyperlinkWithIcon);

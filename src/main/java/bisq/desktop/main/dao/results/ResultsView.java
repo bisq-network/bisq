@@ -147,7 +147,11 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
         createCyclesTable();
 
         votesPerProposalTableView = new VotesPerProposalTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, bsqFormatter);
-        proposalResultsTableView = new ProposalResultsTableView(gridPane, bsqWalletService, daoFacade, bsqFormatter);
+        proposalResultsTableView = new ProposalResultsTableView(gridPane, bsqWalletService, daoFacade, bsqFormatter,
+                bsqStateService,
+                cycleService,
+                voteResultService,
+                proposalService);
         votesTableView = new VotesTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
         selectedItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
     }

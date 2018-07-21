@@ -18,14 +18,17 @@
 package bisq.desktop.main.dao.results.proposals;
 
 import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.main.dao.proposal.ProposalDetailsWindow;
+import bisq.desktop.main.dao.proposal.ProposalWindow;
 import bisq.desktop.main.dao.results.BaseResultsTableView;
-import bisq.desktop.main.dao.results.ProposalResultsDetailsWindow;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.period.CycleService;
+import bisq.core.dao.voting.proposal.ProposalService;
+import bisq.core.dao.voting.voteresult.VoteResultService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -51,8 +54,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProposalResultsTableView extends BaseResultsTableView<ProposalResultsListItem> {
 
-    public ProposalResultsTableView(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter) {
+    private final BsqStateService bsqStateService;
+    private final CycleService cycleService;
+    private final VoteResultService voteResultService;
+    private final ProposalService proposalService;
+
+    public ProposalResultsTableView(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter,
+                                    BsqStateService bsqStateService,
+                                    CycleService cycleService,
+                                    VoteResultService voteResultService,
+                                    ProposalService proposalService) {
         super(gridPane, bsqWalletService, daoFacade, bsqFormatter);
+        this.bsqStateService = bsqStateService;
+        this.cycleService = cycleService;
+        this.voteResultService = voteResultService;
+        this.proposalService = proposalService;
     }
 
     @Override
@@ -127,7 +143,7 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                                     //field.getStyleClass().add(item.getColorStyleClass());
                                     //field.setId(item.getColorStyleClass());
                                     field.setStyle(item.getColorStyle());
-                                    field.setOnAction(event -> new ProposalDetailsWindow(bsqFormatter,
+                                    field.setOnAction(event -> new ProposalWindow(bsqFormatter,
                                             bsqWalletService,
                                             item.getEvaluatedProposal().getProposal(),
                                             daoFacade)
@@ -164,7 +180,11 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                                 if (item != null && !empty) {
                                     field = new Hyperlink(item.getAccepted());
                                     field.setStyle(item.getColorStyle());
-                                    field.setOnAction(event -> new ProposalResultsDetailsWindow(bsqFormatter, item.getEvaluatedProposal()).show());
+                                    field.setOnAction(event -> new VoteResultsForProposalWindow(resultsOfCycle,
+                                            item.getEvaluatedProposal().getProposal(),
+                                            bsqStateService,
+                                            bsqFormatter)
+                                            .show());
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
@@ -199,7 +219,11 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                                 if (item != null && !empty) {
                                     field = new Hyperlink(item.getRejected());
                                     field.setStyle(item.getColorStyle());
-                                    field.setOnAction(event -> new ProposalResultsDetailsWindow(bsqFormatter, item.getEvaluatedProposal()).show());
+                                    field.setOnAction(event -> new VoteResultsForProposalWindow(resultsOfCycle,
+                                            item.getEvaluatedProposal().getProposal(),
+                                            bsqStateService,
+                                            bsqFormatter)
+                                            .show());
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {

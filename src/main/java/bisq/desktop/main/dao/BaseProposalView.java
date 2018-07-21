@@ -23,8 +23,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.proposal.ProposalDetailsWindow;
 import bisq.desktop.main.dao.proposal.ProposalDisplay;
+import bisq.desktop.main.dao.proposal.ProposalWindow;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
@@ -328,7 +328,7 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getShortId());
                                     field.setOnAction(event -> {
-                                        new ProposalDetailsWindow(bsqFormatter, bsqWalletService, proposal, daoFacade).show();
+                                        new ProposalWindow(bsqFormatter, bsqWalletService, proposal, daoFacade).show();
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

@@ -35,14 +35,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VotesPerProposalListItem {
     @Getter
-    private final EvaluatedProposalWithDecryptedVote evaluatedProposalWithDecryptedVote;
+    private final EvaluatedProposalWithDecryptedVotes evaluatedProposalWithDecryptedVotes;
     @Getter
     private final Proposal proposal;
     private final String proposalTxId;
 
-    public VotesPerProposalListItem(EvaluatedProposalWithDecryptedVote evaluatedProposalWithDecryptedVote) {
-        this.evaluatedProposalWithDecryptedVote = evaluatedProposalWithDecryptedVote;
-        proposal = evaluatedProposalWithDecryptedVote.getEvaluatedProposal().getProposal();
+    public VotesPerProposalListItem(EvaluatedProposalWithDecryptedVotes evaluatedProposalWithDecryptedVotes) {
+        this.evaluatedProposalWithDecryptedVotes = evaluatedProposalWithDecryptedVotes;
+        proposal = evaluatedProposalWithDecryptedVotes.getEvaluatedProposal().getProposal();
         proposalTxId = proposal.getTxId();
     }
 
@@ -52,7 +52,7 @@ public class VotesPerProposalListItem {
 
     public Tuple2<AwesomeIcon, String> getIconStyleTuple(String blindVoteTxId) {
         Optional<Boolean> isAccepted = Optional.empty();
-        Map<String, DecryptedVote> map = evaluatedProposalWithDecryptedVote.getDecryptedVotesByBlindVoteTxId();
+        Map<String, DecryptedVote> map = evaluatedProposalWithDecryptedVotes.getDecryptedVotesByBlindVoteTxId();
         if (map.containsKey(blindVoteTxId)) {
             DecryptedVote decryptedVote = map.get(blindVoteTxId);
             isAccepted = decryptedVote.getBallotList().stream()
@@ -72,13 +72,4 @@ public class VotesPerProposalListItem {
             return new Tuple2<>(AwesomeIcon.MINUS_SIGN, "dao-ignored-icon");
         }
     }
-
-    @Override
-    public String toString() {
-        return "VotesPerProposalListItem{" +
-                "\n     evaluatedProposalWithDecryptedVote=" + evaluatedProposalWithDecryptedVote +
-                "\n}";
-    }
-
-
 }

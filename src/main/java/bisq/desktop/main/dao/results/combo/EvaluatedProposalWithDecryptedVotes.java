@@ -24,19 +24,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Data;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
 
 @Data
-public class EvaluatedProposalWithDecryptedVote {
+public class EvaluatedProposalWithDecryptedVotes {
     private final EvaluatedProposal evaluatedProposal;
-    @Setter
-    @Nullable
-    private DecryptedVote decryptedVote;
     private Map<String, DecryptedVote> decryptedVotesByBlindVoteTxId = new HashMap<>();
 
-    public EvaluatedProposalWithDecryptedVote(EvaluatedProposal evaluatedProposal) {
+    public EvaluatedProposalWithDecryptedVotes(EvaluatedProposal evaluatedProposal) {
         this.evaluatedProposal = evaluatedProposal;
     }
 
