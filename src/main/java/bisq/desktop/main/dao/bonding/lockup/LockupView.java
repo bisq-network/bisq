@@ -36,9 +36,11 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
+import bisq.core.util.validation.StringValidator;
 
 import bisq.network.p2p.P2PService;
 
@@ -48,11 +50,19 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import javax.inject.Inject;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
 
+import javafx.collections.FXCollections;
+
+import javafx.util.StringConverter;
+
+import java.util.Arrays;
+
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -67,10 +77,13 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
     private final IntegerValidator timeInputTextFieldValidator;
+    private final StringValidator bondIdValidator;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
+    private ComboBox<LockupType> lockupTypeComboBox;
+    private InputTextField bondIdInputTextField;
     private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
     private ChangeListener<String> inputTextFieldListener;
@@ -101,6 +114,9 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         timeInputTextFieldValidator = new IntegerValidator();
         timeInputTextFieldValidator.setMinValue(BondingConsensus.getMinLockTime());
         timeInputTextFieldValidator.setMaxValue(BondingConsensus.getMaxLockTime());
+
+        bondIdValidator = new StringValidator();
+        bondIdValidator.setLength(20);
     }
 
     @Override
@@ -119,11 +135,39 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
+        lockupTypeComboBox = addLabelComboBox(root, ++gridRow,
+                Res.getWithCol("dao.bonding.lock.type"), Layout.GRID_GAP).second;
+        lockupTypeComboBox.setConverter(new StringConverter<LockupType>() {
+            @Override
+            public String toString(LockupType lockupType) {
+                return lockupType.toString();
+            }
+
+            @Override
+            public LockupType fromString(String string) {
+                return null;
+            }
+        });
+        lockupTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(LockupType.values())));
+        lockupTypeComboBox.getSelectionModel().selectFirst();
+
+        bondIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.bondId"), Layout.GRID_GAP).second;
+        bondIdInputTextField.setPromptText(Res.get("dao.bonding.lock.setBondId"));
+        bondIdInputTextField.setValidator(bondIdValidator);
+
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
                 int lockupTime = Integer.parseInt(timeInputTextField.getText());
+                LockupType type = lockupTypeComboBox.getValue();
+                // TODO get hash of something
+//                byte[] bytes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+                byte[] bytes = bondIdInputTextField.getText().getBytes();
+                if (type != LockupType.BONDED_ROLE)
+                    bytes = null;
+                final byte[] hash = bytes;
+
                 new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
                         .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
                                 bsqFormatter.formatCoinWithCode(lockupAmount),
@@ -133,6 +177,8 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                         .onAction(() -> {
                             daoFacade.publishLockupTx(lockupAmount,
                                     lockupTime,
+                                    type,
+                                    hash,
                                     () -> {
                                         new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                                     },
