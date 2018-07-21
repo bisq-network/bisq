@@ -33,9 +33,9 @@ import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalType;
-import bisq.core.dao.voting.proposal.burnbond.BurnBondProposal;
 import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
+import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -86,7 +86,7 @@ public class ProposalDisplay {
     public InputTextField requestedBsqTextField, bsqAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
-    public ComboBox<byte[]> burnBondComboBox;
+    public ComboBox<byte[]> confiscateBondComboBox;
     @Getter
     private int gridRow;
     public TextArea descriptionTextArea;
@@ -126,7 +126,7 @@ public class ProposalDisplay {
         int rowSpan;
 
         boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
-                proposalType == ProposalType.CHANGE_PARAM || proposalType == ProposalType.BURN_BOND;
+                proposalType == ProposalType.CHANGE_PARAM || proposalType == ProposalType.CONFISCATE_BOND;
         if (isMakeProposalScreen) {
             rowSpan = hasAddedFields ? 8 : 6;
         } else if (showDetails) {
@@ -137,7 +137,7 @@ public class ProposalDisplay {
                 rowSpan = 6;
             else if (proposalType == ProposalType.CHANGE_PARAM)
                 rowSpan = 7;
-            else if (proposalType == ProposalType.BURN_BOND)
+            else if (proposalType == ProposalType.CONFISCATE_BOND)
                 rowSpan = 6;
             else
                 rowSpan = 5;
@@ -208,14 +208,14 @@ public class ProposalDisplay {
                 break;
             case REMOVE_ALTCOIN:
                 break;
-            case BURN_BOND:
-                burnBondComboBox = addLabelComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.burnBondComboBox.label")).second;
-                ObservableList<byte[]> burnableBonds =
+            case CONFISCATE_BOND:
+                confiscateBondComboBox = addLabelComboBox(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.confiscateBondComboBox.label")).second;
+                ObservableList<byte[]> confiscatableBonds =
                         FXCollections.observableArrayList(daoFacade.getLockupAndUnlockingBondIds());
-//                burnableBonds.addAll("bond1", "bond2", "bond3");
-                burnBondComboBox.setItems(burnableBonds);
-                burnBondComboBox.setConverter(new StringConverter<byte[]>() {
+//                confiscatableBonds.addAll("bond1", "bond2", "bond3");
+                confiscateBondComboBox.setItems(confiscatableBonds);
+                confiscateBondComboBox.setConverter(new StringConverter<byte[]>() {
                     @Override
                     public String toString(byte[] id) {
                         return Utilities.bytesAsHexString(id);
@@ -263,10 +263,10 @@ public class ProposalDisplay {
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
             checkNotNull(paramValueTextField, "paramValueTextField must no tbe null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
-        } else if (proposal instanceof BurnBondProposal) {
-            BurnBondProposal burnBondProposal = (BurnBondProposal) proposal;
-            checkNotNull(burnBondComboBox, "burnBondComboBox must not be null");
-            burnBondComboBox.getSelectionModel().select(burnBondProposal.getBondId());
+        } else if (proposal instanceof ConfiscateBondProposal) {
+            ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
+            checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
+            confiscateBondComboBox.getSelectionModel().select(confiscateBondProposal.getBondId());
         }
         int chainHeight;
         if (txIdTextField != null) {
@@ -289,7 +289,7 @@ public class ProposalDisplay {
         if (bsqAddressTextField != null) bsqAddressTextField.clear();
         if (paramComboBox != null) paramComboBox.getSelectionModel().clearSelection();
         if (paramValueTextField != null) paramValueTextField.clear();
-        if (burnBondComboBox != null) burnBondComboBox.getSelectionModel().clearSelection();
+        if (confiscateBondComboBox != null) confiscateBondComboBox.getSelectionModel().clearSelection();
         if (txIdTextField != null) txIdTextField.cleanup();
         if (descriptionTextArea != null) descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
     }
@@ -326,8 +326,8 @@ public class ProposalDisplay {
         if (paramValueTextField != null)
             paramValueTextField.setEditable(isEditable);
 
-        if (burnBondComboBox != null)
-            burnBondComboBox.setDisable(!isEditable);
+        if (confiscateBondComboBox != null)
+            confiscateBondComboBox.setDisable(!isEditable);
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);
