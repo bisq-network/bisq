@@ -248,7 +248,7 @@ public class VotesTableView extends BaseResultsTableView<VotesListItem> {
         tableView.getColumns().add(blindVoteTxIdColumn);
 
         TableColumn<VotesListItem, VotesListItem> voteRevealTxIdColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.voteRevealTxId"));
-        voteRevealTxIdColumn.setMinWidth(420);
+        voteRevealTxIdColumn.setMinWidth(120);
         voteRevealTxIdColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         voteRevealTxIdColumn.setCellFactory(
                 new Callback<TableColumn<VotesListItem, VotesListItem>, TableCell<VotesListItem,

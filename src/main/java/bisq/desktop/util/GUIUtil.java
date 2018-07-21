@@ -573,12 +573,8 @@ public class GUIUtil {
 
     public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minHeight) {
         int size = tableView.getItems().size();
-        if (size > 0) {
-            int height = Math.max(minHeight, size * rowHeight + headerHeight);
-            tableView.setMaxHeight(height);
-            tableView.setMinHeight(height);
-        } else {
-            log.warn("setFitToRowsForTableView should be called after the table is filled");
-        }
+        int height = Math.max(minHeight, size * rowHeight + headerHeight);
+        tableView.setMaxHeight(height);
+        tableView.setMinHeight(height);
     }
 }

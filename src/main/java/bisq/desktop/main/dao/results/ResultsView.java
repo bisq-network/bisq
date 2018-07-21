@@ -24,6 +24,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.results.combo.VotesPerProposalTableView;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 import bisq.desktop.main.dao.results.proposals.ProposalResultsTableView;
@@ -36,11 +37,13 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.state.period.CycleService;
+import bisq.core.dao.voting.blindvote.BlindVoteConsensus;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.dao.voting.proposal.ProposalConsensus;
 import bisq.core.dao.voting.proposal.ProposalService;
-import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.voting.voteresult.DecryptedVote;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
@@ -76,12 +79,14 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 @FxmlView
 public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable> implements BsqStateListener {
@@ -193,26 +198,7 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
             gridRow = votesPerProposalTableView.createAllFields(++gridRow, resultsOfCycle);
             gridRow = proposalResultsTableView.createAllFields(++gridRow, resultsOfCycle);
             gridRow = votesTableView.createAllFields(++gridRow, resultsOfCycle);
-
-            Map<ProposalType, Long> requiredThresholdByType = new HashMap<>();
-            resultsOfCycle.getEvaluatedProposals().forEach(e -> {
-                requiredThresholdByType.putIfAbsent(e.getProposal().getType(), e.getRequiredThreshold());
-            });
-            requiredThresholdByType.forEach((key, value) -> {
-                String title = Res.get("dao.results.proposals.requiredThreshold." + key.name());
-                String requiredThreshold = String.valueOf(value / 100) + "%";
-                FormBuilder.addLabelTextField(gridPane, ++gridRow, title, requiredThreshold, 0);
-            });
-
-            Map<ProposalType, Long> requiredQuorumByType = new HashMap<>();
-            resultsOfCycle.getEvaluatedProposals().forEach(e -> {
-                requiredQuorumByType.putIfAbsent(e.getProposal().getType(), e.getRequiredQuorum());
-            });
-            requiredQuorumByType.forEach((key, value) -> {
-                String title = Res.get("dao.results.proposals.requiredQuorum." + key.name());
-                String requiredQuorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(value));
-                FormBuilder.addLabelTextField(gridPane, ++gridRow, title, requiredQuorum);
-            });
+            addParams(resultsOfCycle);
         }
     }
 
@@ -260,6 +246,89 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
 
         tableView.setItems(sortedList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+    }
+
+    private void addParams(ResultsOfCycle resultsOfCycle) {
+        //TODO
+        AtomicInteger rowSpan = new AtomicInteger(2);
+        TitledGroupBg header = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, rowSpan.get(), Res.get("dao.results.cycle.header"), 20);
+
+        int height = resultsOfCycle.getCycle().getHeightOfFirstBlock();
+        gridRow--; // first item use same gridRow as header. as we use a ++ in the loop adjust by --.
+        Arrays.stream(Param.values()).forEach(param -> {
+            String label = null;
+            long paramValue = bsqStateService.getParamValue(param, height);
+            boolean isDefaultValue = param.getDefaultValue() == paramValue;
+            String value = null;
+            int top = (param == Param.BSQ_MAKER_FEE_IN_PERCENT) ? 40 : 0;
+            switch (param) {
+                case UNDEFINED:
+                    // ignore
+                    break;
+
+                case BSQ_MAKER_FEE_IN_PERCENT:
+                case BSQ_TAKER_FEE_IN_PERCENT:
+                case BTC_MAKER_FEE_IN_PERCENT:
+                case BTC_TAKER_FEE_IN_PERCENT:
+                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    value = bsqFormatter.formatToPercentWithSymbol(paramValue / 10000d);
+                    break;
+
+                case PROPOSAL_FEE:
+                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    value = bsqFormatter.formatCoinWithCode(ProposalConsensus.getFee(bsqStateService, height));
+                    break;
+                case BLIND_VOTE_FEE:
+                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    value = bsqFormatter.formatCoinWithCode(BlindVoteConsensus.getFee(bsqStateService, height));
+                    break;
+
+                case QUORUM_PROPOSAL:
+                case QUORUM_COMP_REQUEST:
+                case QUORUM_CHANGE_PARAM:
+                case QUORUM_REMOVE_ASSET:
+                case QUORUM_CONFISCATION:
+                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    value = bsqFormatter.formatCoinWithCode(Coin.valueOf(paramValue));
+                    break;
+                case THRESHOLD_PROPOSAL:
+
+                case THRESHOLD_COMP_REQUEST:
+                case THRESHOLD_CHANGE_PARAM:
+                case THRESHOLD_REMOVE_ASSET:
+                case THRESHOLD_CONFISCATION:
+                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    value = bsqFormatter.formatToPercentWithSymbol(paramValue / 10000d);
+                    break;
+
+                case PHASE_UNDEFINED:
+                    // ignore
+                    break;
+
+                case PHASE_PROPOSAL:
+                case PHASE_BREAK1:
+                case PHASE_BLIND_VOTE:
+                case PHASE_BREAK2:
+                case PHASE_VOTE_REVEAL:
+                case PHASE_BREAK3:
+                case PHASE_RESULT:
+                case PHASE_BREAK4:
+                    String phase = Res.get("dao.phase." + param.name());
+                    label = Res.getWithCol("dao.results.cycle.duration.label", phase);
+                    value = Res.get("dao.results.cycle.duration.value", paramValue);
+                    break;
+            }
+            if (value != null) {
+                String postFix = isDefaultValue ?
+                        Res.get("dao.results.cycle.value.postFix.isDefaultValue") :
+                        Res.get("dao.results.cycle.value.postFix.hasChanged");
+                value += " " + postFix;
+                addLabelTextField(gridPane, ++gridRow, label, value, top);
+                rowSpan.getAndIncrement();
+            }
+        });
+
+        GridPane.setRowSpan(header, rowSpan.get());
     }
 
 
