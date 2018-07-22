@@ -28,6 +28,8 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.Bond;
+import bisq.core.dao.bonding.Bonds;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
@@ -39,8 +41,6 @@ import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
-
-import bisq.common.util.Utilities;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
@@ -60,6 +60,7 @@ import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.Getter;
@@ -217,9 +218,9 @@ public class ProposalDisplay {
                 confiscateBondComboBox.setItems(lockupAndUnlockingBondIds);
                 confiscateBondComboBox.setConverter(new StringConverter<byte[]>() {
                     @Override
-                    public String toString(byte[] id) {
-                        //TODO map to some human readable data source
-                        return Utilities.bytesAsHexString(id);
+                    public String toString(byte[] hashOfBondId) {
+                        Optional<Bond> bond = Bonds.getBond(hashOfBondId);
+                        return bond.isPresent() ? bond.get().toDisplayString() : "-";
                     }
 
                     @Override

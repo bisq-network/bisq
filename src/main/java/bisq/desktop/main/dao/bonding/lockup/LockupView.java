@@ -35,16 +35,15 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.Bond;
 import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.bonding.Bonds;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
-import bisq.core.util.validation.StringValidator;
 
 import bisq.network.p2p.P2PService;
-
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -80,13 +79,12 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
     private final IntegerValidator timeInputTextFieldValidator;
-    private final StringValidator bondIdValidator;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private ComboBox<LockupType> lockupTypeComboBox;
-    private InputTextField bondIdInputTextField;
+    private ComboBox<Bond> bondsComboBox;
     private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
     private ChangeListener<String> inputTextFieldListener;
@@ -117,9 +115,6 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         timeInputTextFieldValidator = new IntegerValidator();
         timeInputTextFieldValidator.setMinValue(BondingConsensus.getMinLockTime());
         timeInputTextFieldValidator.setMaxValue(BondingConsensus.getMaxLockTime());
-
-        bondIdValidator = new StringValidator();
-        bondIdValidator.setLength(20);
     }
 
     @Override
@@ -133,13 +128,13 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
 
-        timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"), Layout.GRID_GAP).second;
+        timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time")).second;
         timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
-        lockupTypeComboBox = addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("dao.bonding.lock.type"), Layout.GRID_GAP).second;
+        lockupTypeComboBox = addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
+        lockupTypeComboBox.setPromptText(Res.get("list.currency.select"));
         lockupTypeComboBox.setConverter(new StringConverter<LockupType>() {
             @Override
             public String toString(LockupType lockupType) {
@@ -152,14 +147,21 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
             }
         });
         lockupTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(LockupType.values())));
-        lockupTypeComboBox.getSelectionModel().selectFirst();
 
-        bondIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.bondId"), Layout.GRID_GAP).second;
-        bondIdInputTextField.setPromptText(Res.get("dao.bonding.lock.setBondId"));
+        bondsComboBox = addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bonds")).second;
+        bondsComboBox.setPromptText(Res.get("list.currency.select"));
+        bondsComboBox.setConverter(new StringConverter<Bond>() {
+            @Override
+            public String toString(Bond bond) {
+                return bond.toDisplayString();
+            }
 
-        // TODO atm it does not make sense to validate as we dont use real data
-        // data should get derived anyway sfrom human readable sources
-        //bondIdInputTextField.setValidator(bondIdValidator);
+            @Override
+            public Bond fromString(String string) {
+                return null;
+            }
+        });
+        bondsComboBox.setItems(FXCollections.observableArrayList(Bonds.getBonds()));
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
@@ -169,11 +171,11 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 LockupType type = lockupTypeComboBox.getValue();
                 //TODO use mapping to human readable input
                 Optional<byte[]> hashOfBondId;
-                if (type == LockupType.BONDED_ROLE)
-                    hashOfBondId = Optional.of(Utilities.decodeFromHex(bondIdInputTextField.getText()));
-                else
+                if (type == LockupType.BONDED_ROLE) {
+                    hashOfBondId = Optional.of(bondsComboBox.getSelectionModel().getSelectedItem().getHash());
+                } else {
                     hashOfBondId = Optional.empty();
-
+                }
                 new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
                         .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
                                 bsqFormatter.formatCoinWithCode(lockupAmount),
@@ -256,7 +258,9 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
     private void updateButtonState() {
         lockupButton.setDisable(!bsqValidator.validate(amountInputTextField.getText()).isValid ||
-                !timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid);
+                !timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid ||
+                bondsComboBox.getSelectionModel().getSelectedItem() == null ||
+                lockupTypeComboBox.getSelectionModel().getSelectedItem() == null);
     }
 
     private void handleError(Throwable throwable) {
