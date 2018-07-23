@@ -82,10 +82,11 @@ public class ProposalDisplay {
     private final int maxLengthDescriptionText;
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
-    private DaoFacade daoFacade;
-    private InputTextField uidTextField;
-    private TextField proposalFeeTextField;
-    private TextField proposalTypeTextField;
+    private final DaoFacade daoFacade;
+
+    @Nullable
+    private TextField uidTextField;
+    private TextField proposalFeeTextField, proposalTypeTextField;
     public InputTextField nameTextField;
     @Nullable
     public InputTextField titleTextField;
@@ -172,8 +173,7 @@ public class ProposalDisplay {
                 Res.getWithCol("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
         if (!isMakeProposalScreen) {
-            uidTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("shared.id")).second;
-            uidTextField.setEditable(false);
+            uidTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.id")).second;
             nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
         } else {
             nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
@@ -298,6 +298,7 @@ public class ProposalDisplay {
         proposalTypeTextField.setText(proposal.getType().getDisplayName());
         if (uidTextField != null)
             uidTextField.setText(proposal.getUid());
+
         nameTextField.setText(proposal.getName());
         if (titleTextField != null)
             titleTextField.setText(proposal.getTitle());
@@ -361,7 +362,8 @@ public class ProposalDisplay {
     }
 
     public void fillWithMock() {
-        uidTextField.setText(UUID.randomUUID().toString());
+        if (uidTextField != null)
+            uidTextField.setText(UUID.randomUUID().toString());
         nameTextField.setText("Manfred Karrer");
         if (titleTextField != null)
             titleTextField.setText("Development work November 2017");
