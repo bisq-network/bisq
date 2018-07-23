@@ -49,6 +49,7 @@ import com.google.common.base.Joiner;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
@@ -143,18 +144,19 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
     private void addContent() {
         int rows = 5;
-
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
-
+        boolean isF2F = offer.getPaymentMethod().equals(PaymentMethod.F2F);
         if (!takeOfferHandlerOptional.isPresent())
             rows++;
         if (showAcceptedBanks)
             rows++;
         if (showAcceptedCountryCodes)
             rows++;
+        if (isF2F)
+            rows += 2;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.Offer"));
 
@@ -214,8 +216,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
-        final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
-        final PaymentAccount paymentAccount = user.getPaymentAccount(makerPaymentAccountId);
         String bankId = offer.getBankId();
         if (bankId == null || bankId.equals("null"))
             bankId = "";
@@ -224,8 +224,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
-        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && paymentAccount != null) {
-            addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), paymentAccount.getAccountName());
+        final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
+        final PaymentAccount myPaymentAccount = user.getPaymentAccount(makerPaymentAccountId);
+        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && myPaymentAccount != null) {
+            addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
             String methodWithBankId = method + bankId;
@@ -282,11 +284,22 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
 
-        rows = 5;
+        if (isF2F) {
+            addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.city"), offer.getF2FCity());
+            TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.extra"), "").second;
+            textArea.setText(offer.getF2FExtraInfo());
+            textArea.setMinHeight(33);
+            textArea.setMaxHeight(textArea.getMinHeight());
+            textArea.setEditable(false);
+        }
+
+        rows = 4;
         String paymentMethodCountryCode = offer.getCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxId() != null)
+            rows++;
+        if (!isF2F)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
@@ -305,7 +318,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), value);
 
-        if (paymentMethodCountryCode != null)
+        if (paymentMethodCountryCode != null && !isF2F)
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
 

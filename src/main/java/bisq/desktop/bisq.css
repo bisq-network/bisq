@@ -286,6 +286,10 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-bg-light;
 }
 
+.text-area {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
 #label-url {
     -fx-cursor: hand;
     -fx-text-fill: -bs-blue;

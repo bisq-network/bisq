@@ -36,17 +36,12 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class USPostalMoneyOrderForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(USPostalMoneyOrderForm.class);
-
     private final USPostalMoneyOrderAccount usPostalMoneyOrderAccount;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private TextArea postalAddressTextArea;
