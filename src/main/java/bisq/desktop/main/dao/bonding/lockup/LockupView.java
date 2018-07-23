@@ -17,23 +17,17 @@
 
 package bisq.desktop.main.dao.bonding.lockup;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.main.funds.FundsView;
-import bisq.desktop.main.funds.deposit.DepositView;
-import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
@@ -42,10 +36,7 @@ import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
 
-import bisq.network.p2p.P2PService;
-
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
@@ -69,11 +60,9 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class LockupView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
-    private final WalletsSetup walletsSetup;
-    private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
-    private final Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
+    private final BondingViewUtils bondingViewUtils;
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
     private final IntegerValidator timeInputTextFieldValidator;
@@ -96,19 +85,15 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
     @Inject
     private LockupView(BsqWalletService bsqWalletService,
-                       WalletsSetup walletsSetup,
-                       P2PService p2PService,
                        BsqFormatter bsqFormatter,
-                       Navigation navigation,
                        BsqBalanceUtil bsqBalanceUtil,
+                       BondingViewUtils bondingViewUtils,
                        BsqValidator bsqValidator,
                        DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
-        this.walletsSetup = walletsSetup;
-        this.p2PService = p2PService;
         this.bsqFormatter = bsqFormatter;
-        this.navigation = navigation;
         this.bsqBalanceUtil = bsqBalanceUtil;
+        this.bondingViewUtils = bondingViewUtils;
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
 
@@ -188,35 +173,10 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
-                int lockupTime = Integer.parseInt(timeInputTextField.getText());
-                LockupType lockupType = lockupTypeComboBox.getValue();
-                BondedRole bondedRole = bondedRolesComboBox.getValue();
-                new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
-                        .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
-                                bsqFormatter.formatCoinWithCode(lockupAmount),
-                                lockupTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            daoFacade.publishLockupTx(lockupAmount,
-                                    lockupTime,
-                                    lockupType,
-                                    bondedRole,
-                                    () -> {
-                                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
-                                    },
-                                    this::handleError
-                            );
-                            amountInputTextField.setText("");
-                            timeInputTextField.setText("");
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-            }
+            bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue(),
+                    () -> {
+                        bondedRolesComboBox.getSelectionModel().clearSelection();
+                    });
         });
 
         focusOutListener = (observable, oldValue, newValue) -> {
@@ -283,21 +243,5 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 !timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid ||
                 bondedRolesComboBox.getSelectionModel().getSelectedItem() == null ||
                 lockupTypeComboBox.getSelectionModel().getSelectedItem() == null);
-    }
-
-    private void handleError(Throwable throwable) {
-        if (throwable instanceof InsufficientMoneyException) {
-            final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
-            final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-            //noinspection unchecked
-            new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
-                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
-                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
-                    .show();
-        } else {
-            log.error(throwable.toString());
-            throwable.printStackTrace();
-            new Popup<>().warning(throwable.toString()).show();
-        }
     }
 }

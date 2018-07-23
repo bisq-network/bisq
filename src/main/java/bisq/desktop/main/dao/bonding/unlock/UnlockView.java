@@ -21,25 +21,21 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
-
-import bisq.network.p2p.P2PService;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -71,7 +67,6 @@ import javafx.util.Callback;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -83,14 +78,12 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
+    private final BondingViewUtils bondingViewUtils;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-    private final WalletsSetup walletsSetup;
-    private final P2PService p2PService;
 
     private int gridRow = 0;
-    private LockupTxListItem selectedItem;
 
     private final ObservableList<LockupTxListItem> observableList = FXCollections.observableArrayList();
     private final FilteredList<LockupTxListItem> lockupTxs = new FilteredList<>(observableList);
@@ -109,21 +102,18 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                        BsqFormatter bsqFormatter,
                        BsqBalanceUtil bsqBalanceUtil,
                        BsqValidator bsqValidator,
+                       BondingViewUtils bondingViewUtils,
                        DaoFacade daoFacade,
-                       Preferences preferences,
-                       WalletsSetup walletsSetup,
-                       P2PService p2PService) {
+                       Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
+        this.bondingViewUtils = bondingViewUtils;
         this.daoFacade = daoFacade;
         this.preferences = preferences;
-        this.walletsSetup = walletsSetup;
-        this.p2PService = p2PService;
     }
-
 
     @Override
     public void initialize() {
@@ -227,46 +217,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onButtonClick() {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(selectedItem.getTxId());
-            if (!lockupTxOutput.isPresent()) {
-                log.warn("Lockup output not found, txId = ", selectedItem.getTxId());
-                return;
-            }
-
-            Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
-            Optional<Integer> opLockTime = daoFacade.getLockTime(selectedItem.getTxId());
-            int lockTime = opLockTime.orElse(-1);
-
-            try {
-                new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
-                        .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
-                                bsqFormatter.formatCoinWithCode(unlockAmount),
-                                lockTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            daoFacade.publishUnlockTx(selectedItem.getTxId(),
-                                    () -> {
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    },
-                                    errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
-                            );
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-            } catch (Throwable t) {
-                log.error(t.toString());
-                t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
-            }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-        }
-        log.info("unlock tx: {}", selectedItem.getTxId());
-    }
 
     private void openTxInBlockExplorer(LockupTxListItem item) {
         if (item.getTxId() != null)
@@ -421,10 +371,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         if (item != null && !empty) {
                             if (button == null) {
                                 button = item.getButton();
-                                button.setOnAction(e -> {
-                                    selectedItem = item;
-                                    onButtonClick();
-                                });
+                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId()));
                                 setGraphic(button);
                             }
                         } else {
