@@ -39,6 +39,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.BankAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SameBankAccount;
 import bisq.core.payment.SepaAccount;
@@ -367,6 +368,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             if (extraDataMap == null)
                 extraDataMap = new HashMap<>();
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
+        }
+
+        if (paymentAccount instanceof F2FAccount) {
+            if (extraDataMap == null)
+                extraDataMap = new HashMap<>();
+            extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
+            extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
         }
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
