@@ -30,8 +30,10 @@ import bisq.core.locale.Res;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
@@ -194,7 +196,7 @@ public class SellerStep3View extends TradeStepView {
         peersPaymentDetailsTextField.setMouseTransparent(false);
         peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
 
-        if (!isBlockChain) {
+        if (!isBlockChain && !trade.getOffer().getPaymentMethod().equals(PaymentMethod.F2F)) {
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
             GridPane.setRowSpan(titledGroupBg, 4);
         }
@@ -266,8 +268,10 @@ public class SellerStep3View extends TradeStepView {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
-                    if (!(paymentAccountPayload instanceof WesternUnionAccountPayload))
+                    if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
+                            !(paymentAccountPayload instanceof F2FAccountPayload)) {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
+                    }
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
@@ -306,18 +310,22 @@ public class SellerStep3View extends TradeStepView {
             //noinspection UnusedAssignment
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
         } else {
-            if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
+            if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
-            else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload))
+            } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
+                    !(paymentAccountPayload instanceof F2FAccountPayload)) {
                 message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
+            }
 
             String part = Res.get("portfolio.pending.step3_seller.openDispute");
             if (paymentAccountPayload instanceof CashDepositAccountPayload)
                 message = message + Res.get("portfolio.pending.step3_seller.cash", part);
             else if (paymentAccountPayload instanceof WesternUnionAccountPayload)
-                message = message + Res.get("portfolio.pending.step3_seller.westernUnion", part);
+                message = message + Res.get("portfolio.pending.step3_seller.westernUnion");
             else if (paymentAccountPayload instanceof MoneyGramAccountPayload)
-                message = message + Res.get("portfolio.pending.step3_seller.moneyGram", part);
+                message = message + Res.get("portfolio.pending.step3_seller.moneyGram");
+            else if (paymentAccountPayload instanceof F2FAccountPayload)
+                message = part1;
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
@@ -365,9 +373,9 @@ public class SellerStep3View extends TradeStepView {
             else if (paymentAccountPayload instanceof SepaInstantAccountPayload)
                 return Optional.of(((SepaInstantAccountPayload) paymentAccountPayload).getHolderName());
             else
-                return Optional.<String>empty();
+                return Optional.empty();
         } else {
-            return Optional.<String>empty();
+            return Optional.empty();
         }
     }
 }

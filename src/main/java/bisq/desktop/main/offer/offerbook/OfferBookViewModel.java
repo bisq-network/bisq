@@ -404,11 +404,15 @@ class OfferBookViewModel extends ActivatableViewModel {
             Offer offer = item.getOffer();
             String method = Res.get(offer.getPaymentMethod().getId() + "_SHORT");
             String methodCountryCode = offer.getCountryCode();
+            if (isF2F(offer)) {
+                result = method + " (" + methodCountryCode + ", " + offer.getF2FCity() + ")";
+            } else {
+                if (methodCountryCode != null)
+                    result = method + " (" + methodCountryCode + ")";
+                else
+                    result = method;
+            }
 
-            if (methodCountryCode != null)
-                result = method + " (" + methodCountryCode + ")";
-            else
-                result = method;
         }
         return result;
     }
@@ -420,35 +424,48 @@ class OfferBookViewModel extends ActivatableViewModel {
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
-            String methodCountryCode = offer.getCountryCode();
-            if (methodCountryCode != null) {
-                String bankId = offer.getBankId();
-                if (bankId != null && !bankId.equals("null")) {
-                    if (BankUtil.isBankIdRequired(methodCountryCode))
-                        result += "\n" + Res.get("offerbook.offerersBankId", bankId);
-                    else if (BankUtil.isBankNameRequired(methodCountryCode))
-                        result += "\n" + Res.get("offerbook.offerersBankName", bankId);
+            String countryCode = offer.getCountryCode();
+            if (isF2F(offer)) {
+                if (countryCode != null) {
+                    result += "\n" + Res.get("payment.f2f.offerbook.tooltip.countryAndCity",
+                            CountryUtil.getNameByCode(countryCode), offer.getF2FCity());
+
+                    result += "\n" + Res.get("payment.f2f.offerbook.tooltip.extra", offer.getF2FExtraInfo());
                 }
-            }
+            } else {
+                if (countryCode != null) {
+                    String bankId = offer.getBankId();
+                    if (bankId != null && !bankId.equals("null")) {
+                        if (BankUtil.isBankIdRequired(countryCode))
+                            result += "\n" + Res.get("offerbook.offerersBankId", bankId);
+                        else if (BankUtil.isBankNameRequired(countryCode))
+                            result += "\n" + Res.get("offerbook.offerersBankName", bankId);
+                    }
+                }
 
-            if (methodCountryCode != null)
-                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode));
+                if (countryCode != null)
+                    result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(countryCode));
 
-            List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
-            List<String> acceptedBanks = offer.getAcceptedBankIds();
-            if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
-                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
-                    result += "\n" + Res.get("offerbook.offerersAcceptedBankSeatsEuro");
-                else
-                    result += "\n" + Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
-            } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
-                if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
-                    result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
-                else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
-                    result += "\n" + Res.getWithCol("shared.acceptedBanks") + " " + Joiner.on(", ").join(acceptedBanks);
+                List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
+                List<String> acceptedBanks = offer.getAcceptedBankIds();
+                if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
+                    if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
+                        result += "\n" + Res.get("offerbook.offerersAcceptedBankSeatsEuro");
+                    else
+                        result += "\n" + Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
+                    if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
+                        result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
+                    else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS))
+                        result += "\n" + Res.getWithCol("shared.acceptedBanks") + " " + Joiner.on(", ").join(acceptedBanks);
+                }
             }
         }
         return result;
+    }
+
+    private boolean isF2F(Offer offer) {
+        return offer.getPaymentMethod().equals(PaymentMethod.F2F);
     }
 
     String getDirectionLabelTooltip(Offer offer) {
