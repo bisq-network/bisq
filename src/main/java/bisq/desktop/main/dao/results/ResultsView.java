@@ -243,6 +243,7 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         createColumns(tableView);
+
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setMargin(tableView, new Insets(20, -10, 5, -10));
         GridPane.setColumnSpan(tableView, 2);
@@ -274,16 +275,16 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
                 case BSQ_TAKER_FEE_IN_PERCENT:
                 case BTC_MAKER_FEE_IN_PERCENT:
                 case BTC_TAKER_FEE_IN_PERCENT:
-                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    label = Res.getWithCol("dao.param." + param.name());
                     value = bsqFormatter.formatToPercentWithSymbol(paramValue / 10000d);
                     break;
 
                 case PROPOSAL_FEE:
-                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    label = Res.getWithCol("dao.param." + param.name());
                     value = bsqFormatter.formatCoinWithCode(ProposalConsensus.getFee(bsqStateService, height));
                     break;
                 case BLIND_VOTE_FEE:
-                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    label = Res.getWithCol("dao.param." + param.name());
                     value = bsqFormatter.formatCoinWithCode(BlindVoteConsensus.getFee(bsqStateService, height));
                     break;
 
@@ -292,7 +293,7 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
                 case QUORUM_CHANGE_PARAM:
                 case QUORUM_REMOVE_ASSET:
                 case QUORUM_CONFISCATION:
-                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    label = Res.getWithCol("dao.param." + param.name());
                     value = bsqFormatter.formatCoinWithCode(Coin.valueOf(paramValue));
                     break;
                 case THRESHOLD_PROPOSAL:
@@ -301,7 +302,7 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
                 case THRESHOLD_CHANGE_PARAM:
                 case THRESHOLD_REMOVE_ASSET:
                 case THRESHOLD_CONFISCATION:
-                    label = Res.getWithCol("dao.results.cycle.param." + param.name());
+                    label = Res.getWithCol("dao.param." + param.name());
                     value = bsqFormatter.formatToPercentWithSymbol(paramValue / 10000d);
                     break;
 

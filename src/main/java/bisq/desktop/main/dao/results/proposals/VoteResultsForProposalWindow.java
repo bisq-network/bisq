@@ -88,8 +88,8 @@ public class VoteResultsForProposalWindow extends Overlay<VoteResultsForProposal
 
     @Override
     public void show() {
-        rowIndex = -1;
         width = MainView.getRootContainer().getWidth() - 20;
+
         createGridPane();
         addContent();
         display();
@@ -103,6 +103,7 @@ public class VoteResultsForProposalWindow extends Overlay<VoteResultsForProposal
     @Override
     protected void createGridPane() {
         super.createGridPane();
+
         gridPane.setPadding(new Insets(35, 40, 30, 40));
         gridPane.getStyleClass().add("grid-pane");
     }
@@ -114,6 +115,7 @@ public class VoteResultsForProposalWindow extends Overlay<VoteResultsForProposal
         GridPane.setColumnSpan(headline, 2);
         gridPane.getChildren().add(headline);
 
+        // For some weird reason the stage key handler (ESC, ENTER) does not work as soon a tableView gets added...
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

@@ -422,8 +422,8 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                             if (button == null) {
                                 button = item.getButton();
                                 button.setOnAction(e -> {
-                                    UnlockView.this.selectedItem = item;
-                                    UnlockView.this.onButtonClick();
+                                    selectedItem = item;
+                                    onButtonClick();
                                 });
                                 setGraphic(button);
                             }

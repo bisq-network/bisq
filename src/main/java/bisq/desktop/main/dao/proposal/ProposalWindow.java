@@ -59,7 +59,7 @@ public class ProposalWindow extends Overlay<ProposalWindow> {
 
         proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, bsqWalletService, daoFacade);
         proposalDisplay.createAllFields(Res.get("dao.proposal.details"), 1, Layout.GROUP_DISTANCE,
-                proposal.getType(), false, true);
+                proposal.getType(), false);
 
         proposalDisplay.setEditable(false);
         proposalDisplay.applyProposalPayload(proposal);

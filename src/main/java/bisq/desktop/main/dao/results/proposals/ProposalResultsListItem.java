@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.results.proposals;
 
+import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.dao.voting.voteresult.ProposalVoteResult;
@@ -82,18 +83,13 @@ public class ProposalResultsListItem {
     }
 
     public String getIssuance() {
-        switch (evaluatedProposal.getProposal().getType()) {
-            case COMPENSATION_REQUEST:
-                Coin requestedBsq = evaluatedProposal.isAccepted() ?
-                        ((CompensationProposal) evaluatedProposal.getProposal()).getRequestedBsq() :
-                        Coin.ZERO;
-                return bsqFormatter.formatCoinWithCode(requestedBsq);
-            case GENERIC:
-            case CHANGE_PARAM:
-            case REMOVE_ALTCOIN:
-            default:
-                return "";
+        if (evaluatedProposal.getProposal().getType() == ProposalType.COMPENSATION_REQUEST) {
+            Coin requestedBsq = evaluatedProposal.isAccepted() ?
+                    ((CompensationProposal) evaluatedProposal.getProposal()).getRequestedBsq() :
+                    Coin.ZERO;
+            return bsqFormatter.formatCoinWithCode(requestedBsq);
+        } else {
+            return "";
         }
-
     }
 }

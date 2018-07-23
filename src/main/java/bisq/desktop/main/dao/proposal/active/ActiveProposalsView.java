@@ -123,7 +123,7 @@ public class ActiveProposalsView extends ProposalItemsView {
             //noinspection IfCanBeSwitch,IfCanBeSwitch,IfCanBeSwitch
             if (phase == DaoPhase.Phase.PROPOSAL) {
                 if (selectedBaseProposalListItem != null && selectedBaseProposalListItem.getProposal() != null) {
-                    button.setText(Res.get("dao.proposal.active.remove"));
+                    button.setText(Res.get("shared.remove"));
                     final boolean isMyProposal = daoFacade.isMyProposal(selectedBaseProposalListItem.getProposal());
                     button.setVisible(isMyProposal);
                     button.setManaged(isMyProposal);

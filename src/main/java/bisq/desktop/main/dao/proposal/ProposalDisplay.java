@@ -28,8 +28,8 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.bonding.Bond;
-import bisq.core.dao.bonding.Bonds;
+import bisq.core.dao.role.BondedRole;
+import bisq.core.dao.role.BondedRoleType;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.proposal.Proposal;
@@ -39,10 +39,14 @@ import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
+import bisq.core.dao.voting.proposal.role.BondedRoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.util.Tuple2;
+
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -56,12 +60,13 @@ import javafx.geometry.HPos;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +85,9 @@ public class ProposalDisplay {
     private DaoFacade daoFacade;
     private InputTextField uidTextField;
     private TextField proposalFeeTextField;
+    private TextField proposalTypeTextField;
     public InputTextField nameTextField;
+    @Nullable
     public InputTextField titleTextField;
     public InputTextField linkInputTextField;
     @Nullable
@@ -88,15 +95,20 @@ public class ProposalDisplay {
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
-    public ComboBox<byte[]> confiscateBondComboBox;
+    public ComboBox<BondedRole> confiscateBondComboBox;
+    @Nullable
+    public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
+
     @Getter
     private int gridRow;
+    @Nullable
     public TextArea descriptionTextArea;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
     @Nullable
     private TxIdTextField txIdTextField;
     private final ChangeListener<String> descriptionTextAreaListener;
     private int gridRowStartIndex;
+    private Label linkLabel;
 
 
     // TODO get that warning at closing the window...
@@ -115,90 +127,131 @@ public class ProposalDisplay {
         descriptionTextAreaListener = (observable, oldValue, newValue) -> {
             if (!ProposalConsensus.isDescriptionSizeValid(newValue)) {
                 new Popup<>().warning(Res.get("dao.proposal.display.description.tooLong", maxLengthDescriptionText)).show();
-                descriptionTextArea.setText(newValue.substring(0, maxLengthDescriptionText));
+                if (descriptionTextArea != null)
+                    descriptionTextArea.setText(newValue.substring(0, maxLengthDescriptionText));
             }
         };
     }
 
     public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
-                                boolean isMakeProposalScreen, boolean showDetails) {
+                                boolean isMakeProposalScreen) {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
-        int rowSpan;
-
-        boolean hasAddedFields = proposalType == ProposalType.COMPENSATION_REQUEST ||
-                proposalType == ProposalType.CHANGE_PARAM || proposalType == ProposalType.CONFISCATE_BOND;
-        if (isMakeProposalScreen) {
-            rowSpan = hasAddedFields ? 8 : 6;
-        } else if (showDetails) {
-            rowSpan = hasAddedFields ? 9 : 7;
-        } else {
-            //noinspection IfCanBeSwitch
-            if (proposalType == ProposalType.COMPENSATION_REQUEST)
-                rowSpan = 6;
-            else if (proposalType == ProposalType.CHANGE_PARAM)
-                rowSpan = 7;
-            else if (proposalType == ProposalType.CONFISCATE_BOND)
-                rowSpan = 6;
-            else
-                rowSpan = 5;
-        }
-
-        addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
-        if (showDetails) {
-            uidTextField = addLabelInputTextField(gridPane, gridRow,
-                    Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
-            uidTextField.setEditable(false);
-            nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
-        } else {
-            nameTextField = addLabelInputTextField(gridPane, gridRow, Res.get("dao.proposal.display.name"),
-                    top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
-        }
-
-        titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("dao.proposal.title")).second;
-
-        descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"),
-                Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
-        descriptionTextArea.setMaxHeight(42); // for 2 lines
-        descriptionTextArea.setMinHeight(descriptionTextArea.getMaxHeight());
-        if (isMakeProposalScreen)
-            descriptionTextArea.textProperty().addListener(descriptionTextAreaListener);
-
-        linkInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.link")).second;
-        linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow, Res.get("dao.proposal.display.link"), "", "").second;
-        linkHyperlinkWithIcon.setVisible(false);
-        linkHyperlinkWithIcon.setManaged(false);
-        linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
+        int rowSpan = 5;
+        boolean showTitle = true;
+        boolean showDescription = true;
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+                rowSpan = 6;
+                break;
+            case BONDED_ROLE:
+                rowSpan = 3;
+                showTitle = false;
+                showDescription = false;
+                break;
+            case REMOVE_ALTCOIN:
+                break;
+            case CHANGE_PARAM:
+                rowSpan = 6;
+                break;
+            case GENERIC:
+                break;
+            case CONFISCATE_BOND:
+                rowSpan = 5;
+                break;
+        }
+        if (isMakeProposalScreen)
+            rowSpan += 2;
 
-                requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.requestedBsq")).second;
+        addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
+        double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
+        proposalTypeTextField = addLabelTextField(gridPane, gridRow,
+                Res.getWithCol("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
+
+        if (!isMakeProposalScreen) {
+            uidTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("shared.id")).second;
+            uidTextField.setEditable(false);
+            nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
+        } else {
+            nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
+        }
+
+        if (showTitle)
+            titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("dao.proposal.title")).second;
+
+        if (showDescription) {
+            descriptionTextArea = addLabelTextArea(gridPane, ++gridRow, Res.get("dao.proposal.display.description"),
+                    Res.get("dao.proposal.display.description.prompt", maxLengthDescriptionText)).second;
+            descriptionTextArea.setMaxHeight(42); // for 2 lines
+            descriptionTextArea.setMinHeight(descriptionTextArea.getMaxHeight());
+            if (isMakeProposalScreen)
+                descriptionTextArea.textProperty().addListener(descriptionTextAreaListener);
+        }
+
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow,
+                Res.get("dao.proposal.display.link"));
+        linkLabel = tuple.first;
+        linkInputTextField = tuple.second;
+        linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
+
+        linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow,
+                "", "", "").second;
+        linkHyperlinkWithIcon.setVisible(false);
+        linkHyperlinkWithIcon.setManaged(false);
+
+        switch (proposalType) {
+            case COMPENSATION_REQUEST:
+                requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.requestedBsq")).second;
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                 bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
                 checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 requestedBsqTextField.setValidator(bsqValidator);
                 // TODO validator, addressTF
-                if (showDetails) {
-                    bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
-                            Res.get("dao.proposal.display.bsqAddress")).second;
-                    checkNotNull(bsqAddressTextField, "bsqAddressTextField must not be null");
-                    bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
-                    bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
-                }
+                bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.bsqAddress")).second;
+                checkNotNull(bsqAddressTextField, "bsqAddressTextField must not be null");
+                bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
+                bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
                 break;
-            case GENERIC:
+            case BONDED_ROLE:
+                linkLabel.setText(Res.get("dao.proposal.display.link.bondRole"));
+                linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.bondRole.prompt"));
+                bondedRoleTypeComboBox = addLabelComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
+                checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
+                bondedRoleTypeComboBox.setPromptText(Res.get("shared.select"));
+                bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
+                bondedRoleTypeComboBox.setConverter(new StringConverter<BondedRoleType>() {
+                    @Override
+                    public String toString(BondedRoleType bondedRoleType) {
+                        return bondedRoleType.getDisplayString();
+                    }
+
+                    @Override
+                    public BondedRoleType fromString(String string) {
+                        return null;
+                    }
+                });
+                break;
+            case REMOVE_ALTCOIN:
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = addLabelComboBox(gridPane, ++gridRow, Res.get("dao.proposal.display.paramComboBox.label")).second;
+                paramComboBox = addLabelComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.paramComboBox.label")).second;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
-                paramComboBox.setItems(FXCollections.observableArrayList(Param.values()));
+                paramComboBox.setPromptText(Res.get("shared.select"));
+                List<Param> list = Arrays.stream(Param.values())
+                        .filter(e -> e != Param.UNDEFINED && e != Param.PHASE_UNDEFINED)
+                        .collect(Collectors.toList());
+                paramComboBox.setItems(FXCollections.observableArrayList(list));
                 paramComboBox.setConverter(new StringConverter<Param>() {
                     @Override
                     public String toString(Param param) {
-                        return param.name();
+                        return param.toDisplayString();
                     }
 
                     @Override
@@ -206,33 +259,32 @@ public class ProposalDisplay {
                         return null;
                     }
                 });
-                paramValueTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.paramValue")).second;
+                paramValueTextField = addLabelInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.paramValue")).second;
                 break;
-            case REMOVE_ALTCOIN:
+            case GENERIC:
                 break;
             case CONFISCATE_BOND:
                 confiscateBondComboBox = addLabelComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.confiscateBondComboBox.label")).second;
-                ObservableList<byte[]> lockupAndUnlockingBondIds =
-                        FXCollections.observableArrayList(daoFacade.getLockupAndUnlockingBondIds());
-                confiscateBondComboBox.setItems(lockupAndUnlockingBondIds);
-                confiscateBondComboBox.setConverter(new StringConverter<byte[]>() {
+                        Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label")).second;
+                checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
+                confiscateBondComboBox.setPromptText(Res.get("shared.select"));
+                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
+                confiscateBondComboBox.setConverter(new StringConverter<BondedRole>() {
                     @Override
-                    public String toString(byte[] hashOfBondId) {
-                        Optional<Bond> bond = Bonds.getBond(hashOfBondId);
-                        return bond.isPresent() ? bond.get().toDisplayString() : "-";
+                    public String toString(BondedRole bondedRole) {
+                        return bondedRole.getDisplayString();
                     }
 
                     @Override
-                    public byte[] fromString(String string) {
+                    public BondedRole fromString(String string) {
                         return null;
                     }
                 });
-
                 break;
         }
 
-        if (!isMakeProposalScreen && showDetails)
+        if (!isMakeProposalScreen)
             txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "").second;
 
@@ -242,11 +294,14 @@ public class ProposalDisplay {
     }
 
     public void applyProposalPayload(Proposal proposal) {
+        proposalTypeTextField.setText(proposal.getType().getDisplayName());
         if (uidTextField != null)
             uidTextField.setText(proposal.getUid());
         nameTextField.setText(proposal.getName());
-        titleTextField.setText(proposal.getTitle());
-        descriptionTextArea.setText(proposal.getDescription());
+        if (titleTextField != null)
+            titleTextField.setText(proposal.getTitle());
+        if (descriptionTextArea != null)
+            descriptionTextArea.setText(proposal.getDescription());
         linkInputTextField.setVisible(false);
         linkInputTextField.setManaged(false);
         linkHyperlinkWithIcon.setVisible(true);
@@ -265,10 +320,17 @@ public class ProposalDisplay {
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
             checkNotNull(paramValueTextField, "paramValueTextField must not be null");
             paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
+        } else if (proposal instanceof BondedRoleProposal) {
+            BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
+            checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
+            BondedRole bondedRole = bondedRoleProposal.getBondedRole();
+            bondedRoleTypeComboBox.getSelectionModel().select(bondedRole.getBondedRoleType());
+
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-            confiscateBondComboBox.getSelectionModel().select(confiscateBondProposal.getHashOfBondId());
+            daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
+                    .ifPresent(bondedRole -> confiscateBondComboBox.getSelectionModel().select(bondedRole));
         }
         int chainHeight;
         if (txIdTextField != null) {
@@ -291,6 +353,7 @@ public class ProposalDisplay {
         if (bsqAddressTextField != null) bsqAddressTextField.clear();
         if (paramComboBox != null) paramComboBox.getSelectionModel().clearSelection();
         if (paramValueTextField != null) paramValueTextField.clear();
+        if (bondedRoleTypeComboBox != null) bondedRoleTypeComboBox.getSelectionModel().clearSelection();
         if (confiscateBondComboBox != null) confiscateBondComboBox.getSelectionModel().clearSelection();
         if (txIdTextField != null) txIdTextField.cleanup();
         if (descriptionTextArea != null) descriptionTextArea.textProperty().removeListener(descriptionTextAreaListener);
@@ -299,8 +362,10 @@ public class ProposalDisplay {
     public void fillWithMock() {
         uidTextField.setText(UUID.randomUUID().toString());
         nameTextField.setText("Manfred Karrer");
-        titleTextField.setText("Development work November 2017");
-        descriptionTextArea.setText("Development work");
+        if (titleTextField != null)
+            titleTextField.setText("Development work November 2017");
+        if (descriptionTextArea != null)
+            descriptionTextArea.setText("Development work");
         linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
         if (requestedBsqTextField != null)
             requestedBsqTextField.setText("14000");
@@ -315,8 +380,10 @@ public class ProposalDisplay {
 
     public void setEditable(boolean isEditable) {
         nameTextField.setEditable(isEditable);
-        titleTextField.setEditable(isEditable);
-        descriptionTextArea.setEditable(isEditable);
+        if (titleTextField != null)
+            titleTextField.setEditable(isEditable);
+        if (descriptionTextArea != null)
+            descriptionTextArea.setEditable(isEditable);
         linkInputTextField.setEditable(isEditable);
         if (requestedBsqTextField != null)
             requestedBsqTextField.setEditable(isEditable);
@@ -330,6 +397,9 @@ public class ProposalDisplay {
 
         if (confiscateBondComboBox != null)
             confiscateBondComboBox.setDisable(!isEditable);
+
+        if (bondedRoleTypeComboBox != null)
+            bondedRoleTypeComboBox.setDisable(!isEditable);
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);
