@@ -144,25 +144,26 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
-                rowSpan = 6;
+                rowSpan = 8;
                 break;
             case BONDED_ROLE:
-                rowSpan = 3;
+                rowSpan = 5;
                 showTitle = false;
                 showDescription = false;
                 break;
             case REMOVE_ALTCOIN:
                 break;
             case CHANGE_PARAM:
-                rowSpan = 6;
+                rowSpan = 8;
                 break;
             case GENERIC:
                 break;
             case CONFISCATE_BOND:
-                rowSpan = 5;
+                rowSpan = 7;
                 break;
         }
-        if (isMakeProposalScreen)
+        // for already created proposals we show the uid and tx id so we add 2 rows
+        if (!isMakeProposalScreen)
             rowSpan += 2;
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);

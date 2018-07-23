@@ -60,6 +60,8 @@ import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 
 import com.google.common.base.Charsets;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -559,7 +561,7 @@ public class GUIUtil {
                                            Runnable actionHandler) {
         new Popup<>().headLine(Res.get("dao.feeTx.confirm", type))
                 .confirmation(Res.get("dao.feeTx.confirm.details",
-                        type,
+                        StringUtils.capitalize(type),
                         bsqFormatter.formatCoinWithCode(fee),
                         btcFormatter.formatCoinWithCode(miningFee),
                         CoinUtil.getFeePerByte(miningFee, txSize),
