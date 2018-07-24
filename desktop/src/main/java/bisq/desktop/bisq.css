@@ -73,7 +73,7 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey8: #E1E9E1; /* 1 usages */
     -bs-bg-green2: #619865; /* 2 usages */
     -bs-bg-green: #99ba9c; /* 4 usages */
-    -bs-green: #00aa33; /* 6 usages */
+    -bs-green: #25B135; /* 6 usages */
     -bs-turquoise: #2cacaf; /* 1 usages */
     -bs-bg-grey5: #f1f6f7; /* 4 usages */
     -bs-bg-grey6: #e7f5f9; /* 3 usages */
@@ -152,6 +152,11 @@ bg color of non edit textFields: fafafa
     -fx-fill: -bs-grey;
 }
 
+.sub-info {
+    -fx-text-fill: -bs-medium-grey;
+    -fx-fill: -bs-medium-grey;
+}
+
 .headline-label {
     -fx-font-weight: bold;
     -fx-font-size: 1.692em;
@@ -181,6 +186,11 @@ bg color of non edit textFields: fafafa
 
 .separator {
     -fx-background: -bs-light-grey;
+}
+
+.jfx-progress-bar > .bar,
+.jfx-progress-bar:indeterminate > .bar{
+    -fx-background-color: -bs-green;
 }
 
 /* Behavior */

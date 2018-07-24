@@ -75,6 +75,8 @@
           <emptyLine />
           <package name="de.jensd.fx" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="com.jfoenix" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="org.controlsfx" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="org.reactfx" withSubpackages="true" static="false" />

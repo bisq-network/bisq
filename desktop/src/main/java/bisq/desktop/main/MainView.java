@@ -53,6 +53,8 @@ import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -447,7 +449,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private VBox createSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(0);
+        vBox.setSpacing(10);
         vBox.setId("splash");
 
         ImageView logo = new ImageView();
@@ -463,9 +465,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator = new ProgressBar();
-        btcSyncIndicator.setPrefWidth(120);
         btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
+        btcSyncIndicator = new JFXProgressBar();
+        btcSyncIndicator.setPrefWidth(305);
 
         ImageView btcSyncIcon = new ImageView();
         btcSyncIcon.setVisible(false);
@@ -487,7 +489,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
         blockchainSyncBox.setPrefHeight(50);
-        blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIndicator, btcSyncIcon);
+        blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIcon);
 
 
         // create P2PNetworkBox
@@ -495,6 +497,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setWrapText(true);
         splashP2PNetworkLabel.setMaxWidth(500);
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
+        splashP2PNetworkLabel.getStyleClass().add("sub-info");
         splashP2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
         splashP2PNetworkBusyAnimation = new BusyAnimation();
@@ -502,6 +505,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
+                splashP2PNetworkLabel.getStyleClass().remove("sub-info");
                 splashP2PNetworkLabel.getStyleClass().add("error-text");
                 splashP2PNetworkBusyAnimation.stop();
             } else if (model.getSplashP2PNetworkAnimationVisible().get()) {
@@ -545,10 +549,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
-        splashP2PNetworkBox.setPrefHeight(50);
+        splashP2PNetworkBox.setPrefHeight(40);
         splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon, showTorNetworkSettingsButton);
 
-        vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
+        vBox.getChildren().addAll(logo, blockchainSyncBox, btcSyncIndicator, splashP2PNetworkBox);
         return vBox;
     }
 
