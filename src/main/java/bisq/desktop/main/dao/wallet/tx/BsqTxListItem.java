@@ -17,10 +17,8 @@
 
 package bisq.desktop.main.dao.wallet.tx;
 
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.dao.TxConfidenceListItem;
 
-import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -56,8 +54,6 @@ class BsqTxListItem extends TxConfidenceListItem {
     private Coin amount;
     private boolean received;
 
-    private TxConfidenceIndicator txConfidenceIndicator;
-    private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
     BsqTxListItem(Transaction transaction,
@@ -81,7 +77,11 @@ class BsqTxListItem extends TxConfidenceListItem {
         Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction);
         amount = valueSentToMe.subtract(valueSentFromMe);
         if (amount.isPositive()) {
-            direction = Res.get("funds.tx.direction.receivedWith");
+            if (txId.equals(daoFacade.getGenesisTxId()))
+                direction = Res.get("funds.tx.direction.genesisTx");
+            else
+                direction = Res.get("funds.tx.direction.receivedWith");
+
             received = true;
         } else if (amount.isNegative()) {
             direction = Res.get("funds.tx.direction.sentTo");
