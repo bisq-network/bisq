@@ -465,9 +465,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
         btcSyncIndicator = new JFXProgressBar();
         btcSyncIndicator.setPrefWidth(305);
+        btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
 
         ImageView btcSyncIcon = new ImageView();
         btcSyncIcon.setVisible(false);
