@@ -88,6 +88,7 @@ bg color of non edit textFields: fafafa
     -bs-dark-green: #3DA34B;
     -bs-new-grey: #D8D8D8;
     -bs-red: #D73030; /* 5 usages */
+    -fx-box-border: -bs-new-grey;
 
     -bs-green-soft: derive(-bs-green, 60%); /* 2 usages */
     -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
@@ -455,9 +456,18 @@ textfield */
     -fx-alignment: center-left;
 }
 
+.table-view {
+    -fx-control-inner-background-alt: -fx-control-inner-background ;
+}
+
 .table-view .column-header .label {
     -fx-alignment: center;
-    -fx-font-weight: bold;
+    -fx-font-weight: normal;
+    -fx-font-size: 0.923em;
+}
+
+.table-view .column-header {
+    -fx-background-color: -bs-new-grey;
 }
 
 .table-view .focus {
@@ -481,6 +491,11 @@ textfield */
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
     -fx-padding: 1;
+}
+
+.table-row-cell {
+    -fx-border-color: -bs-white;
+    -fx-table-cell-border-color: -bs-white;
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
