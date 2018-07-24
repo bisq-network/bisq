@@ -66,6 +66,7 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -149,9 +150,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 Res.get("shared.multipleOffers"),
                 model.preferences));
 
-        Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
-        HBox currencyHBox = new HBox();
-        currencyHBox.setSpacing(5);
+        Label currencyLabel = new AutoTooltipLabel(Res.get("shared.currency"));
+        currencyLabel.getStyleClass().add("small-text");
+        VBox currencyHBox = new VBox();
+        currencyHBox.setSpacing(0);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
         currencyHBox.setAlignment(Pos.CENTER_LEFT);
         currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
@@ -309,6 +311,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
+        yAxis.setSide(Side.RIGHT);
         yAxis.setAutoRanging(true);
         yAxis.setLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));

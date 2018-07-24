@@ -208,6 +208,7 @@ bg color of non edit textFields: fafafa
 
 .jfx-button {
     -fx-background-color: -bs-new-grey;
+    -fx-background-radius: 0px;
 }
 
 .jfx-checkbox {
@@ -752,9 +753,9 @@ textfield */
 /* OfferBook */
 
 .table-title {
-    -fx-font-weight: bold;
-    -fx-font-size: 1.231em;
-    -fx-alignment: center;
+    -fx-font-size: 1.154em;
+    -fx-font-weight: normal;
+    -fx-alignment: left;
 }
 
 /* Offer */
