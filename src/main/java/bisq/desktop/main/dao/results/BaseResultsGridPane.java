@@ -43,9 +43,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BaseResultsTableView1<R> {
+public abstract class BaseResultsGridPane<R> extends GridPane {
     @Getter
-    protected GridPane gridPane = new GridPane();
     protected final BsqWalletService bsqWalletService;
     protected final DaoFacade daoFacade;
     protected final BsqFormatter bsqFormatter;
@@ -62,8 +61,8 @@ public abstract class BaseResultsTableView1<R> {
 
     protected abstract void createColumns(TableView<R> tableView);
 
-    public BaseResultsTableView1(BsqWalletService bsqWalletService, DaoFacade daoFacade,
-                                 BsqFormatter bsqFormatter, int columnIndex) {
+    public BaseResultsGridPane(BsqWalletService bsqWalletService, DaoFacade daoFacade,
+                               BsqFormatter bsqFormatter, int columnIndex) {
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
@@ -71,7 +70,7 @@ public abstract class BaseResultsTableView1<R> {
         headline = new TableGroupHeadline(getTitle());
         GridPane.setMargin(headline, new Insets(15, -10, -10, -10));
         GridPane.setColumnIndex(headline, columnIndex);
-        gridPane.getChildren().add(headline);
+        getChildren().add(headline);
 
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
@@ -80,7 +79,7 @@ public abstract class BaseResultsTableView1<R> {
         createColumns(tableView);
         GridPane.setMargin(tableView, new Insets(35, -10, 5, -10));
         GridPane.setColumnIndex(tableView, columnIndex);
-        gridPane.getChildren().add(tableView);
+        getChildren().add(tableView);
 
         GridPane.setHgrow(headline, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);

@@ -27,8 +27,8 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.results.combo.VotesPerProposalTableView;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
-import bisq.desktop.main.dao.results.proposals.ProposalResultsTableView;
-import bisq.desktop.main.dao.results.votes.VotesTableView;
+import bisq.desktop.main.dao.results.proposals.ProposalResultsGridPane;
+import bisq.desktop.main.dao.results.votes.VoteResultsGridPane;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -68,7 +68,6 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -115,8 +114,8 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     private ChangeListener<ResultsListItem> selectedItemListener;
 
     private VotesPerProposalTableView votesPerProposalTableView;
-    private ProposalResultsTableView proposalResultsTableView;
-    private VotesTableView votesTableView;
+    private ProposalResultsGridPane proposalResultsGridPane;
+    private VoteResultsGridPane voteResultsGridPane;
     private GridPane gridPane;
     private HBox hBox;
     private Label directionLabel;
@@ -156,33 +155,30 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
         hBox.setFillHeight(true);
 
         //votesPerProposalTableView = new VotesPerProposalTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, bsqFormatter);
-        proposalResultsTableView = new ProposalResultsTableView(this, bsqWalletService, daoFacade, bsqFormatter,
+        proposalResultsGridPane = new ProposalResultsGridPane(this, bsqWalletService, daoFacade, bsqFormatter,
                 bsqStateService);
-        hBox.getChildren().add(proposalResultsTableView.getGridPane());
+        hBox.getChildren().add(proposalResultsGridPane);
 
         directionLabel = new Label("<< voted on");
         HBox.setMargin(directionLabel, new Insets(0, -10, 0, -10));
-        StackPane stackPane = new StackPane();
-        stackPane.getChildren().add(directionLabel);
-        hBox.getChildren().add(stackPane);
 
-        votesTableView = new VotesTableView(this, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
-        hBox.getChildren().add(votesTableView.getGridPane());
+        voteResultsGridPane = new VoteResultsGridPane(this, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
+        hBox.getChildren().add(voteResultsGridPane);
 
-        HBox.setHgrow(proposalResultsTableView.getGridPane(), Priority.ALWAYS);
-        HBox.setHgrow(votesTableView.getGridPane(), Priority.ALWAYS);
+        HBox.setHgrow(proposalResultsGridPane, Priority.ALWAYS);
+        HBox.setHgrow(voteResultsGridPane, Priority.ALWAYS);
 
         selectedItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
     }
 
     @Override
     public void onSelectedEvaluatedProposal(EvaluatedProposal evaluatedProposal) {
-        votesTableView.onSelectedEvaluatedProposal(evaluatedProposal);
+        voteResultsGridPane.onSelectedEvaluatedProposal(evaluatedProposal);
     }
 
     @Override
     public void onSelectedDecryptedVote(DecryptedVote decryptedVote) {
-        proposalResultsTableView.onSelectedDecryptedVote(decryptedVote);
+        proposalResultsGridPane.onSelectedDecryptedVote(decryptedVote);
     }
 
     @Override
@@ -232,8 +228,8 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
             gridRow = 1;
 
             // gridRow = votesPerProposalTableView.createAllFields(++gridRow, resultsOfCycle);
-            proposalResultsTableView.createAllFields(resultsOfCycle);
-            votesTableView.createAllFields(resultsOfCycle);
+            proposalResultsGridPane.createAllFields(resultsOfCycle);
+            voteResultsGridPane.createAllFields(resultsOfCycle);
 
             gridPane.getChildren().add(hBox);
 

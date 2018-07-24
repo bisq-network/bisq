@@ -36,14 +36,14 @@ import java.util.stream.Stream;
 
 import lombok.Getter;
 
-public class VotesListItem extends BaseResultsListItem {
+public class VoteResultsListItem extends BaseResultsListItem {
     private final BsqStateService bsqStateService;
     private final BsqFormatter bsqFormatter;
     private int id;
     @Getter
     private final DecryptedVote decryptedVote;
 
-    public VotesListItem(int id, DecryptedVote decryptedVote, BsqStateService bsqStateService, BsqFormatter bsqFormatter) {
+    public VoteResultsListItem(int id, DecryptedVote decryptedVote, BsqStateService bsqStateService, BsqFormatter bsqFormatter) {
         this.id = id;
         this.decryptedVote = decryptedVote;
         this.bsqStateService = bsqStateService;

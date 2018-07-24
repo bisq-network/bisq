@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.results.proposals;
 
 import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.main.dao.results.BaseResultsTableView1;
+import bisq.desktop.main.dao.results.BaseResultsGridPane;
 import bisq.desktop.main.dao.results.SelectionListener;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -48,14 +48,14 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ProposalResultsTableView extends BaseResultsTableView1<ProposalResultsListItem> {
+public class ProposalResultsGridPane extends BaseResultsGridPane<ProposalResultsListItem> {
 
     private SelectionListener selectionListener;
     private final BsqStateService bsqStateService;
 
-    public ProposalResultsTableView(SelectionListener selectionListener,
-                                    BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter,
-                                    BsqStateService bsqStateService) {
+    public ProposalResultsGridPane(SelectionListener selectionListener,
+                                   BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter,
+                                   BsqStateService bsqStateService) {
         super(bsqWalletService, daoFacade, bsqFormatter, 0);
         this.selectionListener = selectionListener;
         this.bsqStateService = bsqStateService;
