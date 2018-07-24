@@ -211,6 +211,22 @@ bg color of non edit textFields: fafafa
 
 .jfx-checkbox {
     -jfx-checked-color: -bs-green;
+    -fx-font-size: 0.692em;
+}
+
+.jfx-check-box .box,
+.jfx-check-box:indeterminate .box,
+.jfx-check-box:indeterminate:selected .box {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+
+.jfx-check-box .mark ,
+.jfx-check-box .indeterminate-mark {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
 }
 
 /* Behavior */
