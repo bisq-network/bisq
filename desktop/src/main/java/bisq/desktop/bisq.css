@@ -193,6 +193,15 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-green;
 }
 
+.jfx-spinner {
+    -jfx-radius: 10;
+}
+
+.jfx-spinner:indeterminate .arc,
+.jfx-spinner:determinate .arc{
+    -fx-stroke: -bs-green;
+}
+
 /* Behavior */
 
 .show-hand {
