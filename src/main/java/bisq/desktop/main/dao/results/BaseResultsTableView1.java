@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.results;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
-import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
@@ -33,27 +32,29 @@ import javafx.scene.layout.Priority;
 
 import javafx.geometry.Insets;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BaseResultsTableView1<R> {
-    protected final GridPane gridPane;
+    @Getter
+    protected GridPane gridPane = new GridPane();
     protected final BsqWalletService bsqWalletService;
     protected final DaoFacade daoFacade;
     protected final BsqFormatter bsqFormatter;
-
-    protected int gridRow;
-    protected int gridRowStartIndex;
-
 
     protected final ObservableList<R> itemList = FXCollections.observableArrayList();
     private final SortedList<R> sortedList = new SortedList<>(itemList);
     protected ResultsOfCycle resultsOfCycle;
     protected TableView<R> tableView;
+    private TableGroupHeadline headline;
 
     protected abstract String getTitle();
 
@@ -61,31 +62,15 @@ public abstract class BaseResultsTableView1<R> {
 
     protected abstract void createColumns(TableView<R> tableView);
 
-    public BaseResultsTableView1(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter) {
-        this.gridPane = gridPane;
+    public BaseResultsTableView1(BsqWalletService bsqWalletService, DaoFacade daoFacade,
+                                 BsqFormatter bsqFormatter, int columnIndex) {
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
-    }
 
-    public int createAllFields(int gridRowStartIndex, ResultsOfCycle resultsOfCycle) {
-        this.resultsOfCycle = resultsOfCycle;
-        this.gridRowStartIndex = gridRowStartIndex;
-        this.gridRow = gridRowStartIndex;
-
-        removeAllFields();
-        createTableView();
-        fillList();
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
-
-        return gridRow;
-    }
-
-    private void createTableView() {
-        TableGroupHeadline headline = new TableGroupHeadline(getTitle());
-        GridPane.setRowIndex(headline, gridRow);
+        headline = new TableGroupHeadline(getTitle());
         GridPane.setMargin(headline, new Insets(15, -10, -10, -10));
-        GridPane.setColumnSpan(headline, 2);
+        GridPane.setColumnIndex(headline, columnIndex);
         gridPane.getChildren().add(headline);
 
         tableView = new TableView<>();
@@ -93,18 +78,28 @@ public abstract class BaseResultsTableView1<R> {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         createColumns(tableView);
-        GridPane.setRowIndex(tableView, gridRow);
         GridPane.setMargin(tableView, new Insets(35, -10, 5, -10));
-        GridPane.setColumnSpan(tableView, 2);
-        GridPane.setHgrow(tableView, Priority.SOMETIMES);
+        GridPane.setColumnIndex(tableView, columnIndex);
         gridPane.getChildren().add(tableView);
+
+        GridPane.setHgrow(headline, Priority.ALWAYS);
+        GridPane.setHgrow(tableView, Priority.ALWAYS);
+
+        tableView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<R>() {
+            @Override
+            public void changed(ObservableValue<? extends R> observable, R oldValue, R newValue) {
+                onSelected(newValue);
+            }
+        });
+    }
+
+    protected abstract void onSelected(R item);
+
+    public void createAllFields(ResultsOfCycle resultsOfCycle) {
+        this.resultsOfCycle = resultsOfCycle;
 
         tableView.setItems(sortedList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-    }
-
-    private void removeAllFields() {
-        GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow);
-        gridRow = gridRowStartIndex;
+        fillList();
     }
 }

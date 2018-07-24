@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.dao.results.votes;
 
+import bisq.desktop.main.dao.results.BaseResultsListItem;
+
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
 import bisq.core.dao.voting.ballot.vote.LongVote;
@@ -34,7 +36,7 @@ import java.util.stream.Stream;
 
 import lombok.Getter;
 
-public class VotesListItem {
+public class VotesListItem extends BaseResultsListItem {
     private final BsqStateService bsqStateService;
     private final BsqFormatter bsqFormatter;
     private int id;
@@ -59,6 +61,15 @@ public class VotesListItem {
     public String getStake() {
         return bsqFormatter.formatCoinWithCode(getStakeAsCoin());
     }
+
+    public String getStakeAndMerit() {
+        return bsqFormatter.formatCoinWithCode(getStakeAndMeritAsCoin());
+    }
+
+    public Coin getStakeAndMeritAsCoin() {
+        return getMeritAsCoin().add(getStakeAsCoin());
+    }
+
 
     public Coin getStakeAsCoin() {
         return Coin.valueOf(decryptedVote.getStake());

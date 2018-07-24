@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.dao.results.proposals;
 
+import bisq.desktop.main.dao.results.BaseResultsListItem;
+
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.voteresult.EvaluatedProposal;
@@ -30,7 +32,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import lombok.Getter;
 
-public class ProposalResultsListItem {
+public class ProposalResultsListItem extends BaseResultsListItem {
     private final ProposalVoteResult proposalVoteResult;
     private final BsqFormatter bsqFormatter;
     @Getter

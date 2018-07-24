@@ -58,6 +58,7 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -65,7 +66,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -89,7 +92,7 @@ import java.util.stream.Collectors;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 @FxmlView
-public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable> implements BsqStateListener {
+public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable> implements BsqStateListener, SelectionListener {
     @FXML
     private ScrollPane scrollPane;
 
@@ -115,6 +118,8 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     private ProposalResultsTableView proposalResultsTableView;
     private VotesTableView votesTableView;
     private GridPane gridPane;
+    private HBox hBox;
+    private Label directionLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,14 +151,38 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
 
         createCyclesTable();
 
-        votesPerProposalTableView = new VotesPerProposalTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, bsqFormatter);
-        proposalResultsTableView = new ProposalResultsTableView(gridPane, bsqWalletService, daoFacade, bsqFormatter,
-                bsqStateService,
-                cycleService,
-                voteResultService,
-                proposalService);
-        votesTableView = new VotesTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
+        hBox = new HBox();
+        hBox.setSpacing(30);
+        hBox.setFillHeight(true);
+
+        //votesPerProposalTableView = new VotesPerProposalTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, bsqFormatter);
+        proposalResultsTableView = new ProposalResultsTableView(this, bsqWalletService, daoFacade, bsqFormatter,
+                bsqStateService);
+        hBox.getChildren().add(proposalResultsTableView.getGridPane());
+
+        directionLabel = new Label("<< voted on");
+        HBox.setMargin(directionLabel, new Insets(0, -10, 0, -10));
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().add(directionLabel);
+        hBox.getChildren().add(stackPane);
+
+        votesTableView = new VotesTableView(this, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
+        hBox.getChildren().add(votesTableView.getGridPane());
+
+        HBox.setHgrow(proposalResultsTableView.getGridPane(), Priority.ALWAYS);
+        HBox.setHgrow(votesTableView.getGridPane(), Priority.ALWAYS);
+
         selectedItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
+    }
+
+    @Override
+    public void onSelectedEvaluatedProposal(EvaluatedProposal evaluatedProposal) {
+        votesTableView.onSelectedEvaluatedProposal(evaluatedProposal);
+    }
+
+    @Override
+    public void onSelectedDecryptedVote(DecryptedVote decryptedVote) {
+        proposalResultsTableView.onSelectedDecryptedVote(decryptedVote);
     }
 
     @Override
@@ -195,14 +224,24 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onResultsListItemSelected(ResultsListItem item) {
-        removeDetailsViews();
+        //removeDetailsViews();
         if (item != null) {
             ResultsOfCycle resultsOfCycle = item.getResultsOfCycle();
 
-            gridRow = votesPerProposalTableView.createAllFields(++gridRow, resultsOfCycle);
-            gridRow = proposalResultsTableView.createAllFields(++gridRow, resultsOfCycle);
-            gridRow = votesTableView.createAllFields(++gridRow, resultsOfCycle);
-            addParams(resultsOfCycle);
+            GUIUtil.removeChildrenFromGridPaneRows(gridPane, 1, gridRow);
+            gridRow = 1;
+
+            // gridRow = votesPerProposalTableView.createAllFields(++gridRow, resultsOfCycle);
+            proposalResultsTableView.createAllFields(resultsOfCycle);
+            votesTableView.createAllFields(resultsOfCycle);
+
+            gridPane.getChildren().add(hBox);
+
+            GridPane.setRowIndex(hBox, gridRow);
+            GridPane.setMargin(hBox, new Insets(0, 0, 0, 0));
+            GridPane.setColumnSpan(hBox, 2);
+
+            // addParams(resultsOfCycle);
         }
     }
 

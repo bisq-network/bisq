@@ -18,29 +18,25 @@
 package bisq.desktop.main.dao.results.proposals;
 
 import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.main.dao.proposal.ProposalWindow;
-import bisq.desktop.main.dao.results.BaseResultsTableView;
-import bisq.desktop.main.dao.results.model.ResultsOfCycle;
-import bisq.desktop.util.GUIUtil;
+import bisq.desktop.main.dao.results.BaseResultsTableView1;
+import bisq.desktop.main.dao.results.SelectionListener;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.state.period.CycleService;
-import bisq.core.dao.voting.proposal.ProposalService;
-import bisq.core.dao.voting.voteresult.VoteResultService;
+import bisq.core.dao.voting.voteresult.DecryptedVote;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.GridPane;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -52,23 +48,40 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ProposalResultsTableView extends BaseResultsTableView<ProposalResultsListItem> {
+public class ProposalResultsTableView extends BaseResultsTableView1<ProposalResultsListItem> {
 
+    private SelectionListener selectionListener;
     private final BsqStateService bsqStateService;
-    private final CycleService cycleService;
-    private final VoteResultService voteResultService;
-    private final ProposalService proposalService;
 
-    public ProposalResultsTableView(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter,
-                                    BsqStateService bsqStateService,
-                                    CycleService cycleService,
-                                    VoteResultService voteResultService,
-                                    ProposalService proposalService) {
-        super(gridPane, bsqWalletService, daoFacade, bsqFormatter);
+    public ProposalResultsTableView(SelectionListener selectionListener,
+                                    BsqWalletService bsqWalletService, DaoFacade daoFacade, BsqFormatter bsqFormatter,
+                                    BsqStateService bsqStateService) {
+        super(bsqWalletService, daoFacade, bsqFormatter, 0);
+        this.selectionListener = selectionListener;
         this.bsqStateService = bsqStateService;
-        this.cycleService = cycleService;
-        this.voteResultService = voteResultService;
-        this.proposalService = proposalService;
+    }
+
+    @Override
+    protected void onSelected(ProposalResultsListItem item) {
+        itemList.forEach(ProposalResultsListItem::resetTableRow);
+
+        if (item != null)
+            selectionListener.onSelectedEvaluatedProposal(item.getEvaluatedProposal());
+    }
+
+    public void onSelectedDecryptedVote(DecryptedVote decryptedVote) {
+        itemList.forEach(item -> item.applyVoteAndProposal(decryptedVote, item.getEvaluatedProposal()));
+    }
+
+    @Override
+    protected void fillList() {
+        itemList.forEach(ProposalResultsListItem::resetTableRow);
+
+        itemList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
+                .map(e -> new ProposalResultsListItem(e, bsqFormatter))
+                .collect(Collectors.toList()));
+
+        itemList.sort(Comparator.comparing(proposalResultsListItem -> proposalResultsListItem.getEvaluatedProposal().getProposal().getCreationDate()));
     }
 
     @Override
@@ -77,28 +90,39 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
     }
 
     @Override
-    protected void fillList() {
-        itemList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
-                .map(e -> new ProposalResultsListItem(e, bsqFormatter))
-                .collect(Collectors.toList()));
-
-        itemList.sort(Comparator.comparing(proposalResultsListItem -> proposalResultsListItem.getEvaluatedProposal().getProposal().getCreationDate()));
-    }
-
-    public int createAllFields(int gridRowStartIndex, ResultsOfCycle resultsOfCycle) {
-        super.createAllFields(gridRowStartIndex, resultsOfCycle);
-
-        GUIUtil.setFitToRowsForTableView(tableView, 30, 28, 80);
-
-        return gridRow;
-    }
-
-    @Override
     protected void createColumns(TableView<ProposalResultsListItem> tableView) {
         TableColumn<ProposalResultsListItem, ProposalResultsListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.proposalOwnerName"));
-        nameColumn.setMinWidth(100);
+        nameColumn.setMinWidth(110);
         nameColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         nameColumn.setCellFactory(
+                new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>, TableCell<ProposalResultsListItem,
+                        ProposalResultsListItem>>() {
+                    @Override
+                    public TableCell<ProposalResultsListItem, ProposalResultsListItem> call(
+                            TableColumn<ProposalResultsListItem, ProposalResultsListItem> column) {
+                        return new TableCell<ProposalResultsListItem, ProposalResultsListItem>() {
+
+                            @Override
+                            public void updateItem(final ProposalResultsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null) {
+                                    item.setTableRow(getTableRow());
+                                    setText(item.getProposalOwnerName());
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+        nameColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getProposalOwnerName));
+        tableView.getColumns().add(nameColumn);
+
+
+        TableColumn<ProposalResultsListItem, ProposalResultsListItem> issuanceColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.issuance"));
+        issuanceColumn.setMinWidth(100);
+        issuanceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        issuanceColumn.setCellFactory(
                 new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>, TableCell<ProposalResultsListItem,
                         ProposalResultsListItem>>() {
                     @Override
@@ -109,17 +133,99 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                             public void updateItem(final ProposalResultsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getProposalOwnerName());
+                                    setText(item.getIssuance());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getProposalOwnerName));
-        tableView.getColumns().add(nameColumn);
+        issuanceColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getThreshold));
+        tableView.getColumns().add(issuanceColumn);
 
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> idColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.proposalId"));
+        TableColumn<ProposalResultsListItem, ProposalResultsListItem> resultColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
+        resultColumn.setMinWidth(60);
+        resultColumn.setMaxWidth(60);
+        resultColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        resultColumn.setCellFactory(new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>,
+                TableCell<ProposalResultsListItem, ProposalResultsListItem>>() {
+            @Override
+            public TableCell<ProposalResultsListItem, ProposalResultsListItem> call(TableColumn<ProposalResultsListItem,
+                    ProposalResultsListItem> column) {
+                return new TableCell<ProposalResultsListItem, ProposalResultsListItem>() {
+                    Label icon;
+
+                    @Override
+                    public void updateItem(final ProposalResultsListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            icon = new Label();
+                            AwesomeDude.setIcon(icon, item.getIcon());
+                            icon.getStyleClass().add(item.getColorStyleClass());
+                            setGraphic(icon);
+                        } else {
+                            setGraphic(null);
+                            if (icon != null)
+                                icon = null;
+                        }
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(resultColumn);
+
+
+        TableColumn<ProposalResultsListItem, ProposalResultsListItem> detailsColumn = new TableColumn<>();
+        detailsColumn.setMinWidth(60);
+        detailsColumn.setMaxWidth(60);
+        detailsColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        detailsColumn.setCellFactory(new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>,
+                TableCell<ProposalResultsListItem, ProposalResultsListItem>>() {
+            @Override
+            public TableCell<ProposalResultsListItem, ProposalResultsListItem> call(TableColumn<ProposalResultsListItem,
+                    ProposalResultsListItem> column) {
+                return new TableCell<ProposalResultsListItem, ProposalResultsListItem>() {
+                    Label icon;
+                    Button button;
+
+                    @Override
+                    public void updateItem(final ProposalResultsListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            icon = new Label();
+                            AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
+                            icon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                            icon.getStyleClass().add("info-icon");
+
+                            button = new Button("", icon);
+                            button.getStyleClass().add("info-icon-button");
+                            button.setOnAction(e -> {
+                                new VoteResultsForProposalWindow(resultsOfCycle,
+                                        item.getEvaluatedProposal().getProposal(),
+                                        bsqStateService,
+                                        bsqFormatter)
+                                        .show();
+                            });
+                            setGraphic(button);
+                        } else {
+                            setGraphic(null);
+                            if (icon != null)
+                                icon = null;
+                            if (button != null)
+                                button = null;
+                        }
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(detailsColumn);
+
+
+
+
+       /* TableColumn<ProposalResultsListItem, ProposalResultsListItem> idColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.proposalId"));
         idColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         idColumn.setMinWidth(100);
         idColumn.setCellFactory(
@@ -160,9 +266,9 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                     }
                 });
         idColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getProposalOwnerName));
-        tableView.getColumns().add(idColumn);
+        tableView.getColumns().add(idColumn);*/
 
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> acceptedColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.accepted"));
+       /* TableColumn<ProposalResultsListItem, ProposalResultsListItem> acceptedColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.accepted"));
         acceptedColumn.setMinWidth(80);
         acceptedColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         acceptedColumn.setCellFactory(
@@ -237,9 +343,9 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                     }
                 });
         rejectedColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getRejected));
-        tableView.getColumns().add(rejectedColumn);
+        tableView.getColumns().add(rejectedColumn);*/
 
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> thresholdColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.threshold"));
+     /*   TableColumn<ProposalResultsListItem, ProposalResultsListItem> thresholdColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.threshold"));
         thresholdColumn.setMinWidth(100);
         thresholdColumn.setMaxWidth(100);
         thresholdColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -262,9 +368,9 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                     }
                 });
         thresholdColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getThreshold));
-        tableView.getColumns().add(thresholdColumn);
+        tableView.getColumns().add(thresholdColumn);*/
 
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> quorumColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.quorum"));
+       /* TableColumn<ProposalResultsListItem, ProposalResultsListItem> quorumColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.quorum"));
         quorumColumn.setMinWidth(130);
         quorumColumn.setMaxWidth(130);
         quorumColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -287,65 +393,6 @@ public class ProposalResultsTableView extends BaseResultsTableView<ProposalResul
                     }
                 });
         quorumColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getThreshold));
-        tableView.getColumns().add(quorumColumn);
-
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> issuanceColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.issuance"));
-        issuanceColumn.setMinWidth(130);
-        issuanceColumn.setMaxWidth(130);
-        issuanceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        issuanceColumn.setCellFactory(
-                new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>, TableCell<ProposalResultsListItem,
-                        ProposalResultsListItem>>() {
-                    @Override
-                    public TableCell<ProposalResultsListItem, ProposalResultsListItem> call(
-                            TableColumn<ProposalResultsListItem, ProposalResultsListItem> column) {
-                        return new TableCell<ProposalResultsListItem, ProposalResultsListItem>() {
-                            @Override
-                            public void updateItem(final ProposalResultsListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getIssuance());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        issuanceColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getThreshold));
-        tableView.getColumns().add(issuanceColumn);
-
-        TableColumn<ProposalResultsListItem, ProposalResultsListItem> resultColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
-        resultColumn.setMinWidth(60);
-        resultColumn.setMaxWidth(60);
-        resultColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        resultColumn.setCellFactory(new Callback<TableColumn<ProposalResultsListItem, ProposalResultsListItem>,
-                TableCell<ProposalResultsListItem, ProposalResultsListItem>>() {
-            @Override
-            public TableCell<ProposalResultsListItem, ProposalResultsListItem> call(TableColumn<ProposalResultsListItem,
-                    ProposalResultsListItem> column) {
-                return new TableCell<ProposalResultsListItem, ProposalResultsListItem>() {
-                    Label icon;
-
-                    @Override
-                    public void updateItem(final ProposalResultsListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            icon = new Label();
-                            AwesomeDude.setIcon(icon, item.getIcon());
-                            icon.getStyleClass().add(item.getColorStyleClass());
-                            setGraphic(icon);
-                        } else {
-                            setGraphic(null);
-                            if (icon != null)
-                                icon = null;
-                        }
-                    }
-                };
-            }
-        });
-
-        resultColumn.setComparator(Comparator.comparing(ProposalResultsListItem::getThreshold));
-        tableView.getColumns().add(resultColumn);
+        tableView.getColumns().add(quorumColumn);*/
     }
 }

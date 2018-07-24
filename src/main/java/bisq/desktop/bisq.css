@@ -1352,7 +1352,6 @@ textfield */
     -fx-font-size: 0.846em;
 }
 
-
 /********************************************************************************************************************
  *                                                                                                                  *
  * DAO                                                                                                              *
@@ -1362,3 +1361,25 @@ textfield */
 .compensation-root {
     -fx-background-insets: 0, 0 0 0 0
 }
+
+.info-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.info-icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+/*
+.vote-result-table-row-accepted {
+    -fx-background-color: rgba(0, 255, 0, 0.4);
+}
+
+.vote-result-table-row-rejected {
+    -fx-background-color: rgba(255, 0, 68, 0.23);
+}
+
+.vote-result-table-row-ignored {
+    -fx-background-color: rgba(182, 182, 182, 0.4);
+}*/

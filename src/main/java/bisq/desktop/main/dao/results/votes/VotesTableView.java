@@ -18,26 +18,28 @@
 package bisq.desktop.main.dao.results.votes;
 
 import bisq.desktop.components.AutoTooltipTableColumn;
-import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.dao.results.BaseResultsTableView;
-import bisq.desktop.main.dao.results.model.ResultsOfCycle;
+import bisq.desktop.main.dao.results.BaseResultsTableView1;
+import bisq.desktop.main.dao.results.SelectionListener;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.voteresult.DecryptedVote;
+import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.GridPane;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -52,25 +54,37 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class VotesTableView extends BaseResultsTableView<VotesListItem> {
+public class VotesTableView extends BaseResultsTableView1<VotesListItem> {
+    private SelectionListener selectionListener;
     private final BsqStateService bsqStateService;
     private final Preferences preferences;
 
-    public VotesTableView(GridPane gridPane, BsqWalletService bsqWalletService, DaoFacade daoFacade,
+    public VotesTableView(SelectionListener selectionListener,
+                          BsqWalletService bsqWalletService, DaoFacade daoFacade,
                           BsqStateService bsqStateService, Preferences preferences, BsqFormatter bsqFormatter) {
-        super(gridPane, bsqWalletService, daoFacade, bsqFormatter);
+        super(bsqWalletService, daoFacade, bsqFormatter, 1);
+        this.selectionListener = selectionListener;
 
         this.bsqStateService = bsqStateService;
         this.preferences = preferences;
     }
 
     @Override
-    protected String getTitle() {
-        return Res.get("dao.results.votes.header");
+    protected void onSelected(VotesListItem item) {
+        itemList.forEach(VotesListItem::resetTableRow);
+
+        if (item != null)
+            selectionListener.onSelectedDecryptedVote(item.getDecryptedVote());
+    }
+
+    public void onSelectedEvaluatedProposal(EvaluatedProposal evaluatedProposal) {
+        itemList.forEach(item -> item.applyVoteAndProposal(item.getDecryptedVote(), evaluatedProposal));
     }
 
     @Override
     protected void fillList() {
+        itemList.forEach(VotesListItem::resetTableRow);
+
         List<DecryptedVote> decryptedVotesForCycle = new ArrayList<>(resultsOfCycle.getDecryptedVotesForCycle());
         decryptedVotesForCycle.sort(Comparator.comparing(DecryptedVote::getBlindVoteTxId));
         AtomicInteger index = new AtomicInteger();
@@ -82,16 +96,138 @@ public class VotesTableView extends BaseResultsTableView<VotesListItem> {
                 .collect(Collectors.toList()));
     }
 
-    public int createAllFields(int gridRowStartIndex, ResultsOfCycle resultsOfCycle) {
-        super.createAllFields(gridRowStartIndex, resultsOfCycle);
-
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
-
-        return gridRow;
+    @Override
+    protected String getTitle() {
+        return Res.get("dao.results.votes.header");
     }
 
     @Override
     protected void createColumns(TableView<VotesListItem> tableView) {
+        TableColumn<VotesListItem, VotesListItem> stakeAndMeritColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stakeAndMerit"));
+        stakeAndMeritColumn.setMinWidth(90);
+        stakeAndMeritColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        stakeAndMeritColumn.setCellFactory(
+                new Callback<TableColumn<VotesListItem, VotesListItem>, TableCell<VotesListItem,
+                        VotesListItem>>() {
+
+
+                    @Override
+                    public TableCell<VotesListItem, VotesListItem> call(
+                            TableColumn<VotesListItem, VotesListItem> column) {
+                        return new TableCell<VotesListItem, VotesListItem>() {
+                            @Override
+                            public void updateItem(final VotesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null) {
+                                    item.setTableRow(getTableRow());
+                                    setText(item.getStakeAndMerit());
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+        stakeAndMeritColumn.setComparator(Comparator.comparing(VotesListItem::getStakeAsCoin));
+        tableView.getColumns().add(stakeAndMeritColumn);
+
+        TableColumn<VotesListItem, VotesListItem> stakeColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stake"));
+        stakeColumn.setMinWidth(90);
+        stakeColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        stakeColumn.setCellFactory(
+                new Callback<TableColumn<VotesListItem, VotesListItem>, TableCell<VotesListItem,
+                        VotesListItem>>() {
+                    @Override
+                    public TableCell<VotesListItem, VotesListItem> call(
+                            TableColumn<VotesListItem, VotesListItem> column) {
+                        return new TableCell<VotesListItem, VotesListItem>() {
+                            @Override
+                            public void updateItem(final VotesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getStake());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        stakeColumn.setComparator(Comparator.comparing(VotesListItem::getStakeAsCoin));
+        tableView.getColumns().add(stakeColumn);
+
+        TableColumn<VotesListItem, VotesListItem> meritColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.merit"));
+        meritColumn.setMinWidth(90);
+        meritColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        meritColumn.setCellFactory(
+                new Callback<TableColumn<VotesListItem, VotesListItem>, TableCell<VotesListItem,
+                        VotesListItem>>() {
+                    @Override
+                    public TableCell<VotesListItem, VotesListItem> call(
+                            TableColumn<VotesListItem, VotesListItem> column) {
+                        return new TableCell<VotesListItem, VotesListItem>() {
+                            @Override
+                            public void updateItem(final VotesListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getMerit());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        meritColumn.setComparator(Comparator.comparing(VotesListItem::getMeritAsCoin));
+        tableView.getColumns().add(meritColumn);
+
+
+        TableColumn<VotesListItem, VotesListItem> detailsColumn = new TableColumn<>();
+        detailsColumn.setMinWidth(60);
+        detailsColumn.setMaxWidth(60);
+        detailsColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        detailsColumn.setCellFactory(new Callback<TableColumn<VotesListItem, VotesListItem>,
+                TableCell<VotesListItem, VotesListItem>>() {
+            @Override
+            public TableCell<VotesListItem, VotesListItem> call(TableColumn<VotesListItem,
+                    VotesListItem> column) {
+                return new TableCell<VotesListItem, VotesListItem>() {
+                    Label icon;
+                    Button button;
+
+                    @Override
+                    public void updateItem(final VotesListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            icon = new Label();
+                            AwesomeDude.setIcon(icon, AwesomeIcon.INFO_SIGN);
+                            icon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                            icon.getStyleClass().add("info-icon");
+
+                            button = new Button("", icon);
+                            button.getStyleClass().add("info-icon-button");
+                            button.setOnAction(e -> {
+                               /* new VoteResultsForProposalWindow(resultsOfCycle,
+                                        item.getEvaluatedProposal().getProposal(),
+                                        bsqStateService,
+                                        bsqFormatter)
+                                        .show();*/
+                            });
+                            setGraphic(button);
+                        } else {
+                            setGraphic(null);
+                            if (icon != null)
+                                icon = null;
+                            if (button != null)
+                                button = null;
+                        }
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(detailsColumn);
+
+        /*
+
         TableColumn<VotesListItem, VotesListItem> indexColumn = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.id"));
         indexColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         indexColumn.setMinWidth(70);
@@ -279,7 +415,7 @@ public class VotesTableView extends BaseResultsTableView<VotesListItem> {
                     }
                 });
         voteRevealTxIdColumn.setComparator(Comparator.comparing(VotesListItem::getVoteRevealTxId));
-        tableView.getColumns().add(voteRevealTxIdColumn);
+        tableView.getColumns().add(voteRevealTxIdColumn);*/
     }
 
     private void openTxInBlockExplorer(String txId) {
