@@ -206,7 +206,11 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-button {
-    -fx-background-color:-bs-new-grey;
+    -fx-background-color: -bs-new-grey;
+}
+
+.jfx-checkbox {
+    -jfx-checked-color: -bs-green;
 }
 
 /* Behavior */
