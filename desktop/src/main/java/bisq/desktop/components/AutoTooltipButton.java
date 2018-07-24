@@ -17,14 +17,15 @@
 
 package bisq.desktop.components;
 
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.skins.JFXButtonSkin;
+
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Skin;
-import javafx.scene.control.skin.ButtonSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipButton extends Button {
+public class AutoTooltipButton extends JFXButton {
 
     public AutoTooltipButton() {
         super();
@@ -43,8 +44,8 @@ public class AutoTooltipButton extends Button {
         return new AutoTooltipButtonSkin(this);
     }
 
-    private class AutoTooltipButtonSkin extends ButtonSkin {
-        public AutoTooltipButtonSkin(Button button) {
+    private class AutoTooltipButtonSkin extends JFXButtonSkin {
+        public AutoTooltipButtonSkin(JFXButton button) {
             super(button);
         }
 

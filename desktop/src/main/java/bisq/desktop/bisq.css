@@ -62,7 +62,6 @@ bg color of non edit textFields: fafafa
     -bs-dim-grey: dimgrey; /* 1 usages */
     -bs-very-dark-grey3: #333000; /* 3 usages */
 
-    -bs-red: red; /* 5 usages */
     -bs-error-red: #dd0000; /* 5 usages */
     -bs-soft-red: #ee6664; /* 1 usages */
     -bs-pink: #ff8986; /* 2 usages */
@@ -73,7 +72,6 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey8: #E1E9E1; /* 1 usages */
     -bs-bg-green2: #619865; /* 2 usages */
     -bs-bg-green: #99ba9c; /* 4 usages */
-    -bs-green: #25B135; /* 6 usages */
     -bs-turquoise: #2cacaf; /* 1 usages */
     -bs-bg-grey5: #f1f6f7; /* 4 usages */
     -bs-bg-grey6: #e7f5f9; /* 3 usages */
@@ -86,17 +84,22 @@ bg color of non edit textFields: fafafa
     -bs-blue-transparent: #0f87c344;
     -bs-blue: blue; /* 1 usages */
 
+    -bs-green: #25B135; /* 6 usages */
+    -bs-dark-green: #3DA34B;
+    -bs-new-grey: #D8D8D8;
+    -bs-red: #D73030; /* 5 usages */
+
     -bs-green-soft: derive(-bs-green, 60%); /* 2 usages */
     -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
 
     -bs-warning: -bs-orange; /* 1 usages */
 
-    -bs-buy: -bs-yellow; /* 12 usages */
+    -bs-buy: -bs-dark-green; /* 12 usages */
     -bs-buy-focus: derive(-bs-buy, -50%); /* 2 usages */
     -bs-buy-hover: derive(-bs-buy, -10%); /* 2 usages */
     -bs-buy-transparent: derive(-bs-buy, 75%); /* 1 usages */
 
-    -bs-sell: -bs-turquoise; /* 11 usages */
+    -bs-sell: -bs-red; /* 11 usages */
     -bs-sell-focus: derive(-bs-sell, -50%); /* 2 usages */
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
     -bs-sell-transparent: derive(-bs-sell, 95%); /* 1 usages */
@@ -200,6 +203,10 @@ bg color of non edit textFields: fafafa
 .jfx-spinner:indeterminate .arc,
 .jfx-spinner:determinate .arc{
     -fx-stroke: -bs-green;
+}
+
+.jfx-button {
+    -fx-background-color:-bs-new-grey;
 }
 
 /* Behavior */
@@ -845,13 +852,13 @@ textfield */
 #open-support-button {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
-    -fx-base: -bs-warning;
+    -fx-background-color: -bs-warning;
 }
 
 #open-dispute-button {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
-    -fx-base: -bs-error-red;
+    -fx-background-color: -bs-error-red;
 }
 
 /* TitledGroupBg */
@@ -1070,77 +1077,37 @@ textfield */
  ********************************************************************************************************************/
 
 #buy-button-big {
-    -fx-base: -bs-buy;
-    -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
     -fx-font-size: 1.154em;
-    -fx-background-radius: 5;
-}
-
-#buy-button-big:focused {
-    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
-}
-
-#buy-button-big:hover {
-    -fx-base: -bs-buy-hover;
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
 }
 
 #buy-button {
-    -fx-base: -bs-buy;
+    -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
 }
 
-#buy-button:focused {
-    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
-}
-
-#buy-button:hover {
-    -fx-base: -bs-buy-hover;
-}
 
 #sell-button-big {
-    -fx-base: -bs-sell;
+    -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
     -fx-font-size: 1.154em;
-    -fx-background-radius: 5;
-}
-
-#sell-button-big:focused {
-    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
-}
-
-#sell-button-big:hover {
-    -fx-base: -bs-sell-hover;
 }
 
 #sell-button {
-    -fx-base: -bs-sell;
+    -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
     -fx-font-weight: bold;
 }
 
-#sell-button:focused {
-    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
-}
-
-#sell-button:hover {
-    -fx-base: -bs-sell-hover;
-}
-
 #cancel-button {
-    -fx-base: -bs-cancel;
+    -jfx-button-type: FLAT;
+    /*-fx-background-color: -bs-cancel;*/
     -fx-text-fill: -bs-very-dark-grey3;
     -fx-font-weight: bold;
-}
-
-#cancel-button:hover {
-    -fx-base: -bs-cancel-hover;
-}
-
-#cancel-button:focused {
-    -fx-background-color: -bs-cancel-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
 }
 
 /********************************************************************************************************************
