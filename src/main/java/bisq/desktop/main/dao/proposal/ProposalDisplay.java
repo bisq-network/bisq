@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.proposal;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -214,7 +215,7 @@ public class ProposalDisplay {
                 inputControls.add(bsqAddressTextField);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = addLabelComboBox(gridPane, ++gridRow,
+                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
                 bondedRoleTypeComboBox.setPromptText(Res.get("shared.select"));
@@ -236,7 +237,7 @@ public class ProposalDisplay {
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = addLabelComboBox(gridPane, ++gridRow,
+                paramComboBox = FormBuilder.<Param>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.paramComboBox.label")).second;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
                 paramComboBox.setPromptText(Res.get("shared.select"));
@@ -264,7 +265,7 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = addLabelComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.<BondedRole>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label")).second;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
                 confiscateBondComboBox.setPromptText(Res.get("shared.select"));

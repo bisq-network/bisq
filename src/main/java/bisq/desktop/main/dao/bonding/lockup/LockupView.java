@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 
@@ -53,7 +54,6 @@ import javafx.util.StringConverter;
 import java.util.Arrays;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -118,7 +118,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
-        lockupTypeComboBox = addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
+        lockupTypeComboBox = FormBuilder.<LockupType>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
         lockupTypeComboBox.setPromptText(Res.get("shared.select"));
         lockupTypeComboBox.setConverter(new StringConverter<LockupType>() {
             @Override
@@ -140,7 +140,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         //TODO handle trade type
         lockupTypeComboBox.getSelectionModel().select(0);
 
-        bondedRolesComboBox = addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
+        bondedRolesComboBox = FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
         bondedRolesComboBox.setPromptText(Res.get("shared.select"));
         bondedRolesComboBox.setConverter(new StringConverter<BondedRole>() {
             @Override
