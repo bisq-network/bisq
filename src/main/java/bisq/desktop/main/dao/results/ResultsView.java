@@ -25,7 +25,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.dao.results.combo.VotesPerProposalTableView;
 import bisq.desktop.main.dao.results.model.ResultsOfCycle;
 import bisq.desktop.main.dao.results.proposals.ProposalResultsGridPane;
 import bisq.desktop.main.dao.results.votes.VoteResultsGridPane;
@@ -58,7 +57,6 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -105,20 +103,15 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
 
-
     private int gridRow = 0;
     private TableView<ResultsListItem> tableView;
-
     private final ObservableList<ResultsListItem> itemList = FXCollections.observableArrayList();
     private final SortedList<ResultsListItem> sortedList = new SortedList<>(itemList);
     private ChangeListener<ResultsListItem> selectedItemListener;
-
-    private VotesPerProposalTableView votesPerProposalTableView;
     private ProposalResultsGridPane proposalResultsGridPane;
     private VoteResultsGridPane voteResultsGridPane;
     private GridPane gridPane;
     private HBox hBox;
-    private Label directionLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -154,13 +147,9 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
         hBox.setSpacing(30);
         hBox.setFillHeight(true);
 
-        //votesPerProposalTableView = new VotesPerProposalTableView(gridPane, bsqWalletService, daoFacade, bsqStateService, bsqFormatter);
         proposalResultsGridPane = new ProposalResultsGridPane(this, bsqWalletService, daoFacade, bsqFormatter,
                 bsqStateService);
         hBox.getChildren().add(proposalResultsGridPane);
-
-        directionLabel = new Label("<< voted on");
-        HBox.setMargin(directionLabel, new Insets(0, -10, 0, -10));
 
         voteResultsGridPane = new VoteResultsGridPane(this, bsqWalletService, daoFacade, bsqStateService, preferences, bsqFormatter);
         hBox.getChildren().add(voteResultsGridPane);
@@ -172,16 +161,6 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     }
 
     @Override
-    public void onSelectedEvaluatedProposal(EvaluatedProposal evaluatedProposal) {
-        voteResultsGridPane.onSelectedEvaluatedProposal(evaluatedProposal);
-    }
-
-    @Override
-    public void onSelectedDecryptedVote(DecryptedVote decryptedVote) {
-        proposalResultsGridPane.onSelectedDecryptedVote(decryptedVote);
-    }
-
-    @Override
     protected void activate() {
         tableView.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
         fillCycleList();
@@ -190,6 +169,21 @@ public class ResultsView extends ActivatableViewAndModel<AnchorPane, Activatable
     @Override
     protected void deactivate() {
         tableView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // SelectionListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onSelectedEvaluatedProposal(EvaluatedProposal evaluatedProposal) {
+        voteResultsGridPane.onSelectedEvaluatedProposal(evaluatedProposal);
+    }
+
+    @Override
+    public void onSelectedDecryptedVote(DecryptedVote decryptedVote) {
+        proposalResultsGridPane.onSelectedDecryptedVote(decryptedVote);
     }
 
 

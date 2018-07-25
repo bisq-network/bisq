@@ -217,7 +217,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                             public void updateItem(final BondedRolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    String link = item.getBondedRole().getLinkToAccount();
+                                    String link = item.getBondedRole().getLink();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(link, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(link));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("shared.openURL", link)));

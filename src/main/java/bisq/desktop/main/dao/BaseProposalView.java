@@ -285,30 +285,6 @@ public abstract class BaseProposalView extends ActivatableView<GridPane, Void> {
         nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
         tableView.getColumns().add(nameColumn);
 
-        TableColumn<BaseProposalListItem, BaseProposalListItem> titleColumn = new AutoTooltipTableColumn<>(Res.get("dao.proposal.title"));
-        titleColumn.setPrefWidth(100);
-        titleColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        titleColumn.setCellFactory(
-                new Callback<TableColumn<BaseProposalListItem, BaseProposalListItem>, TableCell<BaseProposalListItem,
-                        BaseProposalListItem>>() {
-                    @Override
-                    public TableCell<BaseProposalListItem, BaseProposalListItem> call(
-                            TableColumn<BaseProposalListItem, BaseProposalListItem> column) {
-                        return new TableCell<BaseProposalListItem, BaseProposalListItem>() {
-                            @Override
-                            public void updateItem(final BaseProposalListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getProposal().getTitle());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        titleColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getTitle()));
-        tableView.getColumns().add(titleColumn);
-
         TableColumn<BaseProposalListItem, BaseProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         uidColumn.setCellFactory(
