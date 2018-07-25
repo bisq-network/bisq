@@ -79,7 +79,7 @@ public final class Navigation implements PersistedDataHost {
                             //noinspection unchecked
                             return ((Class<? extends View>) Class.forName(className));
                         } catch (ClassNotFoundException e) {
-                            log.warn("Could not find the Viewpath class {}; exception: {}", className, e);
+                            log.warn("Could not find the viewPath class {}; exception: {}", className, e);
                         }
                         return null;
                     })
@@ -91,8 +91,8 @@ public final class Navigation implements PersistedDataHost {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void navigateTo(Class<? extends View>... viewClasses) {
+    @SafeVarargs
+    public final void navigateTo(Class<? extends View>... viewClasses) {
         navigateTo(ViewPath.to(viewClasses));
     }
 

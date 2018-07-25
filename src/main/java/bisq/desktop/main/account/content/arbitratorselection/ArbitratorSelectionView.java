@@ -331,8 +331,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
                                     setGraphic(null);
 
-                                    if (checkBox != null)
-                                        checkBox.setOnAction(null);
+                                    checkBox.setOnAction(null);
                                     if (tableRow != null)
                                         tableRow.setOnMouseClicked(null);
                                 }
@@ -341,6 +340,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     }
                 });
 
+        //noinspection unchecked
         tableView.getColumns().addAll(dateColumn, nameColumn, languagesColumn, selectionColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
