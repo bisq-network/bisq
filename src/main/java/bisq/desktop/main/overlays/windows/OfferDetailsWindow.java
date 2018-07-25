@@ -241,8 +241,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offerersBankName"),
                             methodWithBankId);
-            }
-            if (paymentMethod.equals(PaymentMethod.CASH_DEPOSIT)) {
+            } else if (paymentMethod.equals(PaymentMethod.CASH_DEPOSIT)) {
                 addLabelTextField(gridPane, ++rowIndex,
                         paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
                         methodWithBankId);
@@ -385,7 +384,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         });
 
         button.setOnAction(e -> {
-            if (user.getAcceptedArbitrators().size() > 0) {
+            if (user.getAcceptedArbitrators() != null &&
+                    user.getAcceptedArbitrators().size() > 0) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
@@ -398,8 +398,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 }
             } else {
                 new Popup<>().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
-
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                         ArbitratorSelectionView.class);
             }

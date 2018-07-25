@@ -251,7 +251,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         // providedBridges
         providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
-        final Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
+        final Tuple2<Label, ComboBox<Transport>> labelComboBoxTuple2 = addLabelComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeLabel = labelComboBoxTuple2.first;
         transportTypeComboBox = labelComboBoxTuple2.second;
         transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(

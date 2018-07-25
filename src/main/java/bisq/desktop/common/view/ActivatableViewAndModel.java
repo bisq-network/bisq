@@ -30,7 +30,6 @@ public abstract class ActivatableViewAndModel<R extends Node, M extends Activata
     }
 
     public ActivatableViewAndModel() {
-        //noinspection unchecked
         this((M) Activatable.NO_OP_INSTANCE);
     }
 

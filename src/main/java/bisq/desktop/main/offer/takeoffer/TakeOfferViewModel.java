@@ -240,7 +240,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
                     btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))

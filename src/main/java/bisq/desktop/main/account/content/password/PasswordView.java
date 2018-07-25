@@ -109,7 +109,6 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         .actionButtonTextWithGoTo("navigation.account.walletSeed")
                         .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
-                            //noinspection unchecked
                             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, SeedWordsView.class);
                         })
                         .show();

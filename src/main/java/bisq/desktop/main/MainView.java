@@ -713,7 +713,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         private final Class<? extends View> viewClass;
 
-        public NavButton(Class<? extends View> viewClass, String title) {
+        NavButton(Class<? extends View> viewClass, String title) {
             super(title, new ImageView() {{
                 setId("image-nav-" + viewId(viewClass));
             }});
@@ -740,7 +740,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 }
             });
 
-            //noinspection unchecked
             this.setOnAction(e -> navigation.navigateTo(MainView.class, viewClass));
         }
 

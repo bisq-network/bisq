@@ -37,6 +37,7 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -105,7 +106,6 @@ import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addHBoxLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -156,12 +156,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
 
-        final Tuple3<HBox, AutoTooltipLabel, ComboBox> filterBoxTuple = addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
+        final Tuple3<HBox, AutoTooltipLabel, ComboBox<TradeCurrency>> filterBoxTuple = FormBuilder.addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
         final HBox filterBox = filterBoxTuple.first;
         currencyComboBox = filterBoxTuple.third;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
 
-        //noinspection unchecked
         paymentMethodComboBox = new ComboBox<>();
         final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
         paymentMethodLabel.setPadding(new Insets(0, 0, 0, 10));
@@ -405,7 +404,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     .closeButtonText(Res.get("offerbook.setupNewAccount"))
                     .onClose(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
-                        //noinspection unchecked
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     })
                     .show();
@@ -507,7 +505,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
-                        //noinspection unchecked
                         new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -526,7 +523,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);
                 }).show();
     }

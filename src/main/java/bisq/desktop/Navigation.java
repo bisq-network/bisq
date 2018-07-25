@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -82,7 +83,7 @@ public final class Navigation implements PersistedDataHost {
                         }
                         return null;
                     })
-                    .filter(e -> e != null)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
             if (!viewClasses.isEmpty())
@@ -123,7 +124,7 @@ public final class Navigation implements PersistedDataHost {
         currentPath = newPath;
         previousPath = currentPath;
         queueUpForSave();
-        listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
+        listeners.forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
     private void queueUpForSave() {

@@ -189,7 +189,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                 //edit offer
                 model.onPublishOffer(() -> {
                     log.debug("Edit offer was successful");
-                    //noinspection unchecked
                     new Popup<>().feedback(Res.get("editOffer.success")).show();
                     spinnerInfoLabel.setText("");
                     close();

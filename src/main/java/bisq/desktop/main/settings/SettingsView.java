@@ -69,13 +69,10 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == preferencesTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (newValue == networkTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
             else if (newValue == aboutTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
         };
     }
@@ -87,13 +84,10 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         Tab selectedItem = root.getSelectionModel().getSelectedItem();
         if (selectedItem == preferencesTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
         else if (selectedItem == networkTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
         else if (selectedItem == aboutTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
     }
 

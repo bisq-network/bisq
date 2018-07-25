@@ -155,7 +155,6 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
-        //noinspection unchecked
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
@@ -190,8 +189,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        //noinspection unchecked
-        languageComboBox = addLabelComboBox(gridPane, ++gridRow).second;
+        languageComboBox = FormBuilder.<String>addLabelComboBox(gridPane, ++gridRow).second;
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {

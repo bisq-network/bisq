@@ -92,10 +92,8 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersDisputesTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
             else if (newValue == arbitratorsDisputesTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         };
 
@@ -104,12 +102,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private void updateArbitratorsDisputesTabDisableState() {
         boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
-                .findAny().isPresent();
+                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
-                .filter(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()))
-                .findAny().isPresent();
+                .anyMatch(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
             arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets"));
@@ -130,16 +126,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         else
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
         //noinspection UnusedAssignment
         String key = "supportInfo";
         if (!DevEnv.isDevMode())
-            //noinspection unchecked
             new Popup<>().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
                     .dontShowAgainId(key)

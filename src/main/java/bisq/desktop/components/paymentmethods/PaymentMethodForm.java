@@ -20,6 +20,7 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -67,7 +68,8 @@ public abstract class PaymentMethodForm {
     protected CheckBox useCustomAccountNameCheckBox;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
-    public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
+                             InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.inputValidator = inputValidator;
@@ -77,8 +79,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        //noinspection unchecked
-        currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getMainFiatCurrencies()));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {

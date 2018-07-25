@@ -118,7 +118,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addLabelListView;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
@@ -326,7 +329,6 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         tuple.first.setTextAlignment(TextAlignment.RIGHT);
-        //noinspection unchecked
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
@@ -372,8 +374,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        //noinspection unchecked
-        paymentMethodComboBox = addLabelComboBox(root, gridRow, Res.getWithCol("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        paymentMethodComboBox = FormBuilder.<PaymentMethod>addLabelComboBox(root, gridRow, Res.getWithCol("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
@@ -474,11 +475,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new NationalBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SameBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WECHAT_PAY_ID:

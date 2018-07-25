@@ -215,7 +215,6 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
-        //noinspection unchecked
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
