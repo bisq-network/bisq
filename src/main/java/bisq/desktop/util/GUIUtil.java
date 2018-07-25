@@ -24,6 +24,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.Country;
+import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -45,6 +47,8 @@ import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
@@ -70,6 +74,8 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -81,6 +87,8 @@ import javafx.scene.layout.Region;
 import javafx.geometry.Orientation;
 
 import javafx.beans.property.DoubleProperty;
+
+import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
@@ -102,6 +110,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -396,7 +405,6 @@ public class GUIUtil {
 
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
-
         while (parent != null) {
             if (parent.getClass().isAssignableFrom(t)) {
                 break;
@@ -404,7 +412,6 @@ public class GUIUtil {
                 parent = parent.getParent();
             }
         }
-
         //noinspection unchecked
         return parent != null ? (T) parent : null;
     }
@@ -578,5 +585,87 @@ public class GUIUtil {
         int height = Math.max(minHeight, size * rowHeight + headerHeight);
         tableView.setMaxHeight(height);
         tableView.setMinHeight(height);
+    }
+
+    public static Tuple2<ComboBox<TradeCurrency>, Integer> addRegionCountryTradeCurrencyComboBoxes(GridPane gridPane,
+                                                                                                   int gridRow,
+                                                                                                   Consumer<Country> onCountrySelectedHandler,
+                                                                                                   Consumer<TradeCurrency> onTradeCurrencySelectedHandler) {
+        gridRow = addRegionCountry(gridPane, gridRow, onCountrySelectedHandler);
+
+        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(gridPane, ++gridRow,
+                Res.getWithCol("shared.currency")).second;
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
+
+        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency currency) {
+                return currency.getNameAndCode();
+            }
+
+            @Override
+            public TradeCurrency fromString(String string) {
+                return null;
+            }
+        });
+        currencyComboBox.setDisable(true);
+
+        currencyComboBox.setOnAction(e -> {
+            onTradeCurrencySelectedHandler.accept(currencyComboBox.getSelectionModel().getSelectedItem());
+        });
+
+        return new Tuple2<>(currencyComboBox, gridRow);
+    }
+
+    public static int addRegionCountry(GridPane gridPane,
+                                       int gridRow,
+                                       Consumer<Country> onCountrySelectedHandler) {
+        Tuple3<Label, ComboBox<bisq.core.locale.Region>, ComboBox<Country>> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
+
+        ComboBox<bisq.core.locale.Region> regionComboBox = tuple3.second;
+        regionComboBox.setPromptText(Res.get("payment.select.region"));
+        regionComboBox.setConverter(new StringConverter<bisq.core.locale.Region>() {
+            @Override
+            public String toString(bisq.core.locale.Region region) {
+                return region.name;
+            }
+
+            @Override
+            public bisq.core.locale.Region fromString(String s) {
+                return null;
+            }
+        });
+        regionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
+
+        ComboBox<Country> countryComboBox = tuple3.third;
+        countryComboBox.setVisibleRowCount(15);
+        countryComboBox.setDisable(true);
+        countryComboBox.setPromptText(Res.get("payment.select.country"));
+        countryComboBox.setConverter(new StringConverter<Country>() {
+            @Override
+            public String toString(Country country) {
+                return country.name + " (" + country.code + ")";
+            }
+
+            @Override
+            public Country fromString(String s) {
+                return null;
+            }
+        });
+
+        regionComboBox.setOnAction(e -> {
+            bisq.core.locale.Region selectedItem = regionComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                countryComboBox.setDisable(false);
+                countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesForRegion(selectedItem)));
+            }
+        });
+
+        countryComboBox.setOnAction(e -> {
+            onCountrySelectedHandler.accept(countryComboBox.getSelectionModel().getSelectedItem());
+        });
+
+        return gridRow;
     }
 }

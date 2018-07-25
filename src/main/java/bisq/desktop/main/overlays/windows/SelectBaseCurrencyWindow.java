@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
@@ -44,7 +45,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
 public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> {
@@ -90,15 +90,15 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.msg", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.select"));
-        //noinspection unchecked
+        Tuple2<Label, ComboBox<BaseCurrencyNetwork>> tuple = FormBuilder.addLabelComboBox(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.select"));
+
         comboBox = tuple.second;
         comboBox.setPromptText(Res.get("shared.select"));
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
         // show ony mainnet in production version
         if (!DevEnv.isDevMode())
             baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> e.isMainnet())
+                    .filter(BaseCurrencyNetwork::isMainnet)
                     .collect(Collectors.toList());
         comboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
 

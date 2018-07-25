@@ -77,7 +77,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                 else
                     loadView(viewPath.tip());
@@ -97,16 +96,12 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             if (newValue == accountSettingsTab) {
                 Class<? extends View> selectedViewClass = accountSettingsView.getSelectedViewClass();
                 if (selectedViewClass == null)
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                 else
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);
             } else if (arbitratorRegistrationTab != null) {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
             } else {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
             }
         };
@@ -123,13 +118,10 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
             if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
             else if (arbitratorRegistrationTab != null)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
             else
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
         }
 

@@ -341,7 +341,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
-            //noinspection unchecked
             new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -386,7 +385,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                             .onAction(() -> {
                                 navigation.setReturnPath(navigation.getCurrentPath());
-                                //noinspection unchecked
                                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                                         ArbitratorSelectionView.class);
                             }).show();
@@ -549,7 +547,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
                             close();
-                            //noinspection unchecked
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .onClose(() -> {
@@ -608,7 +605,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                 .actionButtonTextWithGoTo("navigation.portfolio.pending")
                                 .dontShowAgainId(key)
                                 .onAction(() -> {
-                                    //noinspection unchecked
                                     UserThread.runAfter(
                                             () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
                                             , 100, TimeUnit.MILLISECONDS);
@@ -701,11 +697,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 2, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox<PaymentAccount>> tuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
-        //noinspection unchecked
         paymentAccountsComboBox = tuple.second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
@@ -1023,7 +1018,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
-            //noinspection unchecked
             new Popup<>().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))

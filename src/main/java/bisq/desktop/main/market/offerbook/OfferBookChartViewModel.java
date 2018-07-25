@@ -187,7 +187,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             final String code = tradeCurrency.getCode();
 
             if (isEditEntry(code)) {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             } else {
                 selectedTradeCurrencyProperty.set(tradeCurrency);

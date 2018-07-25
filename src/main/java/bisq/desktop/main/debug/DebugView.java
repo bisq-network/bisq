@@ -214,19 +214,19 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 ));
     }
 
-    private void addGroup(String title, ObservableList<Class> list) {
-        ComboBox<Class> comboBox = FormBuilder.addLabelComboBox(root, ++rowIndex, title).second;
+    private void addGroup(String title, ObservableList<Class<? extends Task>> list) {
+        ComboBox<Class<? extends Task>> comboBox = FormBuilder.<Class<? extends Task>>addLabelComboBox(root, ++rowIndex, title).second;
         comboBox.setVisibleRowCount(list.size());
         comboBox.setItems(list);
         comboBox.setPromptText("Select task to intercept");
-        comboBox.setConverter(new StringConverter<Class>() {
+        comboBox.setConverter(new StringConverter<Class<? extends Task>>() {
             @Override
-            public String toString(Class item) {
+            public String toString(Class<? extends Task> item) {
                 return item.getSimpleName();
             }
 
             @Override
-            public Class fromString(String s) {
+            public Class<? extends Task> fromString(String s) {
                 return null;
             }
         });
