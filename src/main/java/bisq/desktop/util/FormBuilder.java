@@ -1200,14 +1200,14 @@ public class FormBuilder {
     // Label  + List
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title) {
+    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title) {
         return addLabelListView(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
-        ListView listView = new ListView();
+        ListView<T> listView = new ListView<>();
         GridPane.setRowIndex(listView, rowIndex);
         GridPane.setColumnIndex(listView, 1);
         GridPane.setMargin(listView, new Insets(top, 0, 0, 0));

@@ -66,7 +66,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import static bisq.desktop.util.FormBuilder.addCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelListView;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -157,7 +156,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     private void addLanguageGroup() {
         addTitledGroupBg(root, gridRow, 1, Res.get("account.arbitratorSelection.whichLanguages"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);

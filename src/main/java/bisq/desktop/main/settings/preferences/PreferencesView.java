@@ -320,7 +320,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> fiatTuple = addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
+        Tuple2<Label, ListView<FiatCurrency>> fiatTuple = FormBuilder.addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
         GridPane.setValignment(fiatTuple.first, VPos.TOP);
         fiatCurrenciesListView = fiatTuple.second;
         fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
@@ -367,7 +367,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
+        Tuple2<Label, ListView<CryptoCurrency>> cryptoCurrenciesTuple = FormBuilder.addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
         GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;

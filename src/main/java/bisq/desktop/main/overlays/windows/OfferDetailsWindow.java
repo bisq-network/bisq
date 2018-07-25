@@ -226,18 +226,19 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
         final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
         final PaymentAccount myPaymentAccount = user.getPaymentAccount(makerPaymentAccountId);
+        String countryCode = offer.getCountryCode();
         if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && myPaymentAccount != null) {
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
             String methodWithBankId = method + bankId;
             String paymentMethodLabel = Res.get("shared.paymentMethod");
-            if (isNationalBanks || isSpecificBanks || isSepa) {
-                if (BankUtil.isBankIdRequired(offer.getCountryCode()))
+            if (countryCode != null && (isNationalBanks || isSpecificBanks || isSepa)) {
+                if (BankUtil.isBankIdRequired(countryCode))
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
                             methodWithBankId);
-                else if (BankUtil.isBankNameRequired(offer.getCountryCode()))
+                else if (BankUtil.isBankNameRequired(countryCode))
                     addLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offerersBankName"),
                             methodWithBankId);
@@ -293,7 +294,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
 
         rows = 4;
-        String paymentMethodCountryCode = offer.getCountryCode();
+        String paymentMethodCountryCode = countryCode;
         if (paymentMethodCountryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxId() != null)

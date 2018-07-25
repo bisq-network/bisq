@@ -120,7 +120,6 @@ import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelListView;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -326,7 +325,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView<PaymentAccount>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         tuple.first.setTextAlignment(TextAlignment.RIGHT);
         paymentAccountsListView = tuple.second;

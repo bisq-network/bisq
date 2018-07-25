@@ -64,7 +64,10 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
@@ -153,7 +156,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
+        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
