@@ -84,23 +84,28 @@ bg color of non edit textFields: fafafa
     -bs-blue-transparent: #0f87c344;
     -bs-blue: blue; /* 1 usages */
 
-    -bs-green: #25B135; /* 6 usages */
-    -bs-dark-green: #3DA34B;
-    -bs-new-grey: #D8D8D8;
-    -bs-new-grey-background: #F2F2F2;
-    -bs-new-grey-background-darker: #D0D0D0;
-    -bs-new-grey-darker: #E1E1E1;
-    -bs-font-dark: #4B4B4B;
-    -bs-font-light: #8D8D8D;
-    -bs-red: #D73030; /* 5 usages */
-    -fx-box-border: -bs-new-grey;
+    /* Redesign colors */
+    -bs-rd-green: #25B135; /* 6 usages */
+    -bs-rd-green-dark: #3DA34B;
+    -bs-rd-grey: #373737;
+    /* replace with derive later */
+    -bs-rd-grey-light: #D8D8D8;
+    -bs-rd-grey-background: #F2F2F2;
+    -bs-rd-grey-background-darker: #D0D0D0;
+    -bs-rd-grey-background-darkest: #444444;
+    -bs-rd-grey-darker: #E1E1E1;
+    -bs-rd-font-light: #8D8D8D;
+    -bs-rd-font-dark: #4B4B4B;
 
-    -bs-green-soft: derive(-bs-green, 60%); /* 2 usages */
+    -bs-red: #D73030; /* 5 usages */
+    -fx-box-border: -bs-rd-grey-light;
+
+    -bs-green-soft: derive(-bs-rd-green, 60%); /* 2 usages */
     -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
 
     -bs-warning: -bs-orange; /* 1 usages */
 
-    -bs-buy: -bs-dark-green; /* 12 usages */
+    -bs-buy: -bs-rd-green-dark; /* 12 usages */
     -bs-buy-focus: derive(-bs-buy, -50%); /* 2 usages */
     -bs-buy-hover: derive(-bs-buy, -10%); /* 2 usages */
     -bs-buy-transparent: derive(-bs-buy, 75%); /* 1 usages */
@@ -138,7 +143,7 @@ bg color of non edit textFields: fafafa
 }
 
 .success-text {
-    -fx-text-fill: -bs-green;
+    -fx-text-fill: -bs-rd-green;
 }
 
 .highlight, .highlight-static {
@@ -152,8 +157,8 @@ bg color of non edit textFields: fafafa
 }
 
 .info {
-    -fx-text-fill: -bs-green;
-    -fx-fill: -bs-green;
+    -fx-text-fill: -bs-rd-green;
+    -fx-fill: -bs-rd-green;
 }
 
 .info:hover {
@@ -199,7 +204,7 @@ bg color of non edit textFields: fafafa
 
 .jfx-progress-bar > .bar,
 .jfx-progress-bar:indeterminate > .bar{
-    -fx-background-color: -bs-green;
+    -fx-background-color: -bs-rd-green;
 }
 
 .jfx-spinner {
@@ -208,16 +213,16 @@ bg color of non edit textFields: fafafa
 
 .jfx-spinner:indeterminate .arc,
 .jfx-spinner:determinate .arc{
-    -fx-stroke: -bs-green;
+    -fx-stroke: -bs-rd-green;
 }
 
 .jfx-button {
-    -fx-background-color: -bs-new-grey;
+    -fx-background-color: -bs-rd-grey-light;
     -fx-background-radius: 0px;
 }
 
 .jfx-checkbox {
-    -jfx-checked-color: -bs-green;
+    -jfx-checked-color: -bs-rd-green;
     -fx-font-size: 0.692em;
 }
 
@@ -282,7 +287,7 @@ bg color of non edit textFields: fafafa
 #footer-pane {
     -fx-background-color: -bs-bg-grey;
     -fx-font-size: 0.923em;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
 #footer-pane-line {
@@ -295,6 +300,11 @@ bg color of non edit textFields: fafafa
 }
 
 /* Main navigation */
+
+.top-navigation {
+    -fx-background-color: -bs-rd-grey-background-darkest;
+}
+
 #nav-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
@@ -302,12 +312,11 @@ bg color of non edit textFields: fafafa
 
 #nav-button .text {
     -fx-font-size: 0.769em;
+    -fx-fill: -bs-white;
 }
 
-#nav-button:selected .text {
-    -fx-font-size: 0.846em;
-    -fx-font-weight: bold;
-    -fx-fill: -fx-accent;
+#nav-button:selected {
+    -fx-background-image:  url("../../images/nav/nav-selected.png");
 }
 
 #nav-balance-label {
@@ -473,7 +482,7 @@ textfield */
 }
 
 .table-view .column-header {
-    -fx-background-color: -bs-new-grey;
+    -fx-background-color: -bs-rd-grey-light;
 }
 
 .table-view .focus {
@@ -615,7 +624,7 @@ textfield */
  ******************************************************************************/
 
 .tab-pane {
-    -fx-border-color: -bs-new-grey;
+    -fx-border-color: -bs-rd-grey-light;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab {
@@ -625,19 +634,19 @@ textfield */
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:top {
-    -fx-background-color: -bs-new-grey-darker;
+    -fx-background-color: -bs-rd-grey-darker;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:right {
-    -fx-background-color: -bs-new-grey-darker;
+    -fx-background-color: -bs-rd-grey-darker;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:bottom {
-    -fx-background-color: -bs-new-grey-darker;
+    -fx-background-color: -bs-rd-grey-darker;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:left {
-    -fx-background-color: -bs-new-grey-darker;
+    -fx-background-color: -bs-rd-grey-darker;
 }
 
 .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
@@ -648,7 +657,7 @@ textfield */
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:selected {
-    -fx-background-color: -bs-new-grey-background;
+    -fx-background-color: -bs-rd-grey-background;
     -fx-background-insets: 0 1 0 1;
 }
 
@@ -658,15 +667,15 @@ textfield */
 
 .tab-pane > .tab-header-area > .tab-header-background {
     /* TODO should not be using text-box-border I think? */
-    -fx-background-color: -bs-new-grey-background-darker;
+    -fx-background-color: -bs-rd-grey-background-darker;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
-    -fx-text-fill: -bs-font-light;
+    -fx-text-fill: -bs-rd-font-light;
 }
 
 .tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
 .tab-pane:focused {
@@ -1061,7 +1070,7 @@ textfield */
 
 /* bubble */
 #message-bubble-green {
-    -fx-background-color: -bs-green;
+    -fx-background-color: -bs-rd-green;
     -fx-background-radius: 10 10 10 10;
 }
 
@@ -1210,12 +1219,12 @@ textfield */
 
 #popup-headline {
     -fx-font-size: 1.231em;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
 #popup-bg {
     -fx-font-size: 1.077em;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
     -fx-background-color: -bs-white;
     -fx-background-radius: 10 10 10 10;
     -fx-background-insets: 10;
@@ -1224,7 +1233,7 @@ textfield */
 
 #popup-bg-top {
     -fx-font-size: 1.077em;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
     -fx-background-color: -bs-white;
     -fx-background-radius: 0 0 10 10;
     -fx-background-insets: 10;
@@ -1243,7 +1252,7 @@ textfield */
 #notification-popup-headline {
     -fx-font-size: 1em;
     -fx-font-weight: bold;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
 #notification-popup-bg {
@@ -1267,7 +1276,7 @@ textfield */
 #peer-info-popup-headline {
     -fx-font-size: 1em;
     -fx-font-weight: bold;
-    -fx-text-fill: -bs-font-dark;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
 .popup-icon-information {

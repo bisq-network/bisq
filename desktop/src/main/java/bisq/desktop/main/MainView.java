@@ -26,7 +26,6 @@ import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipToggleButton;
-import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.disputes.DisputesView;
@@ -67,6 +66,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -75,6 +75,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -218,11 +220,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setLeftAnchor(this, 10d);
-            setTopAnchor(this, 0d);
-        }};
-
 
         Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
@@ -250,18 +247,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
 
-        HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox navPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton,
+                disputesButtonHolder, spacer, marketPriceBox.second, availableBalanceBox.second,
                 reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton, daoButton) {{
-            setRightAnchor(this, 10d);
+            setLeftAnchor(this, 0d);
+            setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
+            setPadding(new Insets(0,11,0, 11));
+            getStyleClass().add("top-navigation");
         }};
 
         root.widthProperty().addListener((observable, oldValue, newValue) -> {
             double w = (double) newValue;
             if (w > 0) {
-                leftNavPane.setSpacing(w >= 1080 ? 12 : 6);
-                rightNavPane.setSpacing(w >= 1080 ? 12 : 6);
+                //leftNavPane.setSpacing(w >= 1080 ? 12 : 6);
+                navPane.setSpacing(w >= 1080 ? 12 : 6);
             }
         });
 
@@ -270,11 +274,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 60d);
-            setBottomAnchor(this, 10d);
+            setBottomAnchor(this, 0d);
         }};
 
-        AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
-            setId("content-pane");
+        AnchorPane applicationContainer = new AnchorPane(navPane, contentContainer) {{
+            setId("application-container");
         }};
 
         BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
@@ -727,6 +731,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         NavButton(Class<? extends View> viewClass, String title) {
             super(title, new ImageView() {{
                 setId("image-nav-" + viewId(viewClass));
+                //TODO: remove a soon we have the final icons
+                ColorAdjust makeWhite = new ColorAdjust();
+                makeWhite.setBrightness(1);
+                setEffect(makeWhite);
+                setFitHeight(28);
+                setFitWidth(28);
             }});
 
             this.viewClass = viewClass;
@@ -734,15 +744,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             this.setToggleGroup(navButtons);
             this.setId("nav-button");
             this.setPadding(new Insets(0, -10, -10, -10));
-            this.setMinSize(50, 50);
-            this.setMaxSize(50, 50);
+            this.setMinSize(50, 60);
+            this.setMaxSize(50, 60);
             this.setContentDisplay(ContentDisplay.TOP);
             this.setGraphicTextGap(0);
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> {
                 this.setMouseTransparent(newValue);
-                this.setMinSize(50, 50);
-                this.setMaxSize(50, 50);
+                this.setMinSize(50, 60);
+                this.setMaxSize(50, 60);
                 this.setGraphicTextGap(newValue ? -1 : 0);
                 if (newValue) {
                     this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
