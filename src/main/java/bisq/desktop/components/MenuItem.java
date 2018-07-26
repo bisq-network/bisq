@@ -94,7 +94,6 @@ public class MenuItem extends AutoTooltipToggleButton {
     }
 
     public void activate() {
-        //noinspection unchecked
         setOnAction((event) -> navigation.navigateTo(getNavPathClasses()));
         selectedProperty().addListener(selectedPropertyChangeListener);
         disableProperty().addListener(disablePropertyChangeListener);
@@ -105,6 +104,7 @@ public class MenuItem extends AutoTooltipToggleButton {
     private Class<? extends View>[] getNavPathClasses() {
         List<Class<? extends View>> list = new ArrayList<>(baseNavPath);
         list.add(viewClass);
+        //noinspection unchecked
         Class<? extends View>[] array = new Class[list.size()];
         list.toArray(array);
         return array;

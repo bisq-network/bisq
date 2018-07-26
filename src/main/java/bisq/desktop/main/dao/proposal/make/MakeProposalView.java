@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.proposal.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -72,7 +73,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -131,7 +131,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         addTitledGroupBg(root, 0, 1, Res.get("dao.proposal.create.selectProposalType"));
-        proposalTypeComboBox = addLabelComboBox(root, 0,
+        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, 0,
                 Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_DISTANCE).second;
         proposalTypeComboBox.setConverter(new StringConverter<ProposalType>() {
             @Override

@@ -165,7 +165,6 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
                     cleanup();
                     onHidden();
 
-                    //noinspection unchecked
                     new Popup().warning(missingBsq)
                             .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                             .onAction(() -> {

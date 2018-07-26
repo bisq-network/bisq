@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -78,11 +79,11 @@ public final class Navigation implements PersistedDataHost {
                             //noinspection unchecked
                             return ((Class<? extends View>) Class.forName(className));
                         } catch (ClassNotFoundException e) {
-                            log.warn("Could not find the Viewpath class {}; exception: {}", className, e);
+                            log.warn("Could not find the viewPath class {}; exception: {}", className, e);
                         }
                         return null;
                     })
-                    .filter(e -> e != null)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
             if (!viewClasses.isEmpty())
@@ -90,8 +91,8 @@ public final class Navigation implements PersistedDataHost {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void navigateTo(Class<? extends View>... viewClasses) {
+    @SafeVarargs
+    public final void navigateTo(Class<? extends View>... viewClasses) {
         navigateTo(ViewPath.to(viewClasses));
     }
 
@@ -123,7 +124,7 @@ public final class Navigation implements PersistedDataHost {
         currentPath = newPath;
         previousPath = currentPath;
         queueUpForSave();
-        listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
+        listeners.forEach((e) -> e.onNavigationRequested(currentPath));
     }
 
     private void queueUpForSave() {

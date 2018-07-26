@@ -253,7 +253,6 @@ class OfferBookViewModel extends ActivatableViewModel {
             boolean showAllEntry = isShowAllEntry(code);
             showAllTradeCurrenciesProperty.set(showAllEntry);
             if (isEditEntry(code))
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (!showAllEntry) {
                 this.selectedTradeCurrency = tradeCurrency;

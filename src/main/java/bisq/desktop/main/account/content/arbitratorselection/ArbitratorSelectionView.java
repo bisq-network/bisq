@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
@@ -65,8 +66,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import static bisq.desktop.util.FormBuilder.addCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
-import static bisq.desktop.util.FormBuilder.addLabelListView;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -157,9 +156,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     private void addLanguageGroup() {
         addTitledGroupBg(root, gridRow, 1, Res.get("account.arbitratorSelection.whichLanguages"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
-        //noinspection unchecked
         languagesListView = tuple.second;
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
         languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
@@ -193,8 +191,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             }
         });
 
-        //noinspection unchecked
-        languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
+        languageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow, "", 15).second;
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
@@ -334,8 +331,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
                                     setGraphic(null);
 
-                                    if (checkBox != null)
-                                        checkBox.setOnAction(null);
+                                    checkBox.setOnAction(null);
                                     if (tableRow != null)
                                         tableRow.setOnMouseClicked(null);
                                 }

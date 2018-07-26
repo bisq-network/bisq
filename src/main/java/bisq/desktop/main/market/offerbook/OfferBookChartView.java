@@ -86,15 +86,10 @@ import javafx.util.StringConverter;
 import java.util.Collections;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
-
     private final boolean useDevPrivilegeKeys;
 
     private NumberAxis xAxis;
@@ -275,12 +270,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         sellOfferTableView.setItems(model.getTopSellOfferList());
         buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, SellOfferView.class);
         };
         sellTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, BuyOfferView.class);
         };
         buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
@@ -543,20 +536,18 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         button.setOnAction(e -> {
             if (isSellOffer) {
                 model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, BuyOfferView.class);
             } else {
                 model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SellOfferView.class);
             }
         });
 
         VBox vBox = new VBox();
+        VBox.setVgrow(tableView, Priority.ALWAYS);
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
-        vBox.setVgrow(tableView, Priority.ALWAYS);
         vBox.getChildren().addAll(titleLabel, tableView, button);
 
         button.prefWidthProperty().bind(vBox.widthProperty());

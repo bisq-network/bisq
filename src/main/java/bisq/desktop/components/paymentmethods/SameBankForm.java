@@ -36,7 +36,7 @@ public class SameBankForm extends BankForm {
     }
 
     public SameBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
-                        GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter, closeHandler);
+                        GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
     }
 }

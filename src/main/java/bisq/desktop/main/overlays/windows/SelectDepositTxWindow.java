@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
@@ -44,7 +45,6 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelComboBox;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
 public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
@@ -96,8 +96,8 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
-        //noinspection unchecked
+        Tuple2<Label, ComboBox<Transaction>> tuple = FormBuilder.addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
+
         transactionsComboBox = tuple.second;
         transactionsComboBox.setPromptText(Res.get("shared.select"));
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {

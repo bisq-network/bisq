@@ -45,6 +45,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
@@ -277,7 +278,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
-                        //noinspection unchecked
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     }).show();
         }
@@ -310,7 +310,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             model.getDataModel().swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
             if (preferences.showAgain(key)) {
-                //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -349,7 +348,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                             .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                             .onAction(() -> {
                                 navigation.setReturnPath(navigation.getCurrentPath());
-                                //noinspection unchecked
                                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
                             }).show();
                 }
@@ -372,7 +370,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
-            //noinspection unchecked
             new Popup<>().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
@@ -691,7 +688,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
-                                        //noinspection unchecked
                                         UserThread.runAfter(() ->
                                                         navigation.navigateTo(MainView.class, PortfolioView.class,
                                                                 OpenOffersView.class),
@@ -867,8 +863,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 3);
 
-        //noinspection unchecked
-        final Tuple2<Label, ComboBox> paymentAccountLabelComboBoxTuple = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
+        final Tuple2<Label, ComboBox<PaymentAccount>> paymentAccountLabelComboBoxTuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = paymentAccountLabelComboBoxTuple.first;
         paymentAccountsComboBox = paymentAccountLabelComboBoxTuple.second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
@@ -876,10 +871,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         editOfferElements.add(paymentAccountsComboBox);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
-        Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
+        Tuple2<Label, ComboBox<TradeCurrency>> currencyComboBoxTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
         currencyComboBoxLabel = currencyComboBoxTuple.first;
         editOfferElements.add(currencyComboBoxLabel);
-        //noinspection unchecked
         currencyComboBox = currencyComboBoxTuple.second;
         editOfferElements.add(currencyComboBox);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));

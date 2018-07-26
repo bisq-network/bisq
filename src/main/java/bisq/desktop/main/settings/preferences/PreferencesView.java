@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
@@ -181,7 +182,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
-        //noinspection unchecked
        /* selectBaseCurrencyNetworkComboBox = addLabelComboBox(root, gridRow,
                 Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
 
@@ -198,22 +198,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });*/
 
-        // userLanguage
-        //noinspection unchecked
-        userLanguageComboBox = addLabelComboBox(root, gridRow,
+        userLanguageComboBox = FormBuilder.<String>addLabelComboBox(root, gridRow,
                 Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
-
-        // userCountry
-        //noinspection unchecked
-        userCountryComboBox = addLabelComboBox(root, ++gridRow,
+        userCountryComboBox = FormBuilder.<Country>addLabelComboBox(root, ++gridRow,
                 Res.getWithCol("shared.country")).second;
-
-        // blockChainExplorer
-        //noinspection unchecked
-        blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow,
+        blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addLabelComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer")).second;
 
-        // transactionFee
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
@@ -313,8 +304,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
 
-        //noinspection unchecked
-        preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
+
+        preferredTradeCurrencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
@@ -329,9 +320,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> fiatTuple = addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
+        Tuple2<Label, ListView<FiatCurrency>> fiatTuple = FormBuilder.addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
         GridPane.setValignment(fiatTuple.first, VPos.TOP);
-        //noinspection unchecked
         fiatCurrenciesListView = fiatTuple.second;
         fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
@@ -377,10 +367,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
+        Tuple2<Label, ListView<CryptoCurrency>> cryptoCurrenciesTuple = FormBuilder.addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
         GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
-        //noinspection unchecked
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
         GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
@@ -428,8 +417,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        //noinspection unchecked
-        fiatCurrenciesComboBox = addLabelComboBox(root, ++gridRow).second;
+        fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
         fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
             @Override
@@ -443,8 +431,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
-        Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
-        //noinspection unchecked
+        Tuple2<Label, ComboBox<CryptoCurrency>> labelComboBoxTuple2 = FormBuilder.addLabelComboBox(root, gridRow);
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));

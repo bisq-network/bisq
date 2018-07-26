@@ -643,7 +643,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             updateButtonDisableState();
             return true;
         } else {
-            //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
@@ -825,7 +824,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void displayPriceOutOfRangePopup() {
         Popup popup = new Popup<>();
-        //noinspection unchecked
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 btcFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))
