@@ -153,7 +153,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         Label currencyLabel = new AutoTooltipLabel(Res.get("shared.currency"));
         currencyLabel.getStyleClass().add("small-text");
         VBox currencyHBox = new VBox();
-        currencyHBox.setSpacing(0);
+        currencyHBox.setSpacing(-5);
         currencyHBox.setPadding(new Insets(5, -20, -5, 20));
         currencyHBox.setAlignment(Pos.CENTER_LEFT);
         currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
