@@ -28,7 +28,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.bonding.BondingView;
 import bisq.desktop.main.dao.proposal.ProposalView;
 import bisq.desktop.main.dao.results.ResultsView;
-import bisq.desktop.main.dao.voting.VotingView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 
@@ -55,8 +54,6 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
     private Tab proposalsTab;
     @FXML
-    private Tab votingTab;
-    @FXML
     private Tab resultsTab;
     @FXML
     private Tab bondingTab;
@@ -80,20 +77,17 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     public void initialize() {
         bsqWalletTab = new Tab(Res.get("dao.tab.bsqWallet"));
         proposalsTab = new Tab(Res.get("dao.tab.proposals"));
-        votingTab = new Tab(Res.get("dao.tab.voting"));
         resultsTab = new Tab(Res.get("dao.tab.results"));
         bondingTab = new Tab(Res.get("dao.tab.bonding"));
 
         bsqWalletTab.setClosable(false);
         proposalsTab.setClosable(false);
-        votingTab.setClosable(false);
         resultsTab.setClosable(false);
         bondingTab.setClosable(false);
 
-        root.getTabs().addAll(bsqWalletTab, proposalsTab, votingTab, resultsTab, bondingTab);
+        root.getTabs().addAll(bsqWalletTab, proposalsTab, resultsTab, bondingTab);
 
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq() || !DevEnv.isDaoPhase2Activated()) {
-            votingTab.setDisable(true);
             bondingTab.setDisable(true);
             resultsTab.setDisable(true);
             proposalsTab.setDisable(true);
@@ -102,7 +96,6 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (proposalsTab == null && viewPath.get(2).equals(BsqWalletView.class))
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
                 else
                     loadView(viewPath.tip());
@@ -113,22 +106,14 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             if (newValue == bsqWalletTab) {
                 Class<? extends View> selectedViewClass = bsqWalletView.getSelectedViewClass();
                 if (selectedViewClass == null)
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
-                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
             } else if (newValue == proposalsTab) {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, ProposalView.class);
-            } else if (newValue == votingTab) {
-                //noinspection unchecked
-                navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             } else if (newValue == resultsTab) {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, ResultsView.class);
             } else if (newValue == bondingTab) {
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
             }
         };
@@ -142,19 +127,12 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == bsqWalletTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == proposalsTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, ProposalView.class);
-            else if (selectedItem == votingTab)
-                //noinspection unchecked
-                navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             else if (selectedItem == resultsTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, ResultsView.class);
             else if (selectedItem == bondingTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
         }
     }
@@ -172,8 +150,6 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             bsqWalletView = (BsqWalletView) view;
         } else if (view instanceof ProposalView) {
             selectedTab = proposalsTab;
-        } else if (view instanceof VotingView) {
-            selectedTab = votingTab;
         } else if (view instanceof ResultsView) {
             selectedTab = resultsTab;
         } else if (view instanceof BondingView) {

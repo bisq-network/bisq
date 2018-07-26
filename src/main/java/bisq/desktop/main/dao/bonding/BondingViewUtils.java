@@ -141,7 +141,6 @@ public class BondingViewUtils {
         if (throwable instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-            //noinspection unchecked
             new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))

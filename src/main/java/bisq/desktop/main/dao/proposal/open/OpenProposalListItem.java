@@ -27,6 +27,9 @@ import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.voting.ballot.Ballot;
+import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -39,6 +42,7 @@ import javafx.scene.image.ImageView;
 
 import javafx.beans.value.ChangeListener;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -46,16 +50,21 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @ToString
 @Slf4j
 @EqualsAndHashCode
 public class OpenProposalListItem implements BsqStateListener {
     @Getter
+    private final Proposal proposal;
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
+
     @Getter
-    private final Proposal proposal;
+    @Nullable
+    private Ballot ballot;
 
     @Getter
     private ImageView imageView;
@@ -81,11 +90,23 @@ public class OpenProposalListItem implements BsqStateListener {
                          DaoFacade daoFacade,
                          BsqWalletService bsqWalletService,
                          BsqFormatter bsqFormatter) {
+        this.proposal = proposal;
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
 
-        this.proposal = proposal;
+        init();
+    }
+
+    OpenProposalListItem(Ballot ballot,
+                         DaoFacade daoFacade,
+                         BsqWalletService bsqWalletService,
+                         BsqFormatter bsqFormatter) {
+        this.ballot = ballot;
+        this.proposal = ballot.getProposal();
+        this.daoFacade = daoFacade;
+        this.bsqWalletService = bsqWalletService;
+        this.bsqFormatter = bsqFormatter;
 
         init();
     }
@@ -143,6 +164,26 @@ public class OpenProposalListItem implements BsqStateListener {
         } else {
             button.setVisible(false);
             button.setManaged(false);
+        }
+
+
+        // ballot
+        if (ballot != null) {
+            final Vote vote = ballot.getVote();
+            if (vote != null) {
+                imageView.setVisible(true);
+                if (vote instanceof BooleanVote) {
+                    if (((BooleanVote) vote).isAccepted()) {
+                        imageView.setId("accepted");
+                    } else {
+                        imageView.setId("rejected");
+                    }
+                }/* else {
+                // not impl.
+            }*/
+            } else {
+                imageView.setVisible(false);
+            }
         }
     }
 
@@ -240,5 +281,13 @@ public class OpenProposalListItem implements BsqStateListener {
         }
 
         txConfidenceIndicator.setPrefSize(24, 24);
+    }
+
+    public Optional<BooleanVote> getBooleanVote() {
+        return Optional.ofNullable(ballot)
+                .map(Ballot::getVote)
+                .filter(Objects::nonNull)
+                .filter(vote -> vote instanceof BooleanVote)
+                .map(v -> (BooleanVote) v);
     }
 }

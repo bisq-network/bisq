@@ -87,8 +87,8 @@ public class ProposalDisplay {
     private final DaoFacade daoFacade;
 
     @Nullable
-    private TextField uidTextField;
-    private TextField proposalFeeTextField, proposalTypeTextField;
+    private TextField uidTextField, proposalFeeTextField;
+    private TextField proposalTypeTextField;
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
     @Nullable
@@ -148,28 +148,31 @@ public class ProposalDisplay {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
-        int rowSpan = 5;
+        int rowSpan = 4;
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
-                rowSpan = 6;
+                rowSpan = 5;
                 break;
             case BONDED_ROLE:
-                rowSpan = 5;
+                rowSpan = 4;
                 break;
             case REMOVE_ALTCOIN:
                 break;
             case CHANGE_PARAM:
-                rowSpan = 6;
+                rowSpan = 5;
                 break;
             case GENERIC:
                 break;
             case CONFISCATE_BOND:
-                rowSpan = 5;
+                rowSpan = 4;
                 break;
         }
-        // for already created proposals we show the uid and tx id so we add 2 rows
-        if (!isMakeProposalScreen)
+        // at isMakeProposalScreen we show fee but no uid and txID (+1)
+        // otherwise we don't show fee but show uid and txID (+2)
+        if (isMakeProposalScreen)
+            rowSpan += 1;
+        else
             rowSpan += 2;
 
         addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
@@ -289,9 +292,10 @@ public class ProposalDisplay {
             txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "").second;
 
-        proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
-        if (isMakeProposalScreen)
+        if (isMakeProposalScreen) {
+            proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
             proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
+        }
 
         addListeners();
     }
@@ -339,7 +343,8 @@ public class ProposalDisplay {
         } else {
             chainHeight = daoFacade.getTx(proposal.getTxId()).map(Tx::getBlockHeight).orElse(0);
         }
-        proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(chainHeight)));
+        if (proposalFeeTextField != null)
+            proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(chainHeight)));
     }
 
     private void addListeners() {
@@ -380,9 +385,8 @@ public class ProposalDisplay {
     }
 
     public void setEditable(boolean isEditable) {
-        inputControls.stream().filter(Objects::nonNull).forEach(e -> e.setEditable(!isEditable));
-        comboBoxes.stream()
-                .filter(Objects::nonNull).forEach(comboBox -> comboBox.setEditable(!isEditable));
+        inputControls.stream().filter(Objects::nonNull).forEach(e -> e.setEditable(isEditable));
+        comboBoxes.stream().filter(Objects::nonNull).forEach(comboBox -> comboBox.setDisable(!isEditable));
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);
@@ -397,6 +401,8 @@ public class ProposalDisplay {
             GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow);
             gridRow = gridRowStartIndex;
         }
+        inputControls.clear();
+        comboBoxes.clear();
     }
 
     public int incrementAndGetGridRow() {
@@ -408,7 +414,7 @@ public class ProposalDisplay {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setMinHeight(280); // just enough to display overview at voting without scroller
+        //scrollPane.setMinHeight(280); // just enough to display overview at voting without scroller
 
         AnchorPane anchorPane = new AnchorPane();
         scrollPane.setContent(anchorPane);
