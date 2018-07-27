@@ -820,7 +820,7 @@ textfield */
 .table-title {
     -fx-font-size: 1.154em;
     -fx-font-weight: normal;
-    -fx-alignment: left;
+    -fx-alignment: center-left;
 }
 
 /* Offer */
