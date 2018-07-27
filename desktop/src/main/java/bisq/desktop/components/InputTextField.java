@@ -20,6 +20,8 @@ package bisq.desktop.components;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
+import com.jfoenix.controls.JFXTextField;
+
 import org.controlsfx.control.PopOver;
 
 import javafx.stage.Window;
@@ -51,7 +53,7 @@ import javafx.beans.property.SimpleObjectProperty;
  */
 //TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also
 // consider replacement with controlsFX components.
-public class InputTextField extends TextField {
+public class InputTextField extends JFXTextField {
 
     private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
 
