@@ -35,7 +35,6 @@ import bisq.desktop.util.validation.PasswordValidator;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -43,6 +42,8 @@ import bisq.common.util.Tuple3;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -82,15 +83,17 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        passwordValidator.setIcon(FormBuilder.getIcon(MaterialDesignIcon.ALERT));
+
         headline = FormBuilder.addTitledGroupBg(root, gridRow, 2, "");
         passwordField = FormBuilder.addLabelPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE).second;
-        passwordField.setValidator(passwordValidator);
+        passwordField.getValidators().add(passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
         Tuple2<Label, PasswordTextField> tuple2 = FormBuilder.addLabelPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
         repeatedPasswordLabel = tuple2.first;
         repeatedPasswordField = tuple2.second;
-        repeatedPasswordField.setValidator(passwordValidator);
+        repeatedPasswordField.getValidators().add(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
         Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
@@ -202,22 +205,20 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     }
 
     private void validatePasswords() {
-        passwordValidator.setExternalValidationResult(null);
-        InputValidator.ValidationResult result = passwordValidator.validate(passwordField.getText());
-        if (result.isValid) {
+        passwordValidator.setPasswordsMatch(true);
+
+        if (passwordField.validate()) {
             if (walletsManager.areWalletsEncrypted()) {
                 pwButton.setDisable(false);
                 return;
             } else {
-                result = passwordValidator.validate(repeatedPasswordField.getText());
-
-                if (result.isValid) {
+                if (repeatedPasswordField.validate()) {
                     if (passwordField.getText().equals(repeatedPasswordField.getText())) {
                         pwButton.setDisable(false);
                         return;
                     } else {
-                        passwordValidator.setExternalValidationResult(new InputValidator.ValidationResult(false,
-                                Res.get("password.passwordsDoNotMatch")));
+                        passwordValidator.setPasswordsMatch(false);
+                        repeatedPasswordField.validate();
                     }
                 }
             }

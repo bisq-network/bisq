@@ -196,8 +196,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         GridPane.setMargin(passwordTextField, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(passwordTextField, rowIndex);
         GridPane.setColumnIndex(passwordTextField, 1);
-        PasswordValidator passwordValidator = new PasswordValidator();
-        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordValidator.validate(newValue).isValid);
+        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordTextField.validate());
         passwordTextField.textProperty().addListener(changeListener);
         gridPane.getChildren().addAll(label, passwordTextField);
     }
