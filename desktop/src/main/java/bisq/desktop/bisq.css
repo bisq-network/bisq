@@ -21,15 +21,15 @@ bg color of non edit textFields: fafafa
 */
 
 @font-face {
-    src: url("/fonts/Verdana.ttf");
+    src: url("/fonts/IBMPlexSans-Regular.ttf");
 }
 
 @font-face {
-    src: url("/fonts/VerdanaBold.ttf");
+    src: url("/fonts/IBMPlexSans-Bold.ttf");
 }
 
 @font-face {
-    src: url("/fonts/DroidSansMono.ttf");
+    src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
 
 .root {
@@ -91,6 +91,7 @@ bg color of non edit textFields: fafafa
     /* replace with derive later */
     -bs-rd-grey-light: #D8D8D8;
     -bs-rd-grey-background: #F2F2F2;
+    -bs-rd-grey-background-dark: #DDDDDD;
     -bs-rd-grey-background-darker: #D0D0D0;
     -bs-rd-grey-background-darkest: #444444;
     -bs-rd-grey-darker: #E1E1E1;
@@ -124,7 +125,7 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar: derive(-fx-accent, 50%);
 
     -fx-font-size: 13;
-    -fx-font-family: "Verdana";
+    -fx-font-family: "IBM Plex Sans";
 }
 
 /********************************************************************************************************************
@@ -239,6 +240,75 @@ bg color of non edit textFields: fafafa
 .jfx-check-box .indeterminate-mark {
     -fx-border-radius: 0;
     -fx-border-width: 1;
+}
+
+.radio-button .radio {
+    -fx-border-width: 1px;
+    -fx-border-color: #000;
+    -fx-border-radius: 15px;
+    -fx-padding: 4px;
+    -fx-background-color: null;
+    -fx-background-image: null;
+}
+
+.radio-button .radio:selected {
+    -fx-border-color: -bs-rd-green;
+}
+
+.scroll-bar{
+    -fx-background-color: -bs-rd-grey-background-dark;
+    -fx-background-radius: 0;
+}
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color:transparent;
+    -fx-background-radius: 0;
+}
+.scroll-bar:vertical .track-background,
+.scroll-bar:horizontal .track-background {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: -bs-black;
+    -fx-background-insets: 2 0 2 0;
+    -fx-background-radius: 0;
+}
+.scroll-bar:vertical .thumb {
+    -fx-background-color: -bs-black;
+    -fx-background-insets: 0 2 0 2;
+    -fx-background-radius: 0;
+}
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-rd-grey-background-darkest;
+}
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-black;
+}
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-background-color:transparent;
+    -fx-padding: 1;
+}
+
+.scroll-bar:horizontal .increment-arrow,
+.scroll-bar:vertical .increment-arrow,
+.scroll-bar:horizontal .decrement-arrow,
+.scroll-bar:vertical .decrement-arrow {
+{
+    -fx-shape: null;
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent, -bs-rd-grey-background-darkest,-bs-rd-grey-background-darkest;
 }
 
 /* Behavior */
@@ -471,6 +541,10 @@ textfield */
     -fx-alignment: center-left;
 }
 
+.table-view .filler {
+    -fx-background-color:-bs-rd-grey-light;
+}
+
 .table-view {
     -fx-control-inner-background-alt: -fx-control-inner-background ;
 }
@@ -568,7 +642,7 @@ textfield */
 
 .number-column.table-cell {
 
-    -fx-font-family: "Droid Sans Mono";
+    -fx-font-family: "IBM Plex Mono";
     -fx-font-size: 1em;
     -fx-padding: 0 0 0 0;
 }
