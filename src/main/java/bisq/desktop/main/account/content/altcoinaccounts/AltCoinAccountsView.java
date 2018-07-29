@@ -151,6 +151,11 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                             .useIUnderstandButton()
                             .show();
                     break;
+                case "CCX":
+                    new Popup<>().information(Res.get("account.altcoin.popup.ccx.msg"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
                 case "ZEC":
                     new Popup<>().information(Res.get("account.altcoin.popup.ZEC.msg", "ZEC"))
                             .useIUnderstandButton()
