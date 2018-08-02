@@ -248,7 +248,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
     @Override
     public void onParseBlockChainComplete() {
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(tableView, 34, 28, 80);
 
         // hack to get layout correct
         if (!tableView.getItems().isEmpty()) {
@@ -280,6 +280,14 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         }
 
         updateButtonStates();
+
+        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+
+        // hack to get layout correct
+        if (!tableView.getItems().isEmpty()) {
+            onSelectProposal(tableView.getItems().get(0));
+            onSelectProposal(null);
+        }
     }
 
     private void updateListItems() {
