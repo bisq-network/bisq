@@ -97,6 +97,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-darker: #E1E1E1;
     -bs-rd-font-light: #8D8D8D;
     -bs-rd-font-dark: #4B4B4B;
+    -bs-rd-grey-line: #979797;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-light;
@@ -240,6 +241,17 @@ bg color of non edit textFields: fafafa
 .jfx-check-box .indeterminate-mark {
     -fx-border-radius: 0;
     -fx-border-width: 1;
+}
+
+.jfx-combo-box {
+    -jfx-focus-color: -bs-rd-green;
+    -jfx-unfocus-color: -bs-rd-grey-line;
+}
+
+.jfx-combo-box > .arrow-button > .arrow {
+    -fx-background-color: null;
+    -fx-border-color: -jfx-unfocus-color;
+    -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
 }
 
 .radio-button .radio {
