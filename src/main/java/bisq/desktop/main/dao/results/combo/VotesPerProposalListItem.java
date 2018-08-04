@@ -65,11 +65,11 @@ public class VotesPerProposalListItem {
         }
         if (isAccepted.isPresent()) {
             if (isAccepted.get())
-                return new Tuple2<>(AwesomeIcon.OK_SIGN, "dao-accepted-icon");
+                return new Tuple2<>(AwesomeIcon.THUMBS_UP, "dao-accepted-icon");
             else
-                return new Tuple2<>(AwesomeIcon.REMOVE_SIGN, "dao-rejected-icon");
+                return new Tuple2<>(AwesomeIcon.THUMBS_DOWN, "dao-rejected-icon");
         } else {
-            return new Tuple2<>(AwesomeIcon.MINUS_SIGN, "dao-ignored-icon");
+            return new Tuple2<>(AwesomeIcon.MINUS, "dao-ignored-icon");
         }
     }
 }

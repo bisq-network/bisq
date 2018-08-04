@@ -32,6 +32,8 @@ import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
 import bisq.desktop.main.dao.proposal.make.MakeProposalView;
 import bisq.desktop.main.dao.proposal.open.OpenProposalsView;
 
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -44,6 +46,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 
+import javafx.beans.value.ChangeListener;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,9 +56,10 @@ public class ProposalView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private final DaoFacade daoFacade;
 
     private MenuItem dashboard, make, open, closed;
-    private Navigation.Listener listener;
+    private Navigation.Listener navigationListener;
 
     @FXML
     private VBox leftVBox;
@@ -62,21 +67,30 @@ public class ProposalView extends ActivatableViewAndModel {
     private AnchorPane content;
 
     private Class<? extends View> selectedViewClass;
+    private ChangeListener<DaoPhase.Phase> phaseChangeListener;
 
     @Inject
-    private ProposalView(CachingViewLoader viewLoader, Navigation navigation) {
+    private ProposalView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.daoFacade = daoFacade;
     }
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
+        navigationListener = viewPath -> {
             if (viewPath.size() != 4 || viewPath.indexOf(ProposalView.class) != 2)
                 return;
 
             selectedViewClass = viewPath.tip();
             loadView(selectedViewClass);
+        };
+
+        phaseChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue == DaoPhase.Phase.BLIND_VOTE)
+                open.setLabelText(Res.get("dao.proposal.menuItem.vote"));
+            else
+                open.setLabelText(Res.get("dao.proposal.menuItem.browse"));
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
@@ -85,7 +99,7 @@ public class ProposalView extends ActivatableViewAndModel {
                 ProposalDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
                 MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
-        open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.open"),
+        open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.browse"),
                 OpenProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
         closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"),
                 ClosedProposalsView.class, AwesomeIcon.LIST_ALT, baseNavPath);
@@ -94,12 +108,14 @@ public class ProposalView extends ActivatableViewAndModel {
 
     @Override
     protected void activate() {
+        daoFacade.phaseProperty().addListener(phaseChangeListener);
+
         dashboard.activate();
         make.activate();
         open.activate();
         closed.activate();
 
-        navigation.addListener(listener);
+        navigation.addListener(navigationListener);
         ViewPath viewPath = navigation.getCurrentPath();
         if (viewPath.size() == 3 && viewPath.indexOf(ProposalView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
@@ -117,7 +133,9 @@ public class ProposalView extends ActivatableViewAndModel {
     @SuppressWarnings("Duplicates")
     @Override
     protected void deactivate() {
-        navigation.removeListener(listener);
+        daoFacade.phaseProperty().removeListener(phaseChangeListener);
+
+        navigation.removeListener(navigationListener);
 
         dashboard.deactivate();
         make.deactivate();

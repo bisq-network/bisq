@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.dao.proposal.open;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
@@ -37,8 +36,11 @@ import bisq.core.util.BsqFormatter;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
 
 import javafx.beans.value.ChangeListener;
 
@@ -67,9 +69,7 @@ public class OpenProposalListItem implements BsqStateListener {
     private Ballot ballot;
 
     @Getter
-    private ImageView imageView;
-    @Getter
-    private AutoTooltipButton button;
+    private Label icon;
 
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
@@ -80,7 +80,6 @@ public class OpenProposalListItem implements BsqStateListener {
     private Transaction walletTransaction;
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
     private ChangeListener<Number> chainHeightListener;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -150,40 +149,35 @@ public class OpenProposalListItem implements BsqStateListener {
     public void onPhaseChanged(DaoPhase.Phase phase) {
         //noinspection IfCanBeSwitch
         if (phase == DaoPhase.Phase.PROPOSAL) {
-            imageView.setId("image-remove");
-            button.setGraphic(imageView);
-            button.setText(Res.get("shared.remove"));
-            final boolean isMyProposal = daoFacade.isMyProposal(proposal);
-            button.setVisible(isMyProposal);
-            button.setManaged(isMyProposal);
-        } else if (phase == DaoPhase.Phase.BLIND_VOTE) {
-            button.setGraphic(null);
-            button.setText(Res.get("dao.proposal.active.vote"));
-            button.setVisible(true);
-            button.setManaged(true);
-        } else {
-            button.setVisible(false);
-            button.setManaged(false);
+            icon = AwesomeDude.createIconLabel(AwesomeIcon.FILE_TEXT);
+            icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
+            boolean isMyProposal = daoFacade.isMyProposal(proposal);
+            icon.setVisible(isMyProposal);
+            icon.setManaged(isMyProposal);
+        } else if (icon != null) {
+            icon.setVisible(true);
+            icon.setManaged(true);
         }
-
 
         // ballot
         if (ballot != null) {
             final Vote vote = ballot.getVote();
             if (vote != null) {
-                imageView.setVisible(true);
+                // TODO make Vote BooleanVote
                 if (vote instanceof BooleanVote) {
                     if (((BooleanVote) vote).isAccepted()) {
-                        imageView.setId("accepted");
+                        icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
+                        icon.getStyleClass().addAll("icon", "dao-accepted-icon");
                     } else {
-                        imageView.setId("rejected");
+                        icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
+                        icon.getStyleClass().addAll("icon", "dao-rejected-icon");
                     }
-                }/* else {
-                // not impl.
-            }*/
+                }
             } else {
-                imageView.setVisible(false);
+                icon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);
+                icon.getStyleClass().addAll("icon", "dao-ignored-icon");
             }
+            icon.layout();
         }
     }
 
@@ -200,9 +194,6 @@ public class OpenProposalListItem implements BsqStateListener {
         txConfidenceIndicator.setPrefSize(24, 24);
         txConfidenceIndicator.setTooltip(tooltip);
 
-
-        imageView = new ImageView();
-
         chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
         bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
         setupConfidence();
@@ -213,8 +204,6 @@ public class OpenProposalListItem implements BsqStateListener {
 
         daoFacade.phaseProperty().addListener(phaseChangeListener);
 
-        button = new AutoTooltipButton();
-        button.setMinWidth(70);
         onPhaseChanged(daoFacade.phaseProperty().get());
     }
 

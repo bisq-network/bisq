@@ -326,83 +326,6 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-red-soft;
 }
 
-.dao-tx-type-trade-fee-icon,
-.dao-tx-type-trade-fee-icon:hover {
-    -fx-text-fill: #689f43;
-}
-
-.dao-tx-type-unverified-icon,
-.dao-tx-type-unverified-icon:hover {
-    -fx-text-fill: #ffac00;
-}
-
-.dao-tx-type-invalid-icon,
-.dao-tx-type-invalid-icon:hover {
-    -fx-text-fill: #ff4500;
-}
-
-.dao-tx-type-self-icon,
-.dao-tx-type-self-icon:hover {
-    -fx-text-fill: #818181;
-}
-
-.dao-tx-type-proposal-fee-icon,
-.dao-tx-type-proposal-fee-icon:hover {
-    -fx-text-fill: #6c8b3b;
-}
-
-.dao-tx-type-genesis-icon,
-.dao-tx-type-genesis-icon:hover {
-    -fx-text-fill: -fx-accent;
-}
-
-.dao-tx-type-received-funds-icon,
-.dao-tx-type-received-funds-icon:hover {
-    -fx-text-fill: -bs-green-soft;
-}
-
-.dao-tx-type-sent-funds-icon,
-.dao-tx-type-sent-funds-icon:hover {
-    -fx-text-fill: -bs-red-soft;
-}
-
-.dao-tx-type-vote-icon,
-.dao-tx-type-vote-icon:hover {
-    -fx-text-fill: #0a4576;
-}
-
-.dao-tx-type-vote-reveal-icon,
-.dao-tx-type-vote-reveal-icon:hover {
-    -fx-text-fill: #4AC5FF;
-}
-
-.dao-tx-type-issuance-icon,
-.dao-tx-type-issuance-icon:hover {
-    -fx-text-fill: #04a908;
-}
-
-.dao-tx-type-lockup-icon,
-.dao-tx-type-lockup-icon:hover {
-    -fx-text-fill: #203e7f;
-}
-
-.dao-tx-type-unlock-icon,
-.dao-tx-type-unlock-icon:hover {
-    -fx-text-fill: #438e6c;
-}
-
-.dao-accepted-icon {
-    -fx-text-fill: -bs-green;
-}
-
-.dao-rejected-icon {
-    -fx-text-fill: -bs-error-red;
-}
-
-.dao-ignored-icon {
-    -fx-text-fill: -bs-medium-grey;
-}
-
 .version {
     -fx-text-fill: black;
     -fx-underline: false;
@@ -1358,6 +1281,83 @@ textfield */
  *                                                                                                                  *
  ********************************************************************************************************************/
 
+.dao-tx-type-trade-fee-icon,
+.dao-tx-type-trade-fee-icon:hover {
+    -fx-text-fill: #689f43;
+}
+
+.dao-tx-type-unverified-icon,
+.dao-tx-type-unverified-icon:hover {
+    -fx-text-fill: #ffac00;
+}
+
+.dao-tx-type-invalid-icon,
+.dao-tx-type-invalid-icon:hover {
+    -fx-text-fill: #ff4500;
+}
+
+.dao-tx-type-self-icon,
+.dao-tx-type-self-icon:hover {
+    -fx-text-fill: #818181;
+}
+
+.dao-tx-type-proposal-fee-icon,
+.dao-tx-type-proposal-fee-icon:hover {
+    -fx-text-fill: #6c8b3b;
+}
+
+.dao-tx-type-genesis-icon,
+.dao-tx-type-genesis-icon:hover {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-tx-type-received-funds-icon,
+.dao-tx-type-received-funds-icon:hover {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.dao-tx-type-sent-funds-icon,
+.dao-tx-type-sent-funds-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-vote-icon,
+.dao-tx-type-vote-icon:hover {
+    -fx-text-fill: #0a4576;
+}
+
+.dao-tx-type-vote-reveal-icon,
+.dao-tx-type-vote-reveal-icon:hover {
+    -fx-text-fill: #4AC5FF;
+}
+
+.dao-tx-type-issuance-icon,
+.dao-tx-type-issuance-icon:hover {
+    -fx-text-fill: #04a908;
+}
+
+.dao-tx-type-lockup-icon,
+.dao-tx-type-lockup-icon:hover {
+    -fx-text-fill: #203e7f;
+}
+
+.dao-tx-type-unlock-icon,
+.dao-tx-type-unlock-icon:hover {
+    -fx-text-fill: #438e6c;
+}
+
+.dao-accepted-icon {
+    -fx-text-fill: -bs-green;
+}
+
+.dao-rejected-icon {
+    -fx-text-fill: -bs-error-red;
+}
+
+.dao-ignored-icon {
+    -fx-text-fill: -bs-medium-grey;
+}
+
 .compensation-root {
     -fx-background-insets: 0, 0 0 0 0
 }
@@ -1370,6 +1370,11 @@ textfield */
     -fx-cursor: hand;
     -fx-background-color: transparent;
 }
+
+.dao-remove-proposal-icon {
+    -fx-text-fill: -fx-accent;
+}
+
 
 /*
 .vote-result-table-row-accepted {

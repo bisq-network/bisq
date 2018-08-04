@@ -548,7 +548,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {
-                                                awesomeIcon = AwesomeIcon.SHARE;
+                                                awesomeIcon = AwesomeIcon.FILE_TEXT;
                                                 style = "dao-tx-type-proposal-fee-icon";
                                             }
                                             break;

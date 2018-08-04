@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.voting.dashboard;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.dao.proposal.CycleOverview;
 import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
 
 import bisq.core.dao.DaoFacade;
@@ -34,8 +35,8 @@ public class VotingDashboardView extends ProposalDashboardView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private VotingDashboardView(DaoFacade daoFacade, BSFormatter formatter) {
-        super(daoFacade, formatter);
+    private VotingDashboardView(DaoFacade daoFacade, CycleOverview cycleOverview, BSFormatter formatter) {
+        super(daoFacade, cycleOverview, formatter);
     }
 
     @Override

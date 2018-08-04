@@ -73,7 +73,7 @@ public class ProposalResultsListItem extends BaseResultsListItem {
     }
 
     public AwesomeIcon getIcon() {
-        return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.REMOVE_SIGN;
+        return evaluatedProposal.isAccepted() ? AwesomeIcon.THUMBS_UP : AwesomeIcon.THUMBS_DOWN;
     }
 
     public String getColorStyleClass() {

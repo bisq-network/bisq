@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.proposal.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.SeparatedPhaseBars;
+import bisq.desktop.main.dao.proposal.CycleOverview;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -34,14 +34,7 @@ import javax.inject.Inject;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
@@ -53,13 +46,10 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
     private final DaoFacade daoFacade;
+    private final CycleOverview cycleOverview;
     private final BSFormatter formatter;
 
-    private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private DaoPhase.Phase currentPhase;
-    private Subscription phaseSubscription;
     private int gridRow = 0;
-    private SeparatedPhaseBars separatedPhaseBars;
     private TextField currentPhaseTextField, currentBlockHeightTextField, proposalTextField, blindVoteTextField, voteRevealTextField, voteResultTextField;
 
 
@@ -68,21 +58,15 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalDashboardView(DaoFacade daoFacade, BSFormatter formatter) {
+    public ProposalDashboardView(DaoFacade daoFacade, CycleOverview cycleOverview, BSFormatter formatter) {
         this.daoFacade = daoFacade;
+        this.cycleOverview = cycleOverview;
         this.formatter = formatter;
     }
 
     @Override
     public void initialize() {
-        // cycle bar
-        addTitledGroupBg(root, gridRow, 1, Res.get("dao.cycle.headline"));
-        separatedPhaseBars = createSeparatedPhaseBars();
-        GridPane.setColumnSpan(separatedPhaseBars, 2);
-        GridPane.setColumnIndex(separatedPhaseBars, 0);
-        GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
-        GridPane.setRowIndex(separatedPhaseBars, gridRow);
-        root.getChildren().add(separatedPhaseBars);
+        gridRow = cycleOverview.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
         currentBlockHeightTextField = addLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
@@ -101,19 +85,8 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void activate() {
         super.activate();
 
-        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), phase -> {
-            if (!phase.equals(this.currentPhase)) {
-                this.currentPhase = phase;
-            }
-            phaseBarsItems.forEach(item -> {
-                if (item.getPhase() == phase) {
-                    item.setActive();
-                } else {
-                    item.setInActive();
-                }
-            });
+        cycleOverview.activate();
 
-        });
         daoFacade.addBsqStateListener(this);
 
         applyData(daoFacade.getChainHeight());
@@ -122,8 +95,10 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     @Override
     protected void deactivate() {
         super.deactivate();
+
+        cycleOverview.deactivate();
+
         daoFacade.removeBsqStateListener(this);
-        phaseSubscription.unsubscribe();
     }
 
 
@@ -154,44 +129,12 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyData(int height) {
-        if (height > 0) {
-            phaseBarsItems.forEach(item -> {
-                int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());
-                int lastBlock = daoFacade.getLastBlockOfPhase(height, item.getPhase());
-                final int duration = daoFacade.getDurationForPhase(item.getPhase());
-                item.setPeriodRange(firstBlock, lastBlock, duration);
-                double progress = 0;
-                if (height >= firstBlock && height <= lastBlock) {
-                    progress = (double) (height - firstBlock + 1) / (double) duration;
-                } else if (height < firstBlock) {
-                    progress = 0;
-                } else if (height > lastBlock) {
-                    progress = 1;
-                }
-                item.getProgressProperty().set(progress);
-            });
-            separatedPhaseBars.updateWidth();
-        }
-
         currentBlockHeightTextField.setText(String.valueOf(daoFacade.getChainHeight()));
         currentPhaseTextField.setText(Res.get("dao.phase." + daoFacade.phaseProperty().get().name()));
         proposalTextField.setText(getPhaseDuration(height, DaoPhase.Phase.PROPOSAL));
         blindVoteTextField.setText(getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE));
         voteRevealTextField.setText(getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL));
         voteResultTextField.setText(getPhaseDuration(height, DaoPhase.Phase.RESULT));
-    }
-
-    private SeparatedPhaseBars createSeparatedPhaseBars() {
-        phaseBarsItems = Arrays.asList(
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.PROPOSAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK1, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BLIND_VOTE, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
-        return new SeparatedPhaseBars(phaseBarsItems);
     }
 
     private String getPhaseDuration(int height, DaoPhase.Phase phase) {

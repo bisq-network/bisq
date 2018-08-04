@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.proposal.make;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.dao.proposal.CycleOverview;
 import bisq.desktop.main.dao.proposal.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
@@ -86,15 +87,18 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
+    private final CycleOverview cycleOverview;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
     private ProposalDisplay proposalDisplay;
-    private Button createButton;
+    private Button makeProposalButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
     private ChangeListener<ProposalType> proposalTypeChangeListener;
     @Nullable
     private ProposalType selectedProposalType;
+    private int gridRow;
+    private int alwaysVisibleGridRowIndex;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -107,12 +111,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              FeeService feeService,
+                             CycleOverview cycleOverview,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
+        this.cycleOverview = cycleOverview;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -120,9 +126,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, 0, 1, Res.get("dao.proposal.create.selectProposalType"));
-        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, 0,
-                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_DISTANCE).second;
+        gridRow = cycleOverview.addGroup(root, gridRow);
+
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
+        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
+                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         proposalTypeComboBox.setConverter(new StringConverter<ProposalType>() {
             @Override
             public String toString(ProposalType proposalType) {
@@ -140,6 +148,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             removeProposalDisplay();
             addProposalDisplay();
         };
+        alwaysVisibleGridRowIndex = gridRow + 1;
 
         //TODO remove filter once all are implemented
         List<ProposalType> proposalTypes = Arrays.stream(ProposalType.values())
@@ -151,21 +160,26 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void activate() {
+        cycleOverview.activate();
+
         daoFacade.addBsqStateListener(this);
-        onNewBlockHeight(daoFacade.getChainHeight());
 
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().addListener(proposalTypeChangeListener);
+        if (makeProposalButton != null)
+            setMakeProposalButtonHandler();
 
-        if (createButton != null)
-            setCreateButtonHandler();
+        onNewBlockHeight(daoFacade.getChainHeight());
     }
 
     @Override
     protected void deactivate() {
+        cycleOverview.deactivate();
+
         daoFacade.removeBsqStateListener(this);
+
         proposalTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(proposalTypeChangeListener);
-        if (createButton != null)
-            createButton.setOnAction(null);
+        if (makeProposalButton != null)
+            makeProposalButton.setOnAction(null);
     }
 
 
@@ -308,13 +322,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
             proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, daoFacade);
-            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), 1, Layout.GROUP_DISTANCE,
+            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
-            // proposalDisplay.fillWithMock();
-
-            createButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
-            setCreateButtonHandler();
+            makeProposalButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
+            setMakeProposalButtonHandler();
             proposalDisplay.addInputChangedListener(this::updateButtonState);
             updateButtonState();
         }
@@ -323,15 +335,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private void removeProposalDisplay() {
         if (proposalDisplay != null) {
             proposalDisplay.removeAllFields();
-            GUIUtil.removeChildrenFromGridPaneRows(root, 1, proposalDisplay.getGridRow());
+            GUIUtil.removeChildrenFromGridPaneRows(root, alwaysVisibleGridRowIndex, proposalDisplay.getGridRow());
             proposalDisplay.removeInputChangedListener(this::updateButtonState);
             proposalDisplay.removeListeners();
             proposalDisplay = null;
         }
     }
 
-    private void setCreateButtonHandler() {
-        createButton.setOnAction(event -> {
+    private void setMakeProposalButtonHandler() {
+        makeProposalButton.setOnAction(event -> {
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 publishMyProposal(selectedProposalType);
             } else {
@@ -354,7 +366,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
         });
 
-        createButton.setDisable(!inputsValid.get());
+        makeProposalButton.setDisable(!inputsValid.get());
     }
 }
 

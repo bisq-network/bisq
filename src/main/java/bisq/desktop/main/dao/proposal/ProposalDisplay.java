@@ -68,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -288,9 +287,11 @@ public class ProposalDisplay {
                 break;
         }
 
-        if (!isMakeProposalScreen)
+        if (!isMakeProposalScreen) {
             txIdTextField = addLabelTxIdTextField(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "").second;
+            txIdTextField.setBsq(true);
+        }
 
         if (isMakeProposalScreen) {
             proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
@@ -437,21 +438,5 @@ public class ProposalDisplay {
         anchorPane.getChildren().add(gridPane);
 
         return scrollPane;
-    }
-
-    public void fillWithMock() {
-        if (uidTextField != null)
-            uidTextField.setText(UUID.randomUUID().toString());
-        nameTextField.setText("Manfred Karrer");
-        linkInputTextField.setText("https://github.com/bisq-network/compensation/issues/12");
-        if (requestedBsqTextField != null)
-            requestedBsqTextField.setText("14000");
-        if (bsqAddressTextField != null)
-            bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
-
-        if (paramComboBox != null)
-            paramComboBox.getSelectionModel().select(8); // PROPOSAL_FEE
-        if (paramValueTextField != null)
-            paramValueTextField.setText("333");
     }
 }
