@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results;
-
-import bisq.desktop.main.dao.results.model.ResultsOfCycle;
+package bisq.desktop.main.dao.proposal.result;
 
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
@@ -33,15 +31,15 @@ import java.util.Map;
 
 import lombok.Getter;
 
-public class ResultsListItem {
+public class CycleListItem {
     private final BsqStateService bsqStateService;
     private final BsqFormatter bsqFormatter;
     @Getter
     private ResultsOfCycle resultsOfCycle;
 
-    public ResultsListItem(ResultsOfCycle resultsOfCycle,
-                           BsqStateService bsqStateService,
-                           BsqFormatter bsqFormatter) {
+    public CycleListItem(ResultsOfCycle resultsOfCycle,
+                         BsqStateService bsqStateService,
+                         BsqFormatter bsqFormatter) {
         this.resultsOfCycle = resultsOfCycle;
         this.bsqStateService = bsqStateService;
         this.bsqFormatter = bsqFormatter;
@@ -61,7 +59,7 @@ public class ResultsListItem {
         return String.valueOf(resultsOfCycle.getNumVotes());
     }
 
-    public String getStake() {
+    public String getMeritAndStake() {
         //TODO move to domain
         Map<String, Long> map = new HashMap<>();
         resultsOfCycle.getDecryptedVotesForCycle()

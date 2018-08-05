@@ -27,10 +27,10 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.proposal.closed.ClosedProposalsView;
 import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
 import bisq.desktop.main.dao.proposal.make.MakeProposalView;
 import bisq.desktop.main.dao.proposal.open.OpenProposalsView;
+import bisq.desktop.main.dao.proposal.result.VoteResultView;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
@@ -58,7 +58,7 @@ public class ProposalView extends ActivatableViewAndModel {
     private final Navigation navigation;
     private final DaoFacade daoFacade;
 
-    private MenuItem dashboard, make, open, closed;
+    private MenuItem dashboard, make, open, result;
     private Navigation.Listener navigationListener;
 
     @FXML
@@ -101,9 +101,9 @@ public class ProposalView extends ActivatableViewAndModel {
                 MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
         open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.browse"),
                 OpenProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
-        closed = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.closed"),
-                ClosedProposalsView.class, AwesomeIcon.LIST_ALT, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, make, open, closed);
+        result = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.result"),
+                VoteResultView.class, AwesomeIcon.LIST_ALT, baseNavPath);
+        leftVBox.getChildren().addAll(dashboard, make, open, result);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class ProposalView extends ActivatableViewAndModel {
         dashboard.activate();
         make.activate();
         open.activate();
-        closed.activate();
+        result.activate();
 
         navigation.addListener(navigationListener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -140,7 +140,7 @@ public class ProposalView extends ActivatableViewAndModel {
         dashboard.deactivate();
         make.deactivate();
         open.deactivate();
-        closed.deactivate();
+        result.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -150,7 +150,7 @@ public class ProposalView extends ActivatableViewAndModel {
         if (view instanceof ProposalDashboardView) dashboard.setSelected(true);
         else if (view instanceof MakeProposalView) make.setSelected(true);
         else if (view instanceof OpenProposalsView) open.setSelected(true);
-        else if (view instanceof ClosedProposalsView) closed.setSelected(true);
+        else if (view instanceof VoteResultView) result.setSelected(true);
     }
 }
 

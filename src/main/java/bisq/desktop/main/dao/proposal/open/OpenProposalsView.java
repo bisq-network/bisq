@@ -47,10 +47,13 @@ import bisq.core.dao.voting.ballot.Ballot;
 import bisq.core.dao.voting.ballot.vote.BooleanVote;
 import bisq.core.dao.voting.myvote.MyVote;
 import bisq.core.dao.voting.proposal.Proposal;
+import bisq.core.dao.voting.voteresult.EvaluatedProposal;
+import bisq.core.dao.voting.voteresult.VoteResultService;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -62,12 +65,12 @@ import javax.inject.Inject;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -93,6 +96,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
@@ -100,6 +105,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final CycleOverview cycleOverview;
+    private final VoteResultService voteResultService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -124,11 +130,12 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private ListChangeListener<Proposal> proposalListChangeListener;
     private ListChangeListener<Ballot> ballotListChangeListener;
     private ChangeListener<String> stakeListener;
-    private List<Control> voteControls = new ArrayList<>();
+    private List<Button> voteButtons = new ArrayList<>();
     private List<Node> voteFields = new ArrayList<>();
     private TitledGroupBg voteTitledGroupBg;
-    private Label stakeLabel, revealTxIdLabel, blindVoteTxIdLabel;
+    private Label stakeLabel, meritLabel, revealTxIdLabel, blindVoteTxIdLabel;
     private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
+    private TextField meritTextField;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,12 +146,14 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private OpenProposalsView(DaoFacade daoFacade,
                               BsqWalletService bsqWalletService,
                               CycleOverview cycleOverview,
+                              VoteResultService voteResultService,
                               BsqFormatter bsqFormatter,
                               BSFormatter btcFormatter) {
 
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.cycleOverview = cycleOverview;
+        this.voteResultService = voteResultService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -266,6 +275,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     @Override
     public void onParseBlockChainComplete() {
         updateListItems();
+        applyMerit();
     }
 
 
@@ -307,17 +317,28 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+        tableView.layout();
         root.layout();
     }
 
-    private void createAllFieldsOnProposalDisplay(Proposal proposal) {
+    private void createAllFieldsOnProposalDisplay(Proposal proposal, @Nullable Ballot ballot,
+                                                  @Nullable EvaluatedProposal evaluatedProposal) {
         proposalDisplayView.setVisible(true);
         proposalDisplayView.setManaged(true);
 
         proposalDisplay.createAllFields(Res.get("dao.proposal.selectedProposal"), 0, 0, proposal.getType(),
                 false);
         proposalDisplay.setEditable(false);
+
         proposalDisplay.applyProposalPayload(proposal);
+
+        proposalDisplay.applyEvaluatedProposal(evaluatedProposal);
+
+        Tuple2<Long, Long> meritAndStakeTuple = daoFacade.getMeritAndStakeForProposal(proposal.getTxId());
+        long merit = meritAndStakeTuple.first;
+        long stake = meritAndStakeTuple.second;
+        proposalDisplay.applyBallotAndVoteWeight(ballot, merit, stake);
+
         proposalDisplayInitialized = true;
 
         removeProposalButton = addButtonAfterGroup(proposalDisplayGridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.remove"));
@@ -337,11 +358,11 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         rejectButton.setOnAction(event -> onReject());
         ignoreButton.setOnAction(event -> onCancelVote());
 
-        voteControls.clear();
-        voteControls.add(voteButton);
-        voteControls.add(acceptButton);
-        voteControls.add(rejectButton);
-        voteControls.add(ignoreButton);
+        voteButtons.clear();
+        voteButtons.add(voteButton);
+        voteButtons.add(acceptButton);
+        voteButtons.add(rejectButton);
+        voteButtons.add(ignoreButton);
     }
 
     private void hideProposalDisplay() {
@@ -406,28 +427,58 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
     private void onSelectProposal(OpenProposalListItem item) {
         selectedItem = item;
-        if (selectedItem != null)
-            createAllFieldsOnProposalDisplay(selectedItem.getProposal());
-        else
-            hideProposalDisplay();
+        if (selectedItem != null) {
+            EvaluatedProposal evaluatedProposal = voteResultService.getAllEvaluatedProposals().stream()
+                    .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
+                            daoFacade.getChainHeight()))
+                    .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))
+                    .findAny()
+                    .orElse(null);
 
+            createAllFieldsOnProposalDisplay(selectedItem.getProposal(), selectedItem.getBallot(), evaluatedProposal);
+            applyMerit();
+        } else {
+            hideProposalDisplay();
+        }
         onPhaseChanged(daoFacade.phaseProperty().get());
 
         updateViews();
     }
 
+    private void applyMerit() {
+        // We check if we have voted on that proposal. If so we use the merit used in the vote, otherwise we
+        // use hte merit based on all past issuance with the time decay applied.
+        // The merit from the vote stays the same over blocks, the merit from daoFacade.getMeritAndStake()
+        // decreases with every block a bit (over 2 years it goes to zero).
+        boolean hasConfirmedVoteTxInCycle = daoFacade.getMyVoteListForCycle().stream()
+                .map(myVote -> daoFacade.getTx(myVote.getTxId()))
+                .findAny()
+                .isPresent();
+        long merit;
+        if (selectedItem != null && hasConfirmedVoteTxInCycle) {
+            merit = daoFacade.getMeritAndStakeForProposal(selectedItem.getProposal().getTxId()).first;
+        } else {
+            merit = daoFacade.getAvailableMerit();
+        }
+
+        meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.valueOf(merit)));
+    }
+
     private void onAccept() {
         daoFacade.setVote(getBallotListItem().getBallot(), new BooleanVote(true));
+        proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onReject() {
         daoFacade.setVote(getBallotListItem().getBallot(), new BooleanVote(false));
+        proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onCancelVote() {
         daoFacade.setVote(getBallotListItem().getBallot(), null);
+        proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
@@ -458,8 +509,9 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                 () -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
-                    new Popup().feedback(Res.get("dao.blindVote.success"))
-                            .show();
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().feedback(Res.get("dao.blindVote.success")).show();
+
                     updateViews();
                 }, exception -> {
                     voteButtonBusyAnimation.stop();
@@ -480,11 +532,8 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
     private void updateViews() {
         boolean isBlindVotePhaseButNotLastBlock = isBlindVotePhaseButNotLastBlock();
-        boolean hasVoted = listItems.stream()
-                .filter(e -> e.getBallot() != null)
-                .map(OpenProposalListItem::getBallot)
-                .anyMatch(e -> e.getVote() != null);
-        voteButton.setDisable(!hasVoted ||
+        boolean hasVotedOnProposal = hasVotedOnProposal();
+        voteButton.setDisable(!hasVotedOnProposal ||
                 !stakeInputTextField.getValidator().validate(stakeInputTextField.getText()).isValid);
 
         List<MyVote> myVoteListForCycle = daoFacade.getMyVoteListForCycle();
@@ -493,11 +542,11 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
             Optional<BooleanVote> optionalVote = selectedItem.getBooleanVote();
             boolean isPresent = optionalVote.isPresent();
             boolean isAccepted = isPresent && optionalVote.get().isAccepted();
-            boolean doDisable = hasAlreadyVoted || !isBlindVotePhaseButNotLastBlock;
-            acceptButton.setDisable(hasAlreadyVoted || (isPresent && isAccepted));
-            rejectButton.setDisable(hasAlreadyVoted || (isPresent && !isAccepted));
-            ignoreButton.setDisable(hasAlreadyVoted || !isPresent);
-            stakeInputTextField.setMouseTransparent(doDisable);
+            acceptButton.setDisable((isPresent && isAccepted));
+            rejectButton.setDisable((isPresent && !isAccepted));
+            ignoreButton.setDisable(!isPresent);
+
+            stakeInputTextField.setMouseTransparent(hasAlreadyVoted || !isBlindVotePhaseButNotLastBlock);
         } else {
             stakeInputTextField.setMouseTransparent(true);
         }
@@ -508,11 +557,10 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
             node.setVisible(showVoteFields);
             node.setManaged(showVoteFields);
         });
-        voteControls.forEach(control -> {
-            control.setVisible(isBlindVotePhaseButNotLastBlock);
-            control.setManaged(isBlindVotePhaseButNotLastBlock);
+        voteButtons.forEach(button -> {
+            button.setVisible(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
+            button.setManaged(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
         });
-
 
         blindVoteTxIdTextField.setup("");
         revealTxIdTextField.setup("");
@@ -565,6 +613,13 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         }
     }
 
+    private boolean hasVotedOnProposal() {
+        return listItems.stream()
+                .filter(e -> e.getBallot() != null)
+                .map(OpenProposalListItem::getBallot)
+                .anyMatch(e -> e.getVote() != null);
+    }
+
     private boolean isBlindVotePhaseButNotLastBlock() {
         return daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.BLIND_VOTE);
     }
@@ -606,12 +661,20 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     }
 
     private void createVoteView() {
-        voteTitledGroupBg = addTitledGroupBg(root, ++gridRow, 3,
-                Res.get("dao.proposal.votes.header"), Layout.GROUP_DISTANCE - 20);
+        voteTitledGroupBg = addTitledGroupBg(root, ++gridRow, 4,
+                Res.get("dao.proposal.votes.header"), 20);
         voteFields.add(voteTitledGroupBg);
 
-        Tuple2<Label, InputTextField> stakeTuple = addLabelInputTextField(root, gridRow,
-                Res.getWithCol("dao.proposal.myVote.stake"), Layout.FIRST_ROW_AND_GROUP_DISTANCE - 20);
+        Tuple2<Label, TextField> meritTuple = addLabelTextField(root, gridRow,
+                Res.getWithCol("dao.proposal.myVote.merit"), 40);
+        meritLabel = meritTuple.first;
+        meritTextField = meritTuple.second;
+        meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
+        voteFields.add(meritLabel);
+        voteFields.add(meritTextField);
+
+        Tuple2<Label, InputTextField> stakeTuple = addLabelInputTextField(root, ++gridRow,
+                Res.getWithCol("dao.proposal.myVote.stake"));
         stakeLabel = stakeTuple.first;
         stakeInputTextField = stakeTuple.second;
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
@@ -637,7 +700,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         Tuple3<Button, BusyAnimation, Label> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
-        voteControls.add(voteButton);
+        voteButtons.add(voteButton);
         voteButtonBusyAnimation = voteButtonTuple.second;
         voteButtonInfoLabel = voteButtonTuple.third;
     }

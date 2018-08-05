@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results.model;
+package bisq.desktop.main.dao.proposal.result;
 
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.dao.voting.proposal.Proposal;

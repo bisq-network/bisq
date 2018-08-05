@@ -32,6 +32,9 @@ import bisq.core.dao.role.BondedRole;
 import bisq.core.dao.role.BondedRoleType;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.ext.Param;
+import bisq.core.dao.voting.ballot.Ballot;
+import bisq.core.dao.voting.ballot.vote.BooleanVote;
+import bisq.core.dao.voting.ballot.vote.Vote;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.ProposalType;
 import bisq.core.dao.voting.proposal.compensation.CompensationConsensus;
@@ -39,12 +42,16 @@ import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
 import bisq.core.dao.voting.proposal.role.BondedRoleProposal;
+import bisq.core.dao.voting.voteresult.EvaluatedProposal;
+import bisq.core.dao.voting.voteresult.ProposalVoteResult;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.Coin;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -87,7 +94,8 @@ public class ProposalDisplay {
 
     @Nullable
     private TextField uidTextField, proposalFeeTextField;
-    private TextField proposalTypeTextField;
+    private TextField proposalTypeTextField, myVoteTextField, voteResultTextField;
+    private Label myVoteLabel, voteResultLabel;
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
     @Nullable
@@ -112,6 +120,7 @@ public class ProposalDisplay {
     private List<ComboBox> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
+    private int titledGroupBgRowSpan;
 
 
     // TODO get that warning at closing the window...
@@ -147,34 +156,32 @@ public class ProposalDisplay {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
-        int rowSpan = 4;
+        titledGroupBgRowSpan = 6;
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
-                rowSpan = 5;
+                titledGroupBgRowSpan += 1;
                 break;
             case BONDED_ROLE:
-                rowSpan = 4;
                 break;
             case REMOVE_ALTCOIN:
                 break;
             case CHANGE_PARAM:
-                rowSpan = 5;
+                titledGroupBgRowSpan += 1;
                 break;
             case GENERIC:
                 break;
             case CONFISCATE_BOND:
-                rowSpan = 4;
                 break;
         }
         // at isMakeProposalScreen we show fee but no uid and txID (+1)
         // otherwise we don't show fee but show uid and txID (+2)
         if (isMakeProposalScreen)
-            rowSpan += 1;
+            titledGroupBgRowSpan += 1;
         else
-            rowSpan += 2;
+            titledGroupBgRowSpan += 2;
 
-        addTitledGroupBg(gridPane, gridRow, rowSpan, title, top);
+        addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
         double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
         proposalTypeTextField = addLabelTextField(gridPane, gridRow,
                 Res.getWithCol("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
@@ -298,7 +305,95 @@ public class ProposalDisplay {
             proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
         }
 
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.myVote"));
+        myVoteLabel = tuple2.first;
+        myVoteLabel.setVisible(false);
+        myVoteLabel.setManaged(false);
+        myVoteTextField = tuple2.second;
+        myVoteTextField.setVisible(false);
+        myVoteTextField.setManaged(false);
+
+        tuple2 = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
+        voteResultLabel = tuple2.first;
+        voteResultLabel.setVisible(false);
+        voteResultLabel.setManaged(false);
+        voteResultTextField = tuple2.second;
+        voteResultTextField.setVisible(false);
+        voteResultTextField.setManaged(false);
+
         addListeners();
+    }
+
+    public void applyBallot(@Nullable Ballot ballot) {
+        String myVote = Res.get("dao.proposal.display.myVote.ignored");
+        boolean isNotNull = ballot != null;
+        Vote vote = isNotNull ? ballot.getVote() : null;
+        if (vote != null) {
+            if (vote instanceof BooleanVote) {
+                BooleanVote booleanVote = (BooleanVote) vote;
+                myVote = booleanVote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
+                        Res.get("dao.proposal.display.myVote.rejected");
+
+
+            }
+        }
+        myVoteTextField.setText(myVote);
+
+        myVoteLabel.setVisible(isNotNull);
+        myVoteLabel.setManaged(isNotNull);
+        myVoteTextField.setVisible(isNotNull);
+        myVoteTextField.setManaged(isNotNull);
+    }
+
+    public void applyEvaluatedProposal(@Nullable EvaluatedProposal evaluatedProposal) {
+        boolean isEvaluatedProposalNotNull = evaluatedProposal != null;
+        if (isEvaluatedProposalNotNull) {
+            String result = evaluatedProposal.isAccepted() ? Res.get("dao.proposal.voteResult.success") :
+                    Res.get("dao.proposal.voteResult.failed");
+            ProposalVoteResult proposalVoteResult = evaluatedProposal.getProposalVoteResult();
+            String threshold = (proposalVoteResult.getThreshold() / 100D) + "%";
+            String requiredThreshold = (evaluatedProposal.getRequiredThreshold() / 100D) + "%";
+            String quorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getQuorum()));
+            String requiredQuorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(evaluatedProposal.getRequiredQuorum()));
+            String summary = Res.get("dao.proposal.voteResult.summary", result,
+                    threshold, requiredThreshold, quorum, requiredQuorum);
+            voteResultTextField.setText(summary);
+        }
+        voteResultLabel.setVisible(isEvaluatedProposalNotNull);
+        voteResultLabel.setManaged(isEvaluatedProposalNotNull);
+        voteResultTextField.setVisible(isEvaluatedProposalNotNull);
+        voteResultTextField.setManaged(isEvaluatedProposalNotNull);
+    }
+
+    public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake) {
+        boolean ballotIsNotNull = ballot != null;
+        boolean hasVoted = stake > 0;
+        if (hasVoted) {
+            String myVote = Res.get("dao.proposal.display.myVote.ignored");
+            Vote vote = ballotIsNotNull ? ballot.getVote() : null;
+            if (vote != null) {
+                if (vote instanceof BooleanVote) {
+                    BooleanVote booleanVote = (BooleanVote) vote;
+                    myVote = booleanVote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
+                            Res.get("dao.proposal.display.myVote.rejected");
+
+
+                }
+            }
+
+            String meritString = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit));
+            String stakeString = bsqFormatter.formatCoinWithCode(Coin.valueOf(stake));
+            String weight = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit + stake));
+            String myVoteSummary = Res.get("dao.proposal.myVote.summary", myVote,
+                    weight, meritString, stakeString);
+            myVoteTextField.setText(myVoteSummary);
+        }
+
+        boolean show = ballotIsNotNull && hasVoted;
+        myVoteLabel.setVisible(show);
+        myVoteLabel.setManaged(show);
+        myVoteTextField.setVisible(show);
+        myVoteTextField.setManaged(show);
     }
 
     public void applyProposalPayload(Proposal proposal) {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.results.proposals;
+package bisq.desktop.main.dao.proposal.result;
 
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.ballot.Ballot;
@@ -36,7 +36,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class VoteResultsForProposalListItem {
+public class VoteListItem {
     @Getter
     private final BsqFormatter bsqFormatter;
     private final DecryptedVote decryptedVote;
@@ -44,12 +44,15 @@ public class VoteResultsForProposalListItem {
     private long merit;
     private long stake;
     private String proposalTxId = "";
+    @Getter
     private String blindVoteTxId = "";
+    @Getter
+    private String voteRevealTxId = "";
 
-    public VoteResultsForProposalListItem(Proposal proposal,
-                                          DecryptedVote decryptedVote,
-                                          BsqStateService bsqStateService,
-                                          BsqFormatter bsqFormatter) {
+    public VoteListItem(Proposal proposal,
+                        DecryptedVote decryptedVote,
+                        BsqStateService bsqStateService,
+                        BsqFormatter bsqFormatter) {
         this.decryptedVote = decryptedVote;
         this.bsqFormatter = bsqFormatter;
         proposalTxId = proposal.getTxId();
@@ -58,6 +61,7 @@ public class VoteResultsForProposalListItem {
             merit = decryptedVote.getMerit(bsqStateService);
             stake = decryptedVote.getStake();
             blindVoteTxId = decryptedVote.getBlindVoteTxId();
+            voteRevealTxId = decryptedVote.getVoteRevealTxId();
         }
     }
 
@@ -80,7 +84,6 @@ public class VoteResultsForProposalListItem {
         }
     }
 
-
     public String getMerit() {
         return bsqFormatter.formatCoinWithCode(Coin.valueOf(merit));
     }
@@ -89,7 +92,7 @@ public class VoteResultsForProposalListItem {
         return bsqFormatter.formatCoinWithCode(Coin.valueOf(stake));
     }
 
-    public String getBlindVoteTxId() {
-        return blindVoteTxId;
+    public String getMeritAndStake() {
+        return bsqFormatter.formatCoinWithCode(Coin.valueOf(stake + merit));
     }
 }
