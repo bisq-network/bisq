@@ -42,10 +42,10 @@ import javafx.embed.swing.SwingFXUtils;
 
 @Slf4j
 // Must not be UI thread
-public class QrCodeReader extends Thread {
-    private Webcam webCam;
-    private ImageView imageView;
-    private Consumer<String> resultHandler;
+class QrCodeReader extends Thread {
+    private final Webcam webCam;
+    private final ImageView imageView;
+    private final Consumer<String> resultHandler;
     private boolean isRunning;
 
     public QrCodeReader(Webcam webCam, ImageView imageView, Consumer<String> resultHandler) {

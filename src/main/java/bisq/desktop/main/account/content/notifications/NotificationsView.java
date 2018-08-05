@@ -257,7 +257,7 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                     message = MyOfferTakenEvents.getTestMsg();
                     break;
                 case 1:
-                    messages = TradeEvents.getTestMsgs();
+                    messages = TradeEvents.getTestMessages();
                     break;
                 case 2:
                     message = DisputeMsgEvents.getTestMsg();
@@ -348,7 +348,7 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     private void createPriceAlertFields() {
         FormBuilder.addTitledGroupBg(root, ++gridRow, 3, Res.get("account.notifications.priceAlert.title"),
                 Layout.GROUP_DISTANCE);
-        currencyComboBox = FormBuilder.addLabelComboBox(root, gridRow, Res.get("list.currency.select"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(root, gridRow, Res.get("list.currency.select"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override

@@ -32,8 +32,8 @@ import com.github.sarxos.webcam.Webcam;
 
 @Slf4j
 // Must not be UI thread
-public class WebCamLauncher extends Thread {
-    private Consumer<Webcam> resultHandler;
+class WebCamLauncher extends Thread {
+    private final Consumer<Webcam> resultHandler;
 
     public WebCamLauncher(Consumer<Webcam> resultHandler) {
         this.resultHandler = resultHandler;
