@@ -273,6 +273,7 @@ public class OpenProposalListItem implements BsqStateListener {
     }
 
     public Optional<BooleanVote> getBooleanVote() {
+        //noinspection ConstantConditions
         return Optional.ofNullable(ballot)
                 .map(Ballot::getVote)
                 .filter(Objects::nonNull)

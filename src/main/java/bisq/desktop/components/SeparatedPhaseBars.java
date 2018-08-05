@@ -59,7 +59,8 @@ public class SeparatedPhaseBars extends VBox {
         getChildren().add(progressBars);
 
         items.forEach(item -> {
-            Label titleLabel = new Label(Res.get("dao.phase.separatedPhaseBar." + item.phase));
+            String text = item.phase.name().startsWith("BREAK") ? "" : Res.get("dao.phase.separatedPhaseBar." + item.phase);
+            Label titleLabel = new Label(text);
             titleLabel.setEllipsisString("");
             titleLabel.setAlignment(Pos.CENTER);
             item.setTitleLabel(titleLabel);

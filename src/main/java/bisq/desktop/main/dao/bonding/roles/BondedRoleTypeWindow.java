@@ -31,7 +31,7 @@ import javafx.geometry.Insets;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
+class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
     private final BondedRoleType bondedRoleType;
     private final BsqFormatter bsqFormatter;
 

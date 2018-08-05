@@ -104,18 +104,13 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     private final ObservableList<ProposalListItem> proposalList = FXCollections.observableArrayList();
     private final SortedList<ProposalListItem> sortedProposalList = new SortedList<>(proposalList);
 
-    private TableView<VoteListItem> votesTableView;
     private final ObservableList<VoteListItem> voteListItemList = FXCollections.observableArrayList();
     private final SortedList<VoteListItem> sortedVoteListItemList = new SortedList<>(voteListItemList);
-
-    private ProposalDisplay proposalDisplay;
 
     private Subscription selectedProposalSubscription;
     private ChangeListener<CycleListItem> selectedVoteResultListItemListener;
     private ResultsOfCycle resultsOfCycle;
     private ProposalListItem selectedProposalListItem;
-    private TableGroupHeadline proposalsTableHeader;
-    private TableGroupHeadline votesTableHeader;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +310,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createProposalsTable() {
-        proposalsTableHeader = new TableGroupHeadline(Res.get("dao.results.proposals.header"));
+        TableGroupHeadline proposalsTableHeader = new TableGroupHeadline(Res.get("dao.results.proposals.header"));
         GridPane.setRowIndex(proposalsTableHeader, ++gridRow);
         GridPane.setMargin(proposalsTableHeader, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         GridPane.setColumnSpan(proposalsTableHeader, 2);
@@ -351,7 +346,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, bsqWalletService, daoFacade);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, bsqWalletService, daoFacade);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -380,13 +375,13 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createVotesTable() {
-        votesTableHeader = new TableGroupHeadline(Res.get("dao.results.proposals.voting.detail.header"));
+        TableGroupHeadline votesTableHeader = new TableGroupHeadline(Res.get("dao.results.proposals.voting.detail.header"));
         GridPane.setRowIndex(votesTableHeader, ++gridRow);
         GridPane.setMargin(votesTableHeader, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         GridPane.setColumnSpan(votesTableHeader, 2);
         root.getChildren().add(votesTableHeader);
 
-        votesTableView = new TableView<>();
+        TableView<VoteListItem> votesTableView = new TableView<>();
         votesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 

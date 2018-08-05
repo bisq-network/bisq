@@ -41,9 +41,10 @@ public class VoteListItem {
     private final BsqFormatter bsqFormatter;
     private final DecryptedVote decryptedVote;
 
+    private final String proposalTxId;
+
     private long merit;
     private long stake;
-    private String proposalTxId = "";
     @Getter
     private String blindVoteTxId = "";
     @Getter
@@ -55,6 +56,7 @@ public class VoteListItem {
                         BsqFormatter bsqFormatter) {
         this.decryptedVote = decryptedVote;
         this.bsqFormatter = bsqFormatter;
+
         proposalTxId = proposal.getTxId();
 
         if (decryptedVote != null) {

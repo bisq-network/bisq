@@ -69,8 +69,6 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-    private int gridRow = 0;
-
     private final ObservableList<BondedRolesListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<BondedRolesListItem> sortedList = new SortedList<>(observableList);
 
@@ -94,6 +92,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     @Override
     public void initialize() {
         TableGroupHeadline headline = new TableGroupHeadline(Res.get("dao.bond.table.header"));
+        int gridRow = 0;
         GridPane.setRowIndex(headline, gridRow);
         GridPane.setMargin(headline, new Insets(0, -10, -10, -10));
         GridPane.setColumnSpan(headline, 2);

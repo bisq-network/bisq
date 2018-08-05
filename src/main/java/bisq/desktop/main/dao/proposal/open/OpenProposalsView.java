@@ -130,10 +130,11 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private ListChangeListener<Proposal> proposalListChangeListener;
     private ListChangeListener<Ballot> ballotListChangeListener;
     private ChangeListener<String> stakeListener;
-    private List<Button> voteButtons = new ArrayList<>();
-    private List<Node> voteFields = new ArrayList<>();
+    private final List<Button> voteButtons = new ArrayList<>();
+    private final List<Node> voteFields = new ArrayList<>();
     private TitledGroupBg voteTitledGroupBg;
-    private Label stakeLabel, meritLabel, revealTxIdLabel, blindVoteTxIdLabel;
+    private Label revealTxIdLabel;
+    private Label blindVoteTxIdLabel;
     private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
     private TextField meritTextField;
 
@@ -667,7 +668,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
         Tuple2<Label, TextField> meritTuple = addLabelTextField(root, gridRow,
                 Res.getWithCol("dao.proposal.myVote.merit"), 40);
-        meritLabel = meritTuple.first;
+        Label meritLabel = meritTuple.first;
         meritTextField = meritTuple.second;
         meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
         voteFields.add(meritLabel);
@@ -675,7 +676,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
         Tuple2<Label, InputTextField> stakeTuple = addLabelInputTextField(root, ++gridRow,
                 Res.getWithCol("dao.proposal.myVote.stake"));
-        stakeLabel = stakeTuple.first;
+        Label stakeLabel = stakeTuple.first;
         stakeInputTextField = stakeTuple.second;
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
         voteFields.add(stakeLabel);

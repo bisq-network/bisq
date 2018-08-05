@@ -137,7 +137,7 @@ public class BondingViewUtils {
         log.info("unlock tx: {}", lockupTxId);
     }
 
-    public void handleError(Throwable throwable) {
+    private void handleError(Throwable throwable) {
         if (throwable instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) throwable).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";

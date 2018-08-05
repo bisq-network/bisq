@@ -85,6 +85,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@SuppressWarnings("ConstantConditions")
 @Slf4j
 public class ProposalDisplay {
     private final GridPane gridPane;
@@ -113,14 +114,13 @@ public class ProposalDisplay {
     @Nullable
     private TxIdTextField txIdTextField;
     private int gridRowStartIndex;
-    private List<Runnable> inputChangedListeners = new ArrayList<>();
+    private final List<Runnable> inputChangedListeners = new ArrayList<>();
     @Getter
     private List<TextInputControl> inputControls = new ArrayList<>();
     @Getter
     private List<ComboBox> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
-    private int titledGroupBgRowSpan;
 
 
     // TODO get that warning at closing the window...
@@ -156,7 +156,7 @@ public class ProposalDisplay {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
-        titledGroupBgRowSpan = 6;
+        int titledGroupBgRowSpan = 6;
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
@@ -268,6 +268,7 @@ public class ProposalDisplay {
                 comboBoxes.add(paramComboBox);
                 paramValueTextField = addLabelInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramValue")).second;
+                //noinspection ConstantConditions
                 paramValueTextField.setValidator(new IntegerValidator());
                 inputControls.add(paramValueTextField);
                 break;
@@ -302,6 +303,7 @@ public class ProposalDisplay {
 
         if (isMakeProposalScreen) {
             proposalFeeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
+            //noinspection ConstantConditions
             proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
         }
 
@@ -451,6 +453,7 @@ public class ProposalDisplay {
         });
         comboBoxes.stream()
                 .filter(Objects::nonNull).forEach(comboBox -> {
+            //noinspection unchecked
             comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener);
         });
     }
@@ -463,6 +466,7 @@ public class ProposalDisplay {
         });
         comboBoxes.stream()
                 .filter(Objects::nonNull).forEach(comboBox -> {
+            //noinspection unchecked
             comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener);
         });
     }
