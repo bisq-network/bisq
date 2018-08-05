@@ -64,7 +64,10 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
@@ -153,9 +156,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
+        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
-        //noinspection unchecked
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
@@ -190,8 +192,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        //noinspection unchecked
-        languageComboBox = addLabelComboBox(gridPane, ++gridRow).second;
+        languageComboBox = FormBuilder.<String>addLabelComboBox(gridPane, ++gridRow).second;
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {

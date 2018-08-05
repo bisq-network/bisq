@@ -185,7 +185,6 @@ class MenuItem extends AutoTooltipToggleButton {
     }
 
     public void activate() {
-        //noinspection unchecked
         setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, viewClass));
         selectedProperty().addListener(selectedPropertyChangeListener);
         disableProperty().addListener(disablePropertyChangeListener);

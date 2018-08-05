@@ -101,13 +101,10 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == offerBookTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
             else if (newValue == tradesTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
             else if (newValue == spreadTab)
-                //noinspection unchecked
                 navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
         };
 
@@ -134,13 +131,10 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == offerBookTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
         else if (root.getSelectionModel().getSelectedItem() == tradesTab)
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
         else
-            //noinspection unchecked
             navigation.navigateTo(MainView.class, MarketView.class, SpreadView.class);
 
         if (root.getScene() != null) {

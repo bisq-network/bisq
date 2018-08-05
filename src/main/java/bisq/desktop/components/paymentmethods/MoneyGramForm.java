@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
 
@@ -26,7 +27,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Region;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.MoneyGramAccount;
@@ -37,12 +37,10 @@ import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
 
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
@@ -50,10 +48,6 @@ import javafx.scene.layout.GridPane;
 
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-
-import javafx.collections.FXCollections;
-
-import javafx.util.StringConverter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -116,57 +110,7 @@ public class MoneyGramForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        Tuple3<Label, ComboBox, ComboBox> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
-
-        //noinspection unchecked,unchecked,unchecked
-        ComboBox<Region> regionComboBox = tuple3.second;
-        regionComboBox.setPromptText(Res.get("payment.select.region"));
-        regionComboBox.setConverter(new StringConverter<Region>() {
-            @Override
-            public String toString(Region region) {
-                return region.name;
-            }
-
-            @Override
-            public Region fromString(String s) {
-                return null;
-            }
-        });
-        regionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
-
-        //noinspection unchecked,unchecked,unchecked
-        ComboBox<Country> countryComboBox = tuple3.third;
-        countryComboBox.setVisibleRowCount(15);
-        countryComboBox.setDisable(true);
-        countryComboBox.setPromptText(Res.get("payment.select.country"));
-        countryComboBox.setConverter(new StringConverter<Country>() {
-            @Override
-            public String toString(Country country) {
-                return country.name + " (" + country.code + ")";
-            }
-
-            @Override
-            public Country fromString(String s) {
-                return null;
-            }
-        });
-        countryComboBox.setOnAction(e -> {
-            Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
-            if (selectedItem != null) {
-                getMoneyGramPaymentAccount().setCountry(selectedItem);
-                updateFromInputs();
-                applyIsStateRequired();
-                stateInputTextField.setText("");
-            }
-        });
-
-        regionComboBox.setOnAction(e -> {
-            Region selectedItem = regionComboBox.getSelectionModel().getSelectedItem();
-            if (selectedItem != null) {
-                countryComboBox.setDisable(false);
-                countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllCountriesForRegion(selectedItem)));
-            }
-        });
+        gridRow = GUIUtil.addRegionCountry(gridPane, gridRow, this::onCountrySelected);
 
         holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane,
                 ++gridRow, Res.getWithCol("payment.account.fullName")).second;
@@ -198,6 +142,15 @@ public class MoneyGramForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillCheckBox();
 
         updateFromInputs();
+    }
+
+    private void onCountrySelected(Country country) {
+        if (country != null) {
+            getMoneyGramPaymentAccount().setCountry(country);
+            updateFromInputs();
+            applyIsStateRequired();
+            stateInputTextField.setText("");
+        }
     }
 
     private void addCurrenciesGrid(boolean isEditable) {

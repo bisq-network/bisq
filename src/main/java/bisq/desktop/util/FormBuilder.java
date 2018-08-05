@@ -647,20 +647,20 @@ public class FormBuilder {
     // Label  + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex) {
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex) {
         return addLabelComboBox(gridPane, rowIndex, null, 0);
     }
 
-    public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex, String title) {
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title) {
         return addLabelComboBox(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = null;
         if (title != null)
             label = addLabel(gridPane, rowIndex, title, top);
 
-        ComboBox comboBox = new ComboBox();
+        ComboBox<T> comboBox = new ComboBox<>();
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
@@ -669,12 +669,17 @@ public class FormBuilder {
         return new Tuple2<>(label, comboBox);
     }
 
-    public static Tuple2<Label, SearchComboBox> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + SearchComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple2<Label, SearchComboBox<T>> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = null;
         if (title != null)
             label = addLabel(gridPane, rowIndex, title, top);
 
-        SearchComboBox comboBox = new SearchComboBox();
+        SearchComboBox<T> comboBox = new SearchComboBox<>();
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
@@ -682,44 +687,46 @@ public class FormBuilder {
 
         return new Tuple2<>(label, comboBox);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // HBox  + AutoTooltipLabel + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<HBox, AutoTooltipLabel, ComboBox> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T> Tuple3<HBox, AutoTooltipLabel, ComboBox<T>> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setSpacing(4);
 
         final AutoTooltipLabel label = new AutoTooltipLabel(title);
-        final ComboBox<Object> comboBox = new ComboBox<>();
+        final ComboBox<T> comboBox = new ComboBox<>();
         hBox.getChildren().addAll(label, comboBox);
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnSpan(hBox, 2);
-        GridPane.setMargin(hBox, new Insets(top, 0,0,24));
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 24));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(hBox, label, comboBox);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + ComboBox + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, ComboBox, ComboBox> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title) {
+    public static <T, R> Tuple3<Label, ComboBox<R>, ComboBox<T>> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title) {
         return addLabelComboBoxComboBox(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple3<Label, ComboBox, ComboBox> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T, R> Tuple3<Label, ComboBox<T>, ComboBox<R>> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox comboBox1 = new ComboBox();
-        ComboBox comboBox2 = new ComboBox();
+        ComboBox<T> comboBox1 = new ComboBox<>();
+        ComboBox<R> comboBox2 = new ComboBox<>();
         hBox.getChildren().addAll(comboBox1, comboBox2);
 
         GridPane.setRowIndex(hBox, rowIndex);
@@ -734,18 +741,18 @@ public class FormBuilder {
     // Label  + ComboBox + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, ComboBox, Button> addLabelComboBoxButton(GridPane gridPane,
-                                                                         int rowIndex,
-                                                                         String title,
-                                                                         String buttonTitle) {
+    public static <T> Tuple3<Label, ComboBox<T>, Button> addLabelComboBoxButton(GridPane gridPane,
+                                                                                int rowIndex,
+                                                                                String title,
+                                                                                String buttonTitle) {
         return addLabelComboBoxButton(gridPane, rowIndex, title, buttonTitle, 0);
     }
 
-    public static Tuple3<Label, ComboBox, Button> addLabelComboBoxButton(GridPane gridPane,
-                                                                         int rowIndex,
-                                                                         String title,
-                                                                         String buttonTitle,
-                                                                         double top) {
+    public static <T> Tuple3<Label, ComboBox<T>, Button> addLabelComboBoxButton(GridPane gridPane,
+                                                                                int rowIndex,
+                                                                                String title,
+                                                                                String buttonTitle,
+                                                                                double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
@@ -754,7 +761,7 @@ public class FormBuilder {
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
-        ComboBox comboBox = new ComboBox();
+        ComboBox<T> comboBox = new ComboBox<>();
 
         hBox.getChildren().addAll(comboBox, button);
 
@@ -766,28 +773,29 @@ public class FormBuilder {
         return new Tuple3<>(label, comboBox, button);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + ComboBox + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, ComboBox, TextField> addLabelComboBoxLabel(GridPane gridPane,
-                                                                           int rowIndex,
-                                                                           String title,
-                                                                           String textFieldText) {
+    public static <T> Tuple3<Label, ComboBox<T>, TextField> addLabelComboBoxLabel(GridPane gridPane,
+                                                                                  int rowIndex,
+                                                                                  String title,
+                                                                                  String textFieldText) {
         return addLabelComboBoxLabel(gridPane, rowIndex, title, textFieldText, 0);
     }
 
-    public static Tuple3<Label, ComboBox, TextField> addLabelComboBoxLabel(GridPane gridPane,
-                                                                           int rowIndex,
-                                                                           String title,
-                                                                           String textFieldText,
-                                                                           double top) {
+    public static <T> Tuple3<Label, ComboBox<T>, TextField> addLabelComboBoxLabel(GridPane gridPane,
+                                                                                  int rowIndex,
+                                                                                  String title,
+                                                                                  String textFieldText,
+                                                                                  double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox comboBox = new ComboBox();
+        ComboBox<T> comboBox = new ComboBox<>();
         TextField textField = new TextField(textFieldText);
         textField.setEditable(false);
         textField.setMouseTransparent(true);
@@ -1212,14 +1220,14 @@ public class FormBuilder {
     // Label  + List
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title) {
+    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title) {
         return addLabelListView(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
-        ListView listView = new ListView();
+        ListView<T> listView = new ListView<>();
         GridPane.setRowIndex(listView, rowIndex);
         GridPane.setColumnIndex(listView, 1);
         GridPane.setMargin(listView, new Insets(top, 0, 0, 0));
@@ -1288,7 +1296,7 @@ public class FormBuilder {
 
     public static Button getIconButton(GlyphIcons icon, String styleClass) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
-            final Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "","2em", null, ContentDisplay.CENTER);
+            Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "", "2em", null, ContentDisplay.CENTER);
             textIcon.setId("icon-button");
             textIcon.getGraphic().getStyleClass().add(styleClass);
             textIcon.setPrefWidth(20);
