@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.open;
+package bisq.desktop.main.dao.governance.open;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -27,9 +27,8 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.main.dao.proposal.CycleOverview;
-import bisq.desktop.main.dao.proposal.ProposalDisplay;
-import bisq.desktop.main.dao.proposal.ProposalWindow;
+import bisq.desktop.main.dao.governance.PhasesView;
+import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -104,39 +103,36 @@ import static bisq.desktop.util.FormBuilder.*;
 public class OpenProposalsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
-    private final CycleOverview cycleOverview;
+    private final PhasesView phasesView;
     private final VoteResultService voteResultService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
     private final ObservableList<OpenProposalListItem> listItems = FXCollections.observableArrayList();
     private final SortedList<OpenProposalListItem> sortedList = new SortedList<>(listItems);
+    private final List<Button> voteButtons = new ArrayList<>();
+    private final List<Node> voteFields = new ArrayList<>();
+
     private TableView<OpenProposalListItem> tableView;
-    private Subscription selectedProposalSubscription;
-    private ProposalDisplay proposalDisplay;
-    private int gridRow = 0;
-    private OpenProposalListItem selectedItem;
-    private GridPane proposalDisplayGridPane;
-    private DaoPhase.Phase currentPhase;
-    private Subscription phaseSubscription;
-    private ScrollPane proposalDisplayView;
-    private boolean proposalDisplayInitialized;
-
-
+    private TitledGroupBg voteTitledGroupBg;
+    private Label revealTxIdLabel, blindVoteTxIdLabel, voteButtonInfoLabel;
+    private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
+    private TextField meritTextField;
     private Button removeProposalButton, acceptButton, rejectButton, ignoreButton, voteButton;
     private InputTextField stakeInputTextField;
+    private ScrollPane proposalDisplayView;
+    private GridPane proposalDisplayGridPane;
     private BusyAnimation voteButtonBusyAnimation;
-    private Label voteButtonInfoLabel;
+    private ProposalDisplay proposalDisplay;
+
+    private int gridRow = 0;
+    private boolean proposalDisplayInitialized;
+    private OpenProposalListItem selectedItem;
+    private DaoPhase.Phase currentPhase;
     private ListChangeListener<Proposal> proposalListChangeListener;
     private ListChangeListener<Ballot> ballotListChangeListener;
     private ChangeListener<String> stakeListener;
-    private final List<Button> voteButtons = new ArrayList<>();
-    private final List<Node> voteFields = new ArrayList<>();
-    private TitledGroupBg voteTitledGroupBg;
-    private Label revealTxIdLabel;
-    private Label blindVoteTxIdLabel;
-    private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
-    private TextField meritTextField;
+    private Subscription selectedProposalSubscription, phaseSubscription;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,14 +142,13 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     @Inject
     private OpenProposalsView(DaoFacade daoFacade,
                               BsqWalletService bsqWalletService,
-                              CycleOverview cycleOverview,
+                              PhasesView phasesView,
                               VoteResultService voteResultService,
                               BsqFormatter bsqFormatter,
                               BSFormatter btcFormatter) {
-
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
-        this.cycleOverview = cycleOverview;
+        this.phasesView = phasesView;
         this.voteResultService = voteResultService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -165,7 +160,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
         root.getStyleClass().add("vote-root");
 
-        gridRow = cycleOverview.addGroup(root, gridRow);
+        gridRow = phasesView.addGroup(root, gridRow);
 
         proposalDisplayGridPane = new GridPane();
 
@@ -176,13 +171,12 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         ballotListChangeListener = c -> updateListItems();
         proposalListChangeListener = c -> updateListItems();
 
-        // ballot
         stakeListener = (observable, oldValue, newValue) -> updateViews();
     }
 
     @Override
     protected void activate() {
-        cycleOverview.activate();
+        phasesView.activate();
 
         phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
@@ -210,7 +204,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
     @Override
     protected void deactivate() {
-        cycleOverview.deactivate();
+        phasesView.deactivate();
 
         phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
@@ -521,7 +515,6 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                 });
     }
 
-
     private void updateStateAfterVote() {
         updateViews();
         tableView.refresh();
@@ -712,12 +705,13 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createProposalColumns() {
-        TableColumn<OpenProposalListItem, OpenProposalListItem> dateColumn = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
-        dateColumn.setMinWidth(190);
-        dateColumn.setMinWidth(190);
+        TableColumn<OpenProposalListItem, OpenProposalListItem> column;
 
-        dateColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        dateColumn.setCellFactory(
+        column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
+        column.setMinWidth(190);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
                 new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
                         OpenProposalListItem>>() {
                     @Override
@@ -735,15 +729,16 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                         };
                     }
                 });
-        dateColumn.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
-        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getColumns().add(dateColumn);
-        tableView.getSortOrder().add(dateColumn);
+        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getColumns().add(column);
+        tableView.getSortOrder().add(column);
 
-        TableColumn<OpenProposalListItem, OpenProposalListItem> nameColumn = new AutoTooltipTableColumn<>(Res.get("shared.name"));
-        nameColumn.setMinWidth(60);
-        nameColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        nameColumn.setCellFactory(
+
+        column = new AutoTooltipTableColumn<>(Res.get("shared.name"));
+        column.setMinWidth(60);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
                 new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
                         OpenProposalListItem>>() {
                     @Override
@@ -761,13 +756,14 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                         };
                     }
                 });
-        nameColumn.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
-        tableView.getColumns().add(nameColumn);
+        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
+        tableView.getColumns().add(column);
 
-        TableColumn<OpenProposalListItem, OpenProposalListItem> uidColumn = new AutoTooltipTableColumn<>(Res.get("shared.id"));
-        uidColumn.setMinWidth(60);
-        uidColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        uidColumn.setCellFactory(
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.proposal.table.header.link"));
+        column.setMinWidth(80);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
                 new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
                         OpenProposalListItem>>() {
 
@@ -782,11 +778,9 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
-                                    field = new HyperlinkWithIcon(proposal.getShortId());
-                                    field.setOnAction(event -> {
-                                        new ProposalWindow(bsqFormatter, bsqWalletService, proposal, daoFacade).show();
-                                    });
-                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    field = new HyperlinkWithIcon(proposal.getLink());
+                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -797,15 +791,15 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                         };
                     }
                 });
-        uidColumn.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
-        tableView.getColumns().add(uidColumn);
+        column.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
+        tableView.getColumns().add(column);
 
 
-        TableColumn<OpenProposalListItem, OpenProposalListItem> confidenceColumn = new TableColumn<>(Res.get("shared.confirmations"));
-        confidenceColumn.setMinWidth(130);
-        confidenceColumn.setMaxWidth(confidenceColumn.getMinWidth());
-        confidenceColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        confidenceColumn.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
+        column = new TableColumn<>(Res.get("shared.confirmations"));
+        column.setMinWidth(130);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
                 TableCell<OpenProposalListItem, OpenProposalListItem>>() {
 
             @Override
@@ -826,14 +820,14 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                 };
             }
         });
-        confidenceColumn.setComparator(Comparator.comparing(OpenProposalListItem::getConfirmations));
-        tableView.getColumns().add(confidenceColumn);
+        column.setComparator(Comparator.comparing(OpenProposalListItem::getConfirmations));
+        tableView.getColumns().add(column);
 
-        TableColumn<OpenProposalListItem, OpenProposalListItem> actionColumn = new TableColumn<>();
-        actionColumn.setMinWidth(40);
-        actionColumn.setMaxWidth(actionColumn.getMinWidth());
-        actionColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        actionColumn.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
+        column = new TableColumn<>();
+        column.setMinWidth(40);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
                 TableCell<OpenProposalListItem, OpenProposalListItem>>() {
 
             @Override
@@ -861,6 +855,6 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                 };
             }
         });
-        tableView.getColumns().add(actionColumn);
+        tableView.getColumns().add(column);
     }
 }

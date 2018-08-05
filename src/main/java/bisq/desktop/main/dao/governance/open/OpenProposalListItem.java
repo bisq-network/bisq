@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.open;
+package bisq.desktop.main.dao.governance.open;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 

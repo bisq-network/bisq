@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.result;
+package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
@@ -37,9 +37,9 @@ public class CycleListItem {
     @Getter
     private ResultsOfCycle resultsOfCycle;
 
-    public CycleListItem(ResultsOfCycle resultsOfCycle,
-                         BsqStateService bsqStateService,
-                         BsqFormatter bsqFormatter) {
+    CycleListItem(ResultsOfCycle resultsOfCycle,
+                  BsqStateService bsqStateService,
+                  BsqFormatter bsqFormatter) {
         this.resultsOfCycle = resultsOfCycle;
         this.bsqStateService = bsqStateService;
         this.bsqFormatter = bsqFormatter;

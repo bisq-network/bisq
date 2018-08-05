@@ -26,7 +26,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.bonding.BondingView;
-import bisq.desktop.main.dao.proposal.ProposalView;
+import bisq.desktop.main.dao.governance.GovernanceView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 
@@ -103,7 +103,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                 else
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
             } else if (newValue == proposalsTab) {
-                navigation.navigateTo(MainView.class, DaoView.class, ProposalView.class);
+                navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
             } else if (newValue == bondingTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
             }
@@ -120,7 +120,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             if (selectedItem == bsqWalletTab)
                 navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == proposalsTab)
-                navigation.navigateTo(MainView.class, DaoView.class, ProposalView.class);
+                navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
             else if (selectedItem == bondingTab)
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
         }
@@ -137,7 +137,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (view instanceof BsqWalletView) {
             selectedTab = bsqWalletTab;
             bsqWalletView = (BsqWalletView) view;
-        } else if (view instanceof ProposalView) {
+        } else if (view instanceof GovernanceView) {
             selectedTab = proposalsTab;
         } else if (view instanceof BondingView) {
             selectedTab = bondingTab;

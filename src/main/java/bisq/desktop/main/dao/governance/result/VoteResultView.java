@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.result;
+package bisq.desktop.main.dao.governance.result;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -23,8 +23,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.dao.proposal.CycleOverview;
-import bisq.desktop.main.dao.proposal.ProposalDisplay;
+import bisq.desktop.main.dao.governance.PhasesView;
+import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -84,7 +84,7 @@ import java.util.stream.Collectors;
 @FxmlView
 public class VoteResultView extends ActivatableView<GridPane, Void> implements BsqStateListener {
     private final DaoFacade daoFacade;
-    private final CycleOverview cycleOverview;
+    private final PhasesView phasesView;
     private final BsqStateService bsqStateService;
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
@@ -119,7 +119,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     @Inject
     public VoteResultView(DaoFacade daoFacade,
-                          CycleOverview cycleOverview,
+                          PhasesView phasesView,
                           BsqStateService bsqStateService,
                           CycleService cycleService,
                           VoteResultService voteResultService,
@@ -128,7 +128,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                           Preferences preferences,
                           BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
-        this.cycleOverview = cycleOverview;
+        this.phasesView = phasesView;
         this.bsqStateService = bsqStateService;
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
@@ -140,7 +140,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     @Override
     public void initialize() {
-        gridRow = cycleOverview.addGroup(root, gridRow);
+        gridRow = phasesView.addGroup(root, gridRow);
         selectedVoteResultListItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
 
         createCyclesTable();
@@ -151,7 +151,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     protected void activate() {
         super.activate();
 
-        cycleOverview.activate();
+        phasesView.activate();
 
         daoFacade.addBsqStateListener(this);
         cyclesTableView.getSelectionModel().selectedItemProperty().addListener(selectedVoteResultListItemListener);
@@ -165,7 +165,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
         onResultsListItemSelected(null);
 
-        cycleOverview.deactivate();
+        phasesView.deactivate();
 
         daoFacade.removeBsqStateListener(this);
         cyclesTableView.getSelectionModel().selectedItemProperty().removeListener(selectedVoteResultListItemListener);

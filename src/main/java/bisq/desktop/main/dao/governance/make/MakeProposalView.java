@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.make;
+package bisq.desktop.main.dao.governance.make;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.dao.proposal.CycleOverview;
-import bisq.desktop.main.dao.proposal.ProposalDisplay;
+import bisq.desktop.main.dao.governance.PhasesView;
+import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -87,7 +87,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
-    private final CycleOverview cycleOverview;
+    private final PhasesView phasesView;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -111,14 +111,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              FeeService feeService,
-                             CycleOverview cycleOverview,
+                             PhasesView phasesView,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
-        this.cycleOverview = cycleOverview;
+        this.phasesView = phasesView;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -126,7 +126,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
-        gridRow = cycleOverview.addGroup(root, gridRow);
+        gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
         proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
@@ -160,7 +160,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void activate() {
-        cycleOverview.activate();
+        phasesView.activate();
 
         daoFacade.addBsqStateListener(this);
 
@@ -173,7 +173,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void deactivate() {
-        cycleOverview.deactivate();
+        phasesView.deactivate();
 
         daoFacade.removeBsqStateListener(this);
 

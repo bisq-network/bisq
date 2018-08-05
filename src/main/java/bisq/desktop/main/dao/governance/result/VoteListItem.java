@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.result;
+package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.voting.ballot.Ballot;
@@ -50,10 +50,10 @@ public class VoteListItem {
     @Getter
     private String voteRevealTxId = "";
 
-    public VoteListItem(Proposal proposal,
-                        DecryptedVote decryptedVote,
-                        BsqStateService bsqStateService,
-                        BsqFormatter bsqFormatter) {
+    VoteListItem(Proposal proposal,
+                 DecryptedVote decryptedVote,
+                 BsqStateService bsqStateService,
+                 BsqFormatter bsqFormatter) {
         this.decryptedVote = decryptedVote;
         this.bsqFormatter = bsqFormatter;
 

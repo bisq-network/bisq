@@ -57,40 +57,47 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
     public int addGroup(GridPane gridPane, int gridRow) {
         addTitledGroupBg(gridPane, gridRow, 6, Res.get("shared.balance"));
-        availableBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
+        availableBalanceTextField = addLabelTextField(gridPane, gridRow,
+                Res.getWithCol("dao.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
         availableBalanceTextField.setMouseTransparent(false);
 
-        availableNonBsqBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.availableNonBsqBalance")).second;
+        availableNonBsqBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("dao.availableNonBsqBalance")).second;
         availableNonBsqBalanceTextField.setMouseTransparent(false);
 
-        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
+        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("dao.unverifiedBsqBalance")).second;
         unverifiedBalanceTextField.setMouseTransparent(false);
 
-        lockedForVoteBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared" +
-                ".lockedForVoteBalance")).second;
+        lockedForVoteBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("dao.lockedForVoteBalance")).second;
         lockedForVoteBalanceTextField.setMouseTransparent(false);
 
         lockedInBondsBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol(
-                "shared.lockedInBonds")).second;
+                "dao.lockedInBonds")).second;
         lockedInBondsBalanceTextField.setMouseTransparent(false);
 
         // TODO add unlockingBondsBalanceTextField
 
-        totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
+        totalBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("dao.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
 
         return gridRow;
     }
 
     public int addBondBalanceGroup(GridPane gridPane, int gridRow) {
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("dao.bonding.dashboard.bondsHeadline"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("dao.bonding.dashboard.bondsHeadline"), Layout.GROUP_DISTANCE);
 
-        lockupAmountTextField = addLabelTextField(gridPane, gridRow, Res.get("dao.bonding.dashboard.lockupAmount"),
+        lockupAmountTextField = addLabelTextField(gridPane, gridRow,
+                Res.get("dao.bonding.dashboard.lockupAmount"),
                 Layout.FIRST_ROW_DISTANCE + Layout.GROUP_DISTANCE).second;
         lockupAmountTextField.setMouseTransparent(false);
 
-        unlockingAmountTextField = addLabelTextField(gridPane, ++gridRow, Res.get("dao.bonding.dashboard.unlockingAmount")).second;
+        unlockingAmountTextField = addLabelTextField(gridPane, ++gridRow,
+                Res.get("dao.bonding.dashboard.unlockingAmount")).second;
         unlockingAmountTextField.setMouseTransparent(false);
 
         return gridRow;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal;
+package bisq.desktop.main.dao.governance;
 
 import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
@@ -43,14 +43,14 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
-public class CycleOverview implements BsqStateListener {
+public class PhasesView implements BsqStateListener {
     private final DaoFacade daoFacade;
     private SeparatedPhaseBars separatedPhaseBars;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
     private Subscription phaseSubscription;
 
     @Inject
-    private CycleOverview(DaoFacade daoFacade) {
+    private PhasesView(DaoFacade daoFacade) {
         this.daoFacade = daoFacade;
     }
 

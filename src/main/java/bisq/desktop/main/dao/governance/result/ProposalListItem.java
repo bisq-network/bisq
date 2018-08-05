@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.result;
+package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.role.BondedRole;
 import bisq.core.dao.voting.proposal.Proposal;
@@ -43,7 +43,7 @@ public class ProposalListItem {
     @Getter
     private EvaluatedProposal evaluatedProposal;
 
-    public ProposalListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+    ProposalListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
         proposalVoteResult = evaluatedProposal.getProposalVoteResult();
         this.bsqFormatter = bsqFormatter;

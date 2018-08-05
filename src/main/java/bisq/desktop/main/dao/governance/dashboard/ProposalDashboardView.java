@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal.dashboard;
+package bisq.desktop.main.dao.governance.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.dao.proposal.CycleOverview;
+import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -46,7 +46,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
     private final DaoFacade daoFacade;
-    private final CycleOverview cycleOverview;
+    private final PhasesView phasesView;
     private final BSFormatter formatter;
 
     private int gridRow = 0;
@@ -58,15 +58,15 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalDashboardView(DaoFacade daoFacade, CycleOverview cycleOverview, BSFormatter formatter) {
+    public ProposalDashboardView(DaoFacade daoFacade, PhasesView phasesView, BSFormatter formatter) {
         this.daoFacade = daoFacade;
-        this.cycleOverview = cycleOverview;
+        this.phasesView = phasesView;
         this.formatter = formatter;
     }
 
     @Override
     public void initialize() {
-        gridRow = cycleOverview.addGroup(root, gridRow);
+        gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
         currentBlockHeightTextField = addLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
@@ -85,7 +85,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void activate() {
         super.activate();
 
-        cycleOverview.activate();
+        phasesView.activate();
 
         daoFacade.addBsqStateListener(this);
 
@@ -96,7 +96,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     protected void deactivate() {
         super.deactivate();
 
-        cycleOverview.deactivate();
+        phasesView.deactivate();
 
         daoFacade.removeBsqStateListener(this);
     }

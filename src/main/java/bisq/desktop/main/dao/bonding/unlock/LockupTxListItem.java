@@ -18,8 +18,8 @@
 package bisq.desktop.main.dao.bonding.unlock;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.TxConfidenceListItem;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.main.dao.TxConfidenceListItem;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;

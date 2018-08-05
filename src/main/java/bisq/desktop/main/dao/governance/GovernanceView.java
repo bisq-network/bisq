@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal;
+package bisq.desktop.main.dao.governance;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
@@ -27,10 +27,10 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.proposal.dashboard.ProposalDashboardView;
-import bisq.desktop.main.dao.proposal.make.MakeProposalView;
-import bisq.desktop.main.dao.proposal.open.OpenProposalsView;
-import bisq.desktop.main.dao.proposal.result.VoteResultView;
+import bisq.desktop.main.dao.governance.dashboard.ProposalDashboardView;
+import bisq.desktop.main.dao.governance.make.MakeProposalView;
+import bisq.desktop.main.dao.governance.open.OpenProposalsView;
+import bisq.desktop.main.dao.governance.result.VoteResultView;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.period.DaoPhase;
@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @FxmlView
-public class ProposalView extends ActivatableViewAndModel {
+public class GovernanceView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -70,7 +70,7 @@ public class ProposalView extends ActivatableViewAndModel {
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
 
     @Inject
-    private ProposalView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade) {
+    private GovernanceView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.daoFacade = daoFacade;
@@ -79,7 +79,7 @@ public class ProposalView extends ActivatableViewAndModel {
     @Override
     public void initialize() {
         navigationListener = viewPath -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(ProposalView.class) != 2)
+            if (viewPath.size() != 4 || viewPath.indexOf(GovernanceView.class) != 2)
                 return;
 
             selectedViewClass = viewPath.tip();
@@ -94,7 +94,7 @@ public class ProposalView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, ProposalView.class);
+        final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, GovernanceView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 ProposalDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
@@ -117,14 +117,14 @@ public class ProposalView extends ActivatableViewAndModel {
 
         navigation.addListener(navigationListener);
         ViewPath viewPath = navigation.getCurrentPath();
-        if (viewPath.size() == 3 && viewPath.indexOf(ProposalView.class) == 2 ||
+        if (viewPath.size() == 3 && viewPath.indexOf(GovernanceView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
                 selectedViewClass = MakeProposalView.class;
 
             loadView(selectedViewClass);
 
-        } else if (viewPath.size() == 4 && viewPath.indexOf(ProposalView.class) == 2) {
+        } else if (viewPath.size() == 4 && viewPath.indexOf(GovernanceView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);
         }

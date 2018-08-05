@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.wallet.tx;
 
-import bisq.desktop.main.dao.TxConfidenceListItem;
+import bisq.desktop.components.TxConfidenceListItem;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;

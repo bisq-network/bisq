@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.proposal;
+package bisq.desktop.main.dao.governance;
 
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
@@ -121,11 +121,6 @@ public class ProposalDisplay {
     private List<ComboBox> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
-
-
-    // TODO get that warning at closing the window...
-    // javafx.scene.CssStyleHelper calculateValue
-    // WARNING: Could not resolve '-fx-accent' while resolving lookups for '-fx-text-fill' from rule '*.hyperlink' in stylesheet file:/Users/dev/idea/bisq/desktop/out/production/resources/bisq/desktop/bisq.css
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                            DaoFacade daoFacade) {
