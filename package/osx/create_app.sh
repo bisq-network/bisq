@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="0.7.1"
+version="0.8.0"
 
 ./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
 
@@ -82,18 +82,18 @@ $JAVA_HOME/bin/javapackager \
     -Bicon=package/osx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
-    -name Bisq \
-    -title Bisq \
+    -name Bisq_notifications \
+    -title Bisq_notifications \
     -vendor Bisq \
     -outdir deploy \
     -srcfiles "deploy/Bisq-$version.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
-    -outfile Bisq
+    -outfile Bisq_notifications
 
 rm "deploy/Bisq.html"
 rm "deploy/Bisq.jnlp"
 
-mv "deploy/bundles/Bisq-$version.dmg" "deploy/Bisq-$version.dmg"
+mv "deploy/bundles/Bisq_notifications-$version.dmg" "deploy/Bisq_notifications-$version.dmg"
 rm -r "deploy/bundles"
 
 open deploy
