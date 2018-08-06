@@ -201,10 +201,6 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     }
 
     @Override
-    public void onEmptyBlockAdded(Block block) {
-    }
-
-    @Override
     public void onParseTxsComplete(Block block) {
         updateList();
     }

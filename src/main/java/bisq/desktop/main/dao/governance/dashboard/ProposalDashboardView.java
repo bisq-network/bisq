@@ -112,10 +112,6 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     }
 
     @Override
-    public void onEmptyBlockAdded(Block block) {
-    }
-
-    @Override
     public void onParseTxsComplete(Block block) {
     }
 

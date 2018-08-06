@@ -137,10 +137,6 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     }
 
     @Override
-    public void onEmptyBlockAdded(Block block) {
-    }
-
-    @Override
     public void onParseTxsComplete(Block block) {
         updateList();
     }

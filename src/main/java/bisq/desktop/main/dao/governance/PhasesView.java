@@ -99,10 +99,6 @@ public class PhasesView implements BsqStateListener {
     }
 
     @Override
-    public void onEmptyBlockAdded(Block block) {
-    }
-
-    @Override
     public void onParseTxsComplete(Block block) {
     }
 
