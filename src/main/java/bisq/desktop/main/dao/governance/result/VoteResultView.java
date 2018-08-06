@@ -256,7 +256,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     .collect(Collectors.toList());
 
             long cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
-                    .map(e -> e.getTime() * 1000)
+                    .map(Block::getTime)
                     .orElse(0L);
             int cycleIndex = cycleService.getCycleIndex(cycle);
             ResultsOfCycle resultsOfCycle = new ResultsOfCycle(cycle,

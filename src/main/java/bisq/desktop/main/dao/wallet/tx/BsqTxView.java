@@ -540,8 +540,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
-                                                long blockTimeInSec = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTimeInSec * 1000));
+                                                long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
+                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;
