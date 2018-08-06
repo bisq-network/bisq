@@ -45,7 +45,7 @@ dependencies {
     compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'network.bisq:bisq-core:-SNAPSHOT'
     compile 'network.bisq:bisq-p2p:-SNAPSHOT'
-    compile 'network.bisq:bisq-grpc:-SNAPSHOT'
+    //compile 'network.bisq:bisq-grpc:-SNAPSHOT'
     compile 'org.controlsfx:controlsfx:8.0.6_20'
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
@@ -89,20 +89,7 @@ dependencyVerification {
         'de.jensd:fontawesomefx-materialdesignfont:8f700556bbfdc4a581224d3bd6ff869b8a03f6670bd7e0fc78884bd2f31fdb64',
         'de.jensd:fontawesomefx-commons:e1505a31433f1b2902478217651afc78dae5ab09670336afc46e582a1dea1e4d',
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
-        /*
-         TODO investigate why it fails if that is set. prob. related to master using diff. version and handling in jitpack...
-        'network.bisq.btcd-cli4j:btcd-cli4j-daemon:cf19fddccfd9c5302498dfdb29a7fead8faff04912285bfdaacad1fd7a27f646',
-        'network.bisq.btcd-cli4j:btcd-cli4j-core:cc063c3a501ee6dd6f2e2e98ce59e82d720a52522acc1ec0751434dece4851e4',
-        */
-        'io.grpc:grpc-alts:9cb1d830d8f465ff3011904bad3211192e6eec6562e61a88b2823c8de71c2f37',
-        'io.grpc:grpc-protobuf:0acf523d0eacae11e2c094112737c77af39789cb30332f2359004a6ab67e36a1',
-        'com.google.api.grpc:proto-google-common-protos:cfe1da4c0e82820c32a83c4bf25b42f4d3b7113177321c437a9fff3c42e1f4c9',
-        'com.google.protobuf:protobuf-java-util:8bd8a5de6d7e05dce16c8198c8013ebd9c703e10db957fb6dfab0ad24bcd8adc',
         'com.google.protobuf:protobuf-java:b5e2d91812d183c9f053ffeebcbcda034d4de6679521940a19064714966c2cd4',
-        'io.grpc:grpc-netty:631526592a1496ef2850154f58b45bef63682653c9910facccd550408baf1dc3',
-        'io.grpc:grpc-stub:b72069a9b331fb7e638e3f684968df78b995c41dec89a3cc4d31d554050d663b',
-        'io.grpc:grpc-protobuf-lite:1f81c360acd3d61b32a4ffb065d34fccdf951076490f2dd05070fb3169263d05',
-        'io.grpc:grpc-core:63e02c0fd675797c19861cbd7d254c629145f943a593032febd5676d77bc8678',
         'com.google.code.gson:gson:2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32',
         'com.googlecode.json-simple:json-simple:4e69696892b88b41c55d49ab2fdcc21eead92bf54acc588c0050596c3b75199c',
         'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
@@ -122,15 +109,16 @@ dependencyVerification {
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
         'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
-        'org.apache.commons:commons-lang3:8ac96fc686512d777fca85e144f196cd7cfe0c0aec23127229497d1a38ff651c',
+        'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
         'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
         'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
+        //'network.bisq.btcd-cli4j:btcd-cli4j-daemon:cf19fddccfd9c5302498dfdb29a7fead8faff04912285bfdaacad1fd7a27f646',
+        //'network.bisq.btcd-cli4j:btcd-cli4j-core:cc063c3a501ee6dd6f2e2e98ce59e82d720a52522acc1ec0751434dece4851e4',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
         'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
         'org.fxmisc.easybind:easybind:666af296dda6de68751668a62661571b5238ac6f1c07c8a204fc6f902b222aaf',
-        'io.netty:netty-tcnative-boringssl-static:762aa9b16025e373f73534e8b78bf1552b60bfb1c2c9b579de49e9e5517680de',
         'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
         'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
         'javax.inject:javax.inject:91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff',
@@ -144,8 +132,6 @@ dependencyVerification {
         'com.cedricwalter:tor-binary-windows:9487a735dadcadc6ede5ffad36a911c2d4a484f996be93d71094f26591b8c29e',
         'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',
         'org.apache.httpcomponents:httpcore:d7f853dee87680b07293d30855b39b9eb56c1297bd16ff1cd6f19ddb8fa745fb',
-        'io.netty:netty-codec-http2:6c616bf4dee8fd4bfd9e133b7dba8f6e115042e8dc347aef8f184027b1f9821f',
-        'io.netty:netty-handler-proxy:1d7931e5511890a146303a07819863b6261fdd7b3c22c2c50634f82e362f336c',
         'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
         'com.madgag.spongycastle:core:8d6240b974b0aca4d3da9c7dd44d42339d8a374358aca5fc98e50a995764511f',
         'net.jcip:jcip-annotations:be5805392060c71474bf6c9a67a099471274d30b83eef84bfc4e0889a4f1dcc0',
@@ -155,19 +141,7 @@ dependencyVerification {
         'com.github.JesusMcCloud:jtorctl:c6ef92e46074d8d26db718ce0fe4b64b8cf7b934b7377d164c5d613b4cd7b847',
         'org.apache.commons:commons-compress:a778bbd659722889245fc52a0ec2873fbbb89ec661bc1ad3dc043c0757c784c4',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
-        'io.grpc:grpc-context:817a68c7e5ef48eaede2ab16be9417af5b8ca37d08e90f26925690b9dd6730ca',
-        'com.google.errorprone:error_prone_annotations:de3c873b5dc06060f7a2a4d9b872a3f4dc1955c18095ef9702d13477e437782a',
-        'io.opencensus:opencensus-contrib-grpc-metrics:21c37058d708ff7aed46cc7e0f226d6816190376b086574eafab2c5fa05724fe',
-        'io.opencensus:opencensus-api:f4457f4a81b9021188c44884eb7184d938a35fc0623f1aa0b1eba6f6b96e93a2',
-        'io.netty:netty-codec-http:6de1a2ce4dc8b284aa49dcaa6183c20f5e978c70e28cf8905682fabc5f208612',
-        'io.netty:netty-handler:bfcc1716f57641c4d1521fe2d8988c412fc6d28b0eca773b53e0a262efd7fcfe',
-        'io.netty:netty-codec-socks:7cdd49bcde53f563547ff3313778dcaa7c68cfb07540c0b362953645538d5698',
-        'io.netty:netty-codec:536ea827a0506c5e1a800ffa64a8b5485ff87a40102b169389c57e280fa40d86',
-        'io.netty:netty-transport:08250e03630c66048eaf7257020bef8b11c0d77dafd699a15e795a4d3db19ab3',
         'com.squareup.okio:okio:114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266',
         'org.objenesis:objenesis:5e168368fbc250af3c79aa5fef0c3467a2d64e5a7bd74005f25d8399aeb0708d',
-        'io.netty:netty-buffer:11c6333d88de70d8ca392b7e65a7256829ef6d3344e58788d9ee0da3e8087a63',
-        'io.netty:netty-resolver:623743441feb2db7df48501e0b78f4c34037eae624b732941213a149de293fc1',
-        'io.netty:netty-common:469193e9df5c82505aa2ba0ba1417adcadf493313d7dade36998b9c18997cfcc',
     ]
 }
