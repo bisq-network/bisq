@@ -43,7 +43,7 @@ import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.ProposalVoteResult;
 import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.ext.Param;
+import bisq.core.dao.state.governance.Param;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;

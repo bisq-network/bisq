@@ -40,7 +40,7 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.ext.Param;
+import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
