@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.governance.result;
 
-import bisq.core.dao.role.BondedRole;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
 import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;

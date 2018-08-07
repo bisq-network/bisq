@@ -28,8 +28,8 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.role.BondedRole;
-import bisq.core.dao.role.BondedRoleType;
+import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.ext.Param;
 import bisq.core.dao.voting.ballot.Ballot;
