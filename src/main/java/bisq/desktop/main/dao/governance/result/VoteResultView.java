@@ -78,6 +78,7 @@ import javafx.util.Callback;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -328,10 +329,15 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
+
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllBallots()
+                .stream()
+                .collect(Collectors.toMap(Ballot::getProposalTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
-                .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal, bsqFormatter))
+                .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
+                        ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
+                        bsqFormatter))
                 .collect(Collectors.toList()));
-        proposalList.sort(Comparator.comparing(proposalListItem -> proposalListItem.getEvaluatedProposal().getProposal().getCreationDate()));
         GUIUtil.setFitToRowsForTableView(proposalsTableView, 33, 28, 80);
     }
 
@@ -542,8 +548,36 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     private void createProposalsColumns(TableView<ProposalListItem> votesTableView) {
         TableColumn<ProposalListItem, ProposalListItem> column;
 
+        column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
+        column.setMinWidth(190);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
+                        ProposalListItem>>() {
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(
+                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        votesTableView.getColumns().add(column);
+        votesTableView.getSortOrder().add(column);
+
+
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.proposalOwnerName"));
-        column.setMinWidth(110);
+        column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
@@ -570,8 +604,44 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         votesTableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.details"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.proposal.table.header.link"));
         column.setMinWidth(100);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
+                        ProposalListItem>>() {
+
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
+                            ProposalListItem> column) {
+                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                            private HyperlinkWithIcon field;
+
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    final Proposal proposal = item.getProposal();
+                                    field = new HyperlinkWithIcon(proposal.getLink(), AwesomeIcon.EXTERNAL_LINK);
+                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setTooltip(new Tooltip(proposal.getLink()));
+                                    setGraphic(field);
+                                } else {
+                                    setGraphic(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
+        votesTableView.getColumns().add(column);
+
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.proposal.table.header.proposalType"));
+        column.setMinWidth(150);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
@@ -584,15 +654,75 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getIssuance());
+                                    setText(Res.get("dao.proposal.type.short." + item.getProposal().getType().name()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(ProposalListItem::getThreshold));
+        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
         votesTableView.getColumns().add(column);
+
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.details"));
+        column.setMinWidth(180);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
+                        ProposalListItem>>() {
+                    @Override
+                    public TableCell<ProposalListItem, ProposalListItem> call(
+                            TableColumn<ProposalListItem, ProposalListItem> column) {
+                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                            @Override
+                            public void updateItem(final ProposalListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getDetails());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(ProposalListItem::getDetails));
+        votesTableView.getColumns().add(column);
+
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.myVote"));
+        column.setMinWidth(70);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<TableColumn<ProposalListItem, ProposalListItem>,
+                TableCell<ProposalListItem, ProposalListItem>>() {
+
+            @Override
+            public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
+                    ProposalListItem> column) {
+                return new TableCell<ProposalListItem, ProposalListItem>() {
+                    Label myVoteIcon;
+
+                    @Override
+                    public void updateItem(final ProposalListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            if (myVoteIcon == null) {
+                                myVoteIcon = item.getMyVoteIcon();
+                                setGraphic(myVoteIcon);
+                            }
+                        } else {
+                            setGraphic(null);
+                            if (myVoteIcon != null)
+                                myVoteIcon = null;
+                        }
+                    }
+                };
+            }
+        });
+        votesTableView.getColumns().add(column);
+
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
         column.setMinWidth(90);

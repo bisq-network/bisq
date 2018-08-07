@@ -17,6 +17,9 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.core.dao.governance.ballot.Ballot;
+import bisq.core.dao.governance.ballot.vote.BooleanVote;
+import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
@@ -24,31 +27,56 @@ import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.governance.voteresult.ProposalVoteResult;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
 
 import lombok.Getter;
 
 public class ProposalListItem {
-    private final ProposalVoteResult proposalVoteResult;
-    private final BsqFormatter bsqFormatter;
-    private TableRow tableRow;
+
     @Getter
     private EvaluatedProposal evaluatedProposal;
+    @Getter
+    private final Proposal proposal;
+    private final Vote vote;
+    private final BsqFormatter bsqFormatter;
 
-    ProposalListItem(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+    private TableRow tableRow;
+
+
+    ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
-        proposalVoteResult = evaluatedProposal.getProposalVoteResult();
+        proposal = evaluatedProposal.getProposal();
+        vote = ballot.getVote();
+
         this.bsqFormatter = bsqFormatter;
     }
 
+    // If myVoteIcon would be set in constructor styles are not applied correctly
+    public Label getMyVoteIcon() {
+        Label myVoteIcon;
+        if (vote != null && vote instanceof BooleanVote) {
+            if (((BooleanVote) vote).isAccepted()) {
+                myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
+                myVoteIcon.getStyleClass().addAll("icon", "dao-accepted-icon");
+            } else {
+                myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
+                myVoteIcon.getStyleClass().addAll("icon", "dao-rejected-icon");
+            }
+        } else {
+            myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);
+            myVoteIcon.getStyleClass().addAll("icon", "dao-ignored-icon");
+        }
+        return myVoteIcon;
+    }
 
     public void setTableRow(TableRow tableRow) {
         this.tableRow = tableRow;
@@ -65,30 +93,6 @@ public class ProposalListItem {
         return evaluatedProposal.getProposal().getName();
     }
 
-    public String getProposalId() {
-        return evaluatedProposal.getProposal().getShortId();
-    }
-
-    public String getAccepted() {
-        return Res.get("dao.results.proposals.table.item.votes",
-                bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getStakeOfAcceptedVotes())),
-                String.valueOf(proposalVoteResult.getNumAcceptedVotes()));
-    }
-
-    public String getRejected() {
-        return Res.get("dao.results.proposals.table.item.votes",
-                bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getStakeOfRejectedVotes())),
-                String.valueOf(proposalVoteResult.getNumRejectedVotes()));
-    }
-
-    public String getThreshold() {
-        return proposalVoteResult.getThreshold() > 0 ? (proposalVoteResult.getThreshold() / 100D) + "%" : "";
-    }
-
-    public String getQuorum() {
-        return bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getQuorum()));
-    }
-
     public AwesomeIcon getIcon() {
         return evaluatedProposal.isAccepted() ? AwesomeIcon.OK_SIGN : AwesomeIcon.BAN_CIRCLE;
     }
@@ -97,38 +101,30 @@ public class ProposalListItem {
         return evaluatedProposal.isAccepted() ? "dao-accepted-icon" : "dao-rejected-icon";
     }
 
-    public String getColorStyle() {
-        return evaluatedProposal.isAccepted() ? "-fx-text-fill: -bs-green;" : "-fx-text-fill: -bs-error-red;";
-    }
-
-    public String getIssuance() {
+    public String getDetails() {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:
                 CompensationProposal compensationProposal = (CompensationProposal) proposal;
                 Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
-                return Res.get("dao.results.proposals.table.issuance", bsqFormatter.formatCoinWithCode(requestedBsq));
+                return bsqFormatter.formatCoinWithCode(requestedBsq);
             case BONDED_ROLE:
                 BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
                 BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-                String name = bondedRole.getName();
-                String type = Res.get("dao.bond.bondedRoleType." + bondedRole.getBondedRoleType().name());
-                return Res.get("dao.results.proposals.table.bondedRole", name, type);
+                return Res.get("dao.bond.bondedRoleType." + bondedRole.getBondedRoleType().name());
             case REMOVE_ALTCOIN:
                 // TODO
                 return "N/A";
             case CHANGE_PARAM:
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-                return Res.get("dao.results.proposals.table.paramChange",
-                        changeParamProposal.getParam().getDisplayString(),
-                        changeParamProposal.getParamValue());
+                return changeParamProposal.getParam().getDisplayString();
             case GENERIC:
                 // TODO
                 return "N/A";
             case CONFISCATE_BOND:
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
                 // TODO add info to bond
-                return Res.get("dao.results.proposals.table.confiscateBond", confiscateBondProposal.getTxId());
+                return confiscateBondProposal.getTxId();
         }
         return "-";
     }

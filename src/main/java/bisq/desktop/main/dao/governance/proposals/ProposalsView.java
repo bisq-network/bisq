@@ -92,6 +92,7 @@ import javafx.util.Callback;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -279,13 +280,13 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             // proposal phase
             List<Proposal> list = daoFacade.getActiveOrMyUnconfirmedProposals();
             listItems.setAll(list.stream()
-                    .map(proposal -> new ProposalsListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                    .map(proposal -> new ProposalsListItem(proposal, daoFacade, bsqFormatter))
                     .collect(Collectors.toSet()));
         } else {
             // blind vote phase
             List<Ballot> ballotList = daoFacade.getValidAndConfirmedBallots();
             listItems.setAll(ballotList.stream()
-                    .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
+                    .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqFormatter))
                     .collect(Collectors.toSet()));
         }
 
@@ -520,6 +521,15 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         return selectedItem;
     }
 
+    private Optional<BooleanVote> getBooleanVote(Ballot ballot) {
+        //noinspection ConstantConditions
+        return Optional.ofNullable(ballot)
+                .map(Ballot::getVote)
+                .filter(Objects::nonNull)
+                .filter(vote -> vote instanceof BooleanVote)
+                .map(v -> (BooleanVote) v);
+    }
+
     private void updateViews() {
         boolean isBlindVotePhaseButNotLastBlock = isBlindVotePhaseButNotLastBlock();
         boolean hasVotedOnProposal = hasVotedOnProposal();
@@ -529,7 +539,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         List<MyVote> myVoteListForCycle = daoFacade.getMyVoteListForCycle();
         boolean hasAlreadyVoted = !myVoteListForCycle.isEmpty();
         if (selectedItem != null && acceptButton != null) {
-            Optional<BooleanVote> optionalVote = selectedItem.getBooleanVote();
+            Optional<BooleanVote> optionalVote = getBooleanVote(selectedItem.getBallot());
             boolean isPresent = optionalVote.isPresent();
             boolean isAccepted = isPresent && optionalVote.get().isAccepted();
             acceptButton.setDisable((isPresent && isAccepted));
@@ -791,33 +801,30 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         tableView.getColumns().add(column);
 
 
-        column = new TableColumn<>(Res.get("shared.confirmations"));
-        column.setMinWidth(130);
-        column.setMaxWidth(column.getMinWidth());
+        column = new AutoTooltipTableColumn<>(Res.get("dao.proposal.table.header.proposalType"));
+        column.setMinWidth(60);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<ProposalsListItem, ProposalsListItem>,
-                TableCell<ProposalsListItem, ProposalsListItem>>() {
-
-            @Override
-            public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
-                    ProposalsListItem> column) {
-                return new TableCell<ProposalsListItem, ProposalsListItem>() {
-
+        column.setCellFactory(
+                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
+                        ProposalsListItem>>() {
                     @Override
-                    public void updateItem(final ProposalsListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            setGraphic(item.getTxConfidenceIndicator());
-                        } else {
-                            setGraphic(null);
-                        }
+                    public TableCell<ProposalsListItem, ProposalsListItem> call(
+                            TableColumn<ProposalsListItem, ProposalsListItem> column) {
+                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
+                            @Override
+                            public void updateItem(final ProposalsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(Res.get("dao.proposal.type." + item.getProposal().getType().name()));
+                                else
+                                    setText("");
+                            }
+                        };
                     }
-                };
-            }
-        });
-        column.setComparator(Comparator.comparing(ProposalsListItem::getConfirmations));
+                });
+        column.setComparator(Comparator.comparing(o2 -> o2.getProposal().getName()));
         tableView.getColumns().add(column);
+
 
         column = new TableColumn<>();
         column.setMinWidth(40);

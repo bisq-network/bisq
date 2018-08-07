@@ -17,35 +17,20 @@
 
 package bisq.desktop.main.dao.governance.proposals;
 
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-
-import bisq.core.btc.listeners.TxConfidenceListener;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.vote.BooleanVote;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
-
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 
 import javafx.beans.value.ChangeListener;
-
-import java.util.Objects;
-import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -57,11 +42,11 @@ import javax.annotation.Nullable;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class ProposalsListItem implements BsqStateListener {
+//TODO merge with vote result ProposalListItem
+public class ProposalsListItem {
     @Getter
     private final Proposal proposal;
     private final DaoFacade daoFacade;
-    private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
 
     @Getter
@@ -71,15 +56,7 @@ public class ProposalsListItem implements BsqStateListener {
     @Getter
     private Label icon;
 
-    @Getter
-    private TxConfidenceIndicator txConfidenceIndicator;
-    @Getter
-    private Integer confirmations = 0;
-    private TxConfidenceListener txConfidenceListener;
-    private Tooltip tooltip = new Tooltip(Res.get("confidence.unknown"));
-    private Transaction walletTransaction;
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
-    private ChangeListener<Number> chainHeightListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -87,11 +64,9 @@ public class ProposalsListItem implements BsqStateListener {
 
     ProposalsListItem(Proposal proposal,
                       DaoFacade daoFacade,
-                      BsqWalletService bsqWalletService,
                       BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.daoFacade = daoFacade;
-        this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
 
         init();
@@ -99,33 +74,21 @@ public class ProposalsListItem implements BsqStateListener {
 
     ProposalsListItem(Ballot ballot,
                       DaoFacade daoFacade,
-                      BsqWalletService bsqWalletService,
                       BsqFormatter bsqFormatter) {
         this.ballot = ballot;
         this.proposal = ballot.getProposal();
         this.daoFacade = daoFacade;
-        this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
 
         init();
     }
 
+    private void init() {
+        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
+        daoFacade.phaseProperty().addListener(phaseChangeListener);
 
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        setupConfidence();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
+        onPhaseChanged(daoFacade.phaseProperty().get());
     }
 
 
@@ -134,11 +97,6 @@ public class ProposalsListItem implements BsqStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void cleanup() {
-        daoFacade.removeBsqStateListener(this);
-        bsqWalletService.getChainHeightProperty().removeListener(chainHeightListener);
-        if (txConfidenceListener != null)
-            bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
-
         daoFacade.phaseProperty().removeListener(phaseChangeListener);
     }
 
@@ -175,105 +133,5 @@ public class ProposalsListItem implements BsqStateListener {
             }
             icon.layout();
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void init() {
-        txConfidenceIndicator = new TxConfidenceIndicator();
-        txConfidenceIndicator.setId("funds-confidence");
-
-        txConfidenceIndicator.setProgress(-1);
-        txConfidenceIndicator.setPrefSize(24, 24);
-        txConfidenceIndicator.setTooltip(tooltip);
-
-        chainHeightListener = (observable, oldValue, newValue) -> setupConfidence();
-        bsqWalletService.getChainHeightProperty().addListener(chainHeightListener);
-        setupConfidence();
-
-        daoFacade.addBsqStateListener(this);
-
-        phaseChangeListener = (observable, oldValue, newValue) -> onPhaseChanged(newValue);
-
-        daoFacade.phaseProperty().addListener(phaseChangeListener);
-
-        onPhaseChanged(daoFacade.phaseProperty().get());
-    }
-
-    private void setupConfidence() {
-        final String txId = proposal.getTxId();
-        Optional<Tx> optionalTx = daoFacade.getTx(txId);
-        optionalTx.ifPresent(tx -> {
-            // We cache the walletTransaction once found
-            if (walletTransaction == null) {
-                final Optional<Transaction> transactionOptional = bsqWalletService.isWalletTransaction(txId);
-                transactionOptional.ifPresent(transaction -> walletTransaction = transaction);
-            }
-
-            if (walletTransaction != null) {
-                // It is our tx so we get confidence updates
-                if (txConfidenceListener == null) {
-                    txConfidenceListener = new TxConfidenceListener(txId) {
-                        @Override
-                        public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
-                        }
-                    };
-                    bsqWalletService.addTxConfidenceListener(txConfidenceListener);
-                }
-            } else {
-                // tx from other users, we don't get confidence updates but as we have the bsq tx we can calculate it
-                // we get setupConfidence called at each new block from above listener so no need to register a new listener
-                int depth = bsqWalletService.getChainHeightProperty().get() - tx.getBlockHeight() + 1;
-                if (depth > 0)
-                    updateConfidence(TransactionConfidence.ConfidenceType.BUILDING, depth, -1);
-            }
-
-            final TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
-            if (confidence != null)
-                updateConfidence(confidence, confidence.getDepthInBlocks());
-        });
-    }
-
-    private void updateConfidence(TransactionConfidence confidence, int depthInBlocks) {
-        if (confidence != null) {
-            updateConfidence(confidence.getConfidenceType(), confidence.getDepthInBlocks(), confidence.numBroadcastPeers());
-            confirmations = depthInBlocks;
-        }
-    }
-
-    private void updateConfidence(TransactionConfidence.ConfidenceType confidenceType, int depthInBlocks, int numBroadcastPeers) {
-        switch (confidenceType) {
-            case UNKNOWN:
-                tooltip.setText(Res.get("confidence.unknown"));
-                txConfidenceIndicator.setProgress(0);
-                break;
-            case PENDING:
-                tooltip.setText(Res.get("confidence.seen", numBroadcastPeers > -1 ? numBroadcastPeers : Res.get("shared.na")));
-                txConfidenceIndicator.setProgress(-1.0);
-                break;
-            case BUILDING:
-                tooltip.setText(Res.get("confidence.confirmed", depthInBlocks));
-                txConfidenceIndicator.setProgress(Math.min(1, (double) depthInBlocks / 6.0));
-                break;
-            case DEAD:
-                tooltip.setText(Res.get("confidence.invalid"));
-                txConfidenceIndicator.setProgress(0);
-                break;
-        }
-
-        txConfidenceIndicator.setPrefSize(24, 24);
-    }
-
-    public Optional<BooleanVote> getBooleanVote() {
-        //noinspection ConstantConditions
-        return Optional.ofNullable(ballot)
-                .map(Ballot::getVote)
-                .filter(Objects::nonNull)
-                .filter(vote -> vote instanceof BooleanVote)
-                .map(v -> (BooleanVote) v);
     }
 }
