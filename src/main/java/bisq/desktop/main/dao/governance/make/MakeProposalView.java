@@ -27,8 +27,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.btc.wallet.WalletsSetup;
@@ -37,6 +35,7 @@ import bisq.core.dao.governance.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
+import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
@@ -66,8 +65,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
-
-import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -232,7 +229,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 message = e.getMessage();
             }
             new Popup<>().warning(message).show();
-        } catch (TransactionVerificationException | WalletException | IOException e) {
+        } catch (TxException e) {
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
@@ -252,8 +249,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
-            throws InsufficientMoneyException, TransactionVerificationException, ValidationException,
-            WalletException, IOException {
+            throws InsufficientMoneyException, ValidationException, TxException {
 
         BondedRole bondedRole;
         switch (type) {
