@@ -29,7 +29,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.governance.dashboard.ProposalDashboardView;
 import bisq.desktop.main.dao.governance.make.MakeProposalView;
-import bisq.desktop.main.dao.governance.open.OpenProposalsView;
+import bisq.desktop.main.dao.governance.proposals.ProposalsView;
 import bisq.desktop.main.dao.governance.result.VoteResultView;
 
 import bisq.core.dao.DaoFacade;
@@ -100,7 +100,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
                 MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
         open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.browse"),
-                OpenProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                ProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
         result = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.result"),
                 VoteResultView.class, AwesomeIcon.LIST_ALT, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, make, open, result);
@@ -149,7 +149,7 @@ public class GovernanceView extends ActivatableViewAndModel {
 
         if (view instanceof ProposalDashboardView) dashboard.setSelected(true);
         else if (view instanceof MakeProposalView) make.setSelected(true);
-        else if (view instanceof OpenProposalsView) open.setSelected(true);
+        else if (view instanceof ProposalsView) open.setSelected(true);
         else if (view instanceof VoteResultView) result.setSelected(true);
     }
 }

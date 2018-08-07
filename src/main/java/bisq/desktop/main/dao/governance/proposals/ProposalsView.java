@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.governance.open;
+package bisq.desktop.main.dao.governance.proposals;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -100,7 +100,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class OpenProposalsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
+public class ProposalsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
@@ -108,12 +108,12 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
-    private final ObservableList<OpenProposalListItem> listItems = FXCollections.observableArrayList();
-    private final SortedList<OpenProposalListItem> sortedList = new SortedList<>(listItems);
+    private final ObservableList<ProposalsListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<ProposalsListItem> sortedList = new SortedList<>(listItems);
     private final List<Button> voteButtons = new ArrayList<>();
     private final List<Node> voteFields = new ArrayList<>();
 
-    private TableView<OpenProposalListItem> tableView;
+    private TableView<ProposalsListItem> tableView;
     private TitledGroupBg voteTitledGroupBg;
     private Label revealTxIdLabel, blindVoteTxIdLabel, voteButtonInfoLabel;
     private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
@@ -127,7 +127,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
 
     private int gridRow = 0;
     private boolean proposalDisplayInitialized;
-    private OpenProposalListItem selectedItem;
+    private ProposalsListItem selectedItem;
     private DaoPhase.Phase currentPhase;
     private ListChangeListener<Proposal> proposalListChangeListener;
     private ListChangeListener<Ballot> ballotListChangeListener;
@@ -140,12 +140,12 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private OpenProposalsView(DaoFacade daoFacade,
-                              BsqWalletService bsqWalletService,
-                              PhasesView phasesView,
-                              VoteResultService voteResultService,
-                              BsqFormatter bsqFormatter,
-                              BSFormatter btcFormatter) {
+    private ProposalsView(DaoFacade daoFacade,
+                          BsqWalletService bsqWalletService,
+                          PhasesView phasesView,
+                          VoteResultService voteResultService,
+                          BsqFormatter bsqFormatter,
+                          BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
@@ -225,7 +225,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         if (removeProposalButton != null)
             removeProposalButton.setOnAction(null);
 
-        listItems.forEach(OpenProposalListItem::cleanup);
+        listItems.forEach(ProposalsListItem::cleanup);
         tableView.getSelectionModel().clearSelection();
         selectedItem = null;
     }
@@ -279,13 +279,13 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
             // proposal phase
             List<Proposal> list = daoFacade.getActiveOrMyUnconfirmedProposals();
             listItems.setAll(list.stream()
-                    .map(proposal -> new OpenProposalListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
+                    .map(proposal -> new ProposalsListItem(proposal, daoFacade, bsqWalletService, bsqFormatter))
                     .collect(Collectors.toSet()));
         } else {
             // blind vote phase
             List<Ballot> ballotList = daoFacade.getValidAndConfirmedBallots();
             listItems.setAll(ballotList.stream()
-                    .map(ballot -> new OpenProposalListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
+                    .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqWalletService, bsqFormatter))
                     .collect(Collectors.toSet()));
         }
 
@@ -293,7 +293,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     }
 
     private void updateListItems() {
-        listItems.forEach(OpenProposalListItem::cleanup);
+        listItems.forEach(ProposalsListItem::cleanup);
         listItems.clear();
 
         fillListItems();
@@ -416,7 +416,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         }
     }
 
-    private void onSelectProposal(OpenProposalListItem item) {
+    private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
             EvaluatedProposal evaluatedProposal = voteResultService.getAllEvaluatedProposals().stream()
@@ -516,7 +516,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         tableView.refresh();
     }
 
-    private OpenProposalListItem getBallotListItem() {
+    private ProposalsListItem getBallotListItem() {
         return selectedItem;
     }
 
@@ -606,7 +606,7 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     private boolean hasVotedOnProposal() {
         return listItems.stream()
                 .filter(e -> e.getBallot() != null)
-                .map(OpenProposalListItem::getBallot)
+                .map(ProposalsListItem::getBallot)
                 .anyMatch(e -> e.getVote() != null);
     }
 
@@ -701,21 +701,21 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createProposalColumns() {
-        TableColumn<OpenProposalListItem, OpenProposalListItem> column;
+        TableColumn<ProposalsListItem, ProposalsListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setMinWidth(190);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
-                        OpenProposalListItem>>() {
+                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
+                        ProposalsListItem>>() {
                     @Override
-                    public TableCell<OpenProposalListItem, OpenProposalListItem> call(
-                            TableColumn<OpenProposalListItem, OpenProposalListItem> column) {
-                        return new TableCell<OpenProposalListItem, OpenProposalListItem>() {
+                    public TableCell<ProposalsListItem, ProposalsListItem> call(
+                            TableColumn<ProposalsListItem, ProposalsListItem> column) {
+                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
                             @Override
-                            public void updateItem(final OpenProposalListItem item, boolean empty) {
+                            public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
@@ -735,14 +735,14 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         column.setMinWidth(60);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
-                        OpenProposalListItem>>() {
+                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
+                        ProposalsListItem>>() {
                     @Override
-                    public TableCell<OpenProposalListItem, OpenProposalListItem> call(
-                            TableColumn<OpenProposalListItem, OpenProposalListItem> column) {
-                        return new TableCell<OpenProposalListItem, OpenProposalListItem>() {
+                    public TableCell<ProposalsListItem, ProposalsListItem> call(
+                            TableColumn<ProposalsListItem, ProposalsListItem> column) {
+                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
                             @Override
-                            public void updateItem(final OpenProposalListItem item, boolean empty) {
+                            public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getProposal().getName());
@@ -760,17 +760,17 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>, TableCell<OpenProposalListItem,
-                        OpenProposalListItem>>() {
+                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
+                        ProposalsListItem>>() {
 
                     @Override
-                    public TableCell<OpenProposalListItem, OpenProposalListItem> call(TableColumn<OpenProposalListItem,
-                            OpenProposalListItem> column) {
-                        return new TableCell<OpenProposalListItem, OpenProposalListItem>() {
+                    public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
+                            ProposalsListItem> column) {
+                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
                             private HyperlinkWithIcon field;
 
                             @Override
-                            public void updateItem(final OpenProposalListItem item, boolean empty) {
+                            public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
@@ -795,16 +795,16 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
         column.setMinWidth(130);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
-                TableCell<OpenProposalListItem, OpenProposalListItem>>() {
+        column.setCellFactory(new Callback<TableColumn<ProposalsListItem, ProposalsListItem>,
+                TableCell<ProposalsListItem, ProposalsListItem>>() {
 
             @Override
-            public TableCell<OpenProposalListItem, OpenProposalListItem> call(TableColumn<OpenProposalListItem,
-                    OpenProposalListItem> column) {
-                return new TableCell<OpenProposalListItem, OpenProposalListItem>() {
+            public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
+                    ProposalsListItem> column) {
+                return new TableCell<ProposalsListItem, ProposalsListItem>() {
 
                     @Override
-                    public void updateItem(final OpenProposalListItem item, boolean empty) {
+                    public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -816,24 +816,24 @@ public class OpenProposalsView extends ActivatableView<GridPane, Void> implement
                 };
             }
         });
-        column.setComparator(Comparator.comparing(OpenProposalListItem::getConfirmations));
+        column.setComparator(Comparator.comparing(ProposalsListItem::getConfirmations));
         tableView.getColumns().add(column);
 
         column = new TableColumn<>();
         column.setMinWidth(40);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<OpenProposalListItem, OpenProposalListItem>,
-                TableCell<OpenProposalListItem, OpenProposalListItem>>() {
+        column.setCellFactory(new Callback<TableColumn<ProposalsListItem, ProposalsListItem>,
+                TableCell<ProposalsListItem, ProposalsListItem>>() {
 
             @Override
-            public TableCell<OpenProposalListItem, OpenProposalListItem> call(TableColumn<OpenProposalListItem,
-                    OpenProposalListItem> column) {
-                return new TableCell<OpenProposalListItem, OpenProposalListItem>() {
+            public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
+                    ProposalsListItem> column) {
+                return new TableCell<ProposalsListItem, ProposalsListItem>() {
                     Label icon;
 
                     @Override
-                    public void updateItem(final OpenProposalListItem item, boolean empty) {
+                    public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {

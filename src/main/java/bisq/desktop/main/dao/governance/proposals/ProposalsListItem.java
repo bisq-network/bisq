@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.governance.open;
+package bisq.desktop.main.dao.governance.proposals;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 
@@ -57,7 +57,7 @@ import javax.annotation.Nullable;
 @ToString
 @Slf4j
 @EqualsAndHashCode
-public class OpenProposalListItem implements BsqStateListener {
+public class ProposalsListItem implements BsqStateListener {
     @Getter
     private final Proposal proposal;
     private final DaoFacade daoFacade;
@@ -85,10 +85,10 @@ public class OpenProposalListItem implements BsqStateListener {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    OpenProposalListItem(Proposal proposal,
-                         DaoFacade daoFacade,
-                         BsqWalletService bsqWalletService,
-                         BsqFormatter bsqFormatter) {
+    ProposalsListItem(Proposal proposal,
+                      DaoFacade daoFacade,
+                      BsqWalletService bsqWalletService,
+                      BsqFormatter bsqFormatter) {
         this.proposal = proposal;
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
@@ -97,10 +97,10 @@ public class OpenProposalListItem implements BsqStateListener {
         init();
     }
 
-    OpenProposalListItem(Ballot ballot,
-                         DaoFacade daoFacade,
-                         BsqWalletService bsqWalletService,
-                         BsqFormatter bsqFormatter) {
+    ProposalsListItem(Ballot ballot,
+                      DaoFacade daoFacade,
+                      BsqWalletService bsqWalletService,
+                      BsqFormatter bsqFormatter) {
         this.ballot = ballot;
         this.proposal = ballot.getProposal();
         this.daoFacade = daoFacade;
