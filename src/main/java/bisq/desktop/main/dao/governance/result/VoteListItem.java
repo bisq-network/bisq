@@ -17,11 +17,11 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.core.dao.governance.ballot.Ballot;
+import bisq.core.dao.governance.ballot.vote.BooleanVote;
+import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.voteresult.DecryptedVote;
 import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.ballot.vote.BooleanVote;
-import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.dao.voting.voteresult.DecryptedVote;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;

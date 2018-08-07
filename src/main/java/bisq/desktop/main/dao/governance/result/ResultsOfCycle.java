@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.voteresult.DecryptedVote;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.period.Cycle;
-import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.dao.voting.voteresult.DecryptedVote;
-import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.util.BsqFormatter;
 
 import java.util.List;

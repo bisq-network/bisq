@@ -17,14 +17,14 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
+import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.voting.proposal.Proposal;
-import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
-import bisq.core.dao.voting.proposal.confiscatebond.ConfiscateBondProposal;
-import bisq.core.dao.voting.proposal.param.ChangeParamProposal;
-import bisq.core.dao.voting.proposal.role.BondedRoleProposal;
-import bisq.core.dao.voting.voteresult.EvaluatedProposal;
-import bisq.core.dao.voting.voteresult.ProposalVoteResult;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
+import bisq.core.dao.governance.voteresult.ProposalVoteResult;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

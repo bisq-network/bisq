@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.voting.proposal.compensation.CompensationProposal;
-import bisq.core.dao.voting.voteresult.EvaluatedProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

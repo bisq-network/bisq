@@ -22,14 +22,14 @@ import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.ballot.Ballot;
+import bisq.core.dao.governance.ballot.vote.BooleanVote;
+import bisq.core.dao.governance.ballot.vote.Vote;
+import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.voting.ballot.Ballot;
-import bisq.core.dao.voting.ballot.vote.BooleanVote;
-import bisq.core.dao.voting.ballot.vote.Vote;
-import bisq.core.dao.voting.proposal.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
