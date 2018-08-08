@@ -448,8 +448,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);
                 log.warn("unhandled processState " + tradeState);
-                if (DevEnv.isDevMode())
-                    throw new RuntimeException("unhandled processState " + tradeState);
+                DevEnv.logErrorAndThrowIfDevMode("unhandled processState " + tradeState);
                 break;
         }
     }
