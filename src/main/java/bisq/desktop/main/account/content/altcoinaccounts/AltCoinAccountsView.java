@@ -151,6 +151,11 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                             .useIUnderstandButton()
                             .show();
                     break;
+                case "BLUR":
+                    new Popup<>().information(Res.get("account.altcoin.popup.blur.msg"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
                 case "CCX":
                     new Popup<>().information(Res.get("account.altcoin.popup.ccx.msg"))
                             .useIUnderstandButton()
@@ -334,4 +339,3 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
 }
-
