@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.BooleanVote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.DecryptedVote;
 import bisq.core.dao.state.BsqStateService;
@@ -72,9 +71,7 @@ public class VoteListItem {
         isAccepted = decryptedVote.getBallotList().stream()
                 .filter(ballot -> ballot.getTxId().equals(proposalTxId))
                 .map(Ballot::getVote)
-                .filter(vote -> vote instanceof BooleanVote)
-                .map(vote -> (BooleanVote) vote)
-                .map(BooleanVote::isAccepted)
+                .map(vote -> vote != null && vote.isAccepted())
                 .findAny();
         if (isAccepted.isPresent()) {
             if (isAccepted.get())

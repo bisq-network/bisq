@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.governance.proposals;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.BooleanVote;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.state.period.DaoPhase;
@@ -117,15 +116,12 @@ public class ProposalsListItem {
         if (ballot != null) {
             final Vote vote = ballot.getVote();
             if (vote != null) {
-                // TODO make Vote BooleanVote
-                if (vote instanceof BooleanVote) {
-                    if (((BooleanVote) vote).isAccepted()) {
-                        icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
-                        icon.getStyleClass().addAll("icon", "dao-accepted-icon");
-                    } else {
-                        icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
-                        icon.getStyleClass().addAll("icon", "dao-rejected-icon");
-                    }
+                if ((vote).isAccepted()) {
+                    icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
+                    icon.getStyleClass().addAll("icon", "dao-accepted-icon");
+                } else {
+                    icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
+                    icon.getStyleClass().addAll("icon", "dao-rejected-icon");
                 }
             } else {
                 icon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);

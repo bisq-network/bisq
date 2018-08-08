@@ -40,7 +40,7 @@ import bisq.core.btc.wallet.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.BooleanVote;
+import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
@@ -92,7 +92,6 @@ import javafx.util.Callback;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -457,13 +456,13 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onAccept() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new BooleanVote(true));
+        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onReject() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new BooleanVote(false));
+        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
@@ -521,13 +520,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         return selectedItem;
     }
 
-    private Optional<BooleanVote> getBooleanVote(Ballot ballot) {
-        //noinspection ConstantConditions
-        return Optional.ofNullable(ballot)
-                .map(Ballot::getVote)
-                .filter(Objects::nonNull)
-                .filter(vote -> vote instanceof BooleanVote)
-                .map(v -> (BooleanVote) v);
+    private Optional<Vote> getVote(@Nullable Ballot ballot) {
+        if (ballot == null)
+            return Optional.empty();
+        else
+            return ballot.getVoteAsOptional();
     }
 
     private void updateViews() {
@@ -539,7 +536,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         List<MyVote> myVoteListForCycle = daoFacade.getMyVoteListForCycle();
         boolean hasAlreadyVoted = !myVoteListForCycle.isEmpty();
         if (selectedItem != null && acceptButton != null) {
-            Optional<BooleanVote> optionalVote = getBooleanVote(selectedItem.getBallot());
+            Optional<Vote> optionalVote = getVote(selectedItem.getBallot());
             boolean isPresent = optionalVote.isPresent();
             boolean isAccepted = isPresent && optionalVote.get().isAccepted();
             acceptButton.setDisable((isPresent && isAccepted));

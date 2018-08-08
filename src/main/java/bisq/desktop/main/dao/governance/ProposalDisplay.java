@@ -29,7 +29,6 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.BooleanVote;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
@@ -326,13 +325,8 @@ public class ProposalDisplay {
         boolean isNotNull = ballot != null;
         Vote vote = isNotNull ? ballot.getVote() : null;
         if (vote != null) {
-            if (vote instanceof BooleanVote) {
-                BooleanVote booleanVote = (BooleanVote) vote;
-                myVote = booleanVote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
-                        Res.get("dao.proposal.display.myVote.rejected");
-
-
-            }
+            myVote = vote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
+                    Res.get("dao.proposal.display.myVote.rejected");
         }
         myVoteTextField.setText(myVote);
 
@@ -369,13 +363,8 @@ public class ProposalDisplay {
             String myVote = Res.get("dao.proposal.display.myVote.ignored");
             Vote vote = ballotIsNotNull ? ballot.getVote() : null;
             if (vote != null) {
-                if (vote instanceof BooleanVote) {
-                    BooleanVote booleanVote = (BooleanVote) vote;
-                    myVote = booleanVote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
-                            Res.get("dao.proposal.display.myVote.rejected");
-
-
-                }
+                myVote = vote.isAccepted() ? Res.get("dao.proposal.display.myVote.accepted") :
+                        Res.get("dao.proposal.display.myVote.rejected");
             }
 
             String meritString = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit));

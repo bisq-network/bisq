@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.BooleanVote;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
@@ -63,8 +62,8 @@ public class ProposalListItem {
     // If myVoteIcon would be set in constructor styles are not applied correctly
     public Label getMyVoteIcon() {
         Label myVoteIcon;
-        if (vote != null && vote instanceof BooleanVote) {
-            if (((BooleanVote) vote).isAccepted()) {
+        if (vote != null) {
+            if ((vote).isAccepted()) {
                 myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
                 myVoteIcon.getStyleClass().addAll("icon", "dao-accepted-icon");
             } else {
