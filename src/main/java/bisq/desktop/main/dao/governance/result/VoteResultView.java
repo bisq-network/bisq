@@ -636,7 +636,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
+        column.setComparator(Comparator.comparing(o -> o.getProposal().getTxId()));
         votesTableView.getColumns().add(column);
 
 

@@ -396,7 +396,7 @@ public class ProposalDisplay {
     public void applyProposalPayload(Proposal proposal) {
         proposalTypeTextField.setText(proposal.getType().getDisplayName());
         if (uidTextField != null)
-            uidTextField.setText(proposal.getUid());
+            uidTextField.setText(proposal.getTxId());
 
         nameTextField.setText(proposal.getName());
         linkInputTextField.setVisible(false);

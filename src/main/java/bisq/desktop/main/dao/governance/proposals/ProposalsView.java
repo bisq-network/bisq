@@ -797,7 +797,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o -> o.getProposal().getUid()));
+        column.setComparator(Comparator.comparing(o -> o.getProposal().getTxId()));
         tableView.getColumns().add(column);
 
 
