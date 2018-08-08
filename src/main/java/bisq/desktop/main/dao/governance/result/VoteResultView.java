@@ -654,7 +654,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(Res.get("dao.proposal.type.short." + item.getProposal().getType().name()));
+                                    setText(item.getProposal().getType().getShortDisplayName());
                                 else
                                     setText("");
                             }
