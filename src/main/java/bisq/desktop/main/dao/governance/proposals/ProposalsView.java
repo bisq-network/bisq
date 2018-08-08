@@ -185,7 +185,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
-        daoFacade.getValidAndConfirmedBallots().addListener(ballotListChangeListener);
+        daoFacade.getBallots().addListener(ballotListChangeListener);
         daoFacade.addBsqStateListener(this);
         bsqWalletService.addBsqBalanceListener(this);
 
@@ -213,7 +213,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         sortedList.comparatorProperty().unbind();
 
         daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
-        daoFacade.getValidAndConfirmedBallots().removeListener(ballotListChangeListener);
+        daoFacade.getBallots().removeListener(ballotListChangeListener);
         daoFacade.removeBsqStateListener(this);
         bsqWalletService.removeBsqBalanceListener(this);
 
@@ -284,7 +284,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                     .collect(Collectors.toSet()));
         } else {
             // blind vote phase
-            List<Ballot> ballotList = daoFacade.getValidAndConfirmedBallots();
+            List<Ballot> ballotList = daoFacade.getBallots();
             listItems.setAll(ballotList.stream()
                     .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqFormatter))
                     .collect(Collectors.toSet()));

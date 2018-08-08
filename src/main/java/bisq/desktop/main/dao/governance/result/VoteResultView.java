@@ -225,8 +225,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         if (selectedProposalListItem != null) {
 
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getAllBallots().stream()
-                    .filter(ballot -> ballot.getProposalTxId().equals(evaluatedProposal.getProposalTxId()))
+            Optional<Ballot> optionalBallot = daoFacade.getBallots().stream()
+                    .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
             createProposalDisplay(evaluatedProposal, ballot);
@@ -330,9 +330,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllBallots()
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getBallots()
                 .stream()
-                .collect(Collectors.toMap(Ballot::getProposalTxId, ballot -> ballot));
+                .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),

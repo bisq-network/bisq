@@ -70,7 +70,7 @@ public class VoteListItem {
     public Tuple2<AwesomeIcon, String> getIconStyleTuple() {
         Optional<Boolean> isAccepted;
         isAccepted = decryptedVote.getBallotList().stream()
-                .filter(ballot -> ballot.getProposalTxId().equals(proposalTxId))
+                .filter(ballot -> ballot.getTxId().equals(proposalTxId))
                 .map(Ballot::getVote)
                 .filter(vote -> vote instanceof BooleanVote)
                 .map(vote -> (BooleanVote) vote)
