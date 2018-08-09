@@ -223,6 +223,17 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                         }, 600, TimeUnit.MILLISECONDS);
                     }
                 });
+            }, throwable -> {
+                if (throwable instanceof NoWebCamFoundException) {
+                    new Popup<>().warning(Res.get("account.notifications.noWebCamFound.warning")).show();
+                    webCamButton.setDisable(false);
+                    setPairingTokenFieldsVisible();
+                    noWebCamButton.setManaged(false);
+                    noWebCamButton.setVisible(false);
+                } else {
+                    log.error(throwable.toString());
+                    new Popup<>().error(throwable.toString()).show();
+                }
             });
         });
 
