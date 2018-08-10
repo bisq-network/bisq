@@ -197,8 +197,9 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         webCamButton.setDefaultButton(true);
         webCamButton.setOnAction((event) -> {
             webCamButton.setDisable(true);
-
+            log.info("Start WebCamLauncher");
             new WebCamLauncher(webCam -> {
+                log.info("webCam available");
                 webCamWindow = new WebCamWindow(webCam.getViewSize().width, webCam.getViewSize().height)
                         .onClose(() -> {
                             webCamButton.setDisable(false);
@@ -207,6 +208,7 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                 webCamWindow.show();
 
                 qrCodeReader = new QrCodeReader(webCam, webCamWindow.getImageView(), qrCode -> {
+                    log.info("Qr code available");
                     webCamWindow.hide();
                     webCamButton.setDisable(false);
                     reset();
@@ -399,10 +401,12 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyKeyAndToken(String keyAndToken) {
-        mobileNotificationService.applyKeyAndToken(keyAndToken);
-        if (mobileNotificationValidator.isValid(keyAndToken)) {
-            updateDisableState(false);
-            setPairingTokenFieldsVisible();
+        if (keyAndToken != null && !keyAndToken.isEmpty()) {
+            mobileNotificationService.applyKeyAndToken(keyAndToken);
+            if (mobileNotificationValidator.isValid(keyAndToken)) {
+                updateDisableState(false);
+                setPairingTokenFieldsVisible();
+            }
         }
     }
 

@@ -48,7 +48,7 @@ class QrCodeReader extends Thread {
     private final Consumer<String> resultHandler;
     private boolean isRunning;
 
-    public QrCodeReader(Webcam webCam, ImageView imageView, Consumer<String> resultHandler) {
+    QrCodeReader(Webcam webCam, ImageView imageView, Consumer<String> resultHandler) {
         this.webCam = webCam;
         this.imageView = imageView;
         this.resultHandler = resultHandler;
