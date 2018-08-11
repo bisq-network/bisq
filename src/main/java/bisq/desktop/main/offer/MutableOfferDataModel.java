@@ -40,6 +40,7 @@ import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.BankAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.F2FAccount;
+import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SameBankAccount;
 import bisq.core.payment.SepaAccount;
@@ -307,7 +308,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
-        final boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue();
+        boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue();
         long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
@@ -662,7 +663,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !amount.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                volume.set(price.get().getVolumeByAmount(amount.get()));
+                Volume volumeByAmount = price.get().getVolumeByAmount(amount.get());
+
+                // For HalCash we want multiple of 10 EUR
+                if (isHalCashAccount())
+                    volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+
+                volume.set(volumeByAmount);
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -743,7 +750,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     protected boolean isUseMarketBasedPriceValue() {
-        return marketPriceAvailable && useMarketBasedPrice.get();
+        return marketPriceAvailable && useMarketBasedPrice.get() && !isHalCashAccount();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -812,5 +819,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public boolean isBsqForFeeAvailable() {
         return OfferUtil.isBsqForFeeAvailable(bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isHalCashAccount() {
+        return paymentAccount instanceof HalCashAccount;
     }
 }

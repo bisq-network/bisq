@@ -31,6 +31,7 @@ import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
@@ -279,6 +280,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
 
                 calculateVolume();
+
+                if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
+                    dataModel.applyAmount(OfferUtil.getAdjustedMinAmountForHalCash(dataModel.getAmount().get(), dataModel.tradePrice));
+                    amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
+                }
 
                 if (!dataModel.isMinAmountLessOrEqualAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,

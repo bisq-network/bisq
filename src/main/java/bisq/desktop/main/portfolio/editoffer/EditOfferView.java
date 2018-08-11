@@ -97,7 +97,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         // Workaround to fix margin on top of amount group
         gridPane.setPadding(new Insets(-20, 25, -1, 25));
 
-        updateMarketPriceAvailable();
+        updatePriceToggle();
         updateElementsWithDirection();
 
         model.isNextButtonDisabled.setValue(false);
