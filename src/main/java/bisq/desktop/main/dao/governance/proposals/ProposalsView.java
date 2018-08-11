@@ -58,7 +58,6 @@ import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -476,20 +475,16 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onVote() {
         // TODO verify stake
         Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
-        final Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
-        Transaction dummyTx = null;
         try {
-            // We create a dummy tx to get the mining blindVoteFee for confirmation popup
-            dummyTx = daoFacade.getDummyBlindVoteTx(stake, blindVoteFee);
-        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
-            new Popup<>().warning(exception.toString()).show();
-        }
-
-        if (dummyTx != null) {
-            Coin miningFee = dummyTx.getFee();
-            int txSize = dummyTx.bitcoinSerialize().length;
+            // We create a dummy tx to get the miningFee for displaying it at the confirmation popup
+            Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getMiningFeeAndTxSize(stake);
+            Coin miningFee = miningFeeAndTxSize.first;
+            int txSize = miningFeeAndTxSize.second;
+            Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
             GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.blindVote"), () -> publishBlindVote(stake));
+        } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
+            new Popup<>().warning(exception.toString()).show();
         }
     }
 
