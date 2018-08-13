@@ -56,8 +56,6 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXProgressBar;
 import com.jfoenix.controls.JFXSpinner;
 
-import org.controlsfx.control.spreadsheet.Grid;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -65,11 +63,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -258,7 +254,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
-            setPadding(new Insets(0,11,0, 11));
+            setPadding(new Insets(0, 11, 0, 11));
             getStyleClass().add("top-navigation");
         }};
 
@@ -363,16 +359,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(170);
-        priceComboBox.setMinWidth(170);
+        priceComboBox.setMaxWidth(165);
+        priceComboBox.setMinWidth(165);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
         ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
-        GridPane.setRowIndex(priceComboBox,0);
-        GridPane.setMargin(priceComboBox, new Insets(4,0,0,0));
+        GridPane.setRowIndex(priceComboBox, 0);
+        GridPane.setMargin(priceComboBox, new Insets(4, 0, 0, 0));
         gridPane.getChildren().add(priceComboBox);
 
         final ImageView btcAverageIcon = new ImageView();
@@ -400,7 +396,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         GridPane.setRowIndex(btcAverageIconButton, 0);
         GridPane.setColumnIndex(btcAverageIconButton, 1);
-        GridPane.setMargin(btcAverageIconButton, new Insets(15,0,0,0));
+        GridPane.setMargin(btcAverageIconButton, new Insets(15, 0, 0, 0));
         gridPane.getChildren().add(btcAverageIconButton);
 
 
@@ -429,7 +425,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         GridPane.setRowIndex(poloniexIconButton, 0);
         GridPane.setColumnIndex(poloniexIconButton, 1);
-        GridPane.setMargin(poloniexIconButton, new Insets(15,0,0,0));
+        GridPane.setMargin(poloniexIconButton, new Insets(15, 0, 0, 0));
         gridPane.getChildren().add(poloniexIconButton);
 
         Label marketPriceProviderLabel = new AutoTooltipLabel("Price by");
@@ -438,7 +434,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         GridPane.setRowIndex(marketPriceProviderLabel, 1);
         GridPane.setColumnIndex(marketPriceProviderLabel, 1);
-        GridPane.setMargin(marketPriceProviderLabel, new Insets(2,0,0,0));
+        GridPane.setMargin(marketPriceProviderLabel, new Insets(2, 0, 0, 0));
         gridPane.getChildren().add(marketPriceProviderLabel);
 
         /*model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
@@ -451,7 +447,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         GridPane.setRowIndex(marketPriceLabel, 1);
         GridPane.setColumnIndex(marketPriceLabel, 0);
-        GridPane.setMargin(marketPriceLabel, new Insets(2,0,0,12));
+        GridPane.setMargin(marketPriceLabel, new Insets(2, 0, 0, 12));
         gridPane.getChildren().add(marketPriceLabel);
 
         return new Tuple2<>(priceComboBox, gridPane);

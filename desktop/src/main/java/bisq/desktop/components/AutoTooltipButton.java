@@ -29,14 +29,17 @@ public class AutoTooltipButton extends JFXButton {
 
     public AutoTooltipButton() {
         super();
+        //setButtonType(ButtonType.RAISED);
     }
 
     public AutoTooltipButton(String text) {
         super(text);
+        //setButtonType(ButtonType.RAISED);
     }
 
     public AutoTooltipButton(String text, Node graphic) {
         super(text, graphic);
+        //setButtonType(ButtonType.RAISED);
     }
 
     @Override
