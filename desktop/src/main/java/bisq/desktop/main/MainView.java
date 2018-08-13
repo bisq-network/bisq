@@ -52,8 +52,11 @@ import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXProgressBar;
 import com.jfoenix.controls.JFXSpinner;
+
+import org.controlsfx.control.spreadsheet.Grid;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -73,6 +76,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -221,7 +225,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
 
-        Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> marketPriceBox = getMarketPriceBox();
+        Tuple2<ComboBox<PriceFeedComboBoxItem>, GridPane> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -235,16 +239,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.getSelectedPriceFeedComboBoxItemProperty().addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.getPriceFeedComboBoxItems());
 
-        HBox.setMargin(marketPriceBox.second, new Insets(0, 0, 0, 0));
-
-
-        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
+        Tuple2<Label, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
         availableBalanceBox.first.textProperty().bind(model.getAvailableBalance());
 
-        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
+        Tuple2<Label, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
         reservedBalanceBox.first.textProperty().bind(model.getReservedBalance());
 
-        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
+        Tuple2<Label, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
 
         Region spacer = new Region();
@@ -322,23 +323,21 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         UserThread.execute(() -> onUiReadyHandler.run());
     }
 
-    private Tuple2<TextField, VBox> getBalanceBox(String text) {
-        TextField textField = new TextField();
-        textField.setEditable(false);
-        textField.setPrefWidth(115); //140
-        textField.setMouseTransparent(true);
-        textField.setFocusTraversable(false);
-        textField.getStyleClass().add("display-text-field");
+    private Tuple2<Label, VBox> getBalanceBox(String text) {
+        Label balanceDisplay = new Label();
+        balanceDisplay.setPrefWidth(93); //140
+        balanceDisplay.getStyleClass().add("nav-balance-display");
 
         Label label = new AutoTooltipLabel(text);
-        label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 5));
-        label.setPrefWidth(textField.getPrefWidth());
+        label.getStyleClass().add("nav-balance-label");
+        label.setPadding(new Insets(0, 0, 0, 0));
+        label.setPrefWidth(balanceDisplay.getPrefWidth());
         VBox vBox = new VBox();
         vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(textField, label);
-        return new Tuple2<>(textField, vBox);
+        vBox.getStyleClass().add("balance-box");
+        vBox.setPadding(new Insets(12, 12, 0, 12));
+        vBox.getChildren().addAll(balanceDisplay, label);
+        return new Tuple2<>(balanceDisplay, vBox);
     }
 
     private ListCell<PriceFeedComboBoxItem> getPriceFeedComboBoxListCell() {
@@ -356,17 +355,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> getMarketPriceBox() {
-        ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
+    private Tuple2<ComboBox<PriceFeedComboBoxItem>, GridPane> getMarketPriceBox() {
+
+        GridPane gridPane = new GridPane();
+        gridPane.setPrefWidth(270);
+        gridPane.getStyleClass().add("market-price-box");
+
+        ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(220);
-        priceComboBox.setMinWidth(220);
+        priceComboBox.setMaxWidth(170);
+        priceComboBox.setMinWidth(170);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
         ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
+        GridPane.setRowIndex(priceComboBox,0);
+        GridPane.setMargin(priceComboBox, new Insets(4,0,0,0));
+        gridPane.getChildren().add(priceComboBox);
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -374,7 +381,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.getStyleClass().add("hidden-icon-button");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.setVisible(model.getIsFiatCurrencyPriceFeedSelected().get());
         btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
@@ -392,13 +398,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 }
         );
 
+        GridPane.setRowIndex(btcAverageIconButton, 0);
+        GridPane.setColumnIndex(btcAverageIconButton, 1);
+        GridPane.setMargin(btcAverageIconButton, new Insets(15,0,0,0));
+        gridPane.getChildren().add(btcAverageIconButton);
+
+
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
         final Button poloniexIconButton = new AutoTooltipButton("", poloniexIcon);
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.getStyleClass().add("hidden-icon-button");
-        HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.getIsCryptoCurrencyPriceFeedSelected().get());
         poloniexIconButton.setManaged(poloniexIconButton.isVisible());
@@ -416,22 +427,34 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             );
         });
 
-        Label label = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
-        label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 2));
+        GridPane.setRowIndex(poloniexIconButton, 0);
+        GridPane.setColumnIndex(poloniexIconButton, 1);
+        GridPane.setMargin(poloniexIconButton, new Insets(15,0,0,0));
+        gridPane.getChildren().add(poloniexIconButton);
 
-        model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
-            updateMarketPriceLabel(label);
-        });
+        Label marketPriceProviderLabel = new AutoTooltipLabel("Price by");
+        marketPriceProviderLabel.getStyleClass().add("nav-market-price-label");
+        //marketPriceProviderLabel.setPadding(new Insets(0, 5, 0, 2));
 
-        HBox hBox2 = new HBox();
-        hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);
+        GridPane.setRowIndex(marketPriceProviderLabel, 1);
+        GridPane.setColumnIndex(marketPriceProviderLabel, 1);
+        GridPane.setMargin(marketPriceProviderLabel, new Insets(2,0,0,0));
+        gridPane.getChildren().add(marketPriceProviderLabel);
 
-        VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(priceComboBox, hBox2);
-        return new Tuple2<>(priceComboBox, vBox);
+        /*model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
+            updateMarketPriceLabel(marketPriceProviderLabel);
+        });*/
+
+        Label marketPriceLabel = new AutoTooltipLabel("Market Price");
+        marketPriceLabel.getStyleClass().add("nav-market-price-label");
+        //marketPriceLabel.setPadding(new Insets(0, 5, 0, 2));
+
+        GridPane.setRowIndex(marketPriceLabel, 1);
+        GridPane.setColumnIndex(marketPriceLabel, 0);
+        GridPane.setMargin(marketPriceLabel, new Insets(2,0,0,12));
+        gridPane.getChildren().add(marketPriceLabel);
+
+        return new Tuple2<>(priceComboBox, gridPane);
     }
 
     private void updateMarketPriceLabel(Label label) {
@@ -731,12 +754,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         NavButton(Class<? extends View> viewClass, String title) {
             super(title, new ImageView() {{
                 setId("image-nav-" + viewId(viewClass));
-                //TODO: remove a soon we have the final icons
-                ColorAdjust makeWhite = new ColorAdjust();
-                makeWhite.setBrightness(1);
-                setEffect(makeWhite);
-                setFitHeight(28);
-                setFitWidth(28);
             }});
 
             this.viewClass = viewClass;

@@ -47,6 +47,8 @@ import bisq.common.util.Tuple4;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -144,7 +146,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
 
-        currencyComboBox = new ComboBox<>();
+        currencyComboBox = new JFXComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),

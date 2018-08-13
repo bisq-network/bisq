@@ -87,6 +87,7 @@ bg color of non edit textFields: fafafa
     /* Redesign colors */
     -bs-rd-green: #25B135; /* 6 usages */
     -bs-rd-green-dark: #3DA34B;
+    -bs-rd-nav-selected: #20C133;
     -bs-rd-grey: #373737;
     /* replace with derive later */
     -bs-rd-grey-light: #D8D8D8;
@@ -97,6 +98,9 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-darker: #E1E1E1;
     -bs-rd-font-light: #8D8D8D;
     -bs-rd-font-dark: #4B4B4B;
+    -bs-rd-nav-deselected: #9A9A9A;
+    -bs-rd-nav-border: #535353;
+    -bs-rd-nav-background-dark: #0E0E0E;
     -bs-rd-grey-line: #979797;
 
     -bs-red: #D73030; /* 5 usages */
@@ -256,7 +260,7 @@ bg color of non edit textFields: fafafa
 
 .radio-button .radio {
     -fx-border-width: 1px;
-    -fx-border-color: #000;
+    -fx-border-color: -bs-black;
     -fx-border-radius: 15px;
     -fx-padding: 4px;
     -fx-background-color: null;
@@ -394,22 +398,42 @@ bg color of non edit textFields: fafafa
 
 #nav-button .text {
     -fx-font-size: 0.769em;
-    -fx-fill: -bs-white;
+    -fx-fill: -bs-rd-nav-deselected;
 }
 
 #nav-button:selected {
     -fx-background-image:  url("../../images/nav/nav-selected.png");
 }
 
-#nav-balance-label {
+#nav-button:selected .text {
+    -fx-fill: -bs-rd-nav-selected;
+}
+
+.nav-balance-display {
+    -fx-alignment: center-left;
+    -fx-text-fill: -bs-white;
+}
+
+.nav-balance-label {
     -fx-font-size: 0.769em;
-    -fx-alignment: center;
+    -fx-alignment: center-left;
+    -fx-text-fill: -bs-rd-nav-deselected;
 }
 
 #nav-alert-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-white;
+}
+
+.market-price-box {
+    -fx-background-color:-bs-rd-nav-background-dark;
+}
+
+.nav-market-price-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: top-left;
     -fx-text-fill: -bs-white;
 }
 
@@ -422,9 +446,10 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-bg-light;
 }
 
-.display-text-field {
-    -fx-alignment: center;
-    -fx-background-color: -bs-white;
+
+.balance-box {
+    -fx-border-color: transparent -bs-rd-nav-border transparent transparent;
+    /*-fx-background-color: yellow;*/
 }
 
 .text-area:readonly .content {
@@ -1374,9 +1399,10 @@ textfield */
 }
 
 #price-feed-combo {
-    -fx-background-color: -bs-dark-grey;
+    -fx-background-color:none;
     -fx-text-fill: -bs-white;
     -fx-alignment: center;
+    -jfx-unfocus-color: -bs-black;
 }
 
 #invert-market-price {
