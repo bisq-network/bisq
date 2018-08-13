@@ -30,10 +30,9 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.monetary.Price;
+import bisq.core.monetary.Altcoin;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileNotificationService;
-import bisq.core.notifications.MobileNotificationValidator;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
 import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
@@ -46,6 +45,7 @@ import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -66,11 +66,10 @@ import java.util.List;
 import java.util.Optional;
 
 @FxmlView
-public class NotificationsView extends ActivatableView<GridPane, Void> {
+public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
     private final User user;
     private final PriceFeedService priceFeedService;
-    private final MobileNotificationValidator mobileNotificationValidator;
     private final MobileNotificationService mobileNotificationService;
     private final BSFormatter formatter;
 
@@ -79,14 +78,14 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
 
     private TextField tokenInputTextField;
     private Label tokenInputLabel;
-    private InputTextField priceAlertHigh, priceAlertLow;
+    private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField;
     private CheckBox useSoundCheckBox, tradeCheckBox, marketCheckBox, priceCheckBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private Button webCamButton, noWebCamButton, eraseButton, testMsgButton, setPriceAlertButton,
             removePriceAlertButton;
 
     private ChangeListener<Boolean> useSoundCheckBoxListener, tradeCheckBoxListener, marketCheckBoxListener,
-            priceCheckBoxListener;
+            priceCheckBoxListener, priceAlertHighFocusListener, priceAlertLowFocusListener;
     private ChangeListener<String> tokenInputTextFieldListener, priceAlertHighListener, priceAlertLowListener;
     private ChangeListener<Number> priceFeedServiceListener;
 
@@ -100,17 +99,15 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private NotificationsView(Preferences preferences,
-                              User user,
-                              PriceFeedService priceFeedService,
-                              MobileNotificationValidator mobileNotificationValidator,
-                              MobileNotificationService mobileNotificationService,
-                              BSFormatter formatter) {
+    private MobileNotificationsView(Preferences preferences,
+                                    User user,
+                                    PriceFeedService priceFeedService,
+                                    MobileNotificationService mobileNotificationService,
+                                    BSFormatter formatter) {
         super();
         this.preferences = preferences;
         this.user = user;
         this.priceFeedService = priceFeedService;
-        this.mobileNotificationValidator = mobileNotificationValidator;
         this.mobileNotificationService = mobileNotificationService;
         this.formatter = formatter;
     }
@@ -141,15 +138,18 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         updateDisableState(!mobileNotificationService.isSetupConfirmationSent());
 
         // priceAlert
-        priceAlertHigh.textProperty().addListener(priceAlertHighListener);
-        priceAlertLow.textProperty().addListener(priceAlertLowListener);
+        priceAlertHighInputTextField.textProperty().addListener(priceAlertHighListener);
+        priceAlertLowInputTextField.textProperty().addListener(priceAlertLowListener);
+        priceAlertHighInputTextField.focusedProperty().addListener(priceAlertHighFocusListener);
+        priceAlertLowInputTextField.focusedProperty().addListener(priceAlertLowFocusListener);
         currencyComboBox.setOnAction(e -> setSelectedPriceAlertTradeCurrency());
         setPriceAlertButton.setOnAction(e -> {
             if (arePriceAlertInputsValid()) {
                 String code = selectedPriceAlertTradeCurrency.getCode();
-                long high = getPriceAlertHighTextFieldValue();
-                long low = getPriceAlertLowTextFieldValue();
-                user.setPriceAlertFilter(new PriceAlertFilter(code, high, low));
+                long high = getPriceAsLong(priceAlertHighInputTextField);
+                long low = getPriceAsLong(priceAlertLowInputTextField);
+                if (high > 0 && low > 0)
+                    user.setPriceAlertFilter(new PriceAlertFilter(code, high, low));
                 updatePriceAlertInputs();
             }
         });
@@ -171,8 +171,11 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         marketCheckBox.selectedProperty().removeListener(marketCheckBoxListener);
         priceCheckBox.selectedProperty().removeListener(priceCheckBoxListener);
 
-        priceAlertHigh.textProperty().removeListener(priceAlertHighListener);
-        priceAlertLow.textProperty().removeListener(priceAlertLowListener);
+        priceAlertHighInputTextField.textProperty().removeListener(priceAlertHighListener);
+        priceAlertLowInputTextField.textProperty().removeListener(priceAlertLowListener);
+        priceAlertHighInputTextField.focusedProperty().removeListener(priceAlertHighFocusListener);
+        priceAlertLowInputTextField.focusedProperty().removeListener(priceAlertLowFocusListener);
+
         priceFeedService.updateCounterProperty().removeListener(priceFeedServiceListener);
         currencyComboBox.setOnAction(null);
         setPriceAlertButton.setOnAction(null);
@@ -362,13 +365,50 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
             }
         });
 
-        priceAlertHigh = FormBuilder.addLabelInputTextField(root, ++gridRow,
+        priceAlertHighInputTextField = FormBuilder.addLabelInputTextField(root, ++gridRow,
                 Res.get("account.notifications.priceAlert.high.label")).second;
-        priceAlertHighListener = (observable, oldValue, newValue) -> updatePriceAlertInputs();
-
-        priceAlertLow = FormBuilder.addLabelInputTextField(root, ++gridRow,
+        priceAlertHighListener = (observable, oldValue, newValue) -> {
+            long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
+            long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
+            if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
+                if (priceAlertHighTextFieldValue > priceAlertLowTextFieldValue)
+                    updatePriceAlertInputs();
+            }
+        };
+        priceAlertHighFocusListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue) {
+                applyPriceFormatting(priceAlertHighInputTextField);
+                long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
+                long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
+                if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
+                    if (priceAlertHighTextFieldValue <= priceAlertLowTextFieldValue) {
+                        new Popup<>().warning(Res.get("account.notifications.priceAlert.warning.highPriceTooLow")).show();
+                        UserThread.execute(() -> priceAlertHighInputTextField.clear());
+                    }
+                }
+            }
+        };
+        priceAlertLowInputTextField = FormBuilder.addLabelInputTextField(root, ++gridRow,
                 Res.get("account.notifications.priceAlert.low.label")).second;
-        priceAlertLowListener = (observable, oldValue, newValue) -> updatePriceAlertInputs();
+        priceAlertLowListener = (observable, oldValue, newValue) -> {
+            long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
+            long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
+            if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
+                if (priceAlertLowTextFieldValue < priceAlertHighTextFieldValue)
+                    updatePriceAlertInputs();
+            }
+        };
+        priceAlertLowFocusListener = (observable, oldValue, newValue) -> {
+            applyPriceFormatting(priceAlertLowInputTextField);
+            long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
+            long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
+            if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
+                if (priceAlertLowTextFieldValue >= priceAlertHighTextFieldValue) {
+                    new Popup<>().warning(Res.get("account.notifications.priceAlert.warning.lowerPriceTooHigh")).show();
+                    UserThread.execute(() -> priceAlertLowInputTextField.clear());
+                }
+            }
+        };
 
         Tuple2<Button, Button> tuple = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
                 Res.get("account.notifications.priceAlert.setButton"),
@@ -376,9 +416,16 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         setPriceAlertButton = tuple.first;
         removePriceAlertButton = tuple.second;
 
+        // When we get a price update an existing price alert might get removed.
+        // We get updated the view at each price update so we get aware of the removed PriceAlertFilter in the
+        // fillPriceAlertFields method. To be sure that we called after the PriceAlertFilter has been removed we delay
+        // to the next frame. The priceFeedServiceListener in the  mobileNotificationService might get called before
+        // our listener here.
         priceFeedServiceListener = (observable, oldValue, newValue) -> {
-            fillPriceAlertFields();
-            updatePriceAlertInputs();
+            UserThread.execute(() -> {
+                fillPriceAlertFields();
+                updatePriceAlertInputs();
+            });
         };
     }
 
@@ -389,10 +436,11 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
 
     private void applyKeyAndToken(String keyAndToken) {
         if (keyAndToken != null && !keyAndToken.isEmpty()) {
-            mobileNotificationService.applyKeyAndToken(keyAndToken);
-            if (mobileNotificationValidator.isValid(keyAndToken)) {
+            boolean isValid = mobileNotificationService.applyKeyAndToken(keyAndToken);
+            if (isValid) {
                 updateDisableState(false);
                 setPairingTokenFieldsVisible();
+                updatePriceAlertInputs();
             }
         }
     }
@@ -438,14 +486,16 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
                 currencyComboBox.getSelectionModel().select(optionalTradeCurrency.get());
                 setSelectedPriceAlertTradeCurrency();
 
-                priceAlertHigh.setText(formatter.formatMarketPrice(priceAlertFilter.getHigh() / 10000d, currencyCode));
-                priceAlertLow.setText(formatter.formatMarketPrice(priceAlertFilter.getLow() / 10000d, currencyCode));
+                priceAlertHighInputTextField.setText(formatter.formatMarketPrice(priceAlertFilter.getHigh() / 10000d, currencyCode));
+                priceAlertLowInputTextField.setText(formatter.formatMarketPrice(priceAlertFilter.getLow() / 10000d, currencyCode));
             } else {
                 currencyComboBox.getSelectionModel().clearSelection();
             }
         } else {
-            priceAlertHigh.clear();
-            priceAlertLow.clear();
+            priceAlertHighInputTextField.clear();
+            priceAlertLowInputTextField.clear();
+            priceAlertHighInputTextField.resetValidation();
+            priceAlertLowInputTextField.resetValidation();
             currencyComboBox.getSelectionModel().clearSelection();
         }
     }
@@ -455,14 +505,14 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         boolean selected = priceCheckBox.isSelected();
         boolean disable = !setupConfirmationSent ||
                 !selected;
-        priceAlertHigh.setDisable(selectedPriceAlertTradeCurrency == null || disable);
-        priceAlertLow.setDisable(selectedPriceAlertTradeCurrency == null || disable);
+        priceAlertHighInputTextField.setDisable(selectedPriceAlertTradeCurrency == null || disable);
+        priceAlertLowInputTextField.setDisable(selectedPriceAlertTradeCurrency == null || disable);
         PriceAlertFilter priceAlertFilter = user.getPriceAlertFilter();
         boolean valueSameAsFilter = false;
         if (priceAlertFilter != null &&
                 selectedPriceAlertTradeCurrency != null) {
-            valueSameAsFilter = priceAlertFilter.getHigh() == getPriceAlertHighTextFieldValue() &&
-                    priceAlertFilter.getLow() == getPriceAlertLowTextFieldValue() &&
+            valueSameAsFilter = priceAlertFilter.getHigh() == getPriceAsLong(priceAlertHighInputTextField) &&
+                    priceAlertFilter.getLow() == getPriceAsLong(priceAlertLowInputTextField) &&
                     priceAlertFilter.getCurrencyCode().equals(selectedPriceAlertTradeCurrency.getCode());
         }
         setPriceAlertButton.setDisable(disable || !arePriceAlertInputsValid() || valueSameAsFilter);
@@ -480,16 +530,16 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
         selectedPriceAlertTradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
         if (selectedPriceAlertTradeCurrency != null) {
             boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(selectedPriceAlertTradeCurrency.getCode());
-            priceAlertHigh.setValidator(isCryptoCurrency ? new AltcoinValidator() : new FiatPriceValidator());
-            priceAlertLow.setValidator(isCryptoCurrency ? new AltcoinValidator() : new FiatPriceValidator());
+            priceAlertHighInputTextField.setValidator(isCryptoCurrency ? new AltcoinValidator() : new FiatPriceValidator());
+            priceAlertLowInputTextField.setValidator(isCryptoCurrency ? new AltcoinValidator() : new FiatPriceValidator());
         }
         updatePriceAlertInputs();
     }
 
     private boolean arePriceAlertInputsValid() {
         return selectedPriceAlertTradeCurrency != null &&
-                isPriceInputValid(priceAlertHigh).isValid &&
-                isPriceInputValid(priceAlertLow).isValid;
+                isPriceInputValid(priceAlertHighInputTextField).isValid &&
+                isPriceInputValid(priceAlertLowInputTextField).isValid;
     }
 
     private InputValidator.ValidationResult isPriceInputValid(InputTextField inputTextField) {
@@ -500,15 +550,40 @@ public class NotificationsView extends ActivatableView<GridPane, Void> {
             return new InputValidator.ValidationResult(false);
     }
 
-    private long getPriceAlertHighTextFieldValue() {
-        String text = priceAlertHigh.getText();
-        return text.isEmpty() ? 0 : Price.parse(selectedPriceAlertTradeCurrency.getCode(), text).getValue();
+    private long getPriceAsLong(InputTextField inputTextField) {
+        try {
+            String inputValue = inputTextField.getText();
+            if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
+                double priceAsDouble = formatter.parseNumberStringToDouble(inputValue);
+                String currencyCode = selectedPriceAlertTradeCurrency.getCode();
+                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                        Altcoin.SMALLEST_UNIT_EXPONENT : 2;
+                // We want to use the converted value not the inout value as we apply the converted value at focus out.
+                // E.g. if input is 5555.5555 it will be rounded to  5555.55 and we use that as the value for comparing
+                // low and high price...
+                String stringValue = formatter.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
+                return formatter.parsePriceStringToLong(currencyCode, stringValue, precision);
+            } else {
+                return 0;
+            }
+        } catch (Throwable ignore) {
+            return 0;
+        }
     }
 
-    private long getPriceAlertLowTextFieldValue() {
-        String text = priceAlertLow.getText();
-        return text.isEmpty() ? 0 : Price.parse(selectedPriceAlertTradeCurrency.getCode(), text).getValue();
+    private void applyPriceFormatting(InputTextField inputTextField) {
+        try {
+            String inputValue = inputTextField.getText();
+            if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
+                double priceAsDouble = formatter.parseNumberStringToDouble(inputValue);
+                String currencyCode = selectedPriceAlertTradeCurrency.getCode();
+                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                        Altcoin.SMALLEST_UNIT_EXPONENT : 2;
+                String stringValue = formatter.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
+                inputTextField.setText(stringValue);
+            }
+        } catch (Throwable ignore) {
+        }
     }
-
 }
 
