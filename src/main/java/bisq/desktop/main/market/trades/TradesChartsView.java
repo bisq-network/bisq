@@ -591,7 +591,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                                     setGraphic(new ColoredDecimalPlacesWithZerosText(formatter.formatCoin(item.getTradeAmount(),
                                             4), GUIUtil.AMOUNT_DECIMALS_WITH_ZEROS));
                                 else
-                                    setText("");
+                                    setGraphic(null);
                             }
                         };
                     }
