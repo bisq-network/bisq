@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.settings.preferences;
 
-import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -85,7 +84,7 @@ import java.util.stream.Collectors;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatable> {
+public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox;
@@ -129,9 +128,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(Preferences preferences, FeeService feeService, ReferralIdService referralIdService,
+    public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService, ReferralIdService referralIdService,
                            BSFormatter formatter) {
-        super();
+        super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
@@ -514,6 +513,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 new Popup<>().information(Res.get("settings.preferences.languageChange"))
                         .closeButtonText(Res.get("shared.ok"))
                         .show();
+
+                if (model.needsArbitrationLanguageWarning()) {
+                    new Popup<>().warning(Res.get("settings.preferences.arbitrationLanguageWarning",
+                            model.getArbitrationLanguages()))
+                            .closeButtonText(Res.get("shared.ok"))
+                            .show();
+                }
             }
             // Should we apply the changed currency immediately to the language list?
             // If so and the user selects a unknown language he might get lost and it is hard to find
