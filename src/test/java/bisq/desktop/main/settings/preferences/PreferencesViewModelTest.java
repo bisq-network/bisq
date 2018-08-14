@@ -41,8 +41,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -92,44 +90,4 @@ public class PreferencesViewModelTest {
         assertEquals("English, Deutsch, español", model.getArbitrationLanguages());
     }
 
-    @Test
-    public void testNeedsArbitrationLanguageWarning() {
-        Preferences preferences = PreferenceMakers.empty;
-        preferences.setUserLanguage("de");
-
-        ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
-
-        final ObservableMap<NodeAddress, Arbitrator> arbitrators = FXCollections.observableHashMap();
-
-        ArrayList<String> languagesOne = new ArrayList<String>() {{
-            add("en");
-            add("de");
-        }};
-
-        ArrayList<String> languagesTwo = new ArrayList<String>() {{
-            add("en");
-            add("es");
-        }};
-
-        Arbitrator one = new Arbitrator(new NodeAddress("arbitrator:1"), null, null, null,
-                languagesOne, 0L, null, "", null,
-                null, null);
-
-        Arbitrator two = new Arbitrator(new NodeAddress("arbitrator:2"), null, null, null,
-                languagesTwo, 0L, null, "", null,
-                null, null);
-
-        arbitrators.put(one.getNodeAddress(), one);
-        arbitrators.put(two.getNodeAddress(), two);
-
-        when(arbitratorManager.getArbitratorsObservableMap()).thenReturn(arbitrators);
-
-        PreferencesViewModel model = new PreferencesViewModel(preferences, arbitratorManager);
-
-        assertFalse(model.needsArbitrationLanguageWarning());
-
-        preferences.setUserLanguage("th");
-
-        assertTrue(model.needsArbitrationLanguageWarning());
-    }
 }
