@@ -685,7 +685,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !price.get().isZero() &&
                 allowAmountUpdate) {
             try {
-                amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
+                Coin value = formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
+                if (isHalCashAccount())
+                    value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
+
+                amount.set(value);
                 calculateTotalToPay();
             } catch (Throwable t) {
                 log.error(t.toString());

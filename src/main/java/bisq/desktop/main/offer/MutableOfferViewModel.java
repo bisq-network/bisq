@@ -684,7 +684,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 if (minAmount.get() != null)
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             }
-
             // We want to trigger a recalculation of the volume
             UserThread.execute(() -> onFocusOutVolumeTextField(true, false));
         }
@@ -969,11 +968,16 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (amount.get() != null && !amount.get().isEmpty()) {
             Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
 
-            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null)
-                amount = OfferUtil.getAdjustedAmountForHalCash(amount, dataModel.getPrice().get());
+            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
+                amount = OfferUtil.getAdjustedAmountForHalCash(amount,
+                        dataModel.getPrice().get(),
+                        dataModel.getMaxTradeLimit());
+            }
 
             dataModel.setAmount(amount);
-            if (syncMinAmountWithAmount || dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
+            if (syncMinAmountWithAmount ||
+                    dataModel.getMinAmount().get() == null ||
+                    dataModel.getMinAmount().get().equals(Coin.ZERO)) {
                 minAmount.set(this.amount.get());
                 setMinAmountToModel();
             }
@@ -986,8 +990,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (minAmount.get() != null && !minAmount.get().isEmpty()) {
             Coin minAmount = btcFormatter.parseToCoinWith4Decimals(this.minAmount.get());
 
-            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null)
-                minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount, dataModel.getPrice().get());
+            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
+                minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount,
+                        dataModel.getPrice().get(),
+                        dataModel.getMaxTradeLimit());
+            }
 
             dataModel.setMinAmount(minAmount);
         } else {

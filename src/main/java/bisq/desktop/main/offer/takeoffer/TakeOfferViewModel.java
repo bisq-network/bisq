@@ -282,7 +282,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 calculateVolume();
 
                 if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
-                    dataModel.applyAmount(OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(), dataModel.tradePrice));
+                    Coin adjustedAmountForHalCash = OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
+                            dataModel.tradePrice,
+                            dataModel.getMaxTradeLimit());
+                    dataModel.applyAmount(adjustedAmountForHalCash);
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 }
 
