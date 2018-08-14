@@ -23,6 +23,7 @@ import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.main.MarketPricePresentation;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
 import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
@@ -78,6 +79,8 @@ public class DesktopModule extends AppModule {
         bind(TransactionListItemFactory.class).in(Singleton.class);
         bind(TransactionAwareTradableFactory.class).in(Singleton.class);
         bind(DisplayedTransactionsFactory.class).in(Singleton.class);
+
+        bind(BondingViewUtils.class).in(Singleton.class);
 
         bindConstant().annotatedWith(Names.named(AppOptionKeys.APP_NAME_KEY)).to(environment.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
     }

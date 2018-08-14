@@ -39,6 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
 
+    /* @Nullable
+     private BisqHttpApiServer bisqHttpApiServer;*/
+    /* @Nullable
+    private BisqGrpcServer bisqGrpcServer;
+    */
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
             // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
@@ -119,5 +124,23 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     protected void onApplicationStarted() {
         super.onApplicationStarted();
+
+       /* if (runWithHttpApi()) {
+            final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
+            bisqHttpApiServer = new BisqHttpApiServer(bisqFacade);
+        }*/
+        /*
+        if (runWithGrpcApi()) {
+            final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
+            bisqGrpcServer = new BisqGrpcServer(bisqFacade);
+        }*/
+    }
+
+    private boolean runWithHttpApi() {
+        return bisqEnvironment.getDesktopWithHttpApi().toLowerCase().equals("true");
+    }
+
+    private boolean runWithGrpcApi() {
+        return bisqEnvironment.getDesktopWithGrpcApi().toLowerCase().equals("true");
     }
 }

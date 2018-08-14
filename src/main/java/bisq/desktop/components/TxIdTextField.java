@@ -23,6 +23,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
+import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
@@ -37,12 +38,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Setter;
 
 public class TxIdTextField extends AnchorPane {
-    private static final Logger log = LoggerFactory.getLogger(TxIdTextField.class);
-
     private static Preferences preferences;
 
     public static void setPreferences(Preferences preferences) {
@@ -61,6 +59,8 @@ public class TxIdTextField extends AnchorPane {
     private final Label copyIcon;
     private final Label blockExplorerIcon;
     private TxConfidenceListener txConfidenceListener;
+    @Setter
+    private boolean isBsq;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,12 +70,13 @@ public class TxIdTextField extends AnchorPane {
     public TxIdTextField() {
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setFocusTraversable(false);
-        txConfidenceIndicator.setPrefSize(24, 24);
+        txConfidenceIndicator.setMaxSize(20, 20);
         txConfidenceIndicator.setId("funds-confidence");
         txConfidenceIndicator.setLayoutY(1);
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setVisible(false);
         AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
+        AnchorPane.setTopAnchor(txConfidenceIndicator, 3.0);
         progressIndicatorTooltip = new Tooltip("-");
         txConfidenceIndicator.setTooltip(progressIndicatorTooltip);
 
@@ -106,23 +107,23 @@ public class TxIdTextField extends AnchorPane {
         getChildren().addAll(textField, copyIcon, blockExplorerIcon, txConfidenceIndicator);
     }
 
-    public void setup(String txID) {
+    public void setup(String txId) {
         if (txConfidenceListener != null)
             walletService.removeTxConfidenceListener(txConfidenceListener);
 
-        txConfidenceListener = new TxConfidenceListener(txID) {
+        txConfidenceListener = new TxConfidenceListener(txId) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                 updateConfidence(confidence);
             }
         };
         walletService.addTxConfidenceListener(txConfidenceListener);
-        updateConfidence(walletService.getConfidenceForTxId(txID));
+        updateConfidence(walletService.getConfidenceForTxId(txId));
 
-        textField.setText(txID);
-        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(txID));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(txID));
-        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txID));
+        textField.setText(txId);
+        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
+        copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txId));
     }
 
     public void cleanup() {
@@ -135,14 +136,17 @@ public class TxIdTextField extends AnchorPane {
         textField.setText("");
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void openBlockExplorer(String txID) {
-        if (preferences != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
+    private void openBlockExplorer(String txId) {
+        if (preferences != null) {
+            BlockChainExplorer blockChainExplorer = isBsq ?
+                    preferences.getBsqBlockChainExplorer() :
+                    preferences.getBlockChainExplorer();
+            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId);
+        }
     }
 
     private void updateConfidence(TransactionConfidence confidence) {

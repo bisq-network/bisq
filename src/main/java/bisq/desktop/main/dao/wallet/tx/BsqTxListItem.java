@@ -17,70 +17,58 @@
 
 package bisq.desktop.main.dao.wallet.tx;
 
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.util.GUIUtil;
+import bisq.desktop.components.TxConfidenceListItem;
 
-import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.blockchain.vo.Tx;
-import bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 
-import javafx.scene.control.Tooltip;
-
 import java.util.Date;
-import java.util.Optional;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+@Slf4j
+@EqualsAndHashCode(callSuper = true)
 @Data
-class BsqTxListItem {
-    private final Transaction transaction;
-    private final Optional<Tx> optionalTx;
-    private final BsqWalletService bsqWalletService;
+class BsqTxListItem extends TxConfidenceListItem {
     private final BtcWalletService btcWalletService;
-    private Date date;
-    private final String txId;
-    private int confirmations = 0;
+    private final DaoFacade daoFacade;
+    private final BsqFormatter bsqFormatter;
+    private final Date date;
+    private final boolean isBurnedBsqTx;
+
     private final String address;
     private final String direction;
     private Coin amount;
     private boolean received;
-    private boolean isBurnedBsqTx;
-    private BsqFormatter bsqFormatter;
-    private TxConfidenceIndicator txConfidenceIndicator;
-    private TxConfidenceListener txConfidenceListener;
+
     private boolean issuanceTx;
 
     BsqTxListItem(Transaction transaction,
-                  Optional<Tx> optionalTx,
                   BsqWalletService bsqWalletService,
                   BtcWalletService btcWalletService,
-                  boolean isBurnedBsqTx,
+                  DaoFacade daoFacade,
                   Date date,
                   BsqFormatter bsqFormatter) {
-        this.transaction = transaction;
-        this.optionalTx = optionalTx;
-        this.bsqWalletService = bsqWalletService;
+        super(transaction, bsqWalletService);
+
         this.btcWalletService = btcWalletService;
-        this.isBurnedBsqTx = isBurnedBsqTx;
+        this.daoFacade = daoFacade;
+        this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getHashAsString());
         this.date = date;
         this.bsqFormatter = bsqFormatter;
-
-        txId = transaction.getHashAsString();
-
-        setupConfidence(bsqWalletService);
 
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
@@ -89,7 +77,11 @@ class BsqTxListItem {
         Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction);
         amount = valueSentToMe.subtract(valueSentFromMe);
         if (amount.isPositive()) {
-            direction = Res.get("funds.tx.direction.receivedWith");
+            if (txId.equals(daoFacade.getGenesisTxId()))
+                direction = Res.get("funds.tx.direction.genesisTx");
+            else
+                direction = Res.get("funds.tx.direction.receivedWith");
+
             received = true;
         } else if (amount.isNegative()) {
             direction = Res.get("funds.tx.direction.sentTo");
@@ -129,44 +121,10 @@ class BsqTxListItem {
             address = "";
     }
 
-    private void setupConfidence(BsqWalletService bsqWalletService) {
-        txConfidenceIndicator = new TxConfidenceIndicator();
-        txConfidenceIndicator.setId("funds-confidence");
-        Tooltip tooltip = new Tooltip();
-        txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefSize(24, 24);
-        txConfidenceIndicator.setTooltip(tooltip);
-
-        txConfidenceListener = new TxConfidenceListener(txId) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence, tooltip);
-            }
-        };
-        bsqWalletService.addTxConfidenceListener(txConfidenceListener);
-        updateConfidence(bsqWalletService.getConfidenceForTxId(txId), tooltip);
-    }
-
-    private void updateConfidence(TransactionConfidence confidence, Tooltip tooltip) {
-        if (confidence != null) {
-            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-            confirmations = confidence.getDepthInBlocks();
-        }
-    }
-
-    public void cleanup() {
-        bsqWalletService.removeTxConfidenceListener(txConfidenceListener);
-    }
-
     public TxType getTxType() {
-        if (optionalTx.isPresent())
-            return optionalTx.get().getTxType();
-        else
-            return confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE;
-    }
-
-    public void setAmount(Coin amount) {
-        this.amount = amount;
+        return daoFacade.getTx(txId)
+                .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
+                .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 }
 

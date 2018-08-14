@@ -618,7 +618,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         if (dataModel.isCurrencyForTakerFeeBtc())
             return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
-            return Res.get("shared.paidWithBsq");
+            return Res.get("dao.paidWithBsq");
     }
 
     public String getTotalToPayInfo() {

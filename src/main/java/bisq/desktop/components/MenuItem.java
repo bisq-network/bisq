@@ -57,7 +57,7 @@ public class MenuItem extends AutoTooltipToggleButton {
         this.baseNavPath = baseNavPath;
 
         setToggleGroup(toggleGroup);
-        setText(title);
+        setLabelText(title);
         setId("account-settings-item-background-active");
         setPrefHeight(40);
         setPrefWidth(240);
@@ -109,9 +109,14 @@ public class MenuItem extends AutoTooltipToggleButton {
         list.toArray(array);
         return array;
     }
+
     public void deactivate() {
         setOnAction(null);
         selectedProperty().removeListener(selectedPropertyChangeListener);
         disableProperty().removeListener(disablePropertyChangeListener);
+    }
+
+    public void setLabelText(String value) {
+        setText(value);
     }
 }
