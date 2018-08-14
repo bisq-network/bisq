@@ -28,6 +28,7 @@ import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
+import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
@@ -57,6 +58,7 @@ import bisq.core.network.MessageState;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
+import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -261,6 +263,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.WESTERN_UNION_ID:
                 gridRow = WesternUnionForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.HAL_CASH_ID:
+                gridRow = HalCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.F2F_ID:
                 checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
                 gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer());
@@ -365,6 +370,25 @@ public class BuyerStep2View extends TradeStepView {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.moneyGramMTCNInfo.msg", email))
+                            .onAction(this::showConfirmPaymentStartedPopup)
+                            .actionButtonText(Res.get("shared.yes"))
+                            .closeButtonText(Res.get("shared.no"))
+                            .onClose(popup::hide)
+                            .dontShowAgainId(key)
+                            .show();
+                } else {
+                    showConfirmPaymentStartedPopup();
+                }
+            } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof HalCashAccountPayload) {
+                //noinspection UnusedAssignment
+                //noinspection ConstantConditions
+                String key = "halCashCodeInfo";
+                if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
+                    String mobileNr = ((HalCashAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getMobileNr();
+                    Popup popup = new Popup<>();
+                    popup.headLine(Res.get("portfolio.pending.step2_buyer.halCashInfo.headline"))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.halCashInfo.msg",
+                                    model.dataModel.getTrade().getShortId(), mobileNr))
                             .onAction(this::showConfirmPaymentStartedPopup)
                             .actionButtonText(Res.get("shared.yes"))
                             .closeButtonText(Res.get("shared.no"))
@@ -491,6 +515,12 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + "\n\n" +
+                        copyPaste;
+            } else if (paymentAccountPayload instanceof HalCashAccountPayload) {
+                //noinspection UnusedAssignment
+                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste;
             } else {
                 //noinspection UnusedAssignment
