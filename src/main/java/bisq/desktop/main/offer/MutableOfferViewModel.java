@@ -732,6 +732,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             UserThread.execute(() -> {
                 onFocusOutVolumeTextField(true, false);
                 // We also need to update minAmount
+                onFocusOutAmountTextField(true, false);
                 onFocusOutMinAmountTextField(true, false);
             });
         }
@@ -966,9 +967,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
-            dataModel.setAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
+            Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
+
+            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null)
+                amount = OfferUtil.getAdjustedAmountForHalCash(amount, dataModel.getPrice().get());
+
+            dataModel.setAmount(amount);
             if (syncMinAmountWithAmount || dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
-                minAmount.set(amount.get());
+                minAmount.set(this.amount.get());
                 setMinAmountToModel();
             }
         } else {
@@ -981,7 +987,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             Coin minAmount = btcFormatter.parseToCoinWith4Decimals(this.minAmount.get());
 
             if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null)
-                minAmount = OfferUtil.getAdjustedMinAmountForHalCash(minAmount, dataModel.getPrice().get());
+                minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount, dataModel.getPrice().get());
 
             dataModel.setMinAmount(minAmount);
         } else {
