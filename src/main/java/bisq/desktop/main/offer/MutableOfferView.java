@@ -1149,7 +1149,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         marketBasedPriceInfoInputTextField = priceAsPercentageTuple.second;
-        marketBasedPriceTextField = marketBasedPriceInfoInputTextField.getTextField();
+        marketBasedPriceTextField = marketBasedPriceInfoInputTextField.getInputTextField();
         marketBasedPriceTextField.setPrefWidth(200);
         editOfferElements.add(marketBasedPriceTextField);
         marketBasedPriceLabel = priceAsPercentageTuple.third;
