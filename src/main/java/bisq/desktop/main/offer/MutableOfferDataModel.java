@@ -114,31 +114,33 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private OfferPayload.Direction direction;
-    private TradeCurrency tradeCurrency;
-    private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
+    private final Coin sellerSecurityDeposit;
+
+    protected OfferPayload.Direction direction;
+    protected TradeCurrency tradeCurrency;
+    protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+    protected final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
-    private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Price> price = new SimpleObjectProperty<>();
-    private final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    private final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
-    private final Coin sellerSecurityDeposit;
+    protected final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
+    protected final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
+    protected final ObjectProperty<Price> price = new SimpleObjectProperty<>();
+    protected final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
+    protected final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
 
-    private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
+    protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     protected PaymentAccount paymentAccount;
-    boolean isTabSelected;
-    private double marketPriceMargin = 0;
-    private Coin txFeeFromFeeService;
-    private boolean marketPriceAvailable;
-    private int feeTxSize = 260; // size of typical tx with 1 input
-    private int feeTxSizeEstimationRecursionCounter;
+    protected boolean isTabSelected;
+    protected double marketPriceMargin = 0;
+    protected Coin txFeeFromFeeService;
+    protected boolean marketPriceAvailable;
+    protected int feeTxSize = 260; // size of typical tx with 1 input
+    protected int feeTxSizeEstimationRecursionCounter;
     protected boolean allowAmountUpdate = true;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -668,6 +670,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 // For HalCash we want multiple of 10 EUR
                 if (isHalCashAccount())
                     volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+                    volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount, tradeCurrencyCode.get());
 
                 volume.set(volumeByAmount);
             } catch (Throwable t) {
@@ -688,6 +692,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 Coin value = formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
+                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+                    value = OfferUtil.getRoundedFiatAmount(value, price.get(), tradeCurrencyCode.get(), getMaxTradeLimit());
+
+                calculateVolume();
 
                 amount.set(value);
                 calculateTotalToPay();

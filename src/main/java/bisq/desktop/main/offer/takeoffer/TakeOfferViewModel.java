@@ -28,7 +28,9 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
@@ -281,11 +283,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 calculateVolume();
 
+                Price tradePrice = dataModel.tradePrice;
+                long maxTradeLimit = dataModel.getMaxTradeLimit();
                 if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
                     Coin adjustedAmountForHalCash = OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
-                            dataModel.tradePrice,
-                            dataModel.getMaxTradeLimit());
+                            tradePrice,
+                            maxTradeLimit);
                     dataModel.applyAmount(adjustedAmountForHalCash);
+                    amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
+                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())) {
+                    Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
+                            dataModel.getCurrencyCode(), maxTradeLimit);
+                    dataModel.applyAmount(roundedAmount);
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 }
 

@@ -494,6 +494,8 @@ class TakeOfferDataModel extends OfferDataModel {
             Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
             if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
                 volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+            else if (CurrencyUtil.isFiatCurrency(getCurrencyCode()))
+                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount, getCurrencyCode());
 
             volume.set(volumeByAmount);
 
