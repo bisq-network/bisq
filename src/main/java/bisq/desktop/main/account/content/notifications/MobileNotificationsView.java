@@ -24,6 +24,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WebCamWindow;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
@@ -95,8 +96,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private CheckBox useSoundCheckBox, tradeCheckBox, marketCheckBox, priceCheckBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
-    private Button webCamButton, noWebCamButton, eraseButton, testMsgButton, setPriceAlertButton,
-            removePriceAlertButton, addMarketAlertButton, manageAlertsButton;
+    private Button downloadButton, webCamButton, noWebCamButton, eraseButton, setPriceAlertButton,
+            removePriceAlertButton, addMarketAlertButton, manageAlertsButton /*,testMsgButton*/;
 
     private ChangeListener<Boolean> useSoundCheckBoxListener, tradeCheckBoxListener, marketCheckBoxListener,
             priceCheckBoxListener, priceAlertHighFocusListener, priceAlertLowFocusListener, marketAlertTriggerFocusListener;
@@ -143,9 +144,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         // setup
         tokenInputTextField.textProperty().addListener(tokenInputTextFieldListener);
+        downloadButton.setOnAction(e -> onDownload());
         webCamButton.setOnAction(e -> onOpenWebCam());
         noWebCamButton.setOnAction(e -> onNoWebCam());
-        testMsgButton.setOnAction(e -> onSendTestMsg());
+        // testMsgButton.setOnAction(e -> onSendTestMsg());
         eraseButton.setOnAction(e -> onErase());
 
         // settings
@@ -182,7 +184,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             setPairingTokenFieldsVisible();
         } else {
             eraseButton.setDisable(true);
-            testMsgButton.setDisable(true);
+            //testMsgButton.setDisable(true);
         }
         setDisableForSetupFields(!mobileNotificationService.isSetupConfirmationSent());
         updateMarketAlertFields();
@@ -194,9 +196,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         // setup
         tokenInputTextField.textProperty().removeListener(tokenInputTextFieldListener);
+        downloadButton.setOnAction(null);
         webCamButton.setOnAction(null);
         noWebCamButton.setOnAction(null);
-        testMsgButton.setOnAction(null);
+        //testMsgButton.setOnAction(null);
         eraseButton.setOnAction(null);
 
         // settings
@@ -230,6 +233,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Setup
+    private void onDownload() {
+        GUIUtil.openWebPage("https://bisq.network/downloads");
+    }
+
     private void onOpenWebCam() {
         webCamButton.setDisable(true);
         log.info("Start WebCamLauncher");
@@ -385,13 +392,14 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void createSetupFields() {
         FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
-        Tuple3<Label, Button, Button> tuple = FormBuilder.addLabel2Buttons(root, gridRow,
-                Res.get("account.notifications.webcam.label"),
-                Res.get("account.notifications.webcam.button"), Res.get("account.notifications.noWebcam.button"),
-                Layout.FIRST_ROW_DISTANCE);
-        webCamButton = tuple.second;
-        webCamButton.setDefaultButton(true);
+        downloadButton = FormBuilder.addLabelButton(root, gridRow,
+                Res.getWithCol("account.notifications.download.label"), Res.get("account.notifications.download.button"),
+                Layout.FIRST_ROW_DISTANCE).second;
 
+        Tuple3<Label, Button, Button> tuple = FormBuilder.addLabel2Buttons(root, ++gridRow,
+                Res.getWithCol("account.notifications.webcam.label"),
+                Res.get("account.notifications.webcam.button"), Res.get("account.notifications.noWebcam.button"), 0);
+        webCamButton = tuple.second;
         noWebCamButton = tuple.third;
 
         Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(root, ++gridRow,
@@ -407,9 +415,9 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         tokenInputTextField.setManaged(false);
         tokenInputTextField.setVisible(false);
 
-        testMsgButton = FormBuilder.addLabelButton(root, ++gridRow, Res.get("account.notifications.testMsg.label"),
+        /*testMsgButton = FormBuilder.addLabelButton(root, ++gridRow, Res.get("account.notifications.testMsg.label"),
                 Res.get("account.notifications.testMsg.title")).second;
-        testMsgButton.setDefaultButton(false);
+        testMsgButton.setDefaultButton(false);*/
 
         eraseButton = FormBuilder.addLabelButton(root, ++gridRow,
                 Res.get("account.notifications.erase.label"),
@@ -628,7 +636,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void setDisableForSetupFields(boolean disable) {
-        testMsgButton.setDisable(disable);
+        // testMsgButton.setDisable(disable);
         eraseButton.setDisable(disable);
 
         useSoundCheckBox.setDisable(disable);
@@ -649,7 +657,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         tokenInputTextField.clear();
         setDisableForSetupFields(true);
         eraseButton.setDisable(true);
-        testMsgButton.setDisable(true);
+        //testMsgButton.setDisable(true);
         onRemovePriceAlert();
         new ArrayList<>(marketAlerts.getMarketAlertFilters()).forEach(marketAlerts::removeMarketAlertFilter);
 
