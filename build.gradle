@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-        mavenLocal()
         jcenter()
     }
     dependencies {
@@ -16,7 +15,7 @@ apply plugin: 'witness'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'network.bisq'
-version = '0.9.0'
+version = '0.7.1-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -34,7 +33,6 @@ tasks.withType(JavaCompile) {
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 repositories {
-    mavenLocal()
     jcenter()
     maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
@@ -42,10 +40,9 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:0.9.0'
-    compile 'network.bisq:bisq-core:0.9.0'
-    compile 'network.bisq:bisq-p2p:0.9.0'
-    //compile 'network.bisq:bisq-grpc:0.9.0'
+    compile 'network.bisq:bisq-p2p:-SNAPSHOT'
+    compile 'network.bisq:bisq-core:-SNAPSHOT'
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'org.controlsfx:controlsfx:8.0.6_20'
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
@@ -54,7 +51,7 @@ dependencies {
     compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compileOnly 'org.projectlombok:lombok:1.16.16'
-    // annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
     testCompile('org.mockito:mockito-core:2.8.9') {
         exclude(module: 'objenesis')
     }
@@ -64,7 +61,7 @@ dependencies {
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
     testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    // testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
 }
 
 build.dependsOn installDist
