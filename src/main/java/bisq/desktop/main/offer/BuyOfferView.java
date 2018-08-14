@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.ViewLoader;
 
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
@@ -29,8 +30,8 @@ import javax.inject.Inject;
 public class BuyOfferView extends OfferView {
 
     @Inject
-    public BuyOfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
-        super(viewLoader, navigation, preferences);
+    public BuyOfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences, ArbitratorManager arbitratorManager) {
+        super(viewLoader, navigation, preferences, arbitratorManager);
     }
 }
 

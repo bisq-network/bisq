@@ -35,6 +35,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -490,8 +491,11 @@ class TakeOfferDataModel extends OfferDataModel {
         if (tradePrice != null && offer != null &&
                 amount.get() != null &&
                 !amount.get().isZero()) {
-            volume.set(tradePrice.getVolumeByAmount(amount.get()));
-            //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
+            Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
+            if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
+                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+
+            volume.set(volumeByAmount);
 
             updateBalance();
         }

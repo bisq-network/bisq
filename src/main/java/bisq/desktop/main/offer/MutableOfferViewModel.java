@@ -45,6 +45,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -683,6 +684,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 if (minAmount.get() != null)
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             }
+            // We want to trigger a recalculation of the volume
+            UserThread.execute(() -> onFocusOutVolumeTextField(true, false));
         }
     }
 
@@ -723,6 +726,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 dataModel.calculateAmount();
                 applyMakerFee();
             }
+
+            // We want to trigger a recalculation of the volume and minAmount
+            UserThread.execute(() -> {
+                onFocusOutVolumeTextField(true, false);
+                // We also need to update minAmount
+                onFocusOutAmountTextField(true, false);
+                onFocusOutMinAmountTextField(true, false);
+            });
         }
     }
 
@@ -743,8 +754,16 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             if (result.isValid) {
                 setVolumeToModel();
                 ignoreVolumeStringListener = true;
-                if (dataModel.getVolume().get() != null)
-                    volume.set(btcFormatter.formatVolume(dataModel.getVolume().get()));
+
+                Volume volume = dataModel.getVolume().get();
+                if (volume != null) {
+                    // For HalCash we want multiple of 10 EUR
+                    if (dataModel.isHalCashAccount())
+                        volume = OfferUtil.getAdjustedVolumeForHalCash(volume);
+
+                    this.volume.set(btcFormatter.formatVolume(volume));
+                }
+
                 ignoreVolumeStringListener = false;
 
                 dataModel.calculateAmount();
@@ -947,9 +966,19 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
-            dataModel.setAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
-            if (syncMinAmountWithAmount || dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
-                minAmount.set(amount.get());
+            Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
+
+            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
+                amount = OfferUtil.getAdjustedAmountForHalCash(amount,
+                        dataModel.getPrice().get(),
+                        dataModel.getMaxTradeLimit());
+            }
+
+            dataModel.setAmount(amount);
+            if (syncMinAmountWithAmount ||
+                    dataModel.getMinAmount().get() == null ||
+                    dataModel.getMinAmount().get().equals(Coin.ZERO)) {
+                minAmount.set(this.amount.get());
                 setMinAmountToModel();
             }
         } else {
@@ -958,10 +987,19 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void setMinAmountToModel() {
-        if (minAmount.get() != null && !minAmount.get().isEmpty())
-            dataModel.setMinAmount(btcFormatter.parseToCoinWith4Decimals(minAmount.get()));
-        else
+        if (minAmount.get() != null && !minAmount.get().isEmpty()) {
+            Coin minAmount = btcFormatter.parseToCoinWith4Decimals(this.minAmount.get());
+
+            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
+                minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount,
+                        dataModel.getPrice().get(),
+                        dataModel.getMaxTradeLimit());
+            }
+
+            dataModel.setMinAmount(minAmount);
+        } else {
             dataModel.setMinAmount(null);
+        }
     }
 
     private void setPriceToModel() {
