@@ -37,10 +37,8 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
 import bisq.common.UserThread;
-import bisq.common.handlers.ResultHandler;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
