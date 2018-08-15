@@ -32,14 +32,19 @@ import javafx.beans.property.StringProperty;
 
 import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
+
 import static bisq.desktop.util.FormBuilder.getIcon;
 
 public class InfoInputTextField extends AnchorPane {
 
     private final StringProperty text = new SimpleStringProperty();
 
-    private final InputTextField textField;
+    @Getter
+    private final InputTextField inputTextField;
+    @Getter
     private final Label infoIcon;
+    @Getter
     private final Label warningIcon;
     private Label currentIcon;
     private PopOver popover;
@@ -48,7 +53,7 @@ public class InfoInputTextField extends AnchorPane {
     public InfoInputTextField() {
         super();
 
-        textField = new InputTextField();
+        inputTextField = new InputTextField();
 
         infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
         infoIcon.setLayoutY(3);
@@ -60,12 +65,12 @@ public class InfoInputTextField extends AnchorPane {
 
         AnchorPane.setLeftAnchor(infoIcon, 7.0);
         AnchorPane.setLeftAnchor(warningIcon, 7.0);
-        AnchorPane.setRightAnchor(textField, 0.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(inputTextField, 0.0);
+        AnchorPane.setLeftAnchor(inputTextField, 0.0);
 
         hideIcons();
 
-        getChildren().addAll(textField, infoIcon, warningIcon);
+        getChildren().addAll(inputTextField, infoIcon, warningIcon);
     }
 
     private void hideIcons() {
@@ -93,6 +98,35 @@ public class InfoInputTextField extends AnchorPane {
         setActionHandlers(node);
     }
 
+    public void setIconsRightAligned() {
+        AnchorPane.clearConstraints(infoIcon);
+        AnchorPane.clearConstraints(warningIcon);
+        AnchorPane.clearConstraints(inputTextField);
+
+        AnchorPane.setRightAnchor(infoIcon, 7.0);
+        AnchorPane.setRightAnchor(warningIcon, 7.0);
+        AnchorPane.setLeftAnchor(inputTextField, 0.0);
+        AnchorPane.setRightAnchor(inputTextField, 0.0);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters/Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setText(String text) {
+        this.text.set(text);
+    }
+
+    public String getText() {
+        return text.get();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private void setActionHandlers(Node node) {
 
         currentIcon.setManaged(true);
@@ -116,10 +150,6 @@ public class InfoInputTextField extends AnchorPane {
         });
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private void showPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
@@ -132,19 +162,4 @@ public class InfoInputTextField extends AnchorPane {
             popover.show(currentIcon, -17);
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters/Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public InputTextField getTextField() { return textField; }
-
-    public void setText(String text) {
-        this.text.set(text);
-    }
-
-    public String getText() {
-        return text.get();
-    }
-
 }

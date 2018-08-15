@@ -60,11 +60,34 @@ class EditOfferDataModel extends MutableOfferDataModel {
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 
+    public void reset() {
+        direction = null;
+        tradeCurrency = null;
+        tradeCurrencyCode.set(null);
+        useMarketBasedPrice.set(false);
+        amount.set(null);
+        minAmount.set(null);
+        price.set(null);
+        volume.set(null);
+        buyerSecurityDeposit.set(null);
+        paymentAccounts.clear();
+        paymentAccount = null;
+        marketPriceMargin = 0;
+    }
+
     public void applyOpenOffer(OpenOffer openOffer) {
         this.openOffer = openOffer;
+
+        Offer offer = openOffer.getOffer();
+        direction = offer.getDirection();
+        CurrencyUtil.getTradeCurrency(offer.getCurrencyCode())
+                .ifPresent(c -> this.tradeCurrency = c);
+        tradeCurrencyCode.set(offer.getCurrencyCode());
+        buyerSecurityDeposit.set(offer.getBuyerSecurityDeposit());
+
         this.initialState = openOffer.getState();
-        final PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
-        final TradeCurrency selectedTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get();
+        PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
+        TradeCurrency selectedTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get();
 
         this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
 
@@ -73,7 +96,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         else
             paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
 
-        this.allowAmountUpdate = false;
+        allowAmountUpdate = false;
     }
 
     @Override
@@ -83,9 +106,9 @@ class EditOfferDataModel extends MutableOfferDataModel {
 
     public void populateData() {
         Offer offer = openOffer.getOffer();
-
-        setAmount(offer.getAmount());
+        // Min amount need to be set before amount as if minAmount is null it would be set by amount
         setMinAmount(offer.getMinAmount());
+        setAmount(offer.getAmount());
         setPrice(offer.getPrice());
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());

@@ -50,6 +50,9 @@ dependencies {
     compile 'de.jensd:fontawesomefx-commons:8.15'
     compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
+    compile 'com.github.sarxos:webcam-capture:0.3.12'
+
+
     compileOnly 'org.projectlombok:lombok:1.16.16'
     annotationProcessor 'org.projectlombok:lombok:1.16.16'
     testCompile('org.mockito:mockito-core:2.8.9') {

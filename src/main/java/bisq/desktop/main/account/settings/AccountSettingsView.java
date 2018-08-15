@@ -31,6 +31,7 @@ import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
 import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
+import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.util.Colors;
@@ -63,7 +64,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private final Navigation navigation;
 
 
-    private MenuItem paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup;
+    private MenuItem paymentAccount, altCoinsAccountView, arbitratorSelection, notifications, password, seedWords, backup;
     private Navigation.Listener listener;
 
     @FXML
@@ -96,11 +97,12 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         altCoinsAccountView = new MenuItem(navigation, toggleGroup, Res.get("account.menu.altCoinsAccountView"), AltCoinAccountsView.class, AwesomeIcon.LINK);
         arbitratorSelection = new MenuItem(navigation, toggleGroup, Res.get("account.menu.arbitratorSelection"),
                 ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
+        notifications = new MenuItem(navigation, toggleGroup, Res.get("account.menu.notifications"), MobileNotificationsView.class, AwesomeIcon.BELL);
         password = new MenuItem(navigation, toggleGroup, Res.get("account.menu.password"), PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, Res.get("account.menu.seedWords"), SeedWordsView.class, AwesomeIcon.KEY);
         backup = new MenuItem(navigation, toggleGroup, Res.get("account.menu.backup"), BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
 
-        leftVBox.getChildren().addAll(paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup);
+        leftVBox.getChildren().addAll(paymentAccount, altCoinsAccountView, arbitratorSelection, notifications, password, seedWords, backup);
     }
 
     @Override
@@ -108,6 +110,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         paymentAccount.activate();
         altCoinsAccountView.activate();
         arbitratorSelection.activate();
+        notifications.activate();
         password.activate();
         seedWords.activate();
         backup.activate();
@@ -133,6 +136,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         paymentAccount.deactivate();
         altCoinsAccountView.deactivate();
         arbitratorSelection.deactivate();
+        notifications.deactivate();
         password.deactivate();
         seedWords.deactivate();
         backup.deactivate();
@@ -145,6 +149,7 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         if (view instanceof FiatAccountsView) paymentAccount.setSelected(true);
         else if (view instanceof AltCoinAccountsView) altCoinsAccountView.setSelected(true);
         else if (view instanceof ArbitratorSelectionView) arbitratorSelection.setSelected(true);
+        else if (view instanceof MobileNotificationsView) notifications.setSelected(true);
         else if (view instanceof PasswordView) password.setSelected(true);
         else if (view instanceof SeedWordsView) seedWords.setSelected(true);
         else if (view instanceof BackupView) backup.setSelected(true);
