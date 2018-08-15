@@ -29,6 +29,7 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
@@ -64,7 +65,7 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BtcWalletService.class, AddressEntry.class, PriceFeedService.class, User.class,
         FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class,
-        SecurityDepositValidator.class})
+        SecurityDepositValidator.class, AccountAgeWitnessService.class})
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;
@@ -88,6 +89,7 @@ public class CreateOfferViewModelTest {
         PaymentAccount paymentAccount = mock(PaymentAccount.class);
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
+        AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
@@ -97,8 +99,9 @@ public class CreateOfferViewModelTest {
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
+        when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, null, null, feeService, null, bsFormatter);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, null, feeService, null, bsFormatter);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
