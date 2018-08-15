@@ -46,6 +46,9 @@ public class InfoInputTextField extends AnchorPane {
     private final Label infoIcon;
     @Getter
     private final Label warningIcon;
+    @Getter
+    private final Label privacyIcon;
+
     private Label currentIcon;
     private PopOver popover;
     private boolean hidePopover;
@@ -63,14 +66,19 @@ public class InfoInputTextField extends AnchorPane {
         warningIcon.setLayoutY(3);
         warningIcon.getStyleClass().addAll("icon", "warning");
 
+        privacyIcon = getIcon(AwesomeIcon.EYE_CLOSE);
+        privacyIcon.setLayoutY(3);
+        privacyIcon.getStyleClass().addAll("icon", "info");
+
         AnchorPane.setLeftAnchor(infoIcon, 7.0);
         AnchorPane.setLeftAnchor(warningIcon, 7.0);
+        AnchorPane.setLeftAnchor(privacyIcon, 7.0);
         AnchorPane.setRightAnchor(inputTextField, 0.0);
         AnchorPane.setLeftAnchor(inputTextField, 0.0);
 
         hideIcons();
 
-        getChildren().addAll(inputTextField, infoIcon, warningIcon);
+        getChildren().addAll(inputTextField, infoIcon, warningIcon, privacyIcon);
     }
 
     private void hideIcons() {
@@ -78,6 +86,8 @@ public class InfoInputTextField extends AnchorPane {
         infoIcon.setVisible(false);
         warningIcon.setManaged(false);
         warningIcon.setVisible(false);
+        privacyIcon.setManaged(false);
+        privacyIcon.setVisible(false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -98,13 +108,22 @@ public class InfoInputTextField extends AnchorPane {
         setActionHandlers(node);
     }
 
+    public void setContentForPrivacyPopOver(Node node) {
+        currentIcon = privacyIcon;
+
+        hideIcons();
+        setActionHandlers(node);
+    }
+
     public void setIconsRightAligned() {
         AnchorPane.clearConstraints(infoIcon);
         AnchorPane.clearConstraints(warningIcon);
+        AnchorPane.clearConstraints(privacyIcon);
         AnchorPane.clearConstraints(inputTextField);
 
         AnchorPane.setRightAnchor(infoIcon, 7.0);
         AnchorPane.setRightAnchor(warningIcon, 7.0);
+        AnchorPane.setRightAnchor(privacyIcon, 7.0);
         AnchorPane.setLeftAnchor(inputTextField, 0.0);
         AnchorPane.setRightAnchor(inputTextField, 0.0);
     }

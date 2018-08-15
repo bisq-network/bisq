@@ -19,7 +19,6 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import org.controlsfx.control.PopOver;
@@ -37,71 +36,123 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.Getter;
+
+import static bisq.desktop.util.FormBuilder.getIcon;
+
 public class InfoTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(InfoTextField.class);
 
+    @Getter
+    protected final TextField textField;
+
     private final StringProperty text = new SimpleStringProperty();
     protected final Label infoIcon;
-    protected final TextField textField;
+    protected final Label privacyIcon;
+    private Label currentIcon;
     private Boolean hidePopover;
-    private PopOver infoPopover;
+    private PopOver popover;
+    private PopOver.ArrowLocation arrowLocation;
 
     public InfoTextField() {
+
+        arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;;
         textField = new TextField();
         textField.setEditable(false);
         textField.textProperty().bind(text);
         textField.setFocusTraversable(false);
 
-        infoIcon = new Label();
+        infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
         infoIcon.setLayoutY(3);
         infoIcon.getStyleClass().addAll("icon", "info");
-        AwesomeDude.setIcon(infoIcon, AwesomeIcon.INFO_SIGN);
+
+        privacyIcon = getIcon(AwesomeIcon.EYE_CLOSE);
+        privacyIcon.setLayoutY(3);
+        privacyIcon.getStyleClass().addAll("icon", "info");
 
         AnchorPane.setRightAnchor(infoIcon, 7.0);
+        AnchorPane.setRightAnchor(privacyIcon, 7.0);
         AnchorPane.setRightAnchor(textField, 0.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(textField, infoIcon);
+        hideIcons();
+
+        getChildren().addAll(textField, infoIcon, privacyIcon);
     }
+
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setContentForInfoPopOver(Node node) {
+
+        currentIcon = infoIcon;
+
+        hideIcons();
+    }
+
+    public void setContentForPrivacyPopOver(Node node) {
+        currentIcon = privacyIcon;
+
+        hideIcons();
+        setActionHandlers(node);
+    }
+
+    public void setIconsLeftAligned() {
+        arrowLocation = PopOver.ArrowLocation.LEFT_TOP;;
+
+        AnchorPane.clearConstraints(infoIcon);
+        AnchorPane.clearConstraints(privacyIcon);
+
+        AnchorPane.setLeftAnchor(infoIcon, 7.0);
+        AnchorPane.setLeftAnchor(privacyIcon, 7.0);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    private void hideIcons() {
+        infoIcon.setManaged(false);
+        infoIcon.setVisible(false);
+        privacyIcon.setManaged(false);
+        privacyIcon.setVisible(false);
+    }
+
+    private void setActionHandlers(Node node) {
+
+        currentIcon.setManaged(true);
+        currentIcon.setVisible(true);
+
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        infoIcon.setOnMouseEntered(e -> {
+        currentIcon.setOnMouseEntered(e -> {
             hidePopover = false;
-            showInfoPopOver(node);
+            showPopOver(node);
         });
-        infoIcon.setOnMouseExited(e -> {
-            if (infoPopover != null)
-                infoPopover.hide();
+        currentIcon.setOnMouseExited(e -> {
+            if (popover != null)
+                popover.hide();
             hidePopover = true;
             UserThread.runAfter(() -> {
                 if (hidePopover) {
-                    infoPopover.hide();
+                    popover.hide();
                     hidePopover = false;
                 }
             }, 250, TimeUnit.MILLISECONDS);
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void showInfoPopOver(Node node) {
+    private void showPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        infoPopover = new PopOver(node);
-        if (infoIcon.getScene() != null) {
-            infoPopover.setDetachable(false);
-            infoPopover.setArrowLocation(PopOver.ArrowLocation.RIGHT_TOP);
-            infoPopover.setArrowIndent(5);
+        popover = new PopOver(node);
+        if (currentIcon.getScene() != null) {
+            popover.setDetachable(false);
+            popover.setArrowLocation(arrowLocation);
+            popover.setArrowIndent(5);
 
-            infoPopover.show(infoIcon, -17);
+            popover.show(currentIcon, -17);
         }
     }
 

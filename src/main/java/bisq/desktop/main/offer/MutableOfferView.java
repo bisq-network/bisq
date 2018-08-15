@@ -50,6 +50,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
@@ -158,7 +159,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener;
-    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener, marketPriceMarginListener;
+    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
+            marketPriceMarginListener, volumeListener;
     private ChangeListener<Number> marketPriceAvailableListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
@@ -167,7 +169,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
-    private InfoInputTextField marketBasedPriceInfoInputTextField;
+    private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField;
     protected TitledGroupBg amountTitledGroupBg;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -718,6 +720,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         };
 
+        volumeListener = (observable, oldValue, newValue) -> {
+          if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
+              volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+          }
+        };
+
         marketPriceMarginListener = (observable, oldValue, newValue) -> {
             if (marketBasedPriceInfoInputTextField != null) {
                 String tooltip;
@@ -776,6 +784,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.tradeCurrencyCode.addListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.addListener(marketPriceAvailableListener);
         model.marketPriceMargin.addListener(marketPriceMarginListener);
+        model.volume.addListener(volumeListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -803,6 +812,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.tradeCurrencyCode.removeListener(tradeCurrencyCodeListener);
         model.marketPriceAvailableProperty.removeListener(marketPriceAvailableListener);
         model.marketPriceMargin.removeListener(marketPriceMarginListener);
+        model.volume.removeListener(volumeListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -1180,9 +1190,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
-        Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = getEditableValueCurrencyBox(Res.get("createOffer.volume.prompt"));
+        Tuple3<HBox, InfoInputTextField, Label> volumeValueCurrencyBoxTuple = getEditableValueCurrencyBoxWithInfo(Res.get("createOffer.volume.prompt"));
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
-        volumeTextField = volumeValueCurrencyBoxTuple.second;
+        volumeInfoInputTextField = volumeValueCurrencyBoxTuple.second;
+        volumeTextField = volumeInfoInputTextField.getInputTextField();
         editOfferElements.add(volumeTextField);
         volumeCurrencyLabel = volumeValueCurrencyBoxTuple.third;
         editOfferElements.add(volumeCurrencyLabel);

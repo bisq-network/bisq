@@ -26,6 +26,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
@@ -49,6 +50,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -111,6 +113,7 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.FormBuilder.addLabelFundsTextfield;
 import static bisq.desktop.util.FormBuilder.getAmountCurrencyBox;
 import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBox;
+import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBoxWithInfo;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
@@ -152,6 +155,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
     private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
+    private InfoTextField volumeInfoTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -323,6 +327,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageTextField.setText(model.marketPriceMargin);
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
+
+        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
+            volumeInfoTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
 
         if (offer.getPrice() == null)
             new Popup<>().warning(Res.get("takeOffer.noPriceFeedAvailable"))
@@ -496,7 +503,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void addBindings() {
         amountTextField.textProperty().bindBidirectional(model.amount);
-        volumeTextField.textProperty().bindBidirectional(model.volume);
+        volumeInfoTextField.textProperty().bindBidirectional(model.volume);
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
@@ -515,7 +522,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void removeBindings() {
         amountTextField.textProperty().unbindBidirectional(model.amount);
-        volumeTextField.textProperty().unbindBidirectional(model.volume);
+        volumeInfoTextField.textProperty().unbindBidirectional(model.volume);
         totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         amountTextField.validationResultProperty().unbind();
@@ -941,9 +948,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
-        Tuple3<HBox, TextField, Label> volumeValueCurrencyBoxTuple = getNonEditableValueCurrencyBox();
+        Tuple3<HBox, InfoTextField, Label> volumeValueCurrencyBoxTuple = getNonEditableValueCurrencyBoxWithInfo();
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
-        volumeTextField = volumeValueCurrencyBoxTuple.second;
+
+        volumeInfoTextField = volumeValueCurrencyBoxTuple.second;
+        volumeTextField = volumeInfoTextField.getTextField();
         volumeCurrencyLabel = volumeValueCurrencyBoxTuple.third;
         Tuple2<Label, VBox> volumeInputBoxTuple = getTradeInputBox(volumeValueCurrencyBox, model.volumeDescriptionLabel.get());
         volumeDescriptionLabel = volumeInputBoxTuple.first;
@@ -1067,6 +1076,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 model.getTotalToPayInfo());
 
         return infoGridPane;
+    }
+
+    private Label createPopoverLabel(String text) {
+        final Label label = new Label(text);
+        label.setPrefWidth(300);
+        label.setWrapText(true);
+        label.setPadding(new Insets(10));
+        return label;
     }
 
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {

@@ -1203,6 +1203,25 @@ public class FormBuilder {
         return new Tuple3<>(box, textField, currency);
     }
 
+    public static Tuple3<HBox, InfoTextField, Label> getNonEditableValueCurrencyBoxWithInfo() {
+        InfoTextField infoTextField = new InfoTextField();
+        infoTextField.setIconsLeftAligned();
+        TextField textField = infoTextField.getTextField();
+        textField.setPrefWidth(190);
+        textField.setAlignment(Pos.CENTER_RIGHT);
+        textField.setId("text-input-with-currency-text-field");
+        textField.setMouseTransparent(true);
+        textField.setEditable(false);
+        textField.setFocusTraversable(false);
+
+        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        currency.setId("currency-info-label-disabled");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(infoTextField, currency);
+        return new Tuple3<>(box, infoTextField, currency);
+    }
+
     public static Tuple3<HBox, InputTextField, Label> getAmountCurrencyBox(String promptText) {
         InputTextField input = new InputTextField();
         input.setPrefWidth(190);
