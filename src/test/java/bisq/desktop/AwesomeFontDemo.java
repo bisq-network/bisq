@@ -17,9 +17,6 @@
 
 package bisq.desktop;
 
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.AutoTooltipLabel;
-
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -31,35 +28,33 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class AwesomeFontDemo extends Application {
-    private static final Logger log = LoggerFactory.getLogger(AwesomeFontDemo.class);
-
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-        Pane root = new FlowPane();
+        FlowPane flowPane = new FlowPane();
+        flowPane.setStyle("-fx-background-color: #ddd;");
+        flowPane.setHgap(2);
+        flowPane.setVgap(2);
         List<AwesomeIcon> values = new ArrayList<>(Arrays.asList(AwesomeIcon.values()));
         values.sort((o1, o2) -> o1.name().compareTo(o2.name()));
         for (AwesomeIcon icon : values) {
-            Label label = new AutoTooltipLabel();
-            Button button = new AutoTooltipButton(icon.name(), label);
-            AwesomeDude.setIcon(label, icon);
-            root.getChildren().add(button);
+            Label label = new Label();
+            Button button = new Button(icon.name(), label);
+            button.setStyle("-fx-background-color: #fff;");
+            AwesomeDude.setIcon(label, icon, "12");
+            flowPane.getChildren().add(button);
         }
 
-        primaryStage.setScene(new Scene(root, 1200, 950));
+        primaryStage.setScene(new Scene(flowPane, 1200, 950));
         primaryStage.show();
     }
 }

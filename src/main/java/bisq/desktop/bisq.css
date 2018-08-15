@@ -64,6 +64,7 @@ bg color of non edit textFields: fafafa
 
     -bs-red: red; /* 5 usages */
     -bs-error-red: #dd0000; /* 5 usages */
+    -bs-soft-red: #ee6664; /* 1 usages */
     -bs-pink: #ff8986; /* 2 usages */
     -bs-orange: #ff8a2b; /* 2 usages */
     -bs-orange2: #dd6900; /* 1 usages */
@@ -1337,3 +1338,13 @@ textfield */
     -fx-background-insets: 0, 0 0 0 0
 }
 
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Notifications                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#notification-erase-button {
+    -fx-background-color: -bs-soft-red;
+    -fx-text-fill: #ffffff;
+}
