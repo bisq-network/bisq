@@ -34,9 +34,7 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -249,7 +247,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 stop();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
-                    showEmptyWalletPopup(injector.getInstance(BtcWalletService.class), injector);
+                    showBtcEmergencyWalletPopup(injector);
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
+                    showBsqEmergencyWalletPopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
                     showSendAlertMessagePopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
@@ -267,10 +267,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                         new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
                     // dev ode only
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
-                        // BSQ empty wallet not public yet
-                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class), injector);
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
                         showFPSWindow(scene);
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
                         showDebugWindow(scene, injector);
@@ -298,9 +295,15 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 .show();
     }
 
-    private void showEmptyWalletPopup(WalletService walletService, Injector injector) {
+    private void showBtcEmergencyWalletPopup(Injector injector) {
         EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
-        emptyWalletWindow.setWalletService(walletService);
+        emptyWalletWindow.setIsBtc(true);
+        emptyWalletWindow.show();
+    }
+
+    private void showBsqEmergencyWalletPopup(Injector injector) {
+        EmptyWalletWindow emptyWalletWindow = injector.getInstance(EmptyWalletWindow.class);
+        emptyWalletWindow.setIsBtc(false);
         emptyWalletWindow.show();
     }
 

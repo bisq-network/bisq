@@ -413,6 +413,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
+                                //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);

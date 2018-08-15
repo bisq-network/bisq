@@ -25,8 +25,8 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
-import bisq.core.dao.blockchain.ReadableBsqBlockChain;
-import bisq.core.dao.blockchain.vo.TxType;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
@@ -50,10 +50,11 @@ import javax.annotation.Nullable;
 
 @Slf4j
 class TransactionsListItem {
+    private final BtcWalletService btcWalletService;
+    private final BSFormatter formatter;
     private String dateString;
     private final Date date;
     private final String txId;
-    private final BtcWalletService btcWalletService;
     private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
     @Nullable
@@ -65,26 +66,28 @@ class TransactionsListItem {
     private boolean received;
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
-    private BSFormatter formatter;
     private int confirmations = 0;
 
-    public TransactionsListItem() {
+    // used at exportCSV
+    TransactionsListItem() {
         date = null;
         btcWalletService = null;
         txConfidenceIndicator = null;
         tooltip = null;
         txId = null;
+        formatter = null;
     }
 
-    public TransactionsListItem(Transaction transaction,
-                                BtcWalletService btcWalletService,
-                                BsqWalletService bsqWalletService,
-                                Optional<Tradable> tradableOptional,
-                                ReadableBsqBlockChain readableBsqBlockChain,
-                                BSFormatter formatter) {
-        this.formatter = formatter;
-        txId = transaction.getHashAsString();
+    TransactionsListItem(Transaction transaction,
+                         BtcWalletService btcWalletService,
+                         BsqWalletService bsqWalletService,
+                         Optional<Tradable> tradableOptional,
+                         DaoFacade daoFacade,
+                         BSFormatter formatter) {
         this.btcWalletService = btcWalletService;
+        this.formatter = formatter;
+
+        txId = transaction.getHashAsString();
 
         Coin valueSentToMe = btcWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
@@ -130,7 +133,7 @@ class TransactionsListItem {
                             txFeeForBsqPayment = true;
 
                             //
-                            final Optional<TxType> txTypeOptional = readableBsqBlockChain.getTxType(txId);
+                            final Optional<TxType> txTypeOptional = daoFacade.getOptionalTxType(txId);
                             if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
                                 details = Res.get("funds.tx.proposal");
                         } else {

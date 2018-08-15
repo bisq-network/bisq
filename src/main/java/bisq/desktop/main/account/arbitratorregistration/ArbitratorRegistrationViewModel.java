@@ -136,12 +136,12 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     }
 
     boolean setPrivKeyAndCheckPubKey(String privKeyString) {
-        ECKey _registrationKey = arbitratorManager.getRegistrationKey(privKeyString);
-        if (_registrationKey != null) {
-            String _registrationPubKeyAsHex = Utils.HEX.encode(_registrationKey.getPubKey());
+        ECKey registrationKey = arbitratorManager.getRegistrationKey(privKeyString);
+        if (registrationKey != null) {
+            String _registrationPubKeyAsHex = Utils.HEX.encode(registrationKey.getPubKey());
             boolean isKeyValid = arbitratorManager.isPublicKeyInList(_registrationPubKeyAsHex);
             if (isKeyValid) {
-                registrationKey = _registrationKey;
+                this.registrationKey = registrationKey;
                 registrationPubKeyAsHex.set(_registrationPubKeyAsHex);
             }
             updateDisableStates();

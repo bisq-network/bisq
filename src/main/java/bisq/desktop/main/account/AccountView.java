@@ -60,7 +60,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Tab selectedTab;
-    Tab arbitratorRegistrationTab;
+    private Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private AccountSettingsView accountSettingsView;
     private Scene scene;
@@ -68,7 +68,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     @Inject
     private AccountView(CachingViewLoader viewLoader, Navigation navigation) {
-        super();
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }

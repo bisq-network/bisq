@@ -64,6 +64,8 @@ import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 
 import com.google.common.base.Charsets;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -75,6 +77,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
@@ -104,6 +107,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -548,8 +552,14 @@ public class GUIUtil {
             childByRowMap.get(rowIndex).add(child);
         });
 
-        for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end, childByRowMap.size()); i++) {
-            childByRowMap.get(i).forEach(child -> gridPane.getChildren().remove(child));
+        for (int i = Math.min(start, childByRowMap.size()); i < Math.min(end + 1, childByRowMap.size()); i++) {
+            List<Node> nodes = childByRowMap.get(i);
+            if (nodes != null) {
+                nodes.stream()
+                        .filter(Objects::nonNull)
+                        .filter(node -> gridPane.getChildren().contains(node))
+                        .forEach(node -> gridPane.getChildren().remove(node));
+            }
         }
     }
 
@@ -558,7 +568,7 @@ public class GUIUtil {
                                            Runnable actionHandler) {
         new Popup<>().headLine(Res.get("dao.feeTx.confirm", type))
                 .confirmation(Res.get("dao.feeTx.confirm.details",
-                        type,
+                        StringUtils.capitalize(type),
                         bsqFormatter.formatCoinWithCode(fee),
                         btcFormatter.formatCoinWithCode(miningFee),
                         CoinUtil.getFeePerByte(miningFee, txSize),
@@ -568,6 +578,15 @@ public class GUIUtil {
                 .onAction(actionHandler::run)
                 .closeButtonText(Res.get("shared.cancel"))
                 .show();
+    }
+
+    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minHeight) {
+        int size = tableView.getItems().size();
+        int height = Math.max(minHeight, size * rowHeight + headerHeight);
+        tableView.setMaxHeight(-1);
+        tableView.setMinHeight(-1);
+        tableView.setMaxHeight(height);
+        tableView.setMinHeight(height);
     }
 
     public static Tuple2<ComboBox<TradeCurrency>, Integer> addRegionCountryTradeCurrencyComboBoxes(GridPane gridPane,

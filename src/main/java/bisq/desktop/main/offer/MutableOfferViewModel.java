@@ -894,7 +894,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (dataModel.isCurrencyForMakerFeeBtc())
             return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
-            return Res.get("shared.paidWithBsq");
+            return Res.get("dao.paidWithBsq");
     }
 
     public String getTotalToPayInfo() {
