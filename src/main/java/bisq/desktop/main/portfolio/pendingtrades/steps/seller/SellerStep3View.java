@@ -31,6 +31,7 @@ import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
+import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -269,6 +270,7 @@ public class SellerStep3View extends TradeStepView {
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
                     if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
+                            !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                             !(paymentAccountPayload instanceof F2FAccountPayload)) {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
                     }
@@ -313,6 +315,7 @@ public class SellerStep3View extends TradeStepView {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
+                    !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                     !(paymentAccountPayload instanceof F2FAccountPayload)) {
                 message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
             }
@@ -324,6 +327,8 @@ public class SellerStep3View extends TradeStepView {
                 message = message + Res.get("portfolio.pending.step3_seller.westernUnion");
             else if (paymentAccountPayload instanceof MoneyGramAccountPayload)
                 message = message + Res.get("portfolio.pending.step3_seller.moneyGram");
+            else if (paymentAccountPayload instanceof HalCashAccountPayload)
+                message = message + Res.get("portfolio.pending.step3_seller.halCash");
             else if (paymentAccountPayload instanceof F2FAccountPayload)
                 message = part1;
 

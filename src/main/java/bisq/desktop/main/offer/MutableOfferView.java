@@ -238,7 +238,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             onPaymentAccountsComboBoxSelected();
 
             balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
-            updateMarketPriceAvailable();
+            updatePriceToggle();
         }
     }
 
@@ -297,7 +297,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
 
-        updateMarketPriceAvailable();
+        updatePriceToggle();
 
         if (!model.getDataModel().isMakerFeeValid() && model.getDataModel().getMakerFee() != null)
             showInsufficientBsqFundsForBtcFeePaymentPopup();
@@ -502,6 +502,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         }
 
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
+
+        updatePriceToggle();
     }
 
     private void onCurrencyComboBoxSelected() {
@@ -703,7 +705,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         };
 
-        marketPriceAvailableListener = (observable, oldValue, newValue) -> updateMarketPriceAvailable();
+        marketPriceAvailableListener = (observable, oldValue, newValue) -> updatePriceToggle();
 
         getShowWalletFundedNotificationListener = (observable, oldValue, newValue) -> {
             if (newValue) {
@@ -756,15 +758,16 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         return label;
     }
 
-    protected void updateMarketPriceAvailable() {
+    protected void updatePriceToggle() {
         int marketPriceAvailableValue = model.marketPriceAvailableProperty.get();
         if (marketPriceAvailableValue > -1) {
-            boolean isMarketPriceAvailable = marketPriceAvailableValue == 1;
-            percentagePriceBox.setVisible(isMarketPriceAvailable);
-            percentagePriceBox.setManaged(isMarketPriceAvailable);
-            priceTypeToggleButton.setVisible(isMarketPriceAvailable);
-            priceTypeToggleButton.setManaged(isMarketPriceAvailable);
-            boolean fixedPriceSelected = !model.getDataModel().getUseMarketBasedPrice().get() || !isMarketPriceAvailable;
+            boolean showPriceToggle = marketPriceAvailableValue == 1 &&
+                    !model.getDataModel().isHalCashAccount();
+            percentagePriceBox.setVisible(showPriceToggle);
+            percentagePriceBox.setManaged(showPriceToggle);
+            priceTypeToggleButton.setVisible(showPriceToggle);
+            priceTypeToggleButton.setManaged(showPriceToggle);
+            boolean fixedPriceSelected = !model.getDataModel().getUseMarketBasedPrice().get() || !showPriceToggle;
             updatePriceToggleButtons(fixedPriceSelected);
         }
     }

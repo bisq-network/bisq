@@ -35,7 +35,9 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
@@ -490,8 +492,13 @@ class TakeOfferDataModel extends OfferDataModel {
         if (tradePrice != null && offer != null &&
                 amount.get() != null &&
                 !amount.get().isZero()) {
-            volume.set(tradePrice.getVolumeByAmount(amount.get()));
-            //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
+            Volume volumeByAmount = tradePrice.getVolumeByAmount(amount.get());
+            if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
+                volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+            else if (CurrencyUtil.isFiatCurrency(getCurrencyCode()))
+                volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount, getCurrencyCode());
+
+            volume.set(volumeByAmount);
 
             updateBalance();
         }
@@ -637,5 +644,9 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public Coin getBsqBalance() {
         return bsqWalletService.getAvailableBalance();
+    }
+
+    public boolean isHalCashAccount() {
+        return paymentAccount instanceof HalCashAccount;
     }
 }

@@ -29,6 +29,7 @@ import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
+import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
@@ -59,6 +60,7 @@ import bisq.desktop.util.validation.CashAppValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
 import bisq.desktop.util.validation.F2FValidator;
+import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
@@ -77,6 +79,7 @@ import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
+import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
@@ -143,6 +146,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final InteracETransferValidator interacETransferValidator;
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private final WeChatPayValidator weChatPayValidator;
+    private final HalCashValidator halCashValidator;
     private final F2FValidator f2FValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
@@ -174,6 +178,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
                             WeChatPayValidator weChatPayValidator,
+                            HalCashValidator halCashValidator,
                             F2FValidator f2FValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
@@ -197,6 +202,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.weChatPayValidator = weChatPayValidator;
+        this.halCashValidator = halCashValidator;
         this.f2FValidator = f2FValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
@@ -245,6 +251,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
                     .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/#f2f"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else if (paymentAccount instanceof HalCashAccount) {
+            // HalCash has no chargeback risk so we don't show the text from payment.limits.info.
+            new Popup<>().information(Res.get("payment.halCash.info"))
+                    .width(700)
+                    .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
@@ -499,6 +513,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new WesternUnionForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
                 return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.HAL_CASH_ID:
+                return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:
                 return new F2FForm(paymentAccount, accountAgeWitnessService, f2FValidator, inputValidator, root, gridRow, formatter);
             default:
