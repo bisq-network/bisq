@@ -292,9 +292,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     dataModel.applyAmount(adjustedAmountForHalCash);
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())) {
-                    Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
-                            dataModel.getCurrencyCode(), maxTradeLimit);
-                    dataModel.applyAmount(roundedAmount);
+                    if (!isAmountEqualMinAmount(dataModel.getAmount().get())) {
+                        // We only apply the rounding if the amount is variable (minAmount is lower as amount).
+                        // Otherwise we could get an amount lower then the minAmount set by rounding
+                        Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
+                                dataModel.getCurrencyCode(), maxTradeLimit);
+                        dataModel.applyAmount(roundedAmount);
+                    }
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 }
 
@@ -552,7 +556,25 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void setAmountToModel() {
-        dataModel.applyAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
+        if (amount.get() != null && !amount.get().isEmpty()) {
+            Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
+            long maxTradeLimit = dataModel.getMaxTradeLimit();
+            Price price = dataModel.tradePrice;
+            if (price != null) {
+                if (dataModel.isHalCashAccount()) {
+                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode()) && !isAmountEqualMinAmount(amount)) {
+                    // We only apply the rounding if the amount is variable (minAmount is lower as amount).
+                    // Otherwise we could get an amount lower then the minAmount set by rounding
+                    amount = OfferUtil.getRoundedFiatAmount(amount, price, dataModel.getCurrencyCode(), maxTradeLimit);
+                }
+            }
+            dataModel.applyAmount(amount);
+        }
+    }
+
+    private boolean isAmountEqualMinAmount(Coin amount) {
+        return amount.value == offer.getMinAmount().value;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

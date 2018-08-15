@@ -37,6 +37,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
@@ -643,5 +644,9 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public Coin getBsqBalance() {
         return bsqWalletService.getAvailableBalance();
+    }
+
+    public boolean isHalCashAccount() {
+        return paymentAccount instanceof HalCashAccount;
     }
 }
