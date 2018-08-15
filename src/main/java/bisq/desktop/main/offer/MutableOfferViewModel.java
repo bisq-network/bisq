@@ -168,7 +168,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private MarketPrice marketPrice;
     final IntegerProperty marketPriceAvailableProperty = new SimpleIntegerProperty(-1);
     private ChangeListener<Number> currenciesUpdateListener;
-    private boolean syncMinAmountWithAmount = true;
+    protected boolean syncMinAmountWithAmount = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -760,6 +760,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     // For HalCash we want multiple of 10 EUR
                     if (dataModel.isHalCashAccount())
                         volume = OfferUtil.getAdjustedVolumeForHalCash(volume);
+                    else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+                        volume = OfferUtil.getRoundedFiatVolume(volume, tradeCurrencyCode.get());
 
                     this.volume.set(btcFormatter.formatVolume(volume));
                 }
@@ -968,12 +970,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (amount.get() != null && !amount.get().isEmpty()) {
             Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
 
-            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
-                amount = OfferUtil.getAdjustedAmountForHalCash(amount,
-                        dataModel.getPrice().get(),
-                        dataModel.getMaxTradeLimit());
+            long maxTradeLimit = dataModel.getMaxTradeLimit();
+            Price price = dataModel.getPrice().get();
+            if (price != null) {
+                if (dataModel.isHalCashAccount())
+                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+                    amount = OfferUtil.getRoundedFiatAmount(amount, price, tradeCurrencyCode.get(), maxTradeLimit);
             }
-
             dataModel.setAmount(amount);
             if (syncMinAmountWithAmount ||
                     dataModel.getMinAmount().get() == null ||
@@ -990,10 +994,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (minAmount.get() != null && !minAmount.get().isEmpty()) {
             Coin minAmount = btcFormatter.parseToCoinWith4Decimals(this.minAmount.get());
 
-            if (dataModel.isHalCashAccount() && dataModel.getPrice().get() != null) {
-                minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount,
-                        dataModel.getPrice().get(),
-                        dataModel.getMaxTradeLimit());
+            Price price = dataModel.getPrice().get();
+            long maxTradeLimit = dataModel.getMaxTradeLimit();
+            if (price != null) {
+                if (dataModel.isHalCashAccount())
+                    minAmount = OfferUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
+                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+                    minAmount = OfferUtil.getRoundedFiatAmount(minAmount, price, tradeCurrencyCode.get(), maxTradeLimit);
             }
 
             dataModel.setMinAmount(minAmount);

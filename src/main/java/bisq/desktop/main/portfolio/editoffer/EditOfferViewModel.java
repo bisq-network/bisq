@@ -45,6 +45,7 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     @Inject
     public EditOfferViewModel(EditOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
+        syncMinAmountWithAmount = false;
     }
 
     @Override
@@ -54,6 +55,7 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     }
 
     public void applyOpenOffer(OpenOffer openOffer) {
+        dataModel.reset();
         dataModel.applyOpenOffer(openOffer);
     }
 

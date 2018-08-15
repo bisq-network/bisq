@@ -31,15 +31,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
-    private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
-
     private final WalletsManager walletsManager;
 
 

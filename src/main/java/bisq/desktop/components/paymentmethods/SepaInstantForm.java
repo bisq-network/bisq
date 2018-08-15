@@ -73,7 +73,7 @@ public class SepaInstantForm extends PaymentMethodForm {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                Res.getWithCol("payment.bank.country"),
+                Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(sepaInstantAccountPayload.getCountryCode()));
         // IBAN, BIC will not be translated
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaInstantAccountPayload.getIban());
@@ -127,7 +127,7 @@ public class SepaInstantForm extends PaymentMethodForm {
         });
 
 
-        FormBuilder.addLabel(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"));
+        FormBuilder.addLabel(gridPane, ++gridRow, Res.get("payment.bank.country"));
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         ComboBox<Country> countryComboBox = new ComboBox<>();

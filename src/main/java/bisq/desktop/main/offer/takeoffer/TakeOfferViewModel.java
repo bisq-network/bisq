@@ -28,7 +28,9 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
@@ -281,11 +283,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 calculateVolume();
 
+                Price tradePrice = dataModel.tradePrice;
+                long maxTradeLimit = dataModel.getMaxTradeLimit();
                 if (dataModel.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID)) {
                     Coin adjustedAmountForHalCash = OfferUtil.getAdjustedAmountForHalCash(dataModel.getAmount().get(),
-                            dataModel.tradePrice,
-                            dataModel.getMaxTradeLimit());
+                            tradePrice,
+                            maxTradeLimit);
                     dataModel.applyAmount(adjustedAmountForHalCash);
+                    amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
+                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())) {
+                    if (!isAmountEqualMinAmount(dataModel.getAmount().get())) {
+                        // We only apply the rounding if the amount is variable (minAmount is lower as amount).
+                        // Otherwise we could get an amount lower then the minAmount set by rounding
+                        Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
+                                dataModel.getCurrencyCode(), maxTradeLimit);
+                        dataModel.applyAmount(roundedAmount);
+                    }
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
                 }
 
@@ -543,7 +556,25 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void setAmountToModel() {
-        dataModel.applyAmount(btcFormatter.parseToCoinWith4Decimals(amount.get()));
+        if (amount.get() != null && !amount.get().isEmpty()) {
+            Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
+            long maxTradeLimit = dataModel.getMaxTradeLimit();
+            Price price = dataModel.tradePrice;
+            if (price != null) {
+                if (dataModel.isHalCashAccount()) {
+                    amount = OfferUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
+                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode()) && !isAmountEqualMinAmount(amount)) {
+                    // We only apply the rounding if the amount is variable (minAmount is lower as amount).
+                    // Otherwise we could get an amount lower then the minAmount set by rounding
+                    amount = OfferUtil.getRoundedFiatAmount(amount, price, dataModel.getCurrencyCode(), maxTradeLimit);
+                }
+            }
+            dataModel.applyAmount(amount);
+        }
+    }
+
+    private boolean isAmountEqualMinAmount(Coin amount) {
+        return amount.value == offer.getMinAmount().value;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
