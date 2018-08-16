@@ -145,7 +145,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
     private OfferView.CloseHandler closeHandler;
-    private ChangeListener<Boolean> amountFocusedListener;
     private Subscription cancelButton2StyleSubscription, balanceSubscription,
             showTransactionPublishedScreenSubscription, showWarningInvalidBtcDecimalPlacesSubscription,
             isWaitingForFundsSubscription, offerWarningSubscription, errorMessageSubscription,
@@ -154,7 +153,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private int gridRow = 0;
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
-    private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
+    private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
     private InfoTextField volumeInfoTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -212,8 +211,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     protected void activate() {
         addBindings();
         addSubscriptions();
-
-        amountTextField.focusedProperty().addListener(amountFocusedListener);
+        addListeners();
 
         if (offerAvailabilityBusyAnimation != null && !model.showPayFundsScreenDisplayed.get()) {
             offerAvailabilityBusyAnimation.play();
@@ -253,23 +251,25 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             showNextStepAfterAmountIsSet();
         }
 
-        // notifications
-        model.dataModel.getShowWalletFundedNotification().addListener(getShowWalletFundedNotificationListener);
+        if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode())) {
+            new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
+                    .information(Res.get("popup.roundedFiatValues.msg", model.getOffer().getCurrencyCode()))
+                    .dontShowAgainId("FiatValuesRoundedWarning")
+                    .show();
+        }
     }
 
     @Override
     protected void deactivate() {
         removeBindings();
         removeSubscriptions();
-        amountTextField.focusedProperty().removeListener(amountFocusedListener);
+        removeListeners();
 
         if (offerAvailabilityBusyAnimation != null)
             offerAvailabilityBusyAnimation.stop();
 
         if (waitingForFundsBusyAnimation != null)
             waitingForFundsBusyAnimation.stop();
-
-        model.dataModel.getShowWalletFundedNotification().removeListener(getShowWalletFundedNotificationListener);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -664,6 +664,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2StyleSubscription.unsubscribe();
     }
 
+    private void addListeners() {
+        amountTextField.focusedProperty().addListener(amountFocusedListener);
+        model.dataModel.getShowWalletFundedNotification().addListener(getShowWalletFundedNotificationListener);
+    }
+
+    private void removeListeners() {
+        amountTextField.focusedProperty().removeListener(amountFocusedListener);
+        model.dataModel.getShowWalletFundedNotification().removeListener(getShowWalletFundedNotificationListener);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build UI elements
