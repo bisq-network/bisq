@@ -723,6 +723,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         volumeListener = (observable, oldValue, newValue) -> {
           if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
               volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+              if (!volumeTextField.isFocused()) {
+                  new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
+                      .information(Res.get("popup.roundedFiatValues.msg", model.tradeCurrencyCode.get()))
+                      .dontShowAgainId("FiatValuesRoundedWarning")
+                      .show();
+              }
           }
         };
 

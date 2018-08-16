@@ -685,7 +685,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             }
             // We want to trigger a recalculation of the volume
-            UserThread.execute(() -> onFocusOutVolumeTextField(true, false));
+            UserThread.execute(() -> {
+                onFocusOutVolumeTextField(true, false);
+                onFocusOutMinAmountTextField(true, false);
+            });
         }
     }
 
