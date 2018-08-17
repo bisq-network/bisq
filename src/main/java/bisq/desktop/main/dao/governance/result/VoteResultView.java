@@ -243,8 +243,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         cycleListItemList.clear();
         bsqStateService.getCycles().forEach(cycle -> {
             List<Proposal> proposalsForCycle = proposalService.getProposalPayloads().stream()
-                    .filter(proposalPayload -> cycleService.isTxInCycle(cycle, proposalPayload.getProposal().getTxId()))
                     .map(ProposalPayload::getProposal)
+                    .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
             List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getAllEvaluatedProposals().stream()
