@@ -250,7 +250,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             new Popup<>().information(Res.get("payment.f2f.info"))
                     .width(700)
                     .closeButtonText(Res.get("payment.f2f.info.openURL"))
-                    .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/#f2f"))
+                    .onClose(() -> GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
