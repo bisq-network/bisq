@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:-SNAPSHOT'
+    compile project(':common')
+    //compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.2') {
         exclude(module: 'slf4j-api')
     }
