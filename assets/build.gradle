@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:-SNAPSHOT'
+    compile project(':common')
     compile 'commons-codec:commons-codec:1.9'
     testCompile 'junit:junit:4.12'
 }
