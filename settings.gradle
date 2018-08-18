@@ -1,0 +1,7 @@
+include 'assets'
+include 'common'
+include 'p2p'
+include 'core'
+include 'desktop'
+
+rootProject.name = 'bisq'
