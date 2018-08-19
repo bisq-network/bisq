@@ -296,7 +296,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                         // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                         // Otherwise we could get an amount lower then the minAmount set by rounding
                         Coin roundedAmount = OfferUtil.getRoundedFiatAmount(dataModel.getAmount().get(), tradePrice,
-                                dataModel.getCurrencyCode(), maxTradeLimit);
+                                maxTradeLimit);
                         dataModel.applyAmount(roundedAmount);
                     }
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
@@ -566,7 +566,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode()) && !isAmountEqualMinAmount(amount)) {
                     // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                     // Otherwise we could get an amount lower then the minAmount set by rounding
-                    amount = OfferUtil.getRoundedFiatAmount(amount, price, dataModel.getCurrencyCode(), maxTradeLimit);
+                    amount = OfferUtil.getRoundedFiatAmount(amount, price, maxTradeLimit);
                 }
             }
             dataModel.applyAmount(amount);
@@ -576,6 +576,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private boolean isAmountEqualMinAmount(Coin amount) {
         return amount.value == offer.getMinAmount().value;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
