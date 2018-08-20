@@ -22,6 +22,8 @@ import bisq.common.UserThread;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 
+import javafx.geometry.Point3D;
+
 import java.awt.image.BufferedImage;
 
 import java.util.function.Consumer;
@@ -70,6 +72,8 @@ class QrCodeReader extends Thread {
                 if (bufferedImage != null) {
                     WritableImage writableImage = SwingFXUtils.toFXImage(bufferedImage, null);
                     imageView.setImage(writableImage);
+                    imageView.setRotationAxis(new Point3D(0.0, 1.0, 0.0));
+                    imageView.setRotate(180.0);
 
                     LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
                     BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
