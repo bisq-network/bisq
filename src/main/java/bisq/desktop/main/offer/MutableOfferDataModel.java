@@ -673,7 +673,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 if (isHalCashAccount())
                     volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount, tradeCurrencyCode.get());
+                    volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
 
                 volume.set(volumeByAmount);
             } catch (Throwable t) {
@@ -695,7 +695,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    value = OfferUtil.getRoundedFiatAmount(value, price.get(), tradeCurrencyCode.get(), getMaxTradeLimit());
+                    value = OfferUtil.getRoundedFiatAmount(value, price.get(), getMaxTradeLimit());
 
                 calculateVolume();
 
