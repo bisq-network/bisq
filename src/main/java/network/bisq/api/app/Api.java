@@ -43,7 +43,8 @@ public class Api implements UncaughtExceptionHandler {
             tradeManager = injector.getInstance(TradeManager.class);
 
             setupHandlers();
-            bisqSetup.start(this::onSetupComplete);
+            bisqSetup.addBisqSetupCompleteListener(this::onSetupComplete);
+            bisqSetup.start();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {

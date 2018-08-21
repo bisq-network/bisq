@@ -18,7 +18,7 @@
 package network.bisq.api.app;
 
 import bisq.common.app.AppModule;
-import bisq.core.app.CoreModule;
+import bisq.core.CoreModule;
 import org.springframework.core.env.Environment;
 
 public class StandaloneApiModule extends AppModule {
