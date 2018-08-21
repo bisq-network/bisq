@@ -101,17 +101,17 @@
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-core</artifactId>
-            <version>e7ec316390a11dce2d1d87ca7f891d4deeae2ff9</version>
+            <version>8dbf6aa88c985352bcf4f4a09ce4bd92c4ac02f</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-p2p</artifactId>
-            <version>787e009008b845df5f22da8762d5f2f3807086ec</version>
+            <version>f118fc29d6d1be9c6e8e93c6b92639015362beaa</version>
         </dependency>
         <dependency>
             <groupId>network.bisq</groupId>
             <artifactId>bisq-common</artifactId>
-            <version>c129214ff0191cf5655a55e0fd4ad2670881afca</version>
+            <version>eef111c8e52a6f3175830355a8961311566f580a</version>
         </dependency>
         <dependency>
             <!--force proper guava version since one of arquillian dependencies forces 18.0-->
