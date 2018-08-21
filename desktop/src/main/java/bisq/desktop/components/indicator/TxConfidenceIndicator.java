@@ -42,10 +42,7 @@
 
 package bisq.desktop.components.indicator;
 
-import bisq.desktop.components.indicator.skin.StaticProgressIndicatorSkin;
-
 import javafx.scene.control.Control;
-import javafx.scene.control.Skin;
 
 import javafx.css.PseudoClass;
 import javafx.css.StyleableProperty;
@@ -254,10 +251,10 @@ public class TxConfidenceIndicator extends Control {
      * {@inheritDoc}
      */
 
-    @Override
+    /*@Override
     protected Skin<?> createDefaultSkin() {
         return new StaticProgressIndicatorSkin(this);
-    }
+    }*/
 
     /**
      * Most Controls return true for focusTraversable, so Control overrides
@@ -266,7 +263,6 @@ public class TxConfidenceIndicator extends Control {
      * This method is called from CSS code to get the correct initial value.
      */
     @Deprecated
-    @Override
     @SuppressWarnings("deprecation")
     protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue() {
         return Boolean.FALSE;

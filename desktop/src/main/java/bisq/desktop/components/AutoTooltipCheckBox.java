@@ -19,8 +19,7 @@ package bisq.desktop.components;
 
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Skin;
-
-import com.sun.javafx.scene.control.skin.CheckBoxSkin;
+import javafx.scene.control.skin.CheckBoxSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
