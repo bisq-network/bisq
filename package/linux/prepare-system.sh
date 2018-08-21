@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 cd $(dirname $0)
 
 echo Update OS
@@ -37,6 +36,11 @@ then
 echo Configure Bouncy Castle
 
 wget "http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk15on/1.56/$bouncyCastleJar"
+if ! echo "963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349  ${bouncyCastleJar}" | sha256sum -c -;
+then
+    echo "Bad checksum for ${bouncyCastleJar}." >&2
+    exit 1
+fi
 sudo mv $bouncyCastleJar $JAVA_HOME/jre/lib/ext/
 sudo chmod 777 "$JAVA_HOME/jre/lib/ext/$bouncyCastleJar"
 else
