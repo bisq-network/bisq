@@ -15,7 +15,7 @@ apply plugin: 'witness'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'network.bisq'
-version = '0.8.0'
+version = '-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -40,9 +40,9 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-p2p:0.8.0'
-    compile 'network.bisq:bisq-core:0.8.0'
-    compile 'network.bisq:bisq-common:0.8.0'
+    compile 'network.bisq:bisq-p2p:-SNAPSHOT'
+    compile 'network.bisq:bisq-core:-SNAPSHOT'
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'org.controlsfx:controlsfx:8.0.6_20'
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
