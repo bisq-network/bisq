@@ -613,9 +613,26 @@ textfield */
     -fx-padding: 1;
 }
 
-.table-row-cell {
+.offer-table .table-row-cell {
     -fx-border-color: -bs-white;
     -fx-table-cell-border-color: -bs-white;
+}
+
+.table-row-cell {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-very-light-grey;
+    -fx-table-cell-border-color: -bs-white;
+}
+
+.table-row-cell:selected {
+    -fx-border-width: 0 0 1 0;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-row-cell:empty {
+    -fx-border-width: 0;
+    -fx-background-color: -bs-white;
+    -fx-table-cell-border-color: transparent;
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
