@@ -40,6 +40,8 @@ import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -130,8 +132,8 @@ public class SepaForm extends PaymentMethodForm {
         FormBuilder.addLabel(gridPane, ++gridRow, Res.get("payment.bank.country"));
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        ComboBox<Country> countryComboBox = new ComboBox<>();
-        currencyComboBox = new ComboBox<>();
+        ComboBox<Country> countryComboBox = new JFXComboBox<>();
+        currencyComboBox = new JFXComboBox<>();
         currencyTextField = new TextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);

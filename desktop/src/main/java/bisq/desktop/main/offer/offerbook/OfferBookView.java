@@ -67,6 +67,8 @@ import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
@@ -161,7 +163,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox = filterBoxTuple.third;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
 
-        paymentMethodComboBox = new ComboBox<>();
+        paymentMethodComboBox = new JFXComboBox<>();
         final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
         paymentMethodLabel.setPadding(new Insets(0, 0, 0, 10));
         filterBox.getChildren().addAll(paymentMethodLabel, paymentMethodComboBox);

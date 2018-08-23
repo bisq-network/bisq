@@ -43,6 +43,8 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
@@ -442,7 +444,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
         currencyLabel.setPadding(new Insets(0, 4, 0, 0));
 
-        currencyComboBox = new ComboBox<>();
+        currencyComboBox = new JFXComboBox<>();
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.trade"),
                 Res.get("shared.trades"),

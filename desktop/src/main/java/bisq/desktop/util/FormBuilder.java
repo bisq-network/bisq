@@ -48,6 +48,8 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -682,7 +684,7 @@ public class FormBuilder {
         if (title != null)
             label = addLabel(gridPane, rowIndex, title, top);
 
-        ComboBox<T> comboBox = new ComboBox<>();
+        ComboBox<T> comboBox = new JFXComboBox<>();
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
@@ -721,7 +723,7 @@ public class FormBuilder {
         hBox.setSpacing(4);
 
         final AutoTooltipLabel label = new AutoTooltipLabel(title);
-        final ComboBox<T> comboBox = new ComboBox<>();
+        final ComboBox<T> comboBox = new JFXComboBox<>();
         hBox.getChildren().addAll(label, comboBox);
 
         GridPane.setRowIndex(hBox, rowIndex);
@@ -747,8 +749,8 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox<T> comboBox1 = new ComboBox<>();
-        ComboBox<R> comboBox2 = new ComboBox<>();
+        ComboBox<T> comboBox1 = new JFXComboBox<>();
+        ComboBox<R> comboBox2 = new JFXComboBox<>();
         hBox.getChildren().addAll(comboBox1, comboBox2);
 
         GridPane.setRowIndex(hBox, rowIndex);
@@ -783,7 +785,7 @@ public class FormBuilder {
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
-        ComboBox<T> comboBox = new ComboBox<>();
+        ComboBox<T> comboBox = new JFXComboBox<>();
 
         hBox.getChildren().addAll(comboBox, button);
 
@@ -817,7 +819,7 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox<T> comboBox = new ComboBox<>();
+        ComboBox<T> comboBox = new JFXComboBox<>();
         TextField textField = new TextField(textFieldText);
         textField.setEditable(false);
         textField.setMouseTransparent(true);
