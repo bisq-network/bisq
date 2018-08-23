@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -167,7 +168,7 @@ public class MoneyGramForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         CurrencyUtil.getAllMoneyGramCurrencies().forEach(e -> {
-            CheckBox checkBox = new CheckBox(e.getCode());
+            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setSelected(paymentAccount.getTradeCurrencies().contains(e));
             checkBox.setMinWidth(60);

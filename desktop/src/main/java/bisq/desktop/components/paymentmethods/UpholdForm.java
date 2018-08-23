@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
@@ -99,7 +100,7 @@ public class UpholdForm extends PaymentMethodForm {
 
         CurrencyUtil.getAllUpholdCurrencies().stream().forEach(e ->
         {
-            CheckBox checkBox = new CheckBox(e.getCode());
+            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setSelected(upholdAccount.getTradeCurrencies().contains(e));
             checkBox.setMinWidth(60);

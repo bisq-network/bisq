@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
@@ -98,7 +99,7 @@ public class RevolutForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         CurrencyUtil.getAllRevolutCurrencies().forEach(e -> {
-            CheckBox checkBox = new CheckBox(e.getCode());
+            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);
             checkBox.setSelected(account.getTradeCurrencies().contains(e));
             checkBox.setMinWidth(60);
