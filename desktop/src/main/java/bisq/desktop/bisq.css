@@ -258,17 +258,8 @@ bg color of non edit textFields: fafafa
     -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
 }
 
-.market-price-box > .jfx-combo-box > .input-line {
-    -fx-pref-height: 0px;
-}
-
-.radio-button .radio {
-    -fx-border-width: 1px;
-    -fx-border-color: -bs-black;
-    -fx-border-radius: 15px;
-    -fx-padding: 4px;
-    -fx-background-color: null;
-    -fx-background-image: null;
+.jfx-text-field {
+    -jfx-focus-color: -bs-rd-green;
 }
 
 .market-price-box > .jfx-combo-box > .input-line {
