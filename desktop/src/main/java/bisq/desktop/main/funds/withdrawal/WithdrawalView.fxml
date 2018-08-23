@@ -72,7 +72,7 @@
         <AutoTooltipLabel fx:id="toLabel" GridPane.rowIndex="3"/>
         <TextField fx:id="withdrawToTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-        <Button fx:id="withdrawButton" defaultButton="true" onAction="#onWithdraw"
+        <AutoTooltipButtonfx:id="withdrawButton" defaultButton="true" onAction="#onWithdraw"
                 GridPane.rowIndex="4"
                 GridPane.columnIndex="1"/>
 

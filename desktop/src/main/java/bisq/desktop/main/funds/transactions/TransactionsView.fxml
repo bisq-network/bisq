@@ -38,5 +38,5 @@
             <TableColumn fx:id="revertTxColumn" sortable="false" minWidth="110" maxWidth="110" visible="false"/>
         </columns>
     </TableView>
-    <Button fx:id="exportButton"/>
+    <AutoTooltipButtonfx:id="exportButton"/>
 </VBox>

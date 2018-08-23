@@ -41,5 +41,5 @@
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
-    <Button fx:id="exportButton"/>
+    <AutoTooltipButtonfx:id="exportButton"/>
 </VBox>
