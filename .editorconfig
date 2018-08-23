@@ -9,9 +9,6 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[build.gradle]
-continuation_indent_size = 4
-
 [.idea/codeStyles/*.xml]
 indent_size = 2
 insert_final_newline = false
