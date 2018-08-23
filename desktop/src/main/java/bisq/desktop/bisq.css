@@ -271,8 +271,8 @@ bg color of non edit textFields: fafafa
     -fx-background-image: null;
 }
 
-.radio-button .radio:selected {
-    -fx-border-color: -bs-rd-green;
+.market-price-box > .jfx-combo-box > .input-line {
+    -fx-pref-height: 0px;
 }
 
 .scroll-bar{
