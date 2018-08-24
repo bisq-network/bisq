@@ -15,7 +15,7 @@ import lombok.Setter;
 
 
 import bisq.httpapi.BisqProxy;
-import bisq.httpapi.health.CurrencyListHealthCheck;
+import bisq.httpapi.exceptions.ExceptionMappers;
 import bisq.httpapi.service.auth.AuthFilter;
 import bisq.httpapi.service.auth.TokenRegistry;
 import bisq.httpapi.service.v1.ApiV1;

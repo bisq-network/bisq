@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+//TODO @bernard: Why not use BackupManager from core?
 @Slf4j
 public class BackupManager {
 

@@ -55,7 +55,6 @@ import bisq.httpapi.model.Market;
 import javax.validation.ValidationException;
 
 public class OfferBuilder {
-
     private final FeeService feeService;
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -68,7 +67,9 @@ public class OfferBuilder {
     private boolean marketPriceAvailable;
 
     @Inject
-    public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService, BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService, KeyRing keyRing, P2PService p2PService, Preferences preferences, PriceFeedService priceFeedService, User user) {
+    public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService, BsqWalletService bsqWalletService,
+                        BtcWalletService btcWalletService, FeeService feeService, KeyRing keyRing,
+                        P2PService p2PService, Preferences preferences, PriceFeedService priceFeedService, User user) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -81,7 +82,9 @@ public class OfferBuilder {
     }
 
     public Offer build(String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
-                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
+                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair,
+                       long fiatPrice, Long buyerSecurityDeposit) throws NoAcceptedArbitratorException,
+            PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
         final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
             throw new NoAcceptedArbitratorException("No arbitrator has been chosen");

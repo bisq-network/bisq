@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.httpapi.health;
+package bisq.httpapi.service;
 
 import bisq.httpapi.BisqProxy;
 import com.codahale.metrics.health.HealthCheck;

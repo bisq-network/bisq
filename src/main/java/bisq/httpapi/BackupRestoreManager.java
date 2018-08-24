@@ -12,6 +12,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+//TODO @bernard: Why not use BackupManager from core?
 @Slf4j
 public class BackupRestoreManager {
 

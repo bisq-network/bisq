@@ -48,6 +48,7 @@ import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
+import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.NodeAddress;

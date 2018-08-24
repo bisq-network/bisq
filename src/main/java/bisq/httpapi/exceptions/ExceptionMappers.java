@@ -1,4 +1,4 @@
-package bisq.httpapi.service;
+package bisq.httpapi.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
@@ -7,9 +7,6 @@ import com.google.common.collect.ImmutableList;
 
 
 
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.UnauthorizedException;
-import bisq.httpapi.exceptions.WalletNotReadyException;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import javax.validation.ValidationException;
