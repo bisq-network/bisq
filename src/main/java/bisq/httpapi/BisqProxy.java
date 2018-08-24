@@ -133,7 +133,6 @@ import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
 import bisq.httpapi.model.AuthResult;
-import bisq.httpapi.model.Balances;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;
 import bisq.httpapi.model.ClosedTradableDetails;
@@ -534,17 +533,6 @@ public class BisqProxy {
             throw new NotFoundException("Trade not found: " + tradeId);
         }
         return tradeOptional.get();
-    }
-
-    public Balances getWalletDetails() {
-        if (!btcWalletService.isWalletReady()) {
-            throw new WalletNotReadyException("Wallet is not ready");
-        }
-
-        Coin availableBalance = btcWalletService.getAvailableBalance();
-        Coin reservedBalance = updateReservedBalance();
-        Coin lockedBalance = updateLockedBalance();
-        return new Balances(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue());
     }
 
     // TODO copied from MainViewModel - refactor !
