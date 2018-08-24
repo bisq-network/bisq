@@ -1,21 +1,24 @@
 package network.bisq.api;
 
-import network.bisq.api.model.Preferences;
-import io.restassured.http.ContentType;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.isA;
+
+
+
+import io.restassured.http.ContentType;
+import network.bisq.httpapi.model.Preferences;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class PreferencesResourceIT {

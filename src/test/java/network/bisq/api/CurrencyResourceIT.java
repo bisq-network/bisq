@@ -1,23 +1,29 @@
 package network.bisq.api;
 
-import network.bisq.api.model.Currency;
-import network.bisq.api.model.CurrencyList;
-import network.bisq.api.model.Preferences;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.isOneOf;
+
+
+
+import network.bisq.httpapi.model.Currency;
+import network.bisq.httpapi.model.CurrencyList;
+import network.bisq.httpapi.model.Preferences;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class CurrencyResourceIT {

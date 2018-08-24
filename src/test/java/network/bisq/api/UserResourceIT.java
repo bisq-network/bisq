@@ -1,20 +1,23 @@
 package network.bisq.api;
 
-import com.github.javafaker.Faker;
-import network.bisq.api.model.AuthForm;
-import network.bisq.api.model.AuthResult;
-import network.bisq.api.model.ChangePassword;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.isA;
+
+
+
+import com.github.javafaker.Faker;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import network.bisq.httpapi.model.AuthForm;
+import network.bisq.httpapi.model.AuthResult;
+import network.bisq.httpapi.model.ChangePassword;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class UserResourceIT {

@@ -4,27 +4,39 @@ import bisq.core.btc.AddressEntry;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
-import network.bisq.api.model.*;
-import network.bisq.api.model.payment.SepaPaymentAccount;
-import io.restassured.http.ContentType;
-import io.restassured.response.ValidatableResponse;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
-import org.jetbrains.annotations.NotNull;
+
 import org.json.simple.JSONObject;
+
+import java.math.BigDecimal;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+
+
+
+import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
+import network.bisq.httpapi.model.OfferDetail;
+import network.bisq.httpapi.model.OfferToCreate;
+import network.bisq.httpapi.model.PriceType;
+import network.bisq.httpapi.model.TakeOffer;
+import network.bisq.httpapi.model.WalletAddress;
+import network.bisq.httpapi.model.WithdrawFundsForm;
+import network.bisq.httpapi.model.payment.SepaPaymentAccount;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class OfferResourceIT {

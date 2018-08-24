@@ -1,24 +1,34 @@
 package network.bisq.api;
 
-import com.github.javafaker.Faker;
-import network.bisq.api.model.payment.PaymentAccount;
-import network.bisq.api.model.payment.SepaPaymentAccount;
 import bisq.core.locale.CountryUtil;
 import bisq.core.payment.payload.PaymentMethod;
-import io.restassured.http.ContentType;
-import io.restassured.response.ValidatableResponse;
-import network.bisq.api.model.*;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.spi.CubeOutput;
-import org.hamcrest.core.AnyOf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
+
+
+
+import com.github.javafaker.Faker;
+import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
+import network.bisq.httpapi.model.ArbitratorList;
+import network.bisq.httpapi.model.OfferDetail;
+import network.bisq.httpapi.model.P2PNetworkStatus;
+import network.bisq.httpapi.model.WalletAddressList;
+import network.bisq.httpapi.model.WalletDetails;
+import network.bisq.httpapi.model.payment.PaymentAccount;
+import network.bisq.httpapi.model.payment.SepaPaymentAccount;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.spi.CubeOutput;
+import org.hamcrest.core.AnyOf;
 
 public final class ApiTestHelper {
 

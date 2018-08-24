@@ -1,23 +1,49 @@
 package network.bisq.api;
 
-import com.github.javafaker.Faker;
 import bisq.core.locale.CountryUtil;
-import io.restassured.http.ContentType;
-import network.bisq.api.model.payment.*;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+
+
+
+import com.github.javafaker.Faker;
+import io.restassured.http.ContentType;
+import network.bisq.httpapi.model.payment.AliPayPaymentAccount;
+import network.bisq.httpapi.model.payment.CashAppPaymentAccount;
+import network.bisq.httpapi.model.payment.CashDepositPaymentAccount;
+import network.bisq.httpapi.model.payment.ChaseQuickPayPaymentAccount;
+import network.bisq.httpapi.model.payment.CryptoCurrencyPaymentAccount;
+import network.bisq.httpapi.model.payment.FasterPaymentsPaymentAccount;
+import network.bisq.httpapi.model.payment.InteracETransferPaymentAccount;
+import network.bisq.httpapi.model.payment.MoneyBeamPaymentAccount;
+import network.bisq.httpapi.model.payment.NationalBankAccountPaymentAccount;
+import network.bisq.httpapi.model.payment.OKPayPaymentAccount;
+import network.bisq.httpapi.model.payment.PaymentAccount;
+import network.bisq.httpapi.model.payment.PerfectMoneyPaymentAccount;
+import network.bisq.httpapi.model.payment.PopmoneyPaymentAccount;
+import network.bisq.httpapi.model.payment.RevolutPaymentAccount;
+import network.bisq.httpapi.model.payment.SameBankAccountPaymentAccount;
+import network.bisq.httpapi.model.payment.SepaInstantPaymentAccount;
+import network.bisq.httpapi.model.payment.SepaPaymentAccount;
+import network.bisq.httpapi.model.payment.SpecificBanksAccountPaymentAccount;
+import network.bisq.httpapi.model.payment.SwishPaymentAccount;
+import network.bisq.httpapi.model.payment.USPostalMoneyOrderPaymentAccount;
+import network.bisq.httpapi.model.payment.UpholdPaymentAccount;
+import network.bisq.httpapi.model.payment.VenmoPaymentAccount;
+import network.bisq.httpapi.model.payment.WesternUnionPaymentAccount;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class PaymentAccountIT {

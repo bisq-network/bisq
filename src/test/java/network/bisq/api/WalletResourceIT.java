@@ -1,25 +1,32 @@
 package network.bisq.api;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static io.restassured.RestAssured.given;
+import static network.bisq.api.RegexMatcher.matchesRegex;
+import static org.hamcrest.Matchers.isA;
+import static org.junit.Assert.assertEquals;
+
+
+
 import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import network.bisq.api.model.*;
+import network.bisq.httpapi.model.AuthForm;
+import network.bisq.httpapi.model.AuthResult;
+import network.bisq.httpapi.model.ChangePassword;
+import network.bisq.httpapi.model.SeedWordsRestore;
+import network.bisq.httpapi.model.WithdrawFundsForm;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.arquillian.cube.spi.CubeOutput;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static network.bisq.api.RegexMatcher.matchesRegex;
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.isA;
-import static org.junit.Assert.assertEquals;
 
 @RunWith(Arquillian.class)
 public class WalletResourceIT {

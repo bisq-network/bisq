@@ -4,6 +4,10 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+
+
+import network.bisq.httpapi.model.Market;
+
 /*
  * This file is part of bisq.
  *
