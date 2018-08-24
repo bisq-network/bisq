@@ -157,7 +157,7 @@ import bisq.httpapi.service.auth.TokenRegistry;
 import javax.validation.ValidationException;
 
 /**
- * This class is a proxy for all bitsquare features the model will use.
+ * This class is a proxy for all Bisq features the model will use.
  * <p>
  * No methods/representations used in the interface layers (REST/Socket/...) should be used in this class.
  * => this should be the common gateway to bisq used by all outward-facing API classes.
