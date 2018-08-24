@@ -133,6 +133,7 @@ import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
 import bisq.httpapi.model.AuthResult;
+import bisq.httpapi.model.Balances;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;
 import bisq.httpapi.model.ClosedTradableDetails;
@@ -149,12 +150,14 @@ import bisq.httpapi.model.SeedWords;
 import bisq.httpapi.model.VersionDetails;
 import bisq.httpapi.model.WalletAddress;
 import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletDetails;
 import bisq.httpapi.model.WalletTransaction;
 import bisq.httpapi.model.WalletTransactionList;
 import bisq.httpapi.model.payment.PaymentAccountHelper;
 import bisq.httpapi.service.auth.TokenRegistry;
 import javax.validation.ValidationException;
+
+//TODO @bernard we need ot break that apart to smaller domain specific chunks (or then use core domains directly).
+// its very hard atm to get an overview here
 
 /**
  * This class is a proxy for all Bisq features the model will use.
@@ -533,7 +536,7 @@ public class BisqProxy {
         return tradeOptional.get();
     }
 
-    public WalletDetails getWalletDetails() {
+    public Balances getWalletDetails() {
         if (!btcWalletService.isWalletReady()) {
             throw new WalletNotReadyException("Wallet is not ready");
         }
@@ -541,10 +544,11 @@ public class BisqProxy {
         Coin availableBalance = btcWalletService.getAvailableBalance();
         Coin reservedBalance = updateReservedBalance();
         Coin lockedBalance = updateLockedBalance();
-        return new WalletDetails(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue());
+        return new Balances(availableBalance.getValue(), reservedBalance.getValue(), lockedBalance.getValue());
     }
 
     // TODO copied from MainViewModel - refactor !
+    // TODO @bernard BalancePresentation provides that functionality
     private Coin updateLockedBalance() {
         Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
         lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
@@ -561,6 +565,7 @@ public class BisqProxy {
     }
 
     // TODO copied from MainViewModel - refactor !
+    // TODO @bernard BalancePresentation provides that functionality
     private Coin updateReservedBalance() {
         Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
                 .map(openOffer -> {

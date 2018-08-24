@@ -1,6 +1,7 @@
 package bisq.httpapi.service.resources;
 
 import bisq.core.btc.AddressEntryException;
+import bisq.core.btc.BalanceModel;
 import bisq.core.btc.InsufficientFundsException;
 
 import org.bitcoinj.core.Coin;
@@ -18,11 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.model.AuthForm;
+import bisq.httpapi.model.Balances;
 import bisq.httpapi.model.SeedWords;
 import bisq.httpapi.model.SeedWordsRestore;
 import bisq.httpapi.model.WalletAddress;
 import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletDetails;
 import bisq.httpapi.model.WalletTransactionList;
 import bisq.httpapi.model.WithdrawFundsForm;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
@@ -43,6 +44,8 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+//TODO @bernard: i would prefer to rename those resource classes to either WalletResource -> Wallet as resource is in the
+// package name already or to something more clear. Resource is so overloaded....
 
 @Api(value = "wallet", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
@@ -50,16 +53,20 @@ import javax.ws.rs.core.Response;
 public class WalletResource {
 
     private final BisqProxy bisqProxy;
+    private final BalanceModel balanceModel;
 
     @Inject
-    public WalletResource(BisqProxy bisqProxy) {
+    public WalletResource(BisqProxy bisqProxy, BalanceModel balanceModel) {
         this.bisqProxy = bisqProxy;
+        this.balanceModel = balanceModel;
     }
 
     @ApiOperation(value = "Get wallet details")
     @GET
-    public WalletDetails getWalletDetails() {
-        return bisqProxy.getWalletDetails();
+    public Balances getWalletDetails() {
+        return new Balances(balanceModel.getAvailableBalance().get().value,
+                balanceModel.getReservedBalance().get().value,
+                balanceModel.getLockedBalance().get().value);
     }
 
     @ApiOperation("Get wallet addresses")

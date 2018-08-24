@@ -54,7 +54,6 @@ import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.model.Market;
 import javax.validation.ValidationException;
 
-//TODO @bernard: Should we move that to model?
 public class OfferBuilder {
     private final FeeService feeService;
     private final KeyRing keyRing;

@@ -17,10 +17,10 @@ import static org.hamcrest.Matchers.instanceOf;
 
 
 import bisq.httpapi.model.ArbitratorList;
+import bisq.httpapi.model.Balances;
 import bisq.httpapi.model.OfferDetail;
 import bisq.httpapi.model.P2PNetworkStatus;
 import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletDetails;
 import bisq.httpapi.model.payment.PaymentAccount;
 import bisq.httpapi.model.payment.SepaPaymentAccount;
 import com.github.javafaker.Faker;
@@ -61,7 +61,7 @@ public final class ApiTestHelper {
                         collect(Collectors.toList());
     }
 
-    public static WalletDetails getBalance(int apiPort) {
+    public static Balances getBalance(int apiPort) {
         return given().
                 port(apiPort).
 //
@@ -70,7 +70,7 @@ public final class ApiTestHelper {
 //
         then().
                         statusCode(200).
-                        extract().body().as(WalletDetails.class);
+                        extract().body().as(Balances.class);
     }
 
     public static P2PNetworkStatus getP2PNetworkStatus(int apiPort) {
