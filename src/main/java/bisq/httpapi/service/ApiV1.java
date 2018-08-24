@@ -1,5 +1,9 @@
 package bisq.httpapi.service;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.service.v1.ArbitratorResource;
 import bisq.httpapi.service.v1.BackupResource;
@@ -37,6 +41,7 @@ public class ApiV1 {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public ApiV1(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

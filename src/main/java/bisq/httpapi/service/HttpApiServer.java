@@ -35,6 +35,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 public class HttpApiServer extends Application<ApiConfiguration> {
     private final BtcWalletService walletService;
     private final BisqProxy bisqProxy;
+    private final ApiV1 apiV1;
     private final TokenRegistry tokenRegistry;
     private final BisqEnvironment bisqEnvironment;
     private final Runnable shutdownHandler;
@@ -42,10 +43,11 @@ public class HttpApiServer extends Application<ApiConfiguration> {
     private Runnable hostShutdownHandler;
 
     @Inject
-    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy,
+    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy, ApiV1 apiV1,
                          TokenRegistry tokenRegistry, BisqEnvironment bisqEnvironment) {
         this.walletService = walletService;
         this.bisqProxy = bisqProxy;
+        this.apiV1 = apiV1;
         this.tokenRegistry = tokenRegistry;
         this.bisqEnvironment = bisqEnvironment;
         shutdownHandler = () -> {
@@ -95,7 +97,7 @@ public class HttpApiServer extends Application<ApiConfiguration> {
         environment.jersey().register(MultiPartFeature.class);
         setupHostAndPort(configuration);
         JerseyEnvironment jerseyEnvironment = environment.jersey();
-        jerseyEnvironment.register(new ApiV1(bisqProxy));
+        jerseyEnvironment.register(apiV1);
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
     }
