@@ -34,7 +34,7 @@ import network.bisq.api.service.v1.ApiV1;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-public class BisqApiApplication extends Application<ApiConfiguration> {
+public class HttpApiServer extends Application<ApiConfiguration> {
     private final Injector injector;
     private final BtcWalletService walletService;
     private final Preferences preferences;
@@ -43,7 +43,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
     private Runnable hostShutdownHandler;
 
     @Inject
-    public BisqApiApplication(Injector injector, BtcWalletService walletService, Preferences preferences) {
+    public HttpApiServer(Injector injector, BtcWalletService walletService, Preferences preferences) {
         this.injector = injector;
         this.walletService = walletService;
         this.preferences = preferences;
@@ -56,7 +56,7 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     public void startServer() {
         try {
-            BisqApiApplication.this.run("server", "bisq-api.yml");
+            HttpApiServer.this.run("server", "bisq-api.yml");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

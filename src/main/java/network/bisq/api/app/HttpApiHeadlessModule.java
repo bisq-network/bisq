@@ -17,19 +17,28 @@
 
 package network.bisq.api.app;
 
-import bisq.common.app.AppModule;
 import bisq.core.CoreModule;
+
+import bisq.common.app.AppModule;
+
 import org.springframework.core.env.Environment;
 
-public class StandaloneApiModule extends AppModule {
 
-    public StandaloneApiModule(Environment environment) {
+
+import network.bisq.api.HttpApiModule;
+
+/**
+ * Used in case of the headless version.
+ */
+public class HttpApiHeadlessModule extends AppModule {
+
+    public HttpApiHeadlessModule(Environment environment) {
         super(environment);
     }
 
     @Override
     protected void configure() {
         install(new CoreModule(environment));
-        install(new ApiModule(environment));
+        install(new HttpApiModule(environment));
     }
 }

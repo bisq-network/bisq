@@ -49,7 +49,7 @@ Bitcoin mainnet (meaning you can lose real BTC):
 The following command will start a headless Bisq instance on
 Bitcoin mainnet (meaning you can lose real BTC):
 
-    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.ApiMain"
+    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.HttpApiMain"
 
 
 ## Developing

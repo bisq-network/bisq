@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package network.bisq.api.app;
+package network.bisq.api;
 
 import bisq.core.app.AppOptionKeys;
 
@@ -28,18 +28,18 @@ import com.google.inject.name.Names;
 
 
 
-import network.bisq.api.service.BisqApiApplication;
+import network.bisq.api.service.HttpApiServer;
 import network.bisq.api.service.TokenRegistry;
 
-public class ApiModule extends AppModule {
+public class HttpApiModule extends AppModule {
 
-    public ApiModule(Environment environment) {
+    public HttpApiModule(Environment environment) {
         super(environment);
     }
 
     @Override
     protected void configure() {
-        bind(BisqApiApplication.class).in(Singleton.class);
+        bind(HttpApiServer.class).in(Singleton.class);
         bind(TokenRegistry.class).in(Singleton.class);
 
         String httpApiHost = environment.getProperty(AppOptionKeys.HTTP_API_HOST, String.class, "127.0.0.1");
