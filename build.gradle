@@ -13,7 +13,7 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-mainClassName = 'network.bisq.api.app.ApiMain'
+mainClassName = 'bisq.httpapi.app.HttpApiMain'
 
 repositories {
     mavenLocal()
@@ -25,10 +25,10 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:c129214ff0191cf5655a55e0fd4ad2670881afca'
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
     compile 'network.bisq:bisq-assets:-SNAPSHOT'
-    compile 'network.bisq:bisq-core:e7ec316390a11dce2d1d87ca7f891d4deeae2ff9'
-    compile 'network.bisq:bisq-p2p:787e009008b845df5f22da8762d5f2f3807086ec'
+    compile 'network.bisq:bisq-core:-SNAPSHOT'
+    compile 'network.bisq:bisq-p2p:-SNAPSHOT'
 
     compile "io.dropwizard:dropwizard-core:1.2.2"
     compile "io.dropwizard:dropwizard-forms:1.2.2"

@@ -39,6 +39,12 @@ fi
 if [ ! -z "$USE_DEV_PRIVILEGE_KEYS" ]; then
     ARGS="$ARGS --useDevPrivilegeKeys=$USE_DEV_PRIVILEGE_KEYS"
 fi
+if [ ! -z "$BISQ_API_PORT" ]; then
+    ARGS="$ARGS --httpApiPort=$BISQ_API_PORT"
+fi
+if [ ! -z "$BISQ_API_HOST" ]; then
+    ARGS="$ARGS --httpApiHost=$BISQ_API_HOST"
+fi
 
 echo ./gradlew run --no-daemon --args "foo $ARGS"
 ./gradlew run --no-daemon --args "foo $ARGS"

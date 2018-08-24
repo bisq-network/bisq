@@ -15,8 +15,8 @@ env:
 
 jobs:
   include:
-#    - stage: test
-#      script: ./gradlew test
+    - stage: test
+      script: ./gradlew test
     - stage: integration
       script:
         docker-compose build;
