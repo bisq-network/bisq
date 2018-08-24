@@ -36,7 +36,7 @@ public class BackupResource {
 
     private final BisqProxy bisqProxy;
 
-    BackupResource(BisqProxy bisqProxy) {
+    public BackupResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

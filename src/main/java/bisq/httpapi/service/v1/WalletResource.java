@@ -13,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.BisqProxy;
+import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.model.AuthForm;
 import bisq.httpapi.model.SeedWords;
 import bisq.httpapi.model.SeedWordsRestore;
@@ -49,7 +49,7 @@ public class WalletResource {
 
     private final BisqProxy bisqProxy;
 
-    WalletResource(BisqProxy bisqProxy) {
+    public WalletResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

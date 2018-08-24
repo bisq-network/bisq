@@ -18,7 +18,6 @@ import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.ExceptionMappers;
 import bisq.httpapi.service.auth.AuthFilter;
 import bisq.httpapi.service.auth.TokenRegistry;
-import bisq.httpapi.service.v1.ApiV1;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;

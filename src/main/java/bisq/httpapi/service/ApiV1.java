@@ -1,6 +1,19 @@
-package bisq.httpapi.service.v1;
+package bisq.httpapi.service;
 
 import bisq.httpapi.BisqProxy;
+import bisq.httpapi.service.v1.ArbitratorResource;
+import bisq.httpapi.service.v1.BackupResource;
+import bisq.httpapi.service.v1.ClosedTradableResource;
+import bisq.httpapi.service.v1.CurrencyResource;
+import bisq.httpapi.service.v1.MarketResource;
+import bisq.httpapi.service.v1.NetworkResource;
+import bisq.httpapi.service.v1.OfferResource;
+import bisq.httpapi.service.v1.PaymentAccountResource;
+import bisq.httpapi.service.v1.PreferencesResource;
+import bisq.httpapi.service.v1.TradeResource;
+import bisq.httpapi.service.v1.UserResource;
+import bisq.httpapi.service.v1.VersionResource;
+import bisq.httpapi.service.v1.WalletResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.Authorization;

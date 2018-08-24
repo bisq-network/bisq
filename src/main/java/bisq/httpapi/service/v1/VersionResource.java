@@ -16,7 +16,7 @@ public class VersionResource {
 
     private final BisqProxy bisqProxy;
 
-    VersionResource(BisqProxy bisqProxy) {
+    public VersionResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

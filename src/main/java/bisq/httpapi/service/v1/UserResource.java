@@ -19,7 +19,7 @@ public class UserResource {
 
     private final BisqProxy bisqProxy;
 
-    UserResource(BisqProxy bisqProxy) {
+    public UserResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 
