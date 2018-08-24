@@ -40,7 +40,7 @@
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
-        <string>Bisq-0.7.1.jar</string>
+        <string>Bisq-0.8.0.jar</string>
         <key>JVMPreferencesID</key>
         <string>bisq</string>
         <key>JVMOptions</key>
