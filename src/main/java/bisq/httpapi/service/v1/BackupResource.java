@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 
 import bisq.httpapi.BisqProxy;
-import bisq.httpapi.NotFoundException;
+import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.model.BackupList;
 import bisq.httpapi.model.CreatedBackup;
 import bisq.httpapi.util.ResourceHelper;

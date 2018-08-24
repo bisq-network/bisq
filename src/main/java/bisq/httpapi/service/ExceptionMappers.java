@@ -7,9 +7,9 @@ import com.google.common.collect.ImmutableList;
 
 
 
-import bisq.httpapi.NotFoundException;
-import bisq.httpapi.UnauthorizedException;
-import bisq.httpapi.WalletNotReadyException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.UnauthorizedException;
+import bisq.httpapi.exceptions.WalletNotReadyException;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import javax.validation.ValidationException;

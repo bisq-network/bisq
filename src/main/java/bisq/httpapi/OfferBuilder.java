@@ -48,6 +48,9 @@ import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer
 
 
 
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.model.Market;
 import javax.validation.ValidationException;
 

@@ -122,6 +122,15 @@ import static java.util.stream.Collectors.toList;
 
 
 
+import bisq.httpapi.exceptions.AmountTooHighException;
+import bisq.httpapi.exceptions.AmountTooLowException;
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
+import bisq.httpapi.exceptions.UnauthorizedException;
+import bisq.httpapi.exceptions.WalletNotReadyException;
 import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;

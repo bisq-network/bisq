@@ -12,7 +12,7 @@ import static java.util.stream.Collectors.toList;
 
 
 import bisq.httpapi.BisqProxy;
-import bisq.httpapi.NotFoundException;
+import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.model.TradeDetails;
 import bisq.httpapi.model.TradeList;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;

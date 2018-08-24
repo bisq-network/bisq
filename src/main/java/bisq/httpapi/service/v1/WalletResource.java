@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.httpapi.AmountTooLowException;
+import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.AuthForm;
 import bisq.httpapi.model.SeedWords;

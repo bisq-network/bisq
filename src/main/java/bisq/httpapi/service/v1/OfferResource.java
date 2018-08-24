@@ -15,14 +15,14 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.AmountTooHighException;
+import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.BisqProxy;
-import bisq.httpapi.IncompatiblePaymentAccountException;
-import bisq.httpapi.InsufficientMoneyException;
-import bisq.httpapi.NoAcceptedArbitratorException;
-import bisq.httpapi.NotFoundException;
-import bisq.httpapi.OfferTakerSameAsMakerException;
-import bisq.httpapi.PaymentAccountNotFoundException;
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.model.OfferDetail;
 import bisq.httpapi.model.OfferList;
 import bisq.httpapi.model.OfferToCreate;

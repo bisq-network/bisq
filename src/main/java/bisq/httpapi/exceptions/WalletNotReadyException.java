@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.httpapi.exceptions;
 
 public class WalletNotReadyException extends RuntimeException {
 
