@@ -16,17 +16,20 @@
  */
 package network.bisq.api.app;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.setup.CommonSetup;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.core.app.BisqExecutable;
+
 import joptsimple.OptionSet;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -42,11 +45,6 @@ public class ApiMain extends BisqExecutable implements GracefulShutDownHandler {
 
             new ApiMain().execute(args);
         }
-    }
-
-    @Override
-    protected void setupEnvironment(OptionSet options) {
-        bisqEnvironment = new ApiEnvironment(options);
     }
 
     @Override

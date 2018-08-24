@@ -1,47 +1,5 @@
 package network.bisq.api;
 
-import com.google.common.util.concurrent.FutureCallback;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-
-import javafx.collections.ObservableList;
-
-import org.jetbrains.annotations.NotNull;
-
-import org.spongycastle.crypto.params.KeyParameter;
-
-import bisq.common.app.DevEnv;
-import bisq.common.app.Version;
-import bisq.common.crypto.KeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.Storage;
-import bisq.common.util.Tuple2;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
@@ -91,16 +49,80 @@ import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
 import bisq.core.util.validation.InputValidator;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Statistic;
+
+import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
+import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.storage.FileUtil;
+import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.Wallet;
+
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+
+import com.google.common.util.concurrent.FutureCallback;
+
+import javafx.collections.ObservableList;
+
+import org.spongycastle.crypto.params.KeyParameter;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import javax.validation.ValidationException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nullable;
+
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.stream.Collectors.toList;
+
+
+
+import javax.validation.ValidationException;
 import network.bisq.api.model.AuthResult;
 import network.bisq.api.model.BitcoinNetworkStatus;
 import network.bisq.api.model.ClosedTradableConverter;
@@ -124,20 +146,6 @@ import network.bisq.api.model.WalletTransaction;
 import network.bisq.api.model.WalletTransactionList;
 import network.bisq.api.model.payment.PaymentAccountHelper;
 import network.bisq.api.service.TokenRegistry;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Peer;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.Wallet;
-
-import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.toList;
 
 /**
  * This class is a proxy for all bitsquare features the model will use.
@@ -164,7 +172,7 @@ public class BisqProxy {
     private FeeService feeService;
     private bisq.core.user.Preferences preferences;
     private BsqWalletService bsqWalletService;
-    private final Runnable shutdown;
+    private final Runnable shutdownHandler;
     private final boolean useDevPrivilegeKeys;
     private WalletsSetup walletsSetup;
     @Getter
@@ -174,7 +182,7 @@ public class BisqProxy {
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
 
-    public BisqProxy(Injector injector, Runnable shutdown) {
+    public BisqProxy(Injector injector, Runnable shutdownHandler) {
         this.injector = injector;
         this.accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
         this.arbitratorManager = injector.getInstance(ArbitratorManager.class);
@@ -188,7 +196,7 @@ public class BisqProxy {
         this.feeService = injector.getInstance(FeeService.class);
         this.preferences = injector.getInstance(bisq.core.user.Preferences.class);
         this.bsqWalletService = injector.getInstance(BsqWalletService.class);
-        this.shutdown = shutdown;
+        this.shutdownHandler = shutdownHandler;
         this.marketList = calculateMarketList();
         this.currencyList = calculateCurrencyList();
         this.walletsSetup = injector.getInstance(WalletsSetup.class);
@@ -1059,7 +1067,7 @@ public class BisqProxy {
 
     public void requestBackupRestore(String fileName) throws IOException {
         backupRestoreManager.requestRestore(fileName);
-        if (null == shutdown) {
+        if (null == shutdownHandler) {
             log.warn("No shutdown mechanism provided! You have to restart the app manually.");
             return;
         }
@@ -1070,7 +1078,7 @@ public class BisqProxy {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            shutdown.run();
+            shutdownHandler.run();
         }, "Shutdown before backup restore").start();
     }
 
@@ -1114,8 +1122,8 @@ public class BisqProxy {
                 seed,
                 () -> futureResult.complete(null),
                 throwable -> failFuture(futureResult, throwable));
-        if (null != shutdown)
-            futureResult.thenRunAsync(shutdown::run);
+        if (null != shutdownHandler)
+            futureResult.thenRunAsync(shutdownHandler::run);
         return futureResult;
     }
 

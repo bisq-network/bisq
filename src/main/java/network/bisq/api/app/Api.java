@@ -1,19 +1,24 @@
 package network.bisq.api.app;
 
-import com.google.inject.Injector;
-
-import java.util.concurrent.TimeUnit;
+import bisq.core.app.BisqSetup;
+import bisq.core.trade.TradeManager;
 
 import bisq.common.UserThread;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.util.Profiler;
-import bisq.core.app.BisqSetup;
-import bisq.core.trade.TradeManager;
+
+import com.google.inject.Injector;
+
+import java.util.concurrent.TimeUnit;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+
+
 import network.bisq.api.service.BisqApiApplication;
 
 @Slf4j
@@ -56,7 +61,7 @@ public class Api implements UncaughtExceptionHandler {
     private void onSetupComplete() {
         log.info("onSetupComplete");
         final BisqApiApplication bisqApiApplication = injector.getInstance(BisqApiApplication.class);
-        bisqApiApplication.setShutdown(this::stop);
+        bisqApiApplication.setHostShutdownHandler(this::stop);
         try {
             bisqApiApplication.run("server", "bisq-api.yml");
         } catch (Exception e) {

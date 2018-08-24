@@ -17,13 +17,19 @@
 
 package network.bisq.api.app;
 
-import com.google.inject.Singleton;
+import bisq.core.app.AppOptionKeys;
 
 import bisq.common.app.AppModule;
-import network.bisq.api.BtcAddressValidator;
+
+import org.springframework.core.env.Environment;
+
+import com.google.inject.Singleton;
+import com.google.inject.name.Names;
+
+
+
 import network.bisq.api.service.BisqApiApplication;
 import network.bisq.api.service.TokenRegistry;
-import org.springframework.core.env.Environment;
 
 public class ApiModule extends AppModule {
 
@@ -33,10 +39,13 @@ public class ApiModule extends AppModule {
 
     @Override
     protected void configure() {
-        // added for API usage
         bind(BisqApiApplication.class).in(Singleton.class);
-        bind(BtcAddressValidator.class);
         bind(TokenRegistry.class).in(Singleton.class);
-        bind(ApiEnvironment.class).toInstance((ApiEnvironment) environment);
+
+        String httpApiHost = environment.getProperty(AppOptionKeys.HTTP_API_HOST, String.class, "127.0.0.1");
+        bind(String.class).annotatedWith(Names.named(AppOptionKeys.HTTP_API_HOST)).toInstance(httpApiHost);
+
+        Integer httpApiPort = Integer.valueOf(environment.getProperty(AppOptionKeys.HTTP_API_PORT, String.class, "8080"));
+        bind(Integer.class).annotatedWith(Names.named(AppOptionKeys.HTTP_API_PORT)).toInstance(httpApiPort);
     }
 }

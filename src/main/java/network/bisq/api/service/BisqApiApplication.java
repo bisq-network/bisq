@@ -1,13 +1,22 @@
 package network.bisq.api.service;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.user.Preferences;
-import com.google.inject.Inject;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+
 import com.google.inject.Injector;
-import network.bisq.api.BisqProxy;
-import network.bisq.api.app.ApiEnvironment;
-import network.bisq.api.health.CurrencyListHealthCheck;
-import network.bisq.api.service.v1.ApiV1;
+
+import javax.inject.Inject;
+
+import java.util.EnumSet;
+
+import lombok.Setter;
+
+
+
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -19,33 +28,43 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import network.bisq.api.BisqProxy;
+import network.bisq.api.health.CurrencyListHealthCheck;
+import network.bisq.api.service.v1.ApiV1;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterRegistration;
-import java.util.EnumSet;
-
 public class BisqApiApplication extends Application<ApiConfiguration> {
+    private final Injector injector;
+    private final BtcWalletService walletService;
+    private final Preferences preferences;
+    private final Runnable shutdownHandler;
+    @Setter
+    private Runnable hostShutdownHandler;
 
     @Inject
-    Injector injector;
+    public BisqApiApplication(Injector injector, BtcWalletService walletService, Preferences preferences) {
+        this.injector = injector;
+        this.walletService = walletService;
+        this.preferences = preferences;
+        shutdownHandler = () -> {
+            // TODO add here API specific shut down procedure
+            if (hostShutdownHandler != null)
+                hostShutdownHandler.run();
+        };
+    }
 
-    @Inject
-    BtcWalletService walletService;
-
-    @Inject
-    Preferences preferences;
-
-    private Runnable shutdown;
+    public void startServer() {
+        try {
+            BisqApiApplication.this.run("server", "bisq-api.yml");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public String getName() {
         return "Bisq API";
-    }
-
-    public void setShutdown(Runnable shutdown) {
-        this.shutdown = shutdown;
     }
 
     @Override
@@ -68,12 +87,12 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
 
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
-        BisqProxy bisqProxy = new BisqProxy(injector, shutdown);
+        BisqProxy bisqProxy = new BisqProxy(injector, shutdownHandler);
         preferences.readPersisted();
-        setupCors(environment);
+        setupCrossOriginFilter(environment);
         setupAuth(environment);
         environment.jersey().register(MultiPartFeature.class);
-        setupHostAndPort(configuration, injector.getInstance(ApiEnvironment.class));
+        setupHostAndPort(configuration, injector.getInstance(BisqEnvironment.class));
         final JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
@@ -85,27 +104,23 @@ public class BisqApiApplication extends Application<ApiConfiguration> {
         auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
-    private void setupHostAndPort(ApiConfiguration configuration, ApiEnvironment environment) {
-        final SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
-        final HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
-        final Integer apiPort = environment.getApiPort();
-        if (null != apiPort)
-            connector.setPort(apiPort);
-        final String apiHost = environment.getApiHost();
-        if (null != apiHost)
-            connector.setBindHost(apiHost);
+    private void setupHostAndPort(ApiConfiguration configuration, BisqEnvironment environment) {
+        SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
+        HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
+        connector.setPort(Integer.valueOf(environment.getHttpApiPort()));
+        connector.setBindHost(environment.getHttpApiHost());
     }
 
-    private void setupCors(Environment environment) {
-        final FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+    private void setupCrossOriginFilter(Environment environment) {
+        final FilterRegistration.Dynamic crossOriginFilter = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
 
-        // Configure CORS parameters
-        cors.setInitParameter("allowedOrigins", "*");
-        cors.setInitParameter("allowedHeaders", "*");
-        cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
+        // Configure CrossOriginFilter parameters
+        crossOriginFilter.setInitParameter("allowedOrigins", "*");
+        crossOriginFilter.setInitParameter("allowedHeaders", "*");
+        crossOriginFilter.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
 
         // Add URL mapping
-        cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+        crossOriginFilter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
 }
