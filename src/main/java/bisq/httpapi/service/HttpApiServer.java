@@ -2,12 +2,9 @@ package bisq.httpapi.service;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.user.Preferences;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
-
-import com.google.inject.Injector;
 
 import javax.inject.Inject;
 
@@ -37,23 +34,28 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 public class HttpApiServer extends Application<ApiConfiguration> {
-    private final Injector injector;
     private final BtcWalletService walletService;
-    private final Preferences preferences;
+    private final BisqProxy bisqProxy;
+    private final TokenRegistry tokenRegistry;
+    private final BisqEnvironment bisqEnvironment;
     private final Runnable shutdownHandler;
     @Setter
     private Runnable hostShutdownHandler;
 
     @Inject
-    public HttpApiServer(Injector injector, BtcWalletService walletService, Preferences preferences) {
-        this.injector = injector;
+    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy,
+                         TokenRegistry tokenRegistry, BisqEnvironment bisqEnvironment) {
         this.walletService = walletService;
-        this.preferences = preferences;
+        this.bisqProxy = bisqProxy;
+        this.tokenRegistry = tokenRegistry;
+        this.bisqEnvironment = bisqEnvironment;
         shutdownHandler = () -> {
             // TODO add here API specific shut down procedure
             if (hostShutdownHandler != null)
                 hostShutdownHandler.run();
         };
+
+        bisqProxy.setShutdownHandler(shutdownHandler);
     }
 
     public void startServer() {
@@ -89,28 +91,14 @@ public class HttpApiServer extends Application<ApiConfiguration> {
 
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
-        BisqProxy bisqProxy = new BisqProxy(injector, shutdownHandler);
-        //preferences.readPersisted();
         setupCrossOriginFilter(environment);
         setupAuth(environment);
         environment.jersey().register(MultiPartFeature.class);
-        setupHostAndPort(configuration, injector.getInstance(BisqEnvironment.class));
+        setupHostAndPort(configuration);
         JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
-    }
-
-    private void setupAuth(Environment environment) {
-        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", new AuthFilter(walletService, injector.getInstance(TokenRegistry.class)));
-        auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
-    }
-
-    private void setupHostAndPort(ApiConfiguration configuration, BisqEnvironment environment) {
-        SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
-        HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
-        connector.setPort(Integer.valueOf(environment.getHttpApiPort()));
-        connector.setBindHost(environment.getHttpApiHost());
     }
 
     private void setupCrossOriginFilter(Environment environment) {
@@ -125,4 +113,16 @@ public class HttpApiServer extends Application<ApiConfiguration> {
         crossOriginFilter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
+    private void setupAuth(Environment environment) {
+        AuthFilter authFilter = new AuthFilter(walletService, tokenRegistry);
+        final FilterRegistration.Dynamic auth = environment.servlets().addFilter("Auth", authFilter);
+        auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+    }
+
+    private void setupHostAndPort(ApiConfiguration configuration) {
+        SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
+        HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
+        connector.setPort(Integer.valueOf(bisqEnvironment.getHttpApiPort()));
+        connector.setBindHost(bisqEnvironment.getHttpApiHost());
+    }
 }

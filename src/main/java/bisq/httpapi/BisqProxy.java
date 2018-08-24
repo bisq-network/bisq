@@ -74,9 +74,8 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -110,6 +109,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +126,6 @@ import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;
 import bisq.httpapi.model.ClosedTradableDetails;
-import bisq.httpapi.model.Currency;
 import bisq.httpapi.model.CurrencyList;
 import bisq.httpapi.model.Market;
 import bisq.httpapi.model.MarketList;
@@ -157,65 +156,101 @@ import javax.validation.ValidationException;
  */
 @Slf4j
 public class BisqProxy {
-    private final Injector injector;
-    private AccountAgeWitnessService accountAgeWitnessService;
-    private ArbitratorManager arbitratorManager;
-    private BtcWalletService btcWalletService;
-    private User user;
-    private TradeManager tradeManager;
-    private ClosedTradableManager closedTradableManager;
-    private FailedTradesManager failedTradesManager;
-    private OpenOfferManager openOfferManager;
-    private OfferBookService offerBookService;
-    private P2PService p2PService;
-    private KeyRing keyRing;
-    private FeeService feeService;
-    private bisq.core.user.Preferences preferences;
-    private BsqWalletService bsqWalletService;
-    private final Runnable shutdownHandler;
+    private final AccountAgeWitnessService accountAgeWitnessService;
+    private final ArbitratorManager arbitratorManager;
+    private final BtcWalletService btcWalletService;
+    private final User user;
+    private final TradeManager tradeManager;
+    private final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
+    private final OpenOfferManager openOfferManager;
+    private final OfferBookService offerBookService;
+    private final P2PService p2PService;
+    private final KeyRing keyRing;
+    private final FeeService feeService;
+    private final bisq.core.user.Preferences preferences;
+    private final BsqWalletService bsqWalletService;
+    private final WalletsSetup walletsSetup;
+    private final AltCoinAddressValidator altCoinAddressValidator;
+    private final OfferBuilder offerBuilder;
+    private final ClosedTradableConverter closedTradableConverter;
+    private final TokenRegistry tokenRegistry;
+    private final WalletsManager walletsManager;
+    private final PriceFeedService priceFeedService;
     private final boolean useDevPrivilegeKeys;
-    private WalletsSetup walletsSetup;
-    @Getter
-    private MarketList marketList;
-    @Getter
-    private CurrencyList currencyList;
+    private final File storageDir;
+
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
+    @Getter
+    private final MarketList marketList;
+    @Getter
+    private final CurrencyList currencyList;
+    @Setter
+    private Runnable shutdownHandler;
 
-    //TODO use Guice
-    public BisqProxy(Injector injector, Runnable shutdownHandler) {
-        this.injector = injector;
-        this.accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
-        this.arbitratorManager = injector.getInstance(ArbitratorManager.class);
-        this.btcWalletService = injector.getInstance(BtcWalletService.class);
-        this.tradeManager = injector.getInstance(TradeManager.class);
-        this.openOfferManager = injector.getInstance(OpenOfferManager.class);
-        this.offerBookService = injector.getInstance(OfferBookService.class);
-        this.p2PService = injector.getInstance(P2PService.class);
-        this.keyRing = injector.getInstance(KeyRing.class);
-        this.user = injector.getInstance(User.class);
-        this.feeService = injector.getInstance(FeeService.class);
-        this.preferences = injector.getInstance(bisq.core.user.Preferences.class);
-        this.bsqWalletService = injector.getInstance(BsqWalletService.class);
-        this.shutdownHandler = shutdownHandler;
-        this.marketList = calculateMarketList();
-        this.currencyList = calculateCurrencyList();
-        this.walletsSetup = injector.getInstance(WalletsSetup.class);
-        this.closedTradableManager = injector.getInstance(ClosedTradableManager.class);
-        this.failedTradesManager = injector.getInstance(FailedTradesManager.class);
-        this.useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
+    @Inject
+    public BisqProxy(AccountAgeWitnessService accountAgeWitnessService,
+                     ArbitratorManager arbitratorManager,
+                     BtcWalletService btcWalletService,
+                     User user,
+                     TradeManager tradeManager,
+                     ClosedTradableManager closedTradableManager,
+                     FailedTradesManager failedTradesManager,
+                     OpenOfferManager openOfferManager,
+                     OfferBookService offerBookService,
+                     P2PService p2PService,
+                     KeyRing keyRing,
+                     FeeService feeService,
+                     bisq.core.user.Preferences preferences,
+                     BsqWalletService bsqWalletService,
+                     WalletsSetup walletsSetup,
+                     AltCoinAddressValidator altCoinAddressValidator,
+                     OfferBuilder offerBuilder,
+                     ClosedTradableConverter closedTradableConverter,
+                     TokenRegistry tokenRegistry,
+                     WalletsManager walletsManager,
+                     PriceFeedService priceFeedService,
+                     BisqEnvironment bisqEnvironment,
+                     @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) Boolean useDevPrivilegeKeys,
+                     @Named(Storage.STORAGE_DIR) File storageDir) {
+        this.accountAgeWitnessService = accountAgeWitnessService;
+        this.arbitratorManager = arbitratorManager;
+        this.btcWalletService = btcWalletService;
+        this.user = user;
+        this.tradeManager = tradeManager;
+        this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
+        this.openOfferManager = openOfferManager;
+        this.offerBookService = offerBookService;
+        this.p2PService = p2PService;
+        this.keyRing = keyRing;
+        this.feeService = feeService;
+        this.preferences = preferences;
+        this.bsqWalletService = bsqWalletService;
+        this.walletsSetup = walletsSetup;
+        this.altCoinAddressValidator = altCoinAddressValidator;
+        this.offerBuilder = offerBuilder;
+        this.closedTradableConverter = closedTradableConverter;
+        this.tokenRegistry = tokenRegistry;
+        this.walletsManager = walletsManager;
+        this.priceFeedService = priceFeedService;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+        this.storageDir = storageDir;
 
-        final BisqEnvironment bisqEnvironment = injector.getInstance(BisqEnvironment.class);
-        final String appDataDir = bisqEnvironment.getAppDataDir();
+        String appDataDir = bisqEnvironment.getAppDataDir();
         backupManager = new BackupManager(appDataDir);
         backupRestoreManager = new BackupRestoreManager(appDataDir);
+
+        marketList = calculateMarketList();
+        currencyList = calculateCurrencyList();
     }
 
     public static CurrencyList calculateCurrencyList() {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
         CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getCurrencyCode(), fiatCurrency.getName(), "fiat"));
-        Collections.sort(currencyList.currencies, (Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
+        currencyList.currencies.sort(Comparator.comparing(currency -> currency.name));
         return currencyList;
     }
 
@@ -238,7 +273,6 @@ public class BisqProxy {
             if (null == tradeCurrency) {
                 throw new ValidationException("There must be exactly one trade currency");
             }
-            final AltCoinAddressValidator altCoinAddressValidator = injector.getInstance(AltCoinAddressValidator.class);
             altCoinAddressValidator.setCurrencyCode(tradeCurrency.getCode());
             final InputValidator.ValidationResult validationResult = altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress());
             if (!validationResult.isValid) {
@@ -281,7 +315,7 @@ public class BisqProxy {
     }
 
     private List<PaymentAccount> getPaymentAccountList() {
-        return new ArrayList(user.getPaymentAccounts());
+        return new ArrayList<>(user.getPaymentAccounts());
     }
 
     private PaymentAccount getPaymentAccount(String paymentAccountId) {
@@ -329,7 +363,6 @@ public class BisqProxy {
         if (!fundUsingBisqWallet && null == offerId)
             return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
 
-        final OfferBuilder offerBuilder = injector.getInstance(OfferBuilder.class);
         final Offer offer;
         try {
             offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
@@ -475,7 +508,6 @@ public class BisqProxy {
     }
 
     public List<ClosedTradableDetails> getClosedTradableList() {
-        final ClosedTradableConverter closedTradableConverter = injector.getInstance(ClosedTradableConverter.class);
         return closedTradableManager.getClosedTradables().stream()
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
                 .map(closedTradableConverter::convert)
@@ -983,7 +1015,6 @@ public class BisqProxy {
     }
 
     public AuthResult authenticate(String password) {
-        final TokenRegistry tokenRegistry = injector.getInstance(TokenRegistry.class);
         final boolean isPasswordValid = btcWalletService.isWalletReady() && btcWalletService.isEncrypted() && isWalletPasswordValid(password);
         if (isPasswordValid) {
             return new AuthResult(tokenRegistry.generateToken());
@@ -997,7 +1028,6 @@ public class BisqProxy {
     }
 
     private boolean isWalletPasswordValid(KeyParameter aesKey) {
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
         return null != aesKey && walletsManager.checkAESKey(aesKey);
     }
 
@@ -1006,7 +1036,6 @@ public class BisqProxy {
     }
 
     private Tuple2<KeyParameter, KeyCrypterScrypt> getAESKeyAndScrypt(String password) {
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
         final KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
         return new Tuple2<>(keyCrypterScrypt.deriveKey(password), keyCrypterScrypt);
     }
@@ -1014,7 +1043,6 @@ public class BisqProxy {
     public AuthResult changePassword(String oldPassword, String newPassword) {
         if (!btcWalletService.isWalletReady())
             throw new WalletNotReadyException("Wallet not ready yet");
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
         if (btcWalletService.isEncrypted()) {
             final KeyParameter aesKey = null == oldPassword ? null : getAESKey(oldPassword);
             if (!isWalletPasswordValid(aesKey))
@@ -1024,7 +1052,6 @@ public class BisqProxy {
         if (null != newPassword && newPassword.length() > 0) {
             final Tuple2<KeyParameter, KeyCrypterScrypt> aesKeyAndScrypt = getAESKeyAndScrypt(newPassword);
             walletsManager.encryptWallets(aesKeyAndScrypt.second, aesKeyAndScrypt.first);
-            final TokenRegistry tokenRegistry = injector.getInstance(TokenRegistry.class);
             tokenRegistry.clear();
             return new AuthResult(tokenRegistry.generateToken());
         }
@@ -1032,7 +1059,6 @@ public class BisqProxy {
     }
 
     public PriceFeed getPriceFeed(String[] codes) {
-        final PriceFeedService priceFeedService = injector.getInstance(PriceFeedService.class);
         final List<FiatCurrency> fiatCurrencies = preferences.getFiatCurrencies();
         final List<CryptoCurrency> cryptoCurrencies = preferences.getCryptoCurrencies();
         final Stream<String> codesStream;
@@ -1089,7 +1115,6 @@ public class BisqProxy {
 
     public SeedWords getSeedWords(String password) {
         final DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
         final LocalDate walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
 
         DeterministicSeed seed = keyChainSeed;
@@ -1112,8 +1137,7 @@ public class BisqProxy {
         final long date = walletCreationDate != null ? LocalDate.parse(walletCreationDate).atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
         final DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", date);
 //        TODO this logic comes from GUIUtils
-        final File storageDir = injector.getInstance(Key.get(File.class, Names.named(Storage.STORAGE_DIR)));
-        final WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+
         try {
             FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
         } catch (Throwable t) {
