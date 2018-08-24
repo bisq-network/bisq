@@ -4,19 +4,19 @@ import javax.inject.Inject;
 
 
 
-import bisq.httpapi.service.v1.ArbitratorResource;
-import bisq.httpapi.service.v1.BackupResource;
-import bisq.httpapi.service.v1.ClosedTradableResource;
-import bisq.httpapi.service.v1.CurrencyResource;
-import bisq.httpapi.service.v1.MarketResource;
-import bisq.httpapi.service.v1.NetworkResource;
-import bisq.httpapi.service.v1.OfferResource;
-import bisq.httpapi.service.v1.PaymentAccountResource;
-import bisq.httpapi.service.v1.PreferencesResource;
-import bisq.httpapi.service.v1.TradeResource;
-import bisq.httpapi.service.v1.UserResource;
-import bisq.httpapi.service.v1.VersionResource;
-import bisq.httpapi.service.v1.WalletResource;
+import bisq.httpapi.service.resources.ArbitratorResource;
+import bisq.httpapi.service.resources.BackupResource;
+import bisq.httpapi.service.resources.ClosedTradableResource;
+import bisq.httpapi.service.resources.CurrencyResource;
+import bisq.httpapi.service.resources.MarketResource;
+import bisq.httpapi.service.resources.NetworkResource;
+import bisq.httpapi.service.resources.OfferResource;
+import bisq.httpapi.service.resources.PaymentAccountResource;
+import bisq.httpapi.service.resources.PreferencesResource;
+import bisq.httpapi.service.resources.TradeResource;
+import bisq.httpapi.service.resources.UserResource;
+import bisq.httpapi.service.resources.VersionResource;
+import bisq.httpapi.service.resources.WalletResource;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.Authorization;

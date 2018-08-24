@@ -1,4 +1,4 @@
-package bisq.httpapi.service.v1;
+package bisq.httpapi.service.resources;
 
 import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.InsufficientFundsException;
