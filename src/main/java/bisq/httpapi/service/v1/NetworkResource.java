@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.P2PNetworkStatus;
@@ -18,6 +22,7 @@ public class NetworkResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public NetworkResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

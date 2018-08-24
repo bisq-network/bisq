@@ -1,5 +1,7 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -20,6 +22,7 @@ public class ClosedTradableResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public ClosedTradableResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

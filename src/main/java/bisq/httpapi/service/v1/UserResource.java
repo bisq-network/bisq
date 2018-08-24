@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.AuthForm;
 import bisq.httpapi.model.AuthResult;
@@ -19,6 +23,7 @@ public class UserResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public UserResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

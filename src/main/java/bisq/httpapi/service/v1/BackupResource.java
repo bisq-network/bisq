@@ -1,5 +1,7 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
 import java.nio.file.FileAlreadyExistsException;
 
 import java.io.FileNotFoundException;
@@ -36,6 +38,7 @@ public class BackupResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public BackupResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

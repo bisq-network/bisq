@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.PaymentAccountList;
 import bisq.httpapi.model.payment.PaymentAccount;
@@ -22,6 +26,7 @@ public class PaymentAccountResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public PaymentAccountResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

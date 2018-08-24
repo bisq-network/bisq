@@ -4,6 +4,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 
+import javax.inject.Inject;
+
 import com.google.common.collect.ImmutableList;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,8 +17,8 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.BisqProxy;
+import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.InsufficientMoneyException;
 import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
@@ -55,8 +57,8 @@ public class OfferResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public OfferResource(BisqProxy bisqProxy) {
-
         this.bisqProxy = bisqProxy;
     }
 

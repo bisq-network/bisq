@@ -1,5 +1,7 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
 import com.google.common.collect.ImmutableList;
 
 import java.util.concurrent.CompletableFuture;
@@ -38,6 +40,7 @@ public class TradeResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public TradeResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

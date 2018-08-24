@@ -1,5 +1,7 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,7 @@ public class ArbitratorResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public ArbitratorResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

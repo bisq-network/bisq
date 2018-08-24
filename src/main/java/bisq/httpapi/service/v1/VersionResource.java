@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.VersionDetails;
 import io.swagger.annotations.Api;
@@ -16,6 +20,7 @@ public class VersionResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public VersionResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

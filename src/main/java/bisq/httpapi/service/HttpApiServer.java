@@ -18,6 +18,7 @@ import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.ExceptionMappers;
 import bisq.httpapi.service.auth.AuthFilter;
 import bisq.httpapi.service.auth.TokenRegistry;
+import bisq.httpapi.util.CurrencyListHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -32,10 +33,10 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-public class HttpApiServer extends Application<ApiConfiguration> {
+public class HttpApiServer extends Application<HttpApiConfiguration> {
     private final BtcWalletService walletService;
     private final BisqProxy bisqProxy;
-    private final ApiV1 apiV1;
+    private final HttpApiInterfaceV1 httpApiInterfaceV1;
     private final TokenRegistry tokenRegistry;
     private final BisqEnvironment bisqEnvironment;
     private final Runnable shutdownHandler;
@@ -43,11 +44,11 @@ public class HttpApiServer extends Application<ApiConfiguration> {
     private Runnable hostShutdownHandler;
 
     @Inject
-    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy, ApiV1 apiV1,
+    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy, HttpApiInterfaceV1 httpApiInterfaceV1,
                          TokenRegistry tokenRegistry, BisqEnvironment bisqEnvironment) {
         this.walletService = walletService;
         this.bisqProxy = bisqProxy;
-        this.apiV1 = apiV1;
+        this.httpApiInterfaceV1 = httpApiInterfaceV1;
         this.tokenRegistry = tokenRegistry;
         this.bisqEnvironment = bisqEnvironment;
         shutdownHandler = () -> {
@@ -73,11 +74,11 @@ public class HttpApiServer extends Application<ApiConfiguration> {
     }
 
     @Override
-    public void initialize(Bootstrap<ApiConfiguration> bootstrap) {
+    public void initialize(Bootstrap<HttpApiConfiguration> bootstrap) {
         bootstrap.setConfigurationSourceProvider(new ResourceConfigurationSourceProvider());
-        bootstrap.addBundle(new SwaggerBundle<ApiConfiguration>() {
+        bootstrap.addBundle(new SwaggerBundle<HttpApiConfiguration>() {
             @Override
-            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(ApiConfiguration configuration) {
+            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(HttpApiConfiguration configuration) {
                 return configuration.swaggerBundleConfiguration;
             }
         });
@@ -91,13 +92,13 @@ public class HttpApiServer extends Application<ApiConfiguration> {
     }
 
     @Override
-    public void run(ApiConfiguration configuration, Environment environment) {
+    public void run(HttpApiConfiguration configuration, Environment environment) {
         setupCrossOriginFilter(environment);
         setupAuth(environment);
         environment.jersey().register(MultiPartFeature.class);
         setupHostAndPort(configuration);
         JerseyEnvironment jerseyEnvironment = environment.jersey();
-        jerseyEnvironment.register(apiV1);
+        jerseyEnvironment.register(httpApiInterfaceV1);
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
     }
@@ -120,7 +121,7 @@ public class HttpApiServer extends Application<ApiConfiguration> {
         auth.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
     }
 
-    private void setupHostAndPort(ApiConfiguration configuration) {
+    private void setupHostAndPort(HttpApiConfiguration configuration) {
         SimpleServerFactory serverFactory = (SimpleServerFactory) configuration.getServerFactory();
         HttpConnectorFactory connector = (HttpConnectorFactory) serverFactory.getConnector();
         connector.setPort(Integer.valueOf(bisqEnvironment.getHttpApiPort()));

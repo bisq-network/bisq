@@ -5,6 +5,8 @@ import bisq.core.btc.InsufficientFundsException;
 
 import org.bitcoinj.core.Coin;
 
+import javax.inject.Inject;
+
 import com.google.common.collect.ImmutableList;
 
 import java.util.HashSet;
@@ -49,6 +51,7 @@ public class WalletResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public WalletResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

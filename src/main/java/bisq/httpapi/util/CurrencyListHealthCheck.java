@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.httpapi.service;
+package bisq.httpapi.util;
 
 import bisq.httpapi.BisqProxy;
 import com.codahale.metrics.health.HealthCheck;
@@ -28,13 +28,12 @@ public class CurrencyListHealthCheck extends HealthCheck {
     }
 
     /**
-     * Check that the proky returns a valid currencylist
+     * Check that the proxy returns a valid currencyList
      *
      * @return
-     * @throws Exception
      */
     @Override
-    protected Result check() throws Exception {
+    protected Result check() {
         if (bisqProxy.getCurrencyList().currencies.size() > 0)
             return Result.healthy();
         return Result.unhealthy("Size of currency list is 0");

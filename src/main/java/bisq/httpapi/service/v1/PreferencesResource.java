@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.Preferences;
 import bisq.httpapi.model.PreferencesAvailableValues;
@@ -19,6 +23,7 @@ public class PreferencesResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public PreferencesResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

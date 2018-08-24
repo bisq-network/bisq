@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.CurrencyList;
 import bisq.httpapi.model.PriceFeed;
@@ -18,6 +22,7 @@ public class CurrencyResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public CurrencyResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }

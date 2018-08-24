@@ -1,5 +1,9 @@
 package bisq.httpapi.service.v1;
 
+import javax.inject.Inject;
+
+
+
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.MarketList;
 import io.swagger.annotations.Api;
@@ -15,6 +19,7 @@ public class MarketResource {
 
     private final BisqProxy bisqProxy;
 
+    @Inject
     public MarketResource(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
