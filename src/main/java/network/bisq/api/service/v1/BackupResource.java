@@ -1,23 +1,32 @@
 package network.bisq.api.service.v1;
 
-import network.bisq.api.BisqProxy;
-import network.bisq.api.model.BackupList;
-import network.bisq.api.model.CreatedBackup;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
-import network.bisq.api.service.ResourceHelper;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import java.nio.file.FileAlreadyExistsException;
 
-import javax.validation.ValidationException;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileAlreadyExistsException;
+
+
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
+import javax.validation.ValidationException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import network.bisq.api.BisqProxy;
+import network.bisq.api.model.BackupList;
+import network.bisq.api.model.CreatedBackup;
+import network.bisq.api.util.ResourceHelper;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 
 @Api(value = "backups", authorizations = @Authorization(value = "accessToken"))

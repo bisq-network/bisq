@@ -1,27 +1,35 @@
 package network.bisq.api.service.v1;
 
 import com.google.common.collect.ImmutableList;
-import network.bisq.api.BisqProxy;
-import network.bisq.api.NotFoundException;
-import network.bisq.api.model.TradeDetails;
-import network.bisq.api.model.TradeList;
+
+import java.util.concurrent.CompletableFuture;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static java.util.stream.Collectors.toList;
+import static network.bisq.api.util.ResourceHelper.toValidationErrorResponse;
+
+
+
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import javax.validation.ValidationException;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.CompletableFuture;
-
-import static network.bisq.api.service.ResourceHelper.toValidationErrorResponse;
-import static java.util.stream.Collectors.toList;
+import network.bisq.api.BisqProxy;
+import network.bisq.api.NotFoundException;
+import network.bisq.api.model.TradeDetails;
+import network.bisq.api.model.TradeList;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Slf4j
 @Api(value = "trades", authorizations = @Authorization(value = "accessToken"))

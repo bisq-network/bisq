@@ -1,10 +1,16 @@
-package network.bisq.api.service;
+package network.bisq.api.service.auth;
 
 import bisq.core.btc.wallet.BtcWalletService;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 public class AuthFilter implements Filter {
@@ -28,7 +34,7 @@ public class AuthFilter implements Filter {
         final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         final String pathInfo = httpServletRequest.getPathInfo();
-        if(!pathInfo.startsWith("/api") || pathInfo.endsWith("/user/authenticate") || pathInfo.endsWith("/user/password")) {
+        if (!pathInfo.startsWith("/api") || pathInfo.endsWith("/user/authenticate") || pathInfo.endsWith("/user/password")) {
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }

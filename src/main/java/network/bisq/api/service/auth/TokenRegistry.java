@@ -1,4 +1,4 @@
-package network.bisq.api.service;
+package network.bisq.api.service.auth;
 
 import java.util.HashMap;
 import java.util.Iterator;

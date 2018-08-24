@@ -1,9 +1,11 @@
-package network.bisq.api.service;
+package network.bisq.api.util;
 
 
 import com.google.common.collect.ImmutableList;
-import io.dropwizard.jersey.validation.ValidationErrorMessage;
 
+
+
+import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import javax.ws.rs.core.Response;
 
 public final class ResourceHelper {

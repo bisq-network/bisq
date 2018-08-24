@@ -30,6 +30,8 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import network.bisq.api.BisqProxy;
 import network.bisq.api.health.CurrencyListHealthCheck;
+import network.bisq.api.service.auth.AuthFilter;
+import network.bisq.api.service.auth.TokenRegistry;
 import network.bisq.api.service.v1.ApiV1;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -88,12 +90,12 @@ public class HttpApiServer extends Application<ApiConfiguration> {
     @Override
     public void run(ApiConfiguration configuration, Environment environment) {
         BisqProxy bisqProxy = new BisqProxy(injector, shutdownHandler);
-        preferences.readPersisted();
+        //preferences.readPersisted();
         setupCrossOriginFilter(environment);
         setupAuth(environment);
         environment.jersey().register(MultiPartFeature.class);
         setupHostAndPort(configuration, injector.getInstance(BisqEnvironment.class));
-        final JerseyEnvironment jerseyEnvironment = environment.jersey();
+        JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(new ApiV1(bisqProxy));
         ExceptionMappers.register(jerseyEnvironment);
         environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));

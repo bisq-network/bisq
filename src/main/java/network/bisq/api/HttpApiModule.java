@@ -29,7 +29,7 @@ import com.google.inject.name.Names;
 
 
 import network.bisq.api.service.HttpApiServer;
-import network.bisq.api.service.TokenRegistry;
+import network.bisq.api.service.auth.TokenRegistry;
 
 public class HttpApiModule extends AppModule {
 

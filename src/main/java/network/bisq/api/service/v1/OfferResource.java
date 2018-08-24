@@ -3,29 +3,50 @@ package network.bisq.api.service.v1;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
+
 import com.google.common.collect.ImmutableList;
+
+import java.util.concurrent.CompletableFuture;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static java.util.stream.Collectors.toList;
+import static network.bisq.api.util.ResourceHelper.toValidationErrorResponse;
+
+
+
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import io.swagger.util.Json;
-import lombok.extern.slf4j.Slf4j;
-import network.bisq.api.*;
-import network.bisq.api.NotFoundException;
-import network.bisq.api.model.*;
-import org.hibernate.validator.constraints.NotEmpty;
-
 import javax.validation.Valid;
 import javax.validation.ValidationException;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.CompletableFuture;
-
-import static java.util.stream.Collectors.toList;
-import static network.bisq.api.service.ResourceHelper.toValidationErrorResponse;
+import network.bisq.api.AmountTooHighException;
+import network.bisq.api.BisqProxy;
+import network.bisq.api.IncompatiblePaymentAccountException;
+import network.bisq.api.InsufficientMoneyException;
+import network.bisq.api.NoAcceptedArbitratorException;
+import network.bisq.api.NotFoundException;
+import network.bisq.api.OfferTakerSameAsMakerException;
+import network.bisq.api.PaymentAccountNotFoundException;
+import network.bisq.api.model.OfferDetail;
+import network.bisq.api.model.OfferList;
+import network.bisq.api.model.OfferToCreate;
+import network.bisq.api.model.PriceType;
+import network.bisq.api.model.TakeOffer;
+import network.bisq.api.model.TradeDetails;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Api(value = "offers", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)

@@ -145,7 +145,7 @@ import network.bisq.api.model.WalletDetails;
 import network.bisq.api.model.WalletTransaction;
 import network.bisq.api.model.WalletTransactionList;
 import network.bisq.api.model.payment.PaymentAccountHelper;
-import network.bisq.api.service.TokenRegistry;
+import network.bisq.api.service.auth.TokenRegistry;
 
 /**
  * This class is a proxy for all bitsquare features the model will use.
@@ -182,6 +182,7 @@ public class BisqProxy {
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
 
+    //TODO use Guice
     public BisqProxy(Injector injector, Runnable shutdownHandler) {
         this.injector = injector;
         this.accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
