@@ -49,9 +49,9 @@ import bisq.httpapi.exceptions.NotBootstrappedException;
 import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
 import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
+import bisq.httpapi.model.InputDataForOffer;
 import bisq.httpapi.model.OfferDetail;
 import bisq.httpapi.model.OfferList;
-import bisq.httpapi.model.OfferToCreate;
 import bisq.httpapi.model.PriceType;
 import bisq.httpapi.model.TakeOffer;
 import bisq.httpapi.model.TradeDetails;
@@ -142,35 +142,21 @@ public class OfferResource {
     @DELETE
     @Path("/{id}")
     public void cancelOffer(@Suspended AsyncResponse asyncResponse, @PathParam("id") String id) {
-        final CompletableFuture<Void> completableFuture = cancelOffer(id);
+        CompletableFuture<Void> completableFuture = cancelOffer(id);
         completableFuture.thenApply(response -> asyncResponse.resume(Response.status(200).build()))
                 .exceptionally(throwable -> ResourceHelper.handleException(asyncResponse, throwable));
     }
 
     @ApiOperation(value = "Create offer", response = OfferDetail.class)
     @POST
-    public void createOffer(@Suspended final AsyncResponse asyncResponse, @Valid OfferToCreate offer) {
-        final OfferPayload.Direction direction = OfferPayload.Direction.valueOf(offer.direction);
-        final PriceType priceType = PriceType.valueOf(offer.priceType);
-        final Double marketPriceMargin = null == offer.percentageFromMarketPrice ? null : offer.percentageFromMarketPrice.doubleValue();
-        final CompletableFuture<Offer> completableFuture = offerMake(
-                offer.fundUsingBisqWallet,
-                offer.offerId,
-                offer.accountId,
-                direction,
-                offer.amount,
-                offer.minAmount,
-                PriceType.PERCENTAGE.equals(priceType),
-                marketPriceMargin,
-                offer.marketPair,
-                offer.fixedPrice, offer.buyerSecurityDeposit);
+    public void createOffer(@Suspended final AsyncResponse asyncResponse, @Valid InputDataForOffer input) {
+        CompletableFuture<Offer> completableFuture = createOffer(input);
         completableFuture.thenApply(response -> asyncResponse.resume(new OfferDetail(response)))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
                     final Response.ResponseBuilder responseBuilder;
                     if (cause instanceof ValidationException) {
-                        final int status = 422;
-                        responseBuilder = toValidationErrorResponse(cause, status);
+                        responseBuilder = toValidationErrorResponse(cause, 422);
                     } else if (cause instanceof IncompatiblePaymentAccountException) {
                         responseBuilder = toValidationErrorResponse(cause, 423);
                     } else if (cause instanceof NoAcceptedArbitratorException) {
@@ -182,11 +168,11 @@ public class OfferResource {
                     } else if (cause instanceof InsufficientMoneyException) {
                         responseBuilder = toValidationErrorResponse(cause, 427);
                     } else {
-                        final String message = cause.getMessage();
+                        String message = cause.getMessage();
                         responseBuilder = Response.status(500);
                         if (null != message)
                             responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
-                        log.error("Unable to create offer: " + Json.pretty(offer), cause);
+                        log.error("Unable to create offer: " + Json.pretty(input), cause);
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });
@@ -264,36 +250,59 @@ public class OfferResource {
     }
 
 
-    private CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
-                                               boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
+    private CompletableFuture<Offer> createOffer(InputDataForOffer input) {
+        OfferPayload.Direction direction = OfferPayload.Direction.valueOf(input.direction);
+        PriceType priceType = PriceType.valueOf(input.priceType);
+        Double marketPriceMargin = null == input.percentageFromMarketPrice ? null : input.percentageFromMarketPrice.doubleValue();
+        boolean fundUsingBisqWallet = input.fundUsingBisqWallet;
+        String offerId = input.offerId;
+        String accountId = input.accountId;
+        long amount = input.amount;
+        long minAmount = input.minAmount;
+        boolean useMarketBasedPrice = PriceType.PERCENTAGE.equals(priceType);
+        String marketPair = input.marketPair;
+        long fiatPrice = input.fixedPrice;
+        Long buyerSecurityDeposit = input.buyerSecurityDeposit;
+
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
+        //TODO @bernard what is meant by "Specify offerId of earlier prepared offer if you want to use dedicated wallet address."?
         if (!fundUsingBisqWallet && null == offerId)
-            return ResourceHelper.completeExceptionally(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
+            return ResourceHelper.completeExceptionally(futureResult,
+                    new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
 
-        final Offer offer;
+        Offer offer;
         try {
-            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
+            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice,
+                    marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
         } catch (Exception e) {
             return ResourceHelper.completeExceptionally(futureResult, e);
         }
-        Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
-        if (!OfferUtil.isBuyOffer(direction))
+
+        boolean isBuyOffer = OfferUtil.isBuyOffer(direction);
+        Coin reservedFundsForOffer = isBuyOffer ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
+        if (!isBuyOffer)
             reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount));
 
 //        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
 //        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
-        openOfferManager.placeOffer(offer, reservedFundsForOffer,
+
+        // @bernard: ValidateOffer returns plenty of diff. error messages. To handle all separately would be a big
+        // overkill. I think it should be ok to just display the errorMessage and not handle the diff. errors on your
+        // side.
+        // TODO check for tradeLimit is missing in ValidateOffer
+        openOfferManager.placeOffer(offer,
+                reservedFundsForOffer,
                 fundUsingBisqWallet,
                 transaction -> futureResult.complete(offer),
-                error -> {
-                    if (error.contains("Insufficient money"))
-                        futureResult.completeExceptionally(new InsufficientMoneyException(error));
-                    else if (error.contains("Amount is larger"))
-                        futureResult.completeExceptionally(new AmountTooHighException(error));
+                errorMessage -> {
+                    if (errorMessage.contains("Insufficient money"))
+                        futureResult.completeExceptionally(new InsufficientMoneyException(errorMessage));
+                    else if (errorMessage.contains("Amount is larger"))
+                        futureResult.completeExceptionally(new AmountTooHighException(errorMessage));
                     else
-                        futureResult.completeExceptionally(new RuntimeException(error));
+                        futureResult.completeExceptionally(new RuntimeException(errorMessage));
                 });
 
         return futureResult;

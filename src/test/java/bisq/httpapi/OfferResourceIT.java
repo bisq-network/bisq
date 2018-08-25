@@ -24,8 +24,8 @@ import static org.hamcrest.Matchers.*;
 
 
 
+import bisq.httpapi.model.InputDataForOffer;
 import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.OfferToCreate;
 import bisq.httpapi.model.PriceType;
 import bisq.httpapi.model.TakeOffer;
 import bisq.httpapi.model.WalletAddress;
@@ -92,18 +92,18 @@ public class OfferResourceIT {
     @InSequence(1)
     @Test
     public void createOffer_noArbitratorAccepted_returns424status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         createOffer_template(offer, 424);
     }
 
-    private void createOffer_template(OfferToCreate offer, int expectedStatusCode, String errorMessage) {
+    private void createOffer_template(InputDataForOffer offer, int expectedStatusCode, String errorMessage) {
         createOffer_template(offer, expectedStatusCode).
                 and().body("errors.size()", equalTo(1)).
                 and().body("errors[0]", equalTo(errorMessage))
         ;
     }
 
-    private ValidatableResponse createOffer_template(OfferToCreate offer, int expectedStatusCode) {
+    private ValidatableResponse createOffer_template(InputDataForOffer offer, int expectedStatusCode) {
         return given().
                 port(getAlicePort()).
                 body(offer).
@@ -126,7 +126,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_validPayloadButNoFunds_returns427status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         createOffer_template(offer, 427);
     }
 
@@ -134,21 +134,21 @@ public class OfferResourceIT {
     @Test
     public void createOffer_incompatiblePaymentAccount_returns423status() {
         String otherTradeCurrency = "EUR".equals(tradeCurrency) ? "PLN" : "EUR";
-        final OfferToCreate offer = getOfferToCreateFixedBuy(otherTradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(otherTradeCurrency, alicePaymentAccount.id);
         createOffer_template(offer, 423);
     }
 
     @InSequence(3)
     @Test
     public void createOffer_noPaymentAccount_returns425status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id + alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id + alicePaymentAccount.id);
         createOffer_template(offer, 425);
     }
 
     @InSequence(3)
     @Test
     public void createOffer_useMarketBasePriceButNoMarginProvided_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.priceType = PriceType.PERCENTAGE.name();
         offer.percentageFromMarketPrice = null;
         createOffer_template(offer, 422);
@@ -157,7 +157,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_notUseMarketBasePriceButNoFixedPrice_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.priceType = PriceType.FIXED.name();
         final JSONObject jsonOffer = toJsonObject(offer);
         jsonOffer.remove("fixedPrice");
@@ -177,7 +177,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_invalidDirection_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.direction = OfferPayload.Direction.BUY.name() + OfferPayload.Direction.SELL.name();
         createOffer_template(offer, 422, "direction must be one of: BUY, SELL");
     }
@@ -185,7 +185,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_missingDirection_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.direction = null;
         createOffer_template(offer, 422, "direction may not be null");
     }
@@ -193,7 +193,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_invalidPriceType_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.priceType = PriceType.FIXED.name() + PriceType.PERCENTAGE.name();
         createOffer_template(offer, 422, "priceType must be one of: FIXED, PERCENTAGE");
     }
@@ -201,7 +201,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_missingPriceType_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.priceType = null;
         createOffer_template(offer, 422, "priceType may not be null");
     }
@@ -209,7 +209,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_fixedPriceNegative_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.fixedPrice = -1;
         createOffer_template(offer, 422, "fixedPrice must be greater than or equal to 0");
     }
@@ -217,7 +217,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_fixedPriceZero_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.fixedPrice = 0;
         createOffer_template(offer, 422, "When choosing FIXED price, fill in fixedPrice with a price > 0");
     }
@@ -225,7 +225,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_amountZero_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.amount = 0;
         createOffer_template(offer, 422, "amount must be greater than or equal to 1");
     }
@@ -233,7 +233,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_minAmountZero_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.minAmount = 0;
         createOffer_template(offer, 422, "minAmount must be greater than or equal to 1");
     }
@@ -241,7 +241,7 @@ public class OfferResourceIT {
     @InSequence(3)
     @Test
     public void createOffer_buyerSecurityDepositZero_returns422status() {
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.buyerSecurityDeposit = 0L;
         createOffer_template(offer, 422, "buyerSecurityDeposit must be greater than or equal to 1");
     }
@@ -260,7 +260,7 @@ public class OfferResourceIT {
     public void createOffer_amountTooHigh_returns426() {
         final int alicePort = getAlicePort();
 
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.amount = 100000000;
 
         given().
@@ -280,7 +280,7 @@ public class OfferResourceIT {
     public void createOffer_validPayloadAndHasFunds_returnsOffer() {
         final int alicePort = getAlicePort();
 
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
 
         createdOffer = given().
                 port(alicePort).
@@ -389,7 +389,7 @@ public class OfferResourceIT {
     public void createOffer_validMarketPriceBasedOfferAndHasFunds_returnsOffer() throws Exception {
         final int alicePort = getAlicePort();
 
-        final OfferToCreate offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
+        final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.fixedPrice = 0;
         offer.percentageFromMarketPrice = new BigDecimal(.12);
         offer.priceType = PriceType.PERCENTAGE.name();
@@ -753,8 +753,8 @@ public class OfferResourceIT {
     }
 
     @NotNull
-    private OfferToCreate getOfferToCreateFixedBuy(String tradeCurrency, String paymentAccountId) {
-        final OfferToCreate offer = new OfferToCreate();
+    private InputDataForOffer getOfferToCreateFixedBuy(String tradeCurrency, String paymentAccountId) {
+        final InputDataForOffer offer = new InputDataForOffer();
         offer.fundUsingBisqWallet = true;
         offer.amount = 6250000;
         offer.minAmount = offer.amount;
@@ -768,7 +768,7 @@ public class OfferResourceIT {
     }
 
     @NotNull
-    private static JSONObject toJsonObject(OfferToCreate offer) {
+    private static JSONObject toJsonObject(InputDataForOffer offer) {
         final JSONObject jsonOffer = new JSONObject();
         putIfNotNull(jsonOffer, "fundUsingBisqWallet", offer.fundUsingBisqWallet);
         putIfNotNull(jsonOffer, "amount", offer.amount);

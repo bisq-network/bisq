@@ -89,7 +89,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -99,7 +98,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,9 +116,6 @@ import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;
 import bisq.httpapi.model.ClosedTradableDetails;
-import bisq.httpapi.model.CurrencyList;
-import bisq.httpapi.model.Market;
-import bisq.httpapi.model.MarketList;
 import bisq.httpapi.model.P2PNetworkConnection;
 import bisq.httpapi.model.P2PNetworkStatus;
 import bisq.httpapi.model.PaymentAccountList;
@@ -172,10 +167,7 @@ public class BisqProxy {
 
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
-    @Getter
-    private final MarketList marketList;
-    @Getter
-    private final CurrencyList currencyList;
+
     @Setter
     private Runnable shutdownHandler;
 
@@ -223,29 +215,6 @@ public class BisqProxy {
         String appDataDir = bisqEnvironment.getAppDataDir();
         backupManager = new BackupManager(appDataDir);
         backupRestoreManager = new BackupRestoreManager(appDataDir);
-
-        marketList = calculateMarketList();
-        currencyList = calculateCurrencyList();
-    }
-
-    public static CurrencyList calculateCurrencyList() {
-        CurrencyList currencyList = new CurrencyList();
-        CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
-        CurrencyUtil.getAllSortedFiatCurrencies().forEach(fiatCurrency -> currencyList.add(fiatCurrency.getCurrency().getCurrencyCode(), fiatCurrency.getName(), "fiat"));
-        currencyList.currencies.sort(Comparator.comparing(currency -> currency.name));
-        return currencyList;
-    }
-
-    public static MarketList calculateMarketList() {
-        MarketList marketList = new MarketList();
-        CurrencyList currencyList = calculateCurrencyList(); // we calculate this twice but only at startup
-        //currencyList.getCurrencies().stream().flatMap(currency -> marketList.getMarkets().forEach(currency1 -> cur))
-        List<Market> btc = CurrencyUtil.getAllSortedCryptoCurrencies().stream().filter(cryptoCurrency -> !(cryptoCurrency.getCode().equals("BTC"))).map(cryptoCurrency -> new Market(cryptoCurrency.getCode(), "BTC")).collect(toList());
-        marketList.markets.addAll(btc);
-        btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(toList());
-        marketList.markets.addAll(btc);
-        Collections.sort(currencyList.currencies, Comparator.comparing(p -> p.name));
-        return marketList;
     }
 
     public PaymentAccount addPaymentAccount(PaymentAccount paymentAccount) {

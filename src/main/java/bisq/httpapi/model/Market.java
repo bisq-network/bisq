@@ -11,9 +11,9 @@ public class Market {
     @JsonProperty
     String pair;
     @JsonProperty
-    String lsymbol;
+    String lsymbol; // baseCurrencyCode // TODO @bernard should we rename lsymbol?
     @JsonProperty
-    String rsymbol;
+    String rsymbol; // counterCurrencyCode // TODO @bernard should we rename rsymbol?
 
     public Market(String lsymbol, String rsymbol) {
         this.lsymbol = lsymbol.toUpperCase();

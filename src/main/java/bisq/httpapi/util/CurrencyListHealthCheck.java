@@ -18,6 +18,7 @@
 package bisq.httpapi.util;
 
 import bisq.httpapi.BisqProxy;
+import bisq.httpapi.service.resources.MarketResource;
 import com.codahale.metrics.health.HealthCheck;
 
 public class CurrencyListHealthCheck extends HealthCheck {
@@ -34,7 +35,7 @@ public class CurrencyListHealthCheck extends HealthCheck {
      */
     @Override
     protected Result check() {
-        if (bisqProxy.getCurrencyList().currencies.size() > 0)
+        if (MarketResource.getCurrencyList().currencies.size() > 0)
             return Result.healthy();
         return Result.unhealthy("Size of currency list is 0");
     }

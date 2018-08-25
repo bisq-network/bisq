@@ -48,7 +48,6 @@ import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer
 
 
 
-import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
 import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
@@ -82,35 +81,40 @@ public class OfferBuilder {
         this.user = user;
     }
 
-    public Offer build(String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
-                       boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair,
-                       long fiatPrice, Long buyerSecurityDeposit) throws NoAcceptedArbitratorException,
-            PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
-        final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
+    public Offer build(String offerId,
+                       String accountId,
+                       OfferPayload.Direction direction,
+                       long amount,
+                       long minAmount,
+                       boolean useMarketBasedPrice,
+                       Double marketPriceMargin,
+                       String marketPair,
+                       long fiatPrice,
+                       Long buyerSecurityDeposit)
+            throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
+        List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
             throw new NoAcceptedArbitratorException("No arbitrator has been chosen");
         }
 
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
         if (marketPriceMargin == null && useMarketBasedPrice) {
-            throw new ValidationException("When choosing PERCENTAGE price, fill in percentageFromMarketPrice");
+            throw new ValidationException("When choosing PERCENTAGE price marketPriceMargin must be set");
         } else if (0 == fiatPrice && !useMarketBasedPrice) {
-            throw new ValidationException("When choosing FIXED price, fill in fixedPrice with a price > 0");
+            throw new ValidationException("When choosing FIXED price fiatPrice must be set with a price > 0");
         }
         if (null == marketPriceMargin)
             marketPriceMargin = 0d;
         // fix marketPair if it's lowercase
         marketPair = marketPair.toUpperCase();
 
-        checkMarketValidity(marketPair);
+        validateMarketPair(marketPair);
 
         Market market = new Market(marketPair);
-        // if right side is fiat, then left is base currency.
-        // else right side is base currency.
-        final String currencyCode = market.getRsymbol();
-        final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
-        String baseCurrencyCode = !isFiatCurrency ? currencyCode : market.getLsymbol();
-        String counterCurrencyCode = !isFiatCurrency ? market.getLsymbol() : currencyCode;
+        // BTC_USD for fiat or XMR_BTC for altcoins
+        // baseCurrencyCode is always BTC, counterCurrencyCode is fiat or altcoin
+        String baseCurrencyCode = market.getLsymbol();
+        String counterCurrencyCode = market.getRsymbol();
 
         Optional<PaymentAccount> optionalAccount = getPaymentAccounts().stream()
                 .filter(account1 -> account1.getId().equals(accountId)).findFirst();
@@ -146,7 +150,7 @@ public class OfferBuilder {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = null;
-        if (isFiatCurrency) {
+        if (CurrencyUtil.isFiatCurrency(baseCurrencyCode)) {
             extraDataMap = new HashMap<>();
             final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
             extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
@@ -264,15 +268,18 @@ public class OfferBuilder {
         marketPriceAvailable = null != priceFeedService.getMarketPrice(baseCurrencyCode);
     }
 
-    private void checkMarketValidity(String marketPair) {
+    private void validateMarketPair(String marketPair) {
         if (StringUtils.isEmpty(marketPair)) {
             throw new ValidationException("The marketPair cannot be empty");
         } else if (!marketPair.equals(marketPair.toUpperCase())) {
-            throw new ValidationException("The marketPair should be uppercase: " + marketPair);
+            throw new ValidationException("The marketPair must be uppercase: " + marketPair);
         } else {
-            final boolean existingPair = BisqProxy.calculateMarketList().markets.stream().filter(market -> market.getPair().equals(marketPair)).count() == 1;
+            boolean existingPair = MarketResource.getMarketList().markets.stream()
+                    .filter(market -> market.getPair().equals(marketPair))
+                    .count() == 1;
             if (!existingPair) {
-                throw new ValidationException("There is no valid market pair called: " + marketPair + ". Note that market pairs are uppercase and are separated by an underscore: XMR_BTC");
+                throw new ValidationException("There is no valid market pair called: " + marketPair +
+                        ". Note that market pairs are uppercase and are separated by an underscore: e.g. XMR_BTC");
             }
         }
     }
