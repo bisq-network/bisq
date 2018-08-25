@@ -1,6 +1,7 @@
 package bisq.httpapi.service.resources;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 
@@ -56,17 +57,19 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class OfferResource {
 
     private final BisqProxy bisqProxy;
+    private final OfferBookService offerBookService;
 
     @Inject
-    public OfferResource(BisqProxy bisqProxy) {
+    public OfferResource(BisqProxy bisqProxy, OfferBookService offerBookService) {
         this.bisqProxy = bisqProxy;
+        this.offerBookService = offerBookService;
     }
 
     @ApiOperation("Find offers")
     @GET
     public OfferList find() {
         final OfferList offerList = new OfferList();
-        offerList.offers = bisqProxy.getOfferList().stream().map(OfferDetail::new).collect(toList());
+        offerList.offers = offerBookService.getOffers().stream().map(OfferDetail::new).collect(toList());
         offerList.total = offerList.offers.size();
         return offerList;
     }

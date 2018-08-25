@@ -366,10 +366,6 @@ public class BisqProxy {
         return offerOptional.get();
     }
 
-    public List<Offer> getOfferList() {
-        return offerBookService.getOffers();
-    }
-
     public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
                                               boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
