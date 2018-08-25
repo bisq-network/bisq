@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -44,6 +45,7 @@ import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.InsufficientMoneyException;
 import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
+import bisq.httpapi.exceptions.NotBootstrappedException;
 import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
 import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
@@ -53,6 +55,7 @@ import bisq.httpapi.model.OfferToCreate;
 import bisq.httpapi.model.PriceType;
 import bisq.httpapi.model.TakeOffer;
 import bisq.httpapi.model.TradeDetails;
+import bisq.httpapi.util.ResourceHelper;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,7 +63,6 @@ import io.swagger.annotations.Authorization;
 import io.swagger.util.Json;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -88,6 +90,11 @@ public class OfferResource {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     public OfferResource(OfferBookService offerBookService,
                          TradeManager tradeManager,
@@ -111,43 +118,33 @@ public class OfferResource {
         this.bsqWalletService = bsqWalletService;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // HTTP API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @ApiOperation("Find offers")
     @GET
     public OfferList find() {
-        final OfferList offerList = new OfferList();
-        offerList.offers = offerBookService.getOffers().stream().map(OfferDetail::new).collect(toList());
-        offerList.total = offerList.offers.size();
-        return offerList;
+        List<OfferDetail> offers = getAllOffers();
+        return new OfferList(offers);
     }
 
     @ApiOperation("Get offer details")
     @GET
     @Path("/{id}")
     public OfferDetail getOfferById(@NotEmpty @PathParam("id") String id) {
-        return new OfferDetail(getOffer(id));
+        Offer offer = findOffer(id);
+        return new OfferDetail(offer);
     }
 
     @ApiOperation("Cancel offer")
     @DELETE
     @Path("/{id}")
-    public void cancelOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
-        final CompletableFuture<Void> completableFuture = offerCancel(id);
+    public void cancelOffer(@Suspended AsyncResponse asyncResponse, @PathParam("id") String id) {
+        final CompletableFuture<Void> completableFuture = cancelOffer(id);
         completableFuture.thenApply(response -> asyncResponse.resume(Response.status(200).build()))
-                .exceptionally(e -> {
-                    final Throwable cause = e.getCause();
-                    final Response.ResponseBuilder responseBuilder;
-                    final String message = cause.getMessage();
-                    if (cause instanceof NotFoundException) {
-                        responseBuilder = toValidationErrorResponse(cause, 404);
-                    } else {
-                        responseBuilder = Response.status(500);
-                        if (null != message)
-                            responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
-                        log.error("Unable to remove offer: " + id, cause);
-                    }
-                    return asyncResponse.resume(responseBuilder.build());
-                });
-
+                .exceptionally(throwable -> ResourceHelper.handleException(asyncResponse, throwable));
     }
 
     @ApiOperation(value = "Create offer", response = OfferDetail.class)
@@ -233,23 +230,53 @@ public class OfferResource {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Domain
+    // Domain access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private List<OfferDetail> getAllOffers() {
+        return offerBookService.getOffers().stream().map(OfferDetail::new).collect(toList());
+    }
 
-    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
-                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
+    private Offer findOffer(String offerId) {
+        final Optional<Offer> offerOptional = offerBookService.getOffers().stream()
+                .filter(offer -> offer.getId().equals(offerId))
+                .findAny();
+        if (!offerOptional.isPresent()) {
+            throw new NotFoundException("Offer not found: " + offerId);
+        }
+        return offerOptional.get();
+    }
+
+    private CompletableFuture<Void> cancelOffer(String offerId) {
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+
+        if (!isBootstrapped())
+            return ResourceHelper.completeExceptionally(futureResult, new NotBootstrappedException());
+
+        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
+        if (!openOfferById.isPresent())
+            return ResourceHelper.completeExceptionally(futureResult, new NotFoundException("Offer not found: " + offerId));
+
+        openOfferManager.removeOpenOffer(openOfferById.get(),
+                () -> futureResult.complete(null),
+                errorMessage -> futureResult.completeExceptionally(new RuntimeException(errorMessage)));
+        return futureResult;
+    }
+
+
+    private CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
+                                               boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
         // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
         final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
 
         if (!fundUsingBisqWallet && null == offerId)
-            return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
+            return ResourceHelper.completeExceptionally(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
 
         final Offer offer;
         try {
             offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
         } catch (Exception e) {
-            return failFuture(futureResult, e);
+            return ResourceHelper.completeExceptionally(futureResult, e);
         }
         Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
         if (!OfferUtil.isBuyOffer(direction))
@@ -272,41 +299,30 @@ public class OfferResource {
         return futureResult;
     }
 
-    public CompletableFuture<Void> offerCancel(String offerId) {
-        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
-        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
-        if (!openOfferById.isPresent()) {
-            return failFuture(futureResult, new NotFoundException("Offer not found: " + offerId));
-        }
-        openOfferManager.removeOpenOffer(openOfferById.get(),
-                () -> futureResult.complete(null),
-                error -> futureResult.completeExceptionally(new RuntimeException(error)));
-        return futureResult;
-    }
 
-    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
+    private CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
         final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
         final Offer offer;
         try {
-            offer = getOffer(offerId);
+            offer = findOffer(offerId);
         } catch (NotFoundException e) {
-            return failFuture(futureResult, e);
+            return ResourceHelper.completeExceptionally(futureResult, e);
         }
 
         if (offer.getMakerNodeAddress().equals(p2PService.getAddress())) {
-            return failFuture(futureResult, new OfferTakerSameAsMakerException("Taker's address same as maker's"));
+            return ResourceHelper.completeExceptionally(futureResult, new OfferTakerSameAsMakerException("Taker's address same as maker's"));
         }
 
         // check the paymentAccountId is valid
         final PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
         if (paymentAccount == null) {
-            return failFuture(futureResult, new PaymentAccountNotFoundException("Could not find payment account with id: " + paymentAccountId));
+            return ResourceHelper.completeExceptionally(futureResult, new PaymentAccountNotFoundException("Could not find payment account with id: " + paymentAccountId));
         }
 
         // check the paymentAccountId is compatible with the offer
         if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
             final String errorMessage = "PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode();
-            return failFuture(futureResult, new IncompatiblePaymentAccountException(errorMessage));
+            return ResourceHelper.completeExceptionally(futureResult, new IncompatiblePaymentAccountException(errorMessage));
         }
 
         // check the amount is within the range
@@ -316,7 +332,7 @@ public class OfferResource {
         // workaround because TradeTask does not have an error handler to notify us that something went wrong
         if (btcWalletService.getAvailableBalance().isLessThan(coinAmount)) {
             final String errorMessage = "Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + coinAmount;
-            return failFuture(futureResult, new InsufficientMoneyException(errorMessage));
+            return ResourceHelper.completeExceptionally(futureResult, new InsufficientMoneyException(errorMessage));
         }
 
         // check that the price is correct ??
@@ -356,20 +372,12 @@ public class OfferResource {
         return futureResult;
     }
 
-    public Offer getOffer(String offerId) {
-        final String safeOfferId = (null == offerId) ? "" : offerId;
-        final Optional<Offer> offerOptional = offerBookService.getOffers().stream().filter(offer1 -> safeOfferId.equals(offer1.getId())).findAny();
-        if (!offerOptional.isPresent()) {
-            throw new NotFoundException("Offer not found: " + offerId);
-        }
-        return offerOptional.get();
-    }
 
-    boolean isCurrencyForTakerFeeBtc(Coin amount) {
+    private boolean isCurrencyForTakerFeeBtc(Coin amount) {
         return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
     }
 
-    boolean isBsqForFeeAvailable(Coin amount) {
+    private boolean isBsqForFeeAvailable(Coin amount) {
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
                 getTakerFee(amount, false) != null &&
                 bsqWalletService.getAvailableBalance() != null &&
@@ -379,7 +387,7 @@ public class OfferResource {
 
 
     @Nullable
-    Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
+    private Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
         if (amount != null) {
             // TODO write unit test for that
             Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
@@ -390,7 +398,7 @@ public class OfferResource {
     }
 
     @Nullable
-    public Coin getTakerFee(Coin amount) {
+    private Coin getTakerFee(Coin amount) {
         return getTakerFee(amount, isCurrencyForTakerFeeBtc(amount));
     }
 
@@ -398,9 +406,7 @@ public class OfferResource {
         return user.getPaymentAccount(paymentAccountId);
     }
 
-    @NotNull
-    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Throwable throwable) {
-        futureResult.completeExceptionally(throwable);
-        return futureResult;
+    private boolean isBootstrapped() {
+        return p2PService.isBootstrapped();
     }
 }
