@@ -6,6 +6,7 @@ import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.AddressEntryException;
+import bisq.core.btc.BalanceUtil;
 import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.InsufficientFundsException;
 import bisq.core.btc.Restrictions;
@@ -64,7 +65,6 @@ import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Peer;
@@ -189,6 +189,7 @@ public class BisqProxy {
     private final TokenRegistry tokenRegistry;
     private final WalletsManager walletsManager;
     private final PriceFeedService priceFeedService;
+    private final BalanceUtil balanceUtil;
     private final boolean useDevPrivilegeKeys;
     private final File storageDir;
 
@@ -223,6 +224,7 @@ public class BisqProxy {
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
                      PriceFeedService priceFeedService,
+                     BalanceUtil balanceUtil,
                      BisqEnvironment bisqEnvironment,
                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) Boolean useDevPrivilegeKeys,
                      @Named(Storage.STORAGE_DIR) File storageDir) {
@@ -247,6 +249,7 @@ public class BisqProxy {
         this.tokenRegistry = tokenRegistry;
         this.walletsManager = walletsManager;
         this.priceFeedService = priceFeedService;
+        this.balanceUtil = balanceUtil;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         this.storageDir = storageDir;
 
@@ -535,44 +538,6 @@ public class BisqProxy {
         return tradeOptional.get();
     }
 
-    // TODO copied from MainViewModel - refactor !
-    // TODO @bernard BalancePresentation provides that functionality
-    private Coin updateLockedBalance() {
-        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
-        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
-        Coin sum = Coin.valueOf(lockedTrades
-                .mapToLong(trade -> {
-                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                    if (addressEntryOptional.isPresent())
-                        return addressEntryOptional.get().getCoinLockedInMultiSig().getValue();
-                    else
-                        return 0;
-                })
-                .sum());
-        return sum;
-    }
-
-    // TODO copied from MainViewModel - refactor !
-    // TODO @bernard BalancePresentation provides that functionality
-    private Coin updateReservedBalance() {
-        Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
-                .map(openOffer -> {
-                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-                    if (addressEntryOptional.isPresent()) {
-                        Address address = addressEntryOptional.get().getAddress();
-                        return btcWalletService.getBalanceForAddress(address);
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(e -> e != null)
-                .mapToLong(Coin::getValue)
-                .sum());
-
-        return sum;
-    }
-
-
     public WalletTransactionList getWalletTransactions() {
         final Wallet wallet = walletsSetup.getBtcWallet();
         WalletTransactionList walletTransactions = new WalletTransactionList();
@@ -645,11 +610,11 @@ public class BisqProxy {
     public WalletAddressList getWalletAddresses(WalletAddressPurpose purpose) {
         final Stream<AddressEntry> addressEntryStream;
         if (WalletAddressPurpose.SEND_FUNDS.equals(purpose)) {
-            addressEntryStream = tradeManager.getAddressEntriesForAvailableBalanceStream();
+            addressEntryStream = balanceUtil.getAddressEntriesForAvailableFunds();
         } else if (WalletAddressPurpose.RESERVED_FUNDS.equals(purpose)) {
-            addressEntryStream = getReservedFundsAddressEntryStream();
+            addressEntryStream = balanceUtil.getAddressEntriesForReservedFunds();
         } else if (WalletAddressPurpose.LOCKED_FUNDS.equals(purpose)) {
-            addressEntryStream = getLockedFundsAddressEntryStream();
+            addressEntryStream = balanceUtil.getAddressEntriesForLockedFunds();
         } else if (WalletAddressPurpose.RECEIVE_FUNDS.equals(purpose)) {
             addressEntryStream = btcWalletService.getAvailableAddressEntries().stream();
         } else {
@@ -746,24 +711,6 @@ public class BisqProxy {
         } else {
             throw new AmountTooLowException(Res.get("portfolio.pending.step5_buyer.amountTooLow"));
         }
-    }
-
-    private Stream<AddressEntry> getLockedFundsAddressEntryStream() {
-        return tradeManager.getLockedTradesStream()
-                .map(trade -> {
-                    final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                    return addressEntryOptional.isPresent() ? addressEntryOptional.get() : null;
-                })
-                .filter(e -> e != null);
-    }
-
-    private Stream<AddressEntry> getReservedFundsAddressEntryStream() {
-        return openOfferManager.getObservableList().stream()
-                .map(openOffer -> {
-                    Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-                    return addressEntryOptional.isPresent() ? addressEntryOptional.get() : null;
-                })
-                .filter(e -> e != null);
     }
 
     public CompletableFuture<Void> paymentStarted(String tradeId) {

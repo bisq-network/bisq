@@ -1,7 +1,7 @@
 package bisq.httpapi.service.resources;
 
 import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.BalanceModel;
+import bisq.core.btc.Balances;
 import bisq.core.btc.InsufficientFundsException;
 
 import org.bitcoinj.core.Coin;
@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.model.AuthForm;
-import bisq.httpapi.model.Balances;
 import bisq.httpapi.model.SeedWords;
 import bisq.httpapi.model.SeedWordsRestore;
 import bisq.httpapi.model.WalletAddress;
@@ -53,20 +52,20 @@ import javax.ws.rs.core.Response;
 public class WalletResource {
 
     private final BisqProxy bisqProxy;
-    private final BalanceModel balanceModel;
+    private final Balances balances;
 
     @Inject
-    public WalletResource(BisqProxy bisqProxy, BalanceModel balanceModel) {
+    public WalletResource(BisqProxy bisqProxy, Balances balances) {
         this.bisqProxy = bisqProxy;
-        this.balanceModel = balanceModel;
+        this.balances = balances;
     }
 
     @ApiOperation(value = "Get wallet details")
     @GET
-    public Balances getWalletDetails() {
-        return new Balances(balanceModel.getAvailableBalance().get().value,
-                balanceModel.getReservedBalance().get().value,
-                balanceModel.getLockedBalance().get().value);
+    public bisq.httpapi.model.Balances getWalletDetails() {
+        return new bisq.httpapi.model.Balances(balances.getAvailableBalance().get().value,
+                balances.getReservedBalance().get().value,
+                balances.getLockedBalance().get().value);
     }
 
     @ApiOperation("Get wallet addresses")
@@ -78,7 +77,7 @@ public class WalletResource {
 
     @ApiOperation("Get or create wallet address")
     @POST
-    @Path("/addresses")
+    @Path("/addresses") //TODO should path be "addresses" ?
     public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
         return bisqProxy.getOrCreateAvailableUnusedWalletAddresses();
     }
