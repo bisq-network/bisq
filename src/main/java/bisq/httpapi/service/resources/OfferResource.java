@@ -1,24 +1,45 @@
 package bisq.httpapi.service.resources;
 
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+import bisq.core.util.CoinUtil;
+
+import bisq.network.p2p.P2PService;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.httpapi.util.ResourceHelper.toValidationErrorResponse;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.InsufficientMoneyException;
@@ -39,6 +60,7 @@ import io.swagger.annotations.Authorization;
 import io.swagger.util.Json;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -55,14 +77,38 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 public class OfferResource {
-
-    private final BisqProxy bisqProxy;
     private final OfferBookService offerBookService;
+    private final TradeManager tradeManager;
+    private final OpenOfferManager openOfferManager;
+    private final OfferBuilder offerBuilder;
+    private final P2PService p2PService;
+    private final Preferences preferences;
+    private final FeeService feeService;
+    private final User user;
+    private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
 
     @Inject
-    public OfferResource(BisqProxy bisqProxy, OfferBookService offerBookService) {
-        this.bisqProxy = bisqProxy;
+    public OfferResource(OfferBookService offerBookService,
+                         TradeManager tradeManager,
+                         OpenOfferManager openOfferManager,
+                         OfferBuilder offerBuilder,
+                         P2PService p2PService,
+                         Preferences preferences,
+                         FeeService feeService,
+                         User user,
+                         BtcWalletService btcWalletService,
+                         BsqWalletService bsqWalletService) {
         this.offerBookService = offerBookService;
+        this.tradeManager = tradeManager;
+        this.openOfferManager = openOfferManager;
+        this.offerBuilder = offerBuilder;
+        this.p2PService = p2PService;
+        this.preferences = preferences;
+        this.feeService = feeService;
+        this.user = user;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
     }
 
     @ApiOperation("Find offers")
@@ -78,14 +124,14 @@ public class OfferResource {
     @GET
     @Path("/{id}")
     public OfferDetail getOfferById(@NotEmpty @PathParam("id") String id) {
-        return new OfferDetail(bisqProxy.getOffer(id));
+        return new OfferDetail(getOffer(id));
     }
 
     @ApiOperation("Cancel offer")
     @DELETE
     @Path("/{id}")
     public void cancelOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
-        final CompletableFuture<Void> completableFuture = bisqProxy.offerCancel(id);
+        final CompletableFuture<Void> completableFuture = offerCancel(id);
         completableFuture.thenApply(response -> asyncResponse.resume(Response.status(200).build()))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
@@ -110,7 +156,7 @@ public class OfferResource {
         final OfferPayload.Direction direction = OfferPayload.Direction.valueOf(offer.direction);
         final PriceType priceType = PriceType.valueOf(offer.priceType);
         final Double marketPriceMargin = null == offer.percentageFromMarketPrice ? null : offer.percentageFromMarketPrice.doubleValue();
-        final CompletableFuture<Offer> completableFuture = bisqProxy.offerMake(
+        final CompletableFuture<Offer> completableFuture = offerMake(
                 offer.fundUsingBisqWallet,
                 offer.offerId,
                 offer.accountId,
@@ -154,7 +200,7 @@ public class OfferResource {
     @Path("/{id}/take")
     public void takeOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id, @Valid TakeOffer data) {
 //        TODO how do we go about not blocking this REST thread?
-        final CompletableFuture<Trade> completableFuture = bisqProxy.offerTake(id, data.paymentAccountId, data.amount, true);
+        final CompletableFuture<Trade> completableFuture = offerTake(id, data.paymentAccountId, data.amount, true);
         completableFuture.thenApply(trade -> asyncResponse.resume(new TradeDetails(trade)))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
@@ -183,5 +229,178 @@ public class OfferResource {
                     }
                     return asyncResponse.resume(responseBuilder.build());
                 });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Domain
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
+                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
+        // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
+        final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
+
+        if (!fundUsingBisqWallet && null == offerId)
+            return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
+
+        final Offer offer;
+        try {
+            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
+        } catch (Exception e) {
+            return failFuture(futureResult, e);
+        }
+        Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
+        if (!OfferUtil.isBuyOffer(direction))
+            reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount));
+
+//        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
+//        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
+        openOfferManager.placeOffer(offer, reservedFundsForOffer,
+                fundUsingBisqWallet,
+                transaction -> futureResult.complete(offer),
+                error -> {
+                    if (error.contains("Insufficient money"))
+                        futureResult.completeExceptionally(new InsufficientMoneyException(error));
+                    else if (error.contains("Amount is larger"))
+                        futureResult.completeExceptionally(new AmountTooHighException(error));
+                    else
+                        futureResult.completeExceptionally(new RuntimeException(error));
+                });
+
+        return futureResult;
+    }
+
+    public CompletableFuture<Void> offerCancel(String offerId) {
+        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
+        if (!openOfferById.isPresent()) {
+            return failFuture(futureResult, new NotFoundException("Offer not found: " + offerId));
+        }
+        openOfferManager.removeOpenOffer(openOfferById.get(),
+                () -> futureResult.complete(null),
+                error -> futureResult.completeExceptionally(new RuntimeException(error)));
+        return futureResult;
+    }
+
+    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
+        final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
+        final Offer offer;
+        try {
+            offer = getOffer(offerId);
+        } catch (NotFoundException e) {
+            return failFuture(futureResult, e);
+        }
+
+        if (offer.getMakerNodeAddress().equals(p2PService.getAddress())) {
+            return failFuture(futureResult, new OfferTakerSameAsMakerException("Taker's address same as maker's"));
+        }
+
+        // check the paymentAccountId is valid
+        final PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
+        if (paymentAccount == null) {
+            return failFuture(futureResult, new PaymentAccountNotFoundException("Could not find payment account with id: " + paymentAccountId));
+        }
+
+        // check the paymentAccountId is compatible with the offer
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            final String errorMessage = "PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode();
+            return failFuture(futureResult, new IncompatiblePaymentAccountException(errorMessage));
+        }
+
+        // check the amount is within the range
+        Coin coinAmount = Coin.valueOf(amount);
+        //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
+
+        // workaround because TradeTask does not have an error handler to notify us that something went wrong
+        if (btcWalletService.getAvailableBalance().isLessThan(coinAmount)) {
+            final String errorMessage = "Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + coinAmount;
+            return failFuture(futureResult, new InsufficientMoneyException(errorMessage));
+        }
+
+        // check that the price is correct ??
+
+        // check taker fee
+
+        // check security deposit for BTC buyer
+        // check security deposit for BTC seller
+
+        Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
+                offer.getBuyerSecurityDeposit() :
+                offer.getSellerSecurityDeposit();
+        Coin txFeeFromFeeService = feeService.getTxFee(600);
+        Coin fundsNeededForTradeTemp = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
+        final Coin fundsNeededForTrade;
+        if (offer.isBuyOffer())
+            fundsNeededForTrade = fundsNeededForTradeTemp.add(coinAmount);
+        else
+            fundsNeededForTrade = fundsNeededForTradeTemp;
+
+        Coin takerFee = getTakerFee(coinAmount);
+        checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
+        checkNotNull(takerFee, "takerFee must not be null");
+
+        tradeManager.onTakeOffer(coinAmount,
+                txFeeFromFeeService,
+                takerFee,
+                isCurrencyForTakerFeeBtc(coinAmount),
+                offer.getPrice().getValue(),
+                fundsNeededForTrade,
+                offer,
+                paymentAccount.getId(),
+                useSavingsWallet,
+                futureResult::complete,
+                error -> futureResult.completeExceptionally(new RuntimeException(error))
+        );
+        return futureResult;
+    }
+
+    public Offer getOffer(String offerId) {
+        final String safeOfferId = (null == offerId) ? "" : offerId;
+        final Optional<Offer> offerOptional = offerBookService.getOffers().stream().filter(offer1 -> safeOfferId.equals(offer1.getId())).findAny();
+        if (!offerOptional.isPresent()) {
+            throw new NotFoundException("Offer not found: " + offerId);
+        }
+        return offerOptional.get();
+    }
+
+    boolean isCurrencyForTakerFeeBtc(Coin amount) {
+        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
+    }
+
+    boolean isBsqForFeeAvailable(Coin amount) {
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                getTakerFee(amount, false) != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                getTakerFee(amount, false) != null &&
+                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount, false)).isNegative();
+    }
+
+
+    @Nullable
+    Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
+        if (amount != null) {
+            // TODO write unit test for that
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    public Coin getTakerFee(Coin amount) {
+        return getTakerFee(amount, isCurrencyForTakerFeeBtc(amount));
+    }
+
+    private PaymentAccount getPaymentAccount(String paymentAccountId) {
+        return user.getPaymentAccount(paymentAccountId);
+    }
+
+    @NotNull
+    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Throwable throwable) {
+        futureResult.completeExceptionally(throwable);
+        return futureResult;
     }
 }

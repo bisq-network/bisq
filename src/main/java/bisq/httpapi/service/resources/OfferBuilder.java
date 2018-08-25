@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.httpapi.service.resources;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.Restrictions;
@@ -48,6 +48,7 @@ import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer
 
 
 
+import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
 import bisq.httpapi.exceptions.PaymentAccountNotFoundException;

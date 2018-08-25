@@ -9,7 +9,6 @@ import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.BalanceUtil;
 import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.InsufficientFundsException;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -22,17 +21,10 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferUtil;
-import bisq.core.offer.OpenOffer;
-import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.validation.AltCoinAddressValidator;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.BuyerAsMakerTrade;
@@ -40,7 +32,6 @@ import bisq.core.trade.SellerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.SellerAsMakerProtocol;
@@ -48,7 +39,6 @@ import bisq.core.trade.protocol.SellerAsTakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
@@ -115,21 +105,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-
-import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.exceptions.AmountTooHighException;
 import bisq.httpapi.exceptions.AmountTooLowException;
-import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
-import bisq.httpapi.exceptions.InsufficientMoneyException;
 import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
-import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
 import bisq.httpapi.model.AuthResult;
@@ -174,17 +156,12 @@ public class BisqProxy {
     private final User user;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
-    private final OpenOfferManager openOfferManager;
-    private final OfferBookService offerBookService;
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final FeeService feeService;
     private final bisq.core.user.Preferences preferences;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final AltCoinAddressValidator altCoinAddressValidator;
-    private final OfferBuilder offerBuilder;
     private final ClosedTradableConverter closedTradableConverter;
     private final TokenRegistry tokenRegistry;
     private final WalletsManager walletsManager;
@@ -209,17 +186,12 @@ public class BisqProxy {
                      User user,
                      TradeManager tradeManager,
                      ClosedTradableManager closedTradableManager,
-                     FailedTradesManager failedTradesManager,
-                     OpenOfferManager openOfferManager,
-                     OfferBookService offerBookService,
                      P2PService p2PService,
                      KeyRing keyRing,
-                     FeeService feeService,
                      bisq.core.user.Preferences preferences,
                      BsqWalletService bsqWalletService,
                      WalletsSetup walletsSetup,
                      AltCoinAddressValidator altCoinAddressValidator,
-                     OfferBuilder offerBuilder,
                      ClosedTradableConverter closedTradableConverter,
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
@@ -234,17 +206,12 @@ public class BisqProxy {
         this.user = user;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
-        this.openOfferManager = openOfferManager;
-        this.offerBookService = offerBookService;
         this.p2PService = p2PService;
         this.keyRing = keyRing;
-        this.feeService = feeService;
         this.preferences = preferences;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.altCoinAddressValidator = altCoinAddressValidator;
-        this.offerBuilder = offerBuilder;
         this.closedTradableConverter = closedTradableConverter;
         this.tokenRegistry = tokenRegistry;
         this.walletsManager = walletsManager;
@@ -333,10 +300,6 @@ public class BisqProxy {
         return new ArrayList<>(user.getPaymentAccounts());
     }
 
-    private PaymentAccount getPaymentAccount(String paymentAccountId) {
-        return user.getPaymentAccount(paymentAccountId);
-    }
-
     public PaymentAccountList getAccountList() {
         PaymentAccountList paymentAccountList = new PaymentAccountList();
         paymentAccountList.paymentAccounts = getPaymentAccountList().stream()
@@ -345,61 +308,6 @@ public class BisqProxy {
         return paymentAccountList;
     }
 
-    public CompletableFuture<Void> offerCancel(String offerId) {
-        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
-        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
-        if (!openOfferById.isPresent()) {
-            return failFuture(futureResult, new NotFoundException("Offer not found: " + offerId));
-        }
-        openOfferManager.removeOpenOffer(openOfferById.get(),
-                () -> futureResult.complete(null),
-                error -> futureResult.completeExceptionally(new RuntimeException(error)));
-        return futureResult;
-    }
-
-    public Offer getOffer(String offerId) {
-        final String safeOfferId = (null == offerId) ? "" : offerId;
-        final Optional<Offer> offerOptional = offerBookService.getOffers().stream().filter(offer1 -> safeOfferId.equals(offer1.getId())).findAny();
-        if (!offerOptional.isPresent()) {
-            throw new NotFoundException("Offer not found: " + offerId);
-        }
-        return offerOptional.get();
-    }
-
-    public CompletableFuture<Offer> offerMake(boolean fundUsingBisqWallet, String offerId, String accountId, OfferPayload.Direction direction, long amount, long minAmount,
-                                              boolean useMarketBasedPrice, Double marketPriceMargin, String marketPair, long fiatPrice, Long buyerSecurityDeposit) {
-        // exception from gui code is not clear enough, so this check is added. Missing money is another possible check but that's clear in the gui exception.
-        final CompletableFuture<Offer> futureResult = new CompletableFuture<>();
-
-        if (!fundUsingBisqWallet && null == offerId)
-            return failFuture(futureResult, new ValidationException("Specify offerId of earlier prepared offer if you want to use dedicated wallet address."));
-
-        final Offer offer;
-        try {
-            offer = offerBuilder.build(offerId, accountId, direction, amount, minAmount, useMarketBasedPrice, marketPriceMargin, marketPair, fiatPrice, buyerSecurityDeposit);
-        } catch (Exception e) {
-            return failFuture(futureResult, e);
-        }
-        Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? preferences.getBuyerSecurityDepositAsCoin() : Restrictions.getSellerSecurityDeposit();
-        if (!OfferUtil.isBuyOffer(direction))
-            reservedFundsForOffer = reservedFundsForOffer.add(Coin.valueOf(amount));
-
-//        TODO check if there is sufficient money cause openOfferManager will log exception and pass just message
-//        TODO openOfferManager should return CompletableFuture or at least send full exception to error handler
-        openOfferManager.placeOffer(offer, reservedFundsForOffer,
-                fundUsingBisqWallet,
-                transaction -> futureResult.complete(offer),
-                error -> {
-                    if (error.contains("Insufficient money"))
-                        futureResult.completeExceptionally(new InsufficientMoneyException(error));
-                    else if (error.contains("Amount is larger"))
-                        futureResult.completeExceptionally(new AmountTooHighException(error));
-                    else
-                        futureResult.completeExceptionally(new RuntimeException(error));
-                });
-
-        return futureResult;
-    }
 
     @NotNull
     private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Throwable throwable) {
@@ -409,106 +317,6 @@ public class BisqProxy {
 
     /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
-    public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
-        final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
-        final Offer offer;
-        try {
-            offer = getOffer(offerId);
-        } catch (NotFoundException e) {
-            return failFuture(futureResult, e);
-        }
-
-        if (offer.getMakerNodeAddress().equals(p2PService.getAddress())) {
-            return failFuture(futureResult, new OfferTakerSameAsMakerException("Taker's address same as maker's"));
-        }
-
-        // check the paymentAccountId is valid
-        final PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
-        if (paymentAccount == null) {
-            return failFuture(futureResult, new PaymentAccountNotFoundException("Could not find payment account with id: " + paymentAccountId));
-        }
-
-        // check the paymentAccountId is compatible with the offer
-        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
-            final String errorMessage = "PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode();
-            return failFuture(futureResult, new IncompatiblePaymentAccountException(errorMessage));
-        }
-
-        // check the amount is within the range
-        Coin coinAmount = Coin.valueOf(amount);
-        //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
-
-        // workaround because TradeTask does not have an error handler to notify us that something went wrong
-        if (btcWalletService.getAvailableBalance().isLessThan(coinAmount)) {
-            final String errorMessage = "Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + coinAmount;
-            return failFuture(futureResult, new InsufficientMoneyException(errorMessage));
-        }
-
-        // check that the price is correct ??
-
-        // check taker fee
-
-        // check security deposit for BTC buyer
-        // check security deposit for BTC seller
-
-        Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
-                offer.getBuyerSecurityDeposit() :
-                offer.getSellerSecurityDeposit();
-        Coin txFeeFromFeeService = feeService.getTxFee(600);
-        Coin fundsNeededForTradeTemp = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
-        final Coin fundsNeededForTrade;
-        if (offer.isBuyOffer())
-            fundsNeededForTrade = fundsNeededForTradeTemp.add(coinAmount);
-        else
-            fundsNeededForTrade = fundsNeededForTradeTemp;
-
-        Coin takerFee = getTakerFee(coinAmount);
-        checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
-        checkNotNull(takerFee, "takerFee must not be null");
-
-        tradeManager.onTakeOffer(coinAmount,
-                txFeeFromFeeService,
-                takerFee,
-                isCurrencyForTakerFeeBtc(coinAmount),
-                offer.getPrice().getValue(),
-                fundsNeededForTrade,
-                offer,
-                paymentAccount.getId(),
-                useSavingsWallet,
-                futureResult::complete,
-                error -> futureResult.completeExceptionally(new RuntimeException(error))
-        );
-        return futureResult;
-    }
-
-    boolean isCurrencyForTakerFeeBtc(Coin amount) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
-    }
-
-    @Nullable
-    Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
-        if (amount != null) {
-            // TODO write unit test for that
-            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
-            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
-    public Coin getTakerFee(Coin amount) {
-        return getTakerFee(amount, isCurrencyForTakerFeeBtc(amount));
-    }
-
-
-    boolean isBsqForFeeAvailable(Coin amount) {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getTakerFee(amount, false) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getTakerFee(amount, false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount, false)).isNegative();
-    }
 
     /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
