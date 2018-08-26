@@ -1,21 +1,19 @@
 package bisq.httpapi.service.resources;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
+import bisq.core.offer.TxFeeEstimation;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.BankAccount;
-import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.SameBankAccount;
-import bisq.core.payment.SepaAccount;
-import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
@@ -31,13 +29,15 @@ import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -55,8 +55,11 @@ import bisq.httpapi.model.Market;
 import javax.validation.ValidationException;
 
 public class OfferBuilder {
+    private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final KeyRing keyRing;
+    private final ReferralIdService referralIdService;
+    private final FilterManager filterManager;
     private final P2PService p2PService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
@@ -64,33 +67,44 @@ public class OfferBuilder {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private boolean marketPriceAvailable;
+
 
     @Inject
-    public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService, BsqWalletService bsqWalletService,
-                        BtcWalletService btcWalletService, FeeService feeService, KeyRing keyRing,
-                        P2PService p2PService, Preferences preferences, PriceFeedService priceFeedService, User user) {
+    public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService,
+                        BsqWalletService bsqWalletService,
+                        BtcWalletService btcWalletService,
+                        TradeWalletService tradeWalletService,
+                        FeeService feeService, KeyRing keyRing,
+                        ReferralIdService referralIdService,
+                        FilterManager filterManager,
+                        P2PService p2PService,
+                        Preferences preferences,
+                        PriceFeedService priceFeedService,
+                        User user) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.keyRing = keyRing;
+        this.referralIdService = referralIdService;
+        this.filterManager = filterManager;
         this.p2PService = p2PService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.user = user;
     }
 
-    public Offer build(String offerId,
+    public Offer build(@Nullable String offerId,
                        String accountId,
                        OfferPayload.Direction direction,
                        long amount,
                        long minAmount,
-                       boolean useMarketBasedPrice,
-                       Double marketPriceMargin,
+                       boolean useMarketBasedPriceValue,
+                       @Nullable Double marketPriceMargin,
                        String marketPair,
-                       long fiatPrice,
-                       Long buyerSecurityDeposit)
+                       long priceAsLong,
+                       @Nullable Long buyerSecurityDeposit)
             throws NoAcceptedArbitratorException, PaymentAccountNotFoundException, IncompatiblePaymentAccountException {
         List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         if (null == acceptedArbitratorAddresses || acceptedArbitratorAddresses.size() == 0) {
@@ -98,88 +112,95 @@ public class OfferBuilder {
         }
 
         // Checked that if fixed we have a fixed price, if percentage we have a percentage
-        if (marketPriceMargin == null && useMarketBasedPrice) {
+        if (marketPriceMargin == null && useMarketBasedPriceValue) {
             throw new ValidationException("When choosing PERCENTAGE price marketPriceMargin must be set");
-        } else if (0 == fiatPrice && !useMarketBasedPrice) {
+        } else if (priceAsLong == 0 && !useMarketBasedPriceValue) {
             throw new ValidationException("When choosing FIXED price fiatPrice must be set with a price > 0");
         }
-        if (null == marketPriceMargin)
-            marketPriceMargin = 0d;
-        // fix marketPair if it's lowercase
-        marketPair = marketPair.toUpperCase();
-
-        validateMarketPair(marketPair);
-
-        Market market = new Market(marketPair);
-        // BTC_USD for fiat or XMR_BTC for altcoins
-        // baseCurrencyCode is always BTC, counterCurrencyCode is fiat or altcoin
-        String baseCurrencyCode = market.getLsymbol();
-        String counterCurrencyCode = market.getRsymbol();
 
         Optional<PaymentAccount> optionalAccount = getPaymentAccounts().stream()
-                .filter(account1 -> account1.getId().equals(accountId)).findFirst();
+                .filter(account -> account.getId().equals(accountId))
+                .findFirst();
         if (!optionalAccount.isPresent()) {
             throw new PaymentAccountNotFoundException("Could not find payment account with id: " + accountId);
         }
-        PaymentAccount paymentAccount = optionalAccount.get();
 
-        // COPIED from CreateDataOfferModel: TODO refactor uit of GUI module  /////////////////////////////
-        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
-        ArrayList<String> acceptedCountryCodes = null;
-        if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
-        }
-        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
-        ArrayList<String> acceptedBanks = null;
-        if (paymentAccount instanceof SpecificBanksAccount) {
-            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-        } else if (paymentAccount instanceof SameBankAccount) {
-            acceptedBanks = new ArrayList<>();
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-        }
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(baseCurrencyCode).value;
-        long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
+        validateMarketPair(marketPair);
+
+        // Handle optional data and set default values if not set
+        if (buyerSecurityDeposit == null)
+            buyerSecurityDeposit = preferences.getBuyerSecurityDepositAsCoin().value;
+
+        if (marketPriceMargin == null)
+            marketPriceMargin = 0d;
+
+        offerId = offerId == null ? UUID.randomUUID().toString() : offerId;
+
+        // fix marketPair if it's lowercase
+        marketPair = marketPair.toUpperCase();
+
+
+        Market market = new Market(marketPair);
+        // BTC_USD for fiat or XMR_BTC for altcoins
+        // baseCurrencyCode is always left side, counterCurrencyCode right side
+        String baseCurrencyCode = market.getLsymbol();
+        String counterCurrencyCode = market.getRsymbol();
+
+        PaymentAccount paymentAccount = optionalAccount.get();
+        ArrayList<String> acceptedCountryCodes = OfferUtil.getAcceptedCountryCodes(paymentAccount);
+        ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
+        String bankId = OfferUtil.getBankId(paymentAccount);
+        String countryCode = OfferUtil.getCountryCode(paymentAccount);
+        long maxTradeLimit = OfferUtil.getMaxTradeLimit(accountAgeWitnessService, paymentAccount, baseCurrencyCode);
+        long maxTradePeriod = OfferUtil.getMaxTradePeriod(paymentAccount);
+
         boolean isPrivateOffer = false;
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        HashMap<String, String> extraDataMap = null;
-        if (CurrencyUtil.isFiatCurrency(baseCurrencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
-        }
+        Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService, referralIdService,
+                paymentAccount, baseCurrencyCode);
+        Coin amountAsCoin = Coin.valueOf(amount);
+        boolean marketPriceAvailable = MarketResource.isMarketPriceAvailable();
+        Coin makerFeeAsCoin = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
+        // Throws runtime exception if data are invalid
+        OfferUtil.validateOfferData(filterManager, p2PService, Coin.valueOf(buyerSecurityDeposit), paymentAccount, baseCurrencyCode, makerFeeAsCoin);
 
-        // COPIED from CreateDataOfferModel /////////////////////////////
+        boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amountAsCoin, marketPriceAvailable, marketPriceMargin);
+        long sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit().value;
 
-        updateMarketPriceAvailable(baseCurrencyCode);
+        TxFeeEstimation txFeeEstimation = new TxFeeEstimation(btcWalletService,
+                bsqWalletService,
+                preferences,
+                user,
+                tradeWalletService,
+                feeService,
+                offerId,
+                direction,
+                Coin.valueOf(amount),
+                Coin.valueOf(buyerSecurityDeposit),
+                marketPriceMargin,
+                marketPriceAvailable,
+                260);
+        Coin txFeeFromFeeService = txFeeEstimation.getEstimatedFee();
 
-        // TODO dummy values in this constructor !!!
-        Coin coinAmount = Coin.valueOf(amount);
-        if (null == buyerSecurityDeposit) {
-            buyerSecurityDeposit = preferences.getBuyerSecurityDepositAsCoin().value;
-        }
         OfferPayload offerPayload = new OfferPayload(
-                null == offerId ? UUID.randomUUID().toString() : offerId,
+                offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
-                fiatPrice,
+                priceAsLong,
                 marketPriceMargin,
-                useMarketBasedPrice,
+                useMarketBasedPriceValue,
                 amount,
                 minAmount,
                 baseCurrencyCode,
                 counterCurrencyCode,
-                acceptedArbitratorAddresses,
-                user.getAcceptedMediatorAddresses(),
+                Lists.newArrayList(acceptedArbitratorAddresses),
+                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null, // will be filled in by BroadcastMakerFeeTx class
@@ -189,11 +210,11 @@ public class OfferBuilder {
                 acceptedBanks,
                 Version.VERSION,
                 btcWalletService.getLastBlockSeenHeight(),
-                feeService.getTxFee(600).value, // default also used in code CreateOfferDataModel
-                getMakerFee(coinAmount, marketPriceMargin).value,
-                preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(coinAmount, marketPriceMargin),
+                txFeeFromFeeService.value,
+                makerFeeAsCoin.value,
+                isCurrencyForMakerFeeBtc,
                 buyerSecurityDeposit,
-                Restrictions.getSellerSecurityDeposit().value,
+                sellerSecurityDeposit,
                 maxTradeLimit,
                 maxTradePeriod,
                 useAutoClose,
@@ -221,29 +242,11 @@ public class OfferBuilder {
     }
 
     @Nullable
-    private Coin getMakerFee(Coin amount, double marketPriceMargin) {
-        final boolean currencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(amount, marketPriceMargin);
-        return getMakerFee(currencyForMakerFeeBtc, amount, marketPriceMargin);
-    }
-
-    private boolean isCurrencyForMakerFeeBtc(Coin amount, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount, marketPriceMargin);
-    }
-
-    private boolean isBsqForFeeAvailable(Coin amount, double marketPriceMargin) {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getMakerFee(false, amount, marketPriceMargin) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getMakerFee(false, amount, marketPriceMargin) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getMakerFee(false, amount, marketPriceMargin)).isNegative();
-    }
-
-    @Nullable
     private Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount, double marketPriceMargin) {
         if (amount != null) {
             final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
-            if (marketPriceAvailable) {
+            if (MarketResource.isMarketPriceAvailable()) {
                 if (marketPriceMargin > 0)
                     makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
                 else
@@ -264,10 +267,6 @@ public class OfferBuilder {
         return null == paymentAccounts ? Collections.<PaymentAccount>emptySet() : paymentAccounts;
     }
 
-    private void updateMarketPriceAvailable(String baseCurrencyCode) {
-        marketPriceAvailable = null != priceFeedService.getMarketPrice(baseCurrencyCode);
-    }
-
     private void validateMarketPair(String marketPair) {
         if (StringUtils.isEmpty(marketPair)) {
             throw new ValidationException("The marketPair cannot be empty");
@@ -279,9 +278,9 @@ public class OfferBuilder {
                     .count() == 1;
             if (!existingPair) {
                 throw new ValidationException("There is no valid market pair called: " + marketPair +
-                        ". Note that market pairs are uppercase and are separated by an underscore: e.g. XMR_BTC");
+                        ". Note that market pairs are uppercase and are separated by an underscore: " +
+                        "e.g. XMR_BTC or BTC_EUR");
             }
         }
     }
-
 }

@@ -65,4 +65,9 @@ public class MarketResource {
         }
         return currencyList;
     }
+
+    public static boolean isMarketPriceAvailable() {
+        //TODO check if we have a live market price
+        return true;
+    }
 }
