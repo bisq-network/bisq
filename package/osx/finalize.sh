@@ -2,14 +2,14 @@
 
 cd ../../
 
-version="0.7.1"
+version="0.8.0"
 
 target_dir="releases/$version"
 
-linux32=build/vm/vm_shared_ubuntu14_32bit
-linux64=build/vm/vm_shared_ubuntu
-win32=build/vm/vm_shared_windows_32bit
-win64=build/vm/vm_shared_windows
+linux32=/Volumes/vm_shared_ubuntu14_32bit
+linux64=/Volumes/vm_shared_ubuntu
+win32=/Volumes/vm_shared_windows_32bit
+win64=/Volumes/vm_shared_windows
 
 #macOS=build/vm/vm_shared_macosx
 macOS=deploy
@@ -70,7 +70,7 @@ gpg --digest-algo SHA256 --verify $deb32{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe32{.asc*,}
 
-mkdir ../../build/vm/vm_shared_windows_32bit/$version
-cp -r . ../../build/vm/vm_shared_windows_32bit/$version
+#mkdir ../../build/vm/vm_shared_windows_32bit/$version
+cp -r . $win32/$version
 
 open "."

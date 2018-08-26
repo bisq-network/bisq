@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="0.7.1"
+version="0.8.0"
 
 ./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
 
@@ -23,10 +23,10 @@ echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
 
 
-linux32=build/vm/vm_shared_ubuntu14_32bit
-linux64=build/vm/vm_shared_ubuntu
-win32=build/vm/vm_shared_windows_32bit
-win64=build/vm/vm_shared_windows
+linux32=/Volumes/vm_shared_ubuntu14_32bit
+linux64=/Volumes/vm_shared_ubuntu
+win32=/Volumes/vm_shared_windows_32bit
+win64=/Volumes/vm_shared_windows
 
 mkdir -p $linux32 $linux64 $win32 $win64
 
