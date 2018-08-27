@@ -1,5 +1,7 @@
 package network.bisq.api;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
 
 import java.util.Arrays;
@@ -13,9 +15,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static io.restassured.RestAssured.given;
+import static network.bisq.api.RegexMatcher.matchesRegex;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+
+
+
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
-import org.apache.commons.io.IOUtils;
 import org.arquillian.cube.ContainerObjectFactory;
 import org.arquillian.cube.CubeController;
 import org.arquillian.cube.HostPort;
@@ -23,17 +34,14 @@ import org.arquillian.cube.containerobject.Cube;
 import org.arquillian.cube.containerobject.Environment;
 import org.arquillian.cube.containerobject.Image;
 import org.arquillian.cube.containerobject.Volume;
+import org.arquillian.cube.docker.impl.client.config.CubeContainer;
+import org.arquillian.cube.docker.impl.client.containerobject.CubeContainerObjectConfiguration;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.arquillian.cube.spi.CubeOutput;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.arquillian.test.api.ArquillianResource;
-
-import static io.restassured.RestAssured.given;
-import static network.bisq.api.RegexMatcher.matchesRegex;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class BackupResourceIT {
@@ -243,10 +251,12 @@ public class BackupResourceIT {
         then().
                 statusCode(204);
 
-        final ApiContainer apiContainer = factory.createContainerObject(ApiContainer.class);
         try {
+            final CubeContainer cubeContainer = new CubeContainer();
+            cubeContainer.setAwait(ContainerFactory.getAwaitStrategy());
+            final CubeContainerObjectConfiguration configuration = new CubeContainerObjectConfiguration(cubeContainer);
+            final ApiContainer apiContainer = factory.createContainerObject(ApiContainer.class, configuration);
             ApiTestHelper.waitForAllServicesToBeReady();
-
             given().
                     port(apiContainer.port).
                     queryParam("purpose", "RECEIVE_FUNDS").
@@ -287,7 +297,6 @@ public class BackupResourceIT {
         return alice.getBindPort(8080);
     }
 
-
     @Environment(key = ContainerFactory.ENV_USE_LOCALHOST_FOR_P2P_KEY, value = ContainerFactory.ENV_USE_LOCALHOST_FOR_P2P_VALUE)
     @Environment(key = ContainerFactory.ENV_BASE_CURRENCY_NETWORK_KEY, value = ContainerFactory.ENV_BASE_CURRENCY_NETWORK_VALUE)
     @Environment(key = ContainerFactory.ENV_BITCOIN_REGTEST_HOST_KEY, value = ContainerFactory.ENV_BITCOIN_REGTEST_HOST_VALUE)
@@ -295,6 +304,7 @@ public class BackupResourceIT {
     @Environment(key = ContainerFactory.ENV_LOG_LEVEL_KEY, value = ContainerFactory.ENV_LOG_LEVEL_VALUE)
     @Environment(key = ContainerFactory.ENV_BISQ_API_HOST_KEY, value = ContainerFactory.ENV_BISQ_API_HOST_VALUE)
     @Cube(value = ApiContainer.CUBE_ID, portBinding = "8080")
+    @Volume(hostPath = ContainerFactory.GRADLE_VOLUME_NAME, containerPath = ContainerFactory.GRADLE_VOLUME_CONTAINER_PATH)
     @Volume(hostPath = ContainerFactory.M2_VOLUME_NAME, containerPath = ContainerFactory.M2_VOLUME_CONTAINER_PATH)
     @Volume(hostPath = APP_DIR_VOLUME_NAME, containerPath = APP_DIR_VOLUME_HOST_PATH)
     @Image(ContainerFactory.API_IMAGE)
