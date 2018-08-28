@@ -17,27 +17,19 @@
 
 package network.bisq.api.app;
 
-import bisq.desktop.app.BisqAppModule;
-import javafx.stage.Stage;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.app.AppModule;
+import bisq.core.app.CoreModule;
 import org.springframework.core.env.Environment;
 
-@Slf4j
-public class BisqApiWithUIModule extends BisqAppModule {
+public class StandaloneApiModule extends AppModule {
 
-    public BisqApiWithUIModule(Environment environment, Stage primaryStage) {
-        super(environment, primaryStage);
+    public StandaloneApiModule(Environment environment) {
+        super(environment);
     }
 
     @Override
     protected void configure() {
-        super.configure();
-
-        install(apiModule());
+        install(new CoreModule(environment));
+        install(new ApiModule(environment));
     }
-
-    private ApiModule apiModule() {
-        return new ApiModule(environment);
-    }
-
 }
