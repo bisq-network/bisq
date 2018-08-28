@@ -1,20 +1,24 @@
 package bisq.httpapi;
 
-import bisq.httpapi.model.payment.SepaPaymentAccount;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.hamcrest.Matcher;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+
+
+
+import bisq.httpapi.model.payment.SepaPaymentAccount;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.hamcrest.Matcher;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class TradeResourceIT {
@@ -110,7 +114,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.isCurrencyForMakerFeeBtc", equalTo(true)).
                 and().body("trades[0].offer.isPrivateOffer", equalTo(false)).
                 and().body("trades[0].offer.lowerClosePrice", equalTo(0)).
-                and().body("trades[0].offer.makerFee", equalTo(12500)).
+                and().body("trades[0].offer.makerFee", equalTo(5000)).
                 and().body("trades[0].offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("trades[0].offer.marketPriceMargin", equalTo(0f)).
                 and().body("trades[0].offer.maxTradeLimit", equalTo(25000000)).
