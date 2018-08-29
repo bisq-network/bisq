@@ -282,7 +282,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                     .collect(Collectors.toSet()));
         } else {
             // blind vote phase
-            List<Ballot> ballotList = daoFacade.getBallots();
+            List<Ballot> ballotList = daoFacade.getBallotsOfCycle();
             listItems.setAll(ballotList.stream()
                     .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqFormatter))
                     .collect(Collectors.toSet()));
