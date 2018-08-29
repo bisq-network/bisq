@@ -146,12 +146,14 @@ public class OfferBuilder {
         String baseCurrencyCode = market.getLsymbol();
         String counterCurrencyCode = market.getRsymbol();
 
+        String currencyCode = market.getLsymbol().endsWith("BTC") ? market.getRsymbol() : market.getLsymbol();
+
         PaymentAccount paymentAccount = optionalAccount.get();
         ArrayList<String> acceptedCountryCodes = OfferUtil.getAcceptedCountryCodes(paymentAccount);
         ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
         String bankId = OfferUtil.getBankId(paymentAccount);
         String countryCode = OfferUtil.getCountryCode(paymentAccount);
-        long maxTradeLimit = OfferUtil.getMaxTradeLimit(accountAgeWitnessService, paymentAccount, baseCurrencyCode);
+        long maxTradeLimit = OfferUtil.getMaxTradeLimit(accountAgeWitnessService, paymentAccount, currencyCode);
         long maxTradePeriod = OfferUtil.getMaxTradePeriod(paymentAccount);
 
         boolean isPrivateOffer = false;
@@ -161,12 +163,12 @@ public class OfferBuilder {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService, referralIdService,
-                paymentAccount, baseCurrencyCode);
+                paymentAccount, currencyCode);
         Coin amountAsCoin = Coin.valueOf(amount);
         boolean marketPriceAvailable = MarketResource.isMarketPriceAvailable();
         Coin makerFeeAsCoin = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         // Throws runtime exception if data are invalid
-        OfferUtil.validateOfferData(filterManager, p2PService, Coin.valueOf(buyerSecurityDeposit), paymentAccount, baseCurrencyCode, makerFeeAsCoin);
+        OfferUtil.validateOfferData(filterManager, p2PService, Coin.valueOf(buyerSecurityDeposit), paymentAccount, currencyCode, makerFeeAsCoin);
 
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         long sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit().value;
