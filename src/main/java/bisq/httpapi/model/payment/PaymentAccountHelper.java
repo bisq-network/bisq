@@ -21,9 +21,12 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.CASH_DEPOSIT_ID, new CashDepositPaymentAccountConverter());
         converters.put(PaymentMethod.CHASE_QUICK_PAY_ID, new ChaseQuickPayPaymentAccountConverter());
         converters.put(PaymentMethod.CLEAR_X_CHANGE_ID, new ClearXchangePaymentAccountConverter());
+        converters.put(PaymentMethod.F2F_ID, new F2FPaymentAccountConverter());
         converters.put(PaymentMethod.FASTER_PAYMENTS_ID, new FasterPaymentsPaymentAccountConverter());
+        converters.put(PaymentMethod.HAL_CASH_ID, new HalCashPaymentAccountConverter());
         converters.put(PaymentMethod.INTERAC_E_TRANSFER_ID, new InteracETransferPaymentAccountConverter());
         converters.put(PaymentMethod.MONEY_BEAM_ID, new MoneyBeamPaymentAccountConverter());
+        converters.put(PaymentMethod.MONEY_GRAM_ID, new MoneyGramPaymentAccountConverter());
         converters.put(PaymentMethod.NATIONAL_BANK_ID, new NationalBankAccountPaymentAccountConverter());
         converters.put(PaymentMethod.OK_PAY_ID, new OKPayPaymentAccountConverter());
         converters.put(PaymentMethod.PERFECT_MONEY_ID, new PerfectMoneyPaymentAccountConverter());
@@ -37,6 +40,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.UPHOLD_ID, new UpholdPaymentAccountConverter());
         converters.put(PaymentMethod.US_POSTAL_MONEY_ORDER_ID, new USPostalMoneyOrderPaymentAccountConverter());
         converters.put(PaymentMethod.VENMO_ID, new VenmoPaymentAccountConverter());
+        converters.put(PaymentMethod.WECHAT_PAY_ID, new WeChatPayPaymentAccountConverter());
         converters.put(PaymentMethod.WESTERN_UNION_ID, new WesternUnionPaymentAccountConverter());
     }
 

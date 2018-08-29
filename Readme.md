@@ -13,7 +13,6 @@ see it in action (pretty outdated).
 ## Prerequisites
 
 * Java 8
-* Maven 3.5+
 
 
 ## Bisq configuration
@@ -31,25 +30,13 @@ Changing the appname can fix this issue.
 
 ## Compiling the API
 
-This step needs to be done before you can start the API with UI or headless:
-
-    mvn clean install
-
-
-## Getting started: with UI
-
-The following command will start a GUI Bisq instance on
-Bitcoin mainnet (meaning you can lose real BTC):
-
-    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain"
-
 
 ## Getting started: headless
 
 The following command will start a headless Bisq instance on
 Bitcoin mainnet (meaning you can lose real BTC):
 
-    mvn compile exec:java -Dexec.mainClass="network.bisq.api.app.HttpApiMain"
+    ./gradlew run
 
 
 ## Developing
@@ -58,9 +45,7 @@ When testing it is advisable to run Bisq in REGTEST mode.
 See below on how to pass Bisq arguments to enable REGTEST mode.
 All regular Bisq arguments can be used.
 
-    mvn compile exec:java \
-        -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain" \
-        -Dexec.args="--baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob"
+    ./gradlew run --args ' --baseCurrencyNetwork=BTC_REGTEST --bitcoinRegtestHost localhost --nodePort 2003 --seedNodes=localhost:2225 --useLocalhost true --appName Bisq-Regtest-Bob'
 
 
 ## Exploring the HTTP API
@@ -84,7 +69,7 @@ Set the environment variable `BISQ_API_PORT` to your desired port.
 Set the environment variable `BISQ_API_HOST` to your desired host.
 You might also pass program args: `apiPort` and `apiHost`.
 
-
+#TODO this is invalid instruction. We want to restore it once those params get to BisqEnvironment in core
     mvn compile exec:java \
         -Dexec.mainClass="network.bisq.api.app.BisqApiWithUIMain" \
         -Dexec.args="--apiPort=8000 --apiHost=localhost"
@@ -108,12 +93,9 @@ If you want to build your own production image instead of pulling it from docker
 
 ## Docker for developers
 
-Since maven dependencies are being fetched after container is started you can seed 'm2' volume used for caching local maven repo:
+Since maven and gradle dependencies are being fetched after container is started you can seed 'm2' and 'gradle' volumes used for caching local maven repo:
 
-    docker volume create m2
-    docker container create -v m2:/m2 --name m2helperContainer busybox
-    docker cp ~/.m2/repository m2helperContainer:/m2/
-    docker rm m2helperContainer
+    sh create-docker-volumes.sh
 
 Build bisq-api image:
 
@@ -140,14 +122,7 @@ You have to build bisq-api image before running integration tests.
 Run integration tests:
 
     docker-compose build #just make sure our images are up to date
-    mvn verify -P integration
-
-
-## Build
-
-In order to build shaded jar:
-
-    mvn package -P shade
+    ./gradlew test
 
 
 ## Api naming guidelines:

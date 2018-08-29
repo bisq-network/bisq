@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static bisq.httpapi.RegexMatcher.matchesRegex;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.isA;
 import static org.junit.Assert.assertEquals;
@@ -249,7 +250,7 @@ public class WalletResourceIT {
                 and().body("mnemonicCode", isA(List.class)).
                 and().body("mnemonicCode[0]", isA(String.class)).
                 and().body("walletCreationDate", isA(String.class)).
-                and().body("walletCreationDate", RegexMatcher.matchesRegex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
+                and().body("walletCreationDate", matchesRegex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
         ;
     }
 
@@ -269,7 +270,7 @@ public class WalletResourceIT {
                 and().body("mnemonicCode", isA(List.class)).
                 and().body("mnemonicCode[0]", isA(String.class)).
                 and().body("walletCreationDate", isA(String.class)).
-                and().body("walletCreationDate", RegexMatcher.matchesRegex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
+                and().body("walletCreationDate", matchesRegex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
         ;
     }
 

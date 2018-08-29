@@ -219,7 +219,7 @@ public class OfferResourceIT {
     public void createOffer_fixedPriceZero_returns422status() {
         final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.fixedPrice = 0;
-        createOffer_template(offer, 422, "When choosing FIXED price, fill in fixedPrice with a price > 0");
+        createOffer_template(offer, 422, "When choosing FIXED price fiatPrice must be set with a price > 0");
     }
 
     @InSequence(3)
@@ -302,14 +302,14 @@ public class OfferResourceIT {
                         and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                         and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
                         and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
-                        and().body("extraDataMap.accountAgeWitnessHash", isA(String.class)).
+//                        and().body("extraDataMap.accountAgeWitnessHash", isA(String.class)).
                         and().body("date", isA(Long.class)).
                         and().body("direction", equalTo(OfferPayload.Direction.BUY.name())).
                         and().body("id", isA(String.class)).
                         and().body("isCurrencyForMakerFeeBtc", equalTo(true)).
                         and().body("isPrivateOffer", equalTo(false)).
                         and().body("lowerClosePrice", equalTo(0)).
-                        and().body("makerFee", equalTo(12500)).
+                        and().body("makerFee", equalTo(5000)).
                         and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                         and().body("marketPriceMargin", equalTo(0f)).
                         and().body("maxTradeLimit", equalTo(25000000)).
@@ -362,7 +362,7 @@ public class OfferResourceIT {
                 and().body("offers[0].isCurrencyForMakerFeeBtc", equalTo(true)).
                 and().body("offers[0].isPrivateOffer", equalTo(false)).
                 and().body("offers[0].lowerClosePrice", equalTo(0)).
-                and().body("offers[0].makerFee", equalTo(12500)).
+                and().body("offers[0].makerFee", equalTo(5000)).
                 and().body("offers[0].makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("offers[0].marketPriceMargin", equalTo(0f)).
                 and().body("offers[0].maxTradeLimit", equalTo(25000000)).
@@ -420,7 +420,7 @@ public class OfferResourceIT {
                 and().body("isCurrencyForMakerFeeBtc", equalTo(true)).
                 and().body("isPrivateOffer", equalTo(false)).
                 and().body("lowerClosePrice", equalTo(0)).
-                and().body("makerFee", equalTo(12500)).
+                and().body("makerFee", equalTo(43300)).
                 and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("marketPriceMargin", equalTo(.12f)).
                 and().body("maxTradeLimit", equalTo(25000000)).
@@ -651,7 +651,7 @@ public class OfferResourceIT {
                 and().body("offer.isCurrencyForMakerFeeBtc", equalTo(true)).
                 and().body("offer.isPrivateOffer", equalTo(false)).
                 and().body("offer.lowerClosePrice", equalTo(0)).
-                and().body("offer.makerFee", equalTo(12500)).
+                and().body("offer.makerFee", equalTo(5000)).
                 and().body("offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("offer.marketPriceMargin", equalTo(0f)).
                 and().body("offer.maxTradeLimit", equalTo(25000000)).

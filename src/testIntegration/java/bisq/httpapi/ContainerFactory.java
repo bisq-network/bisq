@@ -1,5 +1,9 @@
 package bisq.httpapi;
 
+import org.jetbrains.annotations.NotNull;
+
+
+
 import org.arquillian.cube.docker.impl.client.config.Await;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuilder;
@@ -13,6 +17,8 @@ public final class ContainerFactory {
     private static final String SEED_NODE_ADDRESS = SEED_NODE_HOST_NAME + ":8000";
     public static final String CONTAINER_NAME_PREFIX = "bisq-api-";
     public static final String API_IMAGE = "bisq-api";
+    public static final String GRADLE_VOLUME_NAME = "gradle";
+    public static final String GRADLE_VOLUME_CONTAINER_PATH = "/root/.gradle-volume";
     public static final String M2_VOLUME_NAME = "m2";
     public static final String M2_VOLUME_CONTAINER_PATH = "/root/.m2";
     public static final String ENV_NODE_PORT_KEY = "NODE_PORT";
@@ -34,19 +40,15 @@ public final class ContainerFactory {
     public static final String ENV_LOG_LEVEL_VALUE = "debug";
 
     public static ContainerBuilder.ContainerOptionsBuilder createApiContainerBuilder(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
-        final Await awaitStrategy = new Await();
-        awaitStrategy.setStrategy("polling");
-        final int sleepPollingTime = 250;
-        awaitStrategy.setIterations(60000 / sleepPollingTime);
-        awaitStrategy.setSleepPollingTime(sleepPollingTime);
         final ContainerBuilder.ContainerOptionsBuilder containerOptionsBuilder = Container.withContainerName(CONTAINER_NAME_PREFIX + nameSuffix)
                 .fromImage(API_IMAGE)
+                .withVolume(GRADLE_VOLUME_NAME, GRADLE_VOLUME_CONTAINER_PATH)
                 .withVolume(M2_VOLUME_NAME, M2_VOLUME_CONTAINER_PATH)
                 .withPortBinding(portBinding)
                 .withEnvironment(ENV_NODE_PORT_KEY, nodePort)
                 .withEnvironment(ENV_BISQ_API_HOST_KEY, ENV_BISQ_API_HOST_VALUE)
                 .withEnvironment(ENV_USE_DEV_PRIVILEGE_KEYS_KEY, ENV_USE_DEV_PRIVILEGE_KEYS_VALUE)
-                .withAwaitStrategy(awaitStrategy);
+                .withAwaitStrategy(getAwaitStrategy());
         if (linkToSeedNode) {
             containerOptionsBuilder.withLink(SEED_NODE_CONTAINER_NAME);
         }
@@ -54,6 +56,16 @@ public final class ContainerFactory {
             containerOptionsBuilder.withLink(BITCOIN_NODE_CONTAINER_NAME, BITCOIN_NODE_HOST_NAME);
         }
         return withRegtestEnv(containerOptionsBuilder);
+    }
+
+    @NotNull
+    public static Await getAwaitStrategy() {
+        final Await awaitStrategy = new Await();
+        awaitStrategy.setStrategy("polling");
+        final int sleepPollingTime = 250;
+        awaitStrategy.setIterations(60000 / sleepPollingTime);
+        awaitStrategy.setSleepPollingTime(sleepPollingTime);
+        return awaitStrategy;
     }
 
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {

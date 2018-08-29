@@ -3,6 +3,8 @@ package bisq.httpapi;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.assertEquals;
+
 
 
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;

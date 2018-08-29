@@ -20,9 +20,12 @@ import bisq.httpapi.model.payment.CashAppPaymentAccount;
 import bisq.httpapi.model.payment.CashDepositPaymentAccount;
 import bisq.httpapi.model.payment.ChaseQuickPayPaymentAccount;
 import bisq.httpapi.model.payment.CryptoCurrencyPaymentAccount;
+import bisq.httpapi.model.payment.F2FPaymentAccount;
 import bisq.httpapi.model.payment.FasterPaymentsPaymentAccount;
+import bisq.httpapi.model.payment.HalCashPaymentAccount;
 import bisq.httpapi.model.payment.InteracETransferPaymentAccount;
 import bisq.httpapi.model.payment.MoneyBeamPaymentAccount;
+import bisq.httpapi.model.payment.MoneyGramPaymentAccount;
 import bisq.httpapi.model.payment.NationalBankAccountPaymentAccount;
 import bisq.httpapi.model.payment.OKPayPaymentAccount;
 import bisq.httpapi.model.payment.PaymentAccount;
@@ -37,6 +40,7 @@ import bisq.httpapi.model.payment.SwishPaymentAccount;
 import bisq.httpapi.model.payment.USPostalMoneyOrderPaymentAccount;
 import bisq.httpapi.model.payment.UpholdPaymentAccount;
 import bisq.httpapi.model.payment.VenmoPaymentAccount;
+import bisq.httpapi.model.payment.WeChatPayPaymentAccount;
 import bisq.httpapi.model.payment.WesternUnionPaymentAccount;
 import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
@@ -54,9 +58,7 @@ public class PaymentAccountIT {
     @InSequence
     @Test
     public void waitForAllServicesToBeReady() throws InterruptedException {
-        /**
-         * PaymentMethod initializes it's static values after all services get initialized
-         */
+//        PaymentMethod initializes it's static values after all services get initialized
         ApiTestHelper.waitForAllServicesToBeReady();
     }
 
@@ -304,6 +306,43 @@ public class PaymentAccountIT {
 
     @InSequence(2)
     @Test
+    public void create_validF2F_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final F2FPaymentAccount accountToCreate = new F2FPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.city = faker.address().city();
+        accountToCreate.contact = faker.phoneNumber().cellPhone();
+        accountToCreate.extraInfo = faker.address().fullAddress();
+
+        final String expectedPaymentDetails = String.format("Face to Face - Contact: %s, city: %s, additional information: %s", accountToCreate.contact, accountToCreate.city, accountToCreate.extraInfo);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("city", equalTo(accountToCreate.city)).
+                and().body("contact", equalTo(accountToCreate.contact)).
+                and().body("extraInfo", equalTo(accountToCreate.extraInfo)).
+                and().body("size()", equalTo(9))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
     public void create_validFasterPayments_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
@@ -334,6 +373,39 @@ public class PaymentAccountIT {
                 and().body("accountNr", equalTo(accountToCreate.accountNr)).
                 and().body("sortCode", equalTo(accountToCreate.sortCode)).
                 and().body("size()", equalTo(8))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
+    public void create_validHalCash_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final HalCashPaymentAccount accountToCreate = new HalCashPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.mobileNr = faker.phoneNumber().cellPhone();
+
+        final String expectedPaymentDetails = String.format("HalCash - Mobile no.: %s", accountToCreate.mobileNr);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("mobileNr", equalTo(accountToCreate.mobileNr)).
+                and().body("size()", equalTo(7))
         ;
     }
 
@@ -406,6 +478,45 @@ public class PaymentAccountIT {
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
                 and().body("size()", equalTo(7))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
+    public void create_validMoneyGram_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final MoneyGramPaymentAccount accountToCreate = new MoneyGramPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.countryCode = "US";
+        accountToCreate.state = faker.address().state();
+        accountToCreate.holderName = faker.name().fullName();
+        accountToCreate.email = faker.internet().emailAddress();
+
+        final String expectedPaymentDetails = String.format("MoneyGram - Full name: %s, State: %s, Country: %s, Email: %s", accountToCreate.holderName, accountToCreate.state, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("countryCode", equalTo(accountToCreate.countryCode)).
+                and().body("state", equalTo(accountToCreate.state)).
+                and().body("holderName", equalTo(accountToCreate.holderName)).
+                and().body("email", equalTo(accountToCreate.email)).
+                and().body("size()", equalTo(10))
         ;
     }
 
@@ -871,6 +982,39 @@ public class PaymentAccountIT {
 
     @InSequence(2)
     @Test
+    public void create_validWeChatPay_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final WeChatPayPaymentAccount accountToCreate = new WeChatPayPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.accountNr = faker.finance().bic();
+
+        final String expectedPaymentDetails = String.format("WeChat Pay - Account no.: %s", accountToCreate.accountNr);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("accountNr", equalTo(accountToCreate.accountNr)).
+                and().body("size()", equalTo(7))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
     public void create_validWesternUnion_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
@@ -962,19 +1106,19 @@ public class PaymentAccountIT {
     @InSequence(1)
     @Test
     public void create_unsupportedCryptoSelectedTradeCurrency_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("selectedTradeCurrency", "BCHX", 422, "Unsupported crypto currency code: BCHX");
+        create_cryptoValidationFailureTemplate("selectedTradeCurrency", "BCHX", "Unsupported crypto currency code: BCHX");
     }
 
     @InSequence(1)
     @Test
     public void create_unsupportedCryptoTradeCurrency_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("tradeCurrencies", Collections.singletonList("XYZ"), 422, "Unsupported crypto currency code: XYZ");
+        create_cryptoValidationFailureTemplate("tradeCurrencies", Collections.singletonList("XYZ"), "Unsupported crypto currency code: XYZ");
     }
 
     @InSequence(1)
     @Test
     public void create_invalidCryptoAddress_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("address", "abc", 422, "Address is not a valid BCH address! Input too short");
+        create_cryptoValidationFailureTemplate("address", "abc", "Address is not a valid BCH address! Input too short");
     }
 
     @InSequence(1)
@@ -1008,12 +1152,12 @@ public class PaymentAccountIT {
     @InSequence(1)
     @Test
     public void create_invalidCountryCode_returnsError() throws Exception {
-        create_sepaValidationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
+        create_sepaValidationFailureTemplate("countryCode", "PLNX", "countryCode is not valid country code");
     }
 
     @InSequence(1)
     @Test
-    public void create_invalidPaymentMethod_returnsError() throws Exception {
+    public void create_invalidPaymentMethod_returnsError() {
         final int alicePort = getAlicePort();
 
         final PaymentAccount accountToCreate = new PaymentAccount("") {
@@ -1031,15 +1175,15 @@ public class PaymentAccountIT {
         then().
                 statusCode(422).
                 and().body("errors.size()", equalTo(1)).
-                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, FASTER_PAYMENTS, INTERAC_E_TRANSFER, MONEY_BEAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
+                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, HAL_CASH, INTERAC_E_TRANSFER, MONEY_BEAM, MONEY_GRAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WECHAT_PAY, WESTERN_UNION"))
         ;
     }
 
     private void create_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {
-        create_sepaValidationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
+        create_sepaValidationFailureTemplate(fieldName, fieldValue, fieldName + " may not be empty");
     }
 
-    private void create_sepaValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+    private void create_sepaValidationFailureTemplate(String fieldName, Object fieldValue, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
         final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
@@ -1054,12 +1198,12 @@ public class PaymentAccountIT {
                 post("/api/v1/payment-accounts").
 //
         then().
-                statusCode(expectedStatusCode).
+                statusCode(422).
                 and().body("errors", hasItem(expectedValidationMessage))
         ;
     }
 
-    private void create_cryptoValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+    private void create_cryptoValidationFailureTemplate(String fieldName, Object fieldValue, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
 
@@ -1079,7 +1223,7 @@ public class PaymentAccountIT {
                 post("/api/v1/payment-accounts").
 //
         then().
-                statusCode(expectedStatusCode).
+                statusCode(422).
                 and().body("errors", hasItem(expectedValidationMessage))
         ;
     }
