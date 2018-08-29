@@ -999,19 +999,19 @@ public class PaymentAccountIT {
     @InSequence(1)
     @Test
     public void create_unsupportedCryptoSelectedTradeCurrency_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("selectedTradeCurrency", "BCHX", 422, "Unsupported crypto currency code: BCHX");
+        create_cryptoValidationFailureTemplate("selectedTradeCurrency", "BCHX", "Unsupported crypto currency code: BCHX");
     }
 
     @InSequence(1)
     @Test
     public void create_unsupportedCryptoTradeCurrency_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("tradeCurrencies", Collections.singletonList("XYZ"), 422, "Unsupported crypto currency code: XYZ");
+        create_cryptoValidationFailureTemplate("tradeCurrencies", Collections.singletonList("XYZ"), "Unsupported crypto currency code: XYZ");
     }
 
     @InSequence(1)
     @Test
     public void create_invalidCryptoAddress_returnsError() throws Exception {
-        create_cryptoValidationFailureTemplate("address", "abc", 422, "Address is not a valid BCH address! Input too short");
+        create_cryptoValidationFailureTemplate("address", "abc", "Address is not a valid BCH address! Input too short");
     }
 
     @InSequence(1)
@@ -1045,7 +1045,7 @@ public class PaymentAccountIT {
     @InSequence(1)
     @Test
     public void create_invalidCountryCode_returnsError() throws Exception {
-        create_sepaValidationFailureTemplate("countryCode", "PLNX", 422, "countryCode is not valid country code");
+        create_sepaValidationFailureTemplate("countryCode", "PLNX", "countryCode is not valid country code");
     }
 
     @InSequence(1)
@@ -1073,10 +1073,10 @@ public class PaymentAccountIT {
     }
 
     private void create_missingAttributeTemplate(String fieldName, Object fieldValue) throws Exception {
-        create_sepaValidationFailureTemplate(fieldName, fieldValue, 422, fieldName + " may not be empty");
+        create_sepaValidationFailureTemplate(fieldName, fieldValue, fieldName + " may not be empty");
     }
 
-    private void create_sepaValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+    private void create_sepaValidationFailureTemplate(String fieldName, Object fieldValue, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
 
         final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
@@ -1091,12 +1091,12 @@ public class PaymentAccountIT {
                 post("/api/v1/payment-accounts").
 //
         then().
-                statusCode(expectedStatusCode).
+                statusCode(422).
                 and().body("errors", hasItem(expectedValidationMessage))
         ;
     }
 
-    private void create_cryptoValidationFailureTemplate(String fieldName, Object fieldValue, int expectedStatusCode, String expectedValidationMessage) throws Exception {
+    private void create_cryptoValidationFailureTemplate(String fieldName, Object fieldValue, String expectedValidationMessage) throws Exception {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
 
@@ -1116,7 +1116,7 @@ public class PaymentAccountIT {
                 post("/api/v1/payment-accounts").
 //
         then().
-                statusCode(expectedStatusCode).
+                statusCode(422).
                 and().body("errors", hasItem(expectedValidationMessage))
         ;
     }
