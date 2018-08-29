@@ -39,7 +39,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class OfferResourceIT {
+public class OfferEndPointIT {
 
     @DockerContainer
     Container alice = ContainerFactory.createApiContainer("alice", "8080->8080", 3333, true, true);

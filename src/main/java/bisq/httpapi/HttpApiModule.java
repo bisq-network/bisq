@@ -30,6 +30,7 @@ import com.google.inject.name.Names;
 
 import bisq.httpapi.service.HttpApiServer;
 import bisq.httpapi.service.auth.TokenRegistry;
+import bisq.httpapi.service.resources.OfferEndPoint;
 
 public class HttpApiModule extends AppModule {
 
@@ -41,6 +42,8 @@ public class HttpApiModule extends AppModule {
     protected void configure() {
         bind(HttpApiServer.class).in(Singleton.class);
         bind(TokenRegistry.class).in(Singleton.class);
+
+        bind(OfferEndPoint.class).in(Singleton.class);
 
         String httpApiHost = environment.getProperty(AppOptionKeys.HTTP_API_HOST, String.class, "127.0.0.1");
         bind(String.class).annotatedWith(Names.named(AppOptionKeys.HTTP_API_HOST)).toInstance(httpApiHost);

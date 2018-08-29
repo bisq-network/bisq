@@ -20,6 +20,8 @@ import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -78,7 +80,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api(value = "offers", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class OfferResource {
+public class OfferEndPoint {
     private final OfferBookService offerBookService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -96,7 +98,7 @@ public class OfferResource {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferResource(OfferBookService offerBookService,
+    public OfferEndPoint(OfferBookService offerBookService,
                          TradeManager tradeManager,
                          OpenOfferManager openOfferManager,
                          OfferBuilder offerBuilder,
@@ -126,6 +128,7 @@ public class OfferResource {
     @ApiOperation("Find offers")
     @GET
     public OfferList find() {
+        //TODO make async and use UserThread.execute
         List<OfferDetail> offers = getAllOffers();
         return new OfferList(offers);
     }
@@ -134,6 +137,7 @@ public class OfferResource {
     @GET
     @Path("/{id}")
     public OfferDetail getOfferById(@NotEmpty @PathParam("id") String id) {
+        //TODO make async and use UserThread.execute
         Offer offer = findOffer(id);
         return new OfferDetail(offer);
     }
@@ -224,7 +228,7 @@ public class OfferResource {
     }
 
     private Offer findOffer(String offerId) {
-        final Optional<Offer> offerOptional = offerBookService.getOffers().stream()
+        Optional<Offer> offerOptional = offerBookService.getOffers().stream()
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();
         if (!offerOptional.isPresent()) {
@@ -235,22 +239,26 @@ public class OfferResource {
 
     private CompletableFuture<Void> cancelOffer(String offerId) {
         final CompletableFuture<Void> futureResult = new CompletableFuture<>();
+        UserThread.execute(() -> {
+            if (!isBootstrapped())
+                futureResult.completeExceptionally(new NotBootstrappedException());
 
-        if (!isBootstrapped())
-            return ResourceHelper.completeExceptionally(futureResult, new NotBootstrappedException());
+            Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
+            if (!openOfferById.isPresent()) {
+                futureResult.completeExceptionally(new NotFoundException("Offer not found: " + offerId));
+                return;
+            }
 
-        Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
-        if (!openOfferById.isPresent())
-            return ResourceHelper.completeExceptionally(futureResult, new NotFoundException("Offer not found: " + offerId));
-
-        openOfferManager.removeOpenOffer(openOfferById.get(),
-                () -> futureResult.complete(null),
-                errorMessage -> futureResult.completeExceptionally(new RuntimeException(errorMessage)));
+            openOfferManager.removeOpenOffer(openOfferById.get(),
+                    () -> futureResult.complete(null),
+                    errorMessage -> futureResult.completeExceptionally(new RuntimeException(errorMessage)));
+        });
         return futureResult;
     }
 
-
     private CompletableFuture<Offer> createOffer(InputDataForOffer input) {
+        //TODO use UserThread.execute
+
         OfferPayload.Direction direction = OfferPayload.Direction.valueOf(input.direction);
         PriceType priceType = PriceType.valueOf(input.priceType);
         Double marketPriceMargin = null == input.percentageFromMarketPrice ? null : input.percentageFromMarketPrice.doubleValue();
@@ -308,8 +316,8 @@ public class OfferResource {
         return futureResult;
     }
 
-
     private CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
+        //TODO use UserThread.execute
         final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
         final Offer offer;
         try {

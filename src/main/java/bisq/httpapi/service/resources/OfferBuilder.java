@@ -68,7 +68,6 @@ public class OfferBuilder {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
 
-
     @Inject
     public OfferBuilder(AccountAgeWitnessService accountAgeWitnessService,
                         BsqWalletService bsqWalletService,

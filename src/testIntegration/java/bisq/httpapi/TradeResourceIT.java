@@ -39,7 +39,7 @@ public class TradeResourceIT {
     @DockerContainer
     Container bitcoin;
 
-    OfferResourceIT offerResourceIT = new OfferResourceIT();
+    OfferEndPointIT offerResourceIT = new OfferEndPointIT();
 
     private static String tradeId;
 
@@ -54,7 +54,7 @@ public class TradeResourceIT {
     @InSequence
     @Test
     public void setupTrade() throws Exception {
-        final OfferResourceIT offerResourceIT = new OfferResourceIT();
+        final OfferEndPointIT offerResourceIT = new OfferEndPointIT();
         offerResourceIT.alice = alice;
         offerResourceIT.bob = bob;
         offerResourceIT.arbitrator = arbitrator;
@@ -84,8 +84,8 @@ public class TradeResourceIT {
     public void getTrades_returnsTrade() {
         final int alicePort = getAlicePort();
 
-        final SepaPaymentAccount alicePaymentAccount = OfferResourceIT.alicePaymentAccount;
-        final SepaPaymentAccount bobPaymentAccount = OfferResourceIT.bobPaymentAccount;
+        final SepaPaymentAccount alicePaymentAccount = OfferEndPointIT.alicePaymentAccount;
+        final SepaPaymentAccount bobPaymentAccount = OfferEndPointIT.bobPaymentAccount;
 
         given().
                 port(getBobPort()).
@@ -104,7 +104,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.baseCurrencyCode", equalTo("BTC")).
                 and().body("trades[0].offer.bankId", equalTo(alicePaymentAccount.bic)).
                 and().body("trades[0].offer.blockHeightAtOfferCreation", isA(Integer.class)).
-                and().body("trades[0].offer.buyerSecurityDeposit", equalTo((int) OfferResourceIT.createdOffer.buyerSecurityDeposit)).
+                and().body("trades[0].offer.buyerSecurityDeposit", equalTo((int) OfferEndPointIT.createdOffer.buyerSecurityDeposit)).
                 and().body("trades[0].offer.counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                 and().body("trades[0].offer.countryCode", equalTo(alicePaymentAccount.countryCode)).
                 and().body("trades[0].offer.currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
@@ -258,7 +258,7 @@ public class TradeResourceIT {
         assertTradeNotFound(getBobPort(), tradeId);
         assertTradeNotFound(getAlicePort(), tradeId);
         assertWalletBalance(getAlicePort(), greaterThan(100000000));
-        assertWalletBalance(getBobPort(), lessThan((int) (100000000 - OfferResourceIT.createdOffer.amount)));
+        assertWalletBalance(getBobPort(), lessThan((int) (100000000 - OfferEndPointIT.createdOffer.amount)));
     }
 
     private void assertWalletBalance(int apiPort, Matcher matcher) {

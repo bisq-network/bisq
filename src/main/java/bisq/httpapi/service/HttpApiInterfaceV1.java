@@ -10,7 +10,7 @@ import bisq.httpapi.service.resources.ClosedTradableResource;
 import bisq.httpapi.service.resources.CurrencyResource;
 import bisq.httpapi.service.resources.MarketResource;
 import bisq.httpapi.service.resources.NetworkResource;
-import bisq.httpapi.service.resources.OfferResource;
+import bisq.httpapi.service.resources.OfferEndPoint;
 import bisq.httpapi.service.resources.PaymentAccountResource;
 import bisq.httpapi.service.resources.PreferencesResource;
 import bisq.httpapi.service.resources.TradeResource;
@@ -45,7 +45,7 @@ public class HttpApiInterfaceV1 {
     private final CurrencyResource currencyResource;
     private final MarketResource marketResource;
     private final NetworkResource networkResource;
-    private final OfferResource offerResource;
+    private final OfferEndPoint offerEndPoint;
     private final PaymentAccountResource paymentAccountResource;
     private final PreferencesResource preferencesResource;
     private final TradeResource tradeResource;
@@ -60,7 +60,7 @@ public class HttpApiInterfaceV1 {
                               CurrencyResource currencyResource,
                               MarketResource marketResource,
                               NetworkResource networkResource,
-                              OfferResource offerResource,
+                              OfferEndPoint offerEndPoint,
                               PaymentAccountResource paymentAccountResource,
                               PreferencesResource preferencesResource,
                               TradeResource tradeResource,
@@ -73,7 +73,7 @@ public class HttpApiInterfaceV1 {
         this.currencyResource = currencyResource;
         this.marketResource = marketResource;
         this.networkResource = networkResource;
-        this.offerResource = offerResource;
+        this.offerEndPoint = offerEndPoint;
         this.paymentAccountResource = paymentAccountResource;
         this.preferencesResource = preferencesResource;
         this.tradeResource = tradeResource;
@@ -113,8 +113,8 @@ public class HttpApiInterfaceV1 {
     }
 
     @Path("offers")
-    public OfferResource getOfferResource() {
-        return offerResource;
+    public OfferEndPoint getOfferEndPoint() {
+        return offerEndPoint;
     }
 
     @Path("payment-accounts")
