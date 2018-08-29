@@ -1,23 +1,51 @@
 package bisq.httpapi;
 
-import com.github.javafaker.Faker;
 import bisq.core.locale.CountryUtil;
-import io.restassured.http.ContentType;
-import bisq.httpapi.model.payment.*;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
-import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.junit.InSequence;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import bisq.httpapi.model.payment.AliPayPaymentAccount;
+import bisq.httpapi.model.payment.CashAppPaymentAccount;
+import bisq.httpapi.model.payment.CashDepositPaymentAccount;
+import bisq.httpapi.model.payment.ChaseQuickPayPaymentAccount;
+import bisq.httpapi.model.payment.CryptoCurrencyPaymentAccount;
+import bisq.httpapi.model.payment.F2FPaymentAccount;
+import bisq.httpapi.model.payment.FasterPaymentsPaymentAccount;
+import bisq.httpapi.model.payment.InteracETransferPaymentAccount;
+import bisq.httpapi.model.payment.MoneyBeamPaymentAccount;
+import bisq.httpapi.model.payment.NationalBankAccountPaymentAccount;
+import bisq.httpapi.model.payment.OKPayPaymentAccount;
+import bisq.httpapi.model.payment.PaymentAccount;
+import bisq.httpapi.model.payment.PerfectMoneyPaymentAccount;
+import bisq.httpapi.model.payment.PopmoneyPaymentAccount;
+import bisq.httpapi.model.payment.RevolutPaymentAccount;
+import bisq.httpapi.model.payment.SameBankAccountPaymentAccount;
+import bisq.httpapi.model.payment.SepaInstantPaymentAccount;
+import bisq.httpapi.model.payment.SepaPaymentAccount;
+import bisq.httpapi.model.payment.SpecificBanksAccountPaymentAccount;
+import bisq.httpapi.model.payment.SwishPaymentAccount;
+import bisq.httpapi.model.payment.USPostalMoneyOrderPaymentAccount;
+import bisq.httpapi.model.payment.UpholdPaymentAccount;
+import bisq.httpapi.model.payment.VenmoPaymentAccount;
+import bisq.httpapi.model.payment.WesternUnionPaymentAccount;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+
+
+
+import com.github.javafaker.Faker;
+import io.restassured.http.ContentType;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
+import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
 public class PaymentAccountIT {
@@ -28,9 +56,7 @@ public class PaymentAccountIT {
     @InSequence
     @Test
     public void waitForAllServicesToBeReady() throws InterruptedException {
-        /**
-         * PaymentMethod initializes it's static values after all services get initialized
-         */
+//        PaymentMethod initializes it's static values after all services get initialized
         ApiTestHelper.waitForAllServicesToBeReady();
     }
 
@@ -273,6 +299,43 @@ public class PaymentAccountIT {
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("address", equalTo(accountToCreate.address)).
                 and().body("size()", equalTo(7))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
+    public void create_validF2F_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final F2FPaymentAccount accountToCreate = new F2FPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.city = faker.address().city();
+        accountToCreate.contact = faker.phoneNumber().cellPhone();
+        accountToCreate.extraInfo = faker.address().fullAddress();
+
+        final String expectedPaymentDetails = String.format("Face to Face - Contact: %s, city: %s, additional information: %s", accountToCreate.contact, accountToCreate.city, accountToCreate.extraInfo);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("city", equalTo(accountToCreate.city)).
+                and().body("contact", equalTo(accountToCreate.contact)).
+                and().body("extraInfo", equalTo(accountToCreate.extraInfo)).
+                and().body("size()", equalTo(9))
         ;
     }
 
@@ -987,7 +1050,7 @@ public class PaymentAccountIT {
 
     @InSequence(1)
     @Test
-    public void create_invalidPaymentMethod_returnsError() throws Exception {
+    public void create_invalidPaymentMethod_returnsError() {
         final int alicePort = getAlicePort();
 
         final PaymentAccount accountToCreate = new PaymentAccount("") {
@@ -1005,7 +1068,7 @@ public class PaymentAccountIT {
         then().
                 statusCode(422).
                 and().body("errors.size()", equalTo(1)).
-                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, FASTER_PAYMENTS, INTERAC_E_TRANSFER, MONEY_BEAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
+                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, INTERAC_E_TRANSFER, MONEY_BEAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
         ;
     }
 

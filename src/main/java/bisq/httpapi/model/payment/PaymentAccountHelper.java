@@ -21,6 +21,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.CASH_DEPOSIT_ID, new CashDepositPaymentAccountConverter());
         converters.put(PaymentMethod.CHASE_QUICK_PAY_ID, new ChaseQuickPayPaymentAccountConverter());
         converters.put(PaymentMethod.CLEAR_X_CHANGE_ID, new ClearXchangePaymentAccountConverter());
+        converters.put(PaymentMethod.F2F_ID, new F2FPaymentAccountConverter());
         converters.put(PaymentMethod.FASTER_PAYMENTS_ID, new FasterPaymentsPaymentAccountConverter());
         converters.put(PaymentMethod.INTERAC_E_TRANSFER_ID, new InteracETransferPaymentAccountConverter());
         converters.put(PaymentMethod.MONEY_BEAM_ID, new MoneyBeamPaymentAccountConverter());
