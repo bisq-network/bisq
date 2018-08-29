@@ -26,6 +26,7 @@ public final class PaymentAccountHelper {
         converters.put(PaymentMethod.HAL_CASH_ID, new HalCashPaymentAccountConverter());
         converters.put(PaymentMethod.INTERAC_E_TRANSFER_ID, new InteracETransferPaymentAccountConverter());
         converters.put(PaymentMethod.MONEY_BEAM_ID, new MoneyBeamPaymentAccountConverter());
+        converters.put(PaymentMethod.MONEY_GRAM_ID, new MoneyGramPaymentAccountConverter());
         converters.put(PaymentMethod.NATIONAL_BANK_ID, new NationalBankAccountPaymentAccountConverter());
         converters.put(PaymentMethod.OK_PAY_ID, new OKPayPaymentAccountConverter());
         converters.put(PaymentMethod.PERFECT_MONEY_ID, new PerfectMoneyPaymentAccountConverter());

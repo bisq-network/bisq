@@ -12,6 +12,7 @@ import bisq.httpapi.model.payment.FasterPaymentsPaymentAccount;
 import bisq.httpapi.model.payment.HalCashPaymentAccount;
 import bisq.httpapi.model.payment.InteracETransferPaymentAccount;
 import bisq.httpapi.model.payment.MoneyBeamPaymentAccount;
+import bisq.httpapi.model.payment.MoneyGramPaymentAccount;
 import bisq.httpapi.model.payment.NationalBankAccountPaymentAccount;
 import bisq.httpapi.model.payment.OKPayPaymentAccount;
 import bisq.httpapi.model.payment.PaymentAccount;
@@ -477,6 +478,45 @@ public class PaymentAccountIT {
                 and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
                 and().body("accountId", equalTo(accountToCreate.accountId)).
                 and().body("size()", equalTo(7))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
+    public void create_validMoneyGram_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final MoneyGramPaymentAccount accountToCreate = new MoneyGramPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.countryCode = "US";
+        accountToCreate.state = faker.address().state();
+        accountToCreate.holderName = faker.name().fullName();
+        accountToCreate.email = faker.internet().emailAddress();
+
+        final String expectedPaymentDetails = String.format("MoneyGram - Full name: %s, State: %s, Country: %s, Email: %s", accountToCreate.holderName, accountToCreate.state, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("countryCode", equalTo(accountToCreate.countryCode)).
+                and().body("state", equalTo(accountToCreate.state)).
+                and().body("holderName", equalTo(accountToCreate.holderName)).
+                and().body("email", equalTo(accountToCreate.email)).
+                and().body("size()", equalTo(10))
         ;
     }
 
@@ -1102,7 +1142,7 @@ public class PaymentAccountIT {
         then().
                 statusCode(422).
                 and().body("errors.size()", equalTo(1)).
-                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, HAL_CASH, INTERAC_E_TRANSFER, MONEY_BEAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
+                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, HAL_CASH, INTERAC_E_TRANSFER, MONEY_BEAM, MONEY_GRAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
         ;
     }
 

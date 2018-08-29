@@ -28,6 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
         @JsonSubTypes.Type(value = HalCashPaymentAccount.class, name = PaymentMethod.HAL_CASH_ID),
         @JsonSubTypes.Type(value = InteracETransferPaymentAccount.class, name = PaymentMethod.INTERAC_E_TRANSFER_ID),
         @JsonSubTypes.Type(value = MoneyBeamPaymentAccount.class, name = PaymentMethod.MONEY_BEAM_ID),
+        @JsonSubTypes.Type(value = MoneyGramPaymentAccount.class, name = PaymentMethod.MONEY_GRAM_ID),
         @JsonSubTypes.Type(value = NationalBankAccountPaymentAccount.class, name = PaymentMethod.NATIONAL_BANK_ID),
         @JsonSubTypes.Type(value = OKPayPaymentAccount.class, name = PaymentMethod.OK_PAY_ID),
         @JsonSubTypes.Type(value = PerfectMoneyPaymentAccount.class, name = PaymentMethod.PERFECT_MONEY_ID),
