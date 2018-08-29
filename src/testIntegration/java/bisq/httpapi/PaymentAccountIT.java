@@ -27,6 +27,7 @@ import bisq.httpapi.model.payment.SwishPaymentAccount;
 import bisq.httpapi.model.payment.USPostalMoneyOrderPaymentAccount;
 import bisq.httpapi.model.payment.UpholdPaymentAccount;
 import bisq.httpapi.model.payment.VenmoPaymentAccount;
+import bisq.httpapi.model.payment.WeChatPayPaymentAccount;
 import bisq.httpapi.model.payment.WesternUnionPaymentAccount;
 
 import java.util.Arrays;
@@ -982,6 +983,39 @@ public class PaymentAccountIT {
 
     @InSequence(2)
     @Test
+    public void create_validWeChatPay_returnsCreatedAccount() {
+        final int alicePort = getAlicePort();
+        final Faker faker = new Faker();
+
+        final WeChatPayPaymentAccount accountToCreate = new WeChatPayPaymentAccount();
+        ApiTestHelper.randomizeAccountPayload(accountToCreate);
+        accountToCreate.accountNr = faker.finance().bic();
+
+        final String expectedPaymentDetails = String.format("WeChat Pay - Account no.: %s", accountToCreate.accountNr);
+
+        given().
+                port(alicePort).
+                contentType(ContentType.JSON).
+                body(accountToCreate).
+//
+        when().
+                post("/api/v1/payment-accounts").
+//
+        then().
+                statusCode(200).
+                and().body("id", isA(String.class)).
+                and().body("paymentMethod", equalTo(accountToCreate.paymentMethod)).
+                and().body("accountName", equalTo(accountToCreate.accountName)).
+                and().body("paymentDetails", equalTo(expectedPaymentDetails)).
+                and().body("selectedTradeCurrency", equalTo(accountToCreate.selectedTradeCurrency)).
+                and().body("tradeCurrencies", equalTo(accountToCreate.tradeCurrencies)).
+                and().body("accountNr", equalTo(accountToCreate.accountNr)).
+                and().body("size()", equalTo(7))
+        ;
+    }
+
+    @InSequence(2)
+    @Test
     public void create_validWesternUnion_returnsCreatedAccount() {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
@@ -1142,7 +1176,7 @@ public class PaymentAccountIT {
         then().
                 statusCode(422).
                 and().body("errors.size()", equalTo(1)).
-                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, HAL_CASH, INTERAC_E_TRANSFER, MONEY_BEAM, MONEY_GRAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WESTERN_UNION"))
+                and().body("errors[0]", equalTo("Unable to recognize sub type of PaymentAccount. Value 'null' is invalid. Allowed values are: ALI_PAY, CASH_APP, CASH_DEPOSIT, CHASE_QUICK_PAY, CLEAR_X_CHANGE, BLOCK_CHAINS, F2F, FASTER_PAYMENTS, HAL_CASH, INTERAC_E_TRANSFER, MONEY_BEAM, MONEY_GRAM, NATIONAL_BANK, OK_PAY, PERFECT_MONEY, POPMONEY, REVOLUT, SAME_BANK, SEPA, SEPA_INSTANT, SPECIFIC_BANKS, SWISH, UPHOLD, US_POSTAL_MONEY_ORDER, VENMO, WECHAT_PAY, WESTERN_UNION"))
         ;
     }
 
