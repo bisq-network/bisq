@@ -34,7 +34,7 @@ import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.dao.governance.voteresult.DecryptedVote;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.BsqStateListener;
@@ -251,9 +251,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 
-            List<DecryptedVote> decryptedVotesForCycle = voteResultService.getAllDecryptedVotes().stream()
-                    .filter(decryptedVote -> cycleService.isTxInCycle(cycle, decryptedVote.getBlindVoteTxId()))
-                    .filter(decryptedVote -> cycleService.isTxInCycle(cycle, decryptedVote.getVoteRevealTxId()))
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = voteResultService.getAllDecryptedBallotsWithMerits().stream()
+                    .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getBlindVoteTxId()))
+                    .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getVoteRevealTxId()))
                     .collect(Collectors.toList());
 
             long cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
@@ -400,8 +400,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(selectedProposalListItem.getEvaluatedProposal().getProposal()))
                 .forEach(evaluatedProposal -> {
-                    resultsOfCycle.getDecryptedVotesForCycle().forEach(decryptedVote -> {
-                        voteListItemList.add(new VoteListItem(evaluatedProposal.getProposal(), decryptedVote,
+                    resultsOfCycle.getDecryptedVotesForCycle().forEach(decryptedBallotsWithMerits -> {
+                        voteListItemList.add(new VoteListItem(evaluatedProposal.getProposal(), decryptedBallotsWithMerits,
                                 bsqStateService, bsqFormatter));
                     });
                 });
