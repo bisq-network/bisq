@@ -19,12 +19,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "user")
 @Produces(MediaType.APPLICATION_JSON)
-public class UserResource {
+public class UserEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public UserResource(BisqProxy bisqProxy) {
+    public UserEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

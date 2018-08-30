@@ -30,7 +30,18 @@ import com.google.inject.name.Names;
 
 import bisq.httpapi.service.HttpApiServer;
 import bisq.httpapi.service.auth.TokenRegistry;
-import bisq.httpapi.service.resources.OfferEndPoint;
+import bisq.httpapi.service.resources.ArbitratorEndpoint;
+import bisq.httpapi.service.resources.BackupEndpoint;
+import bisq.httpapi.service.resources.ClosedTradableEndpoint;
+import bisq.httpapi.service.resources.MarketEndpoint;
+import bisq.httpapi.service.resources.NetworkEndpoint;
+import bisq.httpapi.service.resources.OfferEndpoint;
+import bisq.httpapi.service.resources.PaymentAccountEndpoint;
+import bisq.httpapi.service.resources.PreferencesEndpoint;
+import bisq.httpapi.service.resources.TradeEndpoint;
+import bisq.httpapi.service.resources.UserEndpoint;
+import bisq.httpapi.service.resources.VersionEndpoint;
+import bisq.httpapi.service.resources.WalletEndpoint;
 
 public class HttpApiModule extends AppModule {
 
@@ -43,7 +54,18 @@ public class HttpApiModule extends AppModule {
         bind(HttpApiServer.class).in(Singleton.class);
         bind(TokenRegistry.class).in(Singleton.class);
 
-        bind(OfferEndPoint.class).in(Singleton.class);
+        bind(ArbitratorEndpoint.class).in(Singleton.class);
+        bind(BackupEndpoint.class).in(Singleton.class);
+        bind(ClosedTradableEndpoint.class).in(Singleton.class);
+        bind(MarketEndpoint.class).in(Singleton.class);
+        bind(NetworkEndpoint.class).in(Singleton.class);
+        bind(OfferEndpoint.class).in(Singleton.class);
+        bind(PaymentAccountEndpoint.class).in(Singleton.class);
+        bind(PreferencesEndpoint.class).in(Singleton.class);
+        bind(TradeEndpoint.class).in(Singleton.class);
+        bind(UserEndpoint.class).in(Singleton.class);
+        bind(VersionEndpoint.class).in(Singleton.class);
+        bind(WalletEndpoint.class).in(Singleton.class);
 
         String httpApiHost = environment.getProperty(AppOptionKeys.HTTP_API_HOST, String.class, "127.0.0.1");
         bind(String.class).annotatedWith(Names.named(AppOptionKeys.HTTP_API_HOST)).toInstance(httpApiHost);

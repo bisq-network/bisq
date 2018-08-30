@@ -16,7 +16,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class ArbitratorResourceIT {
+public class ArbitratorEndpointIT {
 
     @DockerContainer
     Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, true, false);

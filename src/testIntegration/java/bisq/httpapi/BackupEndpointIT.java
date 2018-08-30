@@ -44,7 +44,7 @@ import org.jboss.arquillian.junit.InSequence;
 import org.jboss.arquillian.test.api.ArquillianResource;
 
 @RunWith(Arquillian.class)
-public class BackupResourceIT {
+public class BackupEndpointIT {
 
     private static final String APP_DIR_VOLUME_NAME = "alice-app-dir";
     private static final String APP_DIR_VOLUME_HOST_PATH = "/root/.local/share/Bisq";

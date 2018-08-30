@@ -18,12 +18,12 @@ import javax.ws.rs.core.MediaType;
 @Slf4j
 @Api(value = "closed-tradables", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class ClosedTradableResource {
+public class ClosedTradableEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public ClosedTradableResource(BisqProxy bisqProxy) {
+    public ClosedTradableEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

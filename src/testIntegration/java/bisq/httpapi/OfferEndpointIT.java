@@ -5,6 +5,14 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.model.TakeOffer;
+import bisq.httpapi.model.WalletAddress;
+import bisq.httpapi.model.WithdrawFundsForm;
+import bisq.httpapi.model.payment.SepaPaymentAccount;
+
 import org.json.simple.JSONObject;
 
 import java.math.BigDecimal;
@@ -24,13 +32,6 @@ import static org.hamcrest.Matchers.*;
 
 
 
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.model.TakeOffer;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WithdrawFundsForm;
-import bisq.httpapi.model.payment.SepaPaymentAccount;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
@@ -39,7 +40,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class OfferEndPointIT {
+public class OfferEndpointIT {
 
     @DockerContainer
     Container alice = ContainerFactory.createApiContainer("alice", "8080->8080", 3333, true, true);
@@ -442,7 +443,7 @@ public class OfferEndPointIT {
     }
 
     /**
-     * Although this test is for WalletResource it is located here to reuse state that is expensive to restore elsewhere
+     * Although this test is for WalletEndpoint it is located here to reuse state that is expensive to restore elsewhere
      */
     @InSequence(9)
     @Test

@@ -36,12 +36,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 @Api(value = "trades", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class TradeResource {
+public class TradeEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public TradeResource(BisqProxy bisqProxy) {
+    public TradeEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

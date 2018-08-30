@@ -17,7 +17,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class VersionResourceIT {
+public class VersionEndpointIT {
 
     @DockerContainer
     private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);

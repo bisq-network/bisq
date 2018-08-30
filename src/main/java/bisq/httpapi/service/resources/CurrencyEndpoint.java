@@ -18,19 +18,19 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "currencies", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class CurrencyResource {
+public class CurrencyEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public CurrencyResource(BisqProxy bisqProxy) {
+    public CurrencyEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 
     @ApiOperation("List available currencies")
     @GET
     public CurrencyList getCurrencyList() {
-        return MarketResource.getCurrencyList();
+        return MarketEndpoint.getCurrencyList();
     }
 
     @ApiOperation(value = "Get market prices", notes = "If currencyCodes is not provided then currencies from preferences are used.")

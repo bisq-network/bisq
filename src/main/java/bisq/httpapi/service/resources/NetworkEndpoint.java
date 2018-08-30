@@ -18,12 +18,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "network", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class NetworkResource {
+public class NetworkEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public NetworkResource(BisqProxy bisqProxy) {
+    public NetworkEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

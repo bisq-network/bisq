@@ -22,12 +22,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "payment-accounts", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class PaymentAccountResource {
+public class PaymentAccountEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public PaymentAccountResource(BisqProxy bisqProxy) {
+    public PaymentAccountEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

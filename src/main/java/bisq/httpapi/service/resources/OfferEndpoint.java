@@ -18,6 +18,22 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
 
+import bisq.httpapi.exceptions.AmountTooHighException;
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
+import bisq.httpapi.exceptions.NotBootstrappedException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.OfferList;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.model.TakeOffer;
+import bisq.httpapi.model.TradeDetails;
+import bisq.httpapi.util.ResourceHelper;
+
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
@@ -43,21 +59,6 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.exceptions.AmountTooHighException;
-import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
-import bisq.httpapi.exceptions.InsufficientMoneyException;
-import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
-import bisq.httpapi.exceptions.NotBootstrappedException;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
-import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.OfferList;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.model.TakeOffer;
-import bisq.httpapi.model.TradeDetails;
-import bisq.httpapi.util.ResourceHelper;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -80,7 +81,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api(value = "offers", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class OfferEndPoint {
+public class OfferEndpoint {
     private final OfferBookService offerBookService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -98,7 +99,7 @@ public class OfferEndPoint {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferEndPoint(OfferBookService offerBookService,
+    public OfferEndpoint(OfferBookService offerBookService,
                          TradeManager tradeManager,
                          OpenOfferManager openOfferManager,
                          OfferBuilder offerBuilder,

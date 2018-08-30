@@ -20,7 +20,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class UserResourceIT {
+public class UserEndpointIT {
 
     @DockerContainer
     Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);
@@ -124,13 +124,13 @@ public class UserResourceIT {
     public void changePassword_settingAnotherPassword_enablesAuthentication() {
         final int alicePort = getAlicePort();
         final Faker faker = new Faker();
-        final String oldPassword = UserResourceIT.validPassword;
+        final String oldPassword = UserEndpointIT.validPassword;
         String newPassword;
         do {
             newPassword = faker.internet().password();
-        } while (UserResourceIT.validPassword.equals(newPassword));
-        UserResourceIT.validPassword = newPassword;
-        UserResourceIT.invalidPassword = newPassword + newPassword;
+        } while (UserEndpointIT.validPassword.equals(newPassword));
+        UserEndpointIT.validPassword = newPassword;
+        UserEndpointIT.invalidPassword = newPassword + newPassword;
         String oldAccessToken = accessToken;
         accessToken = given().
                 port(alicePort).

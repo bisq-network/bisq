@@ -37,7 +37,7 @@ public class ClosableTradableResourceIT {
     @DockerContainer
     private Container bitcoin;
 
-    private TradeResourceIT tradeResourceIT = new TradeResourceIT();
+    private TradeEndpointIT tradeResourceIT = new TradeEndpointIT();
 
     {
         alice = tradeResourceIT.alice;

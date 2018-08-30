@@ -16,12 +16,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "version", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class VersionResource {
+public class VersionEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public VersionResource(BisqProxy bisqProxy) {
+    public VersionEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

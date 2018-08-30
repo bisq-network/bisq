@@ -1,5 +1,10 @@
 package bisq.httpapi.service.resources;
 
+import bisq.httpapi.BisqProxy;
+import bisq.httpapi.model.Arbitrator;
+import bisq.httpapi.model.ArbitratorList;
+import bisq.httpapi.model.ArbitratorRegistration;
+
 import javax.inject.Inject;
 
 import java.util.Collection;
@@ -7,10 +12,6 @@ import java.util.stream.Collectors;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.model.Arbitrator;
-import bisq.httpapi.model.ArbitratorList;
-import bisq.httpapi.model.ArbitratorRegistration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -29,12 +30,12 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @Api(value = "arbitrators", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class ArbitratorResource {
+public class ArbitratorEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public ArbitratorResource(BisqProxy bisqProxy) {
+    public ArbitratorEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

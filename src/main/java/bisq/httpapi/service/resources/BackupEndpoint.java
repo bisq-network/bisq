@@ -34,12 +34,12 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 @Api(value = "backups", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupResource {
+public class BackupEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public BackupResource(BisqProxy bisqProxy) {
+    public BackupEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

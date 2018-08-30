@@ -2,6 +2,10 @@ package bisq.httpapi.service.resources;
 
 import bisq.core.locale.CurrencyUtil;
 
+import bisq.httpapi.model.CurrencyList;
+import bisq.httpapi.model.Market;
+import bisq.httpapi.model.MarketList;
+
 import javax.inject.Inject;
 
 import java.util.Comparator;
@@ -11,9 +15,6 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.model.CurrencyList;
-import bisq.httpapi.model.Market;
-import bisq.httpapi.model.MarketList;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -23,12 +24,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "markets", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class MarketResource {
+public class MarketEndpoint {
     private static MarketList marketList;
     private static CurrencyList currencyList;
 
     @Inject
-    public MarketResource() {
+    public MarketEndpoint() {
     }
 
     @ApiOperation("List markets")

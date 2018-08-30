@@ -4,6 +4,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 
+import bisq.httpapi.model.payment.SepaPaymentAccount;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,7 +15,6 @@ import static org.hamcrest.Matchers.*;
 
 
 
-import bisq.httpapi.model.payment.SepaPaymentAccount;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.hamcrest.Matcher;
@@ -21,7 +22,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class TradeResourceIT {
+public class TradeEndpointIT {
 
     @DockerContainer
     Container alice;
@@ -39,7 +40,7 @@ public class TradeResourceIT {
     @DockerContainer
     Container bitcoin;
 
-    OfferEndPointIT offerResourceIT = new OfferEndPointIT();
+    OfferEndpointIT offerResourceIT = new OfferEndpointIT();
 
     private static String tradeId;
 
@@ -54,7 +55,7 @@ public class TradeResourceIT {
     @InSequence
     @Test
     public void setupTrade() throws Exception {
-        final OfferEndPointIT offerResourceIT = new OfferEndPointIT();
+        final OfferEndpointIT offerResourceIT = new OfferEndpointIT();
         offerResourceIT.alice = alice;
         offerResourceIT.bob = bob;
         offerResourceIT.arbitrator = arbitrator;
@@ -84,8 +85,8 @@ public class TradeResourceIT {
     public void getTrades_returnsTrade() {
         final int alicePort = getAlicePort();
 
-        final SepaPaymentAccount alicePaymentAccount = OfferEndPointIT.alicePaymentAccount;
-        final SepaPaymentAccount bobPaymentAccount = OfferEndPointIT.bobPaymentAccount;
+        final SepaPaymentAccount alicePaymentAccount = OfferEndpointIT.alicePaymentAccount;
+        final SepaPaymentAccount bobPaymentAccount = OfferEndpointIT.bobPaymentAccount;
 
         given().
                 port(getBobPort()).
@@ -104,7 +105,7 @@ public class TradeResourceIT {
                 and().body("trades[0].offer.baseCurrencyCode", equalTo("BTC")).
                 and().body("trades[0].offer.bankId", equalTo(alicePaymentAccount.bic)).
                 and().body("trades[0].offer.blockHeightAtOfferCreation", isA(Integer.class)).
-                and().body("trades[0].offer.buyerSecurityDeposit", equalTo((int) OfferEndPointIT.createdOffer.buyerSecurityDeposit)).
+                and().body("trades[0].offer.buyerSecurityDeposit", equalTo((int) OfferEndpointIT.createdOffer.buyerSecurityDeposit)).
                 and().body("trades[0].offer.counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                 and().body("trades[0].offer.countryCode", equalTo(alicePaymentAccount.countryCode)).
                 and().body("trades[0].offer.currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
@@ -258,7 +259,7 @@ public class TradeResourceIT {
         assertTradeNotFound(getBobPort(), tradeId);
         assertTradeNotFound(getAlicePort(), tradeId);
         assertWalletBalance(getAlicePort(), greaterThan(100000000));
-        assertWalletBalance(getBobPort(), lessThan((int) (100000000 - OfferEndPointIT.createdOffer.amount)));
+        assertWalletBalance(getBobPort(), lessThan((int) (100000000 - OfferEndpointIT.createdOffer.amount)));
     }
 
     private void assertWalletBalance(int apiPort, Matcher matcher) {

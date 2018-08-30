@@ -15,7 +15,6 @@ import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 
 
-
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.model.AuthForm;
@@ -25,6 +24,9 @@ import bisq.httpapi.model.WalletAddress;
 import bisq.httpapi.model.WalletAddressList;
 import bisq.httpapi.model.WalletTransactionList;
 import bisq.httpapi.model.WithdrawFundsForm;
+
+
+
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -43,19 +45,16 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-//TODO @bernard: i would prefer to rename those resource classes to either WalletResource -> Wallet as resource is in the
-// package name already or to something more clear. Resource is so overloaded....
-
 @Api(value = "wallet", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class WalletResource {
+public class WalletEndpoint {
 
     private final BisqProxy bisqProxy;
     private final Balances balances;
 
     @Inject
-    public WalletResource(BisqProxy bisqProxy, Balances balances) {
+    public WalletEndpoint(BisqProxy bisqProxy, Balances balances) {
         this.bisqProxy = bisqProxy;
         this.balances = balances;
     }

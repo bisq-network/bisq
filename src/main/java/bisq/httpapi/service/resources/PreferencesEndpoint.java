@@ -19,12 +19,12 @@ import javax.ws.rs.core.MediaType;
 
 @Api(value = "preferences", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
-public class PreferencesResource {
+public class PreferencesEndpoint {
 
     private final BisqProxy bisqProxy;
 
     @Inject
-    public PreferencesResource(BisqProxy bisqProxy) {
+    public PreferencesEndpoint(BisqProxy bisqProxy) {
         this.bisqProxy = bisqProxy;
     }
 

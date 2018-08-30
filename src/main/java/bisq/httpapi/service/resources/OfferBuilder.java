@@ -164,7 +164,7 @@ public class OfferBuilder {
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService, referralIdService,
                 paymentAccount, currencyCode);
         Coin amountAsCoin = Coin.valueOf(amount);
-        boolean marketPriceAvailable = MarketResource.isMarketPriceAvailable();
+        boolean marketPriceAvailable = MarketEndpoint.isMarketPriceAvailable();
         Coin makerFeeAsCoin = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         // Throws runtime exception if data are invalid
         OfferUtil.validateOfferData(filterManager, p2PService, Coin.valueOf(buyerSecurityDeposit), paymentAccount, currencyCode, makerFeeAsCoin);
@@ -247,7 +247,7 @@ public class OfferBuilder {
         if (amount != null) {
             final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
-            if (MarketResource.isMarketPriceAvailable()) {
+            if (MarketEndpoint.isMarketPriceAvailable()) {
                 if (marketPriceMargin > 0)
                     makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
                 else
@@ -274,7 +274,7 @@ public class OfferBuilder {
         } else if (!marketPair.equals(marketPair.toUpperCase())) {
             throw new ValidationException("The marketPair must be uppercase: " + marketPair);
         } else {
-            boolean existingPair = MarketResource.getMarketList().markets.stream()
+            boolean existingPair = MarketEndpoint.getMarketList().markets.stream()
                     .filter(market -> market.getPair().equals(marketPair))
                     .count() == 1;
             if (!existingPair) {
