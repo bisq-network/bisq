@@ -13,9 +13,10 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-mainClassName = 'bisq.httpapi.BisqHttpApiMain'
+mainClassName = 'bisq.httpapi.app.HttpApiMain'
 
 repositories {
+    mavenLocal()
     jcenter()
     maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
@@ -37,7 +38,7 @@ dependencies {
 
     runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
     compileOnly 'org.projectlombok:lombok:1.16.16'
-    //annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
     testCompile 'junit:junit:4.12'
     testCompile('org.mockito:mockito-core:2.8.9') {
         exclude(module: 'objenesis')
@@ -48,7 +49,7 @@ dependencies {
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
     testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    //testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
 
     // Converted from Bisq-API projects maven file (http://sagioto.github.io/maven2gradle/)
     // TODO add exclusions
