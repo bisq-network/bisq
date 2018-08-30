@@ -1,4 +1,4 @@
-package bisq.httpapi.service.resources;
+package bisq.httpapi.service.endpoint;
 
 import javax.inject.Inject;
 

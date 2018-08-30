@@ -18,7 +18,7 @@
 package bisq.httpapi.util;
 
 import bisq.httpapi.BisqProxy;
-import bisq.httpapi.service.resources.MarketEndpoint;
+import bisq.httpapi.service.endpoint.MarketEndpoint;
 import com.codahale.metrics.health.HealthCheck;
 
 public class CurrencyListHealthCheck extends HealthCheck {

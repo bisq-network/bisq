@@ -1,4 +1,4 @@
-package bisq.httpapi.service.resources;
+package bisq.httpapi.service.endpoint;
 
 import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.Arbitrator;

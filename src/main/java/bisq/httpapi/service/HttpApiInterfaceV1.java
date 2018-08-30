@@ -1,18 +1,18 @@
 package bisq.httpapi.service;
 
-import bisq.httpapi.service.resources.ArbitratorEndpoint;
-import bisq.httpapi.service.resources.BackupEndpoint;
-import bisq.httpapi.service.resources.ClosedTradableEndpoint;
-import bisq.httpapi.service.resources.CurrencyEndpoint;
-import bisq.httpapi.service.resources.MarketEndpoint;
-import bisq.httpapi.service.resources.NetworkEndpoint;
-import bisq.httpapi.service.resources.OfferEndpoint;
-import bisq.httpapi.service.resources.PaymentAccountEndpoint;
-import bisq.httpapi.service.resources.PreferencesEndpoint;
-import bisq.httpapi.service.resources.TradeEndpoint;
-import bisq.httpapi.service.resources.UserEndpoint;
-import bisq.httpapi.service.resources.VersionEndpoint;
-import bisq.httpapi.service.resources.WalletEndpoint;
+import bisq.httpapi.service.endpoint.ArbitratorEndpoint;
+import bisq.httpapi.service.endpoint.BackupEndpoint;
+import bisq.httpapi.service.endpoint.ClosedTradableEndpoint;
+import bisq.httpapi.service.endpoint.CurrencyEndpoint;
+import bisq.httpapi.service.endpoint.MarketEndpoint;
+import bisq.httpapi.service.endpoint.NetworkEndpoint;
+import bisq.httpapi.service.endpoint.OfferEndpoint;
+import bisq.httpapi.service.endpoint.PaymentAccountEndpoint;
+import bisq.httpapi.service.endpoint.PreferencesEndpoint;
+import bisq.httpapi.service.endpoint.TradeEndpoint;
+import bisq.httpapi.service.endpoint.UserEndpoint;
+import bisq.httpapi.service.endpoint.VersionEndpoint;
+import bisq.httpapi.service.endpoint.WalletEndpoint;
 
 import javax.inject.Inject;
 
