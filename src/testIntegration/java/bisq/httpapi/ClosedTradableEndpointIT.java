@@ -19,7 +19,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class ClosableTradableResourceIT {
+public class ClosedTradableEndpointIT {
 
     @DockerContainer
     private Container alice;
