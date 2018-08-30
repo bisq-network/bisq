@@ -118,7 +118,7 @@ public class TradeEndpointIT {
                 and().body("trades[0].offer.makerFee", equalTo(5000)).
                 and().body("trades[0].offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("trades[0].offer.marketPriceMargin", equalTo(0f)).
-                and().body("trades[0].offer.maxTradeLimit", equalTo(25000000)).
+                and().body("trades[0].offer.maxTradeLimit", equalTo(6250000)).
                 and().body("trades[0].offer.maxTradePeriod", equalTo(518400000)).
                 and().body("trades[0].offer.minAmount", equalTo(6250000)).
                 and().body("trades[0].offer.offerFeePaymentTxId", isA(String.class)).

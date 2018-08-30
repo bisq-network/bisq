@@ -303,7 +303,7 @@ public class OfferEndpointIT {
                         and().body("counterCurrencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
                         and().body("countryCode", equalTo(alicePaymentAccount.countryCode)).
                         and().body("currencyCode", equalTo(alicePaymentAccount.selectedTradeCurrency)).
-//                        and().body("extraDataMap.accountAgeWitnessHash", isA(String.class)).
+                        and().body("extraDataMap.accountAgeWitnessHash", isA(String.class)).
                         and().body("date", isA(Long.class)).
                         and().body("direction", equalTo(OfferPayload.Direction.BUY.name())).
                         and().body("id", isA(String.class)).
@@ -313,7 +313,7 @@ public class OfferEndpointIT {
                         and().body("makerFee", equalTo(5000)).
                         and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                         and().body("marketPriceMargin", equalTo(0f)).
-                        and().body("maxTradeLimit", equalTo(25000000)).
+                        and().body("maxTradeLimit", equalTo(6250000)).
                         and().body("maxTradePeriod", equalTo(518400000)).
                         and().body("minAmount", equalTo(6250000)).
                         and().body("offerFeePaymentTxId", isA(String.class)).
@@ -366,7 +366,7 @@ public class OfferEndpointIT {
                 and().body("offers[0].makerFee", equalTo(5000)).
                 and().body("offers[0].makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("offers[0].marketPriceMargin", equalTo(0f)).
-                and().body("offers[0].maxTradeLimit", equalTo(25000000)).
+                and().body("offers[0].maxTradeLimit", equalTo(6250000)).
                 and().body("offers[0].maxTradePeriod", equalTo(518400000)).
                 and().body("offers[0].minAmount", equalTo(6250000)).
                 and().body("offers[0].offerFeePaymentTxId", isA(String.class)).
@@ -424,7 +424,7 @@ public class OfferEndpointIT {
                 and().body("makerFee", equalTo(43300)).
                 and().body("makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("marketPriceMargin", equalTo(.12f)).
-                and().body("maxTradeLimit", equalTo(25000000)).
+                and().body("maxTradeLimit", equalTo(6250000)).
                 and().body("maxTradePeriod", equalTo(518400000)).
                 and().body("minAmount", equalTo(6250000)).
                 and().body("offerFeePaymentTxId", isA(String.class)).
@@ -655,7 +655,7 @@ public class OfferEndpointIT {
                 and().body("offer.makerFee", equalTo(5000)).
                 and().body("offer.makerPaymentAccountId", equalTo(alicePaymentAccount.id)).
                 and().body("offer.marketPriceMargin", equalTo(0f)).
-                and().body("offer.maxTradeLimit", equalTo(25000000)).
+                and().body("offer.maxTradeLimit", equalTo(6250000)).
                 and().body("offer.maxTradePeriod", equalTo(518400000)).
                 and().body("offer.minAmount", equalTo(6250000)).
                 and().body("offer.offerFeePaymentTxId", isA(String.class)).
