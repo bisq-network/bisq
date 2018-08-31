@@ -4,6 +4,8 @@ import bisq.httpapi.facade.NetworkFacade;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.P2PNetworkStatus;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 
@@ -14,6 +16,8 @@ import io.swagger.annotations.Authorization;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
 
@@ -28,17 +32,29 @@ public class NetworkEndpoint {
         this.networkFacade = networkFacade;
     }
 
-    @ApiOperation(value = "Get Bitcoin network status")
+    @ApiOperation(value = "Get Bitcoin network status", response = BitcoinNetworkStatus.class)
     @GET
     @Path("/bitcoin/status")
-    public BitcoinNetworkStatus getBitcoinNetworkStatus() {
-        return networkFacade.getBitcoinNetworkStatus();
+    public void getBitcoinNetworkStatus(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(networkFacade.getBitcoinNetworkStatus());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation(value = "Get P2P network status")
+    @ApiOperation(value = "Get P2P network status", response = P2PNetworkStatus.class)
     @GET
     @Path("/p2p/status")
-    public P2PNetworkStatus getP2PNetworkStatus() {
-        return networkFacade.getP2PNetworkStatus();
+    public void getP2PNetworkStatus(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(networkFacade.getP2PNetworkStatus());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 }
