@@ -18,6 +18,8 @@ import bisq.httpapi.model.TakeOffer;
 import bisq.httpapi.model.TradeDetails;
 import bisq.httpapi.util.ResourceHelper;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
@@ -64,21 +66,31 @@ public class OfferEndpoint {
     }
 
 
-    @ApiOperation("Find offers")
+    @ApiOperation(value = "Find offers", response = OfferList.class)
     @GET
-    public OfferList find() {
-        //TODO make async and use UserThread.execute
-        List<OfferDetail> offers = offerFacade.getAllOffers();
-        return new OfferList(offers);
+    public void find(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                List<OfferDetail> offers = offerFacade.getAllOffers();
+                asyncResponse.resume(new OfferList(offers));
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get offer details")
+    @ApiOperation(value = "Get offer details", response = OfferDetail.class)
     @GET
     @Path("/{id}")
-    public OfferDetail getOfferById(@NotEmpty @PathParam("id") String id) {
-        //TODO make async and use UserThread.execute
-        Offer offer = offerFacade.findOffer(id);
-        return new OfferDetail(offer);
+    public void getOfferById(@Suspended final AsyncResponse asyncResponse, @NotEmpty @PathParam("id") String id) {
+        UserThread.execute(() -> {
+            try {
+                Offer offer = offerFacade.findOffer(id);
+                asyncResponse.resume(new OfferDetail(offer));
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
     @ApiOperation("Cancel offer")

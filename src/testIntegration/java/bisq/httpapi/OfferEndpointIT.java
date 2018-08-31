@@ -473,6 +473,19 @@ public class OfferEndpointIT {
 
     @InSequence(10)
     @Test
+    public void getOfferById_offerNotFound_returns404status() {
+        given().
+                port(getAlicePort()).
+//
+        when().
+                get("/api/v1/offers/abc").
+//
+        then().
+                statusCode(404);
+    }
+
+    @InSequence(10)
+    @Test
     public void takeOffer_offerNotFound_returns404status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         takeOffer_template("non-existing-id", payload, 404);
