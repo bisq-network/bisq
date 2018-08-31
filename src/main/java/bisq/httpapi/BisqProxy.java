@@ -24,7 +24,6 @@ import bisq.core.user.User;
 import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
-import bisq.httpapi.facade.ShutdownFacade;
 import bisq.httpapi.facade.WalletFacade;
 import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
@@ -55,11 +54,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,10 +101,6 @@ public class BisqProxy {
     private final WalletsManager walletsManager;
     private final PriceFeedService priceFeedService;
     private final boolean useDevPrivilegeKeys;
-
-    private final BackupManager backupManager;
-    private final BackupRestoreManager backupRestoreManager;
-    private final ShutdownFacade shutdownFacade;
     private final WalletFacade walletFacade;
 
     @Inject
@@ -126,9 +116,7 @@ public class BisqProxy {
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
                      PriceFeedService priceFeedService,
-                     BisqEnvironment bisqEnvironment,
                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) Boolean useDevPrivilegeKeys,
-                     ShutdownFacade shutdownFacade,
                      WalletFacade walletFacade) {
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
@@ -143,12 +131,7 @@ public class BisqProxy {
         this.walletsManager = walletsManager;
         this.priceFeedService = priceFeedService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        this.shutdownFacade = shutdownFacade;
         this.walletFacade = walletFacade;
-
-        String appDataDir = bisqEnvironment.getAppDataDir();
-        backupManager = new BackupManager(appDataDir);
-        backupRestoreManager = new BackupRestoreManager(appDataDir);
     }
 
 
@@ -388,43 +371,6 @@ public class BisqProxy {
         for (MarketPrice price : marketPrices)
             priceFeed.prices.put(price.getCurrencyCode(), price.getPrice());
         return priceFeed;
-    }
-
-    public String createBackup() throws IOException {
-        return backupManager.createBackup();
-    }
-
-    public FileInputStream getBackup(String fileName) throws FileNotFoundException {
-        return backupManager.getBackup(fileName);
-    }
-
-    public boolean removeBackup(String fileName) throws FileNotFoundException {
-        return backupManager.removeBackup(fileName);
-    }
-
-    public List<String> getBackupList() {
-        return backupManager.getBackupList();
-    }
-
-    public void requestBackupRestore(String fileName) throws IOException {
-        backupRestoreManager.requestRestore(fileName);
-        if (!shutdownFacade.isShutdownSupported()) {
-            log.warn("No shutdown mechanism provided! You have to restart the app manually.");
-            return;
-        }
-        log.info("Backup restore requested. Initiating shutdown.");
-        new Thread(() -> {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            shutdownFacade.shutDown();
-        }, "Shutdown before backup restore").start();
-    }
-
-    public void uploadBackup(String fileName, InputStream uploadedInputStream) throws IOException {
-        backupManager.saveBackup(fileName, uploadedInputStream);
     }
 
     @NotNull

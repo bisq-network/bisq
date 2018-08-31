@@ -1,5 +1,11 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.facade.BackupFacade;
+import bisq.httpapi.model.BackupList;
+import bisq.httpapi.model.CreatedBackup;
+import bisq.httpapi.util.ResourceHelper;
+
 import javax.inject.Inject;
 
 import java.nio.file.FileAlreadyExistsException;
@@ -10,11 +16,6 @@ import java.io.InputStream;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.model.BackupList;
-import bisq.httpapi.model.CreatedBackup;
-import bisq.httpapi.util.ResourceHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -36,23 +37,23 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class BackupEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final BackupFacade backupFacade;
 
     @Inject
-    public BackupEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public BackupEndpoint(BackupFacade backupFacade) {
+        this.backupFacade = backupFacade;
     }
 
     @ApiOperation("List backups")
     @GET
-    public BackupList getBackupList() throws IOException {
-        return new BackupList(bisqProxy.getBackupList());
+    public BackupList getBackupList() {
+        return new BackupList(backupFacade.getBackupList());
     }
 
     @ApiOperation("Create backup")
     @POST
     public CreatedBackup createBackup() throws IOException {
-        return new CreatedBackup(bisqProxy.createBackup());
+        return new CreatedBackup(backupFacade.createBackup());
     }
 
     @ApiOperation("Upload backup")
@@ -62,7 +63,7 @@ public class BackupEndpoint {
     public void uploadBackup(@FormDataParam("file") InputStream uploadedInputStream,
                              @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
         try {
-            bisqProxy.uploadBackup(fileDetail.getFileName(), uploadedInputStream);
+            backupFacade.uploadBackup(fileDetail.getFileName(), uploadedInputStream);
         } catch (FileAlreadyExistsException e) {
             throw new ValidationException(e.getMessage());
         }
@@ -74,7 +75,7 @@ public class BackupEndpoint {
     @Path("/{path}")
     public Response getBackup(@PathParam("path") String fileName) {
         try {
-            return Response.ok(bisqProxy.getBackup(fileName), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            return Response.ok(backupFacade.getBackup(fileName), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                     .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
                     .build();
         } catch (FileNotFoundException e) {
@@ -87,7 +88,7 @@ public class BackupEndpoint {
     @Path("/{path}/restore")
     public void restoreBackup(@PathParam("path") String fileName) throws IOException {
         try {
-            bisqProxy.requestBackupRestore(fileName);
+            backupFacade.requestBackupRestore(fileName);
         } catch (FileNotFoundException e) {
             throw new NotFoundException(e.getMessage());
         }
@@ -98,7 +99,7 @@ public class BackupEndpoint {
     @Path("/{path}")
     public Response removeBackup(@PathParam("path") String fileName) {
         try {
-            if (bisqProxy.removeBackup(fileName))
+            if (backupFacade.removeBackup(fileName))
                 return Response.status(Response.Status.NO_CONTENT).build();
             else
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Unable to remove file: " + fileName).build();
