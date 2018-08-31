@@ -5,6 +5,8 @@ import bisq.httpapi.model.Arbitrator;
 import bisq.httpapi.model.ArbitratorList;
 import bisq.httpapi.model.ArbitratorRegistration;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import java.util.Collection;
@@ -24,6 +26,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.hibernate.validator.constraints.NotBlank;
@@ -47,28 +51,56 @@ public class ArbitratorEndpoint {
 
     @ApiOperation("Register yourself as arbitrator")
     @POST
-    public void register(@Valid ArbitratorRegistration data) {
-        arbitratorFacade.registerArbitrator(data.languageCodes);
+    public void register(@Suspended final AsyncResponse asyncResponse, @Valid ArbitratorRegistration data) {
+        UserThread.execute(() -> {
+            try {
+                arbitratorFacade.registerArbitrator(data.languageCodes);
+                asyncResponse.resume(Response.noContent().build());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation(value = "Find available arbitrators")
+    @ApiOperation(value = "Find available arbitrators", response = ArbitratorList.class)
     @GET
-    public ArbitratorList find(@QueryParam("acceptedOnly") boolean acceptedOnly) {
-        return toRestModel(arbitratorFacade.getArbitrators(acceptedOnly));
+    public void find(@Suspended final AsyncResponse asyncResponse, @QueryParam("acceptedOnly") boolean acceptedOnly) {
+        UserThread.execute(() -> {
+            try {
+                final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.getArbitrators(acceptedOnly));
+                asyncResponse.resume(arbitratorList);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Select arbitrator")
+    @ApiOperation(value = "Select arbitrator", response = ArbitratorList.class)
     @POST
     @Path("/{address}/select")
-    public ArbitratorList selectArbitrator(@NotBlank @PathParam("address") String address) {
-        return toRestModel(arbitratorFacade.selectArbitrator(address));
+    public void selectArbitrator(@Suspended final AsyncResponse asyncResponse, @NotBlank @PathParam("address") String address) {
+        UserThread.execute(() -> {
+            try {
+                final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.selectArbitrator(address));
+                asyncResponse.resume(arbitratorList);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Deselect arbitrator")
+    @ApiOperation(value = "Deselect arbitrator", response = ArbitratorList.class)
     @POST
     @Path("/{address}/deselect")
-    public ArbitratorList deselectArbitrator(@NotBlank @PathParam("address") String address) {
-        return toRestModel(arbitratorFacade.deselectArbitrator(address));
+    public void deselectArbitrator(@Suspended final AsyncResponse asyncResponse, @NotBlank @PathParam("address") String address) {
+        UserThread.execute(() -> {
+            try {
+                final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.deselectArbitrator(address));
+                asyncResponse.resume(arbitratorList);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
     private static ArbitratorList toRestModel(Collection<bisq.core.arbitration.Arbitrator> businessModelList) {
