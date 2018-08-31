@@ -2,19 +2,6 @@ package bisq.httpapi;
 
 import bisq.core.locale.CountryUtil;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-
-
-
 import bisq.httpapi.model.payment.AliPayPaymentAccount;
 import bisq.httpapi.model.payment.CashAppPaymentAccount;
 import bisq.httpapi.model.payment.CashDepositPaymentAccount;
@@ -42,6 +29,20 @@ import bisq.httpapi.model.payment.UpholdPaymentAccount;
 import bisq.httpapi.model.payment.VenmoPaymentAccount;
 import bisq.httpapi.model.payment.WeChatPayPaymentAccount;
 import bisq.httpapi.model.payment.WesternUnionPaymentAccount;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+
+
+
 import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
@@ -50,7 +51,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 
 @RunWith(Arquillian.class)
-public class PaymentAccountIT {
+public class PaymentAccountEndpointIT {
 
     @DockerContainer
     private Container alice = ContainerFactory.createApiContainer("alice", "8081->8080", 3333, false, false);

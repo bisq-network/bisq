@@ -5,6 +5,8 @@ import bisq.httpapi.model.PaymentAccountList;
 import bisq.httpapi.model.payment.PaymentAccount;
 import bisq.httpapi.model.payment.PaymentAccountHelper;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 
@@ -19,7 +21,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Api(value = "payment-accounts", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)
@@ -35,20 +40,40 @@ public class PaymentAccountEndpoint {
     @ApiOperation("Remove payment account")
     @DELETE
     @Path("/{id}")
-    public void removeById(@PathParam("id") String id) {
-        paymentAccountFacade.removePaymentAccount(id);
+    public void removeById(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id) {
+        UserThread.execute(() -> {
+            try {
+                paymentAccountFacade.removePaymentAccount(id);
+                asyncResponse.resume(Response.status(Response.Status.NO_CONTENT).build());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation(value = "Create payment account", notes = "Inspect models section at the bottom of the page for valid PaymentAccount sub-types schemas")
+    @ApiOperation(value = "Create payment account", notes = "Inspect models section at the bottom of the page for valid PaymentAccount sub-types schemas", response = PaymentAccount.class)
     @POST
-    public PaymentAccount create(@Valid PaymentAccount account) {
-        final bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
-        return PaymentAccountHelper.toRestModel(paymentAccountFacade.addPaymentAccount(paymentAccount));
+    public void create(@Suspended final AsyncResponse asyncResponse, @Valid PaymentAccount account) {
+        UserThread.execute(() -> {
+            try {
+                final bisq.core.payment.PaymentAccount paymentAccount = PaymentAccountHelper.toBusinessModel(account);
+                final PaymentAccount result = PaymentAccountHelper.toRestModel(paymentAccountFacade.addPaymentAccount(paymentAccount));
+                asyncResponse.resume(result);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get existing payment accounts")
+    @ApiOperation(value = "Get existing payment accounts", response = PaymentAccountList.class)
     @GET
-    public PaymentAccountList find() {
-        return paymentAccountFacade.getAccountList();
+    public void find(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(paymentAccountFacade.getAccountList());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 }
