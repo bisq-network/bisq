@@ -1,13 +1,14 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.facade.UserFacade;
+import bisq.httpapi.model.AuthForm;
+import bisq.httpapi.model.AuthResult;
+import bisq.httpapi.model.ChangePassword;
+
 import javax.inject.Inject;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.model.AuthForm;
-import bisq.httpapi.model.AuthResult;
-import bisq.httpapi.model.ChangePassword;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javax.validation.Valid;
@@ -21,18 +22,18 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final UserFacade userFacade;
 
     @Inject
-    public UserEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public UserEndpoint(UserFacade userFacade) {
+        this.userFacade = userFacade;
     }
 
     @ApiOperation("Exchange password for access token")
     @POST
     @Path("/authenticate")
     public AuthResult authenticate(@Valid AuthForm authForm) {
-        return bisqProxy.authenticate(authForm.password);
+        return userFacade.authenticate(authForm.password);
     }
 
 
@@ -40,7 +41,7 @@ public class UserEndpoint {
     @POST
     @Path("/password")
     public AuthResult changePassword(@Valid ChangePassword data) {
-        return bisqProxy.changePassword(data.oldPassword, data.newPassword);
+        return userFacade.changePassword(data.oldPassword, data.newPassword);
     }
 
 }
