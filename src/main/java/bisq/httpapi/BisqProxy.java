@@ -1,33 +1,20 @@
 package bisq.httpapi;
 
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
-import bisq.httpapi.model.BitcoinNetworkStatus;
-import bisq.httpapi.model.P2PNetworkConnection;
-import bisq.httpapi.model.P2PNetworkStatus;
 import bisq.httpapi.model.PriceFeed;
 import bisq.httpapi.model.VersionDetails;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
-import bisq.network.p2p.network.Statistic;
-
 import bisq.common.app.Version;
-
-import org.bitcoinj.core.Peer;
 
 import javax.inject.Inject;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,19 +34,13 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 public class BisqProxy {
-    private final P2PService p2PService;
     private final bisq.core.user.Preferences preferences;
-    private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
 
     @Inject
-    public BisqProxy(P2PService p2PService,
-                     bisq.core.user.Preferences preferences,
-                     WalletsSetup walletsSetup,
+    public BisqProxy(bisq.core.user.Preferences preferences,
                      PriceFeedService priceFeedService) {
-        this.p2PService = p2PService;
         this.preferences = preferences;
-        this.walletsSetup = walletsSetup;
         this.priceFeedService = priceFeedService;
     }
 
@@ -68,32 +49,6 @@ public class BisqProxy {
 
 
     /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
-
-    public P2PNetworkStatus getP2PNetworkStatus() {
-        final P2PNetworkStatus p2PNetworkStatus = new P2PNetworkStatus();
-        final NodeAddress address = p2PService.getAddress();
-        if (null != address)
-            p2PNetworkStatus.address = address.getFullAddress();
-        p2PNetworkStatus.p2pNetworkConnection = p2PService.getNetworkNode().getAllConnections().stream()
-                .map(P2PNetworkConnection::new)
-                .collect(Collectors.toList());
-        p2PNetworkStatus.totalSentBytes = Statistic.totalSentBytesProperty().get();
-        p2PNetworkStatus.totalReceivedBytes = Statistic.totalReceivedBytesProperty().get();
-        return p2PNetworkStatus;
-    }
-
-    public BitcoinNetworkStatus getBitcoinNetworkStatus() {
-        final BitcoinNetworkStatus networkStatus = new BitcoinNetworkStatus();
-        final List<Peer> peers = walletsSetup.connectedPeersProperty().get();
-        if (null != peers)
-            networkStatus.peers = peers.stream().map(peer -> peer.getAddress().toString()).collect(Collectors.toList());
-        else
-            networkStatus.peers = Collections.emptyList();
-        networkStatus.useTorForBitcoinJ = preferences.getUseTorForBitcoinJ();
-        networkStatus.bitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
-        networkStatus.bitcoinNodes = preferences.getBitcoinNodes();
-        return networkStatus;
-    }
 
     public VersionDetails getVersionDetails() {
         final VersionDetails versionDetails = new VersionDetails();

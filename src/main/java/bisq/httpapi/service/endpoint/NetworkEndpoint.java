@@ -1,12 +1,13 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.facade.NetworkFacade;
+import bisq.httpapi.model.BitcoinNetworkStatus;
+import bisq.httpapi.model.P2PNetworkStatus;
+
 import javax.inject.Inject;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.model.BitcoinNetworkStatus;
-import bisq.httpapi.model.P2PNetworkStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -20,24 +21,24 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class NetworkEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final NetworkFacade networkFacade;
 
     @Inject
-    public NetworkEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public NetworkEndpoint(NetworkFacade networkFacade) {
+        this.networkFacade = networkFacade;
     }
 
     @ApiOperation(value = "Get Bitcoin network status")
     @GET
     @Path("/bitcoin/status")
     public BitcoinNetworkStatus getBitcoinNetworkStatus() {
-        return bisqProxy.getBitcoinNetworkStatus();
+        return networkFacade.getBitcoinNetworkStatus();
     }
 
     @ApiOperation(value = "Get P2P network status")
     @GET
     @Path("/p2p/status")
     public P2PNetworkStatus getP2PNetworkStatus() {
-        return bisqProxy.getP2PNetworkStatus();
+        return networkFacade.getP2PNetworkStatus();
     }
 }
