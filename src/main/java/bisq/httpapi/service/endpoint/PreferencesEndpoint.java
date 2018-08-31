@@ -4,6 +4,8 @@ import bisq.httpapi.facade.PreferencesFacade;
 import bisq.httpapi.model.Preferences;
 import bisq.httpapi.model.PreferencesAvailableValues;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 
@@ -16,6 +18,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
 @Api(value = "preferences", authorizations = @Authorization(value = "accessToken"))
@@ -29,22 +33,40 @@ public class PreferencesEndpoint {
         this.preferencesFacade = preferencesFacade;
     }
 
-    @ApiOperation("Get preferences")
+    @ApiOperation(value = "Get preferences", response = Preferences.class)
     @GET
-    public Preferences getPreferences() {
-        return preferencesFacade.getPreferences();
+    public void getPreferences(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(preferencesFacade.getPreferences());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation(value = "Set preferences", notes = "Supports partial update")
+    @ApiOperation(value = "Set preferences", notes = "Supports partial update", response = Preferences.class)
     @PUT
-    public Preferences setPreferences(@Valid Preferences preferences) {
-        return preferencesFacade.setPreferences(preferences);
+    public void setPreferences(@Suspended final AsyncResponse asyncResponse, @Valid Preferences preferences) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(preferencesFacade.setPreferences(preferences));
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get available preferences values")
+    @ApiOperation(value = "Get available preferences values", response = PreferencesAvailableValues.class)
     @GET
     @Path("/available-values")
-    public PreferencesAvailableValues getPreferencesAvailableValues() {
-        return preferencesFacade.getPreferencesAvailableValues();
+    public void getPreferencesAvailableValues(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(preferencesFacade.getPreferencesAvailableValues());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 }
