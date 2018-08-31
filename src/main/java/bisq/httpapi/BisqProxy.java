@@ -21,10 +21,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
-import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
@@ -33,7 +29,6 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
-import bisq.core.util.validation.InputValidator;
 
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.exceptions.NotFoundException;
@@ -45,7 +40,6 @@ import bisq.httpapi.model.ClosedTradableConverter;
 import bisq.httpapi.model.ClosedTradableDetails;
 import bisq.httpapi.model.P2PNetworkConnection;
 import bisq.httpapi.model.P2PNetworkStatus;
-import bisq.httpapi.model.PaymentAccountList;
 import bisq.httpapi.model.Preferences;
 import bisq.httpapi.model.PreferencesAvailableValues;
 import bisq.httpapi.model.PriceFeed;
@@ -55,7 +49,6 @@ import bisq.httpapi.model.WalletAddress;
 import bisq.httpapi.model.WalletAddressList;
 import bisq.httpapi.model.WalletTransaction;
 import bisq.httpapi.model.WalletTransactionList;
-import bisq.httpapi.model.payment.PaymentAccountHelper;
 import bisq.httpapi.service.auth.TokenRegistry;
 
 import bisq.network.p2p.NodeAddress;
@@ -136,7 +129,6 @@ import javax.validation.ValidationException;
  */
 @Slf4j
 public class BisqProxy {
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final BtcWalletService btcWalletService;
     private final User user;
@@ -147,7 +139,6 @@ public class BisqProxy {
     private final bisq.core.user.Preferences preferences;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
-    private final AltCoinAddressValidator altCoinAddressValidator;
     private final ClosedTradableConverter closedTradableConverter;
     private final TokenRegistry tokenRegistry;
     private final WalletsManager walletsManager;
@@ -163,8 +154,7 @@ public class BisqProxy {
     private Runnable shutdownHandler;
 
     @Inject
-    public BisqProxy(AccountAgeWitnessService accountAgeWitnessService,
-                     ArbitratorManager arbitratorManager,
+    public BisqProxy(ArbitratorManager arbitratorManager,
                      BtcWalletService btcWalletService,
                      User user,
                      TradeManager tradeManager,
@@ -174,7 +164,6 @@ public class BisqProxy {
                      bisq.core.user.Preferences preferences,
                      BsqWalletService bsqWalletService,
                      WalletsSetup walletsSetup,
-                     AltCoinAddressValidator altCoinAddressValidator,
                      ClosedTradableConverter closedTradableConverter,
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
@@ -183,7 +172,6 @@ public class BisqProxy {
                      BisqEnvironment bisqEnvironment,
                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) Boolean useDevPrivilegeKeys,
                      @Named(Storage.STORAGE_DIR) File storageDir) {
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
         this.user = user;
@@ -194,7 +182,6 @@ public class BisqProxy {
         this.preferences = preferences;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
-        this.altCoinAddressValidator = altCoinAddressValidator;
         this.closedTradableConverter = closedTradableConverter;
         this.tokenRegistry = tokenRegistry;
         this.walletsManager = walletsManager;
@@ -206,66 +193,6 @@ public class BisqProxy {
         String appDataDir = bisqEnvironment.getAppDataDir();
         backupManager = new BackupManager(appDataDir);
         backupRestoreManager = new BackupRestoreManager(appDataDir);
-    }
-
-    public PaymentAccount addPaymentAccount(PaymentAccount paymentAccount) {
-        if (paymentAccount instanceof CryptoCurrencyAccount) {
-            final CryptoCurrencyAccount cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
-            final TradeCurrency tradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
-            if (null == tradeCurrency) {
-                throw new ValidationException("There must be exactly one trade currency");
-            }
-            altCoinAddressValidator.setCurrencyCode(tradeCurrency.getCode());
-            final InputValidator.ValidationResult validationResult = altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress());
-            if (!validationResult.isValid) {
-                throw new ValidationException(validationResult.errorMessage);
-            }
-        }
-        user.addPaymentAccount(paymentAccount);
-        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
-        if (singleTradeCurrency != null) {
-            if (singleTradeCurrency instanceof FiatCurrency)
-                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
-            else
-                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
-        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            if (tradeCurrencies.contains(CurrencyUtil.getDefaultTradeCurrency()))
-                paymentAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
-            else
-                paymentAccount.setSelectedTradeCurrency(tradeCurrencies.get(0));
-
-            tradeCurrencies.forEach(tradeCurrency -> {
-                if (tradeCurrency instanceof FiatCurrency)
-                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
-                else
-                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
-            });
-        }
-
-        accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
-        return paymentAccount;
-    }
-
-
-    public void removePaymentAccount(String id) {
-        final PaymentAccount paymentAccount = user.getPaymentAccount(id);
-        if (null == paymentAccount) {
-            throw new NotFoundException("Payment account not found: " + id);
-        }
-        user.removePaymentAccount(paymentAccount);
-    }
-
-    private List<PaymentAccount> getPaymentAccountList() {
-        return new ArrayList<>(user.getPaymentAccounts());
-    }
-
-    public PaymentAccountList getAccountList() {
-        PaymentAccountList paymentAccountList = new PaymentAccountList();
-        paymentAccountList.paymentAccounts = getPaymentAccountList().stream()
-                .map(PaymentAccountHelper::toRestModel)
-                .collect(Collectors.toList());
-        return paymentAccountList;
     }
 
 
