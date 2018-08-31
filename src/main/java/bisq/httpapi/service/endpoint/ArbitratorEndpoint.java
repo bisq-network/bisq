@@ -1,6 +1,6 @@
 package bisq.httpapi.service.endpoint;
 
-import bisq.httpapi.BisqProxy;
+import bisq.httpapi.facade.ArbitratorFacade;
 import bisq.httpapi.model.Arbitrator;
 import bisq.httpapi.model.ArbitratorList;
 import bisq.httpapi.model.ArbitratorRegistration;
@@ -32,11 +32,11 @@ import org.hibernate.validator.constraints.NotBlank;
 @Produces(MediaType.APPLICATION_JSON)
 public class ArbitratorEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final ArbitratorFacade arbitratorFacade;
 
     @Inject
-    public ArbitratorEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public ArbitratorEndpoint(ArbitratorFacade arbitratorFacade) {
+        this.arbitratorFacade = arbitratorFacade;
     }
 
     @ApiOperation("Unregister yourself as arbitrator")
@@ -48,27 +48,27 @@ public class ArbitratorEndpoint {
     @ApiOperation("Register yourself as arbitrator")
     @POST
     public void register(@Valid ArbitratorRegistration data) {
-        bisqProxy.registerArbitrator(data.languageCodes);
+        arbitratorFacade.registerArbitrator(data.languageCodes);
     }
 
     @ApiOperation(value = "Find available arbitrators")
     @GET
     public ArbitratorList find(@QueryParam("acceptedOnly") boolean acceptedOnly) {
-        return toRestModel(bisqProxy.getArbitrators(acceptedOnly));
+        return toRestModel(arbitratorFacade.getArbitrators(acceptedOnly));
     }
 
     @ApiOperation("Select arbitrator")
     @POST
     @Path("/{address}/select")
     public ArbitratorList selectArbitrator(@NotBlank @PathParam("address") String address) {
-        return toRestModel(bisqProxy.selectArbitrator(address));
+        return toRestModel(arbitratorFacade.selectArbitrator(address));
     }
 
     @ApiOperation("Deselect arbitrator")
     @POST
     @Path("/{address}/deselect")
     public ArbitratorList deselectArbitrator(@NotBlank @PathParam("address") String address) {
-        return toRestModel(bisqProxy.deselectArbitrator(address));
+        return toRestModel(arbitratorFacade.deselectArbitrator(address));
     }
 
     private static ArbitratorList toRestModel(Collection<bisq.core.arbitration.Arbitrator> businessModelList) {
