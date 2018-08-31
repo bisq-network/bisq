@@ -3,6 +3,12 @@ package bisq.httpapi.service;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 
+import bisq.httpapi.BisqProxy;
+import bisq.httpapi.exceptions.ExceptionMappers;
+import bisq.httpapi.service.auth.AuthFilter;
+import bisq.httpapi.service.auth.TokenRegistry;
+import bisq.httpapi.util.CurrencyListHealthCheck;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 
@@ -10,15 +16,8 @@ import javax.inject.Inject;
 
 import java.util.EnumSet;
 
-import lombok.Setter;
 
 
-
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.exceptions.ExceptionMappers;
-import bisq.httpapi.service.auth.AuthFilter;
-import bisq.httpapi.service.auth.TokenRegistry;
-import bisq.httpapi.util.CurrencyListHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
@@ -39,9 +38,6 @@ public class HttpApiServer extends Application<HttpApiConfiguration> {
     private final HttpApiInterfaceV1 httpApiInterfaceV1;
     private final TokenRegistry tokenRegistry;
     private final BisqEnvironment bisqEnvironment;
-    private final Runnable shutdownHandler;
-    @Setter
-    private Runnable hostShutdownHandler;
 
     @Inject
     public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy, HttpApiInterfaceV1 httpApiInterfaceV1,
@@ -51,13 +47,6 @@ public class HttpApiServer extends Application<HttpApiConfiguration> {
         this.httpApiInterfaceV1 = httpApiInterfaceV1;
         this.tokenRegistry = tokenRegistry;
         this.bisqEnvironment = bisqEnvironment;
-        shutdownHandler = () -> {
-            // TODO add here API specific shut down procedure
-            if (hostShutdownHandler != null)
-                hostShutdownHandler.run();
-        };
-
-        bisqProxy.setShutdownHandler(shutdownHandler);
     }
 
     public void startServer() {

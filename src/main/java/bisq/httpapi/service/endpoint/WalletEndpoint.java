@@ -4,6 +4,16 @@ import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.Balances;
 import bisq.core.btc.InsufficientFundsException;
 
+import bisq.httpapi.exceptions.AmountTooLowException;
+import bisq.httpapi.facade.WalletFacade;
+import bisq.httpapi.model.AuthForm;
+import bisq.httpapi.model.SeedWords;
+import bisq.httpapi.model.SeedWordsRestore;
+import bisq.httpapi.model.WalletAddress;
+import bisq.httpapi.model.WalletAddressList;
+import bisq.httpapi.model.WalletTransactionList;
+import bisq.httpapi.model.WithdrawFundsForm;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -13,17 +23,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.HashSet;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.exceptions.AmountTooLowException;
-import bisq.httpapi.model.AuthForm;
-import bisq.httpapi.model.SeedWords;
-import bisq.httpapi.model.SeedWordsRestore;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletTransactionList;
-import bisq.httpapi.model.WithdrawFundsForm;
 
 
 
@@ -50,13 +49,13 @@ import javax.ws.rs.core.Response;
 @Slf4j
 public class WalletEndpoint {
 
-    private final BisqProxy bisqProxy;
     private final Balances balances;
+    private final WalletFacade walletFacade;
 
     @Inject
-    public WalletEndpoint(BisqProxy bisqProxy, Balances balances) {
-        this.bisqProxy = bisqProxy;
+    public WalletEndpoint(Balances balances, WalletFacade walletFacade) {
         this.balances = balances;
+        this.walletFacade = walletFacade;
     }
 
     @ApiOperation(value = "Get wallet details")
@@ -70,15 +69,15 @@ public class WalletEndpoint {
     @ApiOperation("Get wallet addresses")
     @GET
     @Path("/addresses")
-    public WalletAddressList getAddresses(@QueryParam("purpose") BisqProxy.WalletAddressPurpose purpose) {
-        return bisqProxy.getWalletAddresses(purpose);
+    public WalletAddressList getAddresses(@QueryParam("purpose") WalletFacade.WalletAddressPurpose purpose) {
+        return walletFacade.getWalletAddresses(purpose);
     }
 
     @ApiOperation("Get or create wallet address")
     @POST
     @Path("/addresses") //TODO should path be "addresses" ?
     public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
-        return bisqProxy.getOrCreateAvailableUnusedWalletAddresses();
+        return walletFacade.getOrCreateAvailableUnusedWalletAddresses();
     }
 
     @ApiOperation("Get wallet seed words")
@@ -86,14 +85,14 @@ public class WalletEndpoint {
     @Path("/seed-words/retrieve")
     public SeedWords getSeedWords(AuthForm form) {
         final String password = null == form ? null : form.password;
-        return bisqProxy.getSeedWords(password);
+        return walletFacade.getSeedWords(password);
     }
 
     @ApiOperation("Restore wallet from seed words")
     @POST
     @Path("/seed-words/restore")
     public void restoreWalletFromSeedWords(@Suspended final AsyncResponse asyncResponse, @Valid @NotNull SeedWordsRestore data) {
-        bisqProxy.restoreWalletFromSeedWords(data.mnemonicCode, data.walletCreationDate, data.password)
+        walletFacade.restoreWalletFromSeedWords(data.mnemonicCode, data.walletCreationDate, data.password)
                 .thenApply(response -> asyncResponse.resume(Response.noContent().build()))
                 .exceptionally(e -> {
                     final Throwable cause = e.getCause();
@@ -112,7 +111,7 @@ public class WalletEndpoint {
     @GET
     @Path("/transactions")
     public WalletTransactionList getTransactions() {
-        return bisqProxy.getWalletTransactions();
+        return walletFacade.getWalletTransactions();
     }
 
     @ApiOperation("Withdraw funds")
@@ -124,7 +123,7 @@ public class WalletEndpoint {
         final boolean feeExcluded = data.feeExcluded;
         final String targetAddress = data.targetAddress;
         try {
-            bisqProxy.withdrawFunds(sourceAddresses, amountAsCoin, feeExcluded, targetAddress);
+            walletFacade.withdrawFunds(sourceAddresses, amountAsCoin, feeExcluded, targetAddress);
         } catch (AddressEntryException e) {
             throw new ValidationException(e.getMessage());
         } catch (InsufficientFundsException e) {

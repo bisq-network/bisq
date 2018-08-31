@@ -19,15 +19,7 @@ package bisq.httpapi;
 
 import bisq.core.app.AppOptionKeys;
 
-import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
-
-import com.google.inject.Singleton;
-import com.google.inject.name.Names;
-
-
-
+import bisq.httpapi.facade.ShutdownFacade;
 import bisq.httpapi.service.HttpApiServer;
 import bisq.httpapi.service.auth.TokenRegistry;
 import bisq.httpapi.service.endpoint.ArbitratorEndpoint;
@@ -43,6 +35,13 @@ import bisq.httpapi.service.endpoint.UserEndpoint;
 import bisq.httpapi.service.endpoint.VersionEndpoint;
 import bisq.httpapi.service.endpoint.WalletEndpoint;
 
+import bisq.common.app.AppModule;
+
+import org.springframework.core.env.Environment;
+
+import com.google.inject.Singleton;
+import com.google.inject.name.Names;
+
 public class HttpApiModule extends AppModule {
 
     public HttpApiModule(Environment environment) {
@@ -53,6 +52,8 @@ public class HttpApiModule extends AppModule {
     protected void configure() {
         bind(HttpApiServer.class).in(Singleton.class);
         bind(TokenRegistry.class).in(Singleton.class);
+
+        bind(ShutdownFacade.class).in(Singleton.class);
 
         bind(ArbitratorEndpoint.class).in(Singleton.class);
         bind(BackupEndpoint.class).in(Singleton.class);

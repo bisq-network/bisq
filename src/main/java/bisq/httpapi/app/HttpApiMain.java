@@ -20,6 +20,9 @@ package bisq.httpapi.app;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;
 
+import bisq.httpapi.facade.ShutdownFacade;
+import bisq.httpapi.service.HttpApiServer;
+
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.setup.CommonSetup;
@@ -27,10 +30,6 @@ import bisq.common.setup.CommonSetup;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.httpapi.service.HttpApiServer;
 
 /**
  * Main class for headless version.
@@ -66,8 +65,9 @@ public class HttpApiMain extends BisqHeadlessAppMain {
         log.info("onSetupComplete");
 
         HttpApiServer httpApiServer = injector.getInstance(HttpApiServer.class);
-        httpApiServer.setHostShutdownHandler(() -> UserThread.runAfter(() -> this.gracefulShutDown(() -> log.debug("App shutdown complete")),
-                200, TimeUnit.MILLISECONDS));
+        final ShutdownFacade shutdownFacade = injector.getInstance(ShutdownFacade.class);
+        shutdownFacade.setShutdownHandler(() -> UserThread.runAfter(() -> this.gracefulShutDown(() -> log.debug("App shutdown complete")),
+                        200, TimeUnit.MILLISECONDS));
         httpApiServer.startServer();
     }
 }

@@ -5,13 +5,8 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.BalanceUtil;
 import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.InsufficientFundsException;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Country;
@@ -19,21 +14,18 @@ import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
-import bisq.core.util.validation.BtcAddressValidator;
 
-import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.exceptions.NotFoundException;
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
+import bisq.httpapi.facade.ShutdownFacade;
+import bisq.httpapi.facade.WalletFacade;
 import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.ClosedTradableConverter;
@@ -43,12 +35,7 @@ import bisq.httpapi.model.P2PNetworkStatus;
 import bisq.httpapi.model.Preferences;
 import bisq.httpapi.model.PreferencesAvailableValues;
 import bisq.httpapi.model.PriceFeed;
-import bisq.httpapi.model.SeedWords;
 import bisq.httpapi.model.VersionDetails;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletTransaction;
-import bisq.httpapi.model.WalletTransactionList;
 import bisq.httpapi.service.auth.TokenRegistry;
 
 import bisq.network.p2p.NodeAddress;
@@ -58,33 +45,17 @@ import bisq.network.p2p.network.Statistic;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Peer;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -97,19 +68,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.httpapi.facade.FacadeUtil.failFuture;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 
@@ -132,63 +97,54 @@ public class BisqProxy {
     private final ArbitratorManager arbitratorManager;
     private final BtcWalletService btcWalletService;
     private final User user;
-    private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final bisq.core.user.Preferences preferences;
-    private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final ClosedTradableConverter closedTradableConverter;
     private final TokenRegistry tokenRegistry;
     private final WalletsManager walletsManager;
     private final PriceFeedService priceFeedService;
-    private final BalanceUtil balanceUtil;
     private final boolean useDevPrivilegeKeys;
-    private final File storageDir;
 
     private final BackupManager backupManager;
     private final BackupRestoreManager backupRestoreManager;
-
-    @Setter
-    private Runnable shutdownHandler;
+    private final ShutdownFacade shutdownFacade;
+    private final WalletFacade walletFacade;
 
     @Inject
     public BisqProxy(ArbitratorManager arbitratorManager,
                      BtcWalletService btcWalletService,
                      User user,
-                     TradeManager tradeManager,
                      ClosedTradableManager closedTradableManager,
                      P2PService p2PService,
                      KeyRing keyRing,
                      bisq.core.user.Preferences preferences,
-                     BsqWalletService bsqWalletService,
                      WalletsSetup walletsSetup,
                      ClosedTradableConverter closedTradableConverter,
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
                      PriceFeedService priceFeedService,
-                     BalanceUtil balanceUtil,
                      BisqEnvironment bisqEnvironment,
                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) Boolean useDevPrivilegeKeys,
-                     @Named(Storage.STORAGE_DIR) File storageDir) {
+                     ShutdownFacade shutdownFacade,
+                     WalletFacade walletFacade) {
         this.arbitratorManager = arbitratorManager;
         this.btcWalletService = btcWalletService;
         this.user = user;
-        this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.preferences = preferences;
-        this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.closedTradableConverter = closedTradableConverter;
         this.tokenRegistry = tokenRegistry;
         this.walletsManager = walletsManager;
         this.priceFeedService = priceFeedService;
-        this.balanceUtil = balanceUtil;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        this.storageDir = storageDir;
+        this.shutdownFacade = shutdownFacade;
+        this.walletFacade = walletFacade;
 
         String appDataDir = bisqEnvironment.getAppDataDir();
         backupManager = new BackupManager(appDataDir);
@@ -206,181 +162,6 @@ public class BisqProxy {
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
                 .map(closedTradableConverter::convert)
                 .collect(toList());
-    }
-
-    public WalletTransactionList getWalletTransactions() {
-        final Wallet wallet = walletsSetup.getBtcWallet();
-        WalletTransactionList walletTransactions = new WalletTransactionList();
-        walletTransactions.transactions.addAll(btcWalletService.getTransactions(true)
-                .stream()
-                .map(transaction -> toWalletTransaction(wallet, transaction))
-                .collect(Collectors.toList()));
-        walletTransactions.total = walletTransactions.transactions.size();
-        return walletTransactions;
-    }
-
-    @NotNull
-    private WalletTransaction toWalletTransaction(Wallet wallet, Transaction transaction) {
-        final Coin valueSentFromMe = transaction.getValueSentFromMe(wallet);
-        final Coin valueSentToMe = transaction.getValueSentToMe(wallet);
-        boolean received = false;
-        String addressString = null;
-
-        if (valueSentToMe.isZero()) {
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (!btcWalletService.isTransactionOutputMine(output)) {
-                    received = false;
-                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                        addressString = WalletService.getAddressStringFromOutput(output);
-                        break;
-                    }
-                }
-            }
-        } else if (valueSentFromMe.isZero()) {
-            received = true;
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (btcWalletService.isTransactionOutputMine(output) &&
-                        WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    addressString = WalletService.getAddressStringFromOutput(output);
-                    break;
-                }
-            }
-        } else {
-            boolean outgoing = false;
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (!btcWalletService.isTransactionOutputMine(output)) {
-                    if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                        addressString = WalletService.getAddressStringFromOutput(output);
-                        outgoing = !(BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output));
-                        break;
-                    }
-                }
-            }
-
-            if (outgoing) {
-                received = false;
-            }
-        }
-        final TransactionConfidence confidence = transaction.getConfidence();
-        int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
-
-        final WalletTransaction walletTransaction = new WalletTransaction();
-        walletTransaction.updateTime = transaction.getUpdateTime().getTime();
-        walletTransaction.hash = transaction.getHashAsString();
-        walletTransaction.fee = (transaction.getFee() == null) ? -1 : transaction.getFee().value;
-        walletTransaction.value = transaction.getValue(wallet).value;
-        walletTransaction.valueSentFromMe = valueSentFromMe.value;
-        walletTransaction.valueSentToMe = valueSentToMe.value;
-        walletTransaction.confirmations = confirmations;
-        walletTransaction.inbound = received;
-        walletTransaction.address = addressString;
-        return walletTransaction;
-    }
-
-    public WalletAddressList getWalletAddresses(WalletAddressPurpose purpose) {
-        final Stream<AddressEntry> addressEntryStream;
-        if (WalletAddressPurpose.SEND_FUNDS.equals(purpose)) {
-            addressEntryStream = balanceUtil.getAddressEntriesForAvailableFunds();
-        } else if (WalletAddressPurpose.RESERVED_FUNDS.equals(purpose)) {
-            addressEntryStream = balanceUtil.getAddressEntriesForReservedFunds();
-        } else if (WalletAddressPurpose.LOCKED_FUNDS.equals(purpose)) {
-            addressEntryStream = balanceUtil.getAddressEntriesForLockedFunds();
-        } else if (WalletAddressPurpose.RECEIVE_FUNDS.equals(purpose)) {
-            addressEntryStream = btcWalletService.getAvailableAddressEntries().stream();
-        } else {
-            addressEntryStream = btcWalletService.getAddressEntryListAsImmutableList().stream();
-        }
-        final List<WalletAddress> walletAddresses = addressEntryStream
-                .map(entry -> convertAddressEntryToWalletAddress(entry, btcWalletService))
-                .collect(toList());
-        final WalletAddressList walletAddressList = new WalletAddressList();
-        walletAddressList.walletAddresses = walletAddresses;
-        walletAddressList.total = walletAddresses.size();
-        return walletAddressList;
-    }
-
-    public void withdrawFunds(Set<String> sourceAddresses, Coin amountAsCoin, boolean feeExcluded, String targetAddress)
-            throws AddressEntryException, InsufficientFundsException, AmountTooLowException {
-        // get all address entries
-        final List<AddressEntry> sourceAddressEntries = sourceAddresses.stream()
-                .filter(address -> null != address)
-                .map(address -> btcWalletService.getAddressEntryListAsImmutableList().stream().filter(addressEntry -> address.equals(addressEntry.getAddressString())).findFirst().orElse(null))
-                .filter(item -> null != item)
-                .collect(Collectors.toList());
-        // this filter matches all unauthorized address types
-        Predicate<AddressEntry> filterNotAllowedAddressEntries = addressEntry -> !(AddressEntry.Context.AVAILABLE.equals(addressEntry.getContext())
-                || AddressEntry.Context.TRADE_PAYOUT.equals(addressEntry.getContext()));
-        // check if there are any unauthorized address types
-        if (sourceAddressEntries.stream().anyMatch(filterNotAllowedAddressEntries)) {
-            throw new ValidationException("Funds can be withdrawn only from addresses with context AVAILABLE and TRADE_PAYOUT");
-        }
-
-        Coin sendersAmount;
-        // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
-        Transaction feeEstimationTransaction;
-        try {
-            feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(sourceAddresses, amountAsCoin);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("dust limit")) {
-                throw new AmountTooLowException(e.getMessage());
-            }
-            throw e;
-        }
-        if (feeExcluded && feeEstimationTransaction != null) {
-            sendersAmount = amountAsCoin.add(feeEstimationTransaction.getFee());
-            feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(sourceAddresses, sendersAmount);
-        }
-        checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
-        Coin fee = feeEstimationTransaction.getFee();
-        sendersAmount = feeExcluded ? amountAsCoin.add(fee) : amountAsCoin;
-        Coin receiverAmount = feeExcluded ? amountAsCoin : amountAsCoin.subtract(fee);
-
-        final Coin totalAvailableAmountOfSelectedItems = sourceAddressEntries.stream()
-                .map(address -> btcWalletService.getBalanceForAddress(address.getAddress()))
-                .reduce(Coin.ZERO, Coin::add);
-
-        if (!sendersAmount.isPositive())
-            throw new ValidationException("Senders amount must be positive");
-        if (!new BtcAddressValidator().validate(targetAddress).isValid)
-            throw new ValidationException("Invalid target address");
-        if (sourceAddresses.isEmpty())
-            throw new ValidationException("List of source addresses must not be empty");
-        if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0)
-            throw new InsufficientFundsException("Not enough funds in selected addresses");
-
-        if (receiverAmount.isPositive()) {
-            try {
-//                TODO return completable future
-                btcWalletService.sendFundsForMultipleAddresses(sourceAddresses, targetAddress, amountAsCoin, fee, null, null, new FutureCallback<Transaction>() {
-                    @Override
-                    public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
-                        if (transaction != null) {
-                            log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
-                        } else {
-                            log.error("onWithdraw transaction is null");
-                        }
-
-                        List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
-                        trades.stream()
-                                .filter(Trade::isPayoutPublished)
-                                .forEach(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
-                                        .ifPresent(addressEntry -> {
-                                            if (btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                tradeManager.addTradeToClosedTrades(trade);
-                                        }));
-                    }
-
-                    @Override
-                    public void onFailure(@NotNull Throwable t) {
-                        log.error("onWithdraw onFailure");
-                    }
-                });
-            } catch (org.bitcoinj.core.InsufficientMoneyException e) {
-                throw new InsufficientFundsException(e.getMessage());
-            }
-        } else {
-            throw new AmountTooLowException(Res.get("portfolio.pending.step5_buyer.amountTooLow"));
-        }
     }
 
     public void registerArbitrator(List<String> languageCodes) {
@@ -449,11 +230,6 @@ public class BisqProxy {
 
     private boolean arbitratorIsTrader(Arbitrator arbitrator) {
         return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
-    }
-
-    public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
-        final AddressEntry entry = btcWalletService.getFreshAddressEntry();
-        return convertAddressEntryToWalletAddress(entry, btcWalletService);
     }
 
     public P2PNetworkStatus getP2PNetworkStatus() {
@@ -571,42 +347,24 @@ public class BisqProxy {
     }
 
     public AuthResult authenticate(String password) {
-        final boolean isPasswordValid = btcWalletService.isWalletReady() && btcWalletService.isEncrypted() && isWalletPasswordValid(password);
+        final boolean isPasswordValid = btcWalletService.isWalletReady() && btcWalletService.isEncrypted() && walletFacade.isWalletPasswordValid(password);
         if (isPasswordValid) {
             return new AuthResult(tokenRegistry.generateToken());
         }
         throw new UnauthorizedException();
     }
 
-    private boolean isWalletPasswordValid(String password) {
-        final KeyParameter aesKey = getAESKey(password);
-        return isWalletPasswordValid(aesKey);
-    }
-
-    private boolean isWalletPasswordValid(KeyParameter aesKey) {
-        return null != aesKey && walletsManager.checkAESKey(aesKey);
-    }
-
-    private KeyParameter getAESKey(String password) {
-        return getAESKeyAndScrypt(password).first;
-    }
-
-    private Tuple2<KeyParameter, KeyCrypterScrypt> getAESKeyAndScrypt(String password) {
-        final KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
-        return new Tuple2<>(keyCrypterScrypt.deriveKey(password), keyCrypterScrypt);
-    }
-
     public AuthResult changePassword(String oldPassword, String newPassword) {
         if (!btcWalletService.isWalletReady())
             throw new WalletNotReadyException("Wallet not ready yet");
         if (btcWalletService.isEncrypted()) {
-            final KeyParameter aesKey = null == oldPassword ? null : getAESKey(oldPassword);
-            if (!isWalletPasswordValid(aesKey))
+            final KeyParameter aesKey = null == oldPassword ? null : walletFacade.getAESKey(oldPassword);
+            if (!walletFacade.isWalletPasswordValid(aesKey))
                 throw new UnauthorizedException();
             walletsManager.decryptWallets(aesKey);
         }
         if (null != newPassword && newPassword.length() > 0) {
-            final Tuple2<KeyParameter, KeyCrypterScrypt> aesKeyAndScrypt = getAESKeyAndScrypt(newPassword);
+            final Tuple2<KeyParameter, KeyCrypterScrypt> aesKeyAndScrypt = walletFacade.getAESKeyAndScrypt(newPassword);
             walletsManager.encryptWallets(aesKeyAndScrypt.second, aesKeyAndScrypt.first);
             tokenRegistry.clear();
             return new AuthResult(tokenRegistry.generateToken());
@@ -650,7 +408,7 @@ public class BisqProxy {
 
     public void requestBackupRestore(String fileName) throws IOException {
         backupRestoreManager.requestRestore(fileName);
-        if (null == shutdownHandler) {
+        if (!shutdownFacade.isShutdownSupported()) {
             log.warn("No shutdown mechanism provided! You have to restart the app manually.");
             return;
         }
@@ -661,58 +419,12 @@ public class BisqProxy {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            shutdownHandler.run();
+            shutdownFacade.shutDown();
         }, "Shutdown before backup restore").start();
     }
 
     public void uploadBackup(String fileName, InputStream uploadedInputStream) throws IOException {
         backupManager.saveBackup(fileName, uploadedInputStream);
-    }
-
-    public SeedWords getSeedWords(String password) {
-        final DeterministicSeed keyChainSeed = btcWalletService.getKeyChainSeed();
-        final LocalDate walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
-
-        DeterministicSeed seed = keyChainSeed;
-        if (keyChainSeed.isEncrypted()) {
-            if (null == password)
-                throw new UnauthorizedException();
-            final KeyParameter aesKey = getAESKey(password);
-            if (!isWalletPasswordValid(aesKey))
-                throw new UnauthorizedException();
-            seed = walletsManager.getDecryptedSeed(aesKey, btcWalletService.getKeyChainSeed(), btcWalletService.getKeyCrypter());
-        }
-
-        return new SeedWords(seed.getMnemonicCode(), walletCreationDate.toString());
-    }
-
-    public CompletableFuture<Void> restoreWalletFromSeedWords(List<String> mnemonicCode, String walletCreationDate, String password) {
-        if (btcWalletService.isEncrypted() && (null == password || !isWalletPasswordValid(password)))
-            throw new UnauthorizedException();
-        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
-        final long date = walletCreationDate != null ? LocalDate.parse(walletCreationDate).atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
-        final DeterministicSeed seed = new DeterministicSeed(mnemonicCode, null, "", date);
-//        TODO this logic comes from GUIUtils
-
-        try {
-            FileUtil.renameFile(new File(storageDir, "AddressEntryList"), new File(storageDir, "AddressEntryList_wallet_restore_" + System.currentTimeMillis()));
-        } catch (Throwable t) {
-            return failFuture(futureResult, t);
-        }
-        walletsManager.restoreSeedWords(
-                seed,
-                () -> futureResult.complete(null),
-                throwable -> failFuture(futureResult, throwable));
-        if (null != shutdownHandler)
-            futureResult.thenRunAsync(shutdownHandler::run);
-        return futureResult;
-    }
-
-    public enum WalletAddressPurpose {
-        LOCKED_FUNDS,
-        RECEIVE_FUNDS,
-        RESERVED_FUNDS,
-        SEND_FUNDS
     }
 
     @NotNull
@@ -749,19 +461,6 @@ public class BisqProxy {
         if (!currencyOptional.isPresent())
             throw new ValidationException("Unsupported trade currency code: " + code);
         return currencyOptional.get();
-    }
-
-    @NotNull
-    private static WalletAddress convertAddressEntryToWalletAddress(AddressEntry entry, BtcWalletService btcWalletService) {
-        final Coin balance;
-        if (AddressEntry.Context.MULTI_SIG.equals(entry.getContext())) {
-            balance = entry.getCoinLockedInMultiSig();
-        } else {
-            balance = btcWalletService.getBalanceForAddress(entry.getAddress());
-        }
-        final TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(entry.getAddress());
-        final int confirmations = null == confidence ? 0 : confidence.getDepthInBlocks();
-        return new WalletAddress(entry.getAddressString(), balance.getValue(), confirmations, entry.getContext(), entry.getOfferId());
     }
 
     private static List<String> tradeCurrenciesToCodes(Collection<? extends TradeCurrency> tradeCurrencies) {
