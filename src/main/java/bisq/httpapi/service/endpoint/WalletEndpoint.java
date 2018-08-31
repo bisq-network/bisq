@@ -14,6 +14,8 @@ import bisq.httpapi.model.WalletAddressList;
 import bisq.httpapi.model.WalletTransactionList;
 import bisq.httpapi.model.WithdrawFundsForm;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -58,78 +60,128 @@ public class WalletEndpoint {
         this.walletFacade = walletFacade;
     }
 
-    @ApiOperation(value = "Get wallet details")
+    @ApiOperation(value = "Get wallet details", response = bisq.httpapi.model.Balances.class)
     @GET
-    public bisq.httpapi.model.Balances getWalletDetails() {
-        return new bisq.httpapi.model.Balances(balances.getAvailableBalance().get().value,
-                balances.getReservedBalance().get().value,
-                balances.getLockedBalance().get().value);
+    public void getWalletDetails(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                final long availableBalance = this.balances.getAvailableBalance().get().value;
+                final long reservedBalance = this.balances.getReservedBalance().get().value;
+                final long lockedBalance = this.balances.getLockedBalance().get().value;
+                final bisq.httpapi.model.Balances balances = new bisq.httpapi.model.Balances(availableBalance,
+                        reservedBalance,
+                        lockedBalance);
+                asyncResponse.resume(balances);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get wallet addresses")
+    @ApiOperation(value = "Get wallet addresses", response = WalletAddressList.class)
     @GET
     @Path("/addresses")
-    public WalletAddressList getAddresses(@QueryParam("purpose") WalletFacade.WalletAddressPurpose purpose) {
-        return walletFacade.getWalletAddresses(purpose);
+    public void getAddresses(@Suspended final AsyncResponse asyncResponse, @QueryParam("purpose") WalletFacade.WalletAddressPurpose purpose) {
+        UserThread.execute(() -> {
+            try {
+                final WalletAddressList walletAddresses = walletFacade.getWalletAddresses(purpose);
+                asyncResponse.resume(walletAddresses);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get or create wallet address")
+    @ApiOperation(value = "Get or create wallet address", response = WalletAddress.class)
     @POST
     @Path("/addresses") //TODO should path be "addresses" ?
-    public WalletAddress getOrCreateAvailableUnusedWalletAddresses() {
-        return walletFacade.getOrCreateAvailableUnusedWalletAddresses();
+    public void getOrCreateAvailableUnusedWalletAddresses(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                final WalletAddress addresses = walletFacade.getOrCreateAvailableUnusedWalletAddresses();
+                asyncResponse.resume(addresses);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get wallet seed words")
+    @ApiOperation(value = "Get wallet seed words", response = SeedWords.class)
     @POST
     @Path("/seed-words/retrieve")
-    public SeedWords getSeedWords(AuthForm form) {
-        final String password = null == form ? null : form.password;
-        return walletFacade.getSeedWords(password);
+    public void getSeedWords(@Suspended final AsyncResponse asyncResponse, AuthForm form) {
+        UserThread.execute(() -> {
+            try {
+                final String password = null == form ? null : form.password;
+                final SeedWords seedWords = walletFacade.getSeedWords(password);
+                asyncResponse.resume(seedWords);
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
     @ApiOperation("Restore wallet from seed words")
     @POST
     @Path("/seed-words/restore")
     public void restoreWalletFromSeedWords(@Suspended final AsyncResponse asyncResponse, @Valid @NotNull SeedWordsRestore data) {
-        walletFacade.restoreWalletFromSeedWords(data.mnemonicCode, data.walletCreationDate, data.password)
-                .thenApply(response -> asyncResponse.resume(Response.noContent().build()))
-                .exceptionally(e -> {
-                    final Throwable cause = e.getCause();
-                    final Response.ResponseBuilder responseBuilder;
+        UserThread.execute(() -> {
+            try {
+                walletFacade.restoreWalletFromSeedWords(data.mnemonicCode, data.walletCreationDate, data.password)
+                        .thenApply(response -> asyncResponse.resume(Response.noContent().build()))
+                        .exceptionally(e -> {
+                            final Throwable cause = e.getCause();
+                            final Response.ResponseBuilder responseBuilder;
 
-                    final String message = cause.getMessage();
-                    responseBuilder = Response.status(500);
-                    if (null != message)
-                        responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
-                    log.error("Unable to restore wallet from seed", cause);
-                    return asyncResponse.resume(responseBuilder.build());
-                });
+                            final String message = cause.getMessage();
+                            responseBuilder = Response.status(500);
+                            if (null != message)
+                                responseBuilder.entity(new ValidationErrorMessage(ImmutableList.of(message)));
+                            log.error("Unable to restore wallet from seed", cause);
+                            return asyncResponse.resume(responseBuilder.build());
+                        });
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
-    @ApiOperation("Get wallet transactions")
+    @ApiOperation(value = "Get wallet transactions", response = WalletTransactionList.class)
     @GET
     @Path("/transactions")
-    public WalletTransactionList getTransactions() {
-        return walletFacade.getWalletTransactions();
+    public void getTransactions(@Suspended final AsyncResponse asyncResponse) {
+        UserThread.execute(() -> {
+            try {
+                asyncResponse.resume(walletFacade.getWalletTransactions());
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 
     @ApiOperation("Withdraw funds")
     @POST
     @Path("/withdraw")
-    public void withdrawFunds(@Valid WithdrawFundsForm data) {
-        final HashSet<String> sourceAddresses = new HashSet<>(data.sourceAddresses);
-        final Coin amountAsCoin = Coin.valueOf(data.amount);
-        final boolean feeExcluded = data.feeExcluded;
-        final String targetAddress = data.targetAddress;
-        try {
-            walletFacade.withdrawFunds(sourceAddresses, amountAsCoin, feeExcluded, targetAddress);
-        } catch (AddressEntryException e) {
-            throw new ValidationException(e.getMessage());
-        } catch (InsufficientFundsException e) {
-            throw new WebApplicationException(e.getMessage(), 423);
-        } catch (AmountTooLowException e) {
-            throw new WebApplicationException(e.getMessage(), 424);
-        }
+    public void withdrawFunds(@Suspended final AsyncResponse asyncResponse, @Valid WithdrawFundsForm data) {
+        UserThread.execute(() -> {
+            try {
+                final HashSet<String> sourceAddresses = new HashSet<>(data.sourceAddresses);
+                final Coin amountAsCoin = Coin.valueOf(data.amount);
+                final boolean feeExcluded = data.feeExcluded;
+                final String targetAddress = data.targetAddress;
+                try {
+                    walletFacade.withdrawFunds(sourceAddresses, amountAsCoin, feeExcluded, targetAddress);
+                    asyncResponse.resume(Response.noContent().build());
+                } catch (AddressEntryException e) {
+                    throw new ValidationException(e.getMessage());
+                } catch (InsufficientFundsException e) {
+                    throw new WebApplicationException(e.getMessage(), 423);
+                } catch (AmountTooLowException e) {
+                    throw new WebApplicationException(e.getMessage(), 424);
+                }
+            } catch (Throwable e) {
+                asyncResponse.resume(e);
+            }
+        });
     }
 }
