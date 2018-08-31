@@ -1,5 +1,10 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.facade.TradeFacade;
+import bisq.httpapi.model.TradeDetails;
+import bisq.httpapi.model.TradeList;
+
 import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
@@ -13,10 +18,6 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.model.TradeDetails;
-import bisq.httpapi.model.TradeList;
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -38,18 +39,18 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(MediaType.APPLICATION_JSON)
 public class TradeEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final TradeFacade tradeFacade;
 
     @Inject
-    public TradeEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public TradeEndpoint(TradeFacade tradeFacade) {
+        this.tradeFacade = tradeFacade;
     }
 
     @ApiOperation("List trades")
     @GET
     public TradeList find() {
         final TradeList tradeList = new TradeList();
-        tradeList.trades = bisqProxy.getTradeList().stream().map(TradeDetails::new).collect(toList());
+        tradeList.trades = tradeFacade.getTradeList().stream().map(TradeDetails::new).collect(toList());
         tradeList.total = tradeList.trades.size();
         return tradeList;
     }
@@ -58,14 +59,14 @@ public class TradeEndpoint {
     @GET
     @Path("/{id}")
     public TradeDetails getById(@PathParam("id") String id) {
-        return new TradeDetails(bisqProxy.getTrade(id));
+        return new TradeDetails(tradeFacade.getTrade(id));
     }
 
     @ApiOperation("Confirm payment has started")
     @POST
     @Path("/{id}/payment-started")
     public void paymentStarted(@Suspended final AsyncResponse asyncResponse, @NotEmpty @PathParam("id") String id) {
-        final CompletableFuture<Void> completableFuture = bisqProxy.paymentStarted(id);
+        final CompletableFuture<Void> completableFuture = tradeFacade.paymentStarted(id);
         handlePaymentStatusChange(id, asyncResponse, completableFuture);
     }
 
@@ -73,7 +74,7 @@ public class TradeEndpoint {
     @POST
     @Path("/{id}/payment-received")
     public void paymentReceived(@Suspended final AsyncResponse asyncResponse, @NotEmpty @PathParam("id") String id) {
-        final CompletableFuture<Void> completableFuture = bisqProxy.paymentReceived(id);
+        final CompletableFuture<Void> completableFuture = tradeFacade.paymentReceived(id);
         handlePaymentStatusChange(id, asyncResponse, completableFuture);
     }
 
@@ -81,7 +82,7 @@ public class TradeEndpoint {
     @POST
     @Path("/{id}/move-funds-to-bisq-wallet")
     public void moveFundsToBisqWallet(@PathParam("id") String id) {
-        bisqProxy.moveFundsToBisqWallet(id);
+        tradeFacade.moveFundsToBisqWallet(id);
     }
 
     private void handlePaymentStatusChange(String tradeId, AsyncResponse asyncResponse, CompletableFuture<Void> completableFuture) {

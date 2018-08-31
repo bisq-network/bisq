@@ -27,20 +27,36 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.BuyerAsMakerTrade;
-import bisq.core.trade.SellerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.protocol.BuyerAsMakerProtocol;
-import bisq.core.trade.protocol.BuyerAsTakerProtocol;
-import bisq.core.trade.protocol.SellerAsMakerProtocol;
-import bisq.core.trade.protocol.SellerAsTakerProtocol;
-import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
+
+import bisq.httpapi.exceptions.AmountTooLowException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.UnauthorizedException;
+import bisq.httpapi.exceptions.WalletNotReadyException;
+import bisq.httpapi.model.AuthResult;
+import bisq.httpapi.model.BitcoinNetworkStatus;
+import bisq.httpapi.model.ClosedTradableConverter;
+import bisq.httpapi.model.ClosedTradableDetails;
+import bisq.httpapi.model.P2PNetworkConnection;
+import bisq.httpapi.model.P2PNetworkStatus;
+import bisq.httpapi.model.PaymentAccountList;
+import bisq.httpapi.model.Preferences;
+import bisq.httpapi.model.PreferencesAvailableValues;
+import bisq.httpapi.model.PriceFeed;
+import bisq.httpapi.model.SeedWords;
+import bisq.httpapi.model.VersionDetails;
+import bisq.httpapi.model.WalletAddress;
+import bisq.httpapi.model.WalletAddressList;
+import bisq.httpapi.model.WalletTransaction;
+import bisq.httpapi.model.WalletTransactionList;
+import bisq.httpapi.model.payment.PaymentAccountHelper;
+import bisq.httpapi.service.auth.TokenRegistry;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -49,8 +65,6 @@ import bisq.network.p2p.network.Statistic;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
@@ -69,8 +83,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
-
-import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
@@ -103,33 +115,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.httpapi.facade.FacadeUtil.failFuture;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.exceptions.AmountTooLowException;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.UnauthorizedException;
-import bisq.httpapi.exceptions.WalletNotReadyException;
-import bisq.httpapi.model.AuthResult;
-import bisq.httpapi.model.BitcoinNetworkStatus;
-import bisq.httpapi.model.ClosedTradableConverter;
-import bisq.httpapi.model.ClosedTradableDetails;
-import bisq.httpapi.model.P2PNetworkConnection;
-import bisq.httpapi.model.P2PNetworkStatus;
-import bisq.httpapi.model.PaymentAccountList;
-import bisq.httpapi.model.Preferences;
-import bisq.httpapi.model.PreferencesAvailableValues;
-import bisq.httpapi.model.PriceFeed;
-import bisq.httpapi.model.SeedWords;
-import bisq.httpapi.model.VersionDetails;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletTransaction;
-import bisq.httpapi.model.WalletTransactionList;
-import bisq.httpapi.model.payment.PaymentAccountHelper;
-import bisq.httpapi.service.auth.TokenRegistry;
 import javax.validation.ValidationException;
 
 //TODO @bernard we need ot break that apart to smaller domain specific chunks (or then use core domains directly).
@@ -278,37 +269,16 @@ public class BisqProxy {
     }
 
 
-    @NotNull
-    private <T> CompletableFuture<T> failFuture(CompletableFuture<T> futureResult, Throwable throwable) {
-        futureResult.completeExceptionally(throwable);
-        return futureResult;
-    }
-
     /// START TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
 
 
     /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
-
-    public List<Trade> getTradeList() {
-        final ObservableList<Trade> tradableList = tradeManager.getTradableList();
-        if (null != tradableList) return tradableList.sorted();
-        return Collections.emptyList();
-    }
 
     public List<ClosedTradableDetails> getClosedTradableList() {
         return closedTradableManager.getClosedTradables().stream()
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
                 .map(closedTradableConverter::convert)
                 .collect(toList());
-    }
-
-    public Trade getTrade(String tradeId) {
-        final String safeTradeId = (null == tradeId) ? "" : tradeId;
-        final Optional<Trade> tradeOptional = getTradeList().stream().filter(item -> safeTradeId.equals(item.getId())).findAny();
-        if (!tradeOptional.isPresent()) {
-            throw new NotFoundException("Trade not found: " + tradeId);
-        }
-        return tradeOptional.get();
     }
 
     public WalletTransactionList getWalletTransactions() {
@@ -484,70 +454,6 @@ public class BisqProxy {
         } else {
             throw new AmountTooLowException(Res.get("portfolio.pending.step5_buyer.amountTooLow"));
         }
-    }
-
-    public CompletableFuture<Void> paymentStarted(String tradeId) {
-        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
-        Trade trade;
-        try {
-            trade = getTrade(tradeId);
-        } catch (NotFoundException e) {
-            return failFuture(futureResult, e);
-        }
-
-        if (!Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.equals(trade.getState())) {
-            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to start payment: " + trade.getState()));
-        }
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-        ResultHandler resultHandler = () -> futureResult.complete(null);
-        ErrorMessageHandler errorResultHandler = message -> futureResult.completeExceptionally(new RuntimeException(message));
-
-        if (trade instanceof BuyerAsMakerTrade) {
-            ((BuyerAsMakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
-        } else {
-            ((BuyerAsTakerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorResultHandler);
-        }
-        return futureResult;
-    }
-
-    public CompletableFuture<Void> paymentReceived(String tradeId) {
-        final CompletableFuture<Void> futureResult = new CompletableFuture<>();
-        Trade trade;
-        try {
-            trade = getTrade(tradeId);
-        } catch (NotFoundException e) {
-            return failFuture(futureResult, e);
-        }
-
-        if (!Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG.equals(trade.getState())) {
-            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to receive payment: " + trade.getState()));
-        }
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-
-        if (!(tradeProtocol instanceof SellerAsTakerProtocol || tradeProtocol instanceof SellerAsMakerProtocol)) {
-            return failFuture(futureResult, new ValidationException("Trade is not in the correct state to receive payment: " + trade.getState()));
-        }
-
-        ResultHandler resultHandler = () -> futureResult.complete(null);
-        ErrorMessageHandler errorResultHandler = message -> futureResult.completeExceptionally(new RuntimeException(message));
-
-//        TODO I think we should check instance of tradeProtocol here instead of trade
-        if (trade instanceof SellerAsMakerTrade) {
-            ((SellerAsMakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
-        } else {
-            ((SellerAsTakerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorResultHandler);
-        }
-        return futureResult;
-    }
-
-    public void moveFundsToBisqWallet(String tradeId) {
-        final Trade trade = getTrade(tradeId);
-        final Trade.State tradeState = trade.getState();
-        if (!Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG.equals(tradeState) && !Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG.equals(tradeState))
-            throw new ValidationException("Trade is not in the correct state to transfer funds out: " + tradeState);
-        btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
-        // TODO do we need to handle this ui stuff? --> handleTradeCompleted();
-        tradeManager.addTradeToClosedTrades(trade);
     }
 
     public void registerArbitrator(List<String> languageCodes) {
