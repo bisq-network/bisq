@@ -1,12 +1,13 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.facade.PreferencesFacade;
+import bisq.httpapi.model.Preferences;
+import bisq.httpapi.model.PreferencesAvailableValues;
+
 import javax.inject.Inject;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.model.Preferences;
-import bisq.httpapi.model.PreferencesAvailableValues;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -21,30 +22,29 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class PreferencesEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final PreferencesFacade preferencesFacade;
 
     @Inject
-    public PreferencesEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public PreferencesEndpoint(PreferencesFacade preferencesFacade) {
+        this.preferencesFacade = preferencesFacade;
     }
 
     @ApiOperation("Get preferences")
     @GET
     public Preferences getPreferences() {
-        return bisqProxy.getPreferences();
+        return preferencesFacade.getPreferences();
     }
 
     @ApiOperation(value = "Set preferences", notes = "Supports partial update")
     @PUT
     public Preferences setPreferences(@Valid Preferences preferences) {
-        return bisqProxy.setPreferences(preferences);
+        return preferencesFacade.setPreferences(preferences);
     }
 
     @ApiOperation("Get available preferences values")
     @GET
     @Path("/available-values")
     public PreferencesAvailableValues getPreferencesAvailableValues() {
-        return bisqProxy.getPreferencesAvailableValues();
+        return preferencesFacade.getPreferencesAvailableValues();
     }
-
 }
