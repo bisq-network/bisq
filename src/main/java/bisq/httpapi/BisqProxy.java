@@ -9,15 +9,12 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.closed.ClosedTradableManager;
 
 import bisq.httpapi.exceptions.UnauthorizedException;
 import bisq.httpapi.exceptions.WalletNotReadyException;
 import bisq.httpapi.facade.WalletFacade;
 import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.BitcoinNetworkStatus;
-import bisq.httpapi.model.ClosedTradableConverter;
-import bisq.httpapi.model.ClosedTradableDetails;
 import bisq.httpapi.model.P2PNetworkConnection;
 import bisq.httpapi.model.P2PNetworkStatus;
 import bisq.httpapi.model.PriceFeed;
@@ -62,11 +59,9 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 public class BisqProxy {
     private final BtcWalletService btcWalletService;
-    private final ClosedTradableManager closedTradableManager;
     private final P2PService p2PService;
     private final bisq.core.user.Preferences preferences;
     private final WalletsSetup walletsSetup;
-    private final ClosedTradableConverter closedTradableConverter;
     private final TokenRegistry tokenRegistry;
     private final WalletsManager walletsManager;
     private final PriceFeedService priceFeedService;
@@ -74,21 +69,17 @@ public class BisqProxy {
 
     @Inject
     public BisqProxy(BtcWalletService btcWalletService,
-                     ClosedTradableManager closedTradableManager,
                      P2PService p2PService,
                      bisq.core.user.Preferences preferences,
                      WalletsSetup walletsSetup,
-                     ClosedTradableConverter closedTradableConverter,
                      TokenRegistry tokenRegistry,
                      WalletsManager walletsManager,
                      PriceFeedService priceFeedService,
                      WalletFacade walletFacade) {
         this.btcWalletService = btcWalletService;
-        this.closedTradableManager = closedTradableManager;
         this.p2PService = p2PService;
         this.preferences = preferences;
         this.walletsSetup = walletsSetup;
-        this.closedTradableConverter = closedTradableConverter;
         this.tokenRegistry = tokenRegistry;
         this.walletsManager = walletsManager;
         this.priceFeedService = priceFeedService;
@@ -100,13 +91,6 @@ public class BisqProxy {
 
 
     /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
-
-    public List<ClosedTradableDetails> getClosedTradableList() {
-        return closedTradableManager.getClosedTradables().stream()
-                .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
-                .map(closedTradableConverter::convert)
-                .collect(toList());
-    }
 
     public P2PNetworkStatus getP2PNetworkStatus() {
         final P2PNetworkStatus p2PNetworkStatus = new P2PNetworkStatus();
