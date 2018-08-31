@@ -254,8 +254,8 @@ public class TradeEndpointIT {
     @InSequence(8)
     @Test
     public void moveFundsToBisqWallet_tradeExists_returns200() {
-        moveFundsToBisqWallet_template(getAlicePort(), tradeId, 204);
-        moveFundsToBisqWallet_template(getBobPort(), tradeId, 204);
+        moveFundsToBisqWallet_template(getAlicePort(), tradeId, 200);
+        moveFundsToBisqWallet_template(getBobPort(), tradeId, 200);
         assertTradeNotFound(getBobPort(), tradeId);
         assertTradeNotFound(getAlicePort(), tradeId);
         assertWalletBalance(getAlicePort(), greaterThan(100000000));
