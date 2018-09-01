@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.voteresult.DecryptedVote;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.period.Cycle;
 import bisq.core.util.BsqFormatter;
@@ -43,14 +43,14 @@ class ResultsOfCycle {
     // Proposals which ended up in voting
     private final List<EvaluatedProposal> evaluatedProposals;
 
-    private final List<DecryptedVote> decryptedVotesForCycle;
+    private final List<DecryptedBallotsWithMerits> decryptedVotesForCycle;
 
     ResultsOfCycle(Cycle cycle,
                    int cycleIndex,
                    long cycleStartTime,
                    List<Proposal> proposals,
                    List<EvaluatedProposal> evaluatedProposals,
-                   List<DecryptedVote> decryptedVotesForCycle) {
+                   List<DecryptedBallotsWithMerits> decryptedVotesForCycle) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
         this.cycleStartTime = cycleStartTime;

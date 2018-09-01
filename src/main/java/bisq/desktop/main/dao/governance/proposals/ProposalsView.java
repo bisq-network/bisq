@@ -282,7 +282,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                     .collect(Collectors.toSet()));
         } else {
             // blind vote phase
-            List<Ballot> ballotList = daoFacade.getBallots();
+            List<Ballot> ballotList = daoFacade.getBallotsOfCycle();
             listItems.setAll(ballotList.stream()
                     .map(ballot -> new ProposalsListItem(ballot, daoFacade, bsqFormatter))
                     .collect(Collectors.toSet()));
@@ -437,7 +437,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private void applyMerit() {
         // We check if we have voted on that proposal. If so we use the merit used in the vote, otherwise we
-        // use hte merit based on all past issuance with the time decay applied.
+        // use the merit based on all past issuance with the time decay applied.
         // The merit from the vote stays the same over blocks, the merit from daoFacade.getMeritAndStake()
         // decreases with every block a bit (over 2 years it goes to zero).
         boolean hasConfirmedVoteTxInCycle = daoFacade.getMyVoteListForCycle().stream()

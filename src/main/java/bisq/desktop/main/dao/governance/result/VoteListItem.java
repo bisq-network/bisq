@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.voteresult.DecryptedVote;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.util.BsqFormatter;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VoteListItem {
     @Getter
     private final BsqFormatter bsqFormatter;
-    private final DecryptedVote decryptedVote;
+    private final DecryptedBallotsWithMerits decryptedBallotsWithMerits;
 
     private final String proposalTxId;
 
@@ -50,25 +50,25 @@ public class VoteListItem {
     private String voteRevealTxId = "";
 
     VoteListItem(Proposal proposal,
-                 DecryptedVote decryptedVote,
+                 DecryptedBallotsWithMerits decryptedBallotsWithMerits,
                  BsqStateService bsqStateService,
                  BsqFormatter bsqFormatter) {
-        this.decryptedVote = decryptedVote;
+        this.decryptedBallotsWithMerits = decryptedBallotsWithMerits;
         this.bsqFormatter = bsqFormatter;
 
         proposalTxId = proposal.getTxId();
 
-        if (decryptedVote != null) {
-            merit = decryptedVote.getMerit(bsqStateService);
-            stake = decryptedVote.getStake();
-            blindVoteTxId = decryptedVote.getBlindVoteTxId();
-            voteRevealTxId = decryptedVote.getVoteRevealTxId();
+        if (decryptedBallotsWithMerits != null) {
+            merit = decryptedBallotsWithMerits.getMerit(bsqStateService);
+            stake = decryptedBallotsWithMerits.getStake();
+            blindVoteTxId = decryptedBallotsWithMerits.getBlindVoteTxId();
+            voteRevealTxId = decryptedBallotsWithMerits.getVoteRevealTxId();
         }
     }
 
     public Tuple2<AwesomeIcon, String> getIconStyleTuple() {
         Optional<Boolean> isAccepted;
-        isAccepted = decryptedVote.getBallotList().stream()
+        isAccepted = decryptedBallotsWithMerits.getBallotList().stream()
                 .filter(ballot -> ballot.getTxId().equals(proposalTxId))
                 .map(Ballot::getVote)
                 .map(vote -> vote != null && vote.isAccepted())
