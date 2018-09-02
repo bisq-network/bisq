@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * StorageSignatureKeyPair/STORAGE_SIGN_KEY_ALGO: That is used for signing the data to be stored to the P2P network (by flooding).
  * The algo is selected because it originated from the TomP2P version which used DSA.
  * Changing to EC keys might be considered.
- * <p/>
+ * <p></p>
  * MsgSignatureKeyPair/MSG_SIGN_KEY_ALGO/MSG_SIGN_ALGO: That is used when sending a message to a peer which is encrypted and signed.
  * Changing to EC keys might be considered.
  */
@@ -77,9 +77,6 @@ public class Sig {
      * @param privateKey
      * @param data
      * @return
-     * @throws SignatureException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
      */
     public static byte[] sign(PrivateKey privateKey, byte[] data) throws CryptoException {
         try {
@@ -96,9 +93,6 @@ public class Sig {
      * @param privateKey
      * @param message    UTF-8 encoded message to sign
      * @return Base64 encoded signature
-     * @throws SignatureException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
      */
     public static String sign(PrivateKey privateKey, String message) throws CryptoException {
         byte[] sigAsBytes = sign(privateKey, message.getBytes(Charsets.UTF_8));
@@ -110,9 +104,6 @@ public class Sig {
      * @param data
      * @param signature
      * @return
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws SignatureException
      */
     public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature) throws CryptoException {
         try {
@@ -130,9 +121,6 @@ public class Sig {
      * @param message   UTF-8 encoded message
      * @param signature Base64 encoded signature
      * @return
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws SignatureException
      */
     public static boolean verify(PublicKey publicKey, String message, String signature) throws CryptoException {
         return verify(publicKey, message.getBytes(Charsets.UTF_8), Base64.decode(signature));

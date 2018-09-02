@@ -37,15 +37,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * That class handles the storage of a particular object to disk using Protobuffer.
- * <p/>
+ * <p></p>
  * For every data object we write a separate file to minimize the risk of corrupted files in case of inconsistency from newer versions.
  * In case of a corrupted file we backup the old file to a separate directory, so if it holds critical data it might be helpful for recovery.
- * <p/>
+ * <p></p>
  * We also backup at first read the file, so we have a valid file form the latest version in case a write operation corrupted the file.
- * <p/>
+ * <p></p>
  * The read operation is triggered just at object creation (startup) and is at the moment not executed on a background thread to avoid asynchronous behaviour.
  * As the data are small and it is just one read access the performance penalty is small and might be even worse to create and setup a thread for it.
- * <p/>
+ * <p></p>
  * The write operation used a background thread and supports a delayed write to avoid too many repeated write operations.
  */
 public class Storage<T extends PersistableEnvelope> {
