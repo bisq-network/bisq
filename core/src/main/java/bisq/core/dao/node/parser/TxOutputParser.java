@@ -47,6 +47,7 @@ public class TxOutputParser {
     @Getter
     @Setter
     private long availableInputValue = 0;
+    private int lockTime;
     @Setter
     private int unlockBlockHeight;
     @Setter
@@ -81,8 +82,9 @@ public class TxOutputParser {
         }
     }
 
-    void processOpReturnCandidate(TempTxOutput txOutput) {
+    boolean processOpReturnCandidate(TempTxOutput txOutput) {
         optionalOpReturnTypeCandidate = OpReturnParser.getOptionalOpReturnTypeCandidate(txOutput);
+        return optionalOpReturnTypeCandidate.isPresent();
     }
 
     /**
@@ -164,6 +166,7 @@ public class TxOutputParser {
             optionalVoteRevealUnlockStakeOutput = Optional.of(txOutput);
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.LOCKUP) {
             bsqOutput = TxOutputType.LOCKUP;
+            txOutput.setLockTime(lockTime);
             optionalLockupOutput = Optional.of(txOutput);
         } else {
             bsqOutput = TxOutputType.BSQ_OUTPUT;
@@ -199,8 +202,7 @@ public class TxOutputParser {
                 .ifPresent(verifiedOpReturnType -> {
                     byte[] opReturnData = tempTxOutput.getOpReturnData();
                     checkNotNull(opReturnData, "opReturnData must not be null");
-                    int lockTime = BondingConsensus.getLockTime(opReturnData);
-                    tempTxOutput.setLockTime(lockTime);
+                    lockTime = BondingConsensus.getLockTime(opReturnData);
                 });
     }
 

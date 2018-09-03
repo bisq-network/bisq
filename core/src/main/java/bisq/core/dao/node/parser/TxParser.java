@@ -115,11 +115,15 @@ public class TxParser {
             // We keep the temporary opReturn type in the parsingModel object.
             checkArgument(!outputs.isEmpty(), "outputs must not be empty");
             int lastIndex = outputs.size() - 1;
-            txOutputParser.processOpReturnCandidate(outputs.get(lastIndex));
+            int lastNonOpReturnIndex = lastIndex;
+            if (txOutputParser.processOpReturnCandidate(outputs.get(lastIndex))) {
+                txOutputParser.processTxOutput(true, outputs.get(lastIndex), lastIndex);
+                lastNonOpReturnIndex -= 1;
+            }
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
             // We iterate all outputs including the opReturn to do a full validation including the BSQ fee
-            for (int index = 0; index < outputs.size(); index++) {
+            for (int index = 0; index <= lastNonOpReturnIndex; index++) {
                 boolean isLastOutput = index == lastIndex;
                 txOutputParser.processTxOutput(isLastOutput,
                         outputs.get(index),
@@ -154,6 +158,9 @@ public class TxParser {
                     DevEnv.logErrorAndThrowIfDevMode(msg);
                 }
             } else {
+                // TODO(SQ): The transaction has already been parsed here and the individual txouputs are considered
+                // spendable or otherwise correct. Perhaps this check should be done earlier.
+
                 // We don't consider a tx with multiple OpReturn outputs valid.
                 tempTx.setTxType(TxType.INVALID);
                 String msg = "Invalid tx. We have multiple opReturn outputs. tx=" + tempTx;
