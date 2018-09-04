@@ -8,9 +8,9 @@ set -e
 
 version="0.8.0"
 
-./gradlew --include-build ../common --include-build ../assets --include-build ../p2p --include-build ../core build -x test shadowJar
+../gradlew build -x test shadowJar
 
-EXE_JAR=build/libs/bisq-desktop-$version-all.jar
+EXE_JAR=build/libs/desktop-$version-all.jar
 
 echo SHA 256 before stripping jar file:
 shasum -a256 $EXE_JAR | awk '{print $1}'
