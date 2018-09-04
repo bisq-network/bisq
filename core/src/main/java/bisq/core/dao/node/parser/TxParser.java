@@ -116,7 +116,7 @@ public class TxParser {
             checkArgument(!outputs.isEmpty(), "outputs must not be empty");
             int lastIndex = outputs.size() - 1;
             int lastNonOpReturnIndex = lastIndex;
-            if (txOutputParser.processOpReturnCandidate(outputs.get(lastIndex))) {
+            if (txOutputParser.isOpReturnCandidate(outputs.get(lastIndex))) {
                 txOutputParser.processTxOutput(true, outputs.get(lastIndex), lastIndex);
                 lastNonOpReturnIndex -= 1;
             }

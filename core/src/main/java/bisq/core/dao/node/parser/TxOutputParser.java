@@ -82,7 +82,7 @@ public class TxOutputParser {
         }
     }
 
-    boolean processOpReturnCandidate(TempTxOutput txOutput) {
+    boolean isOpReturnCandidate(TempTxOutput txOutput) {
         optionalOpReturnTypeCandidate = OpReturnParser.getOptionalOpReturnTypeCandidate(txOutput);
         return optionalOpReturnTypeCandidate.isPresent();
     }
