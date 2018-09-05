@@ -19,8 +19,8 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-assets:0.7.2'
-    compile 'network.bisq:bisq-p2p:-SNAPSHOT'
+    compile project(':assets')
+    compile project(':p2p')
     compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
     compile('network.bisq.btcd-cli4j:btcd-cli4j-core:cb5c474b') {
         exclude(module: 'slf4j-api')
