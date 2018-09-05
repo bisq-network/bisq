@@ -54,7 +54,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
     public JFXRadioButtonSkinBisqStyle(JFXRadioButton control) {
         super(control);
 
-        final double radioRadius = 8;
+        final double radioRadius = 7;
         radio = new Circle(radioRadius);
         radio.getStyleClass().setAll("radio");
         radio.setStrokeWidth(1);
@@ -200,7 +200,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
         final double labelHeight = Math.min(radioButton.prefHeight(labelWidth), h);
         final double maxHeight = Math.max(contHeight, labelHeight);
         final double xOffset = computeXOffset(w, labelWidth + contWidth, radioButton.getAlignment().getHpos()) + x;
-        final double yOffset = computeYOffset(h, maxHeight, radioButton.getAlignment().getVpos()) + x;
+        final double yOffset = computeYOffset(h, maxHeight, radioButton.getAlignment().getVpos()) + x + 5;
 
         layoutLabelInArea(xOffset + contWidth + padding/3, yOffset, labelWidth, maxHeight, radioButton.getAlignment());
         ((Text) getChildren().get((getChildren().get(0) instanceof Text) ? 0 : 1)).
