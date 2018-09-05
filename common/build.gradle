@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'com.google.protobuf' version '0.8.5'
+}
+
+group = 'network.bisq'
+version = '-SNAPSHOT'
+
+ext {
+    protobufVersion = '3.5.1'
+}
+
+sourceCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+}
+
+dependencies {
+    compile "com.google.protobuf:protobuf-java:$protobufVersion"
+    compile 'com.google.code.gson:gson:2.7'
+    compile('com.googlecode.json-simple:json-simple:1.1.1') {
+        exclude(module: 'junit')
+    }
+    compile 'org.springframework:spring-core:4.3.6.RELEASE'
+    compile 'org.slf4j:slf4j-api:1.7.22'
+    compile 'ch.qos.logback:logback-core:1.1.10'
+    compile 'ch.qos.logback:logback-classic:1.1.10'
+    compile 'com.google.code.findbugs:jsr305:3.0.1'
+    compile 'com.google.guava:guava:20.0'
+    compile('com.google.inject:guice:4.1.0') {
+        exclude(module: 'guava')
+    }
+    compile('network.bisq.libdohj:libdohj-core:9573d077') {
+        exclude(module: 'jsr305')
+        exclude(module: 'slf4j-api')
+        exclude(module: 'guava')
+        exclude(module: 'protobuf-java')
+    }
+    compile 'org.jetbrains:annotations:13.0'
+    runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
+    compile 'org.bouncycastle:bcpg-jdk15on:1.56'
+    compile 'commons-io:commons-io:2.4'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompile 'junit:junit:4.12'
+}
