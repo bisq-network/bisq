@@ -116,8 +116,9 @@ public class TxParser {
             checkArgument(!outputs.isEmpty(), "outputs must not be empty");
             int lastIndex = outputs.size() - 1;
             int lastNonOpReturnIndex = lastIndex;
-            if (txOutputParser.isOpReturnCandidate(outputs.get(lastIndex))) {
-                txOutputParser.processTxOutput(true, outputs.get(lastIndex), lastIndex);
+            if (txOutputParser.isOpReturnOutput(outputs.get(lastIndex))){
+                // TODO(SQ): perhaps the check for isLastOutput could be skipped
+                txOutputParser.processOpReturnOutput(true, outputs.get(lastIndex));
                 lastNonOpReturnIndex -= 1;
             }
 
@@ -145,7 +146,7 @@ public class TxParser {
                     // use RawTx?
                     TxType txType = TxParser.getBisqTxType(
                             tempTx,
-                            txOutputParser.getOptionalOpReturnTypeCandidate().isPresent(),
+                            txOutputParser.getOptionalVerifiedOpReturnType().isPresent(),
                             remainingInputValue,
                             getOptionalOpReturnType()
                     );
@@ -395,25 +396,7 @@ public class TxParser {
      */
     private Optional<OpReturnType> getOptionalOpReturnType() {
         if (txOutputParser.isBsqOutputFound()) {
-            // We want to be sure that the initial assumption of the opReturn type was matching the result after full
-            // validation.
-            Optional<OpReturnType> optionalOpReturnTypeCandidate = txOutputParser.getOptionalOpReturnTypeCandidate();
-            if (optionalOpReturnTypeCandidate.isPresent()) {
-                OpReturnType opReturnTypeCandidate = optionalOpReturnTypeCandidate.get();
-                Optional<OpReturnType> optionalVerifiedOpReturnType = txOutputParser.getOptionalVerifiedOpReturnType();
-                if (optionalVerifiedOpReturnType.isPresent()) {
-                    OpReturnType verifiedOpReturnType = optionalVerifiedOpReturnType.get();
-                    if (opReturnTypeCandidate == verifiedOpReturnType) {
-                        return optionalVerifiedOpReturnType;
-                    }
-                }
-            }
-
-            String msg = "We got a different opReturn type after validation as we expected initially. " +
-                    "optionalOpReturnTypeCandidate=" + optionalOpReturnTypeCandidate +
-                    ", optionalVerifiedOpReturnType=" + txOutputParser.getOptionalVerifiedOpReturnType();
-            log.error(msg);
-
+            return txOutputParser.getOptionalVerifiedOpReturnType();
         } else {
             String msg = "We got a tx without any valid BSQ output but with burned BSQ. " +
                     "Burned fee=" + remainingInputValue / 100D + " BSQ.";

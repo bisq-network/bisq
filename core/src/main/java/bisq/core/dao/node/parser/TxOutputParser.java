@@ -59,8 +59,6 @@ public class TxOutputParser {
     @Getter
     private boolean bsqOutputFound;
     @Getter
-    private Optional<OpReturnType> optionalOpReturnTypeCandidate = Optional.empty();
-    @Getter
     private Optional<OpReturnType> optionalVerifiedOpReturnType = Optional.empty();
     @Getter
     private Optional<TempTxOutput> optionalIssuanceCandidate = Optional.empty();
@@ -82,9 +80,17 @@ public class TxOutputParser {
         }
     }
 
-    boolean isOpReturnCandidate(TempTxOutput txOutput) {
-        optionalOpReturnTypeCandidate = OpReturnParser.getOptionalOpReturnTypeCandidate(txOutput);
-        return optionalOpReturnTypeCandidate.isPresent();
+    boolean isOpReturnOutput(TempTxOutput txOutput) {
+        return txOutput.getOpReturnData() != null;
+    }
+
+    void processOpReturnOutput(boolean isLastOutput, TempTxOutput tempTxOutput) {
+        byte[] opReturnData = tempTxOutput.getOpReturnData();
+        if (opReturnData != null) {
+            handleOpReturnOutput(tempTxOutput, isLastOutput);
+        } else {
+            log.error("This should be an opReturn output");
+        }
     }
 
     /**
@@ -110,12 +116,8 @@ public class TxOutputParser {
                 handleBtcOutput(tempTxOutput, index);
             }
         } else {
-            handleOpReturnOutput(tempTxOutput, isLastOutput);
+            log.error("This should not be an opReturn output");
         }
-    }
-
-    boolean isOpReturnOutput(TempTxOutput txOutput) {
-        return txOutput.getOpReturnData() != null;
     }
 
     /**
@@ -154,8 +156,8 @@ public class TxOutputParser {
         boolean isFirstOutput = index == 0;
 
         OpReturnType opReturnTypeCandidate = null;
-        if (optionalOpReturnTypeCandidate.isPresent())
-            opReturnTypeCandidate = optionalOpReturnTypeCandidate.get();
+        if (optionalVerifiedOpReturnType.isPresent())
+            opReturnTypeCandidate = optionalVerifiedOpReturnType.get();
 
         TxOutputType bsqOutput;
         if (isFirstOutput && opReturnTypeCandidate == OpReturnType.BLIND_VOTE) {
@@ -182,8 +184,8 @@ public class TxOutputParser {
         // candidate to the parsingModel and we don't apply the TxOutputType as we do that later as the OpReturn check.
         if (availableInputValue > 0 &&
                 index == 1 &&
-                optionalOpReturnTypeCandidate.isPresent() &&
-                optionalOpReturnTypeCandidate.get() == OpReturnType.COMPENSATION_REQUEST) {
+                optionalVerifiedOpReturnType.isPresent() &&
+                optionalVerifiedOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST) {
             // We don't set the txOutputType yet as we have not fully validated the tx but put the candidate
             // into our local optionalIssuanceCandidate.
 
