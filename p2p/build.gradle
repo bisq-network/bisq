@@ -24,10 +24,10 @@ dependencies {
     }
     compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
     compile 'org.fxmisc.easybind:easybind:1.0.3'
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
     testCompile 'junit:junit:4.12'
     testCompile 'org.jmockit:jmockit:1.30'
-    testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompileOnly 'org.projectlombok:lombok:1.18.2'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 }

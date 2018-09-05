@@ -55,8 +55,8 @@ dependencies {
     compile 'com.github.sarxos:webcam-capture:0.3.12'
 
 
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
     testCompile('org.mockito:mockito-core:2.8.9') {
         exclude(module: 'objenesis')
     }
@@ -65,8 +65,8 @@ dependencies {
     testCompile 'org.powermock:powermock-api-mockito2:1.7.1'
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
-    testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompileOnly 'org.projectlombok:lombok:1.18.2'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
 build.dependsOn installDist
