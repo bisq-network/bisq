@@ -101,6 +101,15 @@ public class TxParser {
 
         long accumulatedInputValue = txInputParser.getAccumulatedInputValue();
         txOutputParser.setAvailableInputValue(accumulatedInputValue);
+
+        // We don't allow multiple opReturn outputs (they are non-standard but to be safe lets check it)
+        long numOpReturnOutputs = tempTx.getTempTxOutputs().stream().filter(txOutputParser::isOpReturnOutput).count();
+        if (numOpReturnOutputs > 1) {
+            tempTx.setTxType(TxType.INVALID);
+            String msg = "Invalid tx. We have multiple opReturn outputs. tx=" + tempTx;
+            log.warn(msg);
+        }
+
         txOutputParser.setUnlockBlockHeight(txInputParser.getUnlockBlockHeight());
         txOutputParser.setOptionalSpentLockupTxOutput(txInputParser.getOptionalSpentLockupTxOutput());
         txOutputParser.setTempTx(tempTx); //TODO remove
@@ -116,7 +125,7 @@ public class TxParser {
             checkArgument(!outputs.isEmpty(), "outputs must not be empty");
             int lastIndex = outputs.size() - 1;
             int lastNonOpReturnIndex = lastIndex;
-            if (txOutputParser.isOpReturnOutput(outputs.get(lastIndex))){
+            if (txOutputParser.isOpReturnOutput(outputs.get(lastIndex))) {
                 // TODO(SQ): perhaps the check for isLastOutput could be skipped
                 txOutputParser.processOpReturnOutput(true, outputs.get(lastIndex));
                 lastNonOpReturnIndex -= 1;
@@ -134,11 +143,15 @@ public class TxParser {
 
             remainingInputValue = txOutputParser.getAvailableInputValue();
 
+            // TODO(SQ): If the tx is set to INVALID in this check the txOutputs stay valid
             processOpReturnType(blockHeight, tempTx);
 
-            // We don't allow multiple opReturn outputs (they are non-standard but to be safe lets check it)
-            long numOpReturnOutputs = tempTx.getTempTxOutputs().stream().filter(txOutputParser::isOpReturnOutput).count();
-            if (numOpReturnOutputs <= 1) {
+            // TODO(SQ): Should the destroyed BSQ from an INVALID tx be considered as burnt fee?
+            if (remainingInputValue > 0)
+                tempTx.setBurntFee(remainingInputValue);
+
+            // Process the type of transaction if not already determined to be INVALID
+            if (tempTx.getTxType() != TxType.INVALID) {
                 boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
                         .anyMatch(txOutput -> TxOutputType.UNDEFINED == txOutput.getTxOutputType());
                 if (!isAnyTxOutputTypeUndefined) {
@@ -151,21 +164,11 @@ public class TxParser {
                             getOptionalOpReturnType()
                     );
                     tempTx.setTxType(txType);
-                    if (remainingInputValue > 0)
-                        tempTx.setBurntFee(remainingInputValue);
                 } else {
                     tempTx.setTxType(TxType.INVALID);
                     String msg = "We have undefined txOutput types which must not happen. tx=" + tempTx;
                     DevEnv.logErrorAndThrowIfDevMode(msg);
                 }
-            } else {
-                // TODO(SQ): The transaction has already been parsed here and the individual txouputs are considered
-                // spendable or otherwise correct. Perhaps this check should be done earlier.
-
-                // We don't consider a tx with multiple OpReturn outputs valid.
-                tempTx.setTxType(TxType.INVALID);
-                String msg = "Invalid tx. We have multiple opReturn outputs. tx=" + tempTx;
-                log.warn(msg);
             }
         }
 
@@ -260,8 +263,8 @@ public class TxParser {
     }
 
     private void processCompensationRequest(int blockHeight, TempTx tempTx, long bsqFee) {
-        boolean isFeeAndPhaseValid;
-        isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
+        boolean isFeeAndPhaseValid =
+                isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         Optional<TempTxOutput> optionalIssuanceCandidate = txOutputParser.getOptionalIssuanceCandidate();
         if (isFeeAndPhaseValid) {
             if (optionalIssuanceCandidate.isPresent()) {
@@ -281,8 +284,8 @@ public class TxParser {
     }
 
     private void processProposal(int blockHeight, TempTx tempTx, long bsqFee) {
-        boolean isFeeAndPhaseValid;
-        isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
+        boolean isFeeAndPhaseValid =
+                isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         if (!isFeeAndPhaseValid) {
             tempTx.setTxType(TxType.INVALID);
         }

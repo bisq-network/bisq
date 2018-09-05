@@ -24,6 +24,7 @@ import bisq.core.dao.state.blockchain.TempTx;
 import bisq.core.dao.state.blockchain.TempTxOutput;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.blockchain.TxType;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -105,7 +106,10 @@ public class TxOutputParser {
         byte[] opReturnData = tempTxOutput.getOpReturnData();
         if (opReturnData == null) {
             long txOutputValue = tempTxOutput.getValue();
-            if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
+            if (tempTx.getTxType() == TxType.INVALID) {
+                // Set all non opReturn outputs to BTC_OUTPUT if the tx is invalid
+                tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+            } else if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
                 // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
                 // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
                 // output to not be BSQ output at all
