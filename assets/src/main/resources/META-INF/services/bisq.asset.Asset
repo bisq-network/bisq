@@ -36,7 +36,16 @@ bisq.asset.coins.EtherClassic
 bisq.asset.coins.FuturoCoin
 bisq.asset.coins.Graft
 bisq.asset.coins.Gridcoin
+bisq.asset.coins.Horizen
+bisq.asset.coins.InfinityEconomics
+bisq.asset.coins.Instacash
+bisq.asset.coins.InternetOfPeople
 bisq.asset.coins.Kekcoin
+bisq.asset.coins.Koto
+bisq.asset.coins.Kumacoin
+bisq.asset.coins.LBRY
+bisq.asset.coins.Lisk
+bisq.asset.coins.LitecoinExtreme
 bisq.asset.coins.Litecoin$Mainnet
 bisq.asset.coins.Litecoin$Regtest
 bisq.asset.coins.Litecoin$Testnet
@@ -74,7 +83,6 @@ bisq.asset.coins.Unobtanium
 bisq.asset.coins.Wavi
 bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
-bisq.asset.coins.ZenCash
 bisq.asset.coins.Zero
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.EtherStone
