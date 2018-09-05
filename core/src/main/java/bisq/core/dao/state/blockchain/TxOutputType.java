@@ -1,0 +1,54 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao.state.blockchain;
+
+import bisq.common.proto.ProtoUtil;
+
+import io.bisq.generated.protobuffer.PB;
+
+public enum TxOutputType {
+    UNDEFINED,
+    GENESIS_OUTPUT,
+    BSQ_OUTPUT,
+    BTC_OUTPUT,
+    PROPOSAL_OP_RETURN_OUTPUT,
+    COMP_REQ_OP_RETURN_OUTPUT,
+    CONFISCATE_BOND_OP_RETURN_OUTPUT,
+    ISSUANCE_CANDIDATE_OUTPUT,
+    BLIND_VOTE_LOCK_STAKE_OUTPUT,
+    BLIND_VOTE_OP_RETURN_OUTPUT,
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT,
+    VOTE_REVEAL_OP_RETURN_OUTPUT,
+    LOCKUP,
+    LOCKUP_OP_RETURN_OUTPUT,
+    UNLOCK,
+    INVALID_OUTPUT;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TxOutputType fromProto(PB.TxOutputType txOutputType) {
+        return ProtoUtil.enumFromProto(TxOutputType.class, txOutputType.name());
+    }
+
+    public PB.TxOutputType toProtoMessage() {
+        return PB.TxOutputType.valueOf(name());
+    }
+}

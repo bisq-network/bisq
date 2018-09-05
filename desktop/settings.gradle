@@ -1,0 +1,2 @@
+rootProject.name = 'bisq-desktop'
+include 'common', 'core', 'p2p', 'assets'
