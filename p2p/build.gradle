@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'maven'
+}
+
+group = 'network.bisq'
+version = '-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+}
+
+dependencies {
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
+    compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.2') {
+        exclude(module: 'slf4j-api')
+    }
+    compile('org.apache.httpcomponents:httpclient:4.5.3') {
+        exclude(module: 'commons-logging')
+    }
+    compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+    compile 'org.fxmisc.easybind:easybind:1.0.3'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.jmockit:jmockit:1.30'
+    testCompileOnly 'org.projectlombok:lombok:1.16.16'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+}
