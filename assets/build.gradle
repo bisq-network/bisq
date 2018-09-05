@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'maven'
+}
+
+group 'network.bisq'
+version '-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+javadoc {
+    options.author = true
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'network.bisq:bisq-common:-SNAPSHOT'
+    compile 'commons-codec:commons-codec:1.9'
+    testCompile 'junit:junit:4.12'
+}
