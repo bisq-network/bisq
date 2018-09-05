@@ -53,6 +53,7 @@ bisq.asset.coins.EtherClassic
 bisq.asset.coins.FuturoCoin
 bisq.asset.coins.Graft
 bisq.asset.coins.Gridcoin
+bisq.asset.coins.Horizen
 bisq.asset.coins.InfinityEconomics
 bisq.asset.coins.Instacash
 bisq.asset.coins.InternetOfPeople
@@ -121,7 +122,6 @@ bisq.asset.coins.Xuez
 bisq.asset.coins.Yenten
 bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
-bisq.asset.coins.ZenCash
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.BetterBetting
 bisq.asset.tokens.DaiStablecoin
