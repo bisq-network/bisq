@@ -66,7 +66,7 @@ public class TxParser {
     }
 
     // Apply state changes to tx, inputs and outputs
-    // return true if any input contained BSQ
+    // return Tx if any input contained BSQ
     // Any tx with BSQ input is a BSQ tx (except genesis tx but that is not handled in
     // that class).
     // There might be txs without any valid BSQ txOutput but we still keep track of it,
@@ -143,7 +143,6 @@ public class TxParser {
 
             remainingInputValue = txOutputParser.getAvailableInputValue();
 
-            // TODO(SQ): If the tx is set to INVALID in this check the txOutputs stay valid
             processOpReturnType(blockHeight, tempTx);
 
             // TODO(SQ): Should the destroyed BSQ from an INVALID tx be considered as burnt fee?
@@ -169,6 +168,12 @@ public class TxParser {
                     String msg = "We have undefined txOutput types which must not happen. tx=" + tempTx;
                     DevEnv.logErrorAndThrowIfDevMode(msg);
                 }
+            }
+
+            if (tempTx.getTxType() != TxType.INVALID){
+                txOutputParser.commitTxOutputs();
+            } else {
+                txOutputParser.commitTxOutputsForInvalidTx();
             }
         }
 

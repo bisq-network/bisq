@@ -28,6 +28,8 @@ import bisq.core.dao.state.blockchain.TxType;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import lombok.Getter;
@@ -49,6 +51,7 @@ public class TxOutputParser {
     @Setter
     private long availableInputValue = 0;
     private int lockTime;
+    private List<TempTxOutput> bsqOutputs = new ArrayList<>();
     @Setter
     private int unlockBlockHeight;
     @Setter
@@ -74,11 +77,28 @@ public class TxOutputParser {
         this.bsqStateService = bsqStateService;
     }
 
+    public void commitTxOutputs() {
+        bsqOutputs.forEach(bsqOutput -> {
+            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(bsqOutput));
+        });
+    }
+
+    /**
+     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the bsqStateService
+     */
+    public void commitTxOutputsForInvalidTx() {
+        bsqOutputs.forEach(bsqOutput -> {
+            bsqOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+        });
+
+    }
+
     public void processGenesisTxOutput(TempTx genesisTx) {
         for (int i = 0; i < genesisTx.getTempTxOutputs().size(); ++i) {
             TempTxOutput tempTxOutput = genesisTx.getTempTxOutputs().get(i);
-            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
+            bsqOutputs.add(tempTxOutput);
         }
+        commitTxOutputs();
     }
 
     boolean isOpReturnOutput(TempTxOutput txOutput) {
@@ -144,7 +164,7 @@ public class TxOutputParser {
         availableInputValue -= optionalSpentLockupTxOutput.get().getValue();
 
         txOutput.setTxOutputType(TxOutputType.UNLOCK);
-        bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(txOutput));
+        bsqOutputs.add(txOutput);
 
         //TODO move up to TxParser
         // We should add unlockBlockHeight to TempTxOutput and remove unlockBlockHeight from tempTx
@@ -178,7 +198,7 @@ public class TxOutputParser {
             bsqOutput = TxOutputType.BSQ_OUTPUT;
         }
         txOutput.setTxOutputType(bsqOutput);
-        bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(txOutput));
+        bsqOutputs.add(txOutput);
 
         bsqOutputFound = true;
     }
