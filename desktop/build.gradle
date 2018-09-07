@@ -17,7 +17,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 

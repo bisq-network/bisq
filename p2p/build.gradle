@@ -6,7 +6,7 @@ plugins {
 group = 'network.bisq'
 version = '-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 repositories {
     jcenter()

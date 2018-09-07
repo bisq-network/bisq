@@ -6,7 +6,7 @@ plugins {
 group 'network.bisq'
 version '-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
