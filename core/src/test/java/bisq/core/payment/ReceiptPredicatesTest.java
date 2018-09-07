@@ -23,6 +23,7 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import com.google.common.collect.Lists;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({NationalBankAccount.class, SepaAccount.class, SepaInstantAccount.class, PaymentMethod.class, SameBankAccount.class, SpecificBanksAccount.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class ReceiptPredicatesTest {
     private final ReceiptPredicates predicates = new ReceiptPredicates();
 

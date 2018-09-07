@@ -29,6 +29,7 @@ import org.bitcoinj.core.CoinMaker;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -53,6 +54,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Offer.class, OfferPayload.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class BSFormatterTest {
 
     private BSFormatter formatter;

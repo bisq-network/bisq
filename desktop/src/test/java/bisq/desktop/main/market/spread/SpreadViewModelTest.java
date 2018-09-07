@@ -28,6 +28,7 @@ import bisq.core.util.BSFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({OfferBook.class, PriceFeedService.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class SpreadViewModelTest {
 
     @Test

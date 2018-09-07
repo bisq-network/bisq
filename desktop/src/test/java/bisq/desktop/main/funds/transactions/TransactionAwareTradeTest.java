@@ -27,6 +27,7 @@ import javafx.collections.FXCollections;
 
 import java.util.Collections;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Dispute.class)
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 @SuppressWarnings("ConstantConditions")
 public class TransactionAwareTradeTest {
     private static final String XID = "123";
