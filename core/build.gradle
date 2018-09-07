@@ -49,12 +49,21 @@ dependencies {
     testCompile('org.mockito:mockito-core:2.21.0') {
         exclude(module: 'objenesis')
     }
-    testCompile 'org.jmockit:jmockit:1.30'
     testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
     testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
+    testCompile 'org.jmockit:jmockit:1.42'
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
     testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
     testCompileOnly 'org.projectlombok:lombok:1.18.2'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
+
+/*
+// not working JMockit setup
+test {
+    useJUnitPlatform()
+    def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
+    jvmArgs "-javaagent:$jmockit"
+}
+*/
