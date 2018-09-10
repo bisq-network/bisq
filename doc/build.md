@@ -80,7 +80,7 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-### If using Intellij install the Lombok plugin
+### 2. If using Intellij install the Lombok plugin
 https://plugins.jetbrains.com/plugin/6317-lombok-plugin
 
 Build Bisq
