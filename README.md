@@ -37,12 +37,15 @@ With the above build complete, the Bisq executable jar is now available in the `
 
 _The following instructions have been tested on IDEA 2017.3_
 
+ 1. Open IDEA
+ 1. Go to `Help->Edit Custom Properties...`, add a line to the file that reads `idea.max.intellisense.filesize=12500` (to handle Bisq's very large generated `PB.java` Protobuf source file)
+ 1. Go to `Preferences->Plugins`. Search for and install the _Lombok_ plugin. When prompted, do not restart IDEA.
+ 1. Go to `Preferences->Build, Execution, Deployment->Compiler->Annotation Processors` and check the `Enable annotation processing` option (to enable processing of Lombok annotations)
+ 1. Restart IDEA
  1. Go to `Import Project`, select `settings.gradle` and click `Open`
  1. In the `Import Project from Gradle` screen, check the `Use auto-import` option and click `OK`
  1. When prompted whether to overwrite the existing `.idea` directory, click `Yes`
- 1. Go to `Preferences->Build, Execution, Deployment->Compiler->Annotation Processors` and check the `Enable annotation processing` option (to enable processing of Lombok annotations)
  1. In the `Project` tool window, right click on the root-level `.idea` folder, select `Git->Revert...` and click OK in the dialog that appears (to restore source-controlled `.idea` configuration files that get overwritten during project import)
- 1. Go to `Help->Edit Custom Properties...`, add a line to the file that reads `idea.max.intellisense.filesize=12500`, then quit and restart IDEA (to handle Bisq's very large generated `PB.java` Protobuf source file)
  1. Go to `Build->Build project`. Everything should build cleanly. You should be able to run tests, run `main` methods in any component, etc.
 
 > TIP: If you encounter compilation errors related to the `io.bisq.generated.protobuffer.PB` class, it is probably because you didn't run the full Gradle build above. You need to run the `generateProto` task in the `common` project. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `cd common; ./gradlew generateProto`. Once you've done that, run `Build->Build project` again and you should have no errors.
