@@ -88,7 +88,8 @@ $JAVA_HOME/bin/javapackager \
     -title Bisq \
     -vendor Bisq \
     -outdir deploy \
-    -srcfiles "deploy/Bisq-$version.jar" \
+    -srcdir deploy \
+    -srcfiles "Bisq-$version.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
