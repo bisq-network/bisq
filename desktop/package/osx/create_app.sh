@@ -8,7 +8,9 @@ set -e
 
 version="0.8.0"
 
-../gradlew build -x test shadowJar
+cd ..
+./gradlew :desktop:build -x test shadowJar
+cd desktop
 
 EXE_JAR=build/libs/desktop-$version-all.jar
 
