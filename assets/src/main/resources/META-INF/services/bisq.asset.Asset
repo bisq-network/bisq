@@ -88,6 +88,7 @@ bisq.asset.coins.Nxt
 bisq.asset.coins.Obsidian
 bisq.asset.coins.Octocoin
 bisq.asset.coins.Particl
+bisq.asset.coins.PascalCoin
 bisq.asset.coins.PepeCash
 bisq.asset.coins.Phore
 bisq.asset.coins.PIVX
@@ -133,7 +134,6 @@ bisq.asset.tokens.Internext
 bisq.asset.tokens.LikeCoin
 bisq.asset.tokens.Movement
 bisq.asset.tokens.MyceliumToken
-bisq.asset.tokens.PascalCoin
 bisq.asset.tokens.PiedPiperCoin
 bisq.asset.tokens.Pix
 bisq.asset.tokens.PixelPropertyToken

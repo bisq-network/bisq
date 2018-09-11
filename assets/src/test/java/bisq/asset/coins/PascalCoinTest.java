@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.asset.tokens;
-
-import bisq.asset.AbstractAssetTest;
+package bisq.asset.coins;
 
 import org.junit.Test;
+import bisq.asset.AbstractAssetTest;
 
 public class PascalCoinTest extends AbstractAssetTest {
 
@@ -29,14 +28,26 @@ public class PascalCoinTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("0x65767ec6d4d3d18a200842352485cdc37cbf3a21");
-        assertValidAddress("65767ec6d4d3d18a200842352485cdc37cbf3a21");
+        assertValidAddress("0-10");
+        assertValidAddress("1-22");
+
+        assertValidAddress("1");
+        assertValidAddress("0");
+
+        assertValidAddress("3532-30");
+        assertValidAddress("3532");
+
+        assertValidAddress("507932-29");
+        assertValidAddress("1189514-91");
+        assertValidAddress("1189514");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("0x65767ec6d4d3d18a200842352485cdc37cbf3a216");
-        assertInvalidAddress("0x65767ec6d4d3d18a200842352485cdc37cbf3a2g");
-        assertInvalidAddress("65767ec6d4d3d18a200842352485cdc37cbf3a2g");
+        assertInvalidAddress("-1");
+        assertInvalidAddress("AS-56");
+        assertInvalidAddress("0-1");
+        assertInvalidAddress("-1");
+        assertInvalidAddress("0-100");
     }
 }
