@@ -35,7 +35,7 @@ With the above build complete, the Bisq executable jar is now available in the `
 
 ## Importing Bisq into Intellij IDEA
 
-_The following instructions have been tested on IDEA 2017.3_
+_The following instructions have been tested on IDEA 2018.2_
 
  1. Open IDEA
  1. Go to `Help->Edit Custom Properties...`, add a line to the file that reads `idea.max.intellisense.filesize=12500` (to handle Bisq's very large generated `PB.java` Protobuf source file)
