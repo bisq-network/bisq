@@ -1,5 +1,7 @@
 language: java
 jdk: oraclejdk8
+before_install:
+  grep -v '^#' src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
 notifications:
   slack:
     on_success: change
