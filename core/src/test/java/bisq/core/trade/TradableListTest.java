@@ -27,7 +27,6 @@ import io.bisq.generated.protobuffer.PB;
 
 import mockit.Mocked;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
@@ -36,10 +35,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TradableListTest {
 
-    @Mocked OfferPayload offerPayload;
-
-    @Ignore ("JMockit not configured properly for Java 10")
-    public void protoTesting() {
+    @Test
+    public void protoTesting(@Mocked OfferPayload offerPayload) {
         Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         PB.PersistableEnvelope message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();

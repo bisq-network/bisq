@@ -64,7 +64,6 @@ import mockit.MockUp;
 import mockit.Tested;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -139,7 +138,7 @@ public class TradesChartsViewModelTest {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Ignore("JMockit not configured properly for Java 10")
+    @Test
     public void testGetCandleData() {
         model.selectedTradeCurrencyProperty.setValue(new FiatCurrency("EUR"));
 
@@ -171,7 +170,7 @@ public class TradesChartsViewModelTest {
         assertEquals(isBullish, candleData.isBullish);
     }
 
-    @Ignore ("JMockit not configured properly for Java 10")
+    @Test
     public void testItemLists() throws ParseException {
         // Helper class to add historic trades
         class Trade {
