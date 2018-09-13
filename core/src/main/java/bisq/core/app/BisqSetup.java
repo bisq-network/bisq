@@ -24,8 +24,7 @@ import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.AddressEntry;
-import bisq.core.btc.BalanceModel;
-import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.Balances;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.btc.wallet.WalletsSetup;
@@ -38,14 +37,12 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
-import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -68,7 +65,6 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -83,7 +79,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
@@ -120,7 +115,7 @@ public class BisqSetup {
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
-    private final BalanceModel balanceModel;
+    private final Balances balances;
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
@@ -189,7 +184,7 @@ public class BisqSetup {
                      WalletsManager walletsManager,
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
-                     BalanceModel balanceModel,
+                     Balances balances,
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
                      P2PService p2PService,
@@ -224,7 +219,7 @@ public class BisqSetup {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
-        this.balanceModel = balanceModel;
+        this.balances = balances;
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
@@ -565,29 +560,12 @@ public class BisqSetup {
         disputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
-        tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .filter(addressEntry -> addressEntry.getOfferId() != null)
-                .forEach(addressEntry -> {
-                    log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
-                    btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
-                });
-
-        btcWalletService.addBalanceListener(new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                balanceModel.updateBalance();
-            }
-        });
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
 
-        balanceModel.updateBalance();
-
-        openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
-
+        balances.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
