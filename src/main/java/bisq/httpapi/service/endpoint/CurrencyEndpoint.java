@@ -1,12 +1,13 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.facade.PriceFeedFacade;
+import bisq.httpapi.model.CurrencyList;
+import bisq.httpapi.model.PriceFeed;
+
 import javax.inject.Inject;
 
 
 
-import bisq.httpapi.BisqProxy;
-import bisq.httpapi.model.CurrencyList;
-import bisq.httpapi.model.PriceFeed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -20,11 +21,11 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class CurrencyEndpoint {
 
-    private final BisqProxy bisqProxy;
+    private final PriceFeedFacade priceFeedFacade;
 
     @Inject
-    public CurrencyEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
+    public CurrencyEndpoint(PriceFeedFacade priceFeedFacade) {
+        this.priceFeedFacade = priceFeedFacade;
     }
 
     @ApiOperation("List available currencies")
@@ -42,6 +43,6 @@ public class CurrencyEndpoint {
             codes = new String[0];
         else
             codes = currencyCodes.split("\\s*,\\s*");
-        return bisqProxy.getPriceFeed(codes);
+        return priceFeedFacade.getPriceFeed(codes);
     }
 }

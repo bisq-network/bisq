@@ -3,7 +3,6 @@ package bisq.httpapi.service;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 
-import bisq.httpapi.BisqProxy;
 import bisq.httpapi.exceptions.ExceptionMappers;
 import bisq.httpapi.service.auth.AuthFilter;
 import bisq.httpapi.service.auth.TokenRegistry;
@@ -34,16 +33,14 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 public class HttpApiServer extends Application<HttpApiConfiguration> {
     private final BtcWalletService walletService;
-    private final BisqProxy bisqProxy;
     private final HttpApiInterfaceV1 httpApiInterfaceV1;
     private final TokenRegistry tokenRegistry;
     private final BisqEnvironment bisqEnvironment;
 
     @Inject
-    public HttpApiServer(BtcWalletService walletService, BisqProxy bisqProxy, HttpApiInterfaceV1 httpApiInterfaceV1,
+    public HttpApiServer(BtcWalletService walletService, HttpApiInterfaceV1 httpApiInterfaceV1,
                          TokenRegistry tokenRegistry, BisqEnvironment bisqEnvironment) {
         this.walletService = walletService;
-        this.bisqProxy = bisqProxy;
         this.httpApiInterfaceV1 = httpApiInterfaceV1;
         this.tokenRegistry = tokenRegistry;
         this.bisqEnvironment = bisqEnvironment;
@@ -89,7 +86,7 @@ public class HttpApiServer extends Application<HttpApiConfiguration> {
         JerseyEnvironment jerseyEnvironment = environment.jersey();
         jerseyEnvironment.register(httpApiInterfaceV1);
         ExceptionMappers.register(jerseyEnvironment);
-        environment.healthChecks().register("currency list size", new CurrencyListHealthCheck(bisqProxy));
+        environment.healthChecks().register("currency list size", new CurrencyListHealthCheck());
     }
 
     private void setupCrossOriginFilter(Environment environment) {

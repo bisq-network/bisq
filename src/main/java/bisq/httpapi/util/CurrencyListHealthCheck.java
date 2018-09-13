@@ -17,21 +17,16 @@
 
 package bisq.httpapi.util;
 
-import bisq.httpapi.BisqProxy;
 import bisq.httpapi.service.endpoint.MarketEndpoint;
+
+
+
 import com.codahale.metrics.health.HealthCheck;
 
 public class CurrencyListHealthCheck extends HealthCheck {
-    private final BisqProxy bisqProxy;
-
-    public CurrencyListHealthCheck(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
-    }
 
     /**
      * Check that the proxy returns a valid currencyList
-     *
-     * @return
      */
     @Override
     protected Result check() {
