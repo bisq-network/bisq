@@ -53,3 +53,5 @@ services:
 volumes:
   m2:
     name: m2
+  gradle:
+    name: gradle

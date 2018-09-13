@@ -1,6 +1,6 @@
 # the only required property is resourcePackage, for more config options see below
 swagger:
-  resourcePackage: network.bisq.api.service
+  resourcePackage: bisq.httpapi.service
 
 
 server:

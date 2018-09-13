@@ -1,7 +1,13 @@
 #!/bin/bash
 
+if [ -d /root/.gradle-volume ] ; then
+    echo Copying /root/.gradle-volume to /root/.gradle/
+    mkdir -p /root/.gradle/
+    cp -R /root/.gradle-volume/* /root/.gradle/
+fi
+
 if [ "$SKIP_BUILD" != "true" ]; then
-    mvn compile
+    ./gradlew --no-daemon compileJava -x test
 fi
 
 IP=`ip -4 -o addr show eth0  | sed 's/.*inet \([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/'`
@@ -33,6 +39,12 @@ fi
 if [ ! -z "$USE_DEV_PRIVILEGE_KEYS" ]; then
     ARGS="$ARGS --useDevPrivilegeKeys=$USE_DEV_PRIVILEGE_KEYS"
 fi
+if [ ! -z "$BISQ_API_PORT" ]; then
+    ARGS="$ARGS --httpApiPort=$BISQ_API_PORT"
+fi
+if [ ! -z "$BISQ_API_HOST" ]; then
+    ARGS="$ARGS --httpApiHost=$BISQ_API_HOST"
+fi
 
-echo mvn exec:java -Dexec.mainClass="network.bisq.api.app.ApiMain" -Dexec.args="$ARGS"
-mvn exec:java -Dexec.mainClass="network.bisq.api.app.ApiMain" -Dexec.args="$ARGS"
+echo ./gradlew run --no-daemon --args "foo $ARGS"
+./gradlew run --no-daemon --args "foo $ARGS"

@@ -8,6 +8,7 @@ services:
     image: bisq-api
     volumes:
       - m2:/root/.m2
+      - gradle:/root/.gradle-volume
     environment:
       - LOG_LEVEL=debug
       - USE_LOCALHOST_FOR_P2P=true
