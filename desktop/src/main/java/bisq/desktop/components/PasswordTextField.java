@@ -17,29 +17,11 @@
 
 package bisq.desktop.components;
 
-import bisq.core.locale.Res;
-import bisq.core.util.validation.InputValidator;
-
 import com.jfoenix.controls.JFXPasswordField;
 
-import org.controlsfx.control.PopOver;
-
-import javafx.stage.Window;
-
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
-
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
-
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
 public class PasswordTextField extends JFXPasswordField{
-
+    public PasswordTextField() {
+        super();
+        setLabelFloat(true);
+    }
 }

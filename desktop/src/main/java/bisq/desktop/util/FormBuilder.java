@@ -386,23 +386,23 @@ public class FormBuilder {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Label  + PasswordField
+    // PasswordField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, PasswordTextField> addLabelPasswordTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelPasswordTextField(gridPane, rowIndex, title, 0);
+    public static PasswordTextField addPasswordTextField(GridPane gridPane, int rowIndex, String title) {
+        return addPasswordTextField(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, PasswordTextField> addLabelPasswordTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
+    public static PasswordTextField addPasswordTextField(GridPane gridPane, int rowIndex, String title, double top) {
         PasswordTextField passwordField = new PasswordTextField();
+        passwordField.setPromptText(title);
         GridPane.setRowIndex(passwordField, rowIndex);
-        GridPane.setColumnIndex(passwordField, 1);
-        GridPane.setMargin(passwordField, new Insets(top, 0, 0, 0));
+        GridPane.setColumnIndex(passwordField, 0);
+        GridPane.setColumnSpan(passwordField, 2);
+        GridPane.setMargin(passwordField, new Insets(top + 10, 0, 20, 0));
         gridPane.getChildren().add(passwordField);
 
-        return new Tuple2<>(label, passwordField);
+        return passwordField;
     }
 
 

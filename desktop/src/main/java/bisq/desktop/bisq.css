@@ -262,6 +262,25 @@ bg color of non edit textFields: fafafa
     -jfx-focus-color: -bs-rd-green;
 }
 
+.jfx-password-field {
+    -jfx-focus-color: -bs-rd-green;
+}
+
+.jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
+    -jfx-focus-color: -bs-error-red;
+    -jfx-unfocus-color: -bs-error-red;
+}
+
+.jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
+    -fx-text-fill: -bs-error-red;
+    -fx-font-size: 0.75em;
+}
+
+.jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
+    -fx-text-fill: -bs-error-red;
+    -fx-font-size: 1em;
+}
+
 .market-price-box > .jfx-combo-box > .input-line {
     -fx-pref-height: 0px;
 }

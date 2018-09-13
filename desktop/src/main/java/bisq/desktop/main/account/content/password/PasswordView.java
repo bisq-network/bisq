@@ -36,14 +36,13 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import com.jfoenix.validation.RequiredFieldValidator;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -65,8 +64,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     private Button pwButton;
     private TitledGroupBg headline;
     private int gridRow = 0;
-    private Label repeatedPasswordLabel;
-    private ChangeListener<String> passwordFieldChangeListener;
+    private ChangeListener<Boolean> passwordFieldChangeListener;
     private ChangeListener<String> repeatedPasswordFieldChangeListener;
 
 
@@ -83,18 +81,20 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        passwordValidator.setIcon(FormBuilder.getIcon(MaterialDesignIcon.ALERT));
-
         headline = FormBuilder.addTitledGroupBg(root, gridRow, 2, "");
-        passwordField = FormBuilder.addLabelPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE).second;
-        passwordField.getValidators().add(passwordValidator);
-        passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
+        passwordField = FormBuilder.addPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE);
+        final RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator();
+        passwordField.getValidators().addAll(requiredFieldValidator, passwordValidator);
+        passwordFieldChangeListener = (observable, oldValue, newValue) -> {
+            if (!newValue) validatePasswords();
+        };
 
-        Tuple2<Label, PasswordTextField> tuple2 = FormBuilder.addLabelPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
-        repeatedPasswordLabel = tuple2.first;
-        repeatedPasswordField = tuple2.second;
-        repeatedPasswordField.getValidators().add(passwordValidator);
-        repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
+        repeatedPasswordField = FormBuilder.addPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
+        requiredFieldValidator.setMessage("Password can't be empty");
+        repeatedPasswordField.getValidators().addAll(requiredFieldValidator, passwordValidator);
+        repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> {
+            if (oldValue != newValue) validatePasswords();
+        };
 
         Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
         pwButton = tuple.first;
@@ -178,28 +178,24 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             headline.setText(Res.get("account.password.removePw.headline"));
             repeatedPasswordField.setVisible(false);
             repeatedPasswordField.setManaged(false);
-            repeatedPasswordLabel.setVisible(false);
-            repeatedPasswordLabel.setManaged(false);
         } else {
             pwButton.setText(Res.get("account.password.setPw.button"));
             headline.setText(Res.get("account.password.setPw.headline"));
             repeatedPasswordField.setVisible(true);
             repeatedPasswordField.setManaged(true);
-            repeatedPasswordLabel.setVisible(true);
-            repeatedPasswordLabel.setManaged(true);
         }
     }
 
     @Override
     protected void activate() {
-        passwordField.textProperty().addListener(passwordFieldChangeListener);
+        passwordField.focusedProperty().addListener(passwordFieldChangeListener);
         repeatedPasswordField.textProperty().addListener(repeatedPasswordFieldChangeListener);
 
     }
 
     @Override
     protected void deactivate() {
-        passwordField.textProperty().removeListener(passwordFieldChangeListener);
+        passwordField.focusedProperty().removeListener(passwordFieldChangeListener);
         repeatedPasswordField.textProperty().removeListener(repeatedPasswordFieldChangeListener);
 
     }
