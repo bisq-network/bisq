@@ -1,11 +1,11 @@
 package bisq.httpapi.service.endpoint;
 
-import javax.inject.Inject;
-
-
-
-import bisq.httpapi.BisqProxy;
 import bisq.httpapi.model.VersionDetails;
+
+import bisq.common.app.Version;
+
+
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -18,17 +18,15 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class VersionEndpoint {
 
-    private final BisqProxy bisqProxy;
-
-    @Inject
-    public VersionEndpoint(BisqProxy bisqProxy) {
-        this.bisqProxy = bisqProxy;
-    }
-
     @ApiOperation(value = "Get version details")
     @GET
     public VersionDetails getVersionDetails() {
-        return bisqProxy.getVersionDetails();
+        final VersionDetails versionDetails = new VersionDetails();
+        versionDetails.application = Version.VERSION;
+        versionDetails.network = Version.P2P_NETWORK_VERSION;
+        versionDetails.p2PMessage = Version.getP2PMessageVersion();
+        versionDetails.localDB = Version.LOCAL_DB_VERSION;
+        versionDetails.tradeProtocol = Version.TRADE_PROTOCOL_VERSION;
+        return versionDetails;
     }
-
 }

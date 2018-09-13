@@ -7,9 +7,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.httpapi.model.PriceFeed;
-import bisq.httpapi.model.VersionDetails;
-
-import bisq.common.app.Version;
 
 import javax.inject.Inject;
 
@@ -49,16 +46,6 @@ public class BisqProxy {
 
 
     /// STOP TODO REFACTOR OFFER TAKE DEPENDENCIES //////////////////////////
-
-    public VersionDetails getVersionDetails() {
-        final VersionDetails versionDetails = new VersionDetails();
-        versionDetails.application = Version.VERSION;
-        versionDetails.network = Version.P2P_NETWORK_VERSION;
-        versionDetails.p2PMessage = Version.getP2PMessageVersion();
-        versionDetails.localDB = Version.LOCAL_DB_VERSION;
-        versionDetails.tradeProtocol = Version.TRADE_PROTOCOL_VERSION;
-        return versionDetails;
-    }
 
     public PriceFeed getPriceFeed(String[] codes) {
         final List<FiatCurrency> fiatCurrencies = preferences.getFiatCurrencies();
