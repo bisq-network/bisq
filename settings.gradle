@@ -6,5 +6,6 @@ include 'desktop'
 include 'monitor'
 include 'pricenode'
 include 'relay'
+include 'seednode'
 
 rootProject.name = 'bisq'
