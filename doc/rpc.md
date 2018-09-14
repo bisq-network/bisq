@@ -4,16 +4,17 @@
 You need to setup the bitcoin.conf and add a blocknotify sh file. See the examples in the rec_regtest directory.
 
 To enable RPC calls you need to pass those program arguments:
---rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
+--rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18443 --rpcBlockNotificationPort=4159
 
-The default rpcPort for regtest and testnet is: 18332
+The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
+The default rpcPort for testnet is: 18332
 For mainnet: 8332
 
 If you run 2 clients and want to receive the block notifications on both use different rpcBlockNotificationPorts
 5159 and 4159 are defined in the blocknotify file.
 
 For reg test setup with localhost those are typical program arguments:
---baseCryptoNetwork=btc_regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
+--baseCryptoNetwork=btc_regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18443 --rpcBlockNotificationPort=4159
 
 
 For mainnet:
@@ -36,4 +37,4 @@ Set the block height and transaction ID at with options genesisBlockHeight and g
 Restart the Bisq apps. After that the app will recognize the received Bitcoin as BSQ.
 
 Here are example options for regtest mode:
---daoActivated=true --genesisBlockHeight=111 --genesisTxId=aa92a8d56be3aaafc6b1a8d248ae67c221d78a31de8867a9564e7ae24340b495 --useDevPrivilegeKeys=true --useDevMode=true--baseCurrencyNetwork=BTC_REGTEST  --useLocalhostForP2P=true --nodePort=3612 --appName=bisq-BTC_REGTEST_Bob_dao --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=5159
+--daoActivated=true --genesisBlockHeight=111 --genesisTxId=aa92a8d56be3aaafc6b1a8d248ae67c221d78a31de8867a9564e7ae24340b495 --useDevPrivilegeKeys=true --useDevMode=true--baseCurrencyNetwork=BTC_REGTEST  --useLocalhostForP2P=true --nodePort=3612 --appName=bisq-BTC_REGTEST_Bob_dao --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18443 --rpcBlockNotificationPort=5159
