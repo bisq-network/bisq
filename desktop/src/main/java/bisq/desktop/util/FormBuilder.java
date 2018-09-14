@@ -1137,6 +1137,7 @@ public class FormBuilder {
 
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
+        button.getStyleClass().add("action-button");
 
         BusyAnimation busyAnimation = new BusyAnimation(false);
 

@@ -29,19 +29,16 @@ public class AutoTooltipButton extends JFXButton {
 
     public AutoTooltipButton() {
         super();
-        //setButtonType(ButtonType.RAISED);
     }
 
     public AutoTooltipButton(String text) {
-        super(text);
-        //setButtonType(ButtonType.RAISED);
+        super(text.toUpperCase());
     }
 
     public AutoTooltipButton(String text, Node graphic) {
-        super(text, graphic);
-        //setButtonType(ButtonType.RAISED);
+        super(text.toUpperCase(), graphic);
     }
-
+    
     @Override
     protected Skin<?> createDefaultSkin() {
         return new AutoTooltipButtonSkin(this);

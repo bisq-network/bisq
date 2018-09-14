@@ -1314,7 +1314,7 @@ textfield */
 
 /********************************************************************************************************************
  *                                                                                                                  *
- * Rounded buttons                                                                                                  *
+ * Highlight buttons                                                                                                  *
  *                                                                                                                  *
  ********************************************************************************************************************/
 
@@ -1350,6 +1350,19 @@ textfield */
     /*-fx-background-color: -bs-cancel;*/
     -fx-text-fill: -bs-very-dark-grey3;
     -fx-font-weight: bold;
+}
+
+.action-button:disabled {
+    -fx-background-color: -bs-rd-grey-light;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+}
+
+.action-button {
+    -fx-background-color: -bs-rd-green;
+    -fx-text-fill: -bs-white;
+    -fx-font-size: 0.923em;
+    -fx-pref-height: 32;
+    -fx-padding: 0 40 0 40;
 }
 
 /********************************************************************************************************************

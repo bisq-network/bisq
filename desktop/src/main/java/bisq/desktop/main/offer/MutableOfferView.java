@@ -295,13 +295,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
+            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")).toUpperCase());
             nextButton.setId("buy-button");
             percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             imageView.setId("image-sell-large");
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
+            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")).toUpperCase());
             nextButton.setId("sell-button");
             percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
