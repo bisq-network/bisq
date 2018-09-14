@@ -28,7 +28,6 @@ import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -60,12 +59,12 @@ public class Sig {
     public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO, "BC");
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(KEY_ALGO);
             keyPairGenerator.initialize(1024);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             log.trace("Generate msgSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             log.error(e.toString());
             throw new RuntimeException("Could not create key.");
@@ -80,11 +79,11 @@ public class Sig {
      */
     public static byte[] sign(PrivateKey privateKey, byte[] data) throws CryptoException {
         try {
-            Signature sig = Signature.getInstance(ALGO, "BC");
+            Signature sig = Signature.getInstance(ALGO);
             sig.initSign(privateKey);
             sig.update(data);
             return sig.sign();
-        } catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException e) {
+        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new CryptoException("Signing failed. " + e.getMessage());
         }
     }
@@ -107,11 +106,11 @@ public class Sig {
      */
     public static boolean verify(PublicKey publicKey, byte[] data, byte[] signature) throws CryptoException {
         try {
-            Signature sig = Signature.getInstance(ALGO, "BC");
+            Signature sig = Signature.getInstance(ALGO);
             sig.initVerify(publicKey);
             sig.update(data);
             return sig.verify(signature);
-        } catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException e) {
+        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new CryptoException("Signature verification failed. " + e.getMessage());
         }
     }
@@ -132,8 +131,8 @@ public class Sig {
      */
     public static PublicKey getPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
         try {
-            return KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            return KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(sigPublicKeyBytes), e);
             e.printStackTrace();
             throw new KeyConversionException(e);

@@ -47,10 +47,7 @@ import static org.mockito.Mockito.mock;
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class ArbitratorManagerTest {
 
-    @Before
-    public void setUp() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+
 
     @Test
     public void testIsArbitratorAvailableForLanguage() {

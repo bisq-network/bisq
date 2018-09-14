@@ -26,11 +26,8 @@ import bisq.common.storage.FileUtil;
 
 import io.bisq.generated.protobuffer.PB;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 import java.security.cert.CertificateException;
 
 import java.io.File;
@@ -56,7 +53,7 @@ public class EncryptionServiceTests {
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        Security.addProvider(new BouncyCastleProvider());
+
         dir = File.createTempFile("temp_tests", "");
         //noinspection ResultOfMethodCallIgnored
         dir.delete();

@@ -34,14 +34,11 @@ import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.Sig;
 import bisq.common.storage.FileUtil;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
@@ -84,7 +81,7 @@ public class ProtectedDataStorageTest {
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
-        Security.addProvider(new BouncyCastleProvider());
+
         dir1 = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored,ResultOfMethodCallIgnored
         dir1.delete();

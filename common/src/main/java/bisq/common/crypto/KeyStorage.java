@@ -28,7 +28,6 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.DSAParams;
@@ -121,7 +120,7 @@ public class KeyStorage {
         FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);
         // long now = System.currentTimeMillis();
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm(), "BC");
+            KeyFactory keyFactory = KeyFactory.getInstance(keyEntry.getAlgorithm());
             PublicKey publicKey;
             PrivateKey privateKey;
 
@@ -158,7 +157,7 @@ public class KeyStorage {
 
             log.debug("load completed in {} msec", System.currentTimeMillis() - new Date().getTime());
             return new KeyPair(publicKey, privateKey);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new RuntimeException("Could not load key " + keyEntry.toString(), e);

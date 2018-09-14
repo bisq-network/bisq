@@ -24,10 +24,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -38,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -52,10 +47,7 @@ public class TorNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNodeTest.class);
     private CountDownLatch latch;
 
-    @Before
-    public void setup() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+
 
     @Test
     public void testTorNodeBeforeSecondReady() throws InterruptedException, IOException {
