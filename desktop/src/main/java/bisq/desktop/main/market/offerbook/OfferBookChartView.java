@@ -147,18 +147,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         };
 
         currencyComboBox = new JFXComboBox<>();
+        ((JFXComboBox<CurrencyListItem>) currencyComboBox).setLabelFloat(true);
+        currencyComboBox.setPadding(new Insets(10,0,0,0));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 model.preferences));
-
-        Label currencyLabel = new AutoTooltipLabel(Res.get("shared.currency"));
-        currencyLabel.getStyleClass().add("small-text");
-        VBox currencyHBox = new VBox();
-        currencyHBox.setSpacing(-5);
-        currencyHBox.setPadding(new Insets(5, -20, -5, 20));
-        currencyHBox.setAlignment(Pos.CENTER_LEFT);
-        currencyHBox.getChildren().addAll(currencyLabel, currencyComboBox);
 
         createChart();
 
@@ -182,7 +176,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(currencyHBox, areaChart, bottomHBox);
+        root.getChildren().addAll(currencyComboBox, areaChart, bottomHBox);
     }
 
     @Override
