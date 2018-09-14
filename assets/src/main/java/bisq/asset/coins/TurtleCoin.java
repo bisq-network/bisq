@@ -18,7 +18,7 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.RegexAddressValidator;
 
 public class TurtleCoin extends Coin {
 
