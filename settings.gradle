@@ -3,5 +3,6 @@ include 'common'
 include 'p2p'
 include 'core'
 include 'desktop'
+include 'monitor'
 
 rootProject.name = 'bisq'
