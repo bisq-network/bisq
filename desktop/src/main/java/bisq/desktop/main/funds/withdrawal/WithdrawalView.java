@@ -423,7 +423,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(WithdrawalListItem::cleanup);
-        observableList.setAll(tradeManager.getAddressEntriesForAvailableBalanceStream()
+        observableList.setAll(tradeManager.getAddressEntriesForAvailableFundsStream()
                 .map(addressEntry -> new WithdrawalListItem(addressEntry, walletService, formatter))
                 .collect(Collectors.toList()));
 

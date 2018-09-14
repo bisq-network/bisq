@@ -73,7 +73,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
     static {
         Utilities.removeCryptographyRestrictions();
     }
@@ -239,8 +239,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
+        bisqSetup.addBisqSetupCompleteListener(this);
         bisqSetup.start();
     }
+
+    public abstract void onSetupComplete();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +362,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .ofType(boolean.class);
         parser.accepts(AppOptionKeys.REFERRAL_ID,
                 description("Optional Referral ID (e.g. for API users or pro market makers)", ""))
+                .withRequiredArg();
+        parser.accepts(AppOptionKeys.HTTP_API_HOST,
+                description("Optional HTTP API host", "127.0.0.1"))
+                .withRequiredArg();
+        parser.accepts(AppOptionKeys.HTTP_API_PORT,
+                description("Optional HTTP API port", "8080"))
                 .withRequiredArg();
         parser.accepts(CommonOptionKeys.USE_DEV_MODE,
                 description("Enables dev mode which is used for convenience for developer testing", false))
