@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'network.bisq'
+version = '0.8.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'bisq.monitor.MonitorMain'
+
+repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+}
+
+dependencies {
+    compile project(':core')
+    compile 'com.sparkjava:spark-core:2.5.2'
+    compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+}
+
+build.dependsOn installDist
+installDist.destinationDir = file('build/app')
+distZip.enabled = false

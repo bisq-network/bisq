@@ -1,0 +1,39 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'maven'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+group = 'network.bisq'
+version = '0.8.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'bisq.seednode.SeedNodeMain'
+
+sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
+
+repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+}
+
+dependencies {
+    compile project(':core')
+    runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+}
+
+build.dependsOn installDist
+installDist.destinationDir = file('build/app')
+distZip.enabled = false

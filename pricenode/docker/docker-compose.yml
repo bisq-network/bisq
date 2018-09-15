@@ -1,0 +1,21 @@
+version: '3'
+
+# Fill in your own BTCAVERAGE public and private keys
+
+services:
+    pricenode:
+        restart: unless-stopped
+        build:
+            context: .
+        image: bisq:pricenode
+        ports:
+            - 80:80
+            - 8080:8080
+        environment:
+            - BTCAVERAGE_PRIVKEY=!!!!!!!!!!!!!!!!!!!!!!!!! YOUR PRIVATE KEY !!!!!!!!!!!!!!!!!!!!!!!!!!!
+            - BTCAVERAGE_PUBKEY=!!!!!!!!!!!!!!!!!!!!!!!!!! YOUR PUBKEY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    entropy:
+      restart: always
+      image: harbur/haveged:1.7c-1
+      container_name: haveged-entropy
+      privileged: true
