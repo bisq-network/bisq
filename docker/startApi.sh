@@ -7,7 +7,7 @@ if [ -d /root/.gradle-volume ] ; then
 fi
 
 if [ "$SKIP_BUILD" != "true" ]; then
-    ./gradlew --no-daemon compileJava -x test
+    ../gradlew --no-daemon compileJava -x test
 fi
 
 IP=`ip -4 -o addr show eth0  | sed 's/.*inet \([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/'`
@@ -46,5 +46,5 @@ if [ ! -z "$BISQ_API_HOST" ]; then
     ARGS="$ARGS --httpApiHost=$BISQ_API_HOST"
 fi
 
-echo ./gradlew run --no-daemon --args "foo $ARGS"
-./gradlew run --no-daemon --args "foo $ARGS"
+echo ../gradlew run --no-daemon --args "foo $ARGS"
+../gradlew run --no-daemon --args "foo $ARGS"

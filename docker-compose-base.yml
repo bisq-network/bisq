@@ -3,8 +3,8 @@ version: '2.1'
 services:
   api:
     build:
-      context: .
-      dockerfile: docker/dev/Dockerfile
+      context: ..
+      dockerfile: http-api/docker/dev/Dockerfile
     image: bisq-api
     volumes:
       - m2:/root/.m2

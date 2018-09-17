@@ -16,7 +16,6 @@ tasks.withType(JavaCompile) {
 mainClassName = 'bisq.httpapi.app.HttpApiMain'
 
 repositories {
-    mavenLocal()
     jcenter()
     maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
@@ -25,10 +24,10 @@ repositories {
 }
 
 dependencies {
-    compile 'network.bisq:bisq-common:-SNAPSHOT'
-    compile 'network.bisq:bisq-assets:-SNAPSHOT'
-    compile 'network.bisq:bisq-core:-SNAPSHOT'
-    compile 'network.bisq:bisq-p2p:-SNAPSHOT'
+    compile project(':common')
+    compile project(':assets')
+    compile project(':core')
+    compile project(':p2p')
 
     compile "io.dropwizard:dropwizard-core:1.2.2"
     compile "io.dropwizard:dropwizard-forms:1.2.2"
