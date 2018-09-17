@@ -15,7 +15,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 mainClassName = 'bisq.seednode.SeedNodeMain'
 
@@ -30,8 +30,8 @@ repositories {
 dependencies {
     compile project(':core')
     runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
 build.dependsOn installDist

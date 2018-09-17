@@ -6,7 +6,7 @@ plugins {
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 mainClassName = 'bisq.statistics.StatisticsMain'
 
@@ -18,8 +18,8 @@ repositories {
 
 dependencies {
     compile project(':core')
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
 build.dependsOn installDist
