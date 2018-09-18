@@ -60,6 +60,7 @@ public class CurrencyList {
         List<CurrencyListItem> result = Lists.newLinkedList();
         Optional.ofNullable(first).ifPresent(result::add);
         result.addAll(getPartitionedSortedItems(currencies));
+        delegate.clear();
         delegate.addAll(result);
     }
 
