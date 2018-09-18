@@ -864,6 +864,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
     private void addGridPane() {
         gridPane = new GridPane();
+        gridPane.getStyleClass().add("content-pane");
         gridPane.setPadding(new Insets(30, 25, -1, 25));
         gridPane.setHgap(5);
         gridPane.setVgap(5);

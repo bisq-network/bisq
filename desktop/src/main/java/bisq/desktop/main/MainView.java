@@ -267,7 +267,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         AnchorPane contentContainer = new AnchorPane() {{
-            setId("content-pane");
+            getStyleClass().add("content-pane");
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 60d);

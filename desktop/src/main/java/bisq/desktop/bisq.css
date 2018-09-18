@@ -50,7 +50,6 @@ bg color of non edit textFields: fafafa
     -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
     -bs-light-grey2: #cfcfcf; /* 2 usages */
     -bs-light-grey3: #b5b5b5; /* 1 usages */
-    -bs-bg-grey4: #f6f6f6; /* 1 usages */
     -bs-font-dark: #333; /* 11 usages */
     -bs-bg-grey7: #e0e0e0; /* 2 usages */
     -bs-white: #ffffff; /* 30 usages */
@@ -92,6 +91,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-medium-light:#E9E9E9;
     -bs-rd-grey-very-light: #f8f8f8; /* 10 usages */
     -bs-rd-grey-background: #F2F2F2;
+    -bs-rd-grey-background-bottom: #f6f6f6; /* 1 usages */
     -bs-rd-grey-background-dark: #DDDDDD;
     -bs-rd-grey-background-darker: #D0D0D0;
     -bs-rd-grey-background-darkest: #444444;
@@ -386,8 +386,9 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-bg-grey;
 }
 
-#content-pane {
-    -fx-background-color: -bs-content-bg-grey;
+.content-pane {
+    -fx-background-color: linear-gradient(-bs-rd-grey-background 0%, -bs-rd-grey-background-bottom 100%);
+    /*-fx-background-color: linear-gradient(red 0%, green 100%);*/
 }
 
 #footer-pane {
@@ -908,7 +909,7 @@ textfield */
 #currency-info-label {
     -fx-border-radius: 0 4 4 0;
     -fx-padding: 4 4 4 4;
-    -fx-background-color: -bs-bg-grey4;
+    -fx-background-color: -bs-rd-grey-background-bottom;
     -fx-border-color: -bs-medium-grey;
     -fx-border-style: solid solid solid none;
     -fx-border-insets: 0 0 0 -2;
@@ -1116,21 +1117,21 @@ textfield */
     -fx-font-weight: normal;
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-black;
-    -fx-background-color: -bs-rd-grey-background;
+    -fx-background-color: transparent;
 }
 
 #titled-group-bg-label-active {
     -fx-font-weight: normal;
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-black;
-    -fx-background-color: -bs-rd-grey-background;
+    -fx-background-color: transparent;
 }
 
 #titled-group-bg, #titled-group-bg-active {
     -fx-body-color: -bs-rd-grey-background;
     -fx-border-color: -bs-rd-separator;
     -fx-border-width: 0 0 1 0;
-    -fx-background-color: -bs-rd-grey-background;
+    -fx-background-color: transparent;
     -fx-background-insets: 0;
 }
 
