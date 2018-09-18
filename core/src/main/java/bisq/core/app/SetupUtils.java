@@ -65,6 +65,8 @@ public class SetupUtils {
                             ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
                             ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
                         log.debug("Crypto test succeeded");
+
+                        UserThread.execute(resultHandler::handleResult);
                     } else {
                         errorHandler.accept(new CryptoException("Payload not correct after decryption"));
                     }
