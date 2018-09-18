@@ -1,0 +1,4 @@
+[submodule "http-api"]
+	path = http-api
+	url = https://github.com/mrosseel/bisq-api.git
+	branch = core-integration
