@@ -14,6 +14,17 @@ cd desktop
 
 EXE_JAR=build/libs/desktop-$version-all.jar
 
+# we need to strip out Java 9 module configuration used in the fontawesomefx library as it causes the javapackager to stop,
+# because of this existing module information, although it is not used as a module.
+echo Unzipping jar to delete module config
+tmp=build/libs/tmp
+unzip -o -q $EXE_JAR -d $tmp
+rm $tmp/module-info.class
+rm $EXE_JAR
+echo Zipping jar again without module config
+cd $tmp; zip -r -q -X "../desktop-$version-all.jar" *
+cd ../../../; rm -rf $tmp
+
 echo SHA 256 before stripping jar file:
 shasum -a256 $EXE_JAR | awk '{print $1}'
 
