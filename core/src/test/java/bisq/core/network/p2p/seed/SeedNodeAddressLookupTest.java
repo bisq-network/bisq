@@ -36,10 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 public class SeedNodeAddressLookupTest {
-    @Before
-    public void setUp() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+
 
     @Test
     public void testResolveNodeAddressesWhenLocalAddressSpecified() {

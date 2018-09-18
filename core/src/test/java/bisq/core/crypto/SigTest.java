@@ -23,13 +23,6 @@ import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.Sig;
 import bisq.common.storage.FileUtil;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Security;
-import java.security.cert.CertificateException;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -50,8 +43,8 @@ public class SigTest {
     private File dir;
 
     @Before
-    public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        Security.addProvider(new BouncyCastleProvider());
+    public void setup() throws IOException {
+
         dir = File.createTempFile("temp_tests", "");
         //noinspection ResultOfMethodCallIgnored
         dir.delete();

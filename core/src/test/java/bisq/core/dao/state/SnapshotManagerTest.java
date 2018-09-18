@@ -21,6 +21,7 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import java.io.File;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -35,6 +36,7 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BsqState.class, BsqStateService.class, PersistenceProtoResolver.class, File.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class SnapshotManagerTest {
 
     private SnapshotManager snapshotManager;

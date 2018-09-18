@@ -25,10 +25,7 @@ import org.bitcoinj.store.BlockStoreException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,8 +34,6 @@ public class CommonSetup {
 
     public static void setup(UncaughtExceptionHandler uncaughtExceptionHandler) {
         setupErrorHandler(uncaughtExceptionHandler);
-
-        Security.addProvider(new BouncyCastleProvider());
 
         if (Utilities.isLinux())
             System.setProperty("prism.lcdtext", "false");

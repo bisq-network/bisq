@@ -266,7 +266,6 @@ public class TxConfidenceIndicator extends Control {
      * This method is called from CSS code to get the correct initial value.
      */
     @Deprecated
-    @Override
     @SuppressWarnings("deprecation")
     protected /*do not make final*/ Boolean impl_cssGetFocusTraversableInitialValue() {
         return Boolean.FALSE;

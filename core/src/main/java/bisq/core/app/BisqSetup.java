@@ -444,9 +444,6 @@ public class BisqSetup {
                         ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
                         ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
                     log.debug("Crypto test succeeded");
-
-                    if (Security.getProvider("BC") == null)
-                        throw new CryptoException("Security provider BountyCastle is not available.");
                 } else {
                     throw new CryptoException("Payload not correct after decryption");
                 }

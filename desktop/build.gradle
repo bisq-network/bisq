@@ -17,9 +17,11 @@ apply plugin: 'com.github.johnrengelman.shadow'
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
+
+def jmockitVersion = '1.42'
 
 tasks.withType(AbstractArchiveTask) {
     preserveFileTimestamps = false
@@ -49,26 +51,33 @@ dependencies {
     compile 'org.reactfx:reactfx:2.0-M3'
     compile 'net.glxn:qrgen:1.3'
     compile 'de.jensd:fontawesomefx:8.0.0'
-    compile 'de.jensd:fontawesomefx-commons:8.15'
-    compile 'de.jensd:fontawesomefx-materialdesignfont:1.7.22-4'
+    compile 'de.jensd:fontawesomefx-commons:9.1.2'
+    compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compile 'com.github.sarxos:webcam-capture:0.3.12'
 
 
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
-    testCompile('org.mockito:mockito-core:2.8.9') {
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
+
+    testCompile "org.jmockit:jmockit:$jmockitVersion"
+    testCompile('org.mockito:mockito-core:2.21.0') {
         exclude(module: 'objenesis')
     }
-    testCompile 'org.jmockit:jmockit:1.30'
-    testCompile 'org.powermock:powermock-module-junit4:1.7.1'
-    testCompile 'org.powermock:powermock-api-mockito2:1.7.1'
+    testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
+    testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
-    testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompileOnly 'org.projectlombok:lombok:1.18.2'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
+test {
+    systemProperty 'jdk.attach.allowAttachSelf', true
+
+    def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
+    jvmArgs "-javaagent:$jmockit"
+}
 build.dependsOn installDist
 installDist.destinationDir = file('build/app')
 
@@ -88,8 +97,8 @@ dependencyVerification {
         'org.reactfx:reactfx:81ec8fe545d65661222735711114c2ce427e2187a65f1722e8ac4e4805beeca3',
         'net.glxn:qrgen:c85d9d8512d91e8ad11fe56259a7825bd50ce0245447e236cf168d1b17591882',
         'de.jensd:fontawesomefx:73bacc991a0a6f5cf0f911767c8db161e0949dbca61e8371eb4342e3da96887b',
-        'de.jensd:fontawesomefx-materialdesignfont:8f700556bbfdc4a581224d3bd6ff869b8a03f6670bd7e0fc78884bd2f31fdb64',
-        'de.jensd:fontawesomefx-commons:e1505a31433f1b2902478217651afc78dae5ab09670336afc46e582a1dea1e4d',
+        'de.jensd:fontawesomefx-materialdesignfont:dbad8dfdd1c85e298d5bbae25b2399aec9e85064db57b2427d10f3815aa98752',
+        'de.jensd:fontawesomefx-commons:5539bb3335ecb822dbf928546f57766eeb9f1516cc1417a064b5709629612149',
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
         'com.github.sarxos:webcam-capture:d960b7ea8ec3ddf2df0725ef214c3fccc9699ea7772df37f544e1f8e4fd665f6',
         'com.google.protobuf:protobuf-java:b5e2d91812d183c9f053ffeebcbcda034d4de6679521940a19064714966c2cd4',

@@ -19,8 +19,7 @@ package bisq.desktop.components;
 
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Skin;
-
-import com.sun.javafx.scene.control.skin.RadioButtonSkin;
+import javafx.scene.control.skin.RadioButtonSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 

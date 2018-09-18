@@ -1,5 +1,5 @@
 language: java
-jdk: oraclejdk8
+jdk: oraclejdk10
 before_install:
   grep -v '^#' src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
 notifications:

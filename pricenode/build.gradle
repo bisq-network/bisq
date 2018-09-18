@@ -3,8 +3,8 @@ plugins {
     id "org.springframework.boot" version "1.5.10.RELEASE"
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.10
+targetCompatibility = 1.10
 
 version = file("src/main/resources/version.txt").text
 

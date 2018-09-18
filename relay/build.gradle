@@ -3,8 +3,8 @@ plugins {
     id "org.springframework.boot" version "1.5.10.RELEASE"
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 1.10
+targetCompatibility = 1.10
 
 version = file("src/main/resources/version.txt").text
 
@@ -27,8 +27,8 @@ dependencies {
     compile("com.turo:pushy:0.13.2")
     compile("com.google.firebase:firebase-admin:6.2.0")
 
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    //annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    //annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
 task stage {

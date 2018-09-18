@@ -234,11 +234,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     public ObservableList<CurrencyListItem> getCurrencyListItems() {
-        return currencyListItems;
+        return currencyListItems.getObservableList();
     }
 
     public Optional<CurrencyListItem> getSelectedCurrencyListItem() {
-        return currencyListItems.stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
+        return currencyListItems.getObservableList().stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
     public int getMaxNumberOfPriceZeroDecimalsToColorize(Offer offer) {

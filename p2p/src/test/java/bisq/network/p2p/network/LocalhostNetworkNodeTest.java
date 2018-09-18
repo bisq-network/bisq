@@ -19,10 +19,6 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.TestUtils;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
 import java.io.IOException;
 
 import java.util.concurrent.CountDownLatch;
@@ -30,7 +26,6 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,10 +38,7 @@ import org.junit.Test;
 public class LocalhostNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(LocalhostNetworkNodeTest.class);
 
-    @Before
-    public void setup() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+
 
 
     @Test

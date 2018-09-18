@@ -43,7 +43,6 @@
 package bisq.desktop.components.indicator.skin;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.components.indicator.behavior.StaticProgressIndicatorBehavior;
 
 import javafx.scene.Node;
 import javafx.scene.control.SkinBase;
@@ -57,8 +56,6 @@ import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
 import javafx.scene.transform.Scale;
 
-import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
-
 import javafx.css.CssMetaData;
 import javafx.css.StyleOrigin;
 import javafx.css.Styleable;
@@ -66,10 +63,9 @@ import javafx.css.StyleableBooleanProperty;
 import javafx.css.StyleableIntegerProperty;
 import javafx.css.StyleableObjectProperty;
 import javafx.css.StyleableProperty;
-
-import com.sun.javafx.css.converters.BooleanConverter;
-import com.sun.javafx.css.converters.PaintConverter;
-import com.sun.javafx.css.converters.SizeConverter;
+import javafx.css.converter.BooleanConverter;
+import javafx.css.converter.PaintConverter;
+import javafx.css.converter.SizeConverter;
 
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
@@ -86,8 +82,7 @@ import java.util.List;
 // TODO Copied form OpenJFX, check license issues and way how we integrated it
 // We changed behaviour which was not exposed via APIs
 
-public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIndicator,
-        StaticProgressIndicatorBehavior<TxConfidenceIndicator>> {
+public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator> {
 
     /**
      * ************************************************************************
@@ -212,7 +207,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
      */
     @SuppressWarnings("deprecation")
     public StaticProgressIndicatorSkin(TxConfidenceIndicator control) {
-        super(control, new StaticProgressIndicatorBehavior<>(control));
+        super(control);
 
         InvalidationListener indeterminateListener = valueModel -> initialize();
         control.indeterminateProperty().addListener(indeterminateListener);
@@ -227,7 +222,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
             }
 
             if (spinner != null) {
-                if (!(getSkinnable().impl_isTreeVisible() && getSkinnable().getScene() != null)) {
+                if (getSkinnable().getScene() != null) {
                     getChildren().remove(spinner);
                     spinner = null;
                     timeLineNulled = true;

@@ -38,10 +38,6 @@ import org.bitcoinj.utils.Fiat;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -62,15 +58,12 @@ import mockit.Injectable;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Tested;
-import mockit.integration.junit4.JMockit;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(JMockit.class)
 public class TradesChartsViewModelTest {
     @Tested
     TradesChartsViewModel model;
@@ -131,7 +124,7 @@ public class TradesChartsViewModelTest {
 
     @Before
     public void setup() throws IOException {
-        Security.addProvider(new BouncyCastleProvider());
+
         dir = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored
         dir.delete();
