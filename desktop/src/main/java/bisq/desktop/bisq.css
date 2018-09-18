@@ -51,7 +51,6 @@ bg color of non edit textFields: fafafa
     -bs-light-grey2: #cfcfcf; /* 2 usages */
     -bs-light-grey3: #b5b5b5; /* 1 usages */
     -bs-bg-grey4: #f6f6f6; /* 1 usages */
-    -bs-black: #000000; /* 13 usages */
     -bs-font-dark: #333; /* 11 usages */
     -bs-bg-grey7: #e0e0e0; /* 2 usages */
     -bs-white: #ffffff; /* 30 usages */
@@ -62,7 +61,6 @@ bg color of non edit textFields: fafafa
     -bs-dim-grey: dimgrey; /* 1 usages */
     -bs-very-dark-grey3: #333000; /* 3 usages */
 
-    -bs-error-red: #dd0000; /* 5 usages */
     -bs-soft-red: #ee6664; /* 1 usages */
     -bs-pink: #ff8986; /* 2 usages */
     -bs-orange: #ff8a2b; /* 2 usages */
@@ -86,11 +84,13 @@ bg color of non edit textFields: fafafa
 
     /* Redesign colors */
     -bs-rd-green: #25B135; /* 6 usages */
-    -bs-rd-green-dark: #3DA34B;
+    -bs-rd-green-dark: #3EA34A;
     -bs-rd-nav-selected: #20C133;
     -bs-rd-grey: #373737;
     /* replace with derive later */
     -bs-rd-grey-light: #D8D8D8;
+    -bs-rd-grey-medium-light:#E9E9E9;
+    -bs-rd-grey-very-light: #f8f8f8; /* 10 usages */
     -bs-rd-grey-background: #F2F2F2;
     -bs-rd-grey-background-dark: #DDDDDD;
     -bs-rd-grey-background-darker: #D0D0D0;
@@ -101,13 +101,18 @@ bg color of non edit textFields: fafafa
     -bs-rd-nav-deselected: #9A9A9A;
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-background-dark: #0E0E0E;
+    -bs-rd-black: #000000; /* 13 usages */
+    -bs-rd-black-transparent: rgba(0, 0, 0, 0.2);
     -bs-rd-grey-line: #979797;
+    -bs-rd-separator: #DBDBDB;
+    -bs-rd-font-dark-grey: #3c3c3c;
+    -bs-rd-error-red: #dd0000; /* 5 usages */
 
     -bs-red: #D73030; /* 5 usages */
-    -fx-box-border: -bs-rd-grey-light;
+    -fx-box-border: -bs-rd-grey-medium-light;
 
     -bs-green-soft: derive(-bs-rd-green, 60%); /* 2 usages */
-    -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
+    -bs-red-soft: derive(-bs-rd-error-red, 60%); /* 2 usages */
 
     -bs-warning: -bs-orange; /* 1 usages */
 
@@ -141,11 +146,11 @@ bg color of non edit textFields: fafafa
 
 /* Text */
 .error-text {
-    -fx-text-fill: -bs-error-red;
+    -fx-text-fill: -bs-rd-error-red;
 }
 
 .error {
-    -fx-accent: -bs-error-red;
+    -fx-accent: -bs-rd-error-red;
 }
 
 .success-text {
@@ -158,8 +163,8 @@ bg color of non edit textFields: fafafa
 }
 
 .highlight:hover {
-    -fx-text-fill: -bs-black;
-    -fx-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
+    -fx-fill: -bs-rd-black;
 }
 
 .info {
@@ -224,7 +229,8 @@ bg color of non edit textFields: fafafa
 
 .jfx-button {
     -fx-background-color: -bs-rd-grey-light;
-    -fx-background-radius: 0px;
+    -fx-background-radius: 2px;
+    -fx-effect: dropshadow( gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
 }
 
 .jfx-checkbox {
@@ -267,17 +273,17 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
-    -jfx-focus-color: -bs-error-red;
-    -jfx-unfocus-color: -bs-error-red;
+    -jfx-focus-color: -bs-rd-error-red;
+    -jfx-unfocus-color: -bs-rd-error-red;
 }
 
 .jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
-    -fx-text-fill: -bs-error-red;
-    -fx-font-size: 0.75em;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-font-size: 0.692em;
 }
 
 .jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
-    -fx-text-fill: -bs-error-red;
+    -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 1em;
 }
 
@@ -302,12 +308,12 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 0;
 }
 .scroll-bar:horizontal .thumb {
-    -fx-background-color: -bs-black;
+    -fx-background-color: -bs-rd-black;
     -fx-background-insets: 2 0 2 0;
     -fx-background-radius: 0;
 }
 .scroll-bar:vertical .thumb {
-    -fx-background-color: -bs-black;
+    -fx-background-color: -bs-rd-black;
     -fx-background-insets: 0 2 0 2;
     -fx-background-radius: 0;
 }
@@ -317,7 +323,7 @@ bg color of non edit textFields: fafafa
 }
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bs-black;
+    -fx-background-color: -bs-rd-black;
 }
 .scroll-bar:vertical .increment-button,
 .scroll-bar:vertical .decrement-button,
@@ -443,6 +449,8 @@ bg color of non edit textFields: fafafa
 
 .market-price-box {
     -fx-background-color:-bs-rd-nav-background-dark;
+    -fx-border-width: 0 1 0 1;
+    -fx-border-color: -bs-rd-nav-border;
 }
 
 .nav-market-price-label {
@@ -456,7 +464,7 @@ bg color of non edit textFields: fafafa
 }
 
 .text-field:readonly {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
     -fx-background-color: -bs-bg-light;
 }
 
@@ -498,7 +506,7 @@ bg color of non edit textFields: fafafa
 }
 
 .copy-icon:hover {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
 }
 
 .received-funds-icon {
@@ -516,7 +524,7 @@ bg color of non edit textFields: fafafa
 }
 
 .version-new {
-    -fx-text-fill: -bs-error-red;
+    -fx-text-fill: -bs-rd-error-red;
     -fx-underline: true;
     -fx-cursor: hand;
 }
@@ -529,12 +537,12 @@ bg color of non edit textFields: fafafa
 
 .tooltip {
     -fx-background: -bs-white;
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
     -fx-background-color: -bs-white;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    -fx-effect: dropshadow(three-pass-box, -bs-black-transparent, 10, 0.0, 0, 3);
+    -fx-effect: dropshadow(three-pass-box, -bs-rd-black-transparent, 10, 0.0, 0, 3);
     -fx-font-size: 0.85em;
 }
 
@@ -564,7 +572,7 @@ textfield */
 }
 
 .hyperlink:hover {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
 }
 
 .hyperlink:hover,
@@ -592,7 +600,7 @@ textfield */
 }
 
 .table-view .filler {
-    -fx-background-color:-bs-rd-grey-light;
+    -fx-background-color:-bs-rd-grey-very-light;
 }
 
 .table-view {
@@ -606,7 +614,7 @@ textfield */
 }
 
 .table-view .column-header {
-    -fx-background-color: -bs-rd-grey-light;
+    -fx-background-color: -bs-rd-grey-very-light;
 }
 
 .table-view .focus {
@@ -614,7 +622,7 @@ textfield */
 }
 
 .table-view .text {
-    -fx-fill: -bs-black;
+    -fx-fill: -bs-rd-black;
 }
 
 .table-view:focused {
@@ -659,7 +667,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .button .text {
-    -fx-fill: -bs-black;
+    -fx-fill: -bs-rd-black;
 }
 
 .table-view .table-row-cell .copy-icon .text,
@@ -672,7 +680,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
-    -fx-fill: -bs-black;
+    -fx-fill: -bs-rd-black;
 }
 
 .table-view .table-row-cell:selected .hyperlink .text {
@@ -689,7 +697,7 @@ textfield */
 
 .table-view .table-row-cell .hyperlink .text:hover,
 .table-view .table-row-cell:selected .hyperlink .text:hover {
-    -fx-fill: -bs-black;
+    -fx-fill: -bs-rd-black;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -729,13 +737,13 @@ textfield */
 }
 
 .delete {
-    -fx-text-fill: -bs-error-red;
-    -fx-fill: -bs-error-red;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
 }
 
 .delete:hover {
-    -fx-text-fill: -bs-black;
-    -fx-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
+    -fx-fill: -bs-rd-black;
 }
 
 /*******************************************************************************
@@ -980,7 +988,7 @@ textfield */
 }
 
 #address-text-field:hover {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
 }
 
 /* Account setup */
@@ -1100,44 +1108,30 @@ textfield */
 #open-dispute-button {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
-    -fx-background-color: -bs-error-red;
+    -fx-background-color: -bs-rd-error-red;
 }
 
 /* TitledGroupBg */
 #titled-group-bg-label {
-    -fx-font-weight: bold;
+    -fx-font-weight: normal;
     -fx-font-size: 1.077em;
-    -fx-text-fill: -bs-grey;
-    -fx-background-color: -bs-content-bg-grey;
+    -fx-text-fill: -bs-rd-black;
+    -fx-background-color: -bs-rd-grey-background;
 }
 
 #titled-group-bg-label-active {
-    -fx-font-weight: bold;
+    -fx-font-weight: normal;
     -fx-font-size: 1.077em;
-    -fx-text-fill: -fx-accent;
-    -fx-background-color: -bs-content-bg-grey;
+    -fx-text-fill: -bs-rd-black;
+    -fx-background-color: -bs-rd-grey-background;
 }
 
-#titled-group-bg {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
-}
-
-#titled-group-bg-active {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue3, -bs-bg-blue4);
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 3px, 3px, 2px, 1px;
+#titled-group-bg, #titled-group-bg-active {
+    -fx-body-color: -bs-rd-grey-background;
+    -fx-border-color: -bs-rd-separator;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: -bs-rd-grey-background;
+    -fx-background-insets: 0;
 }
 
 /* TableGroupHeadline */
@@ -1231,7 +1225,7 @@ textfield */
 }
 
 .attachment-icon-black {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
     -fx-cursor: hand;
 }
 
@@ -1275,7 +1269,7 @@ textfield */
 }
 
 #charts .axis, #price-chart .axis, #volume-chart .axis {
-    -fx-tick-label-fill: -bs-black;
+    -fx-tick-label-fill: -bs-rd-black;
     -fx-tick-label-font-size: 0.846em;
 }
 
@@ -1499,7 +1493,7 @@ textfield */
  ********************************************************************************************************************/
 
 .message {
-    -fx-text-fill: -bs-black;
+    -fx-text-fill: -bs-rd-black;
 }
 
 .my-message {
@@ -1593,7 +1587,7 @@ textfield */
 }
 
 .dao-rejected-icon {
-    -fx-text-fill: -bs-error-red;
+    -fx-text-fill: -bs-rd-error-red;
 }
 
 .dao-ignored-icon {
