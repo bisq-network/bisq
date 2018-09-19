@@ -12,7 +12,7 @@ For more information, see https://bisq-network/intro and for step-by-step gettin
 
 ## Building Bisq
 
-You will need [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) installed to complete the following instructions.
+You will need [JDK 10](https://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html) installed to complete the following instructions.
 
 1. Clone the Bisq source code and cd into `bisq`
 

@@ -1,24 +1,19 @@
 plugins {
-    id "java"
-    id "org.springframework.boot" version "1.5.10.RELEASE"
+    id 'java'
+    id 'application'
 }
 
+group = 'network.bisq'
+version = '0.8.0-SNAPSHOT'
+
 sourceCompatibility = 1.10
-targetCompatibility = 1.10
 
-version = file("src/main/resources/version.txt").text
-
-jar.manifest.attributes(
-    "Implementation-Title": rootProject.name,
-    "Implementation-Version": version)
-
-jar.archiveName "${rootProject.name}.jar"
+mainClassName = 'bisq.monitor.MonitorMain'
 
 repositories {
-    mavenLocal()
     jcenter()
     maven { url "https://jitpack.io" }
-    maven { url "https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/" }
+    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
 }
 
 dependencies {
@@ -26,11 +21,12 @@ dependencies {
     compile("com.sparkjava:spark-core:2.5.2")
     compile("com.turo:pushy:0.13.2")
     compile("com.google.firebase:firebase-admin:6.2.0")
-
+    compile 'commons-codec:commons-codec:1.9'
     compileOnly 'org.projectlombok:lombok:1.18.2'
-    //annotationProcessor 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
-task stage {
-    dependsOn assemble
-}
+build.dependsOn installDist
+installDist.destinationDir = file('build/app')
+distZip.enabled = false
+

@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     compile project(":core")
+    compile project(":assets")
     compile("org.knowm.xchange:xchange-bitcoinaverage:4.3.3")
     compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
     compile("org.knowm.xchange:xchange-poloniex:4.3.3")
