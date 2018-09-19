@@ -1,0 +1,25 @@
+language: java
+
+jdk: oraclejdk8
+
+sudo: required
+
+services:
+  - docker
+
+env:
+  - CUBE_LOGGER_ENABLE=true
+
+# The neat part about this setup is that the unit test suite is usually going to be done before
+# the integration test suite, giving you a faster visual feedback on the basic test coverage.
+
+jobs:
+  include:
+    - stage: test
+      script: ./gradlew test
+    - stage: integration
+      script:
+        docker-compose build;
+        ./gradlew build -x test;
+        sh create-docker-volumes.sh;
+        ./gradlew testIntegration;

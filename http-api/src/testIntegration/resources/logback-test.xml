@@ -1,0 +1,15 @@
+<configuration>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="console"/>
+    </root>
+
+    <logger name="org.apache.http" level="INFO"/>
+    <logger name="com.github.dockerjava" level="INFO"/>
+</configuration>
