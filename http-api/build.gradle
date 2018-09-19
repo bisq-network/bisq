@@ -7,7 +7,7 @@ plugins {
 group = 'network.bisq'
 version = '-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.10
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -36,19 +36,20 @@ dependencies {
     compile "io.dropwizard:dropwizard-util:1.2.2"
 
     runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
-    compileOnly 'org.projectlombok:lombok:1.16.16'
-    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
     testCompile 'junit:junit:4.12'
     testCompile('org.mockito:mockito-core:2.8.9') {
         exclude(module: 'objenesis')
     }
     testCompile 'org.powermock:powermock-module-junit4:1.7.1'
     testCompile 'org.powermock:powermock-api-mockito2:1.7.1'
-    testCompile 'org.jmockit:jmockit:1.30'
+    testCompile 'org.jmock' +
+            'it:jmockit:1.30'
     testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
     testCompile 'com.natpryce:make-it-easy:4.0.1'
-    testCompileOnly 'org.projectlombok:lombok:1.16.16'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testCompileOnly 'org.projectlombok:lombok:1.18.2'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 
     // Converted from Bisq-API projects maven file (http://sagioto.github.io/maven2gradle/)
     // TODO add exclusions
@@ -57,7 +58,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:2.9.1"
     compile "com.fasterxml.jackson.core:jackson-annotations:2.9.1"
     compile "javax.xml.bind:jaxb-api:2.3.0"
-    compile "org.projectlombok:lombok:1.16.18"
+    compile "org.projectlombok:lombok:1.18.2"
     compile "org.slf4j:slf4j-api:1.7.22"
     compile "ch.qos.logback:logback-core:1.1.10"
     compile "ch.qos.logback:logback-classic:1.1.10"
