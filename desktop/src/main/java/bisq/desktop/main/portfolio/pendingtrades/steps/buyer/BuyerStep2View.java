@@ -58,6 +58,7 @@ import bisq.core.network.MessageState;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
+import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -522,6 +523,17 @@ public class BuyerStep2View extends TradeStepView {
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste;
+            } else if (paymentAccountPayload instanceof FasterPaymentsAccountPayload) {
+                //noinspection UnusedAssignment
+                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.fasterPaymentsHolderNameInfo") + "\n\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + paddedId +
+                        assign +
+                        refTextWarn + "\n\n" +
+                        fees;
             } else {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
