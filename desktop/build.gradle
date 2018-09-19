@@ -55,7 +55,7 @@ dependencies {
     compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compile 'com.github.sarxos:webcam-capture:0.3.12'
-    compile 'com.jfoenix:jfoenix:8.0.7'
+    compile 'com.jfoenix:jfoenix:9.0.6'
 
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
