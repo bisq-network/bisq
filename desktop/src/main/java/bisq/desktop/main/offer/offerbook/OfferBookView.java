@@ -67,8 +67,6 @@ import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXComboBox;
-
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
@@ -84,9 +82,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 
 import org.fxmisc.easybind.EasyBind;
@@ -158,18 +158,28 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
 
-        final Tuple3<HBox, AutoTooltipLabel, ComboBox<TradeCurrency>> filterBoxTuple = FormBuilder.addHBoxLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE);
-        final HBox filterBox = filterBoxTuple.first;
-        currencyComboBox = filterBoxTuple.third;
-        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.setSpacing(62);
+        hBox.setPadding(new Insets(10, 0, 0, 0));
 
-        paymentMethodComboBox = new JFXComboBox<>();
-        final Label paymentMethodLabel = new AutoTooltipLabel(Res.getWithCol("offerbook.filterByPaymentMethod"));
-        paymentMethodLabel.setPadding(new Insets(0, 0, 0, 10));
-        filterBox.getChildren().addAll(paymentMethodLabel, paymentMethodComboBox);
-        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
+        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addVBoxLabelComboBox(
+                Res.get("offerbook.filterByCurrency"), Res.get("list.currency.select"));
+        final Tuple3<VBox, Label, ComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addVBoxLabelComboBox(
+                Res.get("offerbook.filterByPaymentMethod"), Res.get("shared.selectPaymentMethod"));
+
+        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first);
+
+        GridPane.setRowIndex(hBox, gridRow);
+        GridPane.setColumnSpan(hBox, 2);
+        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        root.getChildren().add(hBox);
+
+        currencyComboBox = currencyBoxTuple.third;
+
+        paymentMethodComboBox = paymentBoxTuple.third;
         paymentMethodComboBox.setVisibleRowCount(20);
-        paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
+        paymentMethodComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 String id = paymentMethod.getId();

@@ -49,6 +49,7 @@ import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXTextField;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -175,6 +176,25 @@ public class FormBuilder {
         return label;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static JFXTextField addTextFieldWithPrompt(GridPane gridPane, int rowIndex, String value, String prompt, double top) {
+
+        final JFXTextField textField = new JFXTextField(value);
+        textField.setPromptText(prompt);
+        textField.setLabelFloat(true);
+        textField.setEditable(false);
+        textField.setMouseTransparent(true);
+        textField.setFocusTraversable(false);
+
+        GridPane.setRowIndex(textField, rowIndex);
+        GridPane.setColumnIndex(textField, 1);
+        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(textField);
+        return textField;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextField
@@ -668,6 +688,55 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // ComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, int top) {
+        final JFXComboBox<T> comboBox = new JFXComboBox<>();
+
+        GridPane.setRowIndex(comboBox, rowIndex);
+        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(comboBox);
+        return comboBox;
+
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + ComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title, String prompt, int top) {
+        final Tuple3<VBox, Label, ComboBox<T>> tuple3 = addVBoxLabelComboBox(title, prompt, 0);
+        final VBox vBox = tuple3.first;
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+
+        return new Tuple2<>(tuple3.second, tuple3.third);
+    }
+
+    public static <T> Tuple3<VBox, Label, ComboBox<T>> addVBoxLabelComboBox(String title, String prompt) {
+        return addVBoxLabelComboBox(title, prompt, 0);
+    }
+
+    public static <T> Tuple3<VBox, Label, ComboBox<T>> addVBoxLabelComboBox(String title, String prompt, int top) {
+        Label label = new AutoTooltipLabel(title);
+        label.getStyleClass().add("small-text");
+        VBox vBox = new VBox();
+        vBox.setSpacing(-5);
+        vBox.setPadding(new Insets(top, 0, 0, 0));
+        vBox.setAlignment(Pos.CENTER_LEFT);
+
+        final JFXComboBox<T> comboBox = new JFXComboBox<>();
+        comboBox.setPromptText(prompt);
+
+        vBox.getChildren().addAll(label, comboBox);
+
+        return new Tuple3<>(vBox, label, comboBox);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -710,28 +779,6 @@ public class FormBuilder {
         gridPane.getChildren().add(comboBox);
 
         return new Tuple2<>(label, comboBox);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // HBox  + AutoTooltipLabel + ComboBox
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static <T> Tuple3<HBox, AutoTooltipLabel, ComboBox<T>> addHBoxLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setSpacing(4);
-
-        final AutoTooltipLabel label = new AutoTooltipLabel(title);
-        final ComboBox<T> comboBox = new JFXComboBox<>();
-        hBox.getChildren().addAll(label, comboBox);
-
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnSpan(hBox, 2);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 24));
-        gridPane.getChildren().add(hBox);
-
-        return new Tuple3<>(hBox, label, comboBox);
     }
 
 

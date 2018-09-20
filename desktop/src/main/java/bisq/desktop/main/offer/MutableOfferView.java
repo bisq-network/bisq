@@ -145,12 +145,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private FundsTextField totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
             priceCurrencyLabel, priceDescriptionLabel,
-            volumeDescriptionLabel, currencyTextFieldLabel, buyerSecurityDepositLabel, currencyComboBoxLabel,
+            volumeDescriptionLabel, buyerSecurityDepositLabel,
             waitingForFundsLabel, marketBasedPriceLabel, xLabel, percentagePriceDescription, resultLabel,
-            buyerSecurityDepositBtcLabel, paymentAccountsLabel;
+            buyerSecurityDepositBtcLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
+    private VBox currencySelection;
     private ImageView imageView, qrCodeImageView;
     private VBox fixedPriceBox, percentagePriceBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, buyerSecurityDepositValueCurrencyBox;
@@ -481,9 +482,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
 
-            currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
+            currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
+            currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());
             currencyTextField.setVisible(!paymentAccount.hasMultipleCurrencies());
-            currencyTextFieldLabel.setVisible(!paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
@@ -503,9 +504,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 model.onCurrencySelected(model.getDataModel().getTradeCurrency());
             }
         } else {
-            currencyComboBox.setVisible(false);
+            currencySelection.setVisible(false);
+            currencySelection.setManaged(false);
             currencyTextField.setVisible(true);
-            currencyTextFieldLabel.setVisible(true);
 
             currencyTextField.setText("");
         }
@@ -568,14 +569,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         // trading account
         paymentAccountsComboBox.managedProperty().bind(paymentAccountsComboBox.visibleProperty());
-        paymentAccountsLabel.managedProperty().bind(paymentAccountsLabel.visibleProperty());
         paymentTitledGroupBg.managedProperty().bind(paymentTitledGroupBg.visibleProperty());
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
         currencyComboBox.managedProperty().bind(currencyComboBox.visibleProperty());
-        currencyComboBoxLabel.visibleProperty().bind(currencyComboBox.visibleProperty());
-        currencyComboBoxLabel.managedProperty().bind(currencyComboBoxLabel.visibleProperty());
         currencyTextField.managedProperty().bind(currencyTextField.visibleProperty());
-        currencyTextFieldLabel.managedProperty().bind(currencyTextFieldLabel.visibleProperty());
     }
 
     private void removeBindings() {
@@ -617,14 +614,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         // trading account
         paymentTitledGroupBg.managedProperty().unbind();
-        paymentAccountsLabel.managedProperty().unbind();
         paymentAccountsComboBox.managedProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBox.prefWidthProperty().unbind();
-        currencyComboBoxLabel.visibleProperty().unbind();
-        currencyComboBoxLabel.managedProperty().unbind();
         currencyTextField.managedProperty().unbind();
-        currencyTextFieldLabel.managedProperty().unbind();
     }
 
     private void addSubscriptions() {
@@ -728,9 +721,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         };
 
         volumeListener = (observable, oldValue, newValue) -> {
-          if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
-              volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
-          }
+            if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
+                volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+            }
         };
 
         marketPriceMarginListener = (observable, oldValue, newValue) -> {
@@ -881,23 +874,34 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void addPaymentGroup() {
-        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
+        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 3);
 
-        final Tuple2<Label, ComboBox<PaymentAccount>> paymentAccountLabelComboBoxTuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
-        paymentAccountsLabel = paymentAccountLabelComboBoxTuple.first;
-        paymentAccountsComboBox = paymentAccountLabelComboBoxTuple.second;
-        paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
+        HBox hBox = new HBox();
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.setSpacing(62);
+        hBox.setPadding(new Insets(10, 0, 0, 0));
+
+        final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = FormBuilder.addVBoxLabelComboBox(
+                Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
+        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addVBoxLabelComboBox(
+                Res.get("shared.currency"), Res.get("list.currency.select"));
+
+        currencySelection = currencyBoxTuple.first;
+        hBox.getChildren().addAll(tradingAccountBoxTuple.first, currencySelection);
+
+        GridPane.setRowIndex(hBox, gridRow);
+        GridPane.setColumnSpan(hBox, 2);
+        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        paymentAccountsComboBox = tradingAccountBoxTuple.third;
         paymentAccountsComboBox.setMinWidth(300);
-        editOfferElements.add(paymentAccountsComboBox);
+        editOfferElements.add(tradingAccountBoxTuple.first);
 
         // we display either currencyComboBox (multi currency account) or currencyTextField (single)
-        Tuple2<Label, ComboBox<TradeCurrency>> currencyComboBoxTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
-        currencyComboBoxLabel = currencyComboBoxTuple.first;
-        editOfferElements.add(currencyComboBoxLabel);
-        currencyComboBox = currencyComboBoxTuple.second;
-        editOfferElements.add(currencyComboBox);
-        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        currencyComboBox = currencyBoxTuple.third;
+        editOfferElements.add(currencySelection);
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -910,21 +914,17 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         });
 
-        Tuple2<Label, TextField> currencyTextFieldTuple = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.currency"), "", 5);
-        currencyTextFieldLabel = currencyTextFieldTuple.first;
-        currencyTextFieldLabel.setVisible(false);
-        editOfferElements.add(currencyTextFieldLabel);
-        currencyTextField = currencyTextFieldTuple.second;
+        currencyTextField = addTextFieldWithPrompt(gridPane, gridRow, "", Res.get("shared.currency"), 5);
         currencyTextField.setVisible(false);
         editOfferElements.add(currencyTextField);
+
+        hBox.getChildren().add(currencyTextField);
     }
 
     protected void hidePaymentGroup() {
         paymentTitledGroupBg.setVisible(false);
-        paymentAccountsLabel.setVisible(false);
         paymentAccountsComboBox.setVisible(false);
         currencyComboBox.setVisible(false);
-        currencyTextFieldLabel.setVisible(false);
         currencyTextField.setVisible(false);
     }
 

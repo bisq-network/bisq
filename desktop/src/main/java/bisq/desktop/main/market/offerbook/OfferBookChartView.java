@@ -30,6 +30,7 @@ import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.CurrencyListItem;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.AppOptionKeys;
@@ -42,12 +43,11 @@ import bisq.core.util.BSFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import com.jfoenix.controls.JFXComboBox;
 
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
@@ -146,11 +146,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
 
-        currencyComboBox = new JFXComboBox<>();
-        ((JFXComboBox<CurrencyListItem>) currencyComboBox).setLabelFloat(true);
-        currencyComboBox.setPadding(new Insets(10,0,0,0));
-        currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
+        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addVBoxLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 10);
+        this.currencyComboBox = currencyComboBoxTuple.third;
+        this.currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 model.preferences));
 
@@ -176,7 +174,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(currencyComboBox, areaChart, bottomHBox);
+        root.getChildren().addAll(currencyComboBoxTuple.first, areaChart, bottomHBox);
     }
 
     @Override
