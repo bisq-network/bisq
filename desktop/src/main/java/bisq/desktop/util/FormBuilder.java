@@ -80,6 +80,8 @@ import javafx.geometry.VPos;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.jetbrains.annotations.NotNull;
+
 public class FormBuilder {
     public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
     public static final String FONTAWESOME_ICONS = "FontAwesome";
@@ -180,20 +182,23 @@ public class FormBuilder {
     // TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static JFXTextField addTextFieldWithPrompt(GridPane gridPane, int rowIndex, String value, String prompt, double top) {
+    public static Tuple2<VBox, TextField> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, int top) {
+
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(0);
 
         final JFXTextField textField = new JFXTextField(value);
-        textField.setPromptText(prompt);
-        textField.setLabelFloat(true);
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
 
-        GridPane.setRowIndex(textField, rowIndex);
-        GridPane.setColumnIndex(textField, 1);
-        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(textField);
-        return textField;
+        vBox.getChildren().addAll(label, textField);
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setColumnIndex(vBox, 1);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+        return new Tuple2<>(vBox, textField);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -705,8 +710,8 @@ public class FormBuilder {
     // Label + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title, String prompt, int top) {
-        final Tuple3<VBox, Label, ComboBox<T>> tuple3 = addVBoxLabelComboBox(title, prompt, 0);
+    public static <T> Tuple2<Label, ComboBox<T>> addTopLabelComboBox(GridPane gridPane, int rowIndex, String title, String prompt, int top) {
+        final Tuple3<VBox, Label, ComboBox<T>> tuple3 = addTopLabelComboBox(title, prompt, 0);
         final VBox vBox = tuple3.first;
 
         GridPane.setRowIndex(vBox, rowIndex);
@@ -716,17 +721,13 @@ public class FormBuilder {
         return new Tuple2<>(tuple3.second, tuple3.third);
     }
 
-    public static <T> Tuple3<VBox, Label, ComboBox<T>> addVBoxLabelComboBox(String title, String prompt) {
-        return addVBoxLabelComboBox(title, prompt, 0);
+    public static <T> Tuple3<VBox, Label, ComboBox<T>> addTopLabelComboBox(String title, String prompt) {
+        return addTopLabelComboBox(title, prompt, 0);
     }
 
-    public static <T> Tuple3<VBox, Label, ComboBox<T>> addVBoxLabelComboBox(String title, String prompt, int top) {
-        Label label = new AutoTooltipLabel(title);
-        label.getStyleClass().add("small-text");
-        VBox vBox = new VBox();
-        vBox.setSpacing(-5);
-        vBox.setPadding(new Insets(top, 0, 0, 0));
-        vBox.setAlignment(Pos.CENTER_LEFT);
+    public static <T> Tuple3<VBox, Label, ComboBox<T>> addTopLabelComboBox(String title, String prompt, int top) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(top);
 
         final JFXComboBox<T> comboBox = new JFXComboBox<>();
         comboBox.setPromptText(prompt);
@@ -734,6 +735,22 @@ public class FormBuilder {
         vBox.getChildren().addAll(label, comboBox);
 
         return new Tuple3<>(vBox, label, comboBox);
+    }
+
+    @NotNull
+    private static VBox getTopLabelVBox(int top) {
+        VBox vBox = new VBox();
+        vBox.setSpacing(0);
+        vBox.setPadding(new Insets(top, 0, 0, 0));
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        return vBox;
+    }
+
+    @NotNull
+    private static Label getTopLabel(String title) {
+        Label label = new AutoTooltipLabel(title);
+        label.getStyleClass().add("small-text");
+        return label;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

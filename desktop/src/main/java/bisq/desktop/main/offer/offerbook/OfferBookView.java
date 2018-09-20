@@ -163,9 +163,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         hBox.setSpacing(62);
         hBox.setPadding(new Insets(10, 0, 0, 0));
 
-        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addVBoxLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelComboBox(
                 Res.get("offerbook.filterByCurrency"), Res.get("list.currency.select"));
-        final Tuple3<VBox, Label, ComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addVBoxLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelComboBox(
                 Res.get("offerbook.filterByPaymentMethod"), Res.get("shared.selectPaymentMethod"));
 
         hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first);

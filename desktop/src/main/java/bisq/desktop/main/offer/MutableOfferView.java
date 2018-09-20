@@ -140,6 +140,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
     protected InputTextField amountTextField, minAmountTextField, volumeTextField;
     private TextField currencyTextField;
+    private VBox currencyTextFieldBox;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
@@ -484,7 +485,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
             currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
             currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());
-            currencyTextField.setVisible(!paymentAccount.hasMultipleCurrencies());
+            currencyTextFieldBox.setVisible(!paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
@@ -506,7 +507,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         } else {
             currencySelection.setVisible(false);
             currencySelection.setManaged(false);
-            currencyTextField.setVisible(true);
+            currencyTextFieldBox.setVisible(true);
 
             currencyTextField.setText("");
         }
@@ -572,7 +573,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentTitledGroupBg.managedProperty().bind(paymentTitledGroupBg.visibleProperty());
         currencyComboBox.prefWidthProperty().bind(paymentAccountsComboBox.widthProperty());
         currencyComboBox.managedProperty().bind(currencyComboBox.visibleProperty());
-        currencyTextField.managedProperty().bind(currencyTextField.visibleProperty());
+        currencyTextFieldBox.managedProperty().bind(currencyTextFieldBox.visibleProperty());
     }
 
     private void removeBindings() {
@@ -617,7 +618,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentAccountsComboBox.managedProperty().unbind();
         currencyComboBox.managedProperty().unbind();
         currencyComboBox.prefWidthProperty().unbind();
-        currencyTextField.managedProperty().unbind();
+        currencyTextFieldBox.managedProperty().unbind();
     }
 
     private void addSubscriptions() {
@@ -880,11 +881,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setSpacing(62);
-        hBox.setPadding(new Insets(10, 0, 0, 0));
+        hBox.setPadding(new Insets(10, 0, 18, 0));
 
-        final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = FormBuilder.addVBoxLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = FormBuilder.addTopLabelComboBox(
                 Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
-        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addVBoxLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelComboBox(
                 Res.get("shared.currency"), Res.get("list.currency.select"));
 
         currencySelection = currencyBoxTuple.first;
@@ -914,18 +915,20 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         });
 
-        currencyTextField = addTextFieldWithPrompt(gridPane, gridRow, "", Res.get("shared.currency"), 5);
-        currencyTextField.setVisible(false);
-        editOfferElements.add(currencyTextField);
+        final Tuple2<VBox, TextField> currencyTextFieldTuple = addTopLabelTextField(gridPane, gridRow, Res.get("shared.currency"), "", 5);
+        currencyTextField = currencyTextFieldTuple.second;
+        currencyTextFieldBox = currencyTextFieldTuple.first;
+        currencyTextFieldBox.setVisible(false);
+        editOfferElements.add(currencyTextFieldBox);
 
-        hBox.getChildren().add(currencyTextField);
+        hBox.getChildren().add(currencyTextFieldBox);
     }
 
     protected void hidePaymentGroup() {
         paymentTitledGroupBg.setVisible(false);
         paymentAccountsComboBox.setVisible(false);
         currencyComboBox.setVisible(false);
-        currencyTextField.setVisible(false);
+        currencyTextFieldBox.setVisible(false);
     }
 
     private void addAmountPriceGroup() {
@@ -952,7 +955,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void addOptionsGroup() {
-        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setDeposit"), Layout.GROUP_DISTANCE);
+        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("createOffer.setDeposit"), Layout.GROUP_DISTANCE);
+        setDepositTitledGroupBg.getStyleClass().add("last");
 
         addBuyerSecurityDepositRow();
 
@@ -1044,6 +1048,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // don't increase gridRow as we removed button when this gets visible
         payFundsTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
                 Res.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        payFundsTitledGroupBg.getStyleClass().add("last");
         GridPane.setColumnSpan(payFundsTitledGroupBg, 3);
         payFundsTitledGroupBg.setVisible(false);
 
@@ -1299,7 +1304,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, fixedPriceBox, priceTypeToggleButton);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 1);
-        GridPane.setMargin(secondRowHBox, new Insets(0, 10, 0, 0));
+        GridPane.setMargin(secondRowHBox, new Insets(0, 10, 18, 0));
         GridPane.setColumnSpan(secondRowHBox, 2);
         gridPane.getChildren().add(secondRowHBox);
     }

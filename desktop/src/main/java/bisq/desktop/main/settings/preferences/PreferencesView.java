@@ -181,7 +181,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
-       /* selectBaseCurrencyNetworkComboBox = addLabelComboBox(root, gridRow,
+       /* selectBaseCurrencyNetworkComboBox = addTopLabelComboBox(root, gridRow,
                 Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
 
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
