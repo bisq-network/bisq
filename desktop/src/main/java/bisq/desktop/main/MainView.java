@@ -428,26 +428,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         GridPane.setMargin(poloniexIconButton, new Insets(15, 0, 0, 0));
         gridPane.getChildren().add(poloniexIconButton);
 
-        Label marketPriceProviderLabel = new AutoTooltipLabel("Price by");
+        Label marketPriceProviderLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
         marketPriceProviderLabel.getStyleClass().add("nav-market-price-label");
-        //marketPriceProviderLabel.setPadding(new Insets(0, 5, 0, 2));
 
         GridPane.setRowIndex(marketPriceProviderLabel, 1);
         GridPane.setColumnIndex(marketPriceProviderLabel, 1);
-        GridPane.setMargin(marketPriceProviderLabel, new Insets(2, 0, 0, 0));
+        GridPane.setMargin(marketPriceProviderLabel, new Insets(-10, 0, 0, 0));
         gridPane.getChildren().add(marketPriceProviderLabel);
 
         /*model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
             updateMarketPriceLabel(marketPriceProviderLabel);
         });*/
 
-        Label marketPriceLabel = new AutoTooltipLabel("Market Price");
+        Label marketPriceLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.label"));
         marketPriceLabel.getStyleClass().add("nav-market-price-label");
         //marketPriceLabel.setPadding(new Insets(0, 5, 0, 2));
 
         GridPane.setRowIndex(marketPriceLabel, 1);
         GridPane.setColumnIndex(marketPriceLabel, 0);
-        GridPane.setMargin(marketPriceLabel, new Insets(2, 0, 0, 12));
+        GridPane.setMargin(marketPriceLabel, new Insets(-10, 0, 0, 12));
         gridPane.getChildren().add(marketPriceLabel);
 
         return new Tuple2<>(priceComboBox, gridPane);
