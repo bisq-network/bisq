@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -365,13 +366,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 ++rowIndex,
                 isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
-        Button button = placeOfferTuple.first;
+        AutoTooltipButton button = (AutoTooltipButton) placeOfferTuple.first;
         button.setMinHeight(40);
         button.setPadding(new Insets(0, 20, 0, 20));
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
         button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
-        button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
+        button.updateText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         busyAnimation = placeOfferTuple.second;
         Label spinnerInfoLabel = placeOfferTuple.third;

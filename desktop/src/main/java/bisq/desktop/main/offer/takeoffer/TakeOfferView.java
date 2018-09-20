@@ -140,7 +140,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private FundsTextField totalToPayTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private Button nextButton, cancelButton1, cancelButton2, takeOfferButton;
+    private AutoTooltipButton nextButton, cancelButton1, cancelButton2, takeOfferButton;
     private ImageView imageView, qrCodeImageView;
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
@@ -285,7 +285,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
+            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
             priceAsPercentageDescription.setText(Res.get("shared.aboveInPercent"));
         } else {
@@ -294,7 +294,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
+            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
             priceAsPercentageDescription.setText(Res.get("shared.belowInPercent"));
         }
 
@@ -883,14 +883,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
         gridPane.getChildren().add(fundingHBox);
 
-        takeOfferButton = FormBuilder.addButtonAfterGroup(gridPane, gridRow, "");
+        takeOfferButton = (AutoTooltipButton) FormBuilder.addButtonAfterGroup(gridPane, gridRow, "");
         takeOfferButton.setVisible(false);
         takeOfferButton.setManaged(false);
         takeOfferButton.setMinHeight(40);
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
         takeOfferButton.setOnAction(e -> onTakeOffer());
 
-        cancelButton2 = FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
+        cancelButton2 = (AutoTooltipButton) FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.getIsBtcWalletFunded().get()) {
                 new Popup<>().warning(Res.get("takeOffer.alreadyFunded.askCancel"))

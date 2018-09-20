@@ -185,7 +185,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             closeButton.setDefaultButton(!isBalanceSufficient);
         } else {
             closeButton.setDefaultButton(true);
-            closeButton.setText(Res.get("shared.close"));
+            closeButton.updateText(Res.get("shared.close"));
         }
 
         HBox hBox = new HBox();
@@ -225,7 +225,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 getWalletService().emptyWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
-                            closeButton.setText(Res.get("shared.close"));
+                            closeButton.updateText(Res.get("shared.close"));
                             balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");

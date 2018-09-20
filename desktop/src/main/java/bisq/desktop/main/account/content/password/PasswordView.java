@@ -20,6 +20,7 @@ package bisq.desktop.main.account.content.password;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -61,7 +62,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private PasswordTextField passwordField;
     private PasswordTextField repeatedPasswordField;
-    private Button pwButton;
+    private AutoTooltipButton pwButton;
     private TitledGroupBg headline;
     private int gridRow = 0;
     private ChangeListener<Boolean> passwordFieldChangeListener;
@@ -97,7 +98,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         };
 
         Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
-        pwButton = tuple.first;
+        pwButton = (AutoTooltipButton) tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;
         pwButton.setDisable(true);
@@ -174,12 +175,12 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private void setText() {
         if (walletsManager.areWalletsEncrypted()) {
-            pwButton.setText(Res.get("account.password.removePw.button"));
+            pwButton.updateText(Res.get("account.password.removePw.button"));
             headline.setText(Res.get("account.password.removePw.headline"));
             repeatedPasswordField.setVisible(false);
             repeatedPasswordField.setManaged(false);
         } else {
-            pwButton.setText(Res.get("account.password.setPw.button"));
+            pwButton.updateText(Res.get("account.password.setPw.button"));
             headline.setText(Res.get("account.password.setPw.headline"));
             repeatedPasswordField.setVisible(true);
             repeatedPasswordField.setManaged(true);

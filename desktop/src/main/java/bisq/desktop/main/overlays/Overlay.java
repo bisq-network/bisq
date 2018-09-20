@@ -139,7 +139,7 @@ public abstract class Overlay<T extends Overlay> {
     protected double width = DEFAULT_WIDTH;
     protected Pane owner;
     protected GridPane gridPane;
-    protected Button closeButton;
+    protected AutoTooltipButton closeButton;
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
     protected Stage stage;

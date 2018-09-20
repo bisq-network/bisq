@@ -136,7 +136,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     protected GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
-    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton, priceTypeToggleButton;
+    private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
+    private Button priceTypeToggleButton;
     private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
     protected InputTextField amountTextField, minAmountTextField, volumeTextField;
     private TextField currencyTextField;
@@ -297,13 +298,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")).toUpperCase());
+            placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
             percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             imageView.setId("image-sell-large");
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")).toUpperCase());
+            placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
             percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
@@ -962,10 +963,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("shared.nextStep"), Res.get("shared.cancel"));
-        nextButton = tuple.first;
+        nextButton = (AutoTooltipButton) tuple.first;
         editOfferElements.add(nextButton);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
-        cancelButton1 = tuple.second;
+        cancelButton1 = (AutoTooltipButton) tuple.second;
         editOfferElements.add(cancelButton1);
         cancelButton1.setDefaultButton(false);
         cancelButton1.setOnAction(e -> {
@@ -1110,12 +1111,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         gridPane.getChildren().add(fundingHBox);
 
 
-        placeOfferButton = addButtonAfterGroup(gridPane, gridRow, "");
+        placeOfferButton = (AutoTooltipButton) addButtonAfterGroup(gridPane, gridRow, "");
         placeOfferButton.setOnAction(e -> onPlaceOffer());
         placeOfferButton.setMinHeight(40);
         placeOfferButton.setPadding(new Insets(0, 20, 0, 20));
 
-        cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
+        cancelButton2 = (AutoTooltipButton) addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.getDataModel().getIsBtcWalletFunded().get()) {
                 new Popup<>().warning(Res.get("createOffer.warnCancelOffer"))

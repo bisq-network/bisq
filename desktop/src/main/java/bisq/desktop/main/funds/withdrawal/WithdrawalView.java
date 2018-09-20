@@ -19,6 +19,7 @@ package bisq.desktop.main.funds.withdrawal;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -109,7 +110,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     Label inputsLabel, amountLabel, fromLabel, toLabel;
     @FXML
-    Button withdrawButton;
+    AutoTooltipButton withdrawButton;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
@@ -182,7 +183,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         feeIncludedRadioButton.setText(Res.get("funds.withdrawal.feeIncluded"));
         fromLabel.setText(Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
         toLabel.setText(Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
-        withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
+        withdrawButton.updateText(Res.get("funds.withdrawal.withdrawButton"));
 
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));

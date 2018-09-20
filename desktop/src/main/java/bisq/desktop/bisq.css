@@ -227,10 +227,20 @@ bg color of non edit textFields: fafafa
     -fx-stroke: -bs-rd-green;
 }
 
-.jfx-button {
+.jfx-button, .action-button {
     -fx-background-color: -bs-rd-grey-light;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-font-size: 0.923em;
+    -fx-font-weight: normal;
     -fx-background-radius: 2px;
+    -fx-pref-height: 32;
+    -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow( gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
+}
+
+.action-button {
+    -fx-background-color: -bs-rd-green-dark;
+    -fx-text-fill: -bs-white;
 }
 
 .jfx-checkbox {
@@ -1318,7 +1328,6 @@ textfield */
  ********************************************************************************************************************/
 
 #buy-button-big {
-    -fx-font-weight: bold;
     -fx-font-size: 1.154em;
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
@@ -1327,41 +1336,23 @@ textfield */
 #buy-button {
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-white;
-    -fx-font-weight: bold;
 }
 
 
 #sell-button-big {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
-    -fx-font-weight: bold;
     -fx-font-size: 1.154em;
 }
 
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-white;
-    -fx-font-weight: bold;
 }
 
-#cancel-button {
-    -jfx-button-type: FLAT;
-    /*-fx-background-color: -bs-cancel;*/
-    -fx-text-fill: -bs-very-dark-grey3;
-    -fx-font-weight: bold;
-}
-
-.action-button:disabled {
-    -fx-background-color: -bs-rd-grey-light;
+.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+    -fx-background-color: -bs-rd-grey-very-light;
     -fx-text-fill: -bs-rd-font-dark-grey;
-}
-
-.action-button {
-    -fx-background-color: -bs-rd-green;
-    -fx-text-fill: -bs-white;
-    -fx-font-size: 0.923em;
-    -fx-pref-height: 32;
-    -fx-padding: 0 40 0 40;
 }
 
 /********************************************************************************************************************

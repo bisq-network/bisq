@@ -121,7 +121,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
-    private Button createOfferButton;
+    private AutoTooltipButton createOfferButton;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
     private TableView<OfferBookListItem> tableView;
 
@@ -255,7 +255,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, -5));
         root.getChildren().add(nrOfOffersLabel);
 
-        createOfferButton = addButton(root, gridRow, "");
+        createOfferButton = (AutoTooltipButton) addButton(root, gridRow, "");
         createOfferButton.setMinHeight(40);
         createOfferButton.setPadding(new Insets(0, 20, 0, 20));
         createOfferButton.setGraphicTextGap(10);
@@ -376,14 +376,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             String mirroredDirectionText = direction == OfferPayload.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()).toUpperCase());
+                createOfferButton.updateText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()));
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()).toUpperCase() + " " +
+                createOfferButton.updateText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()) + " " +
                         (direction == OfferPayload.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
-                                Res.get("offerbook.sellForOtherCurrency", code)).toUpperCase());
+                                Res.get("offerbook.sellForOtherCurrency", code)));
             else
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " " + Res.getBaseCurrencyCode() + ")".toUpperCase());
+                createOfferButton.updateText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " " + Res.getBaseCurrencyCode() + ")");
         }
     }
 
@@ -813,7 +813,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
-                            final Button button = new AutoTooltipButton();
+                            final AutoTooltipButton button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
@@ -907,7 +907,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 isNodeAddressBanned,
                                                 isInsufficientTradeLimit));
 
-                                    button.setText(title);
+                                    button.updateText(title);
                                     setGraphic(button);
                                 } else {
                                     setGraphic(null);

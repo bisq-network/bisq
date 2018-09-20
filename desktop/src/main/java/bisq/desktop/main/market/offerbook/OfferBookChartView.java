@@ -106,8 +106,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private Button leftButton;
-    private Button rightButton;
+    private AutoTooltipButton leftButton;
+    private AutoTooltipButton rightButton;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
     private Label leftHeaderLabel, rightHeaderLabel;
@@ -159,8 +159,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
-        leftButton = tupleBuy.third;
-        rightButton = tupleSell.third;
+        leftButton = (AutoTooltipButton) tupleBuy.third;
+        rightButton = (AutoTooltipButton) tupleSell.third;
 
         leftHeaderLabel = tupleBuy.forth;
         rightHeaderLabel = tupleSell.forth;
@@ -236,10 +236,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", code));
-                        leftButton.setText(Res.get("market.offerBook.buyAltcoin", code, Res.getBaseCurrencyCode()).toUpperCase());
+                        leftButton.updateText(Res.get("market.offerBook.buyAltcoin", code, Res.getBaseCurrencyCode()));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", code));
-                        rightButton.setText(Res.get("market.offerBook.sellAltcoin", code, Res.getBaseCurrencyCode()).toUpperCase());
+                        rightButton.updateText(Res.get("market.offerBook.sellAltcoin", code, Res.getBaseCurrencyCode()));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
                     } else {
@@ -249,10 +249,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
 
                         leftHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        leftButton.setText(Res.get("market.offerBook.sellWithFiat", Res.getBaseCurrencyCode(), code).toUpperCase());
+                        leftButton.updateText(Res.get("market.offerBook.sellWithFiat", Res.getBaseCurrencyCode(), code));
 
                         rightHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        rightButton.setText(Res.get("market.offerBook.buyWithFiat", Res.getBaseCurrencyCode(), code).toUpperCase());
+                        rightButton.updateText(Res.get("market.offerBook.buyWithFiat", Res.getBaseCurrencyCode(), code));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
@@ -522,12 +522,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == OfferPayload.Direction.SELL;
-        Button button = new AutoTooltipButton();
+        AutoTooltipButton button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
-        button.setText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
+        button.updateText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
         button.setMinHeight(40);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {
