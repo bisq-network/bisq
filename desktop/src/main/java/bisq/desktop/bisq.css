@@ -1113,26 +1113,30 @@ textfield */
 }
 
 /* TitledGroupBg */
-#titled-group-bg-label {
+.titled-group-bg-label {
     -fx-font-weight: normal;
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
 
-#titled-group-bg-label-active {
+.titled-group-bg-label-active {
     -fx-font-weight: normal;
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
 
-#titled-group-bg, #titled-group-bg-active {
+.titled-group-bg, .titled-group-bg-active {
     -fx-body-color: -bs-rd-grey-background;
     -fx-border-color: -bs-rd-separator;
     -fx-border-width: 0 0 1 0;
     -fx-background-color: transparent;
     -fx-background-insets: 0;
+}
+
+.titled-group-bg.last, .titled-group-bg-active.last {
+    -fx-border-width: 0;
 }
 
 /* TableGroupHeadline */
