@@ -109,6 +109,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     boolean useTradeNotifications = true;
     boolean useMarketNotifications = true;
     boolean usePriceNotifications = true;
+    boolean useStandbyMode = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +163,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseSoundForMobileNotifications(useSoundForMobileNotifications)
                 .setUseTradeNotifications(useTradeNotifications)
                 .setUseMarketNotifications(useMarketNotifications)
-                .setUsePriceNotifications(usePriceNotifications);
+                .setUsePriceNotifications(usePriceNotifications)
+                .setUseStandbyMode(useStandbyMode);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -235,6 +237,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseSoundForMobileNotifications(),
                 proto.getUseTradeNotifications(),
                 proto.getUseMarketNotifications(),
-                proto.getUsePriceNotifications());
+                proto.getUsePriceNotifications(),
+                proto.getUseStandbyMode());
     }
 }
