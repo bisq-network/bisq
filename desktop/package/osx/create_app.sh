@@ -105,12 +105,6 @@ $JAVA_HOME/bin/javapackager \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
-rm "deploy/Bisq.html"
-rm "deploy/Bisq.jnlp"
-
-mv "deploy/bundles/Bisq-$version.dmg" "deploy/Bisq-$version.dmg"
-rm -r "deploy/bundles"
-
 open deploy
 
 cd package/osx
