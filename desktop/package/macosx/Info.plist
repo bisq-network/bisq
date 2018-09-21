@@ -10,8 +10,6 @@
         <true/>
         <key>CFBundleExecutable</key>
         <string>Bisq</string>
-        <key>CFBundleIconFile</key>
-        <string>package/osx/Bisq.icns</string>
         <key>CFBundleName</key>
         <string>Bisq</string>
         <key>CFBundleIdentifier</key>

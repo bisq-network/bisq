@@ -30,7 +30,7 @@ shasum -a256 $EXE_JAR | awk '{print $1}'
 
 # We make a deterministic jar by stripping out comments with date, etc.
 # jar file created from https://github.com/ManfredKarrer/tools
-java -jar ./package/osx/tools-1.0.jar $EXE_JAR
+java -jar ./package/macosx/tools-1.0.jar $EXE_JAR
 
 echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
@@ -93,7 +93,7 @@ $JAVA_HOME/bin/javapackager \
     -BappVersion=$version \
     -Bmac.CFBundleIdentifier=io.bisq.CAT \
     -Bmac.CFBundleName=Bisq \
-    -Bicon=package/osx/Bisq.icns \
+    -Bicon=package/macosx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bisq \
@@ -107,4 +107,4 @@ $JAVA_HOME/bin/javapackager \
 
 open deploy
 
-cd package/osx
+cd package/macosx
