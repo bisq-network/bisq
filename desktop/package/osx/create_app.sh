@@ -35,11 +35,12 @@ java -jar ./package/osx/tools-1.0.jar $EXE_JAR
 echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
 
-
-linux32=/Volumes/vm_shared_ubuntu14_32bit
-linux64=/Volumes/vm_shared_ubuntu
-win32=/Volumes/vm_shared_windows_32bit
-win64=/Volumes/vm_shared_windows
+# vmPath=/Volumes
+vmPath=/Users/dev
+linux32=$vmPath/vm_shared_ubuntu14_32bit
+linux64=$vmPath/vm_shared_ubuntu
+win32=$vmPath/vm_shared_windows_32bit
+win64=$vmPath/vm_shared_windows
 
 mkdir -p $linux32 $linux64 $win32 $win64
 
