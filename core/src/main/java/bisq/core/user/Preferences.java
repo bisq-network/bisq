@@ -142,6 +142,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final String btcNodesFromOptions;
     private final String useTorFlagFromOptions;
     private final String referralIdFromOptions;
+    @Getter
+    private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -168,6 +170,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
             persist();
         });
+
+        useStandbyModeProperty.addListener((ov) -> {
+            prefPayload.setUseStandbyMode(useStandbyModeProperty.get());
+            persist();
+        });
+
         fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             prefPayload.getFiatCurrencies().clear();
             prefPayload.getFiatCurrencies().addAll(fiatCurrenciesAsObservable);
@@ -254,6 +262,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
+        useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
         withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
 
@@ -583,6 +592,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setUseStandbyMode(boolean useStandbyMode) {
+        this.useStandbyModeProperty.set(useStandbyMode);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -782,5 +794,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         List<String> getBridgeAddresses();
 
         long getWithdrawalTxFeeInBytes();
+
+        void setUseStandbyMode(boolean useStandbyMode);
     }
 }
