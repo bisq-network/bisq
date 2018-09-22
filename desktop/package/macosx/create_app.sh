@@ -30,16 +30,17 @@ shasum -a256 $EXE_JAR | awk '{print $1}'
 
 # We make a deterministic jar by stripping out comments with date, etc.
 # jar file created from https://github.com/ManfredKarrer/tools
-java -jar ./package/osx/tools-1.0.jar $EXE_JAR
+java -jar ./package/macosx/tools-1.0.jar $EXE_JAR
 
 echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
 
-
-linux32=/Volumes/vm_shared_ubuntu14_32bit
-linux64=/Volumes/vm_shared_ubuntu
-win32=/Volumes/vm_shared_windows_32bit
-win64=/Volumes/vm_shared_windows
+# vmPath=/Volumes
+vmPath=/Users/dev
+linux32=$vmPath/vm_shared_ubuntu14_32bit
+linux64=$vmPath/vm_shared_ubuntu
+win32=$vmPath/vm_shared_windows_32bit
+win64=$vmPath/vm_shared_windows
 
 mkdir -p $linux32 $linux64 $win32 $win64
 
@@ -92,7 +93,7 @@ $JAVA_HOME/bin/javapackager \
     -BappVersion=$version \
     -Bmac.CFBundleIdentifier=io.bisq.CAT \
     -Bmac.CFBundleName=Bisq \
-    -Bicon=package/osx/Bisq.icns \
+    -Bicon=package/macosx/Bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
     -native dmg \
     -name Bisq \
@@ -104,12 +105,6 @@ $JAVA_HOME/bin/javapackager \
     -appclass bisq.desktop.app.BisqAppMain \
     -outfile Bisq
 
-rm "deploy/Bisq.html"
-rm "deploy/Bisq.jnlp"
-
-mv "deploy/bundles/Bisq-$version.dmg" "deploy/Bisq-$version.dmg"
-rm -r "deploy/bundles"
-
 open deploy
 
-cd package/osx
+cd package/macosx
