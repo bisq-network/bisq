@@ -19,7 +19,7 @@ package bisq.core.filter;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.network.BitcoinNodes;
+import bisq.core.btc.network.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;
@@ -222,8 +222,8 @@ public class FilterManager {
             listeners.forEach(e -> e.onFilterAdded(filter));
 
             if (filter.isPreventPublicBtcNetwork() &&
-                    preferences.getBitcoinNodesOptionOrdinal() == BitcoinNodes.BitcoinNodesOption.PUBLIC.ordinal())
-                preferences.setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.PROVIDED.ordinal());
+                    preferences.getBitcoinNodesOptionOrdinal() == BtcNodes.BitcoinNodesOption.PUBLIC.ordinal())
+                preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
         }
     }
 

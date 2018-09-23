@@ -17,7 +17,7 @@
 
 package bisq.core.btc.network;
 
-import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BtcNodes.BtcNode;
 import bisq.core.user.Preferences;
 
 import java.util.List;
@@ -29,8 +29,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.CUSTOM;
-import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.PUBLIC;
+import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -46,7 +46,7 @@ public class BtcNodesSetupPreferencesTest {
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PUBLIC.ordinal());
 
         BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate);
-        List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BitcoinNodes.class));
+        List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BtcNodes.class));
 
         assertTrue(nodes.isEmpty());
     }
@@ -58,7 +58,7 @@ public class BtcNodesSetupPreferencesTest {
         when(delegate.getBitcoinNodes()).thenReturn("aaa.onion,bbb.onion");
 
         BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate);
-        List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BitcoinNodes.class));
+        List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BtcNodes.class));
 
         assertEquals(2, nodes.size());
     }

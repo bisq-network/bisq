@@ -17,7 +17,7 @@
 
 package bisq.core.btc.network;
 
-import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BtcNodes.BtcNode;
 
 import bisq.network.DnsLookupException;
 import bisq.network.DnsLookupTor;

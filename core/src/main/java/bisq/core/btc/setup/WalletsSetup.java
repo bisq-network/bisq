@@ -21,9 +21,9 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.btc.network.BitcoinNodes;
-import bisq.core.btc.network.BitcoinNodes.BtcNode;
 import bisq.core.btc.network.BtcNetworkConfig;
+import bisq.core.btc.network.BtcNodes;
+import bisq.core.btc.network.BtcNodes.BtcNode;
 import bisq.core.btc.network.BtcNodesRepository;
 import bisq.core.btc.network.BtcNodesSetupPreferences;
 import bisq.core.btc.network.RegTestHost;
@@ -116,7 +116,7 @@ public class WalletsSetup {
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final BisqEnvironment bisqEnvironment;
-    private final BitcoinNodes bitcoinNodes;
+    private final BtcNodes btcNodes;
     private final String btcWalletFileName;
     private final int numConnectionForBtc;
     private final String userAgent;
@@ -141,7 +141,7 @@ public class WalletsSetup {
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
                         BisqEnvironment bisqEnvironment,
-                        BitcoinNodes bitcoinNodes,
+                        BtcNodes btcNodes,
                         @Named(BtcOptionKeys.USER_AGENT) String userAgent,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.USE_ALL_PROVIDED_NODES) String useAllProvidedNodes,
@@ -152,7 +152,7 @@ public class WalletsSetup {
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.bisqEnvironment = bisqEnvironment;
-        this.bitcoinNodes = bitcoinNodes;
+        this.btcNodes = btcNodes;
         this.numConnectionForBtc = numConnectionForBtc != null ? Integer.parseInt(numConnectionForBtc) : DEFAULT_CONNECTIONS;
         this.useAllProvidedNodes = "true".equals(useAllProvidedNodes);
         this.userAgent = userAgent;
@@ -327,7 +327,7 @@ public class WalletsSetup {
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
         BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences);
 
-        List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(bitcoinNodes);
+        List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(btcNodes);
         int minBroadcastConnections = btcNodesSetupPreferences.calculateMinBroadcastConnections(nodes);
         walletConfig.setMinBroadcastConnections(minBroadcastConnections);
 

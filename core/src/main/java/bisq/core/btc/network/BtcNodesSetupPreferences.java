@@ -17,8 +17,8 @@
 
 package bisq.core.btc.network;
 
-import bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption;
-import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BtcNodes.BitcoinNodesOption;
+import bisq.core.btc.network.BtcNodes.BtcNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.user.Preferences;
 
@@ -31,7 +31,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.CUSTOM;
 
 
 public class BtcNodesSetupPreferences {
@@ -43,7 +43,7 @@ public class BtcNodesSetupPreferences {
         this.preferences = preferences;
     }
 
-    public List<BtcNode> selectPreferredNodes(BitcoinNodes nodes) {
+    public List<BtcNode> selectPreferredNodes(BtcNodes nodes) {
         List<BtcNode> result;
 
         BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
@@ -51,7 +51,7 @@ public class BtcNodesSetupPreferences {
             case CUSTOM:
                 String bitcoinNodes = preferences.getBitcoinNodes();
                 Set<String> distinctNodes = Utilities.commaSeparatedListToSet(bitcoinNodes, false);
-                result = BitcoinNodes.toBtcNodesList(distinctNodes);
+                result = BtcNodes.toBtcNodesList(distinctNodes);
                 if (result.isEmpty()) {
                     log.warn("Custom nodes is set but no valid nodes are provided. " +
                             "We fall back to provided nodes option.");

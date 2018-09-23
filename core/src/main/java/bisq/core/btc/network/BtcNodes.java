@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // Managed here: https://github.com/bisq-network/roles/issues/39
 @Slf4j
-public class BitcoinNodes {
+public class BtcNodes {
 
     public enum BitcoinNodesOption {
         PROVIDED,
@@ -82,10 +82,10 @@ public class BitcoinNodes {
         return BisqEnvironment.getBaseCurrencyNetwork().isBitcoin() && BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
     }
 
-    public static List<BitcoinNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {
+    public static List<BtcNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {
         return nodes.stream()
                 .filter(e -> !e.isEmpty())
-                .map(BitcoinNodes.BtcNode::fromFullAddress)
+                .map(BtcNodes.BtcNode::fromFullAddress)
                 .collect(Collectors.toList());
     }
 
