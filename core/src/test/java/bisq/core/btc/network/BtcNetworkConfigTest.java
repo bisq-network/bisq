@@ -36,7 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-public class WalletNetworkConfigTest {
+public class BtcNetworkConfigTest {
     private static final int MODE = 0;
 
     private WalletConfig delegate;
@@ -48,7 +48,7 @@ public class WalletNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenProxyPresentAndNoPeers() {
-        WalletNetworkConfig config = new WalletNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
+        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
                 mock(Socks5Proxy.class));
         config.proposePeers(Collections.emptyList());
 
@@ -58,7 +58,7 @@ public class WalletNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenProxyNotPresentAndNoPeers() {
-        WalletNetworkConfig config = new WalletNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
+        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
                 null);
         config.proposePeers(Collections.emptyList());
 
@@ -68,7 +68,7 @@ public class WalletNetworkConfigTest {
 
     @Test
     public void testProposePeersWhenPeersPresent() {
-        WalletNetworkConfig config = new WalletNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
+        BtcNetworkConfig config = new BtcNetworkConfig(delegate, mock(NetworkParameters.class), MODE,
                 null);
         config.proposePeers(Collections.singletonList(mock(PeerAddress.class)));
 

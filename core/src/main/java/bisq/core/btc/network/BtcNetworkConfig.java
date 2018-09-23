@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-public class WalletNetworkConfig {
-    private static final Logger log = LoggerFactory.getLogger(WalletNetworkConfig.class);
+public class BtcNetworkConfig {
+    private static final Logger log = LoggerFactory.getLogger(BtcNetworkConfig.class);
 
     @Nullable
     private final Socks5Proxy proxy;
@@ -43,8 +43,8 @@ public class WalletNetworkConfig {
     private final NetworkParameters parameters;
     private final int socks5DiscoverMode;
 
-    public WalletNetworkConfig(WalletConfig delegate, NetworkParameters parameters, int socks5DiscoverMode,
-                               @Nullable Socks5Proxy proxy) {
+    public BtcNetworkConfig(WalletConfig delegate, NetworkParameters parameters, int socks5DiscoverMode,
+                            @Nullable Socks5Proxy proxy) {
         this.delegate = delegate;
         this.parameters = parameters;
         this.socks5DiscoverMode = socks5DiscoverMode;

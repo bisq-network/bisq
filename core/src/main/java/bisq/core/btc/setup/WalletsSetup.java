@@ -23,10 +23,10 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.network.BitcoinNodes;
 import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BtcNetworkConfig;
 import bisq.core.btc.network.BtcNodesSetupPreferences;
 import bisq.core.btc.network.PeerAddressesRepository;
 import bisq.core.btc.network.RegTestHost;
-import bisq.core.btc.network.WalletNetworkConfig;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;
@@ -335,7 +335,7 @@ public class WalletsSetup {
         boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
         List<PeerAddress> peers = repository.getPeerAddresses(proxy, isUseClearNodesWithProxies);
 
-        WalletNetworkConfig networkConfig = new WalletNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy);
+        BtcNetworkConfig networkConfig = new BtcNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy);
         networkConfig.proposePeers(peers);
     }
 
