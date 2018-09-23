@@ -18,11 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.CryptonoteAddressValidator;
 
 public class Monero extends Coin {
 
     public Monero() {
-        super("Monero", "XMR", new DefaultAddressValidator());
+        super("Monero", "XMR", new CryptonoteAddressValidator("4", "8"));
     }
 }
