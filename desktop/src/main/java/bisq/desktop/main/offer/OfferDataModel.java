@@ -19,7 +19,7 @@ package bisq.desktop.main.offer;
 
 import bisq.desktop.common.model.ActivatableDataModel;
 
-import bisq.core.btc.wallet.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 
 import org.bitcoinj.core.Coin;

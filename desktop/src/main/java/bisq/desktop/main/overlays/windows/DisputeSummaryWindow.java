@@ -28,7 +28,7 @@ import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.DisputeResult;
 import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.wallet.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;

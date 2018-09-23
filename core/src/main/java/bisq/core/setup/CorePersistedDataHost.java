@@ -18,7 +18,7 @@
 package bisq.core.setup;
 
 import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.wallet.AddressEntryList;
+import bisq.core.btc.model.AddressEntryList;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;

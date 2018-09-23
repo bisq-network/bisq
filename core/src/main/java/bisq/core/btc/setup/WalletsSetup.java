@@ -25,8 +25,8 @@ import bisq.core.btc.network.PeerAddressesRepository;
 import bisq.core.btc.network.RegTestHost;
 import bisq.core.btc.network.WalletNetworkConfig;
 import bisq.core.btc.network.WalletSetupPreferences;
-import bisq.core.btc.wallet.AddressEntry;
-import bisq.core.btc.wallet.AddressEntryList;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.AddressEntryList;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;

@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.wallet.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;

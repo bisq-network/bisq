@@ -20,7 +20,7 @@ package bisq.desktop.main.funds.withdrawal;
 import bisq.desktop.components.AutoTooltipLabel;
 
 import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.wallet.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
