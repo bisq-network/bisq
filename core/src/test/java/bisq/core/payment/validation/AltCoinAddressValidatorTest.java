@@ -18,7 +18,7 @@
 package bisq.core.payment.validation;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.nodes.BaseCurrencyNetwork;
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 

@@ -19,8 +19,8 @@ package bisq.core.user;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.nodes.BaseCurrencyNetwork;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;

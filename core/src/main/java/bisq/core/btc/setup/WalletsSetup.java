@@ -26,7 +26,6 @@ import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.btc.nodes.BtcNodesRepository;
 import bisq.core.btc.nodes.BtcNodesSetupPreferences;
-import bisq.core.btc.nodes.RegTestHost;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;
