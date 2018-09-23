@@ -21,12 +21,12 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.btc.network.BtcNetworkConfig;
-import bisq.core.btc.network.BtcNodes;
-import bisq.core.btc.network.BtcNodes.BtcNode;
-import bisq.core.btc.network.BtcNodesRepository;
-import bisq.core.btc.network.BtcNodesSetupPreferences;
-import bisq.core.btc.network.RegTestHost;
+import bisq.core.btc.nodes.BtcNetworkConfig;
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.nodes.BtcNodes.BtcNode;
+import bisq.core.btc.nodes.BtcNodesRepository;
+import bisq.core.btc.nodes.BtcNodesSetupPreferences;
+import bisq.core.btc.nodes.RegTestHost;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;

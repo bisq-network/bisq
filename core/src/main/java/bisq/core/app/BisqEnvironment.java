@@ -18,8 +18,8 @@
 package bisq.core.app;
 
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.network.BaseCurrencyNetwork;
-import bisq.core.btc.network.UserAgent;
+import bisq.core.btc.nodes.BaseCurrencyNetwork;
+import bisq.core.btc.nodes.UserAgent;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.exceptions.BisqException;
 import bisq.core.filter.FilterManager;

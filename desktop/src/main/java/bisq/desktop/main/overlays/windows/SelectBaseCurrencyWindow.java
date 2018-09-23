@@ -21,7 +21,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.network.BaseCurrencyNetwork;
+import bisq.core.btc.nodes.BaseCurrencyNetwork;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;

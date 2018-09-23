@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.network;
-
-import bisq.core.btc.network.BtcNodes.BtcNode;
+package bisq.core.btc.nodes;
 
 import org.bitcoinj.core.PeerAddress;
 
@@ -33,13 +31,13 @@ import javax.annotation.Nullable;
 
 public class BtcNodesRepository {
     private final BtcNodeConverter converter;
-    private final List<BtcNode> nodes;
+    private final List<BtcNodes.BtcNode> nodes;
 
-    public BtcNodesRepository(List<BtcNode> nodes) {
+    public BtcNodesRepository(List<BtcNodes.BtcNode> nodes) {
         this(new BtcNodeConverter(), nodes);
     }
 
-    public BtcNodesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
+    public BtcNodesRepository(BtcNodeConverter converter, List<BtcNodes.BtcNode> nodes) {
         this.converter = converter;
         this.nodes = nodes;
     }
@@ -65,21 +63,21 @@ public class BtcNodesRepository {
 
     private List<PeerAddress> getClearNodes() {
         return nodes.stream()
-                .filter(BtcNode::hasClearNetAddress)
+                .filter(BtcNodes.BtcNode::hasClearNetAddress)
                 .flatMap(node -> nullableAsStream(converter.convertClearNode(node)))
                 .collect(Collectors.toList());
     }
 
     private List<PeerAddress> getOnionHosts() {
         return nodes.stream()
-                .filter(BtcNode::hasOnionAddress)
+                .filter(BtcNodes.BtcNode::hasOnionAddress)
                 .flatMap(node -> nullableAsStream(converter.convertOnionHost(node)))
                 .collect(Collectors.toList());
     }
 
     private List<PeerAddress> getClearNodesBehindProxy(Socks5Proxy proxy) {
         return nodes.stream()
-                .filter(BtcNode::hasClearNetAddress)
+                .filter(BtcNodes.BtcNode::hasClearNetAddress)
                 .flatMap(node -> nullableAsStream(converter.convertWithTor(node, proxy)))
                 .collect(Collectors.toList());
     }

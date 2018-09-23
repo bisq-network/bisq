@@ -15,15 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.network;
+package bisq.core.btc.nodes;
 
-public enum RegTestHost {
+import javax.inject.Inject;
+import javax.inject.Named;
 
-    NONE,
-    LOCALHOST,
-    REG_TEST_SERVER; // 188.226.179.109
+public class UserAgent {
+    public static final String NAME_KEY = "useragent.name";
+    public static final String VERSION_KEY = "useragent.version";
 
-    public static final RegTestHost DEFAULT = LOCALHOST;
-    public static final String SERVER_IP = "188.226.179.109";
+    private final String name;
+    private final String version;
 
+    @Inject
+    public UserAgent(@Named(NAME_KEY) String name, @Named(VERSION_KEY) String version) {
+        this.name = name;
+        this.version = version;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getVersion() {
+        return version;
+    }
 }
+

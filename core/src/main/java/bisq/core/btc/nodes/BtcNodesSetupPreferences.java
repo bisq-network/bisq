@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.network;
+package bisq.core.btc.nodes;
 
-import bisq.core.btc.network.BtcNodes.BitcoinNodesOption;
-import bisq.core.btc.network.BtcNodes.BtcNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.user.Preferences;
 
@@ -31,8 +29,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.CUSTOM;
-
 
 public class BtcNodesSetupPreferences {
     private static final Logger log = LoggerFactory.getLogger(BtcNodesSetupPreferences.class);
@@ -43,10 +39,10 @@ public class BtcNodesSetupPreferences {
         this.preferences = preferences;
     }
 
-    public List<BtcNode> selectPreferredNodes(BtcNodes nodes) {
-        List<BtcNode> result;
+    public List<BtcNodes.BtcNode> selectPreferredNodes(BtcNodes nodes) {
+        List<BtcNodes.BtcNode> result;
 
-        BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        BtcNodes.BitcoinNodesOption nodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         switch (nodesOption) {
             case CUSTOM:
                 String bitcoinNodes = preferences.getBitcoinNodes();
@@ -55,7 +51,7 @@ public class BtcNodesSetupPreferences {
                 if (result.isEmpty()) {
                     log.warn("Custom nodes is set but no valid nodes are provided. " +
                             "We fall back to provided nodes option.");
-                    preferences.setBitcoinNodesOptionOrdinal(BitcoinNodesOption.PROVIDED.ordinal());
+                    preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
                     result = nodes.getProvidedBtcNodes();
                 }
                 break;
@@ -72,11 +68,11 @@ public class BtcNodesSetupPreferences {
     }
 
     public boolean isUseCustomNodes() {
-        return CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
+        return BtcNodes.BitcoinNodesOption.CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
     }
 
-    public int calculateMinBroadcastConnections(List<BtcNode> nodes) {
-        BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+    public int calculateMinBroadcastConnections(List<BtcNodes.BtcNode> nodes) {
+        BtcNodes.BitcoinNodesOption nodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         int result;
         switch (nodesOption) {
             case CUSTOM:

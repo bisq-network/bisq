@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.network;
+package bisq.core.btc.nodes;
 
-import bisq.core.btc.network.BtcNodes.BtcNode;
+import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.user.Preferences;
 
 import java.util.List;
@@ -29,8 +29,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.CUSTOM;
-import static bisq.core.btc.network.BtcNodes.BitcoinNodesOption.PUBLIC;
+import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;

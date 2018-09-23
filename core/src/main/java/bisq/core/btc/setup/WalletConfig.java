@@ -18,7 +18,7 @@
 package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.network.ProxySocketFactory;
+import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.app.Version;

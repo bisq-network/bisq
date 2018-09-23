@@ -18,7 +18,7 @@
 package bisq.core.locale;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.network.BaseCurrencyNetwork;
+import bisq.core.btc.nodes.BaseCurrencyNetwork;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;

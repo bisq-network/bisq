@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.network;
+package bisq.core.btc.nodes;
 
 import bisq.core.app.BisqEnvironment;
 

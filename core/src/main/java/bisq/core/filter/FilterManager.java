@@ -19,7 +19,7 @@ package bisq.core.filter;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.network.BtcNodes;
+import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;

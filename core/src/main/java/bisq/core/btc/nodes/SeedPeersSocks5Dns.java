@@ -31,7 +31,7 @@
  * limitations under the License.
  */
 
-package bisq.core.btc.network;
+package bisq.core.btc.nodes;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
