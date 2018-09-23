@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc;
-
-import bisq.core.btc.wallet.Restrictions;
+package bisq.core.btc.wallet;
 
 import org.bitcoinj.core.Coin;
 

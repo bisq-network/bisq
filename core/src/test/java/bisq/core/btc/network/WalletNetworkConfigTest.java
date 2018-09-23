@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.network;
 
 import bisq.core.btc.setup.WalletConfig;
-import bisq.core.btc.setup.WalletNetworkConfig;
 
 import bisq.network.Socks5MultiDiscovery;
 

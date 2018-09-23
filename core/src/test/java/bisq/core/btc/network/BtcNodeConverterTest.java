@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.network;
 
 import bisq.core.btc.network.BitcoinNodes.BtcNode;
-import bisq.core.btc.setup.BtcNodeConverter;
-import bisq.core.btc.setup.BtcNodeConverter.Facade;
+import bisq.core.btc.network.BtcNodeConverter.Facade;
 
 import bisq.network.DnsLookupException;
 

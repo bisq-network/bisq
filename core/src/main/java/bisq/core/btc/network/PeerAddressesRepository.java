@@ -35,13 +35,13 @@ public class PeerAddressesRepository {
     private final BtcNodeConverter converter;
     private final List<BtcNode> nodes;
 
+    public PeerAddressesRepository(List<BtcNode> nodes) {
+        this(new BtcNodeConverter(), nodes);
+    }
+
     public PeerAddressesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
         this.converter = converter;
         this.nodes = nodes;
-    }
-
-    public PeerAddressesRepository(List<BtcNode> nodes) {
-        this(new BtcNodeConverter(), nodes);
     }
 
     public List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseClearNodesWithProxies) {
@@ -85,8 +85,6 @@ public class PeerAddressesRepository {
     }
 
     private static <T> Stream<T> nullableAsStream(@Nullable T item) {
-        return Optional.ofNullable(item)
-                .map(Stream::of)
-                .orElse(Stream.empty());
+        return Optional.ofNullable(item).stream();
     }
 }
