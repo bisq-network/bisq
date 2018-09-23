@@ -27,9 +27,9 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.InsufficientBsqException;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;

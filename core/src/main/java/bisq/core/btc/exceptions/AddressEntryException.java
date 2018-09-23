@@ -15,14 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.exceptions;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
-
-public class InsufficientBsqException extends InsufficientMoneyException {
-
-    public InsufficientBsqException(Coin missing) {
-        super(missing, "Insufficient BSQ,  missing " + missing.value / 100D + " BSQ");
+public class AddressEntryException extends Exception {
+    public AddressEntryException(String message) {
+        super(message);
     }
 }

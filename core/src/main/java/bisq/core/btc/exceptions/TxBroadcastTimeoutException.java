@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.exceptions;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
@@ -35,10 +35,9 @@ public class TxBroadcastTimeoutException extends TxBroadcastException {
     private final Wallet wallet;
 
     /**
-     *
-     * @param localTx       The tx we sent out
-     * @param delay         The timeout delay
-     * @param wallet        Wallet is needed if a client is calling wallet.commitTx(tx)
+     * @param localTx The tx we sent out
+     * @param delay   The timeout delay
+     * @param wallet  Wallet is needed if a client is calling wallet.commitTx(tx)
      */
     public TxBroadcastTimeoutException(Transaction localTx, int delay, Wallet wallet) {
         super("The transaction was not broadcasted in " + delay +

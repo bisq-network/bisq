@@ -15,15 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.exceptions;
 
-import org.bitcoinj.core.Coin;
-
-public interface BsqBalanceListener {
-    void onUpdateBalances(Coin availableBalance,
-                          Coin availableNonBsqBalance,
-                          Coin unverifiedBalance,
-                          Coin lockedForVotingBalance,
-                          Coin lockedInBondsBalance,
-                          Coin unlockingBondsBalance);
+public class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String message) {
+        super(message);
+    }
 }

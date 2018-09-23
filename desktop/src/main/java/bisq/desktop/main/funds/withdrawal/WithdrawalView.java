@@ -27,9 +27,9 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.InsufficientFundsException;
 import bisq.core.btc.Restrictions;
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;

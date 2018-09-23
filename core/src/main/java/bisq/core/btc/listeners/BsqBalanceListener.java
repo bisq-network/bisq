@@ -15,10 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc;
+package bisq.core.btc.listeners;
 
-public class AddressEntryException extends Exception {
-    public AddressEntryException(String message) {
-        super(message);
-    }
+import org.bitcoinj.core.Coin;
+
+public interface BsqBalanceListener {
+    void onUpdateBalances(Coin availableBalance,
+                          Coin availableNonBsqBalance,
+                          Coin unverifiedBalance,
+                          Coin lockedForVotingBalance,
+                          Coin lockedInBondsBalance,
+                          Coin unlockingBondsBalance);
 }

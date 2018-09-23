@@ -33,9 +33,9 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.InsufficientFundsException;
 import bisq.core.btc.Restrictions;
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;

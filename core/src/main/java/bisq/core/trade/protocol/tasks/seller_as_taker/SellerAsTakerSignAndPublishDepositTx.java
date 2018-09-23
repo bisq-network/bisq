@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.seller_as_taker;
 
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.data.RawTransactionInput;
+import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
