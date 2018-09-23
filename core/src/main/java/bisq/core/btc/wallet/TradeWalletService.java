@@ -25,6 +25,8 @@ import bisq.core.btc.data.RawTransactionInput;
 import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.setup.WalletConfig;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 
 import bisq.common.app.Log;

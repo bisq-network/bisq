@@ -24,10 +24,10 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.WalletsSetup;
 
 import bisq.network.p2p.P2PService;
 

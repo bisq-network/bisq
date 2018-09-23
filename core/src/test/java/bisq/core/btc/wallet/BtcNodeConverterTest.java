@@ -18,7 +18,8 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.btc.BitcoinNodes.BtcNode;
-import bisq.core.btc.wallet.BtcNodeConverter.Facade;
+import bisq.core.btc.setup.BtcNodeConverter;
+import bisq.core.btc.setup.BtcNodeConverter.Facade;
 
 import bisq.network.DnsLookupException;
 

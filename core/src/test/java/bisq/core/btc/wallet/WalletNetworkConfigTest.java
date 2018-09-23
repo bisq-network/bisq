@@ -17,6 +17,9 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.setup.WalletConfig;
+import bisq.core.btc.setup.WalletNetworkConfig;
+
 import bisq.network.Socks5MultiDiscovery;
 
 import org.bitcoinj.core.NetworkParameters;

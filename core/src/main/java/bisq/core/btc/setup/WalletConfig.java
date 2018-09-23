@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.ProxySocketFactory;
+import bisq.core.btc.wallet.BisqRiskAnalysis;
+import bisq.core.btc.wallet.BsqWallet;
 
 import bisq.common.app.Version;
 

@@ -36,7 +36,7 @@ import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;

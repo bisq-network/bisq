@@ -30,7 +30,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.setup;
 
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -32,50 +32,50 @@ import java.security.SecureRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class BisqDeterministicKeyChain extends DeterministicKeyChain {
-    private static final Logger log = LoggerFactory.getLogger(BisqDeterministicKeyChain.class);
+class BtcDeterministicKeyChain extends DeterministicKeyChain {
+    private static final Logger log = LoggerFactory.getLogger(BtcDeterministicKeyChain.class);
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    // We have registered 142 (0x8000008E) as coin_type for BSQ
-    public static final ImmutableList<ChildNumber> BIP44_BSQ_ACCOUNT_PATH = ImmutableList.of(
+    // We use 0 (0x80000000) as coin_type for BTC
+    // m / purpose' / coin_type' / account' / change / address_index
+    public static final ImmutableList<ChildNumber> BIP44_BTC_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
-            new ChildNumber(142, true),
+            new ChildNumber(0, true),
             ChildNumber.ZERO_HARDENED);
 
-    public BisqDeterministicKeyChain(SecureRandom random) {
+    public BtcDeterministicKeyChain(SecureRandom random) {
         super(random);
     }
 
-    public BisqDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
+    public BtcDeterministicKeyChain(DeterministicKey accountKey, boolean isFollowingKey) {
         super(accountKey, isFollowingKey);
     }
 
-    public BisqDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
+    public BtcDeterministicKeyChain(DeterministicSeed seed, KeyCrypter crypter) {
         super(seed, crypter);
     }
 
-    public BisqDeterministicKeyChain(DeterministicSeed seed) {
+    public BtcDeterministicKeyChain(DeterministicSeed seed) {
         super(seed);
     }
 
-
     @Override
     public DeterministicKeyChain toEncrypted(KeyCrypter keyCrypter, KeyParameter aesKey) {
-        return new BisqDeterministicKeyChain(keyCrypter, aesKey, this);
+        return new BtcDeterministicKeyChain(keyCrypter, aesKey, this);
     }
 
     protected DeterministicKeyChain makeKeyChainFromSeed(DeterministicSeed seed) {
-        return new BisqDeterministicKeyChain(seed);
+        return new BtcDeterministicKeyChain(seed);
     }
 
-    protected BisqDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
+    protected BtcDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
         super(crypter, aesKey, chain);
     }
 
     @Override
     protected ImmutableList<ChildNumber> getAccountPath() {
-        return BIP44_BSQ_ACCOUNT_PATH;
+        return BIP44_BTC_ACCOUNT_PATH;
     }
 
 }

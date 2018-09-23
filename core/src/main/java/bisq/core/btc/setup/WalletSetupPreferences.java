@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.setup;
 
 import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.BitcoinNodes.BitcoinNodesOption;
@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static bisq.core.btc.BitcoinNodes.BitcoinNodesOption.CUSTOM;
-import static bisq.core.btc.wallet.WalletsSetup.DEFAULT_CONNECTIONS;
+import static bisq.core.btc.setup.WalletsSetup.DEFAULT_CONNECTIONS;
 
 
 class WalletSetupPreferences {

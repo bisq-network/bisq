@@ -20,7 +20,7 @@ package bisq.monitor.metrics;
 import bisq.monitor.MonitorOptionKeys;
 
 import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;

@@ -26,9 +26,9 @@ import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.AddressEntry;
 import bisq.core.btc.BalanceModel;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -87,8 +87,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.security.Security;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;

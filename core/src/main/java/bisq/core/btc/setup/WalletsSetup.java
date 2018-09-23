@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.wallet;
+package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.AddressEntry;
@@ -341,12 +341,12 @@ public class WalletsSetup {
     // Backup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void backupWallets() {
+    public void backupWallets() {
         FileUtil.rollingBackup(walletDir, btcWalletFileName, 20);
         FileUtil.rollingBackup(walletDir, BSQ_WALLET_FILE_NAME, 20);
     }
 
-    void clearBackups() {
+    public void clearBackups() {
         try {
             FileUtil.deleteDirectory(new File(Paths.get(walletDir.getAbsolutePath(), "backup").toString()));
         } catch (IOException e) {

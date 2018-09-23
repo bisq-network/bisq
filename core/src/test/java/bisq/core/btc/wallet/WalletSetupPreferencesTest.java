@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.BitcoinNodes.BtcNode;
+import bisq.core.btc.setup.WalletSetupPreferences;
 import bisq.core.user.Preferences;
 
 import java.util.List;
