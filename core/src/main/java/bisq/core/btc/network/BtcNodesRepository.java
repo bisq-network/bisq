@@ -31,15 +31,15 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-public class PeerAddressesRepository {
+public class BtcNodesRepository {
     private final BtcNodeConverter converter;
     private final List<BtcNode> nodes;
 
-    public PeerAddressesRepository(List<BtcNode> nodes) {
+    public BtcNodesRepository(List<BtcNode> nodes) {
         this(new BtcNodeConverter(), nodes);
     }
 
-    public PeerAddressesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
+    public BtcNodesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
         this.converter = converter;
         this.nodes = nodes;
     }

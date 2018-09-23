@@ -24,8 +24,8 @@ import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.network.BitcoinNodes;
 import bisq.core.btc.network.BitcoinNodes.BtcNode;
 import bisq.core.btc.network.BtcNetworkConfig;
+import bisq.core.btc.network.BtcNodesRepository;
 import bisq.core.btc.network.BtcNodesSetupPreferences;
-import bisq.core.btc.network.PeerAddressesRepository;
 import bisq.core.btc.network.RegTestHost;
 import bisq.core.user.Preferences;
 
@@ -331,7 +331,7 @@ public class WalletsSetup {
         int minBroadcastConnections = btcNodesSetupPreferences.calculateMinBroadcastConnections(nodes);
         walletConfig.setMinBroadcastConnections(minBroadcastConnections);
 
-        PeerAddressesRepository repository = new PeerAddressesRepository(nodes);
+        BtcNodesRepository repository = new BtcNodesRepository(nodes);
         boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
         List<PeerAddress> peers = repository.getPeerAddresses(proxy, isUseClearNodesWithProxies);
 

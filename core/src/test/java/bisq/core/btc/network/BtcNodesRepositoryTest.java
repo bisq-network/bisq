@@ -39,14 +39,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class PeerAddressesRepositoryTest {
+public class BtcNodesRepositoryTest {
     @Test
     public void testGetPeerAddressesWhenClearNodes() {
         BtcNode node = mock(BtcNode.class);
         when(node.hasClearNetAddress()).thenReturn(true);
 
         BtcNodeConverter converter = mock(BtcNodeConverter.class, RETURNS_DEEP_STUBS);
-        PeerAddressesRepository repository = new PeerAddressesRepository(converter,
+        BtcNodesRepository repository = new BtcNodesRepository(converter,
                 Collections.singletonList(node));
 
         List<PeerAddress> peers = repository.getPeerAddresses(null, false);
@@ -62,7 +62,7 @@ public class PeerAddressesRepositoryTest {
         BtcNode node = mock(BtcNode.class);
         when(node.hasClearNetAddress()).thenReturn(true);
 
-        PeerAddressesRepository repository = new PeerAddressesRepository(converter,
+        BtcNodesRepository repository = new BtcNodesRepository(converter,
                 Collections.singletonList(node));
 
         List<PeerAddress> peers = repository.getPeerAddresses(null, false);
@@ -80,7 +80,7 @@ public class PeerAddressesRepositoryTest {
         when(node.hasOnionAddress()).thenReturn(true);
 
         BtcNodeConverter converter = mock(BtcNodeConverter.class, RETURNS_DEEP_STUBS);
-        PeerAddressesRepository repository = new PeerAddressesRepository(converter,
+        BtcNodesRepository repository = new BtcNodesRepository(converter,
                 Lists.newArrayList(node, onionNode));
 
         List<PeerAddress> peers = repository.getPeerAddresses(mock(Socks5Proxy.class), true);
@@ -97,7 +97,7 @@ public class PeerAddressesRepositoryTest {
         when(node.hasOnionAddress()).thenReturn(true);
 
         BtcNodeConverter converter = mock(BtcNodeConverter.class, RETURNS_DEEP_STUBS);
-        PeerAddressesRepository repository = new PeerAddressesRepository(converter,
+        BtcNodesRepository repository = new BtcNodesRepository(converter,
                 Lists.newArrayList(node, onionNode));
 
         List<PeerAddress> peers = repository.getPeerAddresses(mock(Socks5Proxy.class), false);
