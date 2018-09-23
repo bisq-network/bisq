@@ -23,6 +23,8 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
+
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -80,8 +82,12 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
     protected void addCloseButton() {
         super.addCloseButton();
 
-        closeButton.setVisible(false);
-        listener = (observable, oldValue, newValue) -> closeButton.setVisible(newValue != null);
+        closeButton.setText(Res.get("shared.cancel"));
+
+        listener = (observable, oldValue, newValue) -> {
+            if (newValue != null)
+                UserThread.execute(() -> closeButton.setText(Res.get("shared.close")));
+        };
         imageView.imageProperty().addListener(listener);
     }
 
