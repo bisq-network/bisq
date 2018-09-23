@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-
+// TODO not used anymore. Not sure if it was replaced by something else or removed by accident.
 /**
  * SeedPeersSocks5Dns resolves peers via Proxy (Socks5) remote DNS.
  */
