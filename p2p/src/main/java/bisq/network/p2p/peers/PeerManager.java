@@ -676,7 +676,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                                 .orElse(new ArrayList<>());
                     }
                     Peer peer = new Peer(connection.getPeersNodeAddressOptional().get(), supportedCapabilities);
-                    connection.addWeakRCapabilitiesListener(peer);
+                    connection.addWeakCapabilitiesListener(peer);
                     return peer;
                 })
                 .collect(Collectors.toSet());
