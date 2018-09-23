@@ -34,12 +34,12 @@ import org.slf4j.LoggerFactory;
 import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 
 
-public class WalletSetupPreferences {
-    private static final Logger log = LoggerFactory.getLogger(WalletSetupPreferences.class);
+public class BtcNodesSetupPreferences {
+    private static final Logger log = LoggerFactory.getLogger(BtcNodesSetupPreferences.class);
 
     private final Preferences preferences;
 
-    public WalletSetupPreferences(Preferences preferences) {
+    public BtcNodesSetupPreferences(Preferences preferences) {
         this.preferences = preferences;
     }
 

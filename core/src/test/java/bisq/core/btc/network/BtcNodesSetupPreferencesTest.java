@@ -39,13 +39,13 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(Preferences.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
-public class WalletSetupPreferencesTest {
+public class BtcNodesSetupPreferencesTest {
     @Test
     public void testSelectPreferredNodesWhenPublicOption() {
         Preferences delegate = mock(Preferences.class);
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PUBLIC.ordinal());
 
-        WalletSetupPreferences preferences = new WalletSetupPreferences(delegate);
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate);
         List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BitcoinNodes.class));
 
         assertTrue(nodes.isEmpty());
@@ -57,7 +57,7 @@ public class WalletSetupPreferencesTest {
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(CUSTOM.ordinal());
         when(delegate.getBitcoinNodes()).thenReturn("aaa.onion,bbb.onion");
 
-        WalletSetupPreferences preferences = new WalletSetupPreferences(delegate);
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate);
         List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BitcoinNodes.class));
 
         assertEquals(2, nodes.size());

@@ -19,14 +19,14 @@ package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.network.BitcoinNodes;
 import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BtcNodesSetupPreferences;
 import bisq.core.btc.network.PeerAddressesRepository;
 import bisq.core.btc.network.RegTestHost;
 import bisq.core.btc.network.WalletNetworkConfig;
-import bisq.core.btc.network.WalletSetupPreferences;
-import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.model.AddressEntryList;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;
@@ -325,14 +325,14 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
-        WalletSetupPreferences walletSetupPreferences = new WalletSetupPreferences(preferences);
+        BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences);
 
-        List<BtcNode> nodes = walletSetupPreferences.selectPreferredNodes(bitcoinNodes);
-        int minBroadcastConnections = walletSetupPreferences.calculateMinBroadcastConnections(nodes);
+        List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(bitcoinNodes);
+        int minBroadcastConnections = btcNodesSetupPreferences.calculateMinBroadcastConnections(nodes);
         walletConfig.setMinBroadcastConnections(minBroadcastConnections);
 
         PeerAddressesRepository repository = new PeerAddressesRepository(nodes);
-        boolean isUseClearNodesWithProxies = (useAllProvidedNodes || walletSetupPreferences.isUseCustomNodes());
+        boolean isUseClearNodesWithProxies = (useAllProvidedNodes || btcNodesSetupPreferences.isUseCustomNodes());
         List<PeerAddress> peers = repository.getPeerAddresses(proxy, isUseClearNodesWithProxies);
 
         WalletNetworkConfig networkConfig = new WalletNetworkConfig(walletConfig, params, socks5DiscoverMode, proxy);
