@@ -17,8 +17,8 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.btc.setup.BitcoinNodes;
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
 import bisq.core.btc.setup.WalletSetupPreferences;
 import bisq.core.user.Preferences;
 
@@ -31,8 +31,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption.CUSTOM;
-import static bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption.PUBLIC;
+import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;

@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.core.btc.network;
 
-import bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption;
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
@@ -30,20 +31,19 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption.CUSTOM;
-import static bisq.core.btc.setup.WalletsSetup.DEFAULT_CONNECTIONS;
+import static bisq.core.btc.network.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 
 
-class WalletSetupPreferences {
+public class WalletSetupPreferences {
     private static final Logger log = LoggerFactory.getLogger(WalletSetupPreferences.class);
 
     private final Preferences preferences;
 
-    WalletSetupPreferences(Preferences preferences) {
+    public WalletSetupPreferences(Preferences preferences) {
         this.preferences = preferences;
     }
 
-    List<BtcNode> selectPreferredNodes(BitcoinNodes nodes) {
+    public List<BtcNode> selectPreferredNodes(BitcoinNodes nodes) {
         List<BtcNode> result;
 
         BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
@@ -71,11 +71,11 @@ class WalletSetupPreferences {
         return result;
     }
 
-    boolean isUseCustomNodes() {
+    public boolean isUseCustomNodes() {
         return CUSTOM.ordinal() == preferences.getBitcoinNodesOptionOrdinal();
     }
 
-    int calculateMinBroadcastConnections(List<BtcNode> nodes) {
+    public int calculateMinBroadcastConnections(List<BtcNode> nodes) {
         BitcoinNodesOption nodesOption = BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         int result;
         switch (nodesOption) {
@@ -87,7 +87,7 @@ class WalletSetupPreferences {
                 break;
             case PUBLIC:
                 // We keep the empty nodes
-                result = (int) Math.floor(DEFAULT_CONNECTIONS * 0.8);
+                result = (int) Math.floor(WalletsSetup.DEFAULT_CONNECTIONS * 0.8);
                 break;
             case PROVIDED:
             default:

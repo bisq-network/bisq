@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc;
+package bisq.core.btc.network;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.provider.fee.FeeService;

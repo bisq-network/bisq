@@ -18,11 +18,9 @@
 package bisq.core.payment.validation;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.network.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-
-import bisq.asset.AssetRegistry;
 
 import org.junit.Test;
 
@@ -30,6 +28,10 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+
+
+import bisq.asset.AssetRegistry;
 
 public class AltCoinAddressValidatorTest {
 

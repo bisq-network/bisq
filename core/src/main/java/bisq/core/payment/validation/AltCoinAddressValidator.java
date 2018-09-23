@@ -18,20 +18,22 @@
 package bisq.core.payment.validation;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.network.BaseCurrencyNetwork;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
 
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static java.lang.String.format;
+
+
+
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
 
 @Slf4j
 public final class AltCoinAddressValidator extends InputValidator {

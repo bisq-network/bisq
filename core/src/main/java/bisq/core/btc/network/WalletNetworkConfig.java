@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.core.btc.network;
+
+import bisq.core.btc.setup.WalletConfig;
 
 import bisq.network.Socks5MultiDiscovery;
 
@@ -32,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-class WalletNetworkConfig {
+public class WalletNetworkConfig {
     private static final Logger log = LoggerFactory.getLogger(WalletNetworkConfig.class);
 
     @Nullable
@@ -41,15 +43,15 @@ class WalletNetworkConfig {
     private final NetworkParameters parameters;
     private final int socks5DiscoverMode;
 
-    WalletNetworkConfig(WalletConfig delegate, NetworkParameters parameters, int socks5DiscoverMode,
-                        @Nullable Socks5Proxy proxy) {
+    public WalletNetworkConfig(WalletConfig delegate, NetworkParameters parameters, int socks5DiscoverMode,
+                               @Nullable Socks5Proxy proxy) {
         this.delegate = delegate;
         this.parameters = parameters;
         this.socks5DiscoverMode = socks5DiscoverMode;
         this.proxy = proxy;
     }
 
-    void proposePeers(List<PeerAddress> peers) {
+    public void proposePeers(List<PeerAddress> peers) {
         if (!peers.isEmpty()) {
             log.info("You connect with peerAddresses: {}", peers);
             PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);

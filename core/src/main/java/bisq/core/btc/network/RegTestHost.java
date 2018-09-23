@@ -15,16 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.data;
+package bisq.core.btc.network;
 
-import java.util.ArrayList;
+public enum RegTestHost {
 
-public class PreparedDepositTxAndMakerInputs {
-    public final ArrayList<RawTransactionInput> rawMakerInputs;
-    public final byte[] depositTransaction;
+    NONE,
+    LOCALHOST,
+    REG_TEST_SERVER; // 188.226.179.109
 
-    public PreparedDepositTxAndMakerInputs(ArrayList<RawTransactionInput> rawMakerInputs, byte[] depositTransaction) {
-        this.rawMakerInputs = rawMakerInputs;
-        this.depositTransaction = depositTransaction;
-    }
+    public static final RegTestHost DEFAULT = LOCALHOST;
+    public static final String SERVER_IP = "188.226.179.109";
+
 }

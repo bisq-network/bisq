@@ -17,7 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.network.BaseCurrencyNetwork;
 
 import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;

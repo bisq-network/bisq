@@ -20,7 +20,7 @@ package bisq.monitor;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.UserAgent;
+import bisq.core.btc.network.UserAgent;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.network.NetworkOptionKeys;

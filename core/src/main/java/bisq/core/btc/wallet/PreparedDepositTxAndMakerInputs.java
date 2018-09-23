@@ -15,30 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc;
+package bisq.core.btc.wallet;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import java.util.ArrayList;
 
-public class UserAgent {
-    public static final String NAME_KEY = "useragent.name";
-    public static final String VERSION_KEY = "useragent.version";
+public class PreparedDepositTxAndMakerInputs {
+    public final ArrayList<RawTransactionInput> rawMakerInputs;
+    public final byte[] depositTransaction;
 
-    private final String name;
-    private final String version;
-
-    @Inject
-    public UserAgent(@Named(NAME_KEY) String name, @Named(VERSION_KEY) String version) {
-        this.name = name;
-        this.version = version;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getVersion() {
-        return version;
+    public PreparedDepositTxAndMakerInputs(ArrayList<RawTransactionInput> rawMakerInputs, byte[] depositTransaction) {
+        this.rawMakerInputs = rawMakerInputs;
+        this.depositTransaction = depositTransaction;
     }
 }
-

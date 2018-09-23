@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.btc.data.RawTransactionInput;
+import bisq.core.btc.wallet.RawTransactionInput;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 

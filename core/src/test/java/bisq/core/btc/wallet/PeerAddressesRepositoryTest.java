@@ -17,7 +17,7 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
 import bisq.core.btc.setup.BtcNodeConverter;
 import bisq.core.btc.setup.PeerAddressesRepository;
 

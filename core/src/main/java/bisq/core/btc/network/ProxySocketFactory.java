@@ -33,7 +33,7 @@
  * PircBotX. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.core.btc.network;
 
 import javax.net.SocketFactory;
 

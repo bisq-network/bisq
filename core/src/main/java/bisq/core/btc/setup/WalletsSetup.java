@@ -19,7 +19,12 @@ package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.PeerAddressesRepository;
+import bisq.core.btc.network.RegTestHost;
+import bisq.core.btc.network.WalletNetworkConfig;
+import bisq.core.btc.network.WalletSetupPreferences;
 import bisq.core.btc.wallet.AddressEntry;
 import bisq.core.btc.wallet.AddressEntryList;
 import bisq.core.user.Preferences;
@@ -100,7 +105,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class WalletsSetup {
     // We reduce defaultConnections from 12 (PeerGroup.DEFAULT_CONNECTIONS) to 9 nodes
-    static final int DEFAULT_CONNECTIONS = 9;
+    public static final int DEFAULT_CONNECTIONS = 9;
 
     private static final long STARTUP_TIMEOUT = 180;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";

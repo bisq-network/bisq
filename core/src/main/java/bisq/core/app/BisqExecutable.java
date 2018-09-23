@@ -19,7 +19,7 @@ package bisq.core.app;
 
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.setup.RegTestHost;
+import bisq.core.btc.network.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;

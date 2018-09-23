@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.core.btc.network;
 
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
 
 import org.bitcoinj.core.PeerAddress;
 
@@ -31,20 +31,20 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-class PeerAddressesRepository {
+public class PeerAddressesRepository {
     private final BtcNodeConverter converter;
     private final List<BtcNode> nodes;
 
-    PeerAddressesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
+    public PeerAddressesRepository(BtcNodeConverter converter, List<BtcNode> nodes) {
         this.converter = converter;
         this.nodes = nodes;
     }
 
-    PeerAddressesRepository(List<BtcNode> nodes) {
+    public PeerAddressesRepository(List<BtcNode> nodes) {
         this(new BtcNodeConverter(), nodes);
     }
 
-    List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseClearNodesWithProxies) {
+    public List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseClearNodesWithProxies) {
         List<PeerAddress> result;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
         // exit nodes with bloom filters.

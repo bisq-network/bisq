@@ -18,8 +18,8 @@
 package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.network.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
-import bisq.core.btc.wallet.BsqWallet;
 
 import bisq.common.app.Version;
 

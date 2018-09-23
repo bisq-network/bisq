@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.core.btc.network;
 
-import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.network.BitcoinNodes.BtcNode;
 
 import bisq.network.DnsLookupException;
 import bisq.network.DnsLookupTor;

@@ -18,9 +18,9 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.data.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.RawTransactionInput;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
