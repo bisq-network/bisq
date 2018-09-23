@@ -18,7 +18,11 @@
 package bisq.core.btc;
 
 import bisq.core.app.AppOptionKeys;
+import bisq.core.btc.setup.BitcoinNodes;
+import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.AddressEntryList;
+import bisq.core.btc.wallet.BalanceModel;
 import bisq.core.btc.wallet.BsqCoinSelector;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;

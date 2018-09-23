@@ -32,11 +32,11 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.wallet.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.BSFormatter;

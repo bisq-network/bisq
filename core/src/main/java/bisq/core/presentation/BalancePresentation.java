@@ -17,7 +17,7 @@
 
 package bisq.core.presentation;
 
-import bisq.core.btc.BalanceModel;
+import bisq.core.btc.wallet.BalanceModel;
 import bisq.core.util.BSFormatter;
 
 import javax.inject.Inject;

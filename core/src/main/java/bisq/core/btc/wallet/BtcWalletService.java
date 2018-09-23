@@ -17,9 +17,6 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryList;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.exceptions.TransactionVerificationException;

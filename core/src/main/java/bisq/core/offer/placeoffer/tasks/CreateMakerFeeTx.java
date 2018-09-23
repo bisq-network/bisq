@@ -18,8 +18,8 @@
 package bisq.core.offer.placeoffer.tasks;
 
 import bisq.core.arbitration.Arbitrator;
-import bisq.core.btc.AddressEntry;
 import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.wallet.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;

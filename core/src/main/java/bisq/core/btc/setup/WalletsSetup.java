@@ -18,12 +18,10 @@
 package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryList;
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.BitcoinNodes.BtcNode;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.RegTestHost;
+import bisq.core.btc.setup.BitcoinNodes.BtcNode;
+import bisq.core.btc.wallet.AddressEntry;
+import bisq.core.btc.wallet.AddressEntryList;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;

@@ -17,9 +17,8 @@
 
 package bisq.core.btc.setup;
 
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.BitcoinNodes.BitcoinNodesOption;
-import bisq.core.btc.BitcoinNodes.BtcNode;
+import bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption;
+import bisq.core.btc.setup.BitcoinNodes.BtcNode;
 import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
@@ -31,7 +30,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.core.btc.BitcoinNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.setup.BitcoinNodes.BitcoinNodesOption.CUSTOM;
 import static bisq.core.btc.setup.WalletsSetup.DEFAULT_CONNECTIONS;
 
 

@@ -24,10 +24,10 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;

@@ -18,7 +18,6 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.AddressEntry;
 import bisq.core.btc.data.InputsAndChangeOutput;
 import bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.data.RawTransactionInput;

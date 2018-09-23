@@ -17,9 +17,9 @@
 
 package bisq.core.trade.protocol.tasks.buyer_as_maker;
 
-import bisq.core.btc.AddressEntry;
 import bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.data.RawTransactionInput;
+import bisq.core.btc.wallet.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;

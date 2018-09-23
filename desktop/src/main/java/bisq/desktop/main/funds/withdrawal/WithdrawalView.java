@@ -26,13 +26,13 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;

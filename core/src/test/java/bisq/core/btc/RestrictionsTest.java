@@ -17,6 +17,8 @@
 
 package bisq.core.btc;
 
+import bisq.core.btc.wallet.Restrictions;
+
 import org.bitcoinj.core.Coin;
 
 import org.junit.Test;
