@@ -378,7 +378,6 @@ bg color of non edit textFields: fafafa
 .scroll-bar:vertical .increment-arrow,
 .scroll-bar:horizontal .decrement-arrow,
 .scroll-bar:vertical .decrement-arrow {
-{
     -fx-shape: null;
     -fx-background-color: transparent;
 }
