@@ -336,7 +336,7 @@ public class Connection implements MessageListener {
                     "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
-    public void addWeakRCapabilitiesListener(SupportedCapabilitiesListener listener) {
+    public void addWeakCapabilitiesListener(SupportedCapabilitiesListener listener) {
         capabilitiesListeners.add(new WeakReference<>(listener));
     }
 
