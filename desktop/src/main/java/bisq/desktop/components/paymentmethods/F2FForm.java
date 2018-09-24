@@ -59,10 +59,10 @@ public class F2FForm extends PaymentMethodForm {
     private Country selectedCountry;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountPayload paymentAccountPayload, Offer offer) {
+                                      PaymentAccountPayload paymentAccountPayload, Offer offer, double top) {
         F2FAccountPayload f2fAccountPayload = (F2FAccountPayload) paymentAccountPayload;
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.country"),
-                CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()));
+                CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()), top);
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
