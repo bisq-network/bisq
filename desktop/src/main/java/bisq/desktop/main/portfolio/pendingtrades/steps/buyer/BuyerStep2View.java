@@ -269,7 +269,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.F2F_ID:
                 checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
-                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer());
+                gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer(), 0);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",

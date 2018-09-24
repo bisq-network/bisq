@@ -17,10 +17,14 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
+import bisq.core.payment.payload.F2FAccountPayload;
 
 public class SellerStep2View extends TradeStepView {
 
@@ -31,6 +35,19 @@ public class SellerStep2View extends TradeStepView {
     public SellerStep2View(PendingTradesViewModel model) {
         super(model);
     }
+
+    @Override
+    protected void addContent() {
+        addTradeInfoBlock();
+        addInfoBlock();
+        if (model.dataModel.getSellersPaymentAccountPayload() instanceof F2FAccountPayload) {
+            FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 4,
+                    Res.get("portfolio.pending.step2_seller.f2fInfo.headline"), Layout.GROUP_DISTANCE);
+            gridRow = F2FForm.addFormForBuyer(gridPane, --gridRow, model.dataModel.getSellersPaymentAccountPayload(),
+                    model.dataModel.getTrade().getOffer(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
@@ -46,6 +63,7 @@ public class SellerStep2View extends TradeStepView {
         return Res.get("portfolio.pending.step2_seller.waitPayment.msg", model.dataModel.getCurrencyCode());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +75,7 @@ public class SellerStep2View extends TradeStepView {
                 model.dataModel.getCurrencyCode(),
                 model.getDateForOpenDispute());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
@@ -70,7 +89,6 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected void applyOnDisputeOpened() {
     }
-
 }
 
 

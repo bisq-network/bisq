@@ -34,10 +34,13 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.app.AvoidStandbyMode;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -121,6 +124,8 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             mainView.setOnUiReadyHandler(onUiReadyHandler);
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
+
+            injector.getInstance(AvoidStandbyMode.class).init();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
@@ -209,7 +214,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         stage.setOnCloseRequest(event -> {
             event.consume();
-            stop();
+            shutDownByUser();
         });
 
         // configure the primary stage
@@ -244,7 +249,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
             if (Utilities.isCtrlPressed(KeyCode.W, keyEvent) ||
                     Utilities.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                stop();
+                shutDownByUser();
             } else {
                 if (Utilities.isAltOrCtrlPressed(KeyCode.E, keyEvent)) {
                     showBtcEmergencyWalletPopup(injector);
@@ -275,6 +280,26 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 }
             }
         });
+    }
+
+    private void shutDownByUser() {
+        if (injector.getInstance(OpenOfferManager.class).getObservableList().isEmpty()) {
+            // No open offers, so no need to show the popup.
+            stop();
+            return;
+        }
+
+        // We show a popup to inform user that open offers will be removed if Bisq is not running.
+        String key = "showOpenOfferWarnPopupAtShutDown";
+        if (injector.getInstance(Preferences.class).showAgain(key)) {
+            new Popup<>().information(Res.get("popup.info.shutDownWithOpenOffers"))
+                    .dontShowAgainId(key)
+                    .useShutDownButton()
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        } else {
+            stop();
+        }
     }
 
     private void showSendAlertMessagePopup(Injector injector) {

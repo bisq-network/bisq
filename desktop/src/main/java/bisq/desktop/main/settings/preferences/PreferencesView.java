@@ -94,7 +94,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
     // private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
+    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, avoidStandbyModeCheckBox,
+            showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -177,7 +178,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
@@ -296,6 +297,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             if (!newValue.equals(oldValue))
                 referralIdService.setReferralId(newValue);
         };
+
+        // AvoidStandbyMode
+        avoidStandbyModeCheckBox = addLabelCheckBox(root, ++gridRow,
+                Res.get("setting.preferences.avoidStandbyMode"), "").second;
     }
 
     private void initializeDisplayCurrencies() {
@@ -646,6 +651,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
+
+        // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
+        // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
+        avoidStandbyModeCheckBox.setSelected(!preferences.isUseStandbyMode());
+        avoidStandbyModeCheckBox.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyModeCheckBox.isSelected()));
     }
 
    /* private void onSelectNetwork() {
@@ -695,5 +705,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         showOwnOffersInOfferBook.setOnAction(null);
         autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
+        avoidStandbyModeCheckBox.setOnAction(null);
     }
 }
