@@ -22,7 +22,7 @@ import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;

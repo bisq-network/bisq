@@ -18,9 +18,11 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
+import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.Block;

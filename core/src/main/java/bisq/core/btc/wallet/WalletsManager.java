@@ -18,6 +18,7 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
 

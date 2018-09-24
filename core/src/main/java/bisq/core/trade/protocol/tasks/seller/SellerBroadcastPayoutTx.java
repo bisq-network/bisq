@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
-import bisq.core.btc.wallet.TxBroadcastException;
+import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;

@@ -17,13 +17,13 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
-import bisq.core.btc.AddressEntryList;
-import bisq.core.btc.InsufficientFundsException;
-import bisq.core.btc.Restrictions;
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.AddressEntryList;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
