@@ -74,9 +74,9 @@ public enum Param {
     PHASE_BREAK1(1),        // 10 blocks
     PHASE_BLIND_VOTE(2),    // 4 days
     PHASE_BREAK2(1),        // 10 blocks
-    PHASE_VOTE_REVEAL(1),   // 2 days
+    PHASE_VOTE_REVEAL(2),   // 2 days
     PHASE_BREAK3(1),        // 10 blocks
-    PHASE_RESULT(1),        // 1 block
+    PHASE_RESULT(2),        // 1 block
     PHASE_BREAK4(1);        // 10 blocks
 
     /*PHASE_UNDEFINED(0),
