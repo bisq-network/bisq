@@ -53,7 +53,7 @@ import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.full.FullNode;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.JsonBlockChainExporter;
+import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
@@ -99,7 +99,7 @@ public class DaoModule extends AppModule {
         bind(BsqState.class).in(Singleton.class);
         bind(BsqStateService.class).in(Singleton.class);
         bind(SnapshotManager.class).in(Singleton.class);
-        bind(JsonBlockChainExporter.class).in(Singleton.class);
+        bind(ExportJsonFilesService.class).in(Singleton.class);
 
         // Period
         bind(CycleService.class).in(Singleton.class);
