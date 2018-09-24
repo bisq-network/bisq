@@ -21,6 +21,8 @@ import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 
+import com.jfoenix.controls.JFXTextField;
+
 import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -33,7 +35,7 @@ import javax.annotation.Nullable;
 public class BalanceTextField extends AnchorPane {
 
     private Coin targetAmount;
-    private final TextField textField;
+    private final JFXTextField textField;
     private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
     private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
     private BSFormatter formatter;
@@ -45,10 +47,13 @@ public class BalanceTextField extends AnchorPane {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BalanceTextField() {
-        textField = new TextField();
+    public BalanceTextField(String label) {
+        textField = new JFXTextField();
+        textField.setLabelFloat(true);
+        textField.setPromptText(label);
         textField.setFocusTraversable(false);
         textField.setEditable(false);
+        textField.setId("info-field");
 
         AnchorPane.setRightAnchor(textField, 0.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
@@ -81,13 +86,14 @@ public class BalanceTextField extends AnchorPane {
         if (formatter != null)
             textField.setText(formatter.formatCoinWithCode(balance));
 
-        if (targetAmount != null) {
-            if (balance.compareTo(targetAmount) >= 0)
-                textField.setEffect(fundedEffect);
-            else
-                textField.setEffect(notFundedEffect);
-        } else {
-            textField.setEffect(null);
-        }
+            //TODO: replace with new validation logic
+//        if (targetAmount != null) {
+//            if (balance.compareTo(targetAmount) >= 0)
+//                textField.setEffect(fundedEffect);
+//            else
+//                textField.setEffect(notFundedEffect);
+//        } else {
+//            textField.setEffect(null);
+//        }
     }
 }

@@ -40,11 +40,11 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey2: #bbb; /* 1 usages */
     -bs-bg-grey3: #d3d3d3; /* 1 usages */
     -bs-dark-grey: #999; /* 8 usages */
-    -bs-light-grey: #cccccc; /* derive(-bs-white, -20%); 13 usages */
+    -bs-light-grey: #cccccc; /* derive(-bs-rd-white, -20%); 13 usages */
     -bs-content-bg-grey: #f4f4f4; /* 14 usages */
     -bs-very-light-grey: #f8f8f8; /* 10 usages */
-    -bs-bg-light: #FAFAFA; /* derive(-bs-white, -2%) 4 usages */
-    -bs-very-light-grey: #F0F0F0; /* derive(-bs-white, -6%) 10 usages */
+    -bs-bg-light: #FAFAFA; /* derive(-bs-rd-white, -2%) 4 usages */
+    -bs-very-light-grey: #F0F0F0; /* derive(-bs-rd-white, -6%) 10 usages */
     -bs-very-dark-grey: #3c3c3c; /* 8 usages */
     -bs-very-dark-grey2: #111; /* 1 usages */
     -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
@@ -52,7 +52,6 @@ bg color of non edit textFields: fafafa
     -bs-light-grey3: #b5b5b5; /* 1 usages */
     -bs-font-dark: #333; /* 11 usages */
     -bs-bg-grey7: #e0e0e0; /* 2 usages */
-    -bs-white: #ffffff; /* 30 usages */
     -bs-bg-grey9: #fcfcfc; /* 1 usages */
     -bs-bg-grey10: #e5e5e5; /* 1 usages */
     -bs-bg-grey11: #f1f1f1; /* 1 usages */
@@ -77,7 +76,6 @@ bg color of non edit textFields: fafafa
     -bs-bg-blue4: #57acc9; /* 1 usages */
     -bs-bg-blue3: #9bbdc9; /* 1 usages */
     -fx-faint-focus-color: #0f87c322; /* 5 usages */
-    -fx-accent: #0f86c3; /* 18 usages */
     -bs-blue-transparent: #0f87c344;
     -bs-blue: blue; /* 1 usages */
 
@@ -86,7 +84,9 @@ bg color of non edit textFields: fafafa
     -bs-rd-green-dark: #3EA34A;
     -bs-rd-nav-selected: #20C133;
     -bs-rd-grey: #373737;
+    -fx-accent: -bs-rd-green; /* 18 usages */
     /* replace with derive later */
+    -bs-rd-white: #ffffff; /* 30 usages */
     -bs-rd-grey-light: #D8D8D8;
     -bs-rd-grey-medium-light:#E9E9E9;
     -bs-rd-grey-very-light: #f8f8f8; /* 10 usages */
@@ -240,7 +240,7 @@ bg color of non edit textFields: fafafa
 
 .action-button {
     -fx-background-color: -bs-rd-green-dark;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .jfx-checkbox {
@@ -278,6 +278,10 @@ bg color of non edit textFields: fafafa
     -jfx-focus-color: -bs-rd-green;
 }
 
+#info-field {
+    -fx-prompt-text-fill: -bs-rd-black;
+}
+
 .jfx-password-field {
     -jfx-focus-color: -bs-rd-green;
 }
@@ -295,6 +299,33 @@ bg color of non edit textFields: fafafa
 .jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
     -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 1em;
+}
+
+.input-with-border {
+    -fx-background-color:-bs-rd-white;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-rd-grey-background-dark;
+    -fx-border-radius: 3;
+    -fx-pref-height: 43;
+    -fx-pref-width: 243;
+    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+}
+
+.input-with-border .text-field {
+    -fx-alignment: center-right;
+    -fx-pref-height: 43;
+    -fx-font-size: 1.385em;
+}
+
+.input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 60;
+    -fx-padding: 16;
+    -fx-alignment: center;
+}
+
+.input-with-border .icon {
+    -fx-padding:10;
 }
 
 .market-price-box > .jfx-combo-box > .input-line {
@@ -388,7 +419,7 @@ bg color of non edit textFields: fafafa
 /* Splash */
 
 #splash {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 /* Main UI */
@@ -442,7 +473,7 @@ bg color of non edit textFields: fafafa
 
 .nav-balance-display {
     -fx-alignment: center-left;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .nav-balance-label {
@@ -455,7 +486,7 @@ bg color of non edit textFields: fafafa
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 0.846em;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .market-price-box {
@@ -467,7 +498,7 @@ bg color of non edit textFields: fafafa
 .nav-market-price-label {
     -fx-font-size: 0.769em;
     -fx-alignment: top-left;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .text-field {
@@ -498,6 +529,12 @@ bg color of non edit textFields: fafafa
     -fx-underline: true;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
 .icon, icon:hover {
     -fx-cursor: hand;
 }
@@ -513,7 +550,7 @@ bg color of non edit textFields: fafafa
 }
 
 .copy-icon-disputes {
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .copy-icon:hover {
@@ -529,7 +566,7 @@ bg color of non edit textFields: fafafa
 }
 
 .version {
-    -fx-text-fill: black;
+    -fx-text-fill: -bs-rd-black;
     -fx-underline: false;
     -fx-cursor: null;
 }
@@ -540,6 +577,16 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.opaque-icon {
+    -fx-fill: -bs-rd-grey-light;
+    -fx-opacity: 1;
+}
+
+.opaque-icon-character {
+    -fx-font-size: 3em;
+    -fx-text-fill: -bs-rd-grey-light;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *
@@ -547,9 +594,9 @@ bg color of non edit textFields: fafafa
  ******************************************************************************/
 
 .tooltip {
-    -fx-background: -bs-white;
+    -fx-background: -bs-rd-white;
     -fx-text-fill: -bs-rd-black;
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
@@ -652,14 +699,14 @@ textfield */
 }
 
 .offer-table .table-row-cell {
-    -fx-border-color: -bs-white;
-    -fx-table-cell-border-color: -bs-white;
+    -fx-border-color: -bs-rd-white;
+    -fx-table-cell-border-color: -bs-rd-white;
 }
 
 .table-row-cell {
     -fx-border-width: 0 0 1 0;
     -fx-border-color: -bs-very-light-grey;
-    -fx-table-cell-border-color: -bs-white;
+    -fx-table-cell-border-color: -bs-rd-white;
 }
 
 .table-row-cell:selected {
@@ -669,12 +716,12 @@ textfield */
 
 .table-row-cell:empty {
     -fx-border-width: 0;
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
     -fx-table-cell-border-color: transparent;
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
-    -fx-fill: -bs-white;
+    -fx-fill: -bs-rd-white;
 }
 
 .table-view .table-row-cell:selected .button .text {
@@ -687,7 +734,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: -bs-white;
+    -fx-fill: -bs-rd-white;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
@@ -695,7 +742,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: -bs-white;
+    -fx-fill: -bs-rd-white;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -907,7 +954,7 @@ textfield */
 
 #input-description-label {
     -fx-font-size: 0.846em;
-    -fx-alignment: center;
+    -fx-alignment: center-left;
 }
 
 #create-offer-calc-label {
@@ -996,6 +1043,7 @@ textfield */
 #address-text-field {
     -fx-cursor: hand;
     -fx-text-fill: -fx-accent;
+    -fx-prompt-text-fill: -bs-rd-black;
 }
 
 #address-text-field:hover {
@@ -1183,23 +1231,23 @@ textfield */
 
 /* message-list-view*/
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #message-list-view.list-cell {
@@ -1235,7 +1283,7 @@ textfield */
 }
 
 .attachment-icon {
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
     -fx-cursor: hand;
 }
 
@@ -1289,15 +1337,15 @@ textfield */
 }
 
 #charts .chart-plot-background {
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 #charts .default-color0.chart-area-symbol {
-    -fx-background-color: -bs-sell, -bs-white;
+    -fx-background-color: -bs-sell, -bs-rd-white;
 }
 
 #charts .default-color1.chart-area-symbol {
-    -fx-background-color: -bs-buy, -bs-white;
+    -fx-background-color: -bs-buy, -bs-rd-white;
 }
 
 #charts .default-color0.chart-series-area-line {
@@ -1330,24 +1378,24 @@ textfield */
 #buy-button-big {
     -fx-font-size: 1.154em;
     -fx-background-color: -bs-buy;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 #buy-button {
     -fx-background-color: -bs-buy;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 
 #sell-button-big {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
     -fx-font-size: 1.154em;
 }
 
 #sell-button {
     -fx-background-color: -bs-sell;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .action-button:disabled, #sell-button:disabled, #buy-button:disabled {
@@ -1369,7 +1417,7 @@ textfield */
 #popup-bg {
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-font-dark;
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
     -fx-background-radius: 10 10 10 10;
     -fx-background-insets: 10;
     -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
@@ -1378,7 +1426,7 @@ textfield */
 #popup-bg-top {
     -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-font-dark;
-    -fx-background-color: -bs-white;
+    -fx-background-color: -bs-rd-white;
     -fx-background-radius: 0 0 10 10;
     -fx-background-insets: 10;
     -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
@@ -1433,7 +1481,7 @@ textfield */
 
 #price-feed-combo {
     -fx-background-color:none;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
     -fx-alignment: center;
 }
 
@@ -1449,7 +1497,7 @@ textfield */
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 0.769em;
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 #toggle-left {
@@ -1493,7 +1541,7 @@ textfield */
 }
 
 .my-message {
-    -fx-text-fill: -bs-white;
+    -fx-text-fill: -bs-rd-white;
 }
 
 .message-header {
@@ -1615,5 +1663,5 @@ textfield */
 
 #notification-erase-button {
     -fx-background-color: -bs-soft-red;
-    -fx-text-fill: #ffffff;
+    -fx-text-fill: -bs-rd-white;
 }

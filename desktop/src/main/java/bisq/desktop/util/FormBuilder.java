@@ -946,39 +946,37 @@ public class FormBuilder {
     // Label  + AddressTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelAddressTextField(gridPane, rowIndex, title, 0);
+    public static AddressTextField addAddressTextField(GridPane gridPane, int rowIndex, String title) {
+        return addAddressTextField(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
-        AddressTextField addressTextField = new AddressTextField();
+    public static AddressTextField addAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        AddressTextField addressTextField = new AddressTextField(title);
         GridPane.setRowIndex(addressTextField, rowIndex);
-        GridPane.setColumnIndex(addressTextField, 1);
-        GridPane.setMargin(addressTextField, new Insets(top, 0, 0, 0));
+        GridPane.setColumnIndex(addressTextField, 0);
+        GridPane.setMargin(addressTextField, new Insets(top + 20, 0, 0, 0));
         gridPane.getChildren().add(addressTextField);
 
-        return new Tuple2<>(label, addressTextField);
+        return addressTextField;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + FundsTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
-    public static Tuple2<Label, FundsTextField> addLabelFundsTextfield(GridPane gridPane, int rowIndex, String text) {
-        return addLabelFundsTextfield(gridPane, rowIndex, text, 0);
+    public static FundsTextField addFundsTextfield(GridPane gridPane, int rowIndex, String text) {
+        return addFundsTextfield(gridPane, rowIndex, text, 0);
     }
 
-    public static Tuple2<Label, FundsTextField> addLabelFundsTextfield(GridPane gridPane, int rowIndex, String text, double top) {
-        Label label = addLabel(gridPane, rowIndex, text, top);
+    public static FundsTextField addFundsTextfield(GridPane gridPane, int rowIndex, String text, double top) {
 
         FundsTextField fundsTextField = new FundsTextField();
+        fundsTextField.getTextField().setPromptText(text);
         GridPane.setRowIndex(fundsTextField, rowIndex);
-        GridPane.setColumnIndex(fundsTextField, 1);
-        GridPane.setMargin(fundsTextField, new Insets(top, 0, 0, 0));
+        GridPane.setColumnIndex(fundsTextField, 0);
+        GridPane.setMargin(fundsTextField, new Insets(top + 20, 0, 0, 0));
         gridPane.getChildren().add(fundsTextField);
 
-        return new Tuple2<>(label, fundsTextField);
+        return fundsTextField;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1030,15 +1028,15 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static Tuple2<Label, BalanceTextField> addLabelBalanceTextField(GridPane gridPane, int rowIndex, String title) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+    public static BalanceTextField addBalanceTextField(GridPane gridPane, int rowIndex, String title) {
 
-        BalanceTextField balanceTextField = new BalanceTextField();
+        BalanceTextField balanceTextField = new BalanceTextField(title);
         GridPane.setRowIndex(balanceTextField, rowIndex);
-        GridPane.setColumnIndex(balanceTextField, 1);
+        GridPane.setColumnIndex(balanceTextField, 0);
+        GridPane.setMargin(balanceTextField, new Insets(20, 0,0,0));
         gridPane.getChildren().add(balanceTextField);
 
-        return new Tuple2<>(label, balanceTextField);
+        return balanceTextField;
     }
 
 
@@ -1135,7 +1133,7 @@ public class FormBuilder {
         Button button2 = new AutoTooltipButton(title2);
         hBox.getChildren().addAll(button1, button2);
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setColumnIndex(hBox, 0);
         GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
         gridPane.getChildren().add(hBox);
         return new Tuple2<>(button1, button2);
@@ -1222,42 +1220,39 @@ public class FormBuilder {
     // Trade: HBox, InputTextField, Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<HBox, InputTextField, Label> getEditableValueCurrencyBox(String promptText) {
+    public static Tuple3<HBox, InputTextField, Label> getEditableValueBox(String promptText) {
         InputTextField input = new InputTextField();
-        input.setPrefWidth(170);
-        input.setAlignment(Pos.CENTER_RIGHT);
-        input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
-        currency.setId("currency-info-label");
+        Label label = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        label.getStyleClass().add("input-label");
 
         HBox box = new HBox();
-        box.getChildren().addAll(input, currency);
-        return new Tuple3<>(box, input, currency);
+        box.getStyleClass().add("input-with-border");
+        box.setMaxWidth(243);
+        box.getChildren().addAll(input, label);
+        return new Tuple3<>(box, input, label);
     }
 
-    public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueCurrencyBoxWithInfo(String promptText) {
+    public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueBoxWithInfo(String promptText) {
         InfoInputTextField infoInputTextField = new InfoInputTextField();
         InputTextField input = infoInputTextField.getInputTextField();
-        input.setPrefWidth(170);
-        input.setAlignment(Pos.CENTER_RIGHT);
-        input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
-        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
-        currency.setId("currency-info-label");
+        Label label = new AutoTooltipLabel(Res.getBaseCurrencyCode());
+        label.getStyleClass().add("input-label");
 
         HBox box = new HBox();
-        box.getChildren().addAll(infoInputTextField, currency);
-        return new Tuple3<>(box, infoInputTextField, currency);
+        box.getStyleClass().add("input-with-border");
+        box.setMaxWidth(243);
+        box.getChildren().addAll(infoInputTextField, label);
+        return new Tuple3<>(box, infoInputTextField, label);
     }
 
     public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
         TextField textField = new InputTextField();
         textField.setPrefWidth(190);
         textField.setAlignment(Pos.CENTER_RIGHT);
-        textField.setId("text-input-with-currency-text-field");
         textField.setMouseTransparent(true);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
@@ -1276,7 +1271,6 @@ public class FormBuilder {
         TextField textField = infoTextField.getTextField();
         textField.setPrefWidth(190);
         textField.setAlignment(Pos.CENTER_RIGHT);
-        textField.setId("text-input-with-currency-text-field");
         textField.setMouseTransparent(true);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
@@ -1293,7 +1287,6 @@ public class FormBuilder {
         InputTextField input = new InputTextField();
         input.setPrefWidth(190);
         input.setAlignment(Pos.CENTER_RIGHT);
-        input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
 
         Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());

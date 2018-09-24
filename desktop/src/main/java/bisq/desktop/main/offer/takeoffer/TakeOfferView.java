@@ -110,7 +110,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.addLabelFundsTextfield;
 import static bisq.desktop.util.FormBuilder.getAmountCurrencyBox;
 import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBox;
 import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBoxWithInfo;
@@ -129,7 +128,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
-    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
+    private Label directionLabel, amountDescriptionLabel,
             paymentAccountsLabel, paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
@@ -455,12 +454,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         waitingForFundsBusyAnimation.play();
 
         payFundsPane.setVisible(true);
-        totalToPayLabel.setVisible(true);
         totalToPayTextField.setVisible(true);
-        addressLabel.setVisible(true);
         addressTextField.setVisible(true);
         qrCodeImageView.setVisible(true);
-        balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
 
         totalToPayTextField.setFundsStructure(Res.get("takeOffer.fundsBox.fundsStructure",
@@ -823,11 +819,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
-        Tuple2<Label, FundsTextField> fundsTuple = addLabelFundsTextfield(gridPane, gridRow,
+        totalToPayTextField = FormBuilder.addFundsTextfield(gridPane, gridRow,
                 Res.get("shared.totalsNeeded"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        totalToPayLabel = fundsTuple.first;
-        totalToPayLabel.setVisible(false);
-        totalToPayTextField = fundsTuple.second;
         totalToPayTextField.setVisible(false);
 
         qrCodeImageView = new ImageView();
@@ -839,21 +832,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
-        GridPane.setColumnIndex(qrCodeImageView, 2);
+        GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setRowSpan(qrCodeImageView, 3);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = FormBuilder.addLabelAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
-        addressLabel = addressTuple.first;
-        addressLabel.setVisible(false);
-        addressTextField = addressTuple.second;
+        addressTextField = FormBuilder.addAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
         addressTextField.setVisible(false);
 
-        Tuple2<Label, BalanceTextField> balanceTuple = FormBuilder.addLabelBalanceTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletBalance"));
-        balanceLabel = balanceTuple.first;
-        balanceLabel.setVisible(false);
-        balanceTextField = balanceTuple.second;
+        balanceTextField = FormBuilder.addBalanceTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletBalance"));
         balanceTextField.setVisible(false);
 
         fundingHBox = new HBox();

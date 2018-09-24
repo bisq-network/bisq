@@ -55,7 +55,7 @@ import javafx.beans.property.SimpleObjectProperty;
 // consider replacement with controlsFX components.
 public class InputTextField extends JFXTextField {
 
-    private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
+    //private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
 
     private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
             (new InputValidator.ValidationResult(true));
@@ -93,7 +93,7 @@ public class InputTextField extends JFXTextField {
 
         validationResult.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                setEffect(newValue.isValid ? null : invalidEffect);
+                //setEffect(newValue.isValid ? null : invalidEffect);
 
                 if (newValue.isValid)
                     hideErrorMessageDisplay();

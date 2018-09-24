@@ -87,7 +87,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addLabelAddressTextField;
+import static bisq.desktop.util.FormBuilder.addAddressTextField;
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -104,7 +104,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private AddressTextField addressTextField;
     private Button generateNewAddressButton;
     private TitledGroupBg titledGroupBg;
-    private Label addressLabel, amountLabel;
+    private Label amountLabel;
     private InputTextField amountTextField;
 
     private final BtcWalletService walletService;
@@ -183,11 +183,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
-        addressLabel = addressTuple.first;
-        //GridPane.setValignment(addressLabel, VPos.TOP);
-        //GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
-        addressTextField = addressTuple.second;
+        addressTextField = addAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
         addressTextField.setPaymentLabel(paymentLabelString);
 
 
@@ -201,8 +197,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
         titledGroupBg.setManaged(false);
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setManaged(false);
-        addressLabel.setVisible(false);
-        addressLabel.setManaged(false);
         addressTextField.setVisible(false);
         addressTextField.setManaged(false);
         amountLabel.setVisible(false);
@@ -273,8 +267,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
         titledGroupBg.setManaged(true);
         qrCodeImageView.setVisible(true);
         qrCodeImageView.setManaged(true);
-        addressLabel.setVisible(true);
-        addressLabel.setManaged(true);
         addressTextField.setVisible(true);
         addressTextField.setManaged(true);
         amountLabel.setVisible(true);
