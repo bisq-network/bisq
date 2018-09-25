@@ -140,7 +140,7 @@ dependencyVerification {
         'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
         'javax.inject:javax.inject:91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff',
         'aopalliance:aopalliance:0addec670fedcd3f113c5c8091d783280d23f75e3acb841b61a9cdb079376a08',
-        'com.github.bisq-network.bitcoinj:bitcoinj-core:250ece0ab3ef02b6829d9dbc0ec94501f7e707439d0b0777c6635557ceda766e',
+        'com.github.bisq-network.bitcoinj:bitcoinj-core:15e0f4304dd92259c4e9ff0114cbeab7a79abb51a5817b422ce629d3a0a2d551',
         'com.lambdaworks:scrypt:9a82d218099fb14c10c0e86e7eefeebd8c104de920acdc47b8b4b7a686fb73b4',
         'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
         'com.cedricwalter:tor-binary-geoip:7fc7b5ebf80d65ec53d97dd8d3878b8d2c85dc04f3943e5e85e7ba641655492b',
