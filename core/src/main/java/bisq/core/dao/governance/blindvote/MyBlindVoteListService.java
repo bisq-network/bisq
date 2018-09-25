@@ -271,10 +271,11 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
     // blindVoteTxId is null if we use the method from the getCurrentlyAvailableMerit call.
     public MeritList getMerits(@Nullable String blindVoteTxId) {
-        // Create a lookup set for txIds of own comp. requests
+        // Create a lookup set for txIds of own comp. requests from past cycles (we ignore request form that cycle)
         Set<String> myCompensationProposalTxIs = myProposalListService.getList().stream()
                 .filter(proposal -> proposal instanceof CompensationProposal)
                 .map(Proposal::getTxId)
+                .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
         return new MeritList(bsqStateService.getIssuanceSet().stream()
