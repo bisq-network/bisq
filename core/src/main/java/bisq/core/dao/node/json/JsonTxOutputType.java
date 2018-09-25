@@ -20,24 +20,28 @@ package bisq.core.dao.node.json;
 import lombok.Getter;
 
 // Need to be in sync with TxOutputType
-public enum JsonTxType {
-    UNDEFINED_TX_TYPE("Undefined"),
-    UNVERIFIED("Unverified"),
-    INVALID("Invalid"),
-    GENESIS("Genesis"),
-    TRANSFER_BSQ("Transfer BSQ"),
-    PAY_TRADE_FEE("Pay trade fee"),
-    PROPOSAL("Proposal"),
-    COMPENSATION_REQUEST("Compensation request"),
-    BLIND_VOTE("Blind vote"),
-    VOTE_REVEAL("Vote reveal"),
+public enum JsonTxOutputType {
+    UNDEFINED("Undefined"),
+    GENESIS_OUTPUT("Genesis"),
+    BSQ_OUTPUT("BSQ"),
+    BTC_OUTPUT("BTC"),
+    PROPOSAL_OP_RETURN_OUTPUT("Proposal opReturn"),
+    COMP_REQ_OP_RETURN_OUTPUT("Compensation request opReturn"),
+    CONFISCATE_BOND_OP_RETURN_OUTPUT("Confiscate bond opReturn"),
+    ISSUANCE_CANDIDATE_OUTPUT("Issuance candidate"),
+    BLIND_VOTE_LOCK_STAKE_OUTPUT("Blind vote lock stake"),
+    BLIND_VOTE_OP_RETURN_OUTPUT("Blind vote opReturn"),
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT("Vote reveal unlock stake"),
+    VOTE_REVEAL_OP_RETURN_OUTPUT("Vote reveal opReturn"),
     LOCKUP("Lockup"),
-    UNLOCK("Unlock");
+    LOCKUP_OP_RETURN_OUTPUT("Lockup opReturn"),
+    UNLOCK("Unlock"),
+    INVALID_OUTPUT("Invalid");
 
     @Getter
     private String displayString;
 
-    JsonTxType(String displayString) {
+    JsonTxOutputType(String displayString) {
         this.displayString = displayString;
     }
 }

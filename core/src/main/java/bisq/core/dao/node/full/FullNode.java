@@ -19,7 +19,7 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.JsonBlockChainExporter;
+import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.BsqStateService;
@@ -49,7 +49,7 @@ public class FullNode extends BsqNode {
 
     private final RpcService rpcService;
     private final FullNodeNetworkService fullNodeNetworkService;
-    private final JsonBlockChainExporter jsonBlockChainExporter;
+    private final ExportJsonFilesService exportJsonFilesService;
     private boolean addBlockHandlerAdded;
 
 
@@ -64,12 +64,12 @@ public class FullNode extends BsqNode {
                     SnapshotManager snapshotManager,
                     P2PService p2PService,
                     RpcService rpcService,
-                    JsonBlockChainExporter jsonBlockChainExporter,
+                    ExportJsonFilesService exportJsonFilesService,
                     FullNodeNetworkService fullNodeNetworkService) {
         super(blockParser, bsqStateService, snapshotManager, p2PService);
         this.rpcService = rpcService;
 
-        this.jsonBlockChainExporter = jsonBlockChainExporter;
+        this.exportJsonFilesService = exportJsonFilesService;
         this.fullNodeNetworkService = fullNodeNetworkService;
     }
 
@@ -88,7 +88,7 @@ public class FullNode extends BsqNode {
     }
 
     public void shutDown() {
-        jsonBlockChainExporter.shutDown();
+        exportJsonFilesService.shutDown();
         fullNodeNetworkService.shutDown();
     }
 
@@ -147,7 +147,7 @@ public class FullNode extends BsqNode {
     }
 
     private void onNewBlock(Block block) {
-        jsonBlockChainExporter.maybeExport();
+        exportJsonFilesService.exportToJson();
 
         if (p2pNetworkReady && parseBlockchainComplete)
             fullNodeNetworkService.publishNewBlock(block);

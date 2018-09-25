@@ -23,9 +23,8 @@ import java.util.List;
 
 import lombok.Value;
 
-//TODO sync up with data model
 @Value
-public class JsonTx {
+class JsonTx {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String id;
     private final int blockHeight;
@@ -36,4 +35,6 @@ public class JsonTx {
     private final JsonTxType txType;
     private final String txTypeDisplayString;
     private final long burntFee;
+    // If not set it is -1. LockTime of 0 is a valid value.
+    private final int unlockBlockHeight;
 }

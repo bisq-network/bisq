@@ -120,10 +120,6 @@ public class BsqStateService implements DaoSetupService {
         return bsqState.getClone();
     }
 
-    public LinkedList<Block> getBlocksFromState(BsqState bsqState) {
-        return new LinkedList<>(bsqState.getBlocks());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ChainHeight
