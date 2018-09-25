@@ -22,6 +22,7 @@ import bisq.core.dao.state.governance.Issuance;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -62,5 +63,13 @@ public class Merit implements PersistablePayload, NetworkPayload, ConsensusCriti
 
     public String getIssuanceTxId() {
         return issuance.getTxId();
+    }
+
+    @Override
+    public String toString() {
+        return "Merit{" +
+                "\n     issuance=" + issuance +
+                ",\n     signature=" + Utilities.bytesAsHexString(signature) +
+                "\n}";
     }
 }

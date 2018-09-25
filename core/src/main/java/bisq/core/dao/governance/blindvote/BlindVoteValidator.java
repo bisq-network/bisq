@@ -89,6 +89,11 @@ public class BlindVoteValidator {
     public boolean isTxInPhaseAndCycle(BlindVote blindVote) {
         String txId = blindVote.getTxId();
         Optional<Tx> optionalTx = bsqStateService.getTx(txId);
+        if (!optionalTx.isPresent()) {
+            log.warn("Tx is not in bsqStateService. blindVoteTxId={}", txId);
+            return false;
+        }
+
         int txHeight = optionalTx.get().getBlockHeight();
         if (!periodService.isTxInCorrectCycle(txHeight, bsqStateService.getChainHeight())) {
             log.debug("Tx is not in current cycle. blindVote={}", blindVote);
