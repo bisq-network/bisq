@@ -28,7 +28,7 @@ public class EvaluatedProposal {
     private final long requiredQuorum;
     private final long requiredThreshold;
 
-    public EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult, long requiredQuorum, long requiredThreshold) {
+    EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult, long requiredQuorum, long requiredThreshold) {
         this.isAccepted = isAccepted;
         this.proposalVoteResult = proposalVoteResult;
         this.requiredQuorum = requiredQuorum;
