@@ -190,7 +190,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork());
+                return baseCurrencyNetwork != null ?
+                        (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork())
+                        : "";
             }
 
             @Override
