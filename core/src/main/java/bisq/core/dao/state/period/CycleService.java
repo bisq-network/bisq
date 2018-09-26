@@ -17,16 +17,14 @@
 
 package bisq.core.dao.state.period;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.Param;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import com.google.common.collect.ImmutableList;
 
@@ -51,9 +49,9 @@ public class CycleService implements BsqStateListener, DaoSetupService {
 
     @Inject
     public CycleService(BsqStateService bsqStateService,
-                        @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
+                        GenesisTxInfo genesisTxInfo) {
         this.bsqStateService = bsqStateService;
-        this.genesisBlockHeight = genesisBlockHeight;
+        this.genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
     }
 
 
