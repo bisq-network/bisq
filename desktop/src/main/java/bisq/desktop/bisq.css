@@ -540,6 +540,7 @@ bg color of non edit textFields: fafafa
 
 .hidden-icon-button {
     -fx-background-color: transparent;
+    -fx-padding: 0;
     -fx-cursor: hand;
 }
 
