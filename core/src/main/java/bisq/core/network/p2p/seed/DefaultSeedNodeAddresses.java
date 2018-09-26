@@ -80,7 +80,7 @@ class DefaultSeedNodeAddresses {
 
             // BTC testnet
             new NodeAddress("nbphlanpgbei4okt.onion:8001"), // 88.99.216.98
-            new NodeAddress("svw3ehvh5jrq4xgg.onion:8001"), // explorer node
+            new NodeAddress("o5qw2hy6l7jsf654.onion:8001"), // explorer node
             new NodeAddress("vjkh4ykq7x5skdlt.onion:8001"), // local dev test
 
             // BTC regtest
