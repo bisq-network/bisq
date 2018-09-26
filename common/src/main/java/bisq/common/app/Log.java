@@ -88,6 +88,10 @@ public class Log {
         logbackLogger.addAppender(errorAppender);*/
     }
 
+    public static void setCustomLogLevel(String pattern, Level logLevel) {
+        ((Logger) LoggerFactory.getLogger(pattern)).setLevel(logLevel);
+    }
+
     public static void traceCall() {
         if (LoggerFactory.getLogger(Log.class).isTraceEnabled()) {
             StackTraceElement stackTraceElement = new Throwable().getStackTrace()[1];
