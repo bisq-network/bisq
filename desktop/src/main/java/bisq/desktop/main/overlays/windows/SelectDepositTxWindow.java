@@ -68,10 +68,9 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         if (headLine == null)
             headLine = Res.get("selectDepositTxWindow.headline");
 
-        width = 700;
+        width = 768;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

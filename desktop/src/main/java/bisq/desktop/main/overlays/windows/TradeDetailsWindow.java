@@ -84,7 +84,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         this.trade = trade;
 
         rowIndex = -1;
-        width = 850;
+        width = 918;
         createGridPane();
         addContent();
         display();

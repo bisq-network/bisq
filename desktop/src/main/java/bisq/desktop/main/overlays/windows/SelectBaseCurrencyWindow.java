@@ -66,10 +66,9 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         if (headLine == null)
             headLine = Res.get("selectBaseCurrencyWindow.headline");
 
-        width = 700;
+        width = 768;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

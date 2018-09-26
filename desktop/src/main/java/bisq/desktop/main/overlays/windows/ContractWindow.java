@@ -78,7 +78,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1100;
+        width = 1168;
         createGridPane();
         addContent();
         display();

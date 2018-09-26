@@ -40,7 +40,7 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
         this.bondedRoleType = bondedRoleType;
         this.bsqFormatter = bsqFormatter;
 
-        width = 900;
+        width = 968;
         type = Type.Confirmation;
 
     }
@@ -55,7 +55,6 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

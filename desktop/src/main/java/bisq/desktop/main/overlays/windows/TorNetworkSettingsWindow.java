@@ -127,7 +127,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             if (headLine == null)
                 headLine = Res.get("torNetworkSettingWindow.header");
 
-            width = 1000;
+            width = 1068;
             createGridPane();
             addContent();
             addCloseButton();

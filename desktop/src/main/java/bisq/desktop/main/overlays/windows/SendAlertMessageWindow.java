@@ -74,10 +74,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         if (headLine == null)
             headLine = Res.get("sendAlertMessageWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();

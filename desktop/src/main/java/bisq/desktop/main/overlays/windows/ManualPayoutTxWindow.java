@@ -73,10 +73,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         if (headLine == null)
             headLine = "Emergency MultiSig payout tool"; // We dont translate here as it is for dev only purpose
 
-        width = 1000;
+        width = 1068;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

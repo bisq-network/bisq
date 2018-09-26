@@ -121,7 +121,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1050;
+        width = 1118;
         createGridPane();
         addContent();
         display();

@@ -82,10 +82,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();

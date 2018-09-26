@@ -39,7 +39,6 @@ bg color of non edit textFields: fafafa
     -bs-bg-grey: #dddddd; /* 25 usages */
     -bs-bg-grey2: #bbb; /* 1 usages */
     -bs-bg-grey3: #d3d3d3; /* 1 usages */
-    -bs-dark-grey: #999; /* 8 usages */
     -bs-light-grey: #cccccc; /* derive(-bs-rd-white, -20%); 13 usages */
     -bs-content-bg-grey: #f4f4f4; /* 14 usages */
     -bs-very-light-grey: #f8f8f8; /* 10 usages */
@@ -102,6 +101,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-background-dark: #0E0E0E;
     -bs-rd-black: #000000; /* 13 usages */
+    -bs-rd-black-transparent-dark: rgba(0, 0, 0, 0.54);
     -bs-rd-black-transparent: rgba(0, 0, 0, 0.2);
     -bs-rd-grey-line: #979797;
     -bs-rd-separator: #DBDBDB;
@@ -1409,74 +1409,63 @@ textfield */
  *                                                                                                                  *
  ********************************************************************************************************************/
 
-#popup-headline {
-    -fx-font-size: 1.231em;
+.popup-headline {
+    -fx-font-size: 1.538em;
     -fx-text-fill: -bs-rd-font-dark;
 }
 
-#popup-bg {
-    -fx-font-size: 1.077em;
-    -fx-text-fill: -bs-rd-font-dark;
-    -fx-background-color: -bs-rd-white;
-    -fx-background-radius: 10 10 10 10;
-    -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+.popup-headline-information {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-green;
 }
 
-#popup-bg-top {
-    -fx-font-size: 1.077em;
-    -fx-text-fill: -bs-rd-font-dark;
-    -fx-background-color: -bs-rd-white;
-    -fx-background-radius: 0 0 10 10;
-    -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
-}
-
-#popup-grid-pane-bg {
-    -fx-font-size: 1.077em;
-    -fx-text-fill: #333;
-    -fx-background-color: -bs-content-bg-grey;
-    -fx-background-radius: 10 10 10 10;
-    -fx-background-insets: 10;
-    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
-}
-
-#notification-popup-headline {
-    -fx-font-size: 1em;
-    -fx-font-weight: bold;
-    -fx-text-fill: -bs-rd-font-dark;
-}
-
-#notification-popup-bg {
-    -fx-font-size: 0.846em;
-    -fx-text-fill: -bs-very-dark-grey;
-    -fx-background-color: linear-gradient(to bottom, -bs-bg-grey9, -bs-bg-grey10);
-    -fx-background-radius: 5 5 5 5;
-    -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
-}
-
-#peer-info-popup-bg {
-    -fx-font-size: 0.846em;
-    -fx-text-fill: -bs-very-dark-grey;
-    -fx-background-color: linear-gradient(to bottom, -bs-bg-light, -bs-bg-grey11);
-    -fx-background-radius: 3 3 3 3;
-    -fx-background-insets: 5 5 20 20;
-    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
-}
-
-#peer-info-popup-headline {
-    -fx-font-size: 1em;
-    -fx-font-weight: bold;
-    -fx-text-fill: -bs-rd-font-dark;
+.popup-headline-warning {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-error-red;
 }
 
 .popup-icon-information {
-    -fx-text-fill: -bs-bg-grey;
+    -fx-text-fill: -bs-rd-green;
 }
 
 .popup-icon-warning {
-    -fx-text-fill: -bs-orange2;
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.popup-bg, .notification-popup-bg, .peer-info-popup-bg {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-rd-white;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent-dark, 44, 0, 0, 0);
+}
+
+.popup-bg-top {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-rd-white;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent-dark, 44, 0, 0, 0);
+}
+
+.notification-popup-headline, peer-info-popup-headline {
+    -fx-font-size: 1.077em;
+    /*-fx-font-weight: bold;*/
+    -fx-text-fill: -bs-rd-green;
+}
+
+.notification-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent-dark, 44, 0, -1, 3);
+}
+
+.peer-info-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent-dark, 44, 0, -1, 3);
 }
 
 #price-feed-combo {

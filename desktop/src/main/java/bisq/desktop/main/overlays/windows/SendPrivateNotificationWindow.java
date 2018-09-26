@@ -84,10 +84,9 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         if (headLine == null)
             headLine = Res.get("sendPrivateNotificationWindow.headline");
 
-        width = 800;
+        width = 868;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();

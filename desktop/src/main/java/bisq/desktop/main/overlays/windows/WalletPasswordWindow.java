@@ -120,7 +120,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         this.walletsManager = walletsManager;
         this.storageDir = storageDir;
         type = Type.Attention;
-        width = 800;
+        width = 868;
     }
 
 
@@ -140,7 +140,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addInputFields();
         addButtons();
         applyStyles();

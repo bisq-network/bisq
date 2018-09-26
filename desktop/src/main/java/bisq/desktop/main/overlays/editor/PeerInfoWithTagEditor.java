@@ -89,7 +89,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         this.offer = offer;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        width = 400;
+        width = 468;
         type = Type.Undefined;
         if (INSTANCE != null)
             INSTANCE.hide();
@@ -119,7 +119,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     public PeerInfoWithTagEditor numTrades(int numTrades) {
         this.numTrades = numTrades;
         if (numTrades == 0)
-            width = 500;
+            width = 568;
         return this;
     }
 
@@ -303,9 +303,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void applyStyles() {
-        gridPane.setId("peer-info-popup-bg");
+        gridPane.getStyleClass().add("peer-info-popup-bg");
         if (headLineLabel != null)
-            headLineLabel.setId("peer-info-popup-headline");
+            headLineLabel.getStyleClass().add("peer-info-popup-headline");
     }
 
     @Override

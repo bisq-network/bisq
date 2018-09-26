@@ -1391,6 +1391,11 @@ public class FormBuilder {
         return label;
     }
 
+    public static Label getIconForLabel(AwesomeIcon icon, Label label, String fontSize) {
+        AwesomeDude.setIcon(label, icon, fontSize);
+        return label;
+    }
+
     public static Button getIconButton(GlyphIcons icon) {
         return getIconButton(icon, "highlight");
     }

@@ -100,7 +100,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.tradePrice = tradePrice;
 
         rowIndex = -1;
-        width = 1050;
+        width = 1118;
         createGridPane();
         addContent();
         display();
@@ -109,7 +109,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     public void show(Offer offer) {
         this.offer = offer;
         rowIndex = -1;
-        width = 1050;
+        width = 1118;
         createGridPane();
         addContent();
         display();

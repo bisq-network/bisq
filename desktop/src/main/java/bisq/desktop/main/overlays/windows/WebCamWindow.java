@@ -58,7 +58,6 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -35,6 +36,8 @@ import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.StringUtils;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -51,7 +54,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -63,7 +65,6 @@ import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 
 import javafx.beans.value.ChangeListener;
 
@@ -130,9 +131,10 @@ public abstract class Overlay<T extends Overlay> {
         }
     }
 
-    protected final static double DEFAULT_WIDTH = 600;
+    protected final static double DEFAULT_WIDTH = 668;
     protected int rowIndex = -1;
     protected String headLine;
+    protected Label headlineIcon;
     protected String message;
     protected String closeButtonText;
     protected String actionButtonText;
@@ -172,7 +174,6 @@ public abstract class Overlay<T extends Overlay> {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             addHeadLine();
-            addSeparator();
 
             if (showBusyAnimation)
                 addBusyAnimation();
@@ -447,7 +448,7 @@ public abstract class Overlay<T extends Overlay> {
         gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
-        gridPane.setPadding(new Insets(30, 30, 30, 30));
+        gridPane.setPadding(new Insets(64, 64, 64, 64));
         gridPane.setPrefWidth(width);
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
@@ -539,7 +540,7 @@ public abstract class Overlay<T extends Overlay> {
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
                     new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), -10, interpolator)
+                    new KeyValue(gridPane.translateYProperty(), -50, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
@@ -687,13 +688,41 @@ public abstract class Overlay<T extends Overlay> {
 
 
     protected void applyStyles() {
-        if (type.animationType == AnimationType.SlideDownFromCenterTop)
-            gridPane.setId("popup-bg-top");
-        else
-            gridPane.setId("popup-bg");
+        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+            gridPane.getStyleClass().add("popup-bg-top");
+        } else {
+            gridPane.getStyleClass().add("popup-bg");
+        }
 
-        if (headLineLabel != null)
-            headLineLabel.setId("popup-headline");
+
+        if (headLineLabel != null) {
+
+            switch (type) {
+                case Information:
+                case BackgroundInfo:
+                case Instruction:
+                case Confirmation:
+                case Feedback:
+                case Notification:
+                    headLineLabel.getStyleClass().add("popup-headline-information");
+                    headlineIcon.getStyleClass().add("popup-icon-information");
+                    headlineIcon.setManaged(true);
+                    headlineIcon.setVisible(true);
+                    FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
+                    break;
+                case Attention:
+                case Warning:
+                case Error:
+                    headLineLabel.getStyleClass().add("popup-headline-warning");
+                    headlineIcon.getStyleClass().add("popup-icon-warning");
+                    headlineIcon.setManaged(true);
+                    headlineIcon.setVisible(true);
+                    FormBuilder.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
+                    break;
+                default:
+                    headLineLabel.getStyleClass().add("popup-headline");
+            }
+        }
     }
 
     protected void setModality() {
@@ -709,30 +738,24 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
+            HBox hBox = new HBox();
+            hBox.setSpacing(7);
             headLineLabel = new AutoTooltipLabel(headLine);
+            headlineIcon = new Label();
+            headlineIcon.setManaged(false);
+            headlineIcon.setVisible(false);
+            headlineIcon.setPadding(new Insets(3));
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
                 headLineLabel.setStyle(headlineStyle);
 
-            GridPane.setHalignment(headLineLabel, HPos.LEFT);
-            GridPane.setRowIndex(headLineLabel, rowIndex);
-            GridPane.setColumnSpan(headLineLabel, 2);
-            gridPane.getChildren().addAll(headLineLabel);
-        }
-    }
+            hBox.getChildren().addAll(headlineIcon, headLineLabel);
 
-    protected void addSeparator() {
-        if (headLine != null) {
-            Separator separator = new Separator();
-            separator.setMouseTransparent(true);
-            separator.setOrientation(Orientation.HORIZONTAL);
-            separator.getStyleClass().add("separator");
-            GridPane.setHalignment(separator, HPos.CENTER);
-            GridPane.setRowIndex(separator, ++rowIndex);
-            GridPane.setColumnSpan(separator, 2);
-
-            gridPane.getChildren().add(separator);
+            GridPane.setHalignment(hBox, HPos.LEFT);
+            GridPane.setRowIndex(hBox, rowIndex);
+            GridPane.setColumnSpan(hBox, 2);
+            gridPane.getChildren().addAll(hBox);
         }
     }
 

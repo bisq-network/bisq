@@ -90,10 +90,9 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         if (headLine == null)
             headLine = Res.get("feeOptionWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         addDontShowAgainCheckBox();

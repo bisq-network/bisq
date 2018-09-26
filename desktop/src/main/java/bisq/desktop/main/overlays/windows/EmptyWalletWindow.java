@@ -110,10 +110,9 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         if (headLine == null)
             headLine = Res.get("emptyWalletWindow.headline", getCurrency());
 
-        width = 700;
+        width = 768;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();
