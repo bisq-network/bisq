@@ -19,12 +19,6 @@ package bisq.core.locale;
 
 import bisq.core.app.BisqEnvironment;
 
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-import bisq.asset.Token;
-import bisq.asset.coins.BSQ;
-
 import bisq.common.app.DevEnv;
 
 import java.util.ArrayList;
@@ -39,6 +33,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+
+
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
+import bisq.asset.Token;
+import bisq.asset.coins.BSQ;
 
 @Slf4j
 public class CurrencyUtil {
@@ -106,14 +108,13 @@ public class CurrencyUtil {
     private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         List<CryptoCurrency> result = assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
-                .filter(CurrencyUtil::excludeBsqUnlessDaoTradingIsActive)
+                .filter(CurrencyUtil::isNotBsqOrBsqTradingActivated)
                 .filter(CurrencyUtil::assetMatchesNetwork)
                 .map(CurrencyUtil::assetToCryptoCurrency)
                 .sorted(TradeCurrency::compareTo)
                 .collect(Collectors.toList());
 
         // Util for printing all altcoins for adding to FAQ page
-
        /* StringBuilder sb = new StringBuilder();
         result.stream().forEach(e -> sb.append("<li>&#8220;")
                 .append(e.getCode())
@@ -369,17 +370,18 @@ public class CurrencyUtil {
         return !asset.getTickerSymbol().equals(baseCurrencyCode);
     }
 
+    // TODO We handle assets of other types (Token, ERC20) as matching the network which is not correct.
+    // We should add support for network property in those tokens as well.
     private static boolean assetMatchesNetwork(Asset asset) {
         return !(asset instanceof Coin) ||
-                ((Coin) asset).getNetwork().name().equals(BisqEnvironment.getDefaultBaseCurrencyNetwork().getNetwork());
+                ((Coin) asset).getNetwork().name().equals(BisqEnvironment.getBaseCurrencyNetwork().getNetwork());
     }
 
     private static CryptoCurrency assetToCryptoCurrency(Asset asset) {
         return new CryptoCurrency(asset.getTickerSymbol(), asset.getName(), asset instanceof Token);
     }
 
-    private static boolean excludeBsqUnlessDaoTradingIsActive(Asset asset) {
-        return (!(asset instanceof BSQ) || (DevEnv.isDaoTradingActivated()
-                && ((BSQ) asset).getNetwork().name().equals(BisqEnvironment.getBaseCurrencyNetwork().getNetwork())));
+    private static boolean isNotBsqOrBsqTradingActivated(Asset asset) {
+        return !(asset instanceof BSQ) || DevEnv.isDaoTradingActivated() && assetMatchesNetwork(asset);
     }
 }
