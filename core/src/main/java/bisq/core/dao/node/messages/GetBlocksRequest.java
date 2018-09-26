@@ -75,4 +75,13 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
                 Capabilities.Capability.DAO_FULL_NODE.ordinal()
         ));
     }
+
+
+    @Override
+    public String toString() {
+        return "GetBlocksRequest{" +
+                "\n     fromBlockHeight=" + fromBlockHeight +
+                ",\n     nonce=" + nonce +
+                "\n} " + super.toString();
+    }
 }

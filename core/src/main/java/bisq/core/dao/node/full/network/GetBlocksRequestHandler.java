@@ -95,7 +95,8 @@ class GetBlocksRequestHandler {
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         final GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
         log.debug("getBlocksResponse " + getBlocksResponse.getRequestNonce());
-
+        log.info("Received getBlocksResponse from {} for blocks from height {}",
+                connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight());
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                         String errorMessage = "A timeout occurred for getBlocksResponse:" + getBlocksResponse +
@@ -110,7 +111,7 @@ class GetBlocksRequestHandler {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
-                    log.trace("Send DataResponse to {} succeeded. getBlocksResponse={}",
+                    log.info("Send DataResponse to {} succeeded. getBlocksResponse={}",
                             connection.getPeersNodeAddressOptional(), getBlocksResponse);
                     cleanup();
                     listener.onComplete();

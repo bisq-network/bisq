@@ -157,10 +157,10 @@ public class DaoModule extends AppModule {
         bind(IssuanceService.class).in(Singleton.class);
 
         // Genesis
-        String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, null);
+        String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, "");
         bind(String.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TX_ID)).toInstance(genesisTxId);
 
-        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, 0);
+        Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, -1);
         bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
 
         // Bonds

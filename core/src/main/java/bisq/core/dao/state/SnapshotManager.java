@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class SnapshotManager implements BsqStateListener {
-    private static final int SNAPSHOT_GRID = 11000;
+    private static final int SNAPSHOT_GRID = 110000000;
 
     private final BsqState bsqState;
     private final BsqStateService bsqStateService;
