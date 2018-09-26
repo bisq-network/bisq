@@ -43,6 +43,7 @@ public class SnapshotManager implements BsqStateListener {
 
     private final BsqState bsqState;
     private final BsqStateService bsqStateService;
+    private final GenesisTxInfo genesisTxInfo;
     private final Storage<BsqState> storage;
 
     private BsqState snapshotCandidate;
@@ -51,9 +52,11 @@ public class SnapshotManager implements BsqStateListener {
     public SnapshotManager(BsqState bsqState,
                            BsqStateService bsqStateService,
                            PersistenceProtoResolver persistenceProtoResolver,
+                           GenesisTxInfo genesisTxInfo,
                            @Named(Storage.STORAGE_DIR) File storageDir) {
         this.bsqState = bsqState;
         this.bsqStateService = bsqStateService;
+        this.genesisTxInfo = genesisTxInfo;
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
         this.bsqStateService.addBsqStateListener(this);
@@ -78,7 +81,8 @@ public class SnapshotManager implements BsqStateListener {
             if (snapshotCandidate != null) {
                 // We clone because storage is in a threaded context
                 final BsqState cloned = bsqState.getClone(snapshotCandidate);
-                storage.queueUpForSave(cloned);
+                if (cloned.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
+                    storage.queueUpForSave(cloned);
                 log.info("Saved snapshotCandidate to Disc at height " + chainHeadHeight);
             }
             // Now we clone and keep it in memory for the next trigger
@@ -102,7 +106,8 @@ public class SnapshotManager implements BsqStateListener {
         BsqState persisted = storage.initAndGetPersisted(bsqState, 100);
         if (persisted != null) {
             log.info("applySnapshot persisted.chainHeadHeight=" + bsqStateService.getBlocksFromState(persisted).getLast().getHeight());
-            bsqStateService.applySnapshot(persisted);
+            if (persisted.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
+                bsqStateService.applySnapshot(persisted);
         } else {
             log.info("Try to apply snapshot but no stored snapshot available");
         }
