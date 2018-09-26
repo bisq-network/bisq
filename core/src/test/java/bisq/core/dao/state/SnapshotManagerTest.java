@@ -46,6 +46,7 @@ public class SnapshotManagerTest {
         snapshotManager = new SnapshotManager(mock(BsqState.class),
                 mock(BsqStateService.class),
                 mock(PersistenceProtoResolver.class),
+                mock(GenesisTxInfo.class),
                 mock(File.class));
     }
 
