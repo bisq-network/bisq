@@ -17,7 +17,6 @@
 
 package bisq.desktop.app;
 
-import bisq.desktop.SystemTray;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
