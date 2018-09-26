@@ -129,7 +129,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeChartsScreenCurrencyCode());
+        String tradeChartsScreenCurrencyCode = preferences.getTradeChartsScreenCurrencyCode();
+        showAllTradeCurrenciesProperty.set(isShowAllEntry(tradeChartsScreenCurrencyCode));
+
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(tradeChartsScreenCurrencyCode);
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else
@@ -186,8 +189,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 showAllTradeCurrenciesProperty.set(showAllEntry);
                 if (!showAllEntry) {
                     selectedTradeCurrencyProperty.set(tradeCurrency);
-                    preferences.setTradeChartsScreenCurrencyCode(code);
                 }
+                preferences.setTradeChartsScreenCurrencyCode(code);
 
                 updateChartData();
 
