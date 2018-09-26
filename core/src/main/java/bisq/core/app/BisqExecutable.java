@@ -18,6 +18,7 @@
 package bisq.core.app;
 
 import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
@@ -208,7 +209,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-        DevEnv.setDaoActivated(injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED))));
+
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
+        boolean isDaoActivatedOptionSet = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)));
+        DevEnv.setDaoActivated(isDaoActivatedOptionSet || isRegTestOrTestNet);
     }
 
     private void setCorruptedDataBaseFilesHandler() {
