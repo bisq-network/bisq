@@ -29,6 +29,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
 
+import java.util.LinkedList;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -105,7 +107,7 @@ public class SnapshotManager implements BsqStateListener {
         checkNotNull(storage, "storage must not be null");
         BsqState persisted = storage.initAndGetPersisted(bsqState, 100);
         if (persisted != null) {
-            log.info("applySnapshot persisted.chainHeadHeight=" + bsqStateService.getBlocksFromState(persisted).getLast().getHeight());
+            log.info("applySnapshot persisted.chainHeadHeight=" + new LinkedList<>(persisted.getBlocks()).getLast().getHeight());
             if (persisted.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
                 bsqStateService.applySnapshot(persisted);
         } else {

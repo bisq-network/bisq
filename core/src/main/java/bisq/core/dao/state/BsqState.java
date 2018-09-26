@@ -132,10 +132,10 @@ public class BsqState implements PersistableEnvelope {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBsqState(getStateBuilder()).build();
+        return PB.PersistableEnvelope.newBuilder().setBsqState(getBsqStateBuilder()).build();
     }
 
-    private PB.BsqState.Builder getStateBuilder() {
+    private PB.BsqState.Builder getBsqStateBuilder() {
         final PB.BsqState.Builder builder = PB.BsqState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllBlocks(blocks.stream().map(Block::toProtoMessage).collect(Collectors.toList()))
@@ -193,10 +193,10 @@ public class BsqState implements PersistableEnvelope {
     }
 
     BsqState getClone() {
-        return (BsqState) BsqState.fromProto(getStateBuilder().build());
+        return (BsqState) BsqState.fromProto(getBsqStateBuilder().build());
     }
 
     BsqState getClone(BsqState snapshotCandidate) {
-        return (BsqState) BsqState.fromProto(snapshotCandidate.getStateBuilder().build());
+        return (BsqState) BsqState.fromProto(snapshotCandidate.getBsqStateBuilder().build());
     }
 }

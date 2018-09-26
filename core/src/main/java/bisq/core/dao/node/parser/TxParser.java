@@ -264,10 +264,10 @@ public class TxParser {
     /**
      * Whether the BSQ fee and phase is valid for a transaction.
      *
-     * @param blockHeight  The height of the block that the transaction is in.
-     * @param bsqFee       The fee in BSQ, in satoshi.
-     * @param phase        The current phase of the DAO, e.g {@code DaoPhase.Phase.PROPOSAL}.
-     * @param param        The parameter for the fee, e.g {@code Param.PROPOSAL_FEE}.
+     * @param blockHeight The height of the block that the transaction is in.
+     * @param bsqFee      The fee in BSQ, in satoshi.
+     * @param phase       The current phase of the DAO, e.g {@code DaoPhase.Phase.PROPOSAL}.
+     * @param param       The parameter for the fee, e.g {@code Param.PROPOSAL_FEE}.
      * @return True if the fee and phase was valid, false otherwise.
      */
     private boolean isFeeAndPhaseValid(int blockHeight, long bsqFee, DaoPhase.Phase phase, Param param) {
@@ -296,10 +296,10 @@ public class TxParser {
     /**
      * Retrieve the type of the transaction, assuming it is relevant to bisq.
      *
-     * @param tx                    The temporary transaction.
-     * @param hasOpReturnCandidate  True if we have a candidate for an OP_RETURN.
-     * @param remainingInputValue   The remaining value of inputs not yet accounted for, in satoshi.
-     * @param optionalOpReturnType  If present, the OP_RETURN type of the transaction.
+     * @param tx                   The temporary transaction.
+     * @param hasOpReturnCandidate True if we have a candidate for an OP_RETURN.
+     * @param remainingInputValue  The remaining value of inputs not yet accounted for, in satoshi.
+     * @param optionalOpReturnType If present, the OP_RETURN type of the transaction.
      * @return The type of the transaction, if it is relevant to bisq.
      */
     @VisibleForTesting
@@ -399,10 +399,10 @@ public class TxParser {
     /**
      * Parse and return the genesis transaction for bisq, if applicable.
      *
-     * @param genesisTxId         The transaction id of the bisq genesis transaction.
-     * @param genesisBlockHeight  The block height of the bisq genesis transaction.
-     * @param genesisTotalSupply  The total supply of the genesis issuance for bisq.
-     * @param rawTx               The candidate transaction.
+     * @param genesisTxId        The transaction id of the bisq genesis transaction.
+     * @param genesisBlockHeight The block height of the bisq genesis transaction.
+     * @param genesisTotalSupply The total supply of the genesis issuance for bisq.
+     * @param rawTx              The candidate transaction.
      * @return The genesis transaction if applicable, or Optional.empty() otherwise.
      */
     public static Optional<TempTx> findGenesisTx(String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply,
