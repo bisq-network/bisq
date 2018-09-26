@@ -122,7 +122,7 @@ public class BlockParser {
     private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockNotConnectingException {
         LinkedList<Block> blocks = bsqStateService.getBlocks();
         if (!isBlockConnecting(rawBlock, blocks)) {
-            final Block last = blocks.getLast();
+            Block last = blocks.getLast();
             log.warn("addBlock called with a not connecting block. New block:\n" +
                             "height()={}, hash()={}, lastBlock.height()={}, lastBlock.hash()={}",
                     rawBlock.getHeight(),

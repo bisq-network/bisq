@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoOptionKeys;
 
 import org.bitcoinj.core.Coin;
@@ -45,8 +47,11 @@ public class GenesisTxInfo {
 
     public static final Coin GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5");
 
-    private static final String DEFAULT_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
-    private static final int DEFAULT_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
+    private static final String MAINNET_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
+    private static final int MAINNET_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
+
+    private static final String TESTNET_GENESIS_TX_ID = "7085539068b4fc27dfc6c39b0feae2adc7fe20f925e79ca0ba064725fe6c9991";
+    private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1414332; // 2018-09-25
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,14 +64,6 @@ public class GenesisTxInfo {
     private final String genesisTxId;
     @Getter
     private final int genesisBlockHeight;
-
-
-    //TODO not sure if we will use that
-  /*  private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
-
-    static int getIssuanceMaturity() {
-        return ISSUANCE_MATURITY;
-    }*/
 
     // mainnet
     // this tx has a lot of outputs
@@ -85,7 +82,6 @@ public class GenesisTxInfo {
     // private static final String DEFAULT_GENESIS_TX_ID = "--";
     // private static final int DEFAULT_GENESIS_BLOCK_HEIGHT = 499000; // recursive test 137298, 499000 dec 2017
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +89,27 @@ public class GenesisTxInfo {
     @Inject
     public GenesisTxInfo(@Nullable @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
                          @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
-        this.genesisTxId = genesisTxId != null ? genesisTxId : DEFAULT_GENESIS_TX_ID;
-        this.genesisBlockHeight = genesisBlockHeight != 0 ? genesisBlockHeight : DEFAULT_GENESIS_BLOCK_HEIGHT;
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        boolean isMainnet = baseCurrencyNetwork.isMainnet();
+        boolean isTestnet = baseCurrencyNetwork.isTestnet();
+        if (genesisTxId != null && !genesisTxId.isEmpty()) {
+            this.genesisTxId = genesisTxId;
+        } else if (isMainnet) {
+            this.genesisTxId = MAINNET_GENESIS_TX_ID;
+        } else if (isTestnet) {
+            this.genesisTxId = TESTNET_GENESIS_TX_ID;
+        } else {
+            this.genesisTxId = "genesisTxId is undefined";
+        }
+
+        if (genesisBlockHeight != 0) {
+            this.genesisBlockHeight = genesisBlockHeight;
+        } else if (isMainnet) {
+            this.genesisBlockHeight = MAINNET_GENESIS_BLOCK_HEIGHT;
+        } else if (isTestnet) {
+            this.genesisBlockHeight = TESTNET_GENESIS_BLOCK_HEIGHT;
+        } else {
+            this.genesisBlockHeight = 0;
+        }
     }
 }
