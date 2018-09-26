@@ -35,6 +35,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyMode;
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.filter.FilterManager;
@@ -219,6 +220,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // configure the primary stage
         String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
+        if (BisqEnvironment.getBaseCurrencyNetwork().isTestnet())
+            appName += " [TESTNET]";
+        else if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
+            appName += " [REGTEST]";
         stage.setTitle(appName);
         stage.setScene(scene);
         stage.setMinWidth(1020);
