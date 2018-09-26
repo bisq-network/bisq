@@ -18,6 +18,7 @@
 package bisq.core.locale;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
 
 import bisq.common.app.DevEnv;
 
@@ -33,6 +34,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 
 
@@ -108,8 +111,8 @@ public class CurrencyUtil {
     private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         List<CryptoCurrency> result = assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
-                .filter(CurrencyUtil::isNotBsqOrBsqTradingActivated)
-                .filter(CurrencyUtil::assetMatchesNetwork)
+                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
+                .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()))
                 .map(CurrencyUtil::assetToCryptoCurrency)
                 .sorted(TradeCurrency::compareTo)
                 .collect(Collectors.toList());
@@ -367,21 +370,71 @@ public class CurrencyUtil {
     }
 
     private static boolean assetIsNotBaseCurrency(Asset asset) {
-        return !asset.getTickerSymbol().equals(baseCurrencyCode);
+        return !assetMatchesCurrencyCode(asset, baseCurrencyCode);
     }
 
     // TODO We handle assets of other types (Token, ERC20) as matching the network which is not correct.
     // We should add support for network property in those tokens as well.
-    private static boolean assetMatchesNetwork(Asset asset) {
+    public static boolean assetMatchesNetwork(Asset asset, BaseCurrencyNetwork baseCurrencyNetwork) {
         return !(asset instanceof Coin) ||
-                ((Coin) asset).getNetwork().name().equals(BisqEnvironment.getBaseCurrencyNetwork().getNetwork());
+                ((Coin) asset).getNetwork().name().equals(baseCurrencyNetwork.getNetwork());
+    }
+
+    // We only check for coins not other types of assets (TODO network check should be supported for all assets)
+    public static boolean assetMatchesNetworkIfMainnet(Asset asset, BaseCurrencyNetwork baseCurrencyNetwork) {
+        return !(asset instanceof Coin) ||
+                coinMatchesNetworkIfMainnet((Coin) asset, baseCurrencyNetwork);
+    }
+
+    // We want all coins available also in testnet or regtest for testing purpose
+    public static boolean coinMatchesNetworkIfMainnet(Coin coin, BaseCurrencyNetwork baseCurrencyNetwork) {
+        boolean matchesNetwork = assetMatchesNetwork(coin, baseCurrencyNetwork);
+        return !baseCurrencyNetwork.isMainnet() ||
+                matchesNetwork;
     }
 
     private static CryptoCurrency assetToCryptoCurrency(Asset asset) {
         return new CryptoCurrency(asset.getTickerSymbol(), asset.getName(), asset instanceof Token);
     }
 
-    private static boolean isNotBsqOrBsqTradingActivated(Asset asset) {
-        return !(asset instanceof BSQ) || DevEnv.isDaoTradingActivated() && assetMatchesNetwork(asset);
+    private static boolean isNotBsqOrBsqTradingActivated(Asset asset, BaseCurrencyNetwork baseCurrencyNetwork, boolean daoTradingActivated) {
+        return !(asset instanceof BSQ) ||
+                daoTradingActivated && assetMatchesNetwork(asset, baseCurrencyNetwork);
+    }
+
+    public static boolean assetMatchesCurrencyCode(Asset asset, String currencyCode) {
+        return currencyCode.equals(asset.getTickerSymbol());
+    }
+
+    public static Optional<Asset> findAsset(AssetRegistry assetRegistry, String currencyCode,
+                                            BaseCurrencyNetwork baseCurrencyNetwork, boolean daoTradingActivated) {
+        List<Asset> assets = assetRegistry.stream()
+                .filter(asset -> assetMatchesCurrencyCode(asset, currencyCode)).collect(Collectors.toList());
+
+        // If we don't have the ticker symbol we throw an exception
+        if (!assets.stream().findFirst().isPresent())
+            return Optional.empty();
+
+        if (currencyCode.equals("BSQ") && baseCurrencyNetwork.isMainnet() && !daoTradingActivated)
+            return Optional.empty();
+
+        // We check for exact match with network, e.g. BTC$TESTNET
+        Optional<Asset> optionalAssetMatchesNetwork = assets.stream()
+                .filter(asset -> assetMatchesNetwork(asset, baseCurrencyNetwork))
+                .findFirst();
+        if (optionalAssetMatchesNetwork.isPresent())
+            return optionalAssetMatchesNetwork;
+
+        // In testnet or regtest we want to show all coins as well. Most coins have only Mainnet defined so we deliver
+        // that if no exact match was found in previous step
+        if (!baseCurrencyNetwork.isMainnet()) {
+            Optional<Asset> optionalAsset = assets.stream().findFirst();
+            checkArgument(optionalAsset.isPresent(), "optionalAsset must be present as we checked for " +
+                    "not matching ticker symbols already above");
+            return optionalAsset;
+        }
+
+        // If we are in mainnet we need have a mainet asset defined.
+        throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 }
