@@ -33,9 +33,10 @@ public class OfferMaker {
     public static final Property<Offer, OfferPayload.Direction> direction = new Property<>();
     public static final Property<Offer, Boolean> useMarketBasedPrice = new Property<>();
     public static final Property<Offer, Double> marketPriceMargin = new Property<>();
+    public static final Property<Offer, String> id = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
-            new OfferPayload("",
+            new OfferPayload(lookup.valueOf(id, "1234"),
                     0L,
                     null,
                     null,
