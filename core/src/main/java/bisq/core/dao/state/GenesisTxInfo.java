@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoOptionKeys;
 
 import org.bitcoinj.core.Coin;
@@ -93,7 +94,21 @@ public class GenesisTxInfo {
     @Inject
     public GenesisTxInfo(@Nullable @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
                          @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
-        this.genesisTxId = genesisTxId != null ? genesisTxId : DEFAULT_GENESIS_TX_ID;
-        this.genesisBlockHeight = genesisBlockHeight != 0 ? genesisBlockHeight : DEFAULT_GENESIS_BLOCK_HEIGHT;
+        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        if (genesisTxId != null && !genesisTxId.isEmpty()) {
+            this.genesisTxId = genesisTxId;
+        } else if (isMainnet) {
+            this.genesisTxId = DEFAULT_GENESIS_TX_ID;
+        } else {
+            this.genesisTxId = "genesisTxId is undefined";
+        }
+
+        if (genesisBlockHeight != 0) {
+            this.genesisBlockHeight = genesisBlockHeight;
+        } else if (isMainnet) {
+            this.genesisBlockHeight = DEFAULT_GENESIS_BLOCK_HEIGHT;
+        } else {
+            this.genesisBlockHeight = 0;
+        }
     }
 }
