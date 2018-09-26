@@ -542,6 +542,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         VBox vBox = new VBox();
         VBox.setVgrow(tableView, Priority.ALWAYS);
+        vBox.setPadding(new Insets(-15,0,0,0));
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
