@@ -17,9 +17,10 @@
 
 package bisq.desktop.main.settings.preferences;
 
+import bisq.desktop.maker.PreferenceMakers;
+
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.user.PreferenceMakers;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;

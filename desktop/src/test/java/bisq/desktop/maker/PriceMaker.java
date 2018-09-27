@@ -15,7 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.monetary;
+package bisq.desktop.maker;
+
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
 
 import org.bitcoinj.utils.Fiat;
 
@@ -25,17 +28,17 @@ import com.natpryce.makeiteasy.Property;
 
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 
-public class VolumeMaker {
+public class PriceMaker {
 
-    public static final Property<Volume, String> currencyCode = new Property<>();
-    public static final Property<Volume, String> volumeString = new Property<>();
+    public static final Property<Price, String> currencyCode = new Property<>();
+    public static final Property<Price, String> priceString = new Property<>();
 
-    public static final Instantiator<Volume> FiatVolume = lookup ->
-            new Volume(Fiat.parseFiat(lookup.valueOf(currencyCode, "USD"), lookup.valueOf(volumeString, "100")));
+    public static final Instantiator<Price> FiatPrice = lookup ->
+            new Price(Fiat.parseFiat(lookup.valueOf(currencyCode, "USD"), lookup.valueOf(priceString, "100")));
 
-    public static final Instantiator<Volume> AltcoinVolume = lookup ->
-            new Volume(Altcoin.parseAltcoin(lookup.valueOf(currencyCode, "LTC"), lookup.valueOf(volumeString, "100")));
+    public static final Instantiator<Price> AltcoinPrice = lookup ->
+            new Price(Altcoin.parseAltcoin(lookup.valueOf(currencyCode, "LTC"), lookup.valueOf(priceString, "100")));
 
-    public static final Maker<Volume> usdVolume = a(FiatVolume);
-    public static final Maker<Volume> ltcVolume = a(AltcoinVolume);
+    public static final Maker<Price> usdPrice = a(FiatPrice);
+    public static final Maker<Price> ltcPrice = a(AltcoinPrice);
 }
