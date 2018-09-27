@@ -34,6 +34,7 @@ import javafx.stage.Window;
 
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.transform.Rotate;
 
 import javafx.geometry.Insets;
@@ -59,23 +60,18 @@ public class Notification extends Overlay<Notification> {
 
     public void onReadyForDisplay() {
         super.display();
+
         if (autoClose && autoCloseTimer == null)
             autoCloseTimer = UserThread.runAfter(this::doClose, 6);
+
+        stage.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> {
+            doClose();
+        });
     }
 
     @Override
     public void hide() {
-        animateHide(() -> {
-            removeEffectFromBackground();
-
-            if (stage != null)
-                stage.hide();
-            else
-                log.warn("Stage is null");
-
-            cleanup();
-            onHidden();
-        });
+        animateHide();
     }
 
     @Override
