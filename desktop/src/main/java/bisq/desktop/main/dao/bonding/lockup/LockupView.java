@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.bonding.lockup;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.FormBuilder;
@@ -37,12 +38,15 @@ import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
 
+import bisq.common.util.Tuple2;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
@@ -71,6 +75,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private ComboBox<LockupType> lockupTypeComboBox;
+    private Label bondedRolesLabel;
     private ComboBox<BondedRole> bondedRolesComboBox;
     private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
@@ -106,7 +111,8 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.bonding.lock.lockBSQ"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.bonding.lock.lockBSQ"),
+                Layout.GROUP_DISTANCE);
 
         amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
@@ -135,11 +141,26 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
             if (newValue != null) {
                 bondedRolesComboBox.getSelectionModel().clearSelection();
             }
+            int lockupRows = 3;
+            if (newValue == LockupType.BONDED_ROLE) {
+                bondedRolesComboBox.setVisible(true);
+                bondedRolesLabel.setVisible(true);
+                lockupRows++;
+            } else {
+                bondedRolesComboBox.setVisible(false);
+                bondedRolesLabel.setVisible(false);
+            }
+            GridPane.setRowSpan(titledGroupBg, lockupRows);
+            GridPane.setRowIndex(lockupButton, GridPane.getRowIndex(amountInputTextField) + lockupRows);
         };
         //TODO handle trade type
         lockupTypeComboBox.getSelectionModel().select(0);
 
-        bondedRolesComboBox = FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
+        Tuple2<Label, ComboBox<BondedRole>> labelComboBoxTuple2 =
+                FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
+        bondedRolesLabel = labelComboBoxTuple2.first;
+        bondedRolesComboBox = labelComboBoxTuple2.second;
+        bondedRolesComboBox.setPromptText(Res.get("shared.select"));
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRole bondedRole) {
