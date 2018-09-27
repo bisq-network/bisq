@@ -32,11 +32,9 @@ import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-@ToString
 public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
     private final int fromBlockHeight;
     private final int nonce;
