@@ -328,7 +328,7 @@ public class BSFormatter {
                 // TODO quick hack...
                 String res;
                 if (altcoin.getCurrencyCode().equals("BSQ"))
-                    res = altcoinFormat.noCode().minDecimals(3).repeatOptionalDecimals(0, 0).format(altcoin).toString();
+                    res = altcoinFormat.noCode().minDecimals(2).repeatOptionalDecimals(0, 0).format(altcoin).toString();
                 else
                     res = altcoinFormat.noCode().format(altcoin).toString();
                 if (appendCurrencyCode)
