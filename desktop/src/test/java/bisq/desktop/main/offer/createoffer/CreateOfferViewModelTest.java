@@ -54,7 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.user.PreferenceMakers.empty;
+import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;

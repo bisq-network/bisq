@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.user;
+package bisq.desktop.maker;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.user.Preferences;
 
 import bisq.common.storage.Storage;
 
@@ -30,7 +31,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 
 public class PreferenceMakers {
 
-    public static final Property<Preferences, Storage> storage = new Property<>();
+    public static final Property<bisq.core.user.Preferences, Storage> storage = new Property<>();
     public static final Property<Preferences, BisqEnvironment> bisqEnvironment = new Property<>();
     public static final Property<Preferences, String> btcNodesFromOptions = new Property<>();
     public static final Property<Preferences, String> useTorFlagFromOptions = new Property<>();

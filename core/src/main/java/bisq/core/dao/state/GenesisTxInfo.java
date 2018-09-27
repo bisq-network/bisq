@@ -29,8 +29,6 @@ import javax.inject.Named;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 
 /**
  * Encapsulate the genesis txId and height.
@@ -87,12 +85,12 @@ public class GenesisTxInfo {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public GenesisTxInfo(@Nullable @Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
-                         @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) int genesisBlockHeight) {
+    public GenesisTxInfo(@Named(DaoOptionKeys.GENESIS_TX_ID) String genesisTxId,
+                         @Named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) Integer genesisBlockHeight) {
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
-        if (genesisTxId != null && !genesisTxId.isEmpty()) {
+        if (!genesisTxId.isEmpty()) {
             this.genesisTxId = genesisTxId;
         } else if (isMainnet) {
             this.genesisTxId = MAINNET_GENESIS_TX_ID;
@@ -102,7 +100,7 @@ public class GenesisTxInfo {
             this.genesisTxId = "genesisTxId is undefined";
         }
 
-        if (genesisBlockHeight != 0) {
+        if (genesisBlockHeight > -1) {
             this.genesisBlockHeight = genesisBlockHeight;
         } else if (isMainnet) {
             this.genesisBlockHeight = MAINNET_GENESIS_BLOCK_HEIGHT;

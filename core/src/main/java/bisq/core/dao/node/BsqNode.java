@@ -155,7 +155,11 @@ public abstract class BsqNode implements DaoSetupService {
 
     @SuppressWarnings("WeakerAccess")
     protected int getStartBlockHeight() {
-        final int startBlockHeight = Math.max(genesisBlockHeight, bsqStateService.getChainHeight());
+        int chainHeight = bsqStateService.getChainHeight();
+        int startBlockHeight = chainHeight;
+        if (chainHeight > genesisBlockHeight)
+            startBlockHeight = chainHeight + 1;
+
         log.info("Start parse blocks:\n" +
                         "   Start block height={}\n" +
                         "   Genesis txId={}\n" +
@@ -164,7 +168,7 @@ public abstract class BsqNode implements DaoSetupService {
                 startBlockHeight,
                 genesisTxId,
                 genesisBlockHeight,
-                bsqStateService.getChainHeight());
+                chainHeight);
 
         return startBlockHeight;
     }

@@ -372,22 +372,17 @@ public class TxParser {
             // We want to be sure that the initial assumption of the opReturn type was matching the result after full
             // validation.
             Optional<OpReturnType> optionalOpReturnTypeCandidate = txOutputParser.getOptionalOpReturnTypeCandidate();
-            if (optionalOpReturnTypeCandidate.isPresent()) {
-                OpReturnType opReturnTypeCandidate = optionalOpReturnTypeCandidate.get();
-                Optional<OpReturnType> optionalVerifiedOpReturnType = txOutputParser.getOptionalVerifiedOpReturnType();
-                if (optionalVerifiedOpReturnType.isPresent()) {
-                    OpReturnType verifiedOpReturnType = optionalVerifiedOpReturnType.get();
-                    if (opReturnTypeCandidate == verifiedOpReturnType) {
-                        return optionalVerifiedOpReturnType;
-                    }
+            Optional<OpReturnType> optionalVerifiedOpReturnType = txOutputParser.getOptionalVerifiedOpReturnType();
+            if (optionalOpReturnTypeCandidate.isPresent() && optionalVerifiedOpReturnType.isPresent()) {
+                if (optionalOpReturnTypeCandidate.get() == optionalVerifiedOpReturnType.get()) {
+                    return optionalVerifiedOpReturnType;
+                } else {
+                    String msg = "We got a different opReturn type after validation as we expected initially. " +
+                            "optionalOpReturnTypeCandidate=" + optionalOpReturnTypeCandidate +
+                            ", optionalVerifiedOpReturnType=" + txOutputParser.getOptionalVerifiedOpReturnType();
+                    log.warn(msg);
                 }
             }
-
-            String msg = "We got a different opReturn type after validation as we expected initially. " +
-                    "optionalOpReturnTypeCandidate=" + optionalOpReturnTypeCandidate +
-                    ", optionalVerifiedOpReturnType=" + txOutputParser.getOptionalVerifiedOpReturnType();
-            log.error(msg);
-
         } else {
             String msg = "We got a tx without any valid BSQ output but with burned BSQ. " +
                     "Burned fee=" + remainingInputValue / 100D + " BSQ.";

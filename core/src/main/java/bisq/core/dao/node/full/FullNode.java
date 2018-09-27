@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Main class for a full node which have Bitcoin Core with rpc running and does the blockchain lookup itself.
  * It also provides the BSQ transactions to lite nodes on request and broadcasts new BSQ blocks.
- *
+ * <p>
  * TODO request p2p network data again after parsing is complete to be sure that in case we missed data during parsing
  * we get it added.
  */
@@ -188,8 +188,8 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeadHeight);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            int blockHeightOfLastBlock = bsqStateService.getBlockHeightOfLastBlock();
-                            requestChainHeadHeightAndParseBlocks(blockHeightOfLastBlock);
+                            int startHeight = bsqStateService.getBlockHeightOfLastBlock() + 1;
+                            requestChainHeadHeightAndParseBlocks(startHeight);
                         } else {
                             handleError(throwable);
                         }
@@ -232,6 +232,8 @@ public class FullNode extends BsqNode {
                         } catch (BlockNotConnectingException e) {
                             errorHandler.accept(e);
                         }
+                    } else {
+                        log.info("Block was already added height=", rawBlock.getHeight());
                     }
                 },
                 errorHandler);

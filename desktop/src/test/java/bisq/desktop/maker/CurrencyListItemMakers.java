@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.util;
+package bisq.desktop.maker;
+
+import bisq.desktop.util.CurrencyListItem;
 
 import bisq.core.locale.TradeCurrency;
 
@@ -23,14 +25,14 @@ import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
 
-import static bisq.core.locale.TradeCurrencyMakers.bitcoin;
-import static bisq.core.locale.TradeCurrencyMakers.euro;
+import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
+import static bisq.desktop.maker.TradeCurrencyMakers.euro;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 
 public class CurrencyListItemMakers {
 
-    public static final Property<CurrencyListItem, TradeCurrency> tradeCurrency = new Property<>();
+    public static final Property<bisq.desktop.util.CurrencyListItem, TradeCurrency> tradeCurrency = new Property<>();
     public static final Property<CurrencyListItem, Integer> numberOfTrades = new Property<>();
 
     public static final Instantiator<CurrencyListItem> CurrencyListItem = lookup ->

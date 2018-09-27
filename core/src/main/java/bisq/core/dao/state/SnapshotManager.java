@@ -37,11 +37,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Manages snapshots of BsqState.
- * // FIXME not working correctly anymore
  */
 @Slf4j
 public class SnapshotManager implements BsqStateListener {
-    private static final int SNAPSHOT_GRID = 11000;
+    private static final int SNAPSHOT_GRID = 100;
 
     private final BsqState bsqState;
     private final BsqStateService bsqStateService;
@@ -90,7 +89,7 @@ public class SnapshotManager implements BsqStateListener {
             // Now we clone and keep it in memory for the next trigger
             snapshotCandidate = bsqState.getClone();
             // don't access cloned anymore with methods as locks are transient!
-            log.debug("Cloned new snapshotCandidate at height " + chainHeadHeight);
+            log.info("Cloned new snapshotCandidate at height " + chainHeadHeight);
         }
     }
 

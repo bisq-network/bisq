@@ -19,8 +19,11 @@ package bisq.core.dao.state.blockchain;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Optional;
+
 import lombok.Data;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -33,6 +36,7 @@ public abstract class BaseBlock {
     protected final int height;
     protected final long time; // in ms
     protected final String hash;
+    @Nullable // in case of first block in the blockchain
     protected final String previousBlockHash;
 
     BaseBlock(int height, long time, String hash, String previousBlockHash) {
@@ -48,11 +52,13 @@ public abstract class BaseBlock {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     PB.BaseBlock.Builder getBaseBlockBuilder() {
-        return PB.BaseBlock.newBuilder()
+        PB.BaseBlock.Builder builder = PB.BaseBlock.newBuilder()
                 .setHeight(height)
                 .setTime(time)
-                .setHash(hash)
-                .setPreviousBlockHash(previousBlockHash);
+                .setHash(hash);
+        Optional.ofNullable(previousBlockHash).ifPresent(builder::setPreviousBlockHash);
+        return builder;
+
     }
 
     @Override

@@ -15,7 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.locale;
+package bisq.desktop.maker;
+
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Property;
@@ -29,10 +33,10 @@ public class TradeCurrencyMakers {
     public static final Property<TradeCurrency, String> currencyCode = new Property<>();
     public static final Property<TradeCurrency, String> currencyName = new Property<>();
 
-    public static final Instantiator<CryptoCurrency> CryptoCurrency = lookup ->
+    public static final Instantiator<bisq.core.locale.CryptoCurrency> CryptoCurrency = lookup ->
             new CryptoCurrency(lookup.valueOf(currencyCode, "BTC"), lookup.valueOf(currencyName, "Bitcoin"));
 
-    public static final Instantiator<FiatCurrency> FiatCurrency = lookup ->
+    public static final Instantiator<bisq.core.locale.FiatCurrency> FiatCurrency = lookup ->
             new FiatCurrency(lookup.valueOf(currencyCode, "EUR"));
 
     public static final CryptoCurrency bitcoin = make(a(CryptoCurrency));

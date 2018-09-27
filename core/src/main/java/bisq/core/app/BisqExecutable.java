@@ -437,7 +437,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 description("Genesis transaction ID when not using the hard coded one", ""))
                 .withRequiredArg();
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
-                description("Genesis transaction block height when not using the hard coded one", ""))
+                description("Genesis transaction block height when not using the hard coded one", -1))
                 .withRequiredArg();
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
                 description("Developer flag. If true it enables dao phase 2 features.", false))

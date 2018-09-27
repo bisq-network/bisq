@@ -15,7 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.desktop.maker;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;

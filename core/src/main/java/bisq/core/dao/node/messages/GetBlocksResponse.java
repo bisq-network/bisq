@@ -75,4 +75,13 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
                 proto.getRequestNonce(),
                 messageVersion);
     }
+
+
+    @Override
+    public String toString() {
+        return "GetBlocksResponse{" +
+                "\n     blocks=" + blocks +
+                ",\n     requestNonce=" + requestNonce +
+                "\n} " + super.toString();
+    }
 }
