@@ -715,6 +715,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
+                                        setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
                                                 model.getNumberOfDecimalsForVolume(offerBookListItem)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);
