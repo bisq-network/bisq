@@ -280,13 +280,13 @@ public class PriceFeedService {
     }
 
     public Date getLastRequestTimeStampBtcAverage() {
-        return new Date(epochInSecondAtLastRequest * 1000);
+        return new Date(epochInSecondAtLastRequest);
     }
 
     public Date getLastRequestTimeStampPoloniex() {
         Long ts = timeStampMap.get("btcAverageTs");
         if (ts != null) {
-            return new Date(ts * 1000);
+            return new Date(ts);
         } else
             return new Date();
     }
@@ -294,7 +294,7 @@ public class PriceFeedService {
     public Date getLastRequestTimeStampCoinmarketcap() {
         Long ts = timeStampMap.get("coinmarketcapTs");
         if (ts != null) {
-            return new Date(ts * 1000);
+            return new Date(ts);
         } else
             return new Date();
     }
