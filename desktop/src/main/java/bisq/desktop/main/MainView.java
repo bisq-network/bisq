@@ -248,9 +248,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox navPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton,
-                disputesButtonHolder, spacer, marketPriceBox.second, availableBalanceBox.second,
+                spacer, marketPriceBox.second, availableBalanceBox.second,
                 reservedBalanceBox.second, lockedBalanceBox.second,
-                settingsButton, accountButton, daoButton) {{
+                disputesButtonHolder, settingsButton, accountButton, daoButton) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
