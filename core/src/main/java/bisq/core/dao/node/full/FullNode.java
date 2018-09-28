@@ -240,7 +240,7 @@ public class FullNode extends BsqNode {
     }
 
     private void handleError(Throwable throwable) {
-        final String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
+        String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
         log.error(errorMessage);
 
         if (errorMessageHandler != null)

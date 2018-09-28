@@ -221,6 +221,7 @@ public class RpcService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
+                log.error("Error at requestBtcBlock: blockHeight={}", blockHeight);
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
