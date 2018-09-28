@@ -188,8 +188,7 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeadHeight);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            int startHeight = bsqStateService.getBlockHeightOfLastBlock() + 1;
-                            requestChainHeadHeightAndParseBlocks(startHeight);
+                            startReOrgFromLastSnapshot();
                         } else {
                             handleError(throwable);
                         }
