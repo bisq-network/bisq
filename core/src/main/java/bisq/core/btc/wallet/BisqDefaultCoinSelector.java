@@ -17,8 +17,6 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.btc.Restrictions;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;

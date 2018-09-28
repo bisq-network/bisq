@@ -18,20 +18,23 @@
 package bisq.core.payment.validation;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
+
+import bisq.common.app.DevEnv;
+
+import com.google.inject.Inject;
+
+import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
+
+
 
 import bisq.asset.AddressValidationResult;
 import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-
-import com.google.inject.Inject;
-
-import lombok.extern.slf4j.Slf4j;
-
-import static java.lang.String.format;
 
 @Slf4j
 public final class AltCoinAddressValidator extends InputValidator {
@@ -54,30 +57,19 @@ public final class AltCoinAddressValidator extends InputValidator {
         if (!validationResult.isValid || currencyCode == null)
             return validationResult;
 
-        Asset asset = assetRegistry.stream()
-                .filter(this::assetMatchesSelectedCurrencyCode)
-                .filter(this::assetIsNotBaseCurrencyForDifferentNetwork)
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException(format("'%s' is not a registered asset", currencyCode)));
+        Optional<Asset> optionalAsset = CurrencyUtil.findAsset(assetRegistry, currencyCode,
+                BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated());
+        if (optionalAsset.isPresent()) {
+            Asset asset = optionalAsset.get();
+            AddressValidationResult result = asset.validateAddress(input);
+            if (!result.isValid()) {
+                return new ValidationResult(false, Res.get(result.getI18nKey(), asset.getTickerSymbol(),
+                        result.getMessage()));
+            }
 
-        AddressValidationResult result = asset.validateAddress(input);
-        if (!result.isValid())
-            return new ValidationResult(false,
-                    Res.get(result.getI18nKey(), asset.getTickerSymbol(), result.getMessage()));
-
-        return new ValidationResult(true);
-    }
-
-    private boolean assetMatchesSelectedCurrencyCode(Asset a) {
-        return currencyCode.equals(a.getTickerSymbol());
-    }
-
-    private boolean assetIsNotBaseCurrencyForDifferentNetwork(Asset asset) {
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-
-        return !(asset instanceof Coin)
-                || !asset.getTickerSymbol().equals(baseCurrencyNetwork.getCurrencyCode())
-                || (((Coin) asset).getNetwork().name().equals(baseCurrencyNetwork.getNetwork()));
+            return new ValidationResult(true);
+        } else {
+            return new ValidationResult(false);
+        }
     }
 }

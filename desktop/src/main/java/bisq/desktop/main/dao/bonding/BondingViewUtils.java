@@ -24,7 +24,7 @@ import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.governance.role.BondedRole;

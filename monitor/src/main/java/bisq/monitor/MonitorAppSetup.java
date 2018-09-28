@@ -21,7 +21,7 @@ import bisq.monitor.metrics.p2p.MonitorP2PService;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.SetupUtils;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.network.SetupListener;

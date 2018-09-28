@@ -19,7 +19,7 @@ package bisq.core.dao.node.json;
 
 import lombok.Getter;
 
-//TODO sync up with data model
+// Need to be in sync with TxOutputType
 public enum JsonTxType {
     UNDEFINED_TX_TYPE("Undefined"),
     UNVERIFIED("Unverified"),
@@ -27,13 +27,12 @@ public enum JsonTxType {
     GENESIS("Genesis"),
     TRANSFER_BSQ("Transfer BSQ"),
     PAY_TRADE_FEE("Pay trade fee"),
-    PROPOSAL("Ballot"),
+    PROPOSAL("Proposal"),
     COMPENSATION_REQUEST("Compensation request"),
-    VOTE("Vote"),
     BLIND_VOTE("Blind vote"),
     VOTE_REVEAL("Vote reveal"),
-    LOCK_UP("Lockup"),
-    UN_LOCK("Unlock");
+    LOCKUP("Lockup"),
+    UNLOCK("Unlock");
 
     @Getter
     private String displayString;

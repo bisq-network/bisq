@@ -22,7 +22,7 @@ import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
@@ -54,7 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.user.PreferenceMakers.empty;
+import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;

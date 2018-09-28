@@ -47,7 +47,8 @@ public class CycleListItem {
 
     public String getCycle() {
         int displayIndex = resultsOfCycle.getCycleIndex() + 1;
-        String dateTime = bsqFormatter.formatDateTime(new Date(resultsOfCycle.getCycleStartTime()));
+        long cycleStartTime = resultsOfCycle.getCycleStartTime();
+        String dateTime = cycleStartTime > 0 ? bsqFormatter.formatDateTime(new Date(cycleStartTime)) : Res.get("shared.na");
         return Res.get("dao.results.results.table.item.cycle", displayIndex, dateTime);
     }
 

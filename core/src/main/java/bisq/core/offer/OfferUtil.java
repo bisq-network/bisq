@@ -18,7 +18,6 @@
 package bisq.core.offer;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Country;
@@ -266,103 +265,5 @@ public class OfferUtil {
         adjustedAmount = Math.max(minTradeAmount, adjustedAmount);
         adjustedAmount = Math.min(maxTradeLimit, adjustedAmount);
         return Coin.valueOf(adjustedAmount);
-    }
-
-    public static ArrayList<String> getAcceptedCountryCodes(PaymentAccount paymentAccount) {
-        ArrayList<String> acceptedCountryCodes = null;
-        if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof SepaInstantAccount) {
-            acceptedCountryCodes = new ArrayList<>(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
-            if (country != null)
-                acceptedCountryCodes.add(country.code);
-        }
-        return acceptedCountryCodes;
-    }
-
-    public static ArrayList<String> getAcceptedBanks(PaymentAccount paymentAccount) {
-        ArrayList<String> acceptedBanks = null;
-        if (paymentAccount instanceof SpecificBanksAccount) {
-            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-        } else if (paymentAccount instanceof SameBankAccount) {
-            acceptedBanks = new ArrayList<>();
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-        }
-        return acceptedBanks;
-    }
-
-    public static String getBankId(PaymentAccount paymentAccount) {
-        return paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
-    }
-
-    // That is optional and set to null if not supported (AltCoins, OKPay,...)
-    public static String getCountryCode(PaymentAccount paymentAccount) {
-        if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
-            return country != null ? country.code : null;
-        } else {
-            return null;
-        }
-    }
-
-    public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
-        if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
-        else
-            return 0;
-    }
-
-    public static long getMaxTradePeriod(PaymentAccount paymentAccount) {
-        return paymentAccount.getPaymentMethod().getMaxTradePeriod();
-    }
-
-    public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
-                                                      ReferralIdService referralIdService,
-                                                      PaymentAccount paymentAccount,
-                                                      String currencyCode) {
-        Map<String, String> extraDataMap = null;
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
-        }
-
-        if (referralIdService.getOptionalReferralId().isPresent()) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
-        }
-
-        if (paymentAccount instanceof F2FAccount) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
-            extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
-        }
-
-        return extraDataMap;
-    }
-
-    public static void validateOfferData(FilterManager filterManager,
-                                         P2PService p2PService,
-                                         Coin buyerSecurityDepositAsCoin,
-                                         PaymentAccount paymentAccount,
-                                         String currencyCode, Coin makerFeeAsCoin) {
-        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
-                "securityDeposit must be not exceed " +
-                        Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
-        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
-                "securityDeposit must be not be less than " +
-                        Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
-
-        checkArgument(!filterManager.isCurrencyBanned(currencyCode),
-                Res.get("offerbook.warning.currencyBanned"));
-        checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
-                Res.get("offerbook.warning.paymentMethodBanned"));
-        checkNotNull(makerFeeAsCoin, "makerFee must not be null");
-        checkNotNull(p2PService.getAddress(), "Address must not be null");
     }
 }

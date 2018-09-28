@@ -131,7 +131,6 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
 
     public abstract Param getThresholdParam();
 
-
     @Override
     public String toString() {
         return "Proposal{" +

@@ -17,6 +17,10 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.exceptions.TxBroadcastTimeoutException;
+import bisq.core.btc.exceptions.TxMalleabilityException;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
 

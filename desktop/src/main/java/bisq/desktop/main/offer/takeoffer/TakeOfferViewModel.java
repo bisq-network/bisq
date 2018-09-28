@@ -27,7 +27,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;

@@ -45,7 +45,7 @@ dependencies {
     compile('com.google.inject:guice:4.1.0') {
         exclude(module: 'guava')
     }
-    compile('network.bisq.libdohj:libdohj-core:9573d077') {
+    compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
         exclude(module: 'jsr305')
         exclude(module: 'slf4j-api')
         exclude(module: 'guava')

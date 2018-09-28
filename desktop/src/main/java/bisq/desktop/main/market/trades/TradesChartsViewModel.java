@@ -74,6 +74,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 class TradesChartsViewModel extends ActivatableViewModel {
 
     private static final int TAB_INDEX = 2;
@@ -129,7 +131,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getTradeChartsScreenCurrencyCode());
+        String tradeChartsScreenCurrencyCode = preferences.getTradeChartsScreenCurrencyCode();
+        showAllTradeCurrenciesProperty.set(isShowAllEntry(tradeChartsScreenCurrencyCode));
+
+        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(tradeChartsScreenCurrencyCode);
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else
@@ -186,8 +191,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 showAllTradeCurrenciesProperty.set(showAllEntry);
                 if (!showAllEntry) {
                     selectedTradeCurrencyProperty.set(tradeCurrency);
-                    preferences.setTradeChartsScreenCurrencyCode(code);
                 }
+                preferences.setTradeChartsScreenCurrencyCode(code);
 
                 updateChartData();
 
@@ -376,11 +381,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return getTimeFromTick(index);
     }
 
-    private boolean isShowAllEntry(String id) {
-        return id.equals(GUIUtil.SHOW_ALL_FLAG);
+    private boolean isShowAllEntry(@Nullable String id) {
+        return id != null && id.equals(GUIUtil.SHOW_ALL_FLAG);
     }
 
-    private boolean isEditEntry(String id) {
-        return id.equals(GUIUtil.EDIT_FLAG);
+    private boolean isEditEntry(@Nullable String id) {
+        return id != null && id.equals(GUIUtil.EDIT_FLAG);
     }
 }

@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <!-- See: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html -->
+
+        <key>CFBundleVersion</key>
+        <string>0.8.0</string>
+
+        <key>CFBundleShortVersionString</key>
+        <string>0.8.0</string>
+
+        <key>CFBundleExecutable</key>
+        <string>Bisq</string>
+
+        <key>CFBundleName</key>
+        <string>Bisq</string>
+
+        <key>CFBundleIdentifier</key>
+        <string>io.bisq.CAT</string>
+
+        <key>CFBundleIconFile</key>
+        <string>Bisq.icns</string>
+
+        <key>LSApplicationCategoryType</key>
+        <string>public.app-category.finance</string>
+
+        <key>NSHumanReadableCopyright</key>
+        <string>Copyright © 2013-2018 - The Bisq developers</string>
+
+         <!-- Only supported in older OSX versions.
+              See: https://github.com/bitcoin/bitcoin/issues/11896#issuecomment-352148399-->
+        <key>LSAppNapIsDisabled</key>
+        <true/>
+
+        <!-- See: https://developer.apple.com/library/archive/qa/qa1734/_index.html-->
+        <key>NSSupportsAutomaticGraphicsSwitching</key>
+        <true/>
+
+        <key>NSHighResolutionCapable</key>
+        <string>true</string>
+
+        <key>CFBundleAllowMixedLocalizations</key>
+        <true/>
+
+        <key>LSMinimumSystemVersion</key>
+        <string>10.7.4</string>
+
+        <key>CFBundleDevelopmentRegion</key>
+        <string>English</string>
+
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+    </dict>
+</plist>

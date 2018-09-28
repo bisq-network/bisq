@@ -27,7 +27,7 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
