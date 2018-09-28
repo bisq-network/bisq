@@ -322,6 +322,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return null;
     }
 
+    @Nullable
+    public PaymentAccountPayload getBuyersPaymentAccountPayload() {
+        if (getTrade() != null && getTrade().getContract() != null)
+            return getTrade().getContract().getBuyerPaymentAccountPayload();
+        else
+            return null;
+    }
+
     public String getReference() {
         return getOffer() != null ? getOffer().getShortId() : "";
     }
