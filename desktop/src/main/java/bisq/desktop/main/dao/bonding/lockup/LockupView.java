@@ -125,6 +125,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
         lockupTypeComboBox = FormBuilder.<LockupType>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
+        lockupTypeComboBox.setPromptText(Res.get("shared.select"));
         lockupTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(LockupType lockupType) {
@@ -157,7 +158,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         lockupTypeComboBox.getSelectionModel().select(0);
 
         Tuple2<Label, ComboBox<BondedRole>> labelComboBoxTuple2 =
-                FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
+                FormBuilder.addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
         bondedRolesLabel = labelComboBoxTuple2.first;
         bondedRolesComboBox = labelComboBoxTuple2.second;
         bondedRolesComboBox.setPromptText(Res.get("shared.select"));
@@ -192,10 +193,19 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
-            bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue(),
-                    () -> {
-                        bondedRolesComboBox.getSelectionModel().clearSelection();
-                    });
+            switch (lockupTypeComboBox.getValue()) {
+                case BONDED_ROLE:
+                    if (bondedRolesComboBox.getValue() != null ) {
+                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue(),
+                                () -> bondedRolesComboBox.getSelectionModel().clearSelection());
+                    }
+                    break;
+                case REPUTATION:
+                    log.error("REPUTATION!!!!!!!!!!!!!");
+                    break;
+                default:
+                    log.error("Unknown lockup option=" + lockupTypeComboBox.getValue());
+            }
         });
 
         focusOutListener = (observable, oldValue, newValue) -> {

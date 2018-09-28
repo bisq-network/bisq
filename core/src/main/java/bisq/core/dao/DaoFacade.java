@@ -19,6 +19,7 @@ package bisq.core.dao;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.bonding.lockup.LockupService;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.bonding.unlock.UnlockService;
@@ -380,9 +381,9 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Bonding
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondedRole bondedRole,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
                                 ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondedRole, resultHandler, exceptionHandler);
+        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondWithHash, resultHandler, exceptionHandler);
     }
 
     public void publishUnlockTx(String lockupTxId, ResultHandler resultHandler,
