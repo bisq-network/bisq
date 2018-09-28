@@ -213,7 +213,7 @@ public class RpcService {
                     ImmutableList.copyOf(txList));
         });
 
-        Futures.addCallback(future, new FutureCallback<RawBlock>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(RawBlock block) {
                 UserThread.execute(() -> resultHandler.accept(block));

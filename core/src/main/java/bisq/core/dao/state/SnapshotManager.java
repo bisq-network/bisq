@@ -37,6 +37,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Manages snapshots of BsqState.
+ *
+ * One BSQ block with empty txs adds 152 bytes which results in about 8 MB/year
  */
 @Slf4j
 public class SnapshotManager implements BsqStateListener {
