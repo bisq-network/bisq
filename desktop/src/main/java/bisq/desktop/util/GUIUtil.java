@@ -18,6 +18,7 @@
 package bisq.desktop.util;
 
 import bisq.desktop.app.BisqApp;
+import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 
@@ -76,11 +77,15 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 
@@ -90,6 +95,7 @@ import javafx.beans.property.DoubleProperty;
 
 import javafx.collections.FXCollections;
 
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.net.URI;
@@ -288,6 +294,71 @@ public class GUIUtil {
             @Override
             public CurrencyListItem fromString(String s) {
                 return null;
+            }
+        };
+    }
+
+    public static ListCell<CurrencyListItem> getCurrencyListItemButtonCell(String postFixSingle, String postFixMulti,
+                                                                           Preferences preferences) {
+        return new ListCell<>() {
+
+            @Override
+            protected void updateItem(CurrencyListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    AnchorPane pane = new AnchorPane();
+                    Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode() + " - " + item.tradeCurrency.getName());
+                    currency.getStyleClass().add("currency-label-selected");
+                    AnchorPane.setLeftAnchor(currency, 0.0);
+                    pane.getChildren().add(currency);
+
+                    if (preferences.isSortMarketCurrenciesNumerically()) {
+                        Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
+                                (item.numTrades == 1 ? postFixSingle : postFixMulti));
+                        numberOfOffers.getStyleClass().add("offer-label-small");
+                        AnchorPane.setRightAnchor(numberOfOffers, 0.0);
+                        AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                        pane.getChildren().add(numberOfOffers);
+                    }
+
+                    setGraphic(pane);
+                    setText("");
+                } else {
+                    setGraphic(null);
+                    setText("");
+                }
+            }
+        };
+    }
+
+    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle, String postFixMulti,
+                                                                                                                  Preferences preferences) {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(CurrencyListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    Label currencyType = new AutoTooltipLabel(
+                            CurrencyUtil.isFiatCurrency(item.tradeCurrency.getCode()) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+                    currencyType.getStyleClass().add("currency-label-small");
+                    Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode());
+                    currency.getStyleClass().add("currency-label");
+                    box.getChildren().addAll(currencyType, currency);
+
+                    if (preferences.isSortMarketCurrenciesNumerically()) {
+                        Label offers = new AutoTooltipLabel(item.tradeCurrency.getName() + " (" + item.numTrades + " " +
+                                (item.numTrades == 1 ? postFixSingle : postFixMulti) + ")");
+                        offers.getStyleClass().add("currency-label");
+                        box.getChildren().add(offers);
+                    }
+                    setGraphic(box);
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }

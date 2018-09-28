@@ -42,7 +42,6 @@ import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
@@ -64,6 +63,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -148,9 +148,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 10);
         this.currencyComboBox = currencyComboBoxTuple.third;
-        this.currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"),
-                model.preferences));
+        this.currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"), model.preferences));
+        this.currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"), model.preferences));
 
         createChart();
 
@@ -206,7 +207,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
-                    areaChart.setTitle(Res.get("market.offerBook.chart.title", formatter.getCurrencyNameAndCurrencyPair(code)));
                     volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
                     xAxis.setTickLabelFormatter(new StringConverter<Number>() {
                         @Override
@@ -517,9 +517,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
+        HBox titleButtonBox = new HBox();
+        titleButtonBox.setAlignment(Pos.CENTER);
+
         Label titleLabel = new AutoTooltipLabel();
         titleLabel.getStyleClass().add("table-title");
-        UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
         boolean isSellOffer = direction == OfferPayload.Direction.SELL;
         AutoTooltipButton button = new AutoTooltipButton();
@@ -528,7 +530,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
         button.updateText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
-        button.setMinHeight(40);
+        button.setMinHeight(32);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {
             if (isSellOffer) {
@@ -540,15 +542,20 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             }
         });
 
+        Region spacer = new Region();
+
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        titleButtonBox.getChildren().addAll(titleLabel, spacer, button);
+
         VBox vBox = new VBox();
         VBox.setVgrow(tableView, Priority.ALWAYS);
-        vBox.setPadding(new Insets(-15,0,0,0));
+        vBox.setPadding(new Insets(0, 0, 0, 0));
         vBox.setSpacing(10);
         vBox.setFillWidth(true);
         vBox.setMinHeight(190);
-        vBox.getChildren().addAll(titleLabel, tableView, button);
+        vBox.getChildren().addAll(titleButtonBox, tableView);
 
-        button.prefWidthProperty().bind(vBox.widthProperty());
         return new Tuple4<>(tableView, vBox, button, titleLabel);
     }
 

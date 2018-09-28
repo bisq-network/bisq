@@ -29,8 +29,13 @@ bg color of non edit textFields: fafafa
 }
 
 @font-face {
+    src: url("/fonts/IBMPlexSans-Medium.ttf");
+}
+
+@font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
+
 
 .root {
     -bs-very-dark-grey3: #444; /* 3 usages */
@@ -95,8 +100,10 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-background-darker: #D0D0D0;
     -bs-rd-grey-background-darkest: #444444;
     -bs-rd-grey-darker: #E1E1E1;
+    -bs-rd-font-lighter: #A7A7A7;
     -bs-rd-font-light: #8D8D8D;
     -bs-rd-font-dark: #4B4B4B;
+    -bs-rd-font-dark-grey: #3c3c3c;
     -bs-rd-nav-deselected: #9A9A9A;
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-background-dark: #0E0E0E;
@@ -105,7 +112,6 @@ bg color of non edit textFields: fafafa
     -bs-rd-black-transparent: rgba(0, 0, 0, 0.2);
     -bs-rd-grey-line: #979797;
     -bs-rd-separator: #DBDBDB;
-    -bs-rd-font-dark-grey: #3c3c3c;
     -bs-rd-error-red: #dd0000; /* 5 usages */
 
     -bs-red: #D73030; /* 5 usages */
@@ -119,12 +125,12 @@ bg color of non edit textFields: fafafa
     -bs-buy: -bs-rd-green-dark; /* 12 usages */
     -bs-buy-focus: derive(-bs-buy, -50%); /* 2 usages */
     -bs-buy-hover: derive(-bs-buy, -10%); /* 2 usages */
-    -bs-buy-transparent: derive(-bs-buy, 75%); /* 1 usages */
+    -bs-buy-transparent: rgba(62, 163, 74, 0.3); /* 1 usages */
 
     -bs-sell: -bs-red; /* 11 usages */
     -bs-sell-focus: derive(-bs-sell, -50%); /* 2 usages */
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
-    -bs-sell-transparent: derive(-bs-sell, 95%); /* 1 usages */
+    -bs-sell-transparent: rgba(215, 48, 48, 0.3); /* 1 usages */
 
     -bs-cancel: -bs-bg-grey; /* 5 usages */
     -bs-cancel-focus: derive(-bs-cancel, -50%); /* 1 usages */
@@ -1025,9 +1031,35 @@ textfield */
 /* OfferBook */
 
 .table-title {
-    -fx-font-size: 1.154em;
-    -fx-font-weight: normal;
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
     -fx-alignment: center-left;
+}
+
+.currency-label-small {
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-rd-font-lighter;
+    -fx-alignment: center;
+    -fx-pref-height: 35px;
+    -fx-pref-width: 45px;
+}
+
+.offer-label-small {
+    -fx-font-size: 0.692em;
+    -fx-alignment: center-right;
+    -fx-text-fill: -bs-rd-black;
+}
+
+.currency-label-selected {
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.currency-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-alignment: center-left;
+    -fx-pref-height: 35px;
 }
 
 /* Offer */
@@ -1172,8 +1204,8 @@ textfield */
 
 /* TitledGroupBg */
 .titled-group-bg-label {
-    -fx-font-weight: normal;
     -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
@@ -1365,7 +1397,7 @@ textfield */
 }
 
 #charts .axis-label {
-    -fx-font-size: 1.231em;
+    -fx-font-size: 0.769em;
     -fx-alignment: center;
 }
 
@@ -1376,7 +1408,7 @@ textfield */
  ********************************************************************************************************************/
 
 #buy-button-big {
-    -fx-font-size: 1.154em;
+    -fx-font-size: 1em;
     -fx-background-color: -bs-buy;
     -fx-text-fill: -bs-rd-white;
 }
@@ -1390,7 +1422,7 @@ textfield */
 #sell-button-big {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
-    -fx-font-size: 1.154em;
+    -fx-font-size: 1em;
 }
 
 #sell-button {
