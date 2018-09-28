@@ -243,9 +243,14 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             if (!proposalPayloads.contains(proposalPayload)) {
                 Proposal proposal = proposalPayload.getProposal();
                 if (proposalValidator.areDataFieldsValid(proposal)) {
-                    proposalPayloads.add(proposalPayload);
-                    log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
-                            proposal.getTxId());
+                    if (proposalValidator.isTxTypeValid(proposal)) {
+                        proposalPayloads.add(proposalPayload);
+                        log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
+                                proposal.getTxId());
+                    } else {
+                        log.warn("We received a proposal with an invalid txId. Proposal.txId={}",
+                                proposal.getTxId());
+                    }
                 } else {
                     log.warn("We received a invalid append-only proposal from the P2P network. " +
                                     "Proposal.txId={}, blockHeight={}",
