@@ -17,6 +17,7 @@
 
 package bisq.core.btc;
 
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;

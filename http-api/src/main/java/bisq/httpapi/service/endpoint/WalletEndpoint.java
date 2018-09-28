@@ -1,50 +1,30 @@
 package bisq.httpapi.service.endpoint;
 
-import bisq.core.btc.AddressEntryException;
+import bisq.common.UserThread;
 import bisq.core.btc.Balances;
-import bisq.core.btc.InsufficientFundsException;
-
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.facade.WalletFacade;
-import bisq.httpapi.model.AuthForm;
-import bisq.httpapi.model.SeedWords;
-import bisq.httpapi.model.SeedWordsRestore;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletTransactionList;
-import bisq.httpapi.model.WithdrawFundsForm;
-
-import bisq.common.UserThread;
-
-import org.bitcoinj.core.Coin;
-
-import javax.inject.Inject;
-
+import bisq.httpapi.model.*;
 import com.google.common.collect.ImmutableList;
-
-import java.util.HashSet;
-
-import lombok.extern.slf4j.Slf4j;
-
-
-
 import io.dropwizard.jersey.validation.ValidationErrorMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashSet;
 
 @Api(value = "wallet", authorizations = @Authorization(value = "accessToken"))
 @Produces(MediaType.APPLICATION_JSON)

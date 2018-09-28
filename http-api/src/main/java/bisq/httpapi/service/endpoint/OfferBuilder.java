@@ -1,8 +1,8 @@
 package bisq.httpapi.service.endpoint;
 
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;

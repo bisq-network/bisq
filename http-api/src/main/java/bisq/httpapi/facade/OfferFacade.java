@@ -1,9 +1,9 @@
 package bisq.httpapi.facade;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferPayload;
@@ -17,19 +17,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
-
-import bisq.httpapi.exceptions.AmountTooHighException;
-import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
-import bisq.httpapi.exceptions.InsufficientMoneyException;
-import bisq.httpapi.exceptions.NotBootstrappedException;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
-import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.service.endpoint.OfferBuilder;
-import bisq.httpapi.util.ResourceHelper;
 
 import bisq.network.p2p.P2PService;
 
@@ -51,6 +38,18 @@ import static java.util.stream.Collectors.toList;
 
 
 
+import bisq.httpapi.exceptions.AmountTooHighException;
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NotBootstrappedException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.service.endpoint.OfferBuilder;
+import bisq.httpapi.util.ResourceHelper;
 import javax.validation.ValidationException;
 
 public class OfferFacade {

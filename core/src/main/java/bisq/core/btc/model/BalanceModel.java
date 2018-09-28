@@ -78,7 +78,7 @@ public class BalanceModel {
     }
 
     private void updateAvailableBalance() {
-        Coin totalAvailableBalance = Coin.valueOf(tradeManager.getAddressEntriesForAvailableBalanceStream()
+        Coin totalAvailableBalance = Coin.valueOf(tradeManager.getAddressEntriesForAvailableFundsStream()
                 .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).getValue())
                 .sum());
         availableBalance.set(totalAvailableBalance);

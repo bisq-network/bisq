@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'network.bisq'
-version = '-SNAPSHOT'
+version = '0.8.0-SNAPSHOT'
 
 sourceCompatibility = 1.10
 

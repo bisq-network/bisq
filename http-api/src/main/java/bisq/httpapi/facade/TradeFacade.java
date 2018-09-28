@@ -1,6 +1,6 @@
 package bisq.httpapi.facade;
 
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.SellerAsMakerTrade;
@@ -11,8 +11,6 @@ import bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.SellerAsMakerProtocol;
 import bisq.core.trade.protocol.SellerAsTakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
-
-import bisq.httpapi.exceptions.NotFoundException;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -30,6 +28,7 @@ import static bisq.httpapi.facade.FacadeUtil.failFuture;
 
 
 
+import bisq.httpapi.exceptions.NotFoundException;
 import javax.validation.ValidationException;
 
 public class TradeFacade {

@@ -1,12 +1,8 @@
 package bisq.httpapi.facade;
 
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.user.Preferences;
-
-import bisq.httpapi.model.BitcoinNetworkStatus;
-import bisq.httpapi.model.P2PNetworkConnection;
-import bisq.httpapi.model.P2PNetworkStatus;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -19,6 +15,12 @@ import javax.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+
+
+import bisq.httpapi.model.BitcoinNetworkStatus;
+import bisq.httpapi.model.P2PNetworkConnection;
+import bisq.httpapi.model.P2PNetworkStatus;
 
 public class NetworkFacade {
 
@@ -56,7 +58,7 @@ public class NetworkFacade {
         else
             networkStatus.peers = Collections.emptyList();
         networkStatus.useTorForBitcoinJ = preferences.getUseTorForBitcoinJ();
-        networkStatus.bitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        networkStatus.bitcoinNodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         networkStatus.bitcoinNodes = preferences.getBitcoinNodes();
         return networkStatus;
     }

@@ -17,10 +17,10 @@
 
 package bisq.core.offer;
 
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.Restrictions;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;

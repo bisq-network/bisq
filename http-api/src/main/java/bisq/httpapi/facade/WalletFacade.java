@@ -1,32 +1,27 @@
 package bisq.httpapi.facade;
 
+import bisq.common.storage.FileUtil;
+import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.AddressEntryException;
 import bisq.core.btc.BalanceUtil;
-import bisq.core.btc.InsufficientFundsException;
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.validation.BtcAddressValidator;
-
 import bisq.httpapi.exceptions.AmountTooLowException;
 import bisq.httpapi.exceptions.UnauthorizedException;
-import bisq.httpapi.model.SeedWords;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WalletAddressList;
-import bisq.httpapi.model.WalletTransaction;
-import bisq.httpapi.model.WalletTransactionList;
-
-import bisq.common.storage.FileUtil;
-import bisq.common.storage.Storage;
-import bisq.common.util.Tuple2;
-
+import bisq.httpapi.model.*;
+import com.google.common.util.concurrent.FutureCallback;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -34,21 +29,17 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
+import org.jetbrains.annotations.NotNull;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-
-import com.google.common.util.concurrent.FutureCallback;
-
-import org.spongycastle.crypto.params.KeyParameter;
-
+import javax.validation.ValidationException;
+import java.io.File;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-
-import java.io.File;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -57,17 +48,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
-
 import static bisq.httpapi.facade.FacadeUtil.failFuture;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
-
-
-
-import javax.validation.ValidationException;
 
 @Slf4j
 public class WalletFacade {

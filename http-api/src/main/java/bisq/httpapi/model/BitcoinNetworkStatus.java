@@ -1,12 +1,12 @@
 package bisq.httpapi.model;
 
-import bisq.core.btc.BitcoinNodes;
+import bisq.core.btc.nodes.BtcNodes;
 
 import java.util.List;
 
 public class BitcoinNetworkStatus {
 
-    public BitcoinNodes.BitcoinNodesOption bitcoinNodesOption;
+    public BtcNodes.BitcoinNodesOption bitcoinNodesOption;
 
     public String bitcoinNodes;
 
