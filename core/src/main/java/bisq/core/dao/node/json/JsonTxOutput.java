@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 class JsonTxOutput {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String txId;
-    private final int outputIndex;
+    private final int index;
     private final long bsqAmount;
     private final long btcAmount;
     private final int height;
@@ -48,6 +48,6 @@ class JsonTxOutput {
     private final int lockTime; // new
 
     String getId() {
-        return txId + ":" + outputIndex;
+        return txId + ":" + index;
     }
 }
