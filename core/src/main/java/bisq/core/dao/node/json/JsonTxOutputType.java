@@ -20,7 +20,7 @@ package bisq.core.dao.node.json;
 import lombok.Getter;
 
 // Need to be in sync with TxOutputType
-public enum JsonTxOutputType {
+enum JsonTxOutputType {
     UNDEFINED("Undefined"),
     GENESIS_OUTPUT("Genesis"),
     BSQ_OUTPUT("BSQ"),

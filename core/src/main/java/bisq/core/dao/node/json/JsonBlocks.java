@@ -17,19 +17,12 @@
 
 package bisq.core.dao.node.json;
 
-import bisq.core.dao.state.blockchain.SpentInfo;
+import java.util.List;
 
 import lombok.Value;
 
 @Value
-class JsonSpentInfo {
-    private final long height;
-    private final int inputIndex;
-    private final String txId;
-
-    JsonSpentInfo(SpentInfo spentInfo) {
-        height = spentInfo.getBlockHeight();
-        inputIndex = spentInfo.getInputIndex();
-        txId = spentInfo.getTxId();
-    }
+class JsonBlocks {
+    private int chainHeight;
+    private final List<JsonBlock> blocks;
 }

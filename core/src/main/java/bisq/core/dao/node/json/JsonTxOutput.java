@@ -24,7 +24,7 @@ import lombok.Value;
 import javax.annotation.Nullable;
 
 @Value
-public class JsonTxOutput {
+class JsonTxOutput {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String txId;
     private final int outputIndex;
@@ -47,7 +47,7 @@ public class JsonTxOutput {
     private final String opReturn;
     private final int lockTime; // new
 
-    public String getId() {
+    String getId() {
         return txId + ":" + outputIndex;
     }
 }
