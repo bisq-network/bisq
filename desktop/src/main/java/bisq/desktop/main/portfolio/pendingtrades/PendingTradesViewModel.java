@@ -29,6 +29,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -91,6 +92,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final P2PService p2PService;
     private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
+    @Getter
+    private final User user;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();
     private final ObjectProperty<SellerState> sellerState = new SimpleObjectProperty<>();
@@ -112,7 +115,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   P2PService p2PService,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
-                                  Clock clock) {
+                                  Clock clock,
+                                  User user) {
         super(dataModel);
 
         this.btcFormatter = btcFormatter;
@@ -122,6 +126,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.clock = clock;
+        this.user = user;
     }
 
 

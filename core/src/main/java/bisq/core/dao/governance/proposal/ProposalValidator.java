@@ -71,6 +71,17 @@ public class ProposalValidator {
         return isValid(proposal, false);
     }
 
+    public boolean isTxTypeValid(Proposal proposal) {
+        String txId = proposal.getTxId();
+        if (txId == null || txId.equals("")) {
+            log.warn("txId must be set. proposal.getTxId()={}", proposal.getTxId());
+            return false;
+        }
+        Optional<TxType> optionalTxType = bsqStateService.getOptionalTxType(txId);
+        boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
+        return present;
+    }
+
     private boolean isValid(Proposal proposal, boolean allowUnconfirmed) {
         if (!areDataFieldsValid(proposal)) {
             log.warn("proposal data fields are invalid. proposal={}", proposal);

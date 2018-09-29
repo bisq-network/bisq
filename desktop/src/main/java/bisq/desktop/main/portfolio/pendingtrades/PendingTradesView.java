@@ -79,7 +79,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn;
-    @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
@@ -215,7 +214,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     selectedSubView = model.dataModel.tradeManager.isBuyer(model.dataModel.getOffer()) ?
                             new BuyerSubView(model) : new SellerSubView(model);
 
-                    selectedSubView.setMinHeight(430);
+                    selectedSubView.setMinHeight(440);
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
                     if (root.getChildren().size() == 1)
                         root.getChildren().add(selectedSubView);

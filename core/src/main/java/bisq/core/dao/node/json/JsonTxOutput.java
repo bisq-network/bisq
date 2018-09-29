@@ -24,10 +24,10 @@ import lombok.Value;
 import javax.annotation.Nullable;
 
 @Value
-public class JsonTxOutput {
+class JsonTxOutput {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String txId;
-    private final int outputIndex;
+    private final int index;
     private final long bsqAmount;
     private final long btcAmount;
     private final int height;
@@ -41,13 +41,14 @@ public class JsonTxOutput {
     private final long time;
     private final JsonTxType txType;
     private final String txTypeDisplayString;
-    private final JsonTxOutputType txOutputType; // new
-    private final String txOutputTypeDisplayString; // new
+    private final JsonTxOutputType txOutputType;
+    private final String txOutputTypeDisplayString;
     @Nullable
     private final String opReturn;
-    private final int lockTime; // new
+    private final int lockTime;
+    private final boolean isUnspent;
 
-    public String getId() {
-        return txId + ":" + outputIndex;
+    String getId() {
+        return txId + ":" + index;
     }
 }

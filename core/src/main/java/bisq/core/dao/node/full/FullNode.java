@@ -188,8 +188,7 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeadHeight);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            int startHeight = bsqStateService.getBlockHeightOfLastBlock() + 1;
-                            requestChainHeadHeightAndParseBlocks(startHeight);
+                            startReOrgFromLastSnapshot();
                         } else {
                             handleError(throwable);
                         }
@@ -240,7 +239,7 @@ public class FullNode extends BsqNode {
     }
 
     private void handleError(Throwable throwable) {
-        final String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
+        String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
         log.error(errorMessage);
 
         if (errorMessageHandler != null)
