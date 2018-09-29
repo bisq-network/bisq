@@ -233,6 +233,7 @@ public class ExportJsonFilesService implements DaoSetupService {
                     JsonTxOutputType txOutputType = JsonTxOutputType.valueOf(txOutput.getTxOutputType().name());
                     int lockTime = txOutput.getLockTime();
                     String opReturn = txOutput.getOpReturnData() != null ? Utils.HEX.encode(txOutput.getOpReturnData()) : null;
+                    boolean isUnspent = bsqStateService.isUnspent(txOutput.getKey());
                     return new JsonTxOutput(tx.getId(),
                             txOutput.getIndex(),
                             bsqAmount,
@@ -249,7 +250,8 @@ public class ExportJsonFilesService implements DaoSetupService {
                             txOutputType,
                             txOutputType.getDisplayString(),
                             opReturn,
-                            lockTime
+                            lockTime,
+                            isUnspent
                     );
                 })
                 .collect(Collectors.toList());

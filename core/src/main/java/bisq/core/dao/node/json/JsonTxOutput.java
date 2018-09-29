@@ -41,11 +41,12 @@ class JsonTxOutput {
     private final long time;
     private final JsonTxType txType;
     private final String txTypeDisplayString;
-    private final JsonTxOutputType txOutputType; // new
-    private final String txOutputTypeDisplayString; // new
+    private final JsonTxOutputType txOutputType;
+    private final String txOutputTypeDisplayString;
     @Nullable
     private final String opReturn;
-    private final int lockTime; // new
+    private final int lockTime;
+    private final boolean isUnspent;
 
     String getId() {
         return txId + ":" + index;
