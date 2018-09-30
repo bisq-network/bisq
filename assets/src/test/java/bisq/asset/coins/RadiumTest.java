@@ -24,7 +24,7 @@ import org.junit.Test;
 public class RadiumTest extends AbstractAssetTest {
 
     public RadiumTest() {
-        super(new Radium.Mainnet());
+        super(new Radium());
     }
 
     @Test
