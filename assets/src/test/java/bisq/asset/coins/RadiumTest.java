@@ -21,24 +21,24 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class DashTest extends AbstractAssetTest {
+public class RadiumTest extends AbstractAssetTest {
 
-    public DashTest() {
-        super(new Dash.Mainnet());
+    public RadiumTest() {
+        super(new Radium.Mainnet());
     }
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("XjNms118hx6dGyBqsrVMTbzMUmxDVijk7Y");
-        assertValidAddress("XjNPzWfzGiY1jHUmwn9JDSVMsTs6EtZQMc");
-        assertValidAddress("XnaJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTT");
+        assertValidAddress("XfrvQw3Uv4oGgc535TYyBCT2uNU7ofHGDU");
+        assertValidAddress("Xwgof4wf1t8TnQUJ2UokZRVwHxRt4t6Feb");
+        assertValidAddress("Xep8KxEZUsCxQuvCfPdt2VHuHbp43nX7Pm");
 
     }
 
     @Test
     public void testInvalidAddresses() {
         assertInvalidAddress("1XnaJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTT");
-        assertInvalidAddress("XnaJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTTd");
-        assertInvalidAddress("XnaJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTT#");
+        assertInvalidAddress("GGaJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTTd");
+        assertInvalidAddress("FsfJzoAKTNa67Fpt1tLxD5bFMcyN4tCvTT#");
     }
 }
