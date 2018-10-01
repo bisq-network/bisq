@@ -162,6 +162,15 @@ public class RpcService {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
+                if (rawBtcBlock.getHeight() == null || rawBtcBlock.getHeight() == 0) {
+                    // TODO throw exceptions at BlockNotificationWorker.getRelatedEntity
+                    log.warn("We received a RawBlock with no data. " +
+                            "That can happen if we run multiple networks (regtest + testnet) and receive a blockNotify " +
+                            "from the other network or if our BTC node is not completed with processing a new arrived " +
+                            "block. We ignore that notification.");
+                    return;
+                }
+
                 try {
                     log.info("New block received: height={}, id={}", rawBtcBlock.getHeight(), rawBtcBlock.getHash());
                     List<RawTx> txList = rawBtcBlock.getTx().stream()
@@ -204,7 +213,7 @@ public class RpcService {
             List<RawTx> txList = rawBtcBlock.getTx().stream()
                     .map(e -> getTxFromRawTransaction(e, rawBtcBlock))
                     .collect(Collectors.toList());
-            log.info("requestBtcBlock with all txs took {} ms at blockHeight {}; txList.size={}",
+            log.debug("requestBtcBlock with all txs took {} ms at blockHeight {}; txList.size={}",
                     System.currentTimeMillis() - startTs, blockHeight, txList.size());
             return new RawBlock(rawBtcBlock.getHeight(),
                     rawBtcBlock.getTime() * 1000, // rawBtcBlock.getTime() is in sec but we want ms
