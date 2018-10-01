@@ -123,6 +123,7 @@ bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
 bisq.asset.coins.ZenCash
 bisq.asset.coins.ZeroOneCoin
+bisq.asset.tokens.AltEstateToken
 bisq.asset.tokens.BetterBetting
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.Ellaism
