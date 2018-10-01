@@ -163,11 +163,7 @@ public class RpcService {
             @Override
             public void blockDetected(com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
                 if (rawBtcBlock.getHeight() == null || rawBtcBlock.getHeight() == 0) {
-                    // TODO throw exceptions at BlockNotificationWorker.getRelatedEntity
-                    log.warn("We received a RawBlock with no data. " +
-                            "That can happen if we run multiple networks (regtest + testnet) and receive a blockNotify " +
-                            "from the other network or if our BTC node is not completed with processing a new arrived " +
-                            "block. We ignore that notification.");
+                    log.warn("We received a RawBlock with no data. blockHash={}", rawBtcBlock.getHash());
                     return;
                 }
 
