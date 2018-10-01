@@ -30,16 +30,16 @@ public class ODINCoinTest extends AbstractAssetTest {
     @Test
     public void testValidAddresses() {
         assertValidAddress("oSbkQG3QPxidoRRx1BatPCCHRyFXrNQv5X");
-	assertValidAddress("oVG7mEDyA9cG88siBkiQ6DEPTsdJzne8eG");
-	assertValidAddress("oLeSC73Ly7vorwj3BRJ1t7SCSV89PFGksR");
+	    assertValidAddress("oVG7mEDyA9cG88siBkiQ6DEPTsdJzne8eG");
+	    assertValidAddress("oLeSC73Ly7vorwj3BRJ1t7SCSV89PFGksR");
     }
 
     @Test
     public void testInvalidAddresses() {
-	assertInvalidAddress("XXZj1geFg6XnrgHrktsS4LiGayKmS1mUfx");
-	assertInvalidAddress("4VG7mEDyA9cG88siBkiQ6DEPTsdJzne8eG");
+	    assertInvalidAddress("XXZj1geFg6XnrgHrktsS4LiGayKmS1mUfx");
+	    assertInvalidAddress("4VG7mEDyA9cG88siBkiQ6DEPTsdJzne8eG");
         assertInvalidAddress("");
-	assertInvalidAddress("16rCmCmbuWDhPjWTrpQGaU3EPdZF7MTdUk");
+	    assertInvalidAddress("16rCmCmbuWDhPjWTrpQGaU3EPdZF7MTdUk");
         assertInvalidAddress("1jRo3rcp9fjdfjdSGpx");
         assertInvalidAddress("GDARp92UtmTWDjZatG8sduRockSteadyWasHere3atrHSXr9vJzjHq2TfPrjateDz9Wc8ZJKuDayqJ$%");
         assertInvalidAddress("F3xQ8Gv6xnvDhUrM57z71bfFvu9HeofXtXpZRLnrCN2s2cKvkQowrWjJTGz4676ymKvU4NzPY8Cadgsdhsdfhg4gfJwL2yhhkJ7");
