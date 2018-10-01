@@ -29,10 +29,10 @@ public class ODIN extends Coin {
 
     public static class ODINParams extends NetworkParametersAdapter {
         
-	public ODINParams() {
-	    addressHeader = 115;
-	    p2shHeader = 57;
-	    acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
-	}
+	    public ODINParams() {
+	        addressHeader = 115;
+	        p2shHeader = 57;
+	        acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+	    }
     }
 }
