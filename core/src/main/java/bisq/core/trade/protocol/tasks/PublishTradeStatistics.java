@@ -22,14 +22,18 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics2;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.taskrunner.TaskRunner;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
+@Slf4j
 public class PublishTradeStatistics extends TradeTask {
     public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -40,10 +44,15 @@ public class PublishTradeStatistics extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
-                Map<String, String> extraDataMap = null;
+                Map<String, String> extraDataMap = new HashMap<>();
                 if (processModel.getReferralIdService().getOptionalReferralId().isPresent()) {
-                    extraDataMap = new HashMap<>();
                     extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
+                }
+
+                NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
+                if (arbitratorNodeAddress != null) {
+                    String address = arbitratorNodeAddress.getHostNameWithoutPostFix();
+                    extraDataMap.put(TradeStatistics2.ARBITRATOR_ADDRESS, address);
                 }
 
                 Offer offer = trade.getOffer();
