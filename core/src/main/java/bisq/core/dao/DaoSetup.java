@@ -47,6 +47,7 @@ public class DaoSetup {
     private final VoteRevealService voteRevealService;
     private final VoteResultService voteResultService;
     private final BsqNode bsqNode;
+    private final DaoFacade daoFacade;
     private final ExportJsonFilesService exportJsonFilesService;
 
     @Inject
@@ -59,6 +60,7 @@ public class DaoSetup {
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
                     VoteResultService voteResultService,
+                    DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
         this.bsqStateService = bsqStateService;
         this.cycleService = cycleService;
@@ -68,6 +70,7 @@ public class DaoSetup {
         this.myBlindVoteListService = myBlindVoteListService;
         this.voteRevealService = voteRevealService;
         this.voteResultService = voteResultService;
+        this.daoFacade = daoFacade;
         this.exportJsonFilesService = exportJsonFilesService;
 
         bsqNode = bsqNodeProvider.getBsqNode();
@@ -85,6 +88,7 @@ public class DaoSetup {
         voteRevealService.addListeners();
         voteResultService.addListeners();
         exportJsonFilesService.addListeners();
+        daoFacade.addListeners();
 
         bsqStateService.start();
         cycleService.start();
@@ -95,6 +99,7 @@ public class DaoSetup {
         voteRevealService.start();
         voteResultService.start();
         exportJsonFilesService.start();
+        daoFacade.start();
 
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.start();
