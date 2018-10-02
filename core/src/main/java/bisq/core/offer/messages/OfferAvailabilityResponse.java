@@ -46,12 +46,17 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     @Nullable
     private final List<Integer> supportedCapabilities;
 
-    public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
+    // Was introduced in v 0.9.0. Might be null if msg received from node with old version
+    @Nullable
+    private final String selectedArbitrator;
+
+    public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult, String selectedArbitrator) {
         this(offerId,
                 availabilityResult,
                 Capabilities.getSupportedCapabilities(),
                 Version.getP2PMessageVersion(),
-                UUID.randomUUID().toString());
+                UUID.randomUUID().toString(),
+                selectedArbitrator);
     }
 
 
@@ -63,10 +68,12 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                                       AvailabilityResult availabilityResult,
                                       @Nullable List<Integer> supportedCapabilities,
                                       int messageVersion,
-                                      @Nullable String uid) {
+                                      @Nullable String uid,
+                                      @Nullable String selectedArbitrator) {
         super(messageVersion, offerId, uid);
         this.availabilityResult = availabilityResult;
         this.supportedCapabilities = supportedCapabilities;
+        this.selectedArbitrator = selectedArbitrator;
     }
 
     @Override
@@ -77,6 +84,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
+        Optional.ofNullable(selectedArbitrator).ifPresent(e -> builder.setSelectedArbitrator(selectedArbitrator));
 
         return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityResponse(builder)
@@ -88,6 +96,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()),
                 proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion,
-                proto.getUid().isEmpty() ? null : proto.getUid());
+                proto.getUid().isEmpty() ? null : proto.getUid(),
+                proto.getSelectedArbitrator().isEmpty() ? null : proto.getSelectedArbitrator());
     }
 }

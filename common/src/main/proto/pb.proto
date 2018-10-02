@@ -124,6 +124,7 @@ message OfferAvailabilityResponse {
     AvailabilityResult availability_result = 2;
     repeated int32 supported_capabilities = 3;
     string uid = 4;
+    string selected_arbitrator = 5;
 }
 
 message RefreshOfferMessage {
