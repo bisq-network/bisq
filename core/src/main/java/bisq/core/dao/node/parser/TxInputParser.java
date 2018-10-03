@@ -74,7 +74,7 @@ public class TxInputParser {
                     // for later verification at the outputs of a reveal tx.
                     TxOutputType connectedTxOutputType = connectedTxOutput.getTxOutputType();
                     switch (connectedTxOutputType) {
-                        case UNDEFINED:
+                        case UNDEFINED_OUTPUT:
                         case GENESIS_OUTPUT:
                         case BSQ_OUTPUT:
                         case BTC_OUTPUT:
@@ -98,7 +98,7 @@ public class TxInputParser {
                         case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
                         case VOTE_REVEAL_OP_RETURN_OUTPUT:
                             break;
-                        case LOCKUP:
+                        case LOCKUP_OUTPUT:
                             // A LOCKUP BSQ txOutput is spent to a corresponding UNLOCK
                             // txOutput. The UNLOCK can only be spent after lockTime blocks has passed.
                             if (!optionalSpentLockupTxOutput.isPresent()) {
@@ -108,7 +108,7 @@ public class TxInputParser {
                             break;
                         case LOCKUP_OP_RETURN_OUTPUT:
                             break;
-                        case UNLOCK:
+                        case UNLOCK_OUTPUT:
                             // This txInput is Spending an UNLOCK txOutput
                             spentUnlockConnectedTxOutputs.add(connectedTxOutput);
 

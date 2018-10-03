@@ -152,7 +152,7 @@ public class TxParser {
             // Process the type of transaction if not already determined to be INVALID
             if (tempTx.getTxType() != TxType.INVALID) {
                 boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
-                        .anyMatch(txOutput -> TxOutputType.UNDEFINED == txOutput.getTxOutputType());
+                        .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
                 if (!isAnyTxOutputTypeUndefined) {
                     // TODO(chirhonul): we don't modify the tempTx within the call below, so maybe we should
                     // use RawTx?
@@ -351,7 +351,7 @@ public class TxParser {
             if (bsqFeesBurnt) {
                 // Burned fee but no opReturn
                 txType = TxType.PAY_TRADE_FEE;
-            } else if (tx.getTempTxOutputs().get(0).getTxOutputType() == TxOutputType.UNLOCK) {
+            } else if (tx.getTempTxOutputs().get(0).getTxOutputType() == TxOutputType.UNLOCK_OUTPUT) {
                 txType = TxType.UNLOCK;
             } else {
                 log.debug("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");

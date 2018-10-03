@@ -37,7 +37,7 @@ public class TempTxOutput extends BaseTxOutput {
                 txOutput.getAddress(),
                 txOutput.getOpReturnData(),
                 txOutput.getBlockHeight(),
-                TxOutputType.UNDEFINED,
+                TxOutputType.UNDEFINED_OUTPUT,
                 0);
     }
 

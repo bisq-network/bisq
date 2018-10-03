@@ -163,7 +163,7 @@ public class TxOutputParser {
         checkArgument(optionalSpentLockupTxOutput.isPresent(), "optionalSpentLockupTxOutput must be present");
         availableInputValue -= optionalSpentLockupTxOutput.get().getValue();
 
-        txOutput.setTxOutputType(TxOutputType.UNLOCK);
+        txOutput.setTxOutputType(TxOutputType.UNLOCK_OUTPUT);
         bsqOutputs.add(txOutput);
 
         //TODO move up to TxParser
@@ -191,7 +191,7 @@ public class TxOutputParser {
             bsqOutput = TxOutputType.VOTE_REVEAL_UNLOCK_STAKE_OUTPUT;
             optionalVoteRevealUnlockStakeOutput = Optional.of(txOutput);
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.LOCKUP) {
-            bsqOutput = TxOutputType.LOCKUP;
+            bsqOutput = TxOutputType.LOCKUP_OUTPUT;
             txOutput.setLockTime(lockTime);
             optionalLockupOutput = Optional.of(txOutput);
         } else {
