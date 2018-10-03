@@ -156,12 +156,20 @@ public abstract class PaymentMethodForm {
                     CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
                     CurrencyUtil.getDefaultTradeCurrency();
 
+
         final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
         final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), Res.get("payment.maxPeriodAndLimit",
-                getTimeText(hours),
-                formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
-                formatter.formatAccountAge(accountAge)));
+
+        final String limitationsText = paymentAccount instanceof CryptoCurrencyAccount ?
+                Res.get("payment.maxPeriodAndLimitCrypto",
+                        getTimeText(hours),
+                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))))
+                :
+                Res.get("payment.maxPeriodAndLimit",
+                        getTimeText(hours),
+                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+                        formatter.formatAccountAge(accountAge));
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
