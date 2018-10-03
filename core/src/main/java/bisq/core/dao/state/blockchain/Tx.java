@@ -138,14 +138,12 @@ public final class Tx extends BaseTx implements PersistablePayload {
 
 
     /**
-     * OpReturn output might contain the lockTime in case of a LockTx. It has to be the last output.
-     * We store technically the lockTime there as is is stored in the OpReturn data but conceptually we want to provide
-     * it from the transaction.
+     * The locktime is stored in the LOCKUP txOutput, which is the first txOutput.
      *
      * @return
      */
     public int getLockTime() {
-        return getLastTxOutput().getLockTime();
+        return txOutputs.get(0).getLockTime();
     }
 
     @Override
