@@ -127,7 +127,7 @@ public class TxParser {
             int lastNonOpReturnIndex = lastIndex;
             if (txOutputParser.isOpReturnOutput(outputs.get(lastIndex))) {
                 // TODO(SQ): perhaps the check for isLastOutput could be skipped
-                txOutputParser.processOpReturnOutput(true, outputs.get(lastIndex));
+                txOutputParser.processOpReturnOutput(outputs.get(lastIndex));
                 lastNonOpReturnIndex -= 1;
             }
 
@@ -170,8 +170,8 @@ public class TxParser {
                 }
             }
 
-            if (tempTx.getTxType() != TxType.INVALID){
-                txOutputParser.commitTxOutputs();
+            if (tempTx.getTxType() != TxType.INVALID) {
+                txOutputParser.commitTxOutputsForValidTx();
             } else {
                 txOutputParser.commitTxOutputsForInvalidTx();
             }

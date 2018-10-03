@@ -51,7 +51,7 @@ public class TxOutputParser {
     @Setter
     private long availableInputValue = 0;
     private int lockTime;
-    private List<TempTxOutput> bsqOutputs = new ArrayList<>();
+    private List<TempTxOutput> tempTxOutputs = new ArrayList<>();
     @Setter
     private int unlockBlockHeight;
     @Setter
@@ -77,38 +77,34 @@ public class TxOutputParser {
         this.bsqStateService = bsqStateService;
     }
 
-    public void commitTxOutputs() {
-        bsqOutputs.forEach(bsqOutput -> {
-            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(bsqOutput));
-        });
-    }
-
-    /**
-     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the bsqStateService
-     */
-    public void commitTxOutputsForInvalidTx() {
-        bsqOutputs.forEach(bsqOutput -> {
-            bsqOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-        });
-
-    }
 
     public void processGenesisTxOutput(TempTx genesisTx) {
         for (int i = 0; i < genesisTx.getTempTxOutputs().size(); ++i) {
             TempTxOutput tempTxOutput = genesisTx.getTempTxOutputs().get(i);
-            bsqOutputs.add(tempTxOutput);
+            tempTxOutputs.add(tempTxOutput);
         }
-        commitTxOutputs();
+        commitTxOutputsForValidTx();
+    }
+
+    public void commitTxOutputsForValidTx() {
+        tempTxOutputs.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
+    }
+
+    /**
+     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in bsqStateService
+     */
+    public void commitTxOutputsForInvalidTx() {
+        tempTxOutputs.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
     }
 
     boolean isOpReturnOutput(TempTxOutput txOutput) {
         return txOutput.getOpReturnData() != null;
     }
 
-    void processOpReturnOutput(boolean isLastOutput, TempTxOutput tempTxOutput) {
+    void processOpReturnOutput(TempTxOutput tempTxOutput) {
         byte[] opReturnData = tempTxOutput.getOpReturnData();
         if (opReturnData != null) {
-            handleOpReturnOutput(tempTxOutput, isLastOutput);
+            handleOpReturnOutput(tempTxOutput);
         } else {
             log.error("This should be an opReturn output");
         }
@@ -117,9 +113,9 @@ public class TxOutputParser {
     /**
      * Process a transaction output.
      *
-     * @param isLastOutput  If it is the last output
-     * @param tempTxOutput  The TempTxOutput we are parsing
-     * @param index         The index in the outputs
+     * @param isLastOutput If it is the last output
+     * @param tempTxOutput The TempTxOutput we are parsing
+     * @param index        The index in the outputs
      */
     void processTxOutput(boolean isLastOutput, TempTxOutput tempTxOutput, int index) {
         // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
@@ -164,7 +160,7 @@ public class TxOutputParser {
         availableInputValue -= optionalSpentLockupTxOutput.get().getValue();
 
         txOutput.setTxOutputType(TxOutputType.UNLOCK_OUTPUT);
-        bsqOutputs.add(txOutput);
+        tempTxOutputs.add(txOutput);
 
         //TODO move up to TxParser
         // We should add unlockBlockHeight to TempTxOutput and remove unlockBlockHeight from tempTx
@@ -198,7 +194,7 @@ public class TxOutputParser {
             bsqOutput = TxOutputType.BSQ_OUTPUT;
         }
         txOutput.setTxOutputType(bsqOutput);
-        bsqOutputs.add(txOutput);
+        tempTxOutputs.add(txOutput);
 
         bsqOutputFound = true;
     }
@@ -219,8 +215,8 @@ public class TxOutputParser {
         }
     }
 
-    private void handleOpReturnOutput(TempTxOutput tempTxOutput, boolean isLastOutput) {
-        TxOutputType txOutputType = OpReturnParser.getTxOutputType(tempTxOutput, isLastOutput);
+    private void handleOpReturnOutput(TempTxOutput tempTxOutput) {
+        TxOutputType txOutputType = OpReturnParser.getTxOutputType(tempTxOutput);
         tempTxOutput.setTxOutputType(txOutputType);
 
         optionalVerifiedOpReturnType = getMappedOpReturnType(txOutputType);
