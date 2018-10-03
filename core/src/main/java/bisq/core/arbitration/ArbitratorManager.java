@@ -230,30 +230,12 @@ public class ArbitratorManager {
                     );
                 });
 
-        if (preferences.isAutoSelectArbitrators()) {
-            arbitratorsObservableMap.values().stream()
-                    .filter(user::hasMatchingLanguage)
-                    .forEach(a -> {
-                        user.addAcceptedArbitrator(a);
-                        user.addAcceptedMediator(getMediator(a)
-                        );
-                    });
-        } else {
-            // if we don't have any arbitrator we set all matching
-            // we use a delay as we might get our matching arbitrator a bit delayed (first we get one we did not selected
-            // then we get our selected one - we don't want to activate the first in that case)
-            UserThread.runAfter(() -> {
-                if (user.getAcceptedArbitrators().isEmpty()) {
-                    arbitratorsObservableMap.values().stream()
-                            .filter(user::hasMatchingLanguage)
-                            .forEach(a -> {
-                                user.addAcceptedArbitrator(a);
-                                user.addAcceptedMediator(getMediator(a)
-                                );
-                            });
-                }
-            }, 100, TimeUnit.MILLISECONDS);
-        }
+        // We keep the domain with storing the arbitrators in user as it might be still useful for mediators
+        arbitratorsObservableMap.values().forEach(a -> {
+            user.addAcceptedArbitrator(a);
+            user.addAcceptedMediator(getMediator(a)
+            );
+        });
     }
 
     // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
