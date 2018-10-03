@@ -236,6 +236,8 @@ public class ArbitratorManager {
             user.addAcceptedMediator(getMediator(a)
             );
         });
+
+        log.info("Available arbitrators: {}", arbitratorsObservableMap.keySet());
     }
 
     // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
