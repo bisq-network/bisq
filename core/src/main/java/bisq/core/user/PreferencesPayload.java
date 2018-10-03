@@ -17,7 +17,7 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.Restrictions;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;

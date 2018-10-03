@@ -21,7 +21,7 @@ import bisq.desktop.common.model.ActivatableViewModel;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.user.User;

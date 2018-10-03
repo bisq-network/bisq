@@ -19,7 +19,7 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.JsonBlockChainExporter;
+import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.BsqStateService;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Main class for a full node which have Bitcoin Core with rpc running and does the blockchain lookup itself.
  * It also provides the BSQ transactions to lite nodes on request and broadcasts new BSQ blocks.
- *
+ * <p>
  * TODO request p2p network data again after parsing is complete to be sure that in case we missed data during parsing
  * we get it added.
  */
@@ -49,7 +49,7 @@ public class FullNode extends BsqNode {
 
     private final RpcService rpcService;
     private final FullNodeNetworkService fullNodeNetworkService;
-    private final JsonBlockChainExporter jsonBlockChainExporter;
+    private final ExportJsonFilesService exportJsonFilesService;
     private boolean addBlockHandlerAdded;
 
 
@@ -64,12 +64,12 @@ public class FullNode extends BsqNode {
                     SnapshotManager snapshotManager,
                     P2PService p2PService,
                     RpcService rpcService,
-                    JsonBlockChainExporter jsonBlockChainExporter,
+                    ExportJsonFilesService exportJsonFilesService,
                     FullNodeNetworkService fullNodeNetworkService) {
         super(blockParser, bsqStateService, snapshotManager, p2PService);
         this.rpcService = rpcService;
 
-        this.jsonBlockChainExporter = jsonBlockChainExporter;
+        this.exportJsonFilesService = exportJsonFilesService;
         this.fullNodeNetworkService = fullNodeNetworkService;
     }
 
@@ -88,7 +88,7 @@ public class FullNode extends BsqNode {
     }
 
     public void shutDown() {
-        jsonBlockChainExporter.shutDown();
+        exportJsonFilesService.shutDown();
         fullNodeNetworkService.shutDown();
     }
 
@@ -147,7 +147,7 @@ public class FullNode extends BsqNode {
     }
 
     private void onNewBlock(Block block) {
-        jsonBlockChainExporter.maybeExport();
+        exportJsonFilesService.exportToJson();
 
         if (p2pNetworkReady && parseBlockchainComplete)
             fullNodeNetworkService.publishNewBlock(block);
@@ -188,8 +188,7 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeadHeight);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            int blockHeightOfLastBlock = bsqStateService.getBlockHeightOfLastBlock();
-                            requestChainHeadHeightAndParseBlocks(blockHeightOfLastBlock);
+                            startReOrgFromLastSnapshot();
                         } else {
                             handleError(throwable);
                         }
@@ -232,13 +231,15 @@ public class FullNode extends BsqNode {
                         } catch (BlockNotConnectingException e) {
                             errorHandler.accept(e);
                         }
+                    } else {
+                        log.info("Block was already added height=", rawBlock.getHeight());
                     }
                 },
                 errorHandler);
     }
 
     private void handleError(Throwable throwable) {
-        final String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
+        String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
         log.error(errorMessage);
 
         if (errorMessageHandler != null)

@@ -23,6 +23,7 @@ import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
@@ -253,10 +254,12 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     }
 
     public Volume getTradeVolume() {
-        if (getTradePrice().getMonetary() instanceof Altcoin)
+        if (getTradePrice().getMonetary() instanceof Altcoin) {
             return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
-        else
-            return new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
+        } else {
+            Volume volume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
+            return OfferUtil.getRoundedFiatVolume(volume);
+        }
     }
 
     @Override

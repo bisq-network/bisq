@@ -67,6 +67,10 @@ public enum BaseCurrencyNetwork {
         return "MAINNET".equals(network);
     }
 
+    public boolean isTestnet() {
+        return "TESTNET".equals(network);
+    }
+
     public boolean isRegtest() {
         return "REGTEST".equals(network);
     }

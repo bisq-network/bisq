@@ -17,7 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.BalanceModel;
+import bisq.core.btc.model.BalanceModel;
 import bisq.core.presentation.BalancePresentation;
 
 import bisq.common.app.Version;

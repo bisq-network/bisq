@@ -18,8 +18,8 @@
 package bisq.core.offer;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;

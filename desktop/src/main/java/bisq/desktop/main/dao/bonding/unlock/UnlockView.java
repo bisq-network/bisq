@@ -26,7 +26,7 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BsqValidator;
 
-import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;

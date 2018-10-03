@@ -56,7 +56,7 @@ public class BlindVoteConsensus {
     }
 
     public static BallotList getSortedBallotList(BallotListService ballotListService) {
-        List<Ballot> ballotList = ballotListService.getBallotList().stream()
+        List<Ballot> ballotList = ballotListService.getBallotsOfCycle().stream()
                 .sorted(Comparator.comparing(Ballot::getTxId))
                 .collect(Collectors.toList());
         log.info("Sorted ballotList: " + ballotList);

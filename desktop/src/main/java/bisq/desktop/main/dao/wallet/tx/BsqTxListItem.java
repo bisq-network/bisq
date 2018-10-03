@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Data
 class BsqTxListItem extends TxConfidenceListItem {
-    private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
     private final Date date;
@@ -64,7 +63,6 @@ class BsqTxListItem extends TxConfidenceListItem {
                   BsqFormatter bsqFormatter) {
         super(transaction, bsqWalletService);
 
-        this.btcWalletService = btcWalletService;
         this.daoFacade = daoFacade;
         this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getHashAsString());
         this.date = date;

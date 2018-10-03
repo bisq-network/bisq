@@ -67,4 +67,10 @@ public abstract class NetworkEnvelope implements Envelope {
         return messageVersion;
     }
 
+    @Override
+    public String toString() {
+        return "NetworkEnvelope{" +
+                "\n     messageVersion=" + messageVersion +
+                "\n}";
+    }
 }

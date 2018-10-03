@@ -29,8 +29,8 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -107,7 +107,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     Button reSyncSPVChainButton, openTorSettingsButton;
 
     private final Preferences preferences;
-    private final BitcoinNodes bitcoinNodes;
+    private final BtcNodes btcNodes;
     private final FilterManager filterManager;
     private final BisqEnvironment bisqEnvironment;
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
@@ -124,7 +124,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private Subscription nodeAddressSubscription;
     private ChangeListener<Boolean> btcNodesInputTextFieldFocusListener;
     private ToggleGroup bitcoinPeersToggleGroup;
-    private BitcoinNodes.BitcoinNodesOption selectedBitcoinNodesOption;
+    private BtcNodes.BitcoinNodesOption selectedBitcoinNodesOption;
     private ChangeListener<Toggle> bitcoinPeersToggleGroupListener;
     private ChangeListener<String> btcNodesInputTextFieldListener;
     private ChangeListener<Filter> filterPropertyListener;
@@ -133,7 +133,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     public NetworkSettingsView(WalletsSetup walletsSetup,
                                P2PService p2PService,
                                Preferences preferences,
-                               BitcoinNodes bitcoinNodes,
+                               BtcNodes btcNodes,
                                FilterManager filterManager,
                                BisqEnvironment bisqEnvironment,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
@@ -143,7 +143,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
-        this.bitcoinNodes = bitcoinNodes;
+        this.btcNodes = btcNodes;
         this.filterManager = filterManager;
         this.bisqEnvironment = bisqEnvironment;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
@@ -194,21 +194,21 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useCustomNodesRadio.setToggleGroup(bitcoinPeersToggleGroup);
         usePublicNodesRadio.setToggleGroup(bitcoinPeersToggleGroup);
 
-        useProvidedNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.PROVIDED);
-        useCustomNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.CUSTOM);
-        usePublicNodesRadio.setUserData(BitcoinNodes.BitcoinNodesOption.PUBLIC);
+        useProvidedNodesRadio.setUserData(BtcNodes.BitcoinNodesOption.PROVIDED);
+        useCustomNodesRadio.setUserData(BtcNodes.BitcoinNodesOption.CUSTOM);
+        usePublicNodesRadio.setUserData(BtcNodes.BitcoinNodesOption.PUBLIC);
 
-        selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
+        selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.values()[preferences.getBitcoinNodesOptionOrdinal()];
         // In case CUSTOM is selected but no custom nodes are set or
         // in case PUBLIC is selected but we blocked it (B2X risk) we revert to provided nodes
-        if ((selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.CUSTOM &&
+        if ((selectedBitcoinNodesOption == BtcNodes.BitcoinNodesOption.CUSTOM &&
                 (preferences.getBitcoinNodes() == null || preferences.getBitcoinNodes().isEmpty())) ||
-                (selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.PUBLIC && isPreventPublicBtcNetwork())) {
-            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+                (selectedBitcoinNodesOption == BtcNodes.BitcoinNodesOption.PUBLIC && isPreventPublicBtcNetwork())) {
+            selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
         }
-        if (!bitcoinNodes.useProvidedBtcNodes()) {
-            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+        if (!btcNodes.useProvidedBtcNodes()) {
+            selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
         }
 
@@ -216,7 +216,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         onBitcoinPeersToggleSelected(false);
 
         bitcoinPeersToggleGroupListener = (observable, oldValue, newValue) -> {
-            selectedBitcoinNodesOption = (BitcoinNodes.BitcoinNodesOption) newValue.getUserData();
+            selectedBitcoinNodesOption = (BtcNodes.BitcoinNodesOption) newValue.getUserData();
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
             onBitcoinPeersToggleSelected(true);
         };
@@ -353,7 +353,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesInputTextField.setDisable(bitcoinLocalhostNodeRunning);
-        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning || !bitcoinNodes.useProvidedBtcNodes());
+        useProvidedNodesRadio.setDisable(bitcoinLocalhostNodeRunning || !btcNodes.useProvidedBtcNodes());
         useCustomNodesRadio.setDisable(bitcoinLocalhostNodeRunning);
         usePublicNodesRadio.setDisable(bitcoinLocalhostNodeRunning || isPreventPublicBtcNetwork());
 
@@ -381,7 +381,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             .actionButtonText(Res.get("settings.net.warn.usePublicNodes.useProvided"))
                             .onAction(() -> {
                                 UserThread.runAfter(() -> {
-                                    selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+                                    selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
                                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
                                     selectBitcoinPeersToggle();
                                     onBitcoinPeersToggleSelected(false);
@@ -395,13 +395,13 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 break;
             default:
             case PROVIDED:
-                if (bitcoinNodes.useProvidedBtcNodes()) {
+                if (btcNodes.useProvidedBtcNodes()) {
                     btcNodesInputTextField.setDisable(true);
                     btcNodesLabel.setDisable(true);
                     if (calledFromUser)
                         showShutDownPopup();
                 } else {
-                    selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PUBLIC;
+                    selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PUBLIC;
                     preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
                     selectBitcoinPeersToggle();
                     onBitcoinPeersToggleSelected(false);
@@ -414,8 +414,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private void applyPreventPublicBtcNetwork() {
         final boolean preventPublicBtcNetwork = isPreventPublicBtcNetwork();
         usePublicNodesRadio.setDisable(bisqEnvironment.isBitcoinLocalhostNodeRunning() || preventPublicBtcNetwork);
-        if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BitcoinNodes.BitcoinNodesOption.PUBLIC) {
-            selectedBitcoinNodesOption = BitcoinNodes.BitcoinNodesOption.PROVIDED;
+        if (preventPublicBtcNetwork && selectedBitcoinNodesOption == BtcNodes.BitcoinNodesOption.PUBLIC) {
+            selectedBitcoinNodesOption = BtcNodes.BitcoinNodesOption.PROVIDED;
             preferences.setBitcoinNodesOptionOrdinal(selectedBitcoinNodesOption.ordinal());
             selectBitcoinPeersToggle();
             onBitcoinPeersToggleSelected(false);

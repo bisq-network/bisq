@@ -25,6 +25,7 @@ import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.period.CycleService;
 
@@ -35,7 +36,6 @@ import com.google.inject.Inject;
 /**
  * High level entry point for Dao domain.
  * We initialize all main service classes here to be sure they are started.
- *
  */
 public class DaoSetup {
     private final BsqStateService bsqStateService;
@@ -47,6 +47,7 @@ public class DaoSetup {
     private final VoteRevealService voteRevealService;
     private final VoteResultService voteResultService;
     private final BsqNode bsqNode;
+    private final ExportJsonFilesService exportJsonFilesService;
 
     @Inject
     public DaoSetup(BsqNodeProvider bsqNodeProvider,
@@ -57,7 +58,8 @@ public class DaoSetup {
                     BlindVoteListService blindVoteListService,
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
-                    VoteResultService voteResultService) {
+                    VoteResultService voteResultService,
+                    ExportJsonFilesService exportJsonFilesService) {
         this.bsqStateService = bsqStateService;
         this.cycleService = cycleService;
         this.proposalService = proposalService;
@@ -66,6 +68,7 @@ public class DaoSetup {
         this.myBlindVoteListService = myBlindVoteListService;
         this.voteRevealService = voteRevealService;
         this.voteResultService = voteResultService;
+        this.exportJsonFilesService = exportJsonFilesService;
 
         bsqNode = bsqNodeProvider.getBsqNode();
     }
@@ -81,6 +84,7 @@ public class DaoSetup {
         myBlindVoteListService.addListeners();
         voteRevealService.addListeners();
         voteResultService.addListeners();
+        exportJsonFilesService.addListeners();
 
         bsqStateService.start();
         cycleService.start();
@@ -90,6 +94,7 @@ public class DaoSetup {
         myBlindVoteListService.start();
         voteRevealService.start();
         voteResultService.start();
+        exportJsonFilesService.start();
 
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.start();

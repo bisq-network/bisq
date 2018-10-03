@@ -18,11 +18,12 @@
 package bisq.core.app;
 
 import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.RegTestHost;
+import bisq.core.btc.setup.RegTestHost;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
 import bisq.core.exceptions.BisqException;
@@ -208,7 +209,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-        DevEnv.setDaoActivated(injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED))));
+
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
+        boolean isDaoActivatedOptionSet = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)));
+        DevEnv.setDaoActivated(isDaoActivatedOptionSet || isRegTestOrTestNet);
     }
 
     private void setCorruptedDataBaseFilesHandler() {
@@ -432,7 +437,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 description("Genesis transaction ID when not using the hard coded one", ""))
                 .withRequiredArg();
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
-                description("Genesis transaction block height when not using the hard coded one", ""))
+                description("Genesis transaction block height when not using the hard coded one", -1))
                 .withRequiredArg();
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
                 description("Developer flag. If true it enables dao phase 2 features.", false))

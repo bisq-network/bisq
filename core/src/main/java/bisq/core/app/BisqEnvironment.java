@@ -292,7 +292,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         genesisBlockHeight = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) :
-                "";
+                "-1";
         daoActivated = commandLineProperties.containsProperty(DaoOptionKeys.DAO_ACTIVATED) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.DAO_ACTIVATED) :
                 "";

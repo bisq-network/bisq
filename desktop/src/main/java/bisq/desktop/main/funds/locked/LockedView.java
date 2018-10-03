@@ -25,8 +25,8 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.AddressEntry;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;

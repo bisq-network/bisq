@@ -23,12 +23,12 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.BalanceModel;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.BalanceModel;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -61,6 +61,7 @@ import bisq.common.Clock;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
@@ -88,8 +89,6 @@ import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.security.Security;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -100,6 +99,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -471,6 +472,11 @@ public class BisqSetup {
                 walletInitialized.addListener(walletInitializedListener);
             else if (displayTorNetworkSettingsHandler != null)
                 displayTorNetworkSettingsHandler.accept(true);
+
+            log.info("Set log level for org.berndpruenster.netlayer classes to DEBUG to show more details for " +
+                    "Tor network connection issues");
+            Log.setCustomLogLevel("org.berndpruenster.netlayer", Level.DEBUG);
+
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);

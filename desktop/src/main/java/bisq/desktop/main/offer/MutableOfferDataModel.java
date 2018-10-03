@@ -19,12 +19,12 @@ package bisq.desktop.main.offer;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;

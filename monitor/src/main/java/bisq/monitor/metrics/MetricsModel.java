@@ -19,8 +19,8 @@ package bisq.monitor.metrics;
 
 import bisq.monitor.MonitorOptionKeys;
 
-import bisq.core.btc.BitcoinNodes;
-import bisq.core.btc.wallet.WalletsSetup;
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
@@ -72,27 +72,27 @@ public class MetricsModel {
     private String resultAsHtml;
     private SeedNodeRepository seedNodeRepository;
     private SlackApi slackSeedApi, slackBtcApi, slackProviderApi;
-    private BitcoinNodes bitcoinNodes;
+    private BtcNodes btcNodes;
     @Setter
     private long lastCheckTs;
     private long btcNodeUptimeTs;
     private int totalErrors = 0;
     private HashMap<NodeAddress, Metrics> map = new HashMap<>();
     private List<Peer> connectedPeers;
-    private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeDownTimeMap = new HashMap<>();
-    private Map<Tuple2<BitcoinNodes.BtcNode, Boolean>, Integer> btcNodeUpTimeMap = new HashMap<>();
+    private Map<Tuple2<BtcNodes.BtcNode, Boolean>, Integer> btcNodeDownTimeMap = new HashMap<>();
+    private Map<Tuple2<BtcNodes.BtcNode, Boolean>, Integer> btcNodeUpTimeMap = new HashMap<>();
     @Getter
     private Set<NodeAddress> nodesInError = new HashSet<>();
 
     @Inject
     public MetricsModel(SeedNodeRepository seedNodeRepository,
-                        BitcoinNodes bitcoinNodes,
+                        BtcNodes btcNodes,
                         WalletsSetup walletsSetup,
                         @Named(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL) String slackUrlSeedChannel,
                         @Named(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL) String slackUrlBtcChannel,
                         @Named(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL) String slackUrlProviderChannel) {
         this.seedNodeRepository = seedNodeRepository;
-        this.bitcoinNodes = bitcoinNodes;
+        this.btcNodes = btcNodes;
         if (!slackUrlSeedChannel.isEmpty())
             slackSeedApi = new SlackApi(slackUrlSeedChannel);
         if (!slackUrlBtcChannel.isEmpty())
@@ -284,8 +284,8 @@ public class MetricsModel {
                 })
                 .collect(Collectors.toSet());
 
-        List<BitcoinNodes.BtcNode> onionBtcNodes = new ArrayList<>(bitcoinNodes.getProvidedBtcNodes().stream()
-                .filter(BitcoinNodes.BtcNode::hasOnionAddress)
+        List<BtcNodes.BtcNode> onionBtcNodes = new ArrayList<>(btcNodes.getProvidedBtcNodes().stream()
+                .filter(BtcNodes.BtcNode::hasOnionAddress)
                 .collect(Collectors.toSet()));
         onionBtcNodes.sort((o1, o2) -> o1.getOperator() != null && o2.getOperator() != null ?
                 o1.getOperator().compareTo(o2.getOperator()) : 0);
@@ -294,8 +294,8 @@ public class MetricsModel {
         printTable(html, sb, onionBtcNodes, connectedBtcPeers, elapsed, true);
         html.append("</tr></table>");
 
-        List<BitcoinNodes.BtcNode> clearNetNodes = new ArrayList<>(bitcoinNodes.getProvidedBtcNodes().stream()
-                .filter(BitcoinNodes.BtcNode::hasClearNetAddress)
+        List<BtcNodes.BtcNode> clearNetNodes = new ArrayList<>(btcNodes.getProvidedBtcNodes().stream()
+                .filter(BtcNodes.BtcNode::hasClearNetAddress)
                 .collect(Collectors.toSet()));
         clearNetNodes.sort((o1, o2) -> o1.getOperator() != null && o2.getOperator() != null ?
                 o1.getOperator().compareTo(o2.getOperator()) : 0);
@@ -325,11 +325,11 @@ public class MetricsModel {
                 "</tr>");
     }
 
-    private void printTable(StringBuilder html, StringBuilder sb, List<BitcoinNodes.BtcNode> allBtcNodes, Set<String> connectedBtcPeers, long elapsed, boolean isOnion) {
+    private void printTable(StringBuilder html, StringBuilder sb, List<BtcNodes.BtcNode> allBtcNodes, Set<String> connectedBtcPeers, long elapsed, boolean isOnion) {
         allBtcNodes.stream().forEach(node -> {
             int upTime = 0;
             int downTime = 0;
-            Tuple2<BitcoinNodes.BtcNode, Boolean> key = new Tuple2<>(node, isOnion);
+            Tuple2<BtcNodes.BtcNode, Boolean> key = new Tuple2<>(node, isOnion);
             if (btcNodeUpTimeMap.containsKey(key))
                 upTime = btcNodeUpTimeMap.get(key);
 

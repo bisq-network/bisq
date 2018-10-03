@@ -17,7 +17,6 @@
 
 package bisq.desktop.app;
 
-import bisq.desktop.SystemTray;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
@@ -35,6 +34,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyMode;
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.filter.FilterManager;
@@ -44,6 +44,7 @@ import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.setup.UncaughtExceptionHandler;
 import bisq.common.util.Profiler;
@@ -72,6 +73,11 @@ import javafx.scene.layout.StackPane;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -219,6 +225,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // configure the primary stage
         String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
+        if (BisqEnvironment.getBaseCurrencyNetwork().isTestnet())
+            appName += " [TESTNET]";
+        else if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
+            appName += " [REGTEST]";
         stage.setTitle(appName);
         stage.setScene(scene);
         stage.setMinWidth(1020);
@@ -259,6 +269,17 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     showSendAlertMessagePopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
                     showFilterPopup(injector);
+                } else if (Utilities.isAltOrCtrlPressed(KeyCode.T, keyEvent)) {
+                    // Toggle between show tor logs and only show warnings. Helpful in case of connection problems
+                    String pattern = "org.berndpruenster.netlayer";
+                    Level logLevel = ((Logger) LoggerFactory.getLogger(pattern)).getLevel();
+                    if (logLevel != Level.DEBUG) {
+                        log.info("Set log level for org.berndpruenster.netlayer classes to DEBUG");
+                        Log.setCustomLogLevel(pattern, Level.DEBUG);
+                    } else {
+                        log.info("Set log level for org.berndpruenster.netlayer classes to WARN");
+                        Log.setCustomLogLevel(pattern, Level.WARN);
+                    }
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
                     if (walletsManager.areWalletsAvailable())

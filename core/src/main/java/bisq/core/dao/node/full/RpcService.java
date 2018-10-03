@@ -213,7 +213,7 @@ public class RpcService {
                     ImmutableList.copyOf(txList));
         });
 
-        Futures.addCallback(future, new FutureCallback<RawBlock>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(RawBlock block) {
                 UserThread.execute(() -> resultHandler.accept(block));
@@ -221,6 +221,7 @@ public class RpcService {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
+                log.error("Error at requestBtcBlock: blockHeight={}", blockHeight);
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
