@@ -416,7 +416,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(Offer offer,
                             boolean isPaymentAccountValidForOffer,
-                            boolean hasMatchingArbitrator,
                             boolean hasSameProtocolVersion,
                             boolean isIgnored,
                             boolean isOfferBanned,
@@ -424,9 +423,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isPaymentMethodBanned,
                             boolean isNodeAddressBanned,
                             boolean isInsufficientTradeLimit) {
-        if (!hasMatchingArbitrator) {
-            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
-        } else if (!isPaymentAccountValidForOffer) {
+        if (!isPaymentAccountValidForOffer) {
             openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
                     Res.get("offerbook.warning.noMatchingAccount.msg"),
                     FiatAccountsView.class,
@@ -796,7 +793,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new AutoTooltipButton();
-                            boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
+                            boolean isTradable, isPaymentAccountValidForOffer,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
 
@@ -817,7 +814,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
-                                        hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isIgnored = model.isIgnored(offer);
                                         isOfferBanned = model.isOfferBanned(offer);
@@ -826,7 +822,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isNodeAddressBanned = model.isNodeAddressBanned(offer);
                                         isInsufficientTradeLimit = model.isInsufficientTradeLimit(offer);
                                         isTradable = isPaymentAccountValidForOffer &&
-                                                hasMatchingArbitrator &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
                                                 !isOfferBanned &&
@@ -848,7 +843,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(offer,
                                                             isPaymentAccountValidForOffer,
-                                                            hasMatchingArbitrator,
                                                             hasSameProtocolVersion,
                                                             isIgnored,
                                                             isOfferBanned,
@@ -880,7 +874,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (!myOffer && !isTradable)
                                         button.setOnAction(e -> onShowInfo(offer,
                                                 isPaymentAccountValidForOffer,
-                                                hasMatchingArbitrator,
                                                 hasSameProtocolVersion,
                                                 isIgnored,
                                                 isOfferBanned,
