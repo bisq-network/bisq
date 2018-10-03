@@ -45,6 +45,9 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -175,6 +178,19 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public List<Proposal> getValidatedProposals() {
+        return proposalPayloads.stream()
+                .map(proposalPayload -> proposalPayload.getProposal())
+                .filter(proposal -> proposalValidator.isTxTypeValid(proposal))
+                .collect(Collectors.toList());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -243,14 +259,9 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             if (!proposalPayloads.contains(proposalPayload)) {
                 Proposal proposal = proposalPayload.getProposal();
                 if (proposalValidator.areDataFieldsValid(proposal)) {
-                    if (proposalValidator.isTxTypeValid(proposal)) {
-                        proposalPayloads.add(proposalPayload);
-                        log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
-                                proposal.getTxId());
-                    } else {
-                        log.warn("We received a proposal with an invalid txId. Proposal.txId={}",
-                                proposal.getTxId());
-                    }
+                    proposalPayloads.add(proposalPayload);
+                    log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
+                            proposal.getTxId());
                 } else {
                     log.warn("We received a invalid append-only proposal from the P2P network. " +
                                     "Proposal.txId={}, blockHeight={}",
