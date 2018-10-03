@@ -29,7 +29,6 @@ import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
-import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.funds.FundsView;
@@ -408,10 +407,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     })
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
-            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
-                    Res.get("popup.warning.noArbitratorSelected.msg"),
-                    ArbitratorSelectionView.class,
-                    "navigation.arbitratorSelection");
+            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -429,10 +425,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isNodeAddressBanned,
                             boolean isInsufficientTradeLimit) {
         if (!hasMatchingArbitrator) {
-            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
-                    Res.get("popup.warning.noArbitratorSelected.msg"),
-                    ArbitratorSelectionView.class,
-                    "navigation.arbitratorSelection");
+            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
         } else if (!isPaymentAccountValidForOffer) {
             openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
                     Res.get("offerbook.warning.noMatchingAccount.msg"),
