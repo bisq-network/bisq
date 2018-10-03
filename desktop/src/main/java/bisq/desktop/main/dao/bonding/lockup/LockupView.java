@@ -195,13 +195,18 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         lockupButton.setOnAction((event) -> {
             switch (lockupTypeComboBox.getValue()) {
                 case BONDED_ROLE:
-                    if (bondedRolesComboBox.getValue() != null ) {
+                    if (bondedRolesComboBox.getValue() != null) {
                         bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue(),
                                 () -> bondedRolesComboBox.getSelectionModel().clearSelection());
                     }
                     break;
                 case REPUTATION:
-                    log.error("REPUTATION!!!!!!!!!!!!!");
+                    bondingViewUtils.lockupBondForReputation(bsqFormatter.parseToCoin(amountInputTextField.getText()),
+                            Integer.parseInt(timeInputTextField.getText()),
+                            () -> {
+                                amountInputTextField.setText("");
+                                timeInputTextField.setText("");
+                            });
                     break;
                 default:
                     log.error("Unknown lockup option=" + lockupTypeComboBox.getValue());

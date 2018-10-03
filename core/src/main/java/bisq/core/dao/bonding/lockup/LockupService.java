@@ -71,7 +71,7 @@ public class LockupService {
                 lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
         try {
 
-            byte[] hash = BondingConsensus.getHash(lockupType, bondWithHash);
+            byte[] hash = BondingConsensus.getHash(bondWithHash);
             byte[] opReturnData = BondingConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
             final Transaction lockupTx = getLockupTx(lockupAmount, opReturnData);
 

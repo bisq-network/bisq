@@ -508,8 +508,8 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesService.getBondedRoleFromHash(hash);
     }
 
-    public boolean isUnlocking(BondedRole bondedRole) {
-        return bsqStateService.isUnlocking(bondedRole);
+    public boolean isUnlocking(BondWithHash bondWithHash) {
+        return bsqStateService.isUnlocking(bondWithHash);
     }
 
     public Coin getMinCompensationRequestAmount() {

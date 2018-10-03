@@ -89,11 +89,7 @@ public class BondingConsensus {
         return Arrays.copyOfRange(opReturnData, 5, 25);
     }
 
-    public static byte[] getHash(LockupType lockupType, BondWithHash bondWithHash) {
-        if (lockupType == LockupType.BONDED_ROLE) {
-            return bondWithHash.getHash();
-        } else {
-            throw new RuntimeException("Trade bonds not implemented yet");
-        }
+    public static byte[] getHash(BondWithHash bondWithHash) {
+        return bondWithHash.getHash();
     }
 }

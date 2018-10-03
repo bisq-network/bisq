@@ -19,6 +19,7 @@ package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
@@ -720,8 +721,8 @@ public class BsqStateService implements DaoSetupService {
         // txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
     }
 
-    public boolean isUnlocking(BondedRole bondedRole) {
-        Optional<Tx> optionalTx = getTx(bondedRole.getUnlockTxId());
+    public boolean isUnlocking(BondWithHash bondWithHash) {
+        Optional<Tx> optionalTx = getTx(bondWithHash.getUnlockTxId());
         return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
     }
 

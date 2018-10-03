@@ -1533,6 +1533,12 @@ message BondedRoleList {
     repeated BondedRole bonded_role = 1;
 }
 
+message BondedReputation {
+    string salt = 1;
+    string lockup_tx_id = 2;
+    string unlock_tx_id = 3;
+}
+
 message TempProposalPayload {
     Proposal proposal = 1;
     bytes owner_pub_key_encoded = 2;

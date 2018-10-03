@@ -138,6 +138,11 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    public String getUnlockTxId() {
+        return unlockTxId;
+    }
+
+    @Override
     public byte[] getHash() {
         // We use only the immutable data as input for hash
         byte[] bytes = BigInteger.valueOf(hashCode()).toByteArray();
