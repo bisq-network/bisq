@@ -18,7 +18,9 @@
 package bisq.core.offer.availability;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -29,39 +31,39 @@ public class ArbitratorSelectionTest {
     public void testGetLeastUsedArbitrator() {
         // We get least used selected
         List<String> lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb1");
-        List<String> arbitrators = Arrays.asList("arb1", "arb2");
+        Set<String> arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
         String result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb2", result);
 
         // if all are same we use first according to alphanumeric sorting
         lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3");
-        arbitrators = Arrays.asList("arb1", "arb2", "arb3");
+        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb1", result);
         lastAddressesUsedInTrades = Arrays.asList("xxx", "ccc", "aaa");
-        arbitrators = Arrays.asList("aaa", "ccc", "xxx");
+        arbitrators = new HashSet<>(Arrays.asList("aaa", "ccc", "xxx"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("aaa", result);
         lastAddressesUsedInTrades = Arrays.asList("333", "000", "111");
-        arbitrators = Arrays.asList("111", "333", "000");
+        arbitrators = new HashSet<>(Arrays.asList("111", "333", "000"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("000", result);
 
         // if winner is not in our arb list we use our arb from arbitrators even if never used in trades
         lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3");
-        arbitrators = Arrays.asList("arb4");
+        arbitrators = new HashSet<>(Arrays.asList("arb4"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb4", result);
 
         // if winner (arb2) is not in our arb list we use our arb from arbitrators
         lastAddressesUsedInTrades = Arrays.asList("arb1", "arb1", "arb1", "arb2");
-        arbitrators = Arrays.asList("arb1");
+        arbitrators = new HashSet<>(Arrays.asList("arb1"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb1", result);
 
         // arb1 is used least
         lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb2", "arb2", "arb1", "arb1", "arb2");
-        arbitrators = Arrays.asList("arb1", "arb2");
+        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb1", result);
     }

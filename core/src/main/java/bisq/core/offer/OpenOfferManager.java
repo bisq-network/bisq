@@ -333,6 +333,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
+                arbitratorManager,
+                tradeStatisticsManager,
                 user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
@@ -557,11 +559,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         try {
             Optional<OpenOffer> openOfferOptional = getOpenOfferById(request.offerId);
             AvailabilityResult availabilityResult;
+            NodeAddress arbitratorNodeAddress = null;
             if (openOfferOptional.isPresent()) {
-                if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-                    final Offer offer = openOfferOptional.get().getOffer();
-                    if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostNameWithoutPostFix()))) {
+                OpenOffer openOffer = openOfferOptional.get();
+                if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
+                    final Offer offer = openOffer.getOffer();
+                    if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostName()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
+
+                        arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
@@ -595,8 +602,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
-            String selectedArbitrator = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager);
-            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId, availabilityResult, selectedArbitrator);
+            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId, availabilityResult, arbitratorNodeAddress);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getOfferId(),
                     offerAvailabilityResponse.getUid(), peer);

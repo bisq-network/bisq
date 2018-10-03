@@ -26,10 +26,8 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
-import bisq.core.trade.protocol.ArbitratorSelectionRule;
-
-import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
@@ -42,8 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
@@ -64,11 +60,8 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             String id = offer.getId();
             BtcWalletService walletService = model.getWalletService();
 
-            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUser().getAcceptedArbitratorAddresses(),
-                    model.getOffer());
-            log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
-            Arbitrator selectedArbitrator = model.getUser().getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
-            checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
+            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
+                    model.getArbitratorManager());
 
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
             Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
@@ -85,7 +78,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         model.isUseSavingsWallet(),
                         offer.getMakerFee(),
                         offer.getTxFee(),
-                        selectedArbitrator.getBtcAddress(),
+                        arbitrator.getBtcAddress(),
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {

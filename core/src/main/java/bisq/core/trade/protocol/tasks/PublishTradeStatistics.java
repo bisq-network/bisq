@@ -51,7 +51,8 @@ public class PublishTradeStatistics extends TradeTask {
 
                 NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
                 if (arbitratorNodeAddress != null) {
-                    String address = arbitratorNodeAddress.getHostNameWithoutPostFix();
+                    // The first 4 chars are sufficient to identify an arbitrator
+                    String address = arbitratorNodeAddress.getHostName().substring(0, 4);
                     extraDataMap.put(TradeStatistics2.ARBITRATOR_ADDRESS, address);
                 }
 

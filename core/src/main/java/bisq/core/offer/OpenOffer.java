@@ -20,6 +20,8 @@ package bisq.core.offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradableList;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.ProtoUtil;
@@ -31,7 +33,10 @@ import java.util.Date;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @EqualsAndHashCode
 @Slf4j
@@ -52,6 +57,10 @@ public final class OpenOffer implements Tradable {
     private final Offer offer;
     @Getter
     private State state;
+    @Getter
+    @Setter
+    @Nullable
+    private NodeAddress arbitratorNodeAddress;
 
     transient private Storage<TradableList<OpenOffer>> storage;
 

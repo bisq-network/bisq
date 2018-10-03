@@ -17,62 +17,89 @@
 
 package bisq.core.offer.availability;
 
+import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.util.Tuple2;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ArbitratorSelection {
-    public static String getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
-                                                ArbitratorManager arbitratorManager) {
+    @Getter
+    private static boolean isNewRuleActivated;
+
+    static {
+        try {
+            //TODO set activation data to 1 month after release
+            Date activationDate = new SimpleDateFormat("dd/MM/yyyy").parse("1/10/2018");
+            isNewRuleActivated = new Date().after(activationDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Arbitrator getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
+                                                    ArbitratorManager arbitratorManager) {
+        // We take last 100 entries from trade statistics
         List<TradeStatistics2> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
         list.sort(Comparator.comparing(TradeStatistics2::getTradeDate));
         Collections.reverse(list);
-        log.error("first  " + list.get(0).getTradeDate());
-        log.error("last   " + list.get(list.size() - 1).getTradeDate());
-        list = list.subList(0, 100);
-        log.error("list post " + list);
+        if (!list.isEmpty()) {
+            int max = Math.min(list.size(), 100);
+            list = list.subList(0, max);
+        }
 
+        // We stored only first 4 chars of arbitrators onion address
         List<String> lastAddressesUsedInTrades = list.stream()
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
                 .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(TradeStatistics2.ARBITRATOR_ADDRESS))
                 .collect(Collectors.toList());
 
-        List<String> arbitrators = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .map(arbitrator -> arbitrator.getNodeAddress().getHostNameWithoutPostFix())
-                .collect(Collectors.toList());
+        Set<String> arbitrators = arbitratorManager.getArbitratorsObservableMap().values().stream()
+                .map(arbitrator -> arbitrator.getNodeAddress().getHostName())
+                .collect(Collectors.toSet());
 
         String result = getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
-        log.error("result: " + result);
-        return result;
+
+        Optional<Arbitrator> optionalArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
+                .filter(e -> e.getNodeAddress().getHostName().equals(result))
+                .findAny();
+        checkArgument(optionalArbitrator.isPresent(), "optionalArbitrator has to be present");
+        return optionalArbitrator.get();
     }
 
-    static String getLeastUsedArbitrator(List<String> lastAddressesUsedInTrades, List<String> arbitrators) {
+    static String getLeastUsedArbitrator(List<String> lastAddressesUsedInTrades, Set<String> arbitrators) {
+        checkArgument(!arbitrators.isEmpty(), "arbitrators must nto be empty");
         List<Tuple2<String, AtomicInteger>> arbitratorTuples = arbitrators.stream()
                 .map(e -> new Tuple2<>(e, new AtomicInteger(0)))
                 .collect(Collectors.toList());
         arbitratorTuples.forEach(tuple -> {
             int count = (int) lastAddressesUsedInTrades.stream()
-                    .filter(tuple.first::equals)
+                    .filter(tuple.first::startsWith) // we use only first 4 chars for comparing
                     .mapToInt(e -> 1)
                     .count();
             tuple.second.set(count);
         });
-
-        arbitratorTuples.sort(Comparator.comparing(e -> e.first));
         arbitratorTuples.sort(Comparator.comparingInt(e -> e.second.get()));
-
         return arbitratorTuples.get(0).first;
     }
 }

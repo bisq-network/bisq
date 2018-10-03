@@ -33,6 +33,8 @@ import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -49,10 +51,11 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               boolean isCurrencyForTakerFeeBtc,
                               long tradePrice,
                               NodeAddress tradingPeerNodeAddress,
+                              @Nullable NodeAddress arbitratorNodeAddress,
                               Storage<? extends TradableList> storage,
                               BtcWalletService btcWalletService) {
         super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
-                tradingPeerNodeAddress, storage, btcWalletService);
+                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService);
     }
 
 
@@ -81,6 +84,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                         proto.getIsCurrencyForTakerFeeBtc(),
                         proto.getTradePrice(),
                         proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
+                        proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                         storage,
                         btcWalletService),
                 proto,

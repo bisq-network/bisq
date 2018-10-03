@@ -18,6 +18,7 @@
 package bisq.core.trade;
 
 import bisq.core.arbitration.Arbitrator;
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.Mediator;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -29,18 +30,21 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.UserThread;
 import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -373,6 +377,7 @@ public abstract class Trade implements Tradable, Model {
                     Coin txFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
+                    @Nullable NodeAddress arbitratorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
         this.offer = offer;
@@ -381,6 +386,7 @@ public abstract class Trade implements Tradable, Model {
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.storage = storage;
         this.btcWalletService = btcWalletService;
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
@@ -398,10 +404,11 @@ public abstract class Trade implements Tradable, Model {
                     boolean isCurrencyForTakerFeeBtc,
                     long tradePrice,
                     NodeAddress tradingPeerNodeAddress,
+                    @Nullable NodeAddress arbitratorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
 
-        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
+        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
@@ -493,6 +500,8 @@ public abstract class Trade implements Tradable, Model {
                      User user,
                      FilterManager filterManager,
                      AccountAgeWitnessService accountAgeWitnessService,
+                     TradeStatisticsManager tradeStatisticsManager,
+                     ArbitratorManager arbitratorManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
@@ -508,9 +517,21 @@ public abstract class Trade implements Tradable, Model {
                 user,
                 filterManager,
                 accountAgeWitnessService,
+                tradeStatisticsManager,
+                arbitratorManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
+
+        if (ArbitratorSelection.isNewRuleActivated()) {
+            Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getArbitratorByNodeAddress(arbitratorNodeAddress);
+            if (optionalArbitrator.isPresent()) {
+                Arbitrator arbitrator = optionalArbitrator.get();
+                arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+                arbitratorPubKeyRing = arbitrator.getPubKeyRing();
+                UserThread.runAfter(() -> this.persist(), 1);
+            }
+        }
 
         createTradeProtocol();
 
@@ -666,6 +687,7 @@ public abstract class Trade implements Tradable, Model {
         errorMessageProperty.set(errorMessage);
     }
 
+    //TODO can be removed after new rule is actiavted
     @SuppressWarnings("NullableProblems")
     public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;

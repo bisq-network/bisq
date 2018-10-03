@@ -20,6 +20,7 @@ package bisq.core.offer.messages;
 
 import bisq.core.offer.AvailabilityResult;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 
 import bisq.common.app.Capabilities;
@@ -48,15 +49,15 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
 
     // Was introduced in v 0.9.0. Might be null if msg received from node with old version
     @Nullable
-    private final String selectedArbitrator;
+    private final NodeAddress arbitrator;
 
-    public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult, String selectedArbitrator) {
+    public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult, NodeAddress arbitrator) {
         this(offerId,
                 availabilityResult,
                 Capabilities.getSupportedCapabilities(),
                 Version.getP2PMessageVersion(),
                 UUID.randomUUID().toString(),
-                selectedArbitrator);
+                arbitrator);
     }
 
 
@@ -69,11 +70,11 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                                       @Nullable List<Integer> supportedCapabilities,
                                       int messageVersion,
                                       @Nullable String uid,
-                                      @Nullable String selectedArbitrator) {
+                                      @Nullable NodeAddress arbitrator) {
         super(messageVersion, offerId, uid);
         this.availabilityResult = availabilityResult;
         this.supportedCapabilities = supportedCapabilities;
-        this.selectedArbitrator = selectedArbitrator;
+        this.arbitrator = arbitrator;
     }
 
     @Override
@@ -84,7 +85,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
-        Optional.ofNullable(selectedArbitrator).ifPresent(e -> builder.setSelectedArbitrator(selectedArbitrator));
+        Optional.ofNullable(arbitrator).ifPresent(e -> builder.setArbitrator(arbitrator.toProtoMessage()));
 
         return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityResponse(builder)
@@ -97,6 +98,6 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid(),
-                proto.getSelectedArbitrator().isEmpty() ? null : proto.getSelectedArbitrator());
+                proto.hasArbitrator() ? NodeAddress.fromProto(proto.getArbitrator()) : null);
     }
 }

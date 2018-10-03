@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -380,5 +381,11 @@ public class ArbitratorManager {
             republishArbitratorTimer.stop();
             republishArbitratorTimer = null;
         }
+    }
+
+    public Optional<Arbitrator> getArbitratorByNodeAddress(NodeAddress nodeAddress) {
+        return arbitratorsObservableMap.containsKey(nodeAddress) ?
+                Optional.of(arbitratorsObservableMap.get(nodeAddress)) :
+                Optional.empty();
     }
 }
