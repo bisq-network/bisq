@@ -1351,8 +1351,8 @@ enum TxType {
     COMPENSATION_REQUEST = 8;
     BLIND_VOTE = 9;
     VOTE_REVEAL = 10;
-    LOCK_UP = 11;
-    UN_LOCK = 12;
+    LOCKUP = 11;
+    UNLOCK = 12;
 }
 
 message TxInput {
