@@ -91,19 +91,8 @@ public class TxOutputParser {
         for (int i = 0; i < genesisTx.getTempTxOutputs().size(); ++i) {
             TempTxOutput tempTxOutput = genesisTx.getTempTxOutputs().get(i);
             utxoCandidates.add(tempTxOutput);
-            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
+            bsqOutputFound = true;
         }
-    }
-
-    void commitUTXOCandidates() {
-        utxoCandidates.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
-    }
-
-    /**
-     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in bsqStateService
-     */
-    void invalidateUTXOCandidates() {
-        utxoCandidates.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
     }
 
     void processOpReturnOutput(TempTxOutput tempTxOutput) {
@@ -120,13 +109,9 @@ public class TxOutputParser {
                 .ifPresent(opReturnType -> lockTime = BondingConsensus.getLockTime(opReturnData));
     }
 
-    /**
-     * Process a transaction output.
-     *
-     * @param tempTxOutput The TempTxOutput we are parsing
-     */
     void processTxOutput(TempTxOutput tempTxOutput) {
-        // An opReturn output which is not at the last index is invalid.
+        // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
+        // another output index is invalid.
         if (tempTxOutput.isOpReturnOutput()) {
             tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
             return;
@@ -144,6 +129,17 @@ public class TxOutputParser {
         } else {
             handleBtcOutput(tempTxOutput, index);
         }
+    }
+
+    void commitUTXOCandidates() {
+        utxoCandidates.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
+    }
+
+    /**
+     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in bsqStateService
+     */
+    void invalidateUTXOCandidates() {
+        utxoCandidates.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
     }
 
 

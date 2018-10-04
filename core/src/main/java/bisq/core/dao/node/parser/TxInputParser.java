@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TxInputParser {
+    private final BsqStateService bsqStateService;
+
     // Getters
     @Getter
     private long accumulatedInputValue = 0;
@@ -48,7 +50,6 @@ public class TxInputParser {
     private boolean isUnLockInputValid = true;
 
     // Private
-    private final BsqStateService bsqStateService;
     private int numVoteRevealInputs = 0;
 
 

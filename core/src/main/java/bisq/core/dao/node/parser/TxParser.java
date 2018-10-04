@@ -83,7 +83,6 @@ public class TxParser {
         // Parse Genesis
         // ****************************************************************************************
 
-        // Let's see if we have a genesis tx
         Optional<TempTx> optionalGenesisTx = findGenesisTx(
                 genesisTxId,
                 genesisBlockHeight,
@@ -92,6 +91,7 @@ public class TxParser {
         if (optionalGenesisTx.isPresent()) {
             TempTx genesisTx = optionalGenesisTx.get();
             txOutputParser.processGenesisTxOutput(genesisTx);
+            txOutputParser.commitUTXOCandidates();
             return Optional.of(Tx.fromTempTx(genesisTx));
         }
 
@@ -458,8 +458,9 @@ public class TxParser {
         TempTx tempTx = TempTx.fromRawTx(rawTx);
         tempTx.setTxType(TxType.GENESIS);
         long remainingInputValue = genesisTotalSupply.getValue();
-        for (int i = 0; i < tempTx.getTempTxOutputs().size(); ++i) {
-            TempTxOutput txOutput = tempTx.getTempTxOutputs().get(i);
+        List<TempTxOutput> tempTxOutputs = tempTx.getTempTxOutputs();
+        for (int i = 0; i < tempTxOutputs.size(); ++i) {
+            TempTxOutput txOutput = tempTxOutputs.get(i);
             long value = txOutput.getValue();
             boolean isValid = value <= remainingInputValue;
             if (!isValid)
