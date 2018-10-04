@@ -132,14 +132,14 @@ public final class Tx extends BaseTx implements PersistablePayload {
 
 
     /**
-     * The lockTime is stored in the LOCKUP txOutput, which is the first txOutput.
+     * The lockTime is stored in the first output of the LOCKUP tx.
      */
     public int getLockTime() {
         return txOutputs.get(0).getLockTime();
     }
 
     /**
-     * The unlockBlockHeight is stored in the LOCKUP txOutput, which is the first txOutput.
+     * The unlockBlockHeight is stored in the first output of the LOCKUP tx.
      */
     public int getUnlockBlockHeight() {
         return txOutputs.get(0).getUnlockBlockHeight();
