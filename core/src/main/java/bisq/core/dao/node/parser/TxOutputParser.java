@@ -20,7 +20,6 @@ package bisq.core.dao.node.parser;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.TempTx;
 import bisq.core.dao.state.blockchain.TempTxOutput;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputType;
@@ -71,7 +70,7 @@ public class TxOutputParser {
 
     // Private
     private int lockTime;
-    private List<TempTxOutput> utxoCandidates = new ArrayList<>();
+    private final List<TempTxOutput> utxoCandidates = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -86,14 +85,6 @@ public class TxOutputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void processGenesisTxOutput(TempTx genesisTx) {
-        for (int i = 0; i < genesisTx.getTempTxOutputs().size(); ++i) {
-            TempTxOutput tempTxOutput = genesisTx.getTempTxOutputs().get(i);
-            utxoCandidates.add(tempTxOutput);
-            bsqOutputFound = true;
-        }
-    }
 
     void processOpReturnOutput(TempTxOutput tempTxOutput) {
         byte[] opReturnData = tempTxOutput.getOpReturnData();

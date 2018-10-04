@@ -17,7 +17,6 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.node.parser.exceptions.InvalidGenesisTxException;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
 import bisq.core.dao.state.blockchain.RawTx;
@@ -25,6 +24,7 @@ import bisq.core.dao.state.blockchain.TempTx;
 import bisq.core.dao.state.blockchain.TempTxOutput;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxInput;
+import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputKey;
 import bisq.core.dao.state.blockchain.TxOutputType;
 import bisq.core.dao.state.blockchain.TxType;
@@ -70,51 +70,40 @@ public class TxParser {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Optional<Tx> findTx(RawTx rawTx, String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply) {
+        if (GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight))
+            return Optional.of(GenesisTxParser.getGenesisTx(rawTx, genesisTotalSupply, bsqStateService));
+        else
+            return findTx(rawTx);
+    }
+
     // Apply state changes to tx, inputs and outputs
     // return Tx if any input contained BSQ
-    // Any tx with BSQ input is a BSQ tx (except genesis tx but that is not handled in
-    // that class).
+    // Any tx with BSQ input is a BSQ tx.
     // There might be txs without any valid BSQ txOutput but we still keep track of it,
     // for instance to calculate the total burned BSQ.
-    public Optional<Tx> findTx(RawTx rawTx, String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply) {
-        txOutputParser = new TxOutputParser(bsqStateService);
-
-        // ****************************************************************************************
-        // Parse Genesis
-        // ****************************************************************************************
-
-        Optional<TempTx> optionalGenesisTx = findGenesisTx(
-                genesisTxId,
-                genesisBlockHeight,
-                genesisTotalSupply,
-                rawTx);
-        if (optionalGenesisTx.isPresent()) {
-            TempTx genesisTx = optionalGenesisTx.get();
-            txOutputParser.processGenesisTxOutput(genesisTx);
-            txOutputParser.commitUTXOCandidates();
-            return Optional.of(Tx.fromTempTx(genesisTx));
-        }
-
-
-        // ****************************************************************************************
-        // Parse Inputs
-        // ****************************************************************************************
-
-        txInputParser = new TxInputParser(bsqStateService);
-        // If it is not a genesis tx we continue to parse to see if it is a valid BSQ tx.
+    private Optional<Tx> findTx(RawTx rawTx) {
         int blockHeight = rawTx.getBlockHeight();
-        // We could pass tx also to the sub validators but as long we have not refactored the validators to pure
-        // functions lets use the parsingModel.
         TempTx tempTx = TempTx.fromRawTx(rawTx);
 
+        //****************************************************************************************
+        // Parse Inputs
+        //****************************************************************************************
+
+        txInputParser = new TxInputParser(bsqStateService);
         for (int inputIndex = 0; inputIndex < tempTx.getTxInputs().size(); inputIndex++) {
             TxInput input = tempTx.getTxInputs().get(inputIndex);
             TxOutputKey outputKey = input.getConnectedTxOutputKey();
             txInputParser.process(outputKey, blockHeight, rawTx.getId(), inputIndex);
         }
 
+        // Results from txInputParser
         long accumulatedInputValue = txInputParser.getAccumulatedInputValue();
         long burntBondValue = txInputParser.getBurntBondValue();
+        boolean unLockInputValid = txInputParser.isUnLockInputValid();
+        int unlockBlockHeight = txInputParser.getUnlockBlockHeight();
+        Optional<TxOutput> optionalSpentLockupTxOutput = txInputParser.getOptionalSpentLockupTxOutput();
+
         boolean hasBsqInputs = accumulatedInputValue > 0;
         boolean hasBurntBond = burntBondValue > 0;
 
@@ -123,13 +112,14 @@ public class TxParser {
             return Optional.empty();
 
 
-        // ****************************************************************************************
+        //****************************************************************************************
         // Parse Outputs
-        // ****************************************************************************************
+        //****************************************************************************************
 
+        txOutputParser = new TxOutputParser(bsqStateService);
         txOutputParser.setAvailableInputValue(accumulatedInputValue);
-        txOutputParser.setUnlockBlockHeight(txInputParser.getUnlockBlockHeight());
-        txOutputParser.setOptionalSpentLockupTxOutput(txInputParser.getOptionalSpentLockupTxOutput());
+        txOutputParser.setUnlockBlockHeight(unlockBlockHeight);
+        txOutputParser.setOptionalSpentLockupTxOutput(optionalSpentLockupTxOutput);
 
         List<TempTxOutput> outputs = tempTx.getTempTxOutputs();
         // We start with last output as that might be an OP_RETURN output and gives us the specific tx type, so it is
@@ -147,24 +137,27 @@ public class TxParser {
             txOutputParser.processTxOutput(outputs.get(index));
         }
 
+        // Results from txOutputParser
         long remainingInputValue = txOutputParser.getAvailableInputValue();
+        Optional<OpReturnType> optionalOpReturnType = txOutputParser.getOptionalOpReturnType();
+        boolean bsqOutputFound = txOutputParser.isBsqOutputFound();
+
         long burntBsq = remainingInputValue + burntBondValue;
         boolean hasBurntBSQ = burntBsq > 0;
         if (hasBurntBSQ)
             tempTx.setBurntFee(burntBsq);
 
 
-        // ****************************************************************************************
+        //****************************************************************************************
         // Verify and apply txType and txOutputTypes after we have all outputs parsed
-        // ****************************************************************************************
+        //****************************************************************************************
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
 
-        TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ,
-                txInputParser.isUnLockInputValid());
+        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBSQ, unLockInputValid);
         tempTx.setTxType(txType);
 
-        if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound(), hasBurntBond)) {
+        if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
             txOutputParser.invalidateUTXOCandidates();
 
@@ -184,14 +177,13 @@ public class TxParser {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO That method is not testable and still too complex.
-
     /**
      * This method verifies after all outputs are parsed if the opReturn type and the optional txOutputs required for
      * certain use cases are valid.
      * It verifies also if the fee is correct (if required) and if the phase is correct (if relevant).
      * We set the txType as well as the txOutputType of the relevant outputs.
      */
+    // TODO That method is not testable and still too complex.
     private void applyTxTypeAndTxOutputType(int blockHeight, TempTx tempTx, long bsqFee) {
         OpReturnType opReturnType = null;
         Optional<OpReturnType> optionalOpReturnType = txOutputParser.getOptionalOpReturnType();
@@ -328,9 +320,7 @@ public class TxParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
-    /**
-     * Performs various checks for an invalid tx
-     */
+    // Performs various checks for an invalid tx
     static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound, boolean burntBondValue) {
         if (tempTx.getTxType() == TxType.INVALID) {
             // We got already set the invalid type in earlier checks and return early.
@@ -435,45 +425,5 @@ public class TxParser {
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
                 return TxType.INVALID;
         }
-    }
-
-
-    /**
-     * Parse and return the genesis transaction for bisq, if applicable.
-     *
-     * @param genesisTxId        The transaction id of the bisq genesis transaction.
-     * @param genesisBlockHeight The block height of the bisq genesis transaction.
-     * @param genesisTotalSupply The total supply of the genesis issuance for bisq.
-     * @param rawTx              The candidate transaction.
-     * @return The genesis transaction if applicable, or Optional.empty() otherwise.
-     */
-    @VisibleForTesting
-    static Optional<TempTx> findGenesisTx(String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply,
-                                          RawTx rawTx) {
-        boolean isGenesis = rawTx.getBlockHeight() == genesisBlockHeight &&
-                rawTx.getId().equals(genesisTxId);
-        if (!isGenesis)
-            return Optional.empty();
-
-        TempTx tempTx = TempTx.fromRawTx(rawTx);
-        tempTx.setTxType(TxType.GENESIS);
-        long remainingInputValue = genesisTotalSupply.getValue();
-        List<TempTxOutput> tempTxOutputs = tempTx.getTempTxOutputs();
-        for (int i = 0; i < tempTxOutputs.size(); ++i) {
-            TempTxOutput txOutput = tempTxOutputs.get(i);
-            long value = txOutput.getValue();
-            boolean isValid = value <= remainingInputValue;
-            if (!isValid)
-                throw new InvalidGenesisTxException("Genesis tx is invalid; using more than available inputs. " +
-                        "Remaining input value is " + remainingInputValue + " sat; tx info: " + tempTx.toString());
-
-            remainingInputValue -= value;
-            txOutput.setTxOutputType(TxOutputType.GENESIS_OUTPUT);
-        }
-        if (remainingInputValue > 0) {
-            throw new InvalidGenesisTxException("Genesis tx is invalid; not using all available inputs. " +
-                    "Remaining input value is " + remainingInputValue + " sat, tx info: " + tempTx.toString());
-        }
-        return Optional.of(tempTx);
     }
 }
