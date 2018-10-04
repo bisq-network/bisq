@@ -291,7 +291,7 @@ public class TxParser {
         }
 
         // We must not use an `if else` here!
-        if (!isPhaseValid || txInputParser.isVoteRevealInputValid()) {
+        if (!isPhaseValid || !txInputParser.isVoteRevealInputValid()) {
             txOutputParser.getOptionalVoteRevealUnlockStakeOutput().ifPresent(
                     tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
