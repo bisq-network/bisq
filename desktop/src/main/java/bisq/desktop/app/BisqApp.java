@@ -33,7 +33,7 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.AvoidStandbyMode;
+import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
@@ -131,7 +131,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
-            injector.getInstance(AvoidStandbyMode.class).init();
+            injector.getInstance(AvoidStandbyModeService.class).init();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {

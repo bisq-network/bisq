@@ -19,7 +19,7 @@ package bisq.core;
 
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.AvoidStandbyMode;
+import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqFacade;
 import bisq.core.app.BisqSetup;
@@ -94,7 +94,7 @@ public class CoreModule extends AppModule {
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
         bind(CorruptedDatabaseFilesHandler.class).in(Singleton.class);
-        bind(AvoidStandbyMode.class).in(Singleton.class);
+        bind(AvoidStandbyModeService.class).in(Singleton.class);
 
         bind(SeedNodeAddressLookup.class).in(Singleton.class);
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
