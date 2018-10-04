@@ -25,9 +25,7 @@ import bisq.core.dao.state.blockchain.TxOutputType;
 
 import javax.inject.Inject;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TxInputParser {
-    enum VoteRevealInputState {
-        UNKNOWN, VALID, INVALID
-    }
-
+    // Getters
     @Getter
     private long accumulatedInputValue = 0;
     @Getter
@@ -49,22 +44,28 @@ public class TxInputParser {
     private int unlockBlockHeight;
     @Getter
     private Optional<TxOutput> optionalSpentLockupTxOutput = Optional.empty();
-
-    private final BsqStateService bsqStateService;
     @Getter
-    boolean isVoteRevealInputInValid = false;
+    private boolean isUnLockInputValid = true;
+
+    // Private
+    private final BsqStateService bsqStateService;
     private int numVoteRevealInputs = 0;
 
-    //TODO never read from... remove?
-    // We use here TxOutput as we do not alter it but take it from the BsqState
-    private Set<TxOutput> spentUnlockConnectedTxOutputs = new HashSet<>();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
     public TxInputParser(BsqStateService bsqStateService) {
         this.bsqStateService = bsqStateService;
     }
 
-    @SuppressWarnings("IfCanBeSwitch")
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     void process(TxOutputKey txOutputKey, int blockHeight, String txId, int inputIndex) {
         bsqStateService.getUnspentTxOutput(txOutputKey)
                 .ifPresent(connectedTxOutput -> {
@@ -86,10 +87,9 @@ public class TxInputParser {
                             break;
                         case BLIND_VOTE_LOCK_STAKE_OUTPUT:
                             numVoteRevealInputs++;
-                            isVoteRevealInputInValid = numVoteRevealInputs == 1;
                             // The connected tx output of the blind vote tx is our input for the reveal tx.
                             // We allow only one input from any blind vote tx otherwise the vote reveal tx is invalid.
-                            if (!isVoteRevealInputInValid) {
+                            if (!isVoteRevealInputValid()) {
                                 log.warn("We have a tx which has >1 connected txOutputs marked as BLIND_VOTE_LOCK_STAKE_OUTPUT. " +
                                         "This is not a valid BSQ tx.");
                             }
@@ -100,17 +100,21 @@ public class TxInputParser {
                             break;
                         case LOCKUP_OUTPUT:
                             // A LOCKUP BSQ txOutput is spent to a corresponding UNLOCK
-                            // txOutput. The UNLOCK can only be spent after lockTime blocks has passed.
-                            if (!optionalSpentLockupTxOutput.isPresent()) {
+                            // txInput. The UNLOCK can only be spent after lockTime blocks has passed.
+                            isUnLockInputValid = !optionalSpentLockupTxOutput.isPresent();
+                            if (isUnLockInputValid) {
                                 optionalSpentLockupTxOutput = Optional.of(connectedTxOutput);
                                 unlockBlockHeight = blockHeight + connectedTxOutput.getLockTime();
+                            } else {
+                                log.warn("We have a tx which has >1 connected txOutputs marked as LOCKUP_OUTPUT. " +
+                                        "This is not a valid BSQ tx.");
                             }
                             break;
                         case LOCKUP_OP_RETURN_OUTPUT:
+                            // Cannot happen
                             break;
                         case UNLOCK_OUTPUT:
                             // This txInput is Spending an UNLOCK txOutput
-                            spentUnlockConnectedTxOutputs.add(connectedTxOutput);
 
                             //TODO  We should add unlockBlockHeight to TempTxOutput and remove unlockBlockHeight from tempTx
                             // then we can use connectedTxOutput to access the unlockBlockHeight instead of the tx
@@ -119,8 +123,12 @@ public class TxInputParser {
                                 if (blockHeight < unlockTx.getUnlockBlockHeight()) {
                                     accumulatedInputValue -= inputValue;
                                     burntBondValue += inputValue;
+                                } else {
+                                    log.warn("We got a tx which spends the output from an unlock tx but before the " +
+                                            "unlockTime has passed. That leads to burned BSQ!");
                                 }
                             });
+                            // TODO what if tx is not present?
                             break;
                         case INVALID_OUTPUT:
                         default:
@@ -130,5 +138,9 @@ public class TxInputParser {
                     bsqStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
                     bsqStateService.removeUnspentTxOutput(connectedTxOutput);
                 });
+    }
+
+    boolean isVoteRevealInputValid() {
+        return numVoteRevealInputs == 1;
     }
 }

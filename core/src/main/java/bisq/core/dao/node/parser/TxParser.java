@@ -55,12 +55,22 @@ public class TxParser {
     private TxOutputParser txOutputParser;
     private TxInputParser txInputParser;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     public TxParser(PeriodService periodService,
                     BsqStateService bsqStateService) {
         this.periodService = periodService;
         this.bsqStateService = bsqStateService;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Apply state changes to tx, inputs and outputs
     // return Tx if any input contained BSQ
@@ -138,16 +148,17 @@ public class TxParser {
 
             // Apply txType and optional txOutputTypes based on opReturn types
             // We might get a INVALID TxType here
-            // TODO refactor
-            processOpReturnType(blockHeight, tempTx, remainingInputValue);
+            verifyTxAndOutputs(blockHeight, tempTx, remainingInputValue);
 
-            if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound())) {
+            if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound()))
                 tempTx.setTxType(TxType.INVALID);
-            } else {
-                // We might get a INVALID TxType here as well
-                TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ);
-                tempTx.setTxType(txType);
-            }
+
+            // We might get a INVALID TxType here as well
+
+            TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ,
+                    txInputParser.isUnLockInputValid());
+            tempTx.setTxType(txType);
+
 
             if (tempTx.getTxType() != TxType.INVALID) {
                 txOutputParser.commitTxOutputsForValidTx();
@@ -178,33 +189,20 @@ public class TxParser {
             return Optional.empty();
     }
 
-    @VisibleForTesting
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // TODO That method is not testable and still too complex.
+
     /**
-     * Performs various checks for an invalid tx
+     * This method verifies after all outputs are parsed if the opReturn type and the optional txOutputs required for
+     * certain use cases are valid.
+     * It verifies also if the fee is correct (if required) and if the phase is correct (if relevant).
+     * We set the txType as well as the txOutputType of the relevant outputs.
      */
-    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound) {
-        if (tempTx.getTxType() == TxType.INVALID) {
-            // We got already set the invalid type in earlier checks and return early.
-            return true;
-        }
-
-        if (!bsqOutputFound) {
-            log.warn("Invalid Tx: No BSQ output found. tx=" + tempTx);
-            return true;
-        }
-
-        boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
-                .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
-        if (isAnyTxOutputTypeUndefined) {
-            log.warn("Invalid Tx: We have undefined txOutput types. tx=" + tempTx);
-            return true;
-        }
-
-        return false;
-    }
-
-    private void processOpReturnType(int blockHeight, TempTx tempTx, long bsqFee) {
-        // We might have a opReturn output
+    private void verifyTxAndOutputs(int blockHeight, TempTx tempTx, long bsqFee) {
         OpReturnType opReturnType = null;
         Optional<OpReturnType> optionalOpReturnType = txOutputParser.getOptionalOpReturnType();
         if (optionalOpReturnType.isPresent()) {
@@ -293,7 +291,7 @@ public class TxParser {
         }
 
         // We must not use an `if else` here!
-        if (!isPhaseValid || txInputParser.isVoteRevealInputInValid()) {
+        if (!isPhaseValid || txInputParser.isVoteRevealInputValid()) {
             txOutputParser.getOptionalVoteRevealUnlockStakeOutput().ifPresent(
                     tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
@@ -334,17 +332,48 @@ public class TxParser {
         return isInPhase;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @VisibleForTesting
+    /**
+     * Performs various checks for an invalid tx
+     */
+    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound) {
+        if (tempTx.getTxType() == TxType.INVALID) {
+            // We got already set the invalid type in earlier checks and return early.
+            return true;
+        }
+
+        if (!bsqOutputFound) {
+            log.warn("Invalid Tx: No BSQ output found. tx=" + tempTx);
+            return true;
+        }
+
+        boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
+                .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
+        if (isAnyTxOutputTypeUndefined) {
+            log.warn("Invalid Tx: We have undefined txOutput types. tx=" + tempTx);
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Retrieve the type of the transaction, assuming it is relevant to bisq.
      *
-     * @param tempTx                The temporary transaction.
-     * @param optionalOpReturnType  The optional OP_RETURN type of the transaction.
-     * @param hasBurntBSQ           If the have been remaining value from the inputs which got not spent in outputs.
-     *                              Might be valid BSQ fees or burned BSQ from an invalid tx.
+     * @param tempTx               The temporary transaction.
+     * @param optionalOpReturnType The optional OP_RETURN type of the transaction.
+     * @param hasBurntBSQ          If the have been remaining value from the inputs which got not spent in outputs.
+     *                             Might be valid BSQ fees or burned BSQ from an invalid tx.
      * @return The type of the transaction, if it is relevant to bisq.
      */
     @VisibleForTesting
-    static TxType evaluateTxType(TempTx tempTx, Optional<OpReturnType> optionalOpReturnType, boolean hasBurntBSQ) {
+    static TxType evaluateTxType(TempTx tempTx, Optional<OpReturnType> optionalOpReturnType,
+                                 boolean hasBurntBSQ, boolean isUnLockInputValid) {
         if (optionalOpReturnType.isPresent()) {
             // We use the opReturnType to find the txType
             return evaluateTxTypeFromOpReturnType(tempTx, optionalOpReturnType.get());
@@ -358,6 +387,10 @@ public class TxParser {
 
         // UNLOCK tx has no fee, no opReturn but an UNLOCK_OUTPUT at first output.
         if (tempTx.getTempTxOutputs().get(0).getTxOutputType() == TxOutputType.UNLOCK_OUTPUT) {
+            // We check if there have been invalid inputs
+            if (!isUnLockInputValid)
+                return TxType.INVALID;
+
             // UNLOCK tx has no fee, no OpReturn
             return TxType.UNLOCK;
         }
@@ -410,8 +443,9 @@ public class TxParser {
      * @param rawTx              The candidate transaction.
      * @return The genesis transaction if applicable, or Optional.empty() otherwise.
      */
-    public static Optional<TempTx> findGenesisTx(String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply,
-                                                 RawTx rawTx) {
+    @VisibleForTesting
+    static Optional<TempTx> findGenesisTx(String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply,
+                                          RawTx rawTx) {
         boolean isGenesis = rawTx.getBlockHeight() == genesisBlockHeight &&
                 rawTx.getId().equals(genesisTxId);
         if (!isGenesis)
