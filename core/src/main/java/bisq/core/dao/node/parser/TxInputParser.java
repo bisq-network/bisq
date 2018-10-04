@@ -52,7 +52,8 @@ public class TxInputParser {
 
     private final BsqStateService bsqStateService;
     @Getter
-    private TxInputParser.VoteRevealInputState voteRevealInputState = TxInputParser.VoteRevealInputState.UNKNOWN;
+    boolean isVoteRevealInputInValid = false;
+    private int numVoteRevealInputs = 0;
 
     //TODO never read from... remove?
     // We use here TxOutput as we do not alter it but take it from the BsqState
@@ -84,14 +85,13 @@ public class TxInputParser {
                         case ISSUANCE_CANDIDATE_OUTPUT:
                             break;
                         case BLIND_VOTE_LOCK_STAKE_OUTPUT:
-                            if (voteRevealInputState == TxInputParser.VoteRevealInputState.UNKNOWN) {
-                                // The connected tx output of the blind vote tx is our input for the reveal tx.
-                                // We allow only one input from any blind vote tx otherwise the vote reveal tx is invalid.
-                                voteRevealInputState = TxInputParser.VoteRevealInputState.VALID;
-                            } else {
+                            numVoteRevealInputs++;
+                            isVoteRevealInputInValid = numVoteRevealInputs == 1;
+                            // The connected tx output of the blind vote tx is our input for the reveal tx.
+                            // We allow only one input from any blind vote tx otherwise the vote reveal tx is invalid.
+                            if (!isVoteRevealInputInValid) {
                                 log.warn("We have a tx which has >1 connected txOutputs marked as BLIND_VOTE_LOCK_STAKE_OUTPUT. " +
                                         "This is not a valid BSQ tx.");
-                                voteRevealInputState = TxInputParser.VoteRevealInputState.INVALID;
                             }
                             break;
                         case BLIND_VOTE_OP_RETURN_OUTPUT:
