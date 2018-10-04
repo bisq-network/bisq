@@ -197,19 +197,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onAllServicesInitialized() {
         Log.traceCall();
         if (networkNode.getNodeAddress() != null) {
-            p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
-                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                    processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
-            });
+            maybeProcessAllMailboxEntries();
         } else {
             // If our HS is still not published
             networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue != null) {
-                    p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {
-                        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-                            processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
-                    });
-                }
+                if (newValue != null)
+                    maybeProcessAllMailboxEntries();
             });
         }
     }
@@ -291,6 +284,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         if (!seedNodesAvailable) {
             isBootstrapped = true;
+            maybeProcessAllMailboxEntries();
             p2pServiceListeners.stream().forEach(P2PServiceListener::onNoSeedNodeAvailable);
         }
     }
@@ -354,6 +348,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public void onUpdatedDataReceived() {
         if (!isBootstrapped) {
             isBootstrapped = true;
+            maybeProcessAllMailboxEntries();
             p2pServiceListeners.stream().forEach(P2PServiceListener::onUpdatedDataReceived);
             p2PDataStorage.onBootstrapComplete();
         }
@@ -449,7 +444,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     @Override
     public void onAdded(ProtectedStorageEntry protectedStorageEntry) {
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+            processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
     }
 
     @Override
@@ -523,9 +518,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // MailboxMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void processProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
-        Log.traceCall();
-        final NodeAddress nodeAddress = networkNode.getNodeAddress();
+    private void processMailboxEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+        NodeAddress nodeAddress = networkNode.getNodeAddress();
         // Seed nodes don't receive mailbox network_messages
         if (nodeAddress != null && !seedNodeRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
@@ -541,8 +535,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
                         mailboxMap.put(mailboxMessage.getUid(), protectedMailboxStorageEntry);
-                        log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress="
-                                + senderNodeAddress + " / my address=" + getAddress());
+                        log.info("Received a {} mailbox message with messageUid {} and senderAddress {}", mailboxMessage.getClass().getSimpleName(), mailboxMessage.getUid(), senderNodeAddress);
                         decryptedMailboxListeners.forEach(
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
                     } else {
@@ -660,6 +653,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     }
 
+    private void maybeProcessAllMailboxEntries() {
+        if (isBootstrapped) {
+            p2PDataStorage.getMap().values().forEach(protectedStorageEntry -> {
+                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                    processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+            });
+        }
+    }
 
     private void addMailboxData(MailboxStoragePayload expirableMailboxStoragePayload,
                                 PublicKey receiversPublicKey,
@@ -757,8 +758,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         if (!isBootstrapped()) {
             // We don't throw an NetworkNotReadyException here.
-            // This case should not happen anyway but we saw it in some rare cases.
-            // Needs more investigation why as that methods should only be called after isBootstrapped is set.
+            // This case should not happen anyway as we check for isBootstrapped in the callers.
             log.warn("You must have bootstrapped before adding data to the P2P network.");
         }
 
