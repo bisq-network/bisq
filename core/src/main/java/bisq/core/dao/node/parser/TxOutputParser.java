@@ -126,6 +126,12 @@ public class TxOutputParser {
      * @param tempTxOutput The TempTxOutput we are parsing
      */
     void processTxOutput(TempTxOutput tempTxOutput) {
+        // An opReturn output which is not at the last index is invalid.
+        if (tempTxOutput.isOpReturnOutput()) {
+            tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
+            return;
+        }
+
         long txOutputValue = tempTxOutput.getValue();
         int index = tempTxOutput.getIndex();
         if (isUnlockBondTx(tempTxOutput.getValue(), index)) {

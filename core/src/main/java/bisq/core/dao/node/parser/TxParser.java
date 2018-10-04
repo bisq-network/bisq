@@ -43,8 +43,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * Verifies if a given transaction is a BSQ transaction.
  */
@@ -116,82 +114,69 @@ public class TxParser {
         }
 
         long accumulatedInputValue = txInputParser.getAccumulatedInputValue();
+        long burntBondValue = txInputParser.getBurntBondValue();
         boolean hasBsqInputs = accumulatedInputValue > 0;
+        boolean hasBurntBond = burntBondValue > 0;
+
+        // If we don't have any BSQ in our input and we don't have burnt bonds we do not consider the tx as a BSQ tx.
+        if (!hasBsqInputs && !hasBurntBond)
+            return Optional.empty();
 
 
         // ****************************************************************************************
         // Parse Outputs
         // ****************************************************************************************
 
-        if (hasBsqInputs) {
-            txOutputParser.setAvailableInputValue(accumulatedInputValue);
-            txOutputParser.setUnlockBlockHeight(txInputParser.getUnlockBlockHeight());
-            txOutputParser.setOptionalSpentLockupTxOutput(txInputParser.getOptionalSpentLockupTxOutput());
+        txOutputParser.setAvailableInputValue(accumulatedInputValue);
+        txOutputParser.setUnlockBlockHeight(txInputParser.getUnlockBlockHeight());
+        txOutputParser.setOptionalSpentLockupTxOutput(txInputParser.getOptionalSpentLockupTxOutput());
 
-            List<TempTxOutput> outputs = tempTx.getTempTxOutputs();
-            // We start with last output as that might be an OP_RETURN output and gives us the specific tx type, so it is
-            // easier and cleaner at parsing the other outputs to detect which kind of tx we deal with.
-            // Setting the opReturn type here does not mean it will be a valid BSQ tx as the checks are only partial and
-            // BSQ inputs are not verified yet.
-            // We keep the temporary opReturn type in the parsingModel object.
-            checkArgument(!outputs.isEmpty(), "outputs cannot be empty");
-            int lastIndex = outputs.size() - 1;
-            int lastNonOpReturnIndex = lastIndex;
-            if (outputs.get(lastIndex).isOpReturnOutput()) {
-                txOutputParser.processOpReturnOutput(outputs.get(lastIndex));
-                lastNonOpReturnIndex -= 1;
-            }
-
-            // We use order of output index. An output is a BSQ utxo as long there is enough input value
-            // We iterate all outputs including the opReturn to do a full validation including the BSQ fee
-            for (int index = 0; index <= lastNonOpReturnIndex; index++) {
-                txOutputParser.processTxOutput(outputs.get(index));
-            }
-
-            long remainingInputValue = txOutputParser.getAvailableInputValue();
-            boolean hasBurntBSQ = remainingInputValue > 0;
-
-            //TODO use setBurntFee but check in bsqStateService if txType is INVALID
-            if (hasBurntBSQ)
-                tempTx.setBurntFee(remainingInputValue);
-
-
-            // ****************************************************************************************
-            // Verify and apply txType and txOutputTypes after we have all outputs parsed
-            // ****************************************************************************************
-
-
-            applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
-
-            TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ,
-                    txInputParser.isUnLockInputValid());
-            tempTx.setTxType(txType);
-
-            if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound())) {
-                tempTx.setTxType(TxType.INVALID);
-                txOutputParser.invalidateUTXOCandidates();
-
-                if (hasBurntBSQ) {
-                    log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
-                            remainingInputValue / 100D, tempTx);
-                }
-            } else {
-                txOutputParser.commitUTXOCandidates();
-            }
+        List<TempTxOutput> outputs = tempTx.getTempTxOutputs();
+        // We start with last output as that might be an OP_RETURN output and gives us the specific tx type, so it is
+        // easier and cleaner at parsing the other outputs to detect which kind of tx we deal with.
+        int lastIndex = outputs.size() - 1;
+        int lastNonOpReturnIndex = lastIndex;
+        if (outputs.get(lastIndex).isOpReturnOutput()) {
+            txOutputParser.processOpReturnOutput(outputs.get(lastIndex));
+            lastNonOpReturnIndex -= 1;
         }
 
-        // TODO || txInputParser.getBurntBondValue() > 0; should not be necessary
-        // How should we consider the burnt BSQ from spending a LOCKUP tx with the wrong format.
-        // Example: LOCKUP txOutput is 1000 satoshi but first txOutput in spending tx is 900
-        // satoshi, this burns the 1000 satoshi and is currently not considered in the
-        // bsqInputBalancePositive, hence the need to check for parsingModel.getBurntBondValue
-        // Perhaps adding boolean parsingModel.isBSQTx and checking for that would be better?
+        // We need to consider the order of the outputs. An output is a BSQ utxo as long there is enough input value
+        // We iterate all outputs (excluding an optional opReturn).
+        for (int index = 0; index <= lastNonOpReturnIndex; index++) {
+            txOutputParser.processTxOutput(outputs.get(index));
+        }
 
-        //TODO
-        if (hasBsqInputs || txInputParser.getBurntBondValue() > 0)
-            return Optional.of(Tx.fromTempTx(tempTx));
-        else
-            return Optional.empty();
+        long remainingInputValue = txOutputParser.getAvailableInputValue();
+        long burntBsq = remainingInputValue + burntBondValue;
+        boolean hasBurntBSQ = burntBsq > 0;
+        if (hasBurntBSQ)
+            tempTx.setBurntFee(burntBsq);
+
+
+        // ****************************************************************************************
+        // Verify and apply txType and txOutputTypes after we have all outputs parsed
+        // ****************************************************************************************
+
+        applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
+
+        TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ,
+                txInputParser.isUnLockInputValid());
+        tempTx.setTxType(txType);
+
+        if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound(), hasBurntBond)) {
+            tempTx.setTxType(TxType.INVALID);
+            txOutputParser.invalidateUTXOCandidates();
+
+            if (hasBurntBSQ) {
+                log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
+                        burntBsq / 100D, tempTx);
+            }
+        } else {
+            txOutputParser.commitUTXOCandidates();
+        }
+
+        return Optional.of(Tx.fromTempTx(tempTx));
     }
 
 
@@ -346,7 +331,7 @@ public class TxParser {
     /**
      * Performs various checks for an invalid tx
      */
-    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound) {
+    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound, boolean burntBondValue) {
         if (tempTx.getTxType() == TxType.INVALID) {
             // We got already set the invalid type in earlier checks and return early.
             return true;
@@ -366,10 +351,15 @@ public class TxParser {
             return true;
         }
 
-        boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
-                .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
-        if (isAnyTxOutputTypeUndefined) {
-            log.warn("Invalid Tx: We have undefined txOutput types. tx=" + tempTx);
+        if (burntBondValue) {
+            log.warn("Invalid Tx: Bond value was burnt. tx=" + tempTx);
+            return true;
+        }
+
+        if (tempTx.getTempTxOutputs().stream()
+                .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType() ||
+                        TxOutputType.INVALID_OUTPUT == txOutput.getTxOutputType())) {
+            log.warn("Invalid Tx: We have undefined or invalid txOutput types. tx=" + tempTx);
             return true;
         }
 
