@@ -755,36 +755,38 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private void delayedRemoveEntryFromMailbox(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         Log.traceCall();
-        if (isBootstrapped()) {
-            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
-            String uid = mailboxMessage.getUid();
-            if (mailboxMap.containsKey(uid)) {
-                ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);
-                if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
-                    MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
-                    PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
-                    checkArgument(receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
-                            "receiversPubKey is not matching with our key. That must not happen.");
-                    try {
-                        ProtectedMailboxStorageEntry protectedMailboxStorageEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
-                                expirableMailboxStoragePayload,
-                                keyRing.getSignatureKeyPair(),
-                                receiversPubKey);
-                        p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
-                    } catch (CryptoException e) {
-                        log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
-                    }
-
-                    mailboxMap.remove(uid);
-                    log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
-                }
-            } else {
-                log.warn("uid for mailbox entry not found in mailboxMap." + "uid={}", uid);
-            }
-        } else {
-            throw new NetworkNotReadyException();
+        if (!isBootstrapped()) {
+            // We don't throw an NetworkNotReadyException here.
+            // This case should not happen anyway but we saw it in some rare cases.
+            // Needs more investigation why as that methods should only be called after isBootstrapped is set.
+            log.warn("You must have bootstrapped before adding data to the P2P network.");
         }
 
+        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
+        String uid = mailboxMessage.getUid();
+        if (mailboxMap.containsKey(uid)) {
+            ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);
+            if (mailboxData != null && mailboxData.getProtectedStoragePayload() instanceof MailboxStoragePayload) {
+                MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getProtectedStoragePayload();
+                PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
+                checkArgument(receiversPubKey.equals(keyRing.getSignatureKeyPair().getPublic()),
+                        "receiversPubKey is not matching with our key. That must not happen.");
+                try {
+                    ProtectedMailboxStorageEntry protectedMailboxStorageEntry = p2PDataStorage.getMailboxDataWithSignedSeqNr(
+                            expirableMailboxStoragePayload,
+                            keyRing.getSignatureKeyPair(),
+                            receiversPubKey);
+                    p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
+                } catch (CryptoException e) {
+                    log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
+                }
+
+                mailboxMap.remove(uid);
+                log.info("Removed successfully decryptedMsgWithPubKey. uid={}", uid);
+            }
+        } else {
+            log.warn("uid for mailbox entry not found in mailboxMap." + "uid={}", uid);
+        }
     }
 
 
