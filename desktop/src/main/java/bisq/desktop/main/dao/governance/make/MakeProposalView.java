@@ -128,7 +128,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
         proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
                 Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        proposalTypeComboBox.setConverter(new StringConverter<ProposalType>() {
+        proposalTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(ProposalType proposalType) {
                 return proposalType.getDisplayName();
@@ -139,7 +139,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 return null;
             }
         });
-        proposalTypeComboBox.setPromptText(Res.get("shared.select"));
         proposalTypeChangeListener = (observable, oldValue, newValue) -> {
             selectedProposalType = newValue;
             removeProposalDisplay();

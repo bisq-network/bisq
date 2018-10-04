@@ -119,8 +119,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
         lockupTypeComboBox = FormBuilder.<LockupType>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
-        lockupTypeComboBox.setPromptText(Res.get("shared.select"));
-        lockupTypeComboBox.setConverter(new StringConverter<LockupType>() {
+        lockupTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(LockupType lockupType) {
                 return lockupType.getDisplayString();
@@ -141,8 +140,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         lockupTypeComboBox.getSelectionModel().select(0);
 
         bondedRolesComboBox = FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
-        bondedRolesComboBox.setPromptText(Res.get("shared.select"));
-        bondedRolesComboBox.setConverter(new StringConverter<BondedRole>() {
+        bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRole bondedRole) {
                 return bondedRole.getDisplayString();

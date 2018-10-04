@@ -221,9 +221,8 @@ public class ProposalDisplay {
                 bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
-                bondedRoleTypeComboBox.setPromptText(Res.get("shared.select"));
                 bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
-                bondedRoleTypeComboBox.setConverter(new StringConverter<BondedRoleType>() {
+                bondedRoleTypeComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(BondedRoleType bondedRoleType) {
                         return bondedRoleType != null ? bondedRoleType.getDisplayString() : "";
@@ -243,12 +242,11 @@ public class ProposalDisplay {
                 paramComboBox = FormBuilder.<Param>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.paramComboBox.label")).second;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
-                paramComboBox.setPromptText(Res.get("shared.select"));
                 List<Param> list = Arrays.stream(Param.values())
                         .filter(e -> e != Param.UNDEFINED && e != Param.PHASE_UNDEFINED)
                         .collect(Collectors.toList());
                 paramComboBox.setItems(FXCollections.observableArrayList(list));
-                paramComboBox.setConverter(new StringConverter<Param>() {
+                paramComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(Param param) {
                         return param != null ? param.getDisplayString() : "";
@@ -272,9 +270,8 @@ public class ProposalDisplay {
                 confiscateBondComboBox = FormBuilder.<BondedRole>addLabelComboBox(gridPane, ++gridRow,
                         Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label")).second;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-                confiscateBondComboBox.setPromptText(Res.get("shared.select"));
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
-                confiscateBondComboBox.setConverter(new StringConverter<BondedRole>() {
+                confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(BondedRole bondedRole) {
                         return bondedRole != null ? bondedRole.getDisplayString() : "";
