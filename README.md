@@ -7,7 +7,7 @@
 
 Bisq is a safe, private and decentralized way to exchange bitcoin for national currencies and other cryptocurrencies. Bisq uses peer-to-peer technology and multi-signature escrow to facilitate trading without the need for a centralized third party exchange. Bisq is non-custodial (never holds your funds), and incorporates a human arbitration system to resolve disputes.
 
-For more information, see https://bisq-network/intro and for step-by-step getting started instructions, see https://bisq.network/get-started.
+For more information, see https://bisq.network/intro and for step-by-step getting started instructions, see https://bisq.network/get-started.
 
 
 ## Building Bisq
