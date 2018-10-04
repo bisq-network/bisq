@@ -79,4 +79,9 @@ public class TempTxOutput extends BaseTxOutput {
                 "\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
+
+    public boolean isOpReturnOutput() {
+        // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+        return getOpReturnData() != null;
+    }
 }

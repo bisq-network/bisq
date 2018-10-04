@@ -24,7 +24,6 @@ import bisq.core.dao.state.blockchain.TempTx;
 import bisq.core.dao.state.blockchain.TempTxOutput;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -53,8 +52,6 @@ public class TxOutputParser {
     @Setter
     private int unlockBlockHeight;
     @Setter
-    private TempTx tempTx; //TODO remove
-    @Setter
     @Getter
     private Optional<TxOutput> optionalSpentLockupTxOutput = Optional.empty();
 
@@ -74,7 +71,7 @@ public class TxOutputParser {
 
     // Private
     private int lockTime;
-    private List<TempTxOutput> tempTxOutputs = new ArrayList<>();
+    private List<TempTxOutput> utxoCandidates = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,25 +90,20 @@ public class TxOutputParser {
     void processGenesisTxOutput(TempTx genesisTx) {
         for (int i = 0; i < genesisTx.getTempTxOutputs().size(); ++i) {
             TempTxOutput tempTxOutput = genesisTx.getTempTxOutputs().get(i);
-            tempTxOutputs.add(tempTxOutput);
+            utxoCandidates.add(tempTxOutput);
+            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
         }
-        commitTxOutputsForValidTx();
     }
 
-    void commitTxOutputsForValidTx() {
-        tempTxOutputs.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
+    void commitUTXOCandidates() {
+        utxoCandidates.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
     }
 
     /**
      * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in bsqStateService
      */
-    void commitTxOutputsForInvalidTx() {
-        tempTxOutputs.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
-    }
-
-    // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
-    boolean isOpReturnOutput(TempTxOutput txOutput) {
-        return txOutput.getOpReturnData() != null;
+    void invalidateUTXOCandidates() {
+        utxoCandidates.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
     }
 
     void processOpReturnOutput(TempTxOutput tempTxOutput) {
@@ -136,10 +128,7 @@ public class TxOutputParser {
     void processTxOutput(TempTxOutput tempTxOutput) {
         long txOutputValue = tempTxOutput.getValue();
         int index = tempTxOutput.getIndex();
-        if (tempTx.getTxType() == TxType.INVALID) {
-            // Set all non opReturn outputs to BTC_OUTPUT if the tx is invalid
-            tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-        } else if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
+        if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
             // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
             // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
             // output to not be BSQ output at all
@@ -177,7 +166,7 @@ public class TxOutputParser {
 
         txOutput.setTxOutputType(TxOutputType.UNLOCK_OUTPUT);
         txOutput.setUnlockBlockHeight(unlockBlockHeight);
-        tempTxOutputs.add(txOutput);
+        utxoCandidates.add(txOutput);
 
         bsqOutputFound = true;
     }
@@ -211,7 +200,7 @@ public class TxOutputParser {
             bsqOutput = TxOutputType.BSQ_OUTPUT;
         }
         txOutput.setTxOutputType(bsqOutput);
-        tempTxOutputs.add(txOutput);
+        utxoCandidates.add(txOutput);
 
         bsqOutputFound = true;
     }
