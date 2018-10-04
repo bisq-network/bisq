@@ -120,12 +120,11 @@ public class TxInputParser {
                             if (blockHeight < unlockBlockHeight) {
                                 accumulatedInputValue -= inputValue;
                                 burntBondValue += inputValue;
-                            } else {
+
                                 log.warn("We got a tx which spends the output from an unlock tx but before the " +
                                         "unlockTime has passed. That leads to burned BSQ! " +
                                         "blockHeight={}, unLockHeight={}", blockHeight, unlockBlockHeight);
                             }
-
                             break;
                         case INVALID_OUTPUT:
                         default:
