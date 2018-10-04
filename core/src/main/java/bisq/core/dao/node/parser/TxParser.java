@@ -32,8 +32,6 @@ import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
 
-import bisq.common.app.DevEnv;
-
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -136,39 +134,35 @@ public class TxParser {
             }
 
             long remainingInputValue = txOutputParser.getAvailableInputValue();
+            boolean hasBurntBSQ = remainingInputValue > 0;
 
+            // Apply txType and optional txOutputTypes based on opReturn types
+            // We might get a INVALID TxType here
+            // TODO refactor
             processOpReturnType(blockHeight, tempTx, remainingInputValue);
 
-            // TODO(SQ): Should the destroyed BSQ from an INVALID tx be considered as burnt fee?
-            if (remainingInputValue > 0)
-                tempTx.setBurntFee(remainingInputValue);
-
-            // Process the type of transaction if not already determined to be INVALID
-            if (tempTx.getTxType() != TxType.INVALID) {
-                boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
-                        .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
-                if (!isAnyTxOutputTypeUndefined) {
-                    // TODO(chirhonul): we don't modify the tempTx within the call below, so maybe we should
-                    // use RawTx?
-                    TxType txType = TxParser.getBisqTxType(
-                            tempTx,
-                            txOutputParser.getOptionalOpReturnType().isPresent(),
-                            remainingInputValue,
-                            getOptionalOpReturnType(remainingInputValue)
-                    );
-                    tempTx.setTxType(txType);
-                } else {
-                    tempTx.setTxType(TxType.INVALID);
-                    String msg = "We have undefined txOutput types which must not happen. tx=" + tempTx;
-                    DevEnv.logErrorAndThrowIfDevMode(msg);
-                }
+            if (isTxInvalid(tempTx, txOutputParser.isBsqOutputFound())) {
+                tempTx.setTxType(TxType.INVALID);
+            } else {
+                // We might get a INVALID TxType here as well
+                TxType txType = evaluateTxType(tempTx, txOutputParser.getOptionalOpReturnType(), hasBurntBSQ);
+                tempTx.setTxType(txType);
             }
 
             if (tempTx.getTxType() != TxType.INVALID) {
                 txOutputParser.commitTxOutputsForValidTx();
             } else {
                 txOutputParser.commitTxOutputsForInvalidTx();
+
+                if (hasBurntBSQ) {
+                    log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
+                            remainingInputValue / 100D, tempTx);
+                }
             }
+
+            //TODO use setBurntFee but check in bsqStateService if txType is INVALID
+            if (hasBurntBSQ)
+                tempTx.setBurntFee(remainingInputValue);
         }
 
         // TODO || parsingModel.getBurntBondValue() > 0; should not be necessary
@@ -182,6 +176,31 @@ public class TxParser {
             return Optional.of(Tx.fromTempTx(tempTx));
         else
             return Optional.empty();
+    }
+
+    @VisibleForTesting
+    /**
+     * Performs various checks for an invalid tx
+     */
+    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound) {
+        if (tempTx.getTxType() == TxType.INVALID) {
+            // We got already set the invalid type in earlier checks and return early.
+            return true;
+        }
+
+        if (!bsqOutputFound) {
+            log.warn("Invalid Tx: No BSQ output found. tx=" + tempTx);
+            return true;
+        }
+
+        boolean isAnyTxOutputTypeUndefined = tempTx.getTempTxOutputs().stream()
+                .anyMatch(txOutput -> TxOutputType.UNDEFINED_OUTPUT == txOutput.getTxOutputType());
+        if (isAnyTxOutputTypeUndefined) {
+            log.warn("Invalid Tx: We have undefined txOutput types. tx=" + tempTx);
+            return true;
+        }
+
+        return false;
     }
 
     private void processOpReturnType(int blockHeight, TempTx tempTx, long bsqFee) {
@@ -318,50 +337,49 @@ public class TxParser {
     /**
      * Retrieve the type of the transaction, assuming it is relevant to bisq.
      *
-     * @param tx                   The temporary transaction.
-     * @param hasOpReturnCandidate True if we have a candidate for an OP_RETURN.
-     * @param remainingInputValue  The remaining value of inputs not yet accounted for, in satoshi.
-     * @param optionalOpReturnType If present, the OP_RETURN type of the transaction.
+     * @param tempTx                The temporary transaction.
+     * @param optionalOpReturnType  The optional OP_RETURN type of the transaction.
+     * @param hasBurntBSQ           If the have been remaining value from the inputs which got not spent in outputs.
+     *                              Might be valid BSQ fees or burned BSQ from an invalid tx.
      * @return The type of the transaction, if it is relevant to bisq.
      */
     @VisibleForTesting
-    static TxType getBisqTxType(TempTx tx, boolean hasOpReturnCandidate, long remainingInputValue, Optional<OpReturnType> optionalOpReturnType) {
-        TxType txType;
-        // We need to have at least one BSQ output
+    static TxType evaluateTxType(TempTx tempTx, Optional<OpReturnType> optionalOpReturnType, boolean hasBurntBSQ) {
         if (optionalOpReturnType.isPresent()) {
-            log.debug("Optional OP_RETURN type is present for tx.");
-            txType = TxParser.getTxTypeForOpReturn(tx, optionalOpReturnType.get());
-        } else if (!hasOpReturnCandidate) {
-            log.debug("No optional OP_RETURN type and no OP_RETURN candidate is present for tx.");
-
-            boolean bsqFeesBurnt = remainingInputValue > 0;
-            if (bsqFeesBurnt) {
-                // Burned fee but no opReturn
-                txType = TxType.PAY_TRADE_FEE;
-            } else if (tx.getTempTxOutputs().get(0).getTxOutputType() == TxOutputType.UNLOCK_OUTPUT) {
-                txType = TxType.UNLOCK;
-            } else {
-                log.debug("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
-                txType = TxType.TRANSFER_BSQ;
-            }
-        } else {
-            log.debug("No optional OP_RETURN type is present for tx but we do have an OP_RETURN candidate, so it failed validation.");
-            txType = TxType.INVALID;
+            // We use the opReturnType to find the txType
+            return evaluateTxTypeFromOpReturnType(tempTx, optionalOpReturnType.get());
         }
 
-        return txType;
+        // No opReturnType, so we check for the remaining possible cases
+        if (hasBurntBSQ) {
+            // PAY_TRADE_FEE tx has a fee and no opReturn
+            return TxType.PAY_TRADE_FEE;
+        }
+
+        // UNLOCK tx has no fee, no opReturn but an UNLOCK_OUTPUT at first output.
+        if (tempTx.getTempTxOutputs().get(0).getTxOutputType() == TxOutputType.UNLOCK_OUTPUT) {
+            // UNLOCK tx has no fee, no OpReturn
+            return TxType.UNLOCK;
+        }
+
+        // TRANSFER_BSQ has no fee, no opReturn and no UNLOCK_OUTPUT at first output
+        log.debug("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
+        return TxType.TRANSFER_BSQ;
     }
 
-    private static TxType getTxTypeForOpReturn(TempTx tx, OpReturnType opReturnType) {
+    @VisibleForTesting
+    static TxType evaluateTxTypeFromOpReturnType(TempTx tempTx, OpReturnType opReturnType) {
         switch (opReturnType) {
+            case PROPOSAL:
+                return TxType.PROPOSAL;
             case COMPENSATION_REQUEST:
-                boolean hasCorrectNumOutputs = tx.getTempTxOutputs().size() >= 3;
+                boolean hasCorrectNumOutputs = tempTx.getTempTxOutputs().size() >= 3;
                 if (!hasCorrectNumOutputs) {
                     log.warn("Compensation request tx need to have at least 3 outputs");
                     return TxType.INVALID;
                 }
 
-                TempTxOutput issuanceTxOutput = tx.getTempTxOutputs().get(1);
+                TempTxOutput issuanceTxOutput = tempTx.getTempTxOutputs().get(1);
                 boolean hasIssuanceOutput = issuanceTxOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT;
                 if (!hasIssuanceOutput) {
                     log.warn("Compensation request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
@@ -370,8 +388,6 @@ public class TxParser {
                 }
 
                 return TxType.COMPENSATION_REQUEST;
-            case PROPOSAL:
-                return TxType.PROPOSAL;
             case BLIND_VOTE:
                 return TxType.BLIND_VOTE;
             case VOTE_REVEAL:
@@ -379,26 +395,11 @@ public class TxParser {
             case LOCKUP:
                 return TxType.LOCKUP;
             default:
-                log.warn("We got a BSQ tx with fee and unknown OP_RETURN. tx={}", tx);
+                log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
                 return TxType.INVALID;
         }
     }
 
-    /**
-     * The type of the OP_RETURN value of the transaction, if it has such a BSQ output.
-     *
-     * @return The OP_RETURN type if applicable, otherwise Optional.empty().
-     */
-    private Optional<OpReturnType> getOptionalOpReturnType(long remainingInputValue) {
-        if (txOutputParser.isBsqOutputFound()) {
-            return txOutputParser.getOptionalOpReturnType();
-        } else {
-            String msg = "We got a tx without any valid BSQ output but with burned BSQ. " +
-                    "Burned fee=" + remainingInputValue / 100D + " BSQ.";
-            log.warn(msg);
-        }
-        return Optional.empty();
-    }
 
     /**
      * Parse and return the genesis transaction for bisq, if applicable.
