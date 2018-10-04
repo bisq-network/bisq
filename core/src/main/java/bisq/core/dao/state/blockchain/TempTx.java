@@ -43,7 +43,6 @@ public class TempTx extends BaseTx {
                 rawTx.getTxInputs(),
                 ImmutableList.copyOf(rawTx.getRawTxOutputs().stream().map(TempTxOutput::fromRawTxOutput).collect(Collectors.toList())),
                 null,
-                0,
                 0);
     }
 
@@ -53,8 +52,6 @@ public class TempTx extends BaseTx {
     @Nullable
     private TxType txType;
     private long burntFee;
-    // If not set it is -1. LockTime of 0 is a valid value.
-    private int unlockBlockHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +66,7 @@ public class TempTx extends BaseTx {
                    ImmutableList<TxInput> txInputs,
                    ImmutableList<TempTxOutput> tempTxOutputs,
                    @Nullable TxType txType,
-                   long burntFee,
-                   int unlockBlockHeight) {
+                   long burntFee) {
         super(txVersion,
                 id,
                 blockHeight,
@@ -80,9 +76,7 @@ public class TempTx extends BaseTx {
         this.tempTxOutputs = tempTxOutputs;
         this.txType = txType;
         this.burntFee = burntFee;
-        this.unlockBlockHeight = unlockBlockHeight;
     }
-
 
     @Override
     public String toString() {
@@ -90,7 +84,6 @@ public class TempTx extends BaseTx {
                 "\n     txOutputs=" + tempTxOutputs +
                 ",\n     txType=" + txType +
                 ",\n     burntFee=" + burntFee +
-                ",\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
 }

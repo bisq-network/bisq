@@ -228,7 +228,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                     log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                             proposal.getTxId());
                 } else {
-                    log.warn("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
+                    log.debug("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
                             proposal.getTxId(), bsqStateService.getChainHeight());
                 }
             }

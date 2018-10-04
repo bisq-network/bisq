@@ -32,15 +32,14 @@ import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TxParserTest {
+public class GenesisTxParserTest {
 
     @Test
-    public void testGetGenesisTx() {
+    public void testIsGenesis() {
         // fixme(chirhonul): Assert.assertEquals(2, 3);
 
         int blockHeight = 200;
@@ -73,8 +72,8 @@ public class TxParserTest {
         int genesisBlockHeight = 150;
 
         // With mismatch in block height and tx id, we should not get genesis tx back.
-        Optional<TempTx> result = TxParser.findGenesisTx(genesisTxId, genesisBlockHeight, genesisTotalSupply, rawTx);
-        Optional<TempTx> want = Optional.empty();
+        boolean result = GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight);
+        boolean want = false;
         Assert.assertEquals(want, result);
 
         // With correct block height but mismatch in tx id, we should still not get genesis tx back.
@@ -87,12 +86,35 @@ public class TxParserTest {
                 ImmutableList.copyOf(inputs),
                 ImmutableList.copyOf(Arrays.asList(output))
         );
-        result = TxParser.findGenesisTx(genesisTxId, genesisBlockHeight, genesisTotalSupply, rawTx);
-        want = Optional.empty();
+        result = GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight);
+        want = false;
         Assert.assertEquals(want, result);
 
+    }
+
+    @Test
+    public void testGetGenesisTempTx() {
+        int blockHeight = 200;
+        String blockHash = "abc123";
+        Coin genesisTotalSupply = Coin.parseCoin("2.5");
+        long time = new Date().getTime();
+        final List<TxInput> inputs = Arrays.asList(
+                new TxInput("tx0", 0, null),
+                new TxInput("tx1", 1, null)
+        );
+        RawTxOutput output = new RawTxOutput(
+                0,
+                genesisTotalSupply.value,
+                null,
+                null,
+                null,
+                null,
+                blockHeight
+        );
+
+        String genesisTxId = "genesisTxId";
         // With correct tx id and block height, we should find our genesis tx with correct tx and output type.
-        rawTx = new RawTx(
+        RawTx rawTx = new RawTx(
                 genesisTxId,
                 blockHeight,
                 blockHash,
@@ -100,16 +122,16 @@ public class TxParserTest {
                 ImmutableList.copyOf(inputs),
                 ImmutableList.copyOf(Arrays.asList(output))
         );
-        result = TxParser.findGenesisTx(genesisTxId, genesisBlockHeight, genesisTotalSupply, rawTx);
+        TempTx resultTempTx = GenesisTxParser.getGenesisTempTx(rawTx, genesisTotalSupply);
 
         TempTx tempTx = TempTx.fromRawTx(rawTx);
         tempTx.setTxType(TxType.GENESIS);
         for (int i = 0; i < tempTx.getTempTxOutputs().size(); ++i) {
             tempTx.getTempTxOutputs().get(i).setTxOutputType(TxOutputType.GENESIS_OUTPUT);
         }
-        want = Optional.of(tempTx);
+        TempTx wantTempTx = tempTx;
 
-        Assert.assertEquals(want, result);
+        Assert.assertEquals(wantTempTx, resultTempTx);
 
         // With correct tx id and block height, but too low sum of outputs (lower than genesisTotalSupply), we
         // should see an exception raised.
@@ -131,7 +153,7 @@ public class TxParserTest {
                 ImmutableList.copyOf(Arrays.asList(output))
         );
         try {
-            result = TxParser.findGenesisTx(genesisTxId, genesisBlockHeight, genesisTotalSupply, rawTx);
+            GenesisTxParser.getGenesisTempTx(rawTx, genesisTotalSupply);
             Assert.fail("Expected an InvalidGenesisTxException to be thrown when outputs are too low");
         } catch (InvalidGenesisTxException igtxe) {
             String wantMessage = "Genesis tx is invalid; not using all available inputs. Remaining input value is 1 sat";
@@ -168,7 +190,7 @@ public class TxParserTest {
                 ImmutableList.copyOf(Arrays.asList(output1, output2))
         );
         try {
-            result = TxParser.findGenesisTx(genesisTxId, genesisBlockHeight, genesisTotalSupply, rawTx);
+            GenesisTxParser.getGenesisTempTx(rawTx, genesisTotalSupply);
             Assert.fail("Expected an InvalidGenesisTxException to be thrown when outputs are too high");
         } catch (InvalidGenesisTxException igtxe) {
             String wantMessage = "Genesis tx is invalid; using more than available inputs. Remaining input value is 2 sat";
