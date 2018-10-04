@@ -312,7 +312,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // We show a popup to inform user that open offers will be removed if Bisq is not running.
         String key = "showOpenOfferWarnPopupAtShutDown";
-        if (injector.getInstance(Preferences.class).showAgain(key)) {
+        if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
             new Popup<>().information(Res.get("popup.info.shutDownWithOpenOffers"))
                     .dontShowAgainId(key)
                     .useShutDownButton()

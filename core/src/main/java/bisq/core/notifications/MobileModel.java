@@ -68,7 +68,7 @@ public class MobileModel {
     }
 
     public void applyKeyAndToken(String keyAndToken) {
-        log.info("phoneId={}", keyAndToken);
+        log.info("applyKeyAndToken: keyAndToken={}", keyAndToken.substring(0, 20) + "...(truncated in log for privacy reasons)");
         String[] tokens = keyAndToken.split(PHONE_SEPARATOR_ESCAPED);
         String magic = tokens[0];
         descriptor = tokens[1];
