@@ -115,20 +115,16 @@ public class TxInputParser {
                             break;
                         case UNLOCK_OUTPUT:
                             // This txInput is Spending an UNLOCK txOutput
+                            int unlockBlockHeight = connectedTxOutput.getUnlockBlockHeight();
+                            if (blockHeight < unlockBlockHeight) {
+                                accumulatedInputValue -= inputValue;
+                                burntBondValue += inputValue;
+                            } else {
+                                log.warn("We got a tx which spends the output from an unlock tx but before the " +
+                                        "unlockTime has passed. That leads to burned BSQ! " +
+                                        "blockHeight={}, unLockHeight={}", blockHeight, unlockBlockHeight);
+                            }
 
-                            //TODO  We should add unlockBlockHeight to TempTxOutput and remove unlockBlockHeight from tempTx
-                            // then we can use connectedTxOutput to access the unlockBlockHeight instead of the tx
-                            bsqStateService.getTx(connectedTxOutput.getTxId()).ifPresent(unlockTx -> {
-                                // Only count the input as BSQ input if spent after unlock time
-                                if (blockHeight < unlockTx.getUnlockBlockHeight()) {
-                                    accumulatedInputValue -= inputValue;
-                                    burntBondValue += inputValue;
-                                } else {
-                                    log.warn("We got a tx which spends the output from an unlock tx but before the " +
-                                            "unlockTime has passed. That leads to burned BSQ!");
-                                }
-                            });
-                            // TODO what if tx is not present?
                             break;
                         case INVALID_OUTPUT:
                         default:

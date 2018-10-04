@@ -53,16 +53,13 @@ public final class Tx extends BaseTx implements PersistablePayload {
                 tempTx.getTxInputs(),
                 txOutputs,
                 tempTx.getTxType(),
-                tempTx.getBurntFee(),
-                tempTx.getUnlockBlockHeight());
+                tempTx.getBurntFee());
     }
 
     private final ImmutableList<TxOutput> txOutputs;
     @Nullable
     private final TxType txType;
     private final long burntFee;
-    // If not set it is -1. LockTime of 0 is a valid value.
-    private final int unlockBlockHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +74,7 @@ public final class Tx extends BaseTx implements PersistablePayload {
                ImmutableList<TxInput> txInputs,
                ImmutableList<TxOutput> txOutputs,
                @Nullable TxType txType,
-               long burntFee,
-               int unlockBlockHeight) {
+               long burntFee) {
         super(txVersion,
                 id,
                 blockHeight,
@@ -88,7 +84,7 @@ public final class Tx extends BaseTx implements PersistablePayload {
         this.txOutputs = txOutputs;
         this.txType = txType;
         this.burntFee = burntFee;
-        this.unlockBlockHeight = unlockBlockHeight;
+
     }
 
     @Override
@@ -97,8 +93,7 @@ public final class Tx extends BaseTx implements PersistablePayload {
                 .addAllTxOutputs(txOutputs.stream()
                         .map(TxOutput::toProtoMessage)
                         .collect(Collectors.toList()))
-                .setBurntFee(burntFee)
-                .setUnlockBlockHeight(unlockBlockHeight);
+                .setBurntFee(burntFee);
         Optional.ofNullable(txType).ifPresent(txType -> builder.setTxType(txType.toProtoMessage()));
         return getBaseTxBuilder().setTx(builder).build();
     }
@@ -123,8 +118,7 @@ public final class Tx extends BaseTx implements PersistablePayload {
                 txInputs,
                 outputs,
                 TxType.fromProto(protoTx.getTxType()),
-                protoTx.getBurntFee(),
-                protoTx.getUnlockBlockHeight());
+                protoTx.getBurntFee());
     }
 
 
@@ -138,12 +132,17 @@ public final class Tx extends BaseTx implements PersistablePayload {
 
 
     /**
-     * The locktime is stored in the LOCKUP txOutput, which is the first txOutput.
-     *
-     * @return
+     * The lockTime is stored in the LOCKUP txOutput, which is the first txOutput.
      */
     public int getLockTime() {
         return txOutputs.get(0).getLockTime();
+    }
+
+    /**
+     * The unlockBlockHeight is stored in the LOCKUP txOutput, which is the first txOutput.
+     */
+    public int getUnlockBlockHeight() {
+        return txOutputs.get(0).getUnlockBlockHeight();
     }
 
     @Override
@@ -152,7 +151,6 @@ public final class Tx extends BaseTx implements PersistablePayload {
                 "\n     txOutputs=" + txOutputs +
                 ",\n     txType=" + txType +
                 ",\n     burntFee=" + burntFee +
-                ",\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
 

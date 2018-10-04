@@ -1336,7 +1336,6 @@ message Tx {
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
     int64 burnt_fee = 3;
-    int32 unlock_block_height = 4;
 }
 
 enum TxType {
@@ -1381,6 +1380,7 @@ message RawTxOutput {
 message TxOutput {
     TxOutputType tx_output_type = 1;
     int32 lock_time = 2;
+    int32 unlock_block_height = 3;
 }
 
 enum TxOutputType {

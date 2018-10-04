@@ -38,11 +38,14 @@ public class TempTxOutput extends BaseTxOutput {
                 txOutput.getOpReturnData(),
                 txOutput.getBlockHeight(),
                 TxOutputType.UNDEFINED_OUTPUT,
+                -1,
                 0);
     }
 
     private TxOutputType txOutputType;
+    // If not set it is -1, 0 is a valid value.
     private int lockTime;
+    private int unlockBlockHeight;
 
     private TempTxOutput(int index,
                          long value,
@@ -52,7 +55,8 @@ public class TempTxOutput extends BaseTxOutput {
                          @Nullable byte[] opReturnData,
                          int blockHeight,
                          TxOutputType txOutputType,
-                         int lockTime) {
+                         int lockTime,
+                         int unlockBlockHeight) {
         super(index,
                 value,
                 txId,
@@ -63,6 +67,7 @@ public class TempTxOutput extends BaseTxOutput {
 
         this.txOutputType = txOutputType;
         this.lockTime = lockTime;
+        this.unlockBlockHeight = unlockBlockHeight;
     }
 
 
@@ -71,6 +76,7 @@ public class TempTxOutput extends BaseTxOutput {
         return "TempTxOutput{" +
                 "\n     txOutputType=" + txOutputType +
                 "\n     lockTime=" + lockTime +
+                "\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
 }

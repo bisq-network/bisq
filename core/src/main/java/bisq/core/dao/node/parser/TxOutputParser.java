@@ -121,9 +121,11 @@ public class TxOutputParser {
         tempTxOutput.setTxOutputType(txOutputType);
 
         optionalOpReturnType = getMappedOpReturnType(txOutputType);
-        // TODO: Do we really want to store the lockTime in another output as where we get it delivered?
+
+        // If we have a LOCKUP opReturn output we save the lockTime to apply it later to the LOCKUP output.
+        // We keep that data in that other output as it makes parsing of the UNLOCK tx easier.
         optionalOpReturnType.filter(opReturnType -> opReturnType == OpReturnType.LOCKUP)
-                .ifPresent(verifiedOpReturnType -> lockTime = BondingConsensus.getLockTime(opReturnData));
+                .ifPresent(opReturnType -> lockTime = BondingConsensus.getLockTime(opReturnData));
     }
 
     /**
@@ -174,11 +176,8 @@ public class TxOutputParser {
         availableInputValue -= optionalSpentLockupTxOutput.get().getValue();
 
         txOutput.setTxOutputType(TxOutputType.UNLOCK_OUTPUT);
+        txOutput.setUnlockBlockHeight(unlockBlockHeight);
         tempTxOutputs.add(txOutput);
-
-        //TODO move up to TxParser
-        // We should add unlockBlockHeight to TempTxOutput and remove unlockBlockHeight from tempTx
-        tempTx.setUnlockBlockHeight(unlockBlockHeight);
 
         bsqOutputFound = true;
     }
@@ -203,7 +202,9 @@ public class TxOutputParser {
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.LOCKUP) {
             bsqOutput = TxOutputType.LOCKUP_OUTPUT;
 
-            // TODO: Do we really want to store the lockTime in another output as where we get it delivered (opReturn)?
+            // We store the lockTime in the output which will be used as input for a unlock tx.
+            // That makes parsing of that data easier as if we would need to access it from the opReturn output of
+            // that tx.
             txOutput.setLockTime(lockTime);
             optionalLockupOutput = Optional.of(txOutput);
         } else {
