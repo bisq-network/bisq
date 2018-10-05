@@ -36,8 +36,8 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 @Slf4j
 public class ProposalValidator {
 
-    private final BsqStateService bsqStateService;
-    private final PeriodService periodService;
+    protected final BsqStateService bsqStateService;
+    protected final PeriodService periodService;
 
     @Inject
     public ProposalValidator(BsqStateService bsqStateService, PeriodService periodService) {

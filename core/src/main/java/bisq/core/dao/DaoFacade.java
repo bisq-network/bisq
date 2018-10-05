@@ -37,6 +37,7 @@ import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
+import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
@@ -486,5 +487,13 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isUnlocking(BondedRole bondedRole) {
         return bsqStateService.isUnlocking(bondedRole);
+    }
+
+    public Coin getMinCompensationRequestAmount() {
+        return CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+    }
+
+    public Coin getMaxCompensationRequestAmount() {
+        return CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
     }
 }

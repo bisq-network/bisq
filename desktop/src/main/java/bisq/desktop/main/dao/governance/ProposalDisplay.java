@@ -32,7 +32,6 @@ import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
-import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
@@ -204,7 +203,8 @@ public class ProposalDisplay {
                 requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requestedBsq")).second;
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-                bsqValidator.setMinValue(CompensationConsensus.getMinCompensationRequestAmount());
+                bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
+                bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
                 checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 requestedBsqTextField.setValidator(bsqValidator);
                 inputControls.add(requestedBsqTextField);

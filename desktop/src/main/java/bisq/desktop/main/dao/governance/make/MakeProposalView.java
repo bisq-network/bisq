@@ -36,6 +36,7 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
+import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.BsqStateListener;
 import bisq.core.dao.state.blockchain.Block;
@@ -85,6 +86,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final PhasesView phasesView;
+    private final ChangeParamValidator changeParamValidator;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -109,6 +111,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              P2PService p2PService,
                              FeeService feeService,
                              PhasesView phasesView,
+                             ChangeParamValidator changeParamValidator,
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
@@ -116,6 +119,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.phasesView = phasesView;
+        this.changeParamValidator = changeParamValidator;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -288,6 +292,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 } catch (Throwable t) {
                     throw new ValidationException("paramValue is not a long value", t);
                 }
+
+                changeParamValidator.validateParamValue(selectedParam, paramValue);
+
                 //TODO add more custom param validation
                 return daoFacade.getParamProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),

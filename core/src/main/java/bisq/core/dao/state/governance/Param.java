@@ -54,6 +54,10 @@ public enum Param {
     PROPOSAL_FEE(100),          // 5 BSQ    TODO change low dev
     BLIND_VOTE_FEE(200),        // 10 BSQ   TODO change low dev
 
+    // As BSQ based validation values can change over time if BSQ value rise we need to support that in the Params as well
+    COMPENSATION_REQUEST_MIN_AMOUNT(1_000),         // 10 BSQ
+    COMPENSATION_REQUEST_MAX_AMOUNT(10_000_000),    // 100 000 BSQ
+
     // Quorum for voting in BSQ stake
     QUORUM_PROPOSAL(100),           // 10 000 BSQ  TODO change low dev value
     QUORUM_COMP_REQUEST(100),       // 10 000 BSQ  TODO change low dev value
