@@ -158,7 +158,7 @@ public class FullNode extends BsqNode {
                     if (newChainHeadHeight > chainHeadHeight) {
                         log.info("During parsing new blocks have arrived. We parse again with those missing blocks." +
                                 "ChainHeadHeight={}, newChainHeadHeight={}", chainHeadHeight, newChainHeadHeight);
-                        parseBlocksOnHeadHeight(chainHeadHeight, newChainHeadHeight);
+                        parseBlocksOnHeadHeight(chainHeadHeight + 1, newChainHeadHeight);
                     } else {
                         log.info("parseBlocksIfNewBlockAvailable did not result in a new block, so we complete.");
                         onParseBlockChainComplete();
@@ -239,8 +239,11 @@ public class FullNode extends BsqNode {
     }
 
     private void handleError(Throwable throwable) {
-        String errorMessage = "Initializing FullNode failed: Error=" + throwable.toString();
+        String errorMessage = "An error occurred: Error=" + throwable.toString();
         log.error(errorMessage);
+
+        if (throwable instanceof BlockNotConnectingException)
+            startReOrgFromLastSnapshot();
 
         if (errorMessageHandler != null)
             errorMessageHandler.handleErrorMessage(errorMessage);

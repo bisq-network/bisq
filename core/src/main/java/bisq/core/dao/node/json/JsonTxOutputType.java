@@ -21,7 +21,7 @@ import lombok.Getter;
 
 // Need to be in sync with TxOutputType
 enum JsonTxOutputType {
-    UNDEFINED("Undefined"),
+    UNDEFINED_OUTPUT("Undefined"),
     GENESIS_OUTPUT("Genesis"),
     BSQ_OUTPUT("BSQ"),
     BTC_OUTPUT("BTC"),
@@ -33,9 +33,9 @@ enum JsonTxOutputType {
     BLIND_VOTE_OP_RETURN_OUTPUT("Blind vote opReturn"),
     VOTE_REVEAL_UNLOCK_STAKE_OUTPUT("Vote reveal unlock stake"),
     VOTE_REVEAL_OP_RETURN_OUTPUT("Vote reveal opReturn"),
-    LOCKUP("Lockup"),
+    LOCKUP_OUTPUT("Lockup"),
     LOCKUP_OP_RETURN_OUTPUT("Lockup opReturn"),
-    UNLOCK("Unlock"),
+    UNLOCK_OUTPUT("Unlock"),
     INVALID_OUTPUT("Invalid");
 
     @Getter

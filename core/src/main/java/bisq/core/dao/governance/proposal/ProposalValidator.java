@@ -79,6 +79,8 @@ public class ProposalValidator {
         }
         Optional<TxType> optionalTxType = bsqStateService.getOptionalTxType(txId);
         boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
+        if (!present)
+            log.debug("optionalTxType not present for proposal {}" + proposal);
         return present;
     }
 

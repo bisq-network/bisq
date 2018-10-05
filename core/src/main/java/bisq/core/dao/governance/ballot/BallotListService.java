@@ -82,7 +82,6 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
                         .map(ProposalPayload::getProposal)
                         .filter(proposal -> ballotList.stream()
                                 .noneMatch(ballot -> ballot.getProposal().equals(proposal)))
-                        .filter(proposalValidator::isTxTypeValid)
                         .forEach(proposal -> {
                             Ballot ballot = new Ballot(proposal); // vote is null
                             log.info("We create a new ballot with a proposal and add it to our list. " +
@@ -110,9 +109,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
             BallotList persisted = storage.initAndGetPersisted(ballotList, 100);
             if (persisted != null) {
                 ballotList.clear();
-                persisted.getList().stream()
-                        .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
-                        .forEach(ballotList::add);
+                ballotList.addAll(persisted.getList());
                 listeners.forEach(l -> l.onListChanged(ballotList.getList()));
             }
         }
@@ -132,12 +129,15 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
         listeners.add(listener);
     }
 
-    public BallotList getBallotList() {
-        return ballotList;
+    public List<Ballot> getValidatedBallotList() {
+        return ballotList.stream()
+                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
+                .collect(Collectors.toList());
     }
 
-    public List<Ballot> getBallotsOfCycle() {
+    public List<Ballot> getValidBallotsOfCycle() {
         return ballotList.stream()
+                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
                 .filter(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), periodService.getChainHeight()))
                 .collect(Collectors.toList());
     }
