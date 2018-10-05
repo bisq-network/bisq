@@ -210,12 +210,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void publishMyProposal(ProposalType type) {
         try {
-            final ProposalWithTransaction proposalWithTransaction = getProposalWithTransaction(type);
+            ProposalWithTransaction proposalWithTransaction = getProposalWithTransaction(type);
+            if (proposalWithTransaction == null)
+                return;
+
             Proposal proposal = proposalWithTransaction.getProposal();
             Transaction transaction = proposalWithTransaction.getTransaction();
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
-            final Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
+            Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
             GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 
@@ -251,6 +254,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
+    @Nullable
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
 
@@ -286,20 +290,20 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 String paramValueAsString = proposalDisplay.paramValueTextField.getText();
                 if (paramValueAsString == null || paramValueAsString.isEmpty())
                     throw new ValidationException("paramValue is null or empty");
-                long paramValue;
+
                 try {
-                    paramValue = Long.valueOf(paramValueAsString);
-                } catch (Throwable t) {
-                    throw new ValidationException("paramValue is not a long value", t);
+                    long paramValue = bsqFormatter.parseParamValue(selectedParam, paramValueAsString);
+                    log.info("Change param: paramValue={}, paramValueAsString={}", paramValue, paramValueAsString);
+
+                    changeParamValidator.validateParamValue(selectedParam, paramValue);
+                    return daoFacade.getParamProposalWithTransaction(proposalDisplay.nameTextField.getText(),
+                            proposalDisplay.linkInputTextField.getText(),
+                            selectedParam,
+                            paramValue);
+                } catch (Throwable e) {
+                    new Popup<>().warning(e.getMessage()).show();
+                    return null;
                 }
-
-                changeParamValidator.validateParamValue(selectedParam, paramValue);
-
-                //TODO add more custom param validation
-                return daoFacade.getParamProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
-                        selectedParam,
-                        paramValue);
             case GENERIC:
                 //TODO
                 throw new RuntimeException("Not implemented yet");

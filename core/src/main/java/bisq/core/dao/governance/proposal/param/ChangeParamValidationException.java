@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proposal.param;
 
-public class ChangeParamValidationException extends RuntimeException {
+public class ChangeParamValidationException extends Exception {
     public ChangeParamValidationException(String message) {
         super(message);
     }

@@ -45,7 +45,6 @@ import bisq.core.dao.state.governance.Param;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
-import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.util.Tuple2;
 
@@ -119,6 +118,7 @@ public class ProposalDisplay {
     private List<ComboBox> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
+    private ChangeListener<Param> paramChangeListener;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                            DaoFacade daoFacade) {
@@ -261,8 +261,20 @@ public class ProposalDisplay {
                 paramValueTextField = addLabelInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramValue")).second;
                 //noinspection ConstantConditions
-                paramValueTextField.setValidator(new IntegerValidator());
+
+                //TODO use custom param validator
+                paramValueTextField.setValidator(new InputValidator());
+
                 inputControls.add(paramValueTextField);
+
+                paramChangeListener = (observable, oldValue, newValue) -> {
+                    if (newValue != null) {
+                        paramValueTextField.clear();
+                        String currentValue = bsqFormatter.formatParamValue(newValue, daoFacade.getPramValue(newValue));
+                        paramValueTextField.setPromptText(Res.get("dao.param.currentValue", currentValue));
+                    }
+                };
+                paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case GENERIC:
                 break;
@@ -450,6 +462,9 @@ public class ProposalDisplay {
             //noinspection unchecked
             comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener);
         });
+
+        if (paramComboBox != null && paramChangeListener != null)
+            paramComboBox.getSelectionModel().selectedItemProperty().removeListener(paramChangeListener);
     }
 
     public void clearForm() {

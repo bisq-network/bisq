@@ -496,4 +496,8 @@ public class DaoFacade implements DaoSetupService {
     public Coin getMaxCompensationRequestAmount() {
         return CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
     }
+
+    public long getPramValue(Param param) {
+        return bsqStateService.getParamValue(param, periodService.getChainHeight());
+    }
 }

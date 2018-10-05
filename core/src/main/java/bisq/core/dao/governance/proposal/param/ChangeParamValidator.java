@@ -24,6 +24,8 @@ import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
+import bisq.core.locale.Res;
+import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 
@@ -36,9 +38,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class ChangeParamValidator extends ProposalValidator {
 
+    private BsqFormatter bsqFormatter;
+
     @Inject
-    public ChangeParamValidator(BsqStateService bsqStateService, PeriodService periodService) {
+    public ChangeParamValidator(BsqStateService bsqStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
         super(bsqStateService, periodService);
+        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -55,7 +60,7 @@ public class ChangeParamValidator extends ProposalValidator {
     }
 
     // TODO
-    public boolean validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
+    public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
         // max 4 times the current value. min 25% of current value as general boundaries
         checkMinMax(param, paramValue, 300, -75);
 
@@ -76,7 +81,7 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case COMPENSATION_REQUEST_MIN_AMOUNT:
                 if (paramValue < Restrictions.getMinNonDustOutput().value)
-                    throw new ChangeParamValidationException("Value must be larger as the dust limit of " + Restrictions.getMinNonDustOutput().value);
+                    throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
 
                 checkMinMax(param, paramValue, 100, -50);
 
@@ -124,16 +129,15 @@ public class ChangeParamValidator extends ProposalValidator {
             case PHASE_BREAK4:
                 break;
         }
-        return false;
     }
 
     private void checkMinMax(Param param, long paramValue, long maxPercentChange, long minPercentChange) throws ChangeParamValidationException {
         long max = getNewValueByPercentChange(param, maxPercentChange);
         if (paramValue > max)
-            throw new ChangeParamValidationException("Value must not be larger than " + max);
+            throw new ChangeParamValidationException(Res.get("validation.inputTooLarge", bsqFormatter.formatParamValue(param, max)));
         long min = getNewValueByPercentChange(param, minPercentChange);
         if (paramValue < min)
-            throw new ChangeParamValidationException("Value must not be smaller than " + min);
+            throw new ChangeParamValidationException(Res.get("validation.inputTooSmall", bsqFormatter.formatParamValue(param, min)));
     }
 
     /**
@@ -146,7 +150,7 @@ public class ChangeParamValidator extends ProposalValidator {
     @VisibleForTesting
     long getNewValueByPercentChange(Param param, long percentChange) {
         checkArgument(percentChange > -100, "percentChange must be bigger than -100");
-        return (getCurrentValue(param) * 100 * (100 + percentChange)) / 100;
+        return (getCurrentValue(param) * 100 * (100 + percentChange)) / 10000;
     }
 
     private long getCurrentValue(Param param) {
