@@ -59,18 +59,21 @@ public enum Param {
     COMPENSATION_REQUEST_MAX_AMOUNT(10_000_000),    // 100 000 BSQ
 
     // Quorum for voting in BSQ stake
-    QUORUM_PROPOSAL(100),           // 10 000 BSQ  TODO change low dev value
     QUORUM_COMP_REQUEST(100),       // 10 000 BSQ  TODO change low dev value
     QUORUM_CHANGE_PARAM(300),       // 100 000 BSQ TODO change low dev value
-    QUORUM_REMOVE_ASSET(400),       // 10 000 BSQ  TODO change low dev value
+    QUORUM_ROLE(500),       // 10 000 BSQ  TODO change low dev value
     QUORUM_CONFISCATION(500),       // 10 000 BSQ  TODO change low dev value
+    QUORUM_GENERIC(100),           // 10 000 BSQ  TODO change low dev value
+    QUORUM_REMOVE_ASSET(400),       // 10 000 BSQ  TODO change low dev value
+
 
     // Threshold for voting in % with precision of 2 (e.g. 5000 -> 50.00%)
-    THRESHOLD_PROPOSAL(5_000),          // 50%
     THRESHOLD_COMP_REQUEST(5_000),      // 50%
     THRESHOLD_CHANGE_PARAM(7_500),      // 75% -> that might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM!
-    THRESHOLD_REMOVE_ASSET(5_000),      // 50%
+    THRESHOLD_ROLE(5_000),      // 50%
     THRESHOLD_CONFISCATION(8_500),      // 85%
+    THRESHOLD_GENERIC(5_000),          // 50%
+    THRESHOLD_REMOVE_ASSET(5_000),      // 50%
 
     // Period phase (16 blocks atm)
     PHASE_UNDEFINED(0),

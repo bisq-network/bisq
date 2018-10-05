@@ -26,6 +26,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
 import bisq.desktop.util.validation.BsqValidator;
 
+import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
@@ -34,7 +35,9 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
+import bisq.core.dao.governance.proposal.generic.GenericProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRoleType;
@@ -42,6 +45,7 @@ import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.ProposalVoteResult;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.governance.Param;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -82,6 +86,10 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
+
+import bisq.asset.Asset;
+
 @SuppressWarnings("ConstantConditions")
 @Slf4j
 public class ProposalDisplay {
@@ -104,6 +112,8 @@ public class ProposalDisplay {
     public ComboBox<BondedRole> confiscateBondComboBox;
     @Nullable
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
+    @Nullable
+    public ComboBox<Asset> assetComboBox;
 
     @Getter
     private int gridRow;
@@ -155,18 +165,20 @@ public class ProposalDisplay {
             case COMPENSATION_REQUEST:
                 titledGroupBgRowSpan += 1;
                 break;
-            case BONDED_ROLE:
-                break;
-            case REMOVE_ALTCOIN:
-                break;
             case CHANGE_PARAM:
                 titledGroupBgRowSpan += 1;
                 break;
-            case GENERIC:
+            case BONDED_ROLE:
                 break;
             case CONFISCATE_BOND:
                 break;
+            case GENERIC:
+                titledGroupBgRowSpan -= 1;
+                break;
+            case REMOVE_ASSET:
+                break;
         }
+
         // at isMakeProposalScreen we show fee but no uid and txID (+1)
         // otherwise we don't show fee but show uid and txID (+2)
         if (isMakeProposalScreen)
@@ -217,26 +229,6 @@ public class ProposalDisplay {
                 bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
                 inputControls.add(bsqAddressTextField);
                 break;
-            case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addLabelComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
-                checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
-                bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
-                bondedRoleTypeComboBox.setConverter(new StringConverter<>() {
-                    @Override
-                    public String toString(BondedRoleType bondedRoleType) {
-                        return bondedRoleType != null ? bondedRoleType.getDisplayString() : "";
-                    }
-
-                    @Override
-                    public BondedRoleType fromString(String string) {
-                        return null;
-                    }
-                });
-                comboBoxes.add(bondedRoleTypeComboBox);
-                break;
-            case REMOVE_ALTCOIN:
-                break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
                 paramComboBox = FormBuilder.<Param>addLabelComboBox(gridPane, ++gridRow,
@@ -276,7 +268,23 @@ public class ProposalDisplay {
                 };
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
-            case GENERIC:
+            case BONDED_ROLE:
+                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addLabelComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
+                checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
+                bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
+                bondedRoleTypeComboBox.setConverter(new StringConverter<>() {
+                    @Override
+                    public String toString(BondedRoleType bondedRoleType) {
+                        return bondedRoleType != null ? bondedRoleType.getDisplayString() : "";
+                    }
+
+                    @Override
+                    public BondedRoleType fromString(String string) {
+                        return null;
+                    }
+                });
+                comboBoxes.add(bondedRoleTypeComboBox);
                 break;
             case CONFISCATE_BOND:
                 confiscateBondComboBox = FormBuilder.<BondedRole>addLabelComboBox(gridPane, ++gridRow,
@@ -295,6 +303,31 @@ public class ProposalDisplay {
                     }
                 });
                 comboBoxes.add(confiscateBondComboBox);
+                break;
+            case GENERIC:
+                break;
+            case REMOVE_ASSET:
+                assetComboBox = FormBuilder.<Asset>addLabelComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.assetComboBox.label")).second;
+                checkNotNull(assetComboBox, "assetComboBox must not be null");
+                List<Asset> assetList = CurrencyUtil.getAssetRegistry().stream()
+                        .filter(e -> !e.getTickerSymbol().equals("BSQ"))
+                        .filter(e -> !e.getTickerSymbol().equals("BTC"))
+                        .filter(e -> CurrencyUtil.assetMatchesNetwork(e, BaseCurrencyNetwork.BTC_MAINNET))
+                        .collect(Collectors.toList());
+                assetComboBox.setItems(FXCollections.observableArrayList(assetList));
+                assetComboBox.setConverter(new StringConverter<>() {
+                    @Override
+                    public String toString(Asset asset) {
+                        return asset != null ? CurrencyUtil.getNameAndCode(asset.getTickerSymbol()) : "";
+                    }
+
+                    @Override
+                    public Asset fromString(String string) {
+                        return null;
+                    }
+                });
+                comboBoxes.add(assetComboBox);
                 break;
         }
 
@@ -420,12 +453,18 @@ public class ProposalDisplay {
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
             BondedRole bondedRole = bondedRoleProposal.getBondedRole();
             bondedRoleTypeComboBox.getSelectionModel().select(bondedRole.getBondedRoleType());
-
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
             daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
                     .ifPresent(bondedRole -> confiscateBondComboBox.getSelectionModel().select(bondedRole));
+        } else if (proposal instanceof GenericProposal) {
+            // do nothing
+        } else if (proposal instanceof RemoveAssetProposal) {
+            RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
+            checkNotNull(assetComboBox, "assetComboBox must not be null");
+            CurrencyUtil.findAsset(removeAssetProposal.getTickerSymbol(), BaseCurrencyNetwork.BTC_MAINNET)
+                    .ifPresent(asset -> assetComboBox.getSelectionModel().select(asset));
         }
         int chainHeight;
         if (txIdTextField != null) {

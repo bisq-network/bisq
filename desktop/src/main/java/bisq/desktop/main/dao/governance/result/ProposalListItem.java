@@ -23,9 +23,11 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -107,23 +109,22 @@ public class ProposalListItem {
                 CompensationProposal compensationProposal = (CompensationProposal) proposal;
                 Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
                 return bsqFormatter.formatCoinWithCode(requestedBsq);
+            case CHANGE_PARAM:
+                ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
+                return changeParamProposal.getParam().getDisplayString();
             case BONDED_ROLE:
                 BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
                 BondedRole bondedRole = bondedRoleProposal.getBondedRole();
                 return Res.get("dao.bond.bondedRoleType." + bondedRole.getBondedRoleType().name());
-            case REMOVE_ALTCOIN:
-                // TODO
-                return "N/A";
-            case CHANGE_PARAM:
-                ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-                return changeParamProposal.getParam().getDisplayString();
-            case GENERIC:
-                // TODO
-                return "N/A";
             case CONFISCATE_BOND:
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
                 // TODO add info to bond
                 return confiscateBondProposal.getTxId();
+            case GENERIC:
+                return proposal.getName();
+            case REMOVE_ASSET:
+                RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
+                return CurrencyUtil.getNameAndCode(removeAssetProposal.getTickerSymbol());
         }
         return "-";
     }

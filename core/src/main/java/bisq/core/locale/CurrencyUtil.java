@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,6 +53,7 @@ public class CurrencyUtil {
         setBaseCurrencyCode(BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
     }
 
+    @Getter
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
@@ -436,5 +438,12 @@ public class CurrencyUtil {
 
         // If we are in mainnet we need have a mainet asset defined.
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
+    }
+
+    public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
+        return getAssetRegistry().stream()
+                .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
+                .filter(asset -> assetMatchesNetwork(asset, baseCurrencyNetwork))
+                .findAny();
     }
 }

@@ -135,18 +135,20 @@ public class BsqFormatter extends BSFormatter {
             case COMPENSATION_REQUEST_MAX_AMOUNT:
                 return formatCoinWithCode(Coin.valueOf(value));
 
-            case QUORUM_PROPOSAL:
             case QUORUM_COMP_REQUEST:
             case QUORUM_CHANGE_PARAM:
-            case QUORUM_REMOVE_ASSET:
+            case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
+            case QUORUM_GENERIC:
+            case QUORUM_REMOVE_ASSET:
                 return formatCoinWithCode(Coin.valueOf(value));
 
-            case THRESHOLD_PROPOSAL:
             case THRESHOLD_COMP_REQUEST:
             case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_REMOVE_ASSET:
+            case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:
+            case THRESHOLD_GENERIC:
+            case THRESHOLD_REMOVE_ASSET:
                 return formatToPercentWithSymbol(value / 10000d);
 
             case PHASE_UNDEFINED:
@@ -183,18 +185,22 @@ public class BsqFormatter extends BSFormatter {
             case COMPENSATION_REQUEST_MAX_AMOUNT:
                 return parseToCoin(inputValue).value;
 
-            case QUORUM_PROPOSAL:
+
             case QUORUM_COMP_REQUEST:
             case QUORUM_CHANGE_PARAM:
-            case QUORUM_REMOVE_ASSET:
+            case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
+            case QUORUM_GENERIC:
+            case QUORUM_REMOVE_ASSET:
                 return parseToCoin(inputValue).value;
 
-            case THRESHOLD_PROPOSAL:
+
             case THRESHOLD_COMP_REQUEST:
             case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_REMOVE_ASSET:
+            case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:
+            case THRESHOLD_GENERIC:
+            case THRESHOLD_REMOVE_ASSET:
                 return (long) (parsePercentStringToDouble(inputValue) * 10000);
 
             case PHASE_UNDEFINED:

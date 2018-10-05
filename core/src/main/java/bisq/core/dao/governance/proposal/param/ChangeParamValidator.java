@@ -67,6 +67,7 @@ public class ChangeParamValidator extends ProposalValidator {
         switch (param) {
             case UNDEFINED:
                 break;
+
             case BSQ_MAKER_FEE_IN_PERCENT:
                 break;
             case BSQ_TAKER_FEE_IN_PERCENT:
@@ -75,41 +76,47 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case BTC_TAKER_FEE_IN_PERCENT:
                 break;
+
             case PROPOSAL_FEE:
                 break;
             case BLIND_VOTE_FEE:
                 break;
+
             case COMPENSATION_REQUEST_MIN_AMOUNT:
                 if (paramValue < Restrictions.getMinNonDustOutput().value)
                     throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-
                 checkMinMax(param, paramValue, 100, -50);
-
                 break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
                 checkMinMax(param, paramValue, 100, -50);
+                break;
 
-                break;
-            case QUORUM_PROPOSAL:
-                break;
             case QUORUM_COMP_REQUEST:
                 break;
             case QUORUM_CHANGE_PARAM:
                 break;
-            case QUORUM_REMOVE_ASSET:
+            case QUORUM_ROLE:
                 break;
             case QUORUM_CONFISCATION:
                 break;
-            case THRESHOLD_PROPOSAL:
+            case QUORUM_GENERIC:
                 break;
+            case QUORUM_REMOVE_ASSET:
+                break;
+
             case THRESHOLD_COMP_REQUEST:
                 break;
             case THRESHOLD_CHANGE_PARAM:
                 break;
-            case THRESHOLD_REMOVE_ASSET:
+            case THRESHOLD_ROLE:
                 break;
             case THRESHOLD_CONFISCATION:
                 break;
+            case THRESHOLD_GENERIC:
+                break;
+            case THRESHOLD_REMOVE_ASSET:
+                break;
+
             case PHASE_UNDEFINED:
                 break;
             case PHASE_PROPOSAL:
