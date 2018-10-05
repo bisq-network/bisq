@@ -22,7 +22,7 @@ import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
@@ -46,6 +46,7 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -53,7 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.user.PreferenceMakers.empty;
+import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,6 +67,7 @@ import static org.mockito.Mockito.when;
 @PrepareForTest({BtcWalletService.class, AddressEntry.class, PriceFeedService.class, User.class,
         FeeService.class, CreateOfferDataModel.class, PaymentAccount.class, BsqWalletService.class,
         SecurityDepositValidator.class, AccountAgeWitnessService.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;

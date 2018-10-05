@@ -20,8 +20,9 @@ package bisq.desktop.main.dao.governance.result;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
+import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.Cycle;
-import bisq.core.util.BsqFormatter;
 
 import java.util.List;
 
@@ -33,12 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 class ResultsOfCycle {
     private final Cycle cycle;
     private final int cycleIndex;
-    private final int numVotes, numAcceptedVotes, numRejectedVotes;
-    private BsqFormatter bsqFormatter;
+    private final int numVotes;
+    private final int numAcceptedVotes;
+    private final int numRejectedVotes;
+    private final BsqStateService bsqStateService;
     private long cycleStartTime;
 
     // All available proposals of cycle
-    private List<Proposal> proposals;
+    private final List<Proposal> proposals;
 
     // Proposals which ended up in voting
     private final List<EvaluatedProposal> evaluatedProposals;
@@ -50,7 +53,8 @@ class ResultsOfCycle {
                    long cycleStartTime,
                    List<Proposal> proposals,
                    List<EvaluatedProposal> evaluatedProposals,
-                   List<DecryptedBallotsWithMerits> decryptedVotesForCycle) {
+                   List<DecryptedBallotsWithMerits> decryptedVotesForCycle,
+                   BsqStateService bsqStateService) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
         this.cycleStartTime = cycleStartTime;
@@ -67,5 +71,16 @@ class ResultsOfCycle {
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
                 .sum();
+        this.bsqStateService = bsqStateService;
+    }
+
+    public long getCycleStartTime() {
+        // At a new cycle we have cycleStartTime 0 as the block is not processed yet.
+        // To display a correct value we access again from the bsqStateService
+        if (cycleStartTime == 0)
+            cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+                    .map(Block::getTime)
+                    .orElse(0L);
+        return cycleStartTime;
     }
 }

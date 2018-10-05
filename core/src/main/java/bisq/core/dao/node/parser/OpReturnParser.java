@@ -58,17 +58,16 @@ class OpReturnParser {
      * Parse the type of OP_RETURN data and validate it.
      *
      * @param tempTxOutput      The temporary transaction output to parse.
-     * @param isLastOutput      If true, the output being parsed has a non-zero value.
      * @return The type of the transaction output, which will be either one of the
      *                          {@code *_OP_RETURN_OUTPUT} values, or {@code UNDEFINED} in case of
      *                          unexpected state.
      */
-    static TxOutputType getTxOutputType(TempTxOutput tempTxOutput, boolean isLastOutput) {
+    static TxOutputType getTxOutputType(TempTxOutput tempTxOutput) {
         boolean nonZeroOutput = tempTxOutput.getValue() != 0;
         byte[] opReturnData = tempTxOutput.getOpReturnData();
         checkNotNull(opReturnData, "opReturnData must not be null");
 
-        if (nonZeroOutput || !isLastOutput || opReturnData.length < 22) {
+        if (nonZeroOutput || opReturnData.length < 22) {
             log.warn("OP_RETURN data does not match our rules. opReturnData={}",
                     Utils.HEX.encode(opReturnData));
             return TxOutputType.INVALID_OUTPUT;

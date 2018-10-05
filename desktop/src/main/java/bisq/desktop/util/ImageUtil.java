@@ -22,7 +22,9 @@ import bisq.core.locale.Country;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-import com.sun.javafx.tk.quantum.QuantumToolkit;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsEnvironment;
+import java.awt.geom.AffineTransform;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,10 +59,8 @@ public class ImageUtil {
     }
 
     public static boolean isRetina() {
-        float maxRenderScale = ((QuantumToolkit) QuantumToolkit.getToolkit()).getMaxRenderScale();
-        @SuppressWarnings("UnnecessaryLocalVariable")
-        boolean isRetina = maxRenderScale > 1.9f;
-        //log.debug("isRetina=" + isRetina + " / maxRenderScale=" + maxRenderScale);
-        return isRetina;
+        final GraphicsConfiguration gfxConfig = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+        final AffineTransform transform = gfxConfig.getDefaultTransform();
+        return !transform.isIdentity();
     }
 }

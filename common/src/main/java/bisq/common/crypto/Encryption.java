@@ -25,6 +25,8 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 import javax.crypto.spec.SecretKeySpec;
 
 import java.security.InvalidKeyException;
@@ -36,6 +38,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import java.io.ByteArrayOutputStream;
@@ -51,7 +54,7 @@ public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
 
     public static final String ASYM_KEY_ALGO = "RSA";
-    private static final String ASYM_CIPHER = "RSA/None/OAEPWithSHA256AndMGF1Padding";
+    private static final String ASYM_CIPHER = "RSA/ECB/OAEPWithSHA-256AndMGF1PADDING";
 
     private static final String SYM_KEY_ALGO = "AES";
     private static final String SYM_CIPHER = "AES";
@@ -61,7 +64,7 @@ public class Encryption {
     public static KeyPair generateKeyPair() {
         long ts = System.currentTimeMillis();
         try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ASYM_KEY_ALGO, "BC");
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(ASYM_KEY_ALGO);
             keyPairGenerator.initialize(2048);
             KeyPair keyPair = keyPairGenerator.genKeyPair();
             log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
@@ -80,7 +83,7 @@ public class Encryption {
 
     public static byte[] encrypt(byte[] payload, SecretKey secretKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
+            Cipher cipher = Cipher.getInstance(SYM_CIPHER);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher.doFinal(payload);
         } catch (Throwable e) {
@@ -91,7 +94,7 @@ public class Encryption {
 
     public static byte[] decrypt(byte[] encryptedPayload, SecretKey secretKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
+            Cipher cipher = Cipher.getInstance(SYM_CIPHER);
             cipher.init(Cipher.DECRYPT_MODE, secretKey);
             return cipher.doFinal(encryptedPayload);
         } catch (Throwable e) {
@@ -157,7 +160,7 @@ public class Encryption {
     }
 
     private static byte[] getHmac(byte[] payload, SecretKey secretKey) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException {
-        Mac mac = Mac.getInstance(HMAC, "BC");
+        Mac mac = Mac.getInstance(HMAC);
         mac.init(secretKey);
         return mac.doFinal(payload);
     }
@@ -195,8 +198,10 @@ public class Encryption {
 
     public static byte[] encryptSecretKey(SecretKey secretKey, PublicKey publicKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
-            cipher.init(Cipher.WRAP_MODE, publicKey);
+            Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
+            OAEPParameterSpec oaepParameterSpec = new OAEPParameterSpec("SHA-256", "MGF1",
+                    MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
+            cipher.init(Cipher.WRAP_MODE, publicKey, oaepParameterSpec);
             return cipher.wrap(secretKey);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -206,8 +211,10 @@ public class Encryption {
 
     public static SecretKey decryptSecretKey(byte[] encryptedSecretKey, PrivateKey privateKey) throws CryptoException {
         try {
-            Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
-            cipher.init(Cipher.UNWRAP_MODE, privateKey);
+            Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
+            OAEPParameterSpec oaepParameterSpec = new OAEPParameterSpec("SHA-256", "MGF1",
+                    MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
+            cipher.init(Cipher.UNWRAP_MODE, privateKey, oaepParameterSpec);
             return (SecretKey) cipher.unwrap(encryptedSecretKey, "AES", Cipher.SECRET_KEY);
         } catch (Throwable e) {
             // errors when trying to decrypt foreign network_messages are normal
@@ -222,7 +229,7 @@ public class Encryption {
 
     public static SecretKey generateSecretKey(int bits) {
         try {
-            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_KEY_ALGO, "BC");
+            KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_KEY_ALGO);
             keyPairGenerator.init(bits);
             return keyPairGenerator.generateKey();
         } catch (Throwable e) {
@@ -242,8 +249,8 @@ public class Encryption {
      */
     public static PublicKey getPublicKeyFromBytes(byte[] encryptionPubKeyBytes) {
         try {
-            return KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            return KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO).generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(encryptionPubKeyBytes), e);
             e.printStackTrace();
             throw new KeyConversionException(e);

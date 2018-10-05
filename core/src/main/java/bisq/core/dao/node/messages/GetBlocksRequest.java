@@ -32,11 +32,9 @@ import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-@ToString
 public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
     private final int fromBlockHeight;
     private final int nonce;
@@ -74,5 +72,14 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
         return new ArrayList<>(Collections.singletonList(
                 Capabilities.Capability.DAO_FULL_NODE.ordinal()
         ));
+    }
+
+
+    @Override
+    public String toString() {
+        return "GetBlocksRequest{" +
+                "\n     fromBlockHeight=" + fromBlockHeight +
+                ",\n     nonce=" + nonce +
+                "\n} " + super.toString();
     }
 }

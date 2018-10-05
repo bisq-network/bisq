@@ -30,6 +30,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -37,10 +38,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.locale.TradeCurrencyMakers.usd;
-import static bisq.core.user.PreferenceMakers.empty;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcBuyItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
+import static bisq.desktop.maker.PreferenceMakers.empty;
+import static bisq.desktop.maker.TradeCurrencyMakers.usd;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({OfferBook.class, PriceFeedService.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class OfferBookChartViewModelTest {
 
     @Before

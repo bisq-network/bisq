@@ -33,7 +33,6 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -242,8 +241,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     private void fillCycleList() {
         cycleListItemList.clear();
         bsqStateService.getCycles().forEach(cycle -> {
-            List<Proposal> proposalsForCycle = proposalService.getProposalPayloads().stream()
-                    .map(ProposalPayload::getProposal)
+            List<Proposal> proposalsForCycle = proposalService.getValidatedProposals().stream()
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
@@ -265,7 +263,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     cycleStartTime,
                     proposalsForCycle,
                     evaluatedProposalsForCycle,
-                    decryptedVotesForCycle);
+                    decryptedVotesForCycle,
+                    bsqStateService);
             CycleListItem cycleListItem = new CycleListItem(resultsOfCycle, bsqStateService, bsqFormatter);
             cycleListItemList.add(cycleListItem);
         });
@@ -421,12 +420,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(160);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<CycleListItem, CycleListItem>, TableCell<CycleListItem,
-                        CycleListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<CycleListItem, CycleListItem> call(
                             TableColumn<CycleListItem, CycleListItem> column) {
-                        return new TableCell<CycleListItem, CycleListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final CycleListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -446,12 +444,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMaxWidth(90);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<CycleListItem, CycleListItem>, TableCell<CycleListItem,
-                        CycleListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<CycleListItem, CycleListItem> call(
                             TableColumn<CycleListItem, CycleListItem> column) {
-                        return new TableCell<CycleListItem, CycleListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final CycleListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -471,12 +468,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMaxWidth(70);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<CycleListItem, CycleListItem>, TableCell<CycleListItem,
-                        CycleListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<CycleListItem, CycleListItem> call(
                             TableColumn<CycleListItem, CycleListItem> column) {
-                        return new TableCell<CycleListItem, CycleListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final CycleListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -495,12 +491,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(70);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<CycleListItem, CycleListItem>, TableCell<CycleListItem,
-                        CycleListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<CycleListItem, CycleListItem> call(
                             TableColumn<CycleListItem, CycleListItem> column) {
-                        return new TableCell<CycleListItem, CycleListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final CycleListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -519,12 +514,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(70);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<CycleListItem, CycleListItem>, TableCell<CycleListItem,
-                        CycleListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<CycleListItem, CycleListItem> call(
                             TableColumn<CycleListItem, CycleListItem> column) {
-                        return new TableCell<CycleListItem, CycleListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final CycleListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -553,12 +547,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
-                        ProposalListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalListItem, ProposalListItem> call(
                             TableColumn<ProposalListItem, ProposalListItem> column) {
-                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -580,12 +573,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
-                        ProposalListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalListItem, ProposalListItem> call(
                             TableColumn<ProposalListItem, ProposalListItem> column) {
-                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final ProposalListItem item, boolean empty) {
@@ -609,13 +601,12 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
-                        ProposalListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                             ProposalListItem> column) {
-                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -644,12 +635,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(150);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
-                        ProposalListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalListItem, ProposalListItem> call(
                             TableColumn<ProposalListItem, ProposalListItem> column) {
-                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -669,12 +659,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(180);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalListItem, ProposalListItem>, TableCell<ProposalListItem,
-                        ProposalListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalListItem, ProposalListItem> call(
                             TableColumn<ProposalListItem, ProposalListItem> column) {
-                        return new TableCell<ProposalListItem, ProposalListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -694,13 +683,12 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(70);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<ProposalListItem, ProposalListItem>,
-                TableCell<ProposalListItem, ProposalListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
-                return new TableCell<ProposalListItem, ProposalListItem>() {
+                return new TableCell<>() {
                     Label myVoteIcon;
 
                     @Override
@@ -728,12 +716,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<ProposalListItem, ProposalListItem>,
-                TableCell<ProposalListItem, ProposalListItem>>() {
+        column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
-                return new TableCell<ProposalListItem, ProposalListItem>() {
+                return new TableCell<>() {
                     Label icon;
 
                     @Override
@@ -771,12 +758,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<VoteListItem, VoteListItem>, TableCell<VoteListItem,
-                        VoteListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<VoteListItem, VoteListItem> call(
                             TableColumn<VoteListItem, VoteListItem> column) {
-                        return new TableCell<VoteListItem, VoteListItem>() {
+                        return new TableCell<>() {
                             private Label icon;
 
                             @Override
@@ -803,12 +789,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<VoteListItem, VoteListItem>, TableCell<VoteListItem,
-                        VoteListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<VoteListItem, VoteListItem> call(
                             TableColumn<VoteListItem, VoteListItem> column) {
-                        return new TableCell<VoteListItem, VoteListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final VoteListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -826,12 +811,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<VoteListItem, VoteListItem>, TableCell<VoteListItem,
-                        VoteListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<VoteListItem, VoteListItem> call(
                             TableColumn<VoteListItem, VoteListItem> column) {
-                        return new TableCell<VoteListItem, VoteListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final VoteListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -850,12 +834,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<VoteListItem, VoteListItem>, TableCell<VoteListItem,
-                        VoteListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<VoteListItem, VoteListItem> call(
                             TableColumn<VoteListItem, VoteListItem> column) {
-                        return new TableCell<VoteListItem, VoteListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final VoteListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -874,12 +857,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(130);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<VoteListItem, VoteListItem>,
-                TableCell<VoteListItem, VoteListItem>>() {
+        column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
                     VoteListItem> column) {
-                return new TableCell<VoteListItem, VoteListItem>() {
+                return new TableCell<>() {
                     private HyperlinkWithIcon hyperlinkWithIcon;
 
                     @Override
@@ -909,12 +891,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         column.setMinWidth(140);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<VoteListItem, VoteListItem>,
-                TableCell<VoteListItem, VoteListItem>>() {
+        column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
                     VoteListItem> column) {
-                return new TableCell<VoteListItem, VoteListItem>() {
+                return new TableCell<>() {
                     private HyperlinkWithIcon hyperlinkWithIcon;
 
                     @Override

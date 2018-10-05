@@ -18,9 +18,9 @@
 package bisq.core.dao.governance.proposal;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.wallet.TxBroadcastException;
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.state.BsqStateListener;

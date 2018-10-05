@@ -241,6 +241,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.getSelectionModel().select(0);
 
             paymentAccountTitledGroupBg.setText(Res.get("shared.selectTradingAccount"));
+
+            // TODO if we have multiple payment accounts we should show some info/warning to
+            // make sure the user has selected the account he wants to use.
+            // To use a popup is not recommended as we have already 3 popups at the first time (if user has not clicked
+            // don't show again).
+            // @Christoph Maybe a similar warn triangle as used in create offer might work?
         }
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());

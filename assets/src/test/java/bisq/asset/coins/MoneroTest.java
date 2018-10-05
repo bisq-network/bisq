@@ -17,11 +17,28 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
+import org.junit.Test;
 
-public class MoneroTest extends AbstractAssetWithDefaultValidatorTest {
+public class MoneroTest extends AbstractAssetTest {
 
     public MoneroTest() {
         super(new Monero());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("4BJHitCigGy6giuYsJFP26KGkTKiQDJ6HJP1pan2ir2CCV8Twc2WWmo4fu1NVXt8XLGYAkjo5cJ3yH68Lfz9ZXEUJ9MeqPW");
+        assertValidAddress("46tM15KsogEW5MiVmBn7waPF8u8ZsB6aHjJk7BAv1wvMKfWhQ2h2so5BCJ9cRakfPt5BFo452oy3K8UK6L2u2v7aJ3Nf7P2");
+        assertValidAddress("86iQTnEqQ9mXJFvBvbY3KU5do5Jh2NCkpTcZsw3TMZ6oKNJhELvAreZFQ1p8EknRRTKPp2vg9fJvy47Q4ARVChjLMuUAFQJ");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("");
+        assertInvalidAddress("4BJHitCigGy6giuYsJFP26KGkTKiQDJ6HJP1pan2ir2CCV8Twc2WWmo4fu1NVXt8XLGYAkjo5cJ3yH68Lfz9ZXEUJ9MeqP");
+        assertInvalidAddress("4BJHitCigGy6giuYsJFP26KGkTKiQDJ6HJP1pan2ir2CCV8Twc2WWmo4fu1NVXt8XLGYAkjo5cJ3yH68Lfz9ZXEUJ9MeqPWW");
+        assertInvalidAddress("86iQTnEqQ9mXJFvBvbY3KU5do5Jh2NCkpTcZsw3TMZ6oKNJhELvAreZFQ1p8EknRRTKPp2vg9fJvy47Q4ARVChjLMuUAFQ!");
+        assertInvalidAddress("76iQTnEqQ9mXJFvBvbY3KU5do5Jh2NCkpTcZsw3TMZ6oKNJhELvAreZFQ1p8EknRRTKPp2vg9fJvy47Q4ARVChjLMuUAFQJ");
     }
 }

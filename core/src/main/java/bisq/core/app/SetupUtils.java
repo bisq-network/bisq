@@ -34,8 +34,6 @@ import bisq.common.proto.ProtobufferException;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
-import java.security.Security;
-
 import java.util.Date;
 import java.util.function.Consumer;
 
@@ -68,11 +66,7 @@ public class SetupUtils {
                             ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
                         log.debug("Crypto test succeeded");
 
-                        if (Security.getProvider("BC") != null) {
-                            UserThread.execute(resultHandler::handleResult);
-                        } else {
-                            errorHandler.accept(new CryptoException("Security provider BountyCastle is not available."));
-                        }
+                        UserThread.execute(resultHandler::handleResult);
                     } else {
                         errorHandler.accept(new CryptoException("Payload not correct after decryption"));
                     }

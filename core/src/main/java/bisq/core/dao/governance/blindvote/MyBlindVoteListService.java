@@ -19,12 +19,12 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.exceptions.PublishToP2PNetworkException;
@@ -271,10 +271,11 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
     // blindVoteTxId is null if we use the method from the getCurrentlyAvailableMerit call.
     public MeritList getMerits(@Nullable String blindVoteTxId) {
-        // Create a lookup set for txIds of own comp. requests
+        // Create a lookup set for txIds of own comp. requests from past cycles (we ignore request form that cycle)
         Set<String> myCompensationProposalTxIs = myProposalListService.getList().stream()
                 .filter(proposal -> proposal instanceof CompensationProposal)
                 .map(Proposal::getTxId)
+                .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
         return new MeritList(bsqStateService.getIssuanceSet().stream()

@@ -75,4 +75,14 @@ public class Issuance implements PersistablePayload, NetworkPayload {
                 proto.getAmount(),
                 proto.getPubKey().isEmpty() ? null : proto.getPubKey());
     }
+
+    @Override
+    public String toString() {
+        return "Issuance{" +
+                "\n     txId='" + txId + '\'' +
+                ",\n     chainHeight=" + chainHeight +
+                ",\n     amount=" + amount +
+                ",\n     pubKey='" + pubKey + '\'' +
+                "\n}";
+    }
 }

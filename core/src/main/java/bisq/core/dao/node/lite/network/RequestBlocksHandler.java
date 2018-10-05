@@ -126,14 +126,14 @@ public class RequestBlocksHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.debug("We send a {} to peer {}. ", getBlocksRequest.getClass().getSimpleName(), nodeAddress);
+            log.info("We send to peer {} a {}.", nodeAddress, getBlocksRequest);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBlocksRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.trace("Send " + getBlocksRequest + " to " + nodeAddress + " succeeded.");
+                        log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getHostName());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -178,6 +178,8 @@ public class RequestBlocksHandler implements MessageListener {
                                 "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
                                         "at that moment");
                         cleanup();
+                        log.info("We received from peer {} a BlocksResponse with {} blocks",
+                                nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
                         listener.onComplete(getBlocksResponse);
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +

@@ -45,6 +45,9 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -175,6 +178,19 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public List<Proposal> getValidatedProposals() {
+        return proposalPayloads.stream()
+                .map(proposalPayload -> proposalPayload.getProposal())
+                .filter(proposal -> proposalValidator.isTxTypeValid(proposal))
+                .collect(Collectors.toList());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -212,7 +228,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                     log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                             proposal.getTxId());
                 } else {
-                    log.warn("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
+                    log.debug("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
                             proposal.getTxId(), bsqStateService.getChainHeight());
                 }
             }

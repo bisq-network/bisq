@@ -26,14 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-public class JsonScriptPubKey {
+class JsonScriptPubKey {
     private final List<String> addresses;
     private final String asm;
     private final String hex;
     private final int reqSigs;
     private final String type;
 
-    public JsonScriptPubKey(PubKeyScript pubKeyScript) {
+    JsonScriptPubKey(PubKeyScript pubKeyScript) {
         addresses = pubKeyScript.getAddresses();
         asm = pubKeyScript.getAsm();
         hex = pubKeyScript.getHex();

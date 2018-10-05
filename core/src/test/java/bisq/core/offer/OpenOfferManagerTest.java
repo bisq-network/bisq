@@ -9,6 +9,7 @@ import bisq.common.storage.Storage;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({P2PService.class, PeerManager.class, OfferBookService.class, Storage.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class OpenOfferManagerTest {
 
     @Test

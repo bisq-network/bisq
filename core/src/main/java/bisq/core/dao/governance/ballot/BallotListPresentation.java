@@ -75,13 +75,13 @@ public class BallotListPresentation implements BallotListService.BallotListChang
 
     @Override
     public void onParseTxsComplete(Block block) {
-        onListChanged(ballotListService.getBallotList().getList());
+        onListChanged(ballotListService.getValidatedBallotList());
     }
 
     @Override
     public void onParseBlockChainComplete() {
         // As we update the list in ProposalService.onParseBlockChainComplete we need to update here as well.
-        onListChanged(ballotListService.getBallotList().getList());
+        onListChanged(ballotListService.getValidatedBallotList());
     }
 
 

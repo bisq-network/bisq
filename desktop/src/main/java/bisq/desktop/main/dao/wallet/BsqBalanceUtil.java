@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.wallet;
 
 import bisq.desktop.util.Layout;
 
-import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;

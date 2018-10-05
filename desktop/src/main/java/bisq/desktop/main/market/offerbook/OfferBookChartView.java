@@ -204,7 +204,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             }
         });
 
-        model.currencyListItems.addListener(currencyListItemsListener);
+        model.currencyListItems.getObservableList().addListener(currencyListItemsListener);
 
         model.getOfferBookListItems().addListener(changeListener);
         tradeCurrencySubscriber = EasyBind.subscribe(model.selectedTradeCurrencyProperty,
@@ -295,7 +295,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     protected void deactivate() {
         model.getOfferBookListItems().removeListener(changeListener);
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
-        model.currencyListItems.removeListener(currencyListItemsListener);
+        model.currencyListItems.getObservableList().removeListener(currencyListItemsListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
         buyOfferTableView.getSelectionModel().selectedItemProperty().removeListener(buyTableRowSelectionListener);

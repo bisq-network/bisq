@@ -23,6 +23,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 

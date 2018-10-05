@@ -30,12 +30,12 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.core.locale.TradeCurrencyMakers.bitcoin;
-import static bisq.core.locale.TradeCurrencyMakers.euro;
-import static bisq.core.user.PreferenceMakers.empty;
-import static bisq.desktop.util.CurrencyListItemMakers.bitcoinItem;
-import static bisq.desktop.util.CurrencyListItemMakers.euroItem;
-import static bisq.desktop.util.CurrencyListItemMakers.numberOfTrades;
+import static bisq.desktop.maker.CurrencyListItemMakers.bitcoinItem;
+import static bisq.desktop.maker.CurrencyListItemMakers.euroItem;
+import static bisq.desktop.maker.CurrencyListItemMakers.numberOfTrades;
+import static bisq.desktop.maker.PreferenceMakers.empty;
+import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
+import static bisq.desktop.maker.TradeCurrencyMakers.euro;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;

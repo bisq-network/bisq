@@ -22,12 +22,12 @@ import bisq.core.dao.state.blockchain.SpentInfo;
 import lombok.Value;
 
 @Value
-public class JsonSpentInfo {
+class JsonSpentInfo {
     private final long height;
     private final int inputIndex;
     private final String txId;
 
-    public JsonSpentInfo(SpentInfo spentInfo) {
+    JsonSpentInfo(SpentInfo spentInfo) {
         height = spentInfo.getBlockHeight();
         inputIndex = spentInfo.getInputIndex();
         txId = spentInfo.getTxId();

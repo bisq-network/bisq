@@ -120,10 +120,6 @@ public class BsqStateService implements DaoSetupService {
         return bsqState.getClone();
     }
 
-    public LinkedList<Block> getBlocksFromState(BsqState bsqState) {
-        return new LinkedList<>(bsqState.getBlocks());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ChainHeight
@@ -387,7 +383,7 @@ public class BsqStateService implements DaoSetupService {
         TxOutput txOutput = optionalTxOutput.get();
 
         switch (txOutput.getTxOutputType()) {
-            case UNDEFINED:
+            case UNDEFINED_OUTPUT:
                 return false;
             case GENESIS_OUTPUT:
             case BSQ_OUTPUT:
@@ -404,11 +400,11 @@ public class BsqStateService implements DaoSetupService {
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
                 return true;
-            case LOCKUP:
+            case LOCKUP_OUTPUT:
                 return false;
             case LOCKUP_OP_RETURN_OUTPUT:
                 return true;
-            case UNLOCK:
+            case UNLOCK_OUTPUT:
                 return isLockTimeOverForUnlockTxOutput(txOutput);
             case INVALID_OUTPUT:
                 return false;
@@ -431,7 +427,7 @@ public class BsqStateService implements DaoSetupService {
     public boolean isBsqTxOutputType(TxOutput txOutput) {
         final TxOutputType txOutputType = txOutput.getTxOutputType();
         switch (txOutputType) {
-            case UNDEFINED:
+            case UNDEFINED_OUTPUT:
                 return false;
             case GENESIS_OUTPUT:
             case BSQ_OUTPUT:
@@ -447,9 +443,9 @@ public class BsqStateService implements DaoSetupService {
             case BLIND_VOTE_OP_RETURN_OUTPUT:
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
-            case LOCKUP:
+            case LOCKUP_OUTPUT:
             case LOCKUP_OP_RETURN_OUTPUT:
-            case UNLOCK:
+            case UNLOCK_OUTPUT:
                 return true;
             case INVALID_OUTPUT:
                 return false;
@@ -564,7 +560,7 @@ public class BsqStateService implements DaoSetupService {
     public Optional<byte[]> getLockupHash(TxOutput txOutput) {
         Optional<Tx> lockupTx = Optional.empty();
         String txId = txOutput.getTxId();
-        if (txOutput.getTxOutputType() == TxOutputType.LOCKUP) {
+        if (txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT) {
             lockupTx = getTx(txId);
         } else if (isUnlockTxOutputAndLockTimeNotOver(txOutput)) {
             if (getTx(txId).isPresent()) {
@@ -591,7 +587,7 @@ public class BsqStateService implements DaoSetupService {
     }*/
 
     public boolean isUnlockTxOutputAndLockTimeNotOver(TxOutput txOutput) {
-        return txOutput.getTxOutputType() == TxOutputType.UNLOCK && !isLockTimeOverForUnlockTxOutput(txOutput);
+        return txOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT && !isLockTimeOverForUnlockTxOutput(txOutput);
     }
 
     // Lockup
@@ -601,15 +597,15 @@ public class BsqStateService implements DaoSetupService {
     }
 
     public boolean isLockupOutput(TxOutput txOutput) {
-        return txOutput.getTxOutputType() == TxOutputType.LOCKUP;
+        return txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT;
     }
 
     public Set<TxOutput> getLockupTxOutputs() {
-        return getTxOutputsByTxOutputType(TxOutputType.LOCKUP);
+        return getTxOutputsByTxOutputType(TxOutputType.LOCKUP_OUTPUT);
     }
 
     public Set<TxOutput> getUnlockTxOutputs() {
-        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK);
+        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT);
     }
 
     public Optional<TxOutput> getLockupTxOutput(String txId) {
@@ -633,13 +629,13 @@ public class BsqStateService implements DaoSetupService {
 
     // Unlock
     public boolean isUnlockOutput(TxOutput txOutput) {
-        return txOutput.getTxOutputType() == TxOutputType.UNLOCK;
+        return txOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT;
     }
 
     // Unlocking
     // Return UNLOCK TxOutputs that are not yet spendable as lockTime is not over
     public Stream<TxOutput> getUnspentUnlockingTxOutputsStream() {
-        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK).stream()
+        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT).stream()
                 .filter(txOutput -> isUnspent(txOutput.getKey()))
                 .filter(txOutput -> !isLockTimeOverForUnlockTxOutput(txOutput));
     }
@@ -657,7 +653,7 @@ public class BsqStateService implements DaoSetupService {
 
     // TODO SQ i changed the code here. i think it was wrong before
     public boolean isUnlockingOutput(TxOutput unlockTxOutput) {
-        return unlockTxOutput.getTxOutputType() == TxOutputType.UNLOCK &&
+        return unlockTxOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT &&
                 !isLockTimeOverForUnlockTxOutput(unlockTxOutput);
     }
 
@@ -675,7 +671,7 @@ public class BsqStateService implements DaoSetupService {
 
     // We don't care here about the unspent state
     public Stream<TxOutput> getUnlockedTxOutputsStream() {
-        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK).stream()
+        return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT).stream()
                 .filter(this::isLockTimeOverForUnlockTxOutput);
     }
 
@@ -707,7 +703,7 @@ public class BsqStateService implements DaoSetupService {
         }
         getTxOutputStream()
                 .filter(txOutput -> isUnspent(txOutput.getKey()))
-                .filter(txOutput -> txOutput.getTxOutputType() == TxOutputType.LOCKUP ||
+                .filter(txOutput -> txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT ||
                         (isUnlockTxOutputAndLockTimeNotOver(txOutput)))
                 .filter(txOutput -> {
                     Optional<byte[]> hash = getLockupHash(txOutput);

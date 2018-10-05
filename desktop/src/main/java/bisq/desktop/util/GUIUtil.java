@@ -22,8 +22,8 @@ import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
@@ -462,6 +462,8 @@ public class GUIUtil {
             new Popup<>().information(Res.get("popup.warning.notSufficientConnectionsToBtcNetwork", walletsSetup.getMinBroadcastConnections())).show();
         else if (!walletsSetup.isDownloadComplete())
             new Popup<>().information(Res.get("popup.warning.downloadNotComplete")).show();
+        else
+            log.warn("showNotReadyForTxBroadcastPopups called but no case matched. This should never happen if isReadyForTxBroadcast was called before.");
     }
 
     public static void requestFocus(Node node) {

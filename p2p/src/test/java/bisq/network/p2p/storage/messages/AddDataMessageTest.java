@@ -32,12 +32,9 @@ import io.bisq.generated.protobuffer.PB;
 
 import org.apache.commons.lang3.RandomUtils;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.InvalidKeyException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
@@ -60,7 +57,7 @@ public class AddDataMessageTest {
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
-        Security.addProvider(new BouncyCastleProvider());
+
         dir1 = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored
         dir1.delete();

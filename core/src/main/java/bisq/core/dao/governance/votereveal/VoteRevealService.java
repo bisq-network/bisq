@@ -18,12 +18,12 @@
 package bisq.core.dao.governance.votereveal;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
-import bisq.core.btc.wallet.TxMalleabilityException;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.BlindVote;

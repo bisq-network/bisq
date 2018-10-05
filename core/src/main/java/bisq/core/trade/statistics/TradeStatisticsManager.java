@@ -45,8 +45,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -204,5 +206,153 @@ public class TradeStatisticsManager {
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
         }
+    }
+
+    // To have automatic check and removal we would need new fields in the asset class for the date when it was
+    // added/released and a property if it was removed due either getting blocked by the DAO stakehodlers in voting or
+    // removed due lack of activity.
+    // For now we use the old script below to print the usage of the coins.
+    private void printAllCurrencyStats() {
+        Map<String, Set<TradeStatistics2>> map1 = new HashMap<>();
+        for (TradeStatistics2 tradeStatistics : observableTradeStatisticsSet) {
+            if (CurrencyUtil.isFiatCurrency(tradeStatistics.getCounterCurrency())) {
+                String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
+                if (!map1.containsKey(counterCurrency))
+                    map1.put(counterCurrency, new HashSet<>());
+
+                map1.get(counterCurrency).add(tradeStatistics);
+            }
+        }
+
+        StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
+        map1.entrySet().stream()
+                .sorted((o1, o2) -> Integer.compare(o2.getValue().size(), o1.getValue().size()))
+                .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
+        log.error(sb1.toString());
+
+        Map<String, Set<TradeStatistics2>> map2 = new HashMap<>();
+        for (TradeStatistics2 tradeStatistics : observableTradeStatisticsSet) {
+            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getBaseCurrency())) {
+                final String code = CurrencyUtil.getNameAndCode(tradeStatistics.getBaseCurrency());
+                if (!map2.containsKey(code))
+                    map2.put(code, new HashSet<>());
+
+                map2.get(code).add(tradeStatistics);
+            }
+        }
+
+        List<String> allCryptoCurrencies = new ArrayList<>();
+        Set<String> coinsWithValidator = new HashSet<>();
+
+        // List of coins with validator before 0.6.0 hard requirements for address validator
+        coinsWithValidator.add("BTC");
+        coinsWithValidator.add("BSQ");
+        coinsWithValidator.add("LTC");
+        coinsWithValidator.add("DOGE");
+        coinsWithValidator.add("DASH");
+        coinsWithValidator.add("ETH");
+        coinsWithValidator.add("PIVX");
+        coinsWithValidator.add("IOP");
+        coinsWithValidator.add("888");
+        coinsWithValidator.add("ZEC");
+        coinsWithValidator.add("GBYTE");
+        coinsWithValidator.add("NXT");
+
+        // All those need to have a address validator
+        Set<String> newlyAdded = new HashSet<>();
+        // v0.6.0
+        newlyAdded.add("DCT");
+        newlyAdded.add("PNC");
+        newlyAdded.add("WAC");
+        newlyAdded.add("ZEN");
+        newlyAdded.add("ELLA");
+        newlyAdded.add("XCN");
+        newlyAdded.add("TRC");
+        newlyAdded.add("INXT");
+        newlyAdded.add("PART");
+        // v0.6.1
+        newlyAdded.add("MAD");
+        newlyAdded.add("BCH");
+        newlyAdded.add("BCHC");
+        newlyAdded.add("BTG");
+        // v0.6.2
+        newlyAdded.add("CAGE");
+        newlyAdded.add("CRED");
+        newlyAdded.add("XSPEC");
+        // v0.6.3
+        newlyAdded.add("WILD");
+        newlyAdded.add("ONION");
+        // v0.6.4
+        newlyAdded.add("CREA");
+        newlyAdded.add("XIN");
+        // v0.6.5
+        newlyAdded.add("BETR");
+        newlyAdded.add("MVT");
+        newlyAdded.add("REF");
+        // v0.6.6
+        newlyAdded.add("STL");
+        newlyAdded.add("DAI");
+        newlyAdded.add("YTN");
+        newlyAdded.add("DARX");
+        newlyAdded.add("ODN");
+        newlyAdded.add("CDT");
+        newlyAdded.add("DGM");
+        newlyAdded.add("SCS");
+        newlyAdded.add("SOS");
+        newlyAdded.add("ACH");
+        newlyAdded.add("VDN");
+        // v0.7.0
+        newlyAdded.add("ALC");
+        newlyAdded.add("DIN");
+        newlyAdded.add("NAH");
+        newlyAdded.add("ROI");
+        newlyAdded.add("WMCC");
+        newlyAdded.add("RTO");
+        newlyAdded.add("KOTO");
+        newlyAdded.add("PHR");
+        newlyAdded.add("UBQ");
+        newlyAdded.add("QWARK");
+        newlyAdded.add("GEO");
+        newlyAdded.add("GRANS");
+        newlyAdded.add("ICH");
+
+        // TODO add remaining coins since 0.7.0
+        //newlyAdded.clear();
+       /* new AssetRegistry().stream()
+                .sorted(Comparator.comparing(o -> o.getName().toLowerCase()))
+                .filter(e -> !e.getTickerSymbol().equals("BSQ")) // BSQ is not out yet...
+                .filter(e -> !e.getTickerSymbol().equals("BTC"))
+                .map(e -> e.getTickerSymbol()) // We want to get rid of duplicated entries for regtest/testnet...
+                .distinct()
+                .forEach(e -> newlyAdded.add(e));*/
+
+        coinsWithValidator.addAll(newlyAdded);
+
+        CurrencyUtil.getAllSortedCryptoCurrencies()
+                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
+        StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
+        StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
+        map2.entrySet().stream()
+                .sorted((o1, o2) -> Integer.compare(o2.getValue().size(), o1.getValue().size()))
+                .forEach(e -> {
+                    String key = e.getKey();
+                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
+                    // key is: USD Tether (USDT)
+                    String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        allCryptoCurrencies.remove(key);
+                });
+        log.error(sb2.toString());
+
+        // Not considered age of newly added coins, so take care with removal if coin was added recently.
+        allCryptoCurrencies.sort(String::compareTo);
+        allCryptoCurrencies
+                .forEach(e -> {
+                    // key is: USD Tether (USDT)
+                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
+                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
+                        sb3.append(e).append("\n");
+                });
+        log.error(sb3.toString());
     }
 }

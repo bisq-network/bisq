@@ -82,7 +82,7 @@ import javax.annotation.Nullable;
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
  * by providing a reduced API and/or aggregating subroutines.
  */
-public class DaoFacade {
+public class DaoFacade implements DaoSetupService {
     private final ProposalListPresentation proposalListPresentation;
     private final BallotListService ballotListService;
     private final BallotListPresentation ballotListPresentation;
@@ -135,7 +135,19 @@ public class DaoFacade {
         this.lockupService = lockupService;
         this.unlockService = unlockService;
         this.proposalConsensus = proposalConsensus;
+    }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoSetupService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addListeners() {
+    }
+
+    @Override
+    public void start() {
         bsqStateService.addBsqStateListener(new BsqStateListener() {
             @Override
             public void onNewBlockHeight(int blockHeight) {
@@ -152,6 +164,7 @@ public class DaoFacade {
             }
         });
     }
+
 
     public void addBsqStateListener(BsqStateListener listener) {
         bsqStateService.addBsqStateListener(listener);

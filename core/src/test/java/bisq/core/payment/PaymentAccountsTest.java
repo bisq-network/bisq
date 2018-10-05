@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -41,6 +42,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PaymentAccount.class, AccountAgeWitness.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class PaymentAccountsTest {
     @Test
     public void testGetOldestPaymentAccountForOfferWhenNoValidAccounts() {

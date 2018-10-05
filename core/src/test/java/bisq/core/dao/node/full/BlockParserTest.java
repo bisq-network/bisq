@@ -49,7 +49,6 @@ import java.util.Optional;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Tested;
-import mockit.integration.junit4.JMockit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -62,7 +61,6 @@ import static org.junit.Assert.assertTrue;
 
 // Intro to jmockit can be found at http://jmockit.github.io/tutorial/Mocking.html
 @Ignore
-@RunWith(JMockit.class)
 public class BlockParserTest {
     // @Tested classes are instantiated automatically when needed in a test case,
     // using injection where possible, see http://jmockit.github.io/tutorial/Mocking.html#tested

@@ -22,14 +22,14 @@ import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
-import bisq.asset.AssetRegistry;
-
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
+
+
+import bisq.asset.AssetRegistry;
 
 public class AltCoinAddressValidatorTest {
 
@@ -50,11 +50,7 @@ public class AltCoinAddressValidatorTest {
         assertTrue(validator.validate("Lg3PX8wRWmApFCoCMAsPF5P9dPHYQHEWKW").isValid);
 
         validator.setCurrencyCode("BOGUS");
-        try {
-            validator.validate("1BOGUSADDR");
-            fail("expected validation to fail for unregistered asset 'BOGUS'");
-        } catch (IllegalArgumentException ex) {
-            assertThat(ex.getMessage(), containsString("'BOGUS' is not a registered asset"));
-        }
+
+        assertFalse(validator.validate("1BOGUSADDR").isValid);
     }
 }

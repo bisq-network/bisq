@@ -25,7 +25,6 @@ import org.spongycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
 import java.nio.ByteBuffer;
 
@@ -40,10 +39,10 @@ public class Hash {
      */
     public static byte[] getSha256Hash(byte[] data) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256", "BC");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(data, 0, data.length);
             return digest.digest();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException e) {
             log.error("Could not create MessageDigest for hash. " + e.toString());
             e.printStackTrace();
             throw new RuntimeException(e);
