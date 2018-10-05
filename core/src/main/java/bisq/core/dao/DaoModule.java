@@ -19,6 +19,7 @@ package bisq.core.dao;
 
 import bisq.core.dao.bonding.lockup.LockupService;
 import bisq.core.dao.bonding.unlock.UnlockService;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
@@ -177,6 +178,9 @@ public class DaoModule extends AppModule {
         bind(LockupService.class).in(Singleton.class);
         bind(UnlockService.class).in(Singleton.class);
         bind(BondedRolesService.class).in(Singleton.class);
+
+        // Asset
+        bind(AssetService.class).in(Singleton.class);
 
         // Options
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));

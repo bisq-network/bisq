@@ -19,6 +19,7 @@ package bisq.core.locale;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.governance.asset.AssetService;
 
 import bisq.common.app.DevEnv;
 
@@ -441,9 +442,15 @@ public class CurrencyUtil {
     }
 
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
-        return getAssetRegistry().stream()
+        return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
                 .filter(asset -> assetMatchesNetwork(asset, baseCurrencyNetwork))
                 .findAny();
+    }
+
+    public static List<CryptoCurrency> getWhiteListedSortedCryptoCurrencies(AssetService assetService) {
+        return getAllSortedCryptoCurrencies().stream()
+                .filter(e -> !assetService.isAssetRemoved(e.getCode()))
+                .collect(Collectors.toList());
     }
 }

@@ -931,6 +931,7 @@ message PersistableEnvelope {
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
+        RemovedAssetList removed_asset_list = 25;
     }
 }
 
@@ -1501,6 +1502,14 @@ message GenericProposal {
 
 message RemoveAssetProposal {
     string ticker_symbol = 1;
+}
+
+message RemovedAsset {
+    string ticker_symbol = 1;
+    string remove_reason = 2;
+}
+message RemovedAssetList {
+    repeated RemovedAsset removed_asset = 1;
 }
 
 message BondedRole {

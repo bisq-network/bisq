@@ -20,6 +20,7 @@ package bisq.core.proto.persistable;
 import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.governance.asset.RemovedAssetsList;
 import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
@@ -132,6 +133,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MeritList.fromProto(proto.getMeritList());
                 case BONDED_ROLE_LIST:
                     return BondedRoleList.fromProto(proto.getBondedRoleList());
+                case REMOVED_ASSET_LIST:
+                    return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());
