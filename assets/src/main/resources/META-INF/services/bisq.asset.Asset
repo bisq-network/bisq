@@ -7,6 +7,7 @@ bisq.asset.coins.Angelcoin
 bisq.asset.coins.Aquachain
 bisq.asset.coins.Arto
 bisq.asset.coins.BitCloud
+bisq.asset.coins.Bitcoin2
 bisq.asset.coins.BitcoinCash
 bisq.asset.coins.BitcoinClashic
 bisq.asset.coins.BitcoinCore
@@ -25,10 +26,12 @@ bisq.asset.coins.Burstcoin
 bisq.asset.coins.Byteball
 bisq.asset.coins.Cagecoin
 bisq.asset.coins.CassubianDetk
+bisq.asset.coins.Chaucha
 bisq.asset.coins.Conceal
 bisq.asset.coins.Counterparty
 bisq.asset.coins.Creativecoin
 bisq.asset.coins.Credits
+bisq.asset.coins.Croat
 bisq.asset.coins.Cryptonite
 bisq.asset.coins.Cryptonodes
 bisq.asset.coins.DACash
@@ -56,6 +59,7 @@ bisq.asset.coins.Gridcoin
 bisq.asset.coins.InfinityEconomics
 bisq.asset.coins.Instacash
 bisq.asset.coins.InternetOfPeople
+bisq.asset.coins.Kekcoin
 bisq.asset.coins.Koto
 bisq.asset.coins.Kumacoin
 bisq.asset.coins.LBRY
@@ -65,6 +69,7 @@ bisq.asset.coins.Litecoin$Mainnet
 bisq.asset.coins.Litecoin$Regtest
 bisq.asset.coins.Litecoin$Testnet
 bisq.asset.coins.Lobstex
+bisq.asset.coins.Loki
 bisq.asset.coins.Madbyte
 bisq.asset.coins.Madcoin
 bisq.asset.coins.MaidSafeCoin
@@ -73,6 +78,7 @@ bisq.asset.coins.Mazacoin
 bisq.asset.coins.MegaCoin
 bisq.asset.coins.MFCoin
 bisq.asset.coins.MicroCoin
+bisq.asset.coins.MobitGlobal
 bisq.asset.coins.Monero
 bisq.asset.coins.Motion
 bisq.asset.coins.Myriadcoin
@@ -80,6 +86,7 @@ bisq.asset.coins.Namecoin
 bisq.asset.coins.Nano
 bisq.asset.coins.NavCoin
 bisq.asset.coins.NEETCOIN
+bisq.asset.coins.Neos
 bisq.asset.coins.NewPowerCoin
 bisq.asset.coins.Nilu
 bisq.asset.coins.Nimiq
@@ -94,9 +101,14 @@ bisq.asset.coins.PIVX
 bisq.asset.coins.PostCoin
 bisq.asset.coins.Pranacoin
 bisq.asset.coins.PRiVCY
+bisq.asset.coins.PZDC
+bisq.asset.coins.QMCoin
+bisq.asset.coins.QRL
+bisq.asset.coins.Radium
 bisq.asset.coins.ReddCoin
 bisq.asset.coins.Ringo
 bisq.asset.coins.Roicoin
+bisq.asset.coins.Ryo
 bisq.asset.coins.SafeFileSystemCoin
 bisq.asset.coins.Semux
 bisq.asset.coins.Siacoin
@@ -104,12 +116,15 @@ bisq.asset.coins.Siafund
 bisq.asset.coins.Sibcoin
 bisq.asset.coins.Spectrecoin
 bisq.asset.coins.SpeedCash
+bisq.asset.coins.Starwels
 bisq.asset.coins.STEEM
 bisq.asset.coins.Stellite
 bisq.asset.coins.Strayacoin
+bisq.asset.coins.SUB1X
 bisq.asset.coins.Tamadcoin
 bisq.asset.coins.Terracoin
 bisq.asset.coins.Triton
+bisq.asset.coins.TurtleCoin
 bisq.asset.coins.Ubiq
 bisq.asset.coins.Unobtanium
 bisq.asset.coins.VDinar
@@ -129,6 +144,7 @@ bisq.asset.tokens.Ellaism
 bisq.asset.tokens.Exceed
 bisq.asset.tokens.GeoCoin
 bisq.asset.tokens.Grans
+bisq.asset.tokens.GreenBlockCoin
 bisq.asset.tokens.Internext
 bisq.asset.tokens.LikeCoin
 bisq.asset.tokens.Movement
