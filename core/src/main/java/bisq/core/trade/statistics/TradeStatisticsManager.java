@@ -18,6 +18,8 @@
 package bisq.core.trade.statistics;
 
 import bisq.core.app.AppOptionKeys;
+import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -32,13 +34,18 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.common.UserThread;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.storage.Storage;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+
+import java.time.Duration;
 
 import java.io.File;
 
@@ -59,29 +66,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class TradeStatisticsManager {
 
-    static TradeStatistics2 ConvertToTradeStatistics2(TradeStatistics tradeStatistics) {
-        return new TradeStatistics2(tradeStatistics.getDirection(),
-                tradeStatistics.getBaseCurrency(),
-                tradeStatistics.getCounterCurrency(),
-                tradeStatistics.getOfferPaymentMethod(),
-                tradeStatistics.getOfferDate(),
-                tradeStatistics.isOfferUseMarketBasedPrice(),
-                tradeStatistics.getOfferMarketPriceMargin(),
-                tradeStatistics.getOfferAmount(),
-                tradeStatistics.getOfferMinAmount(),
-                tradeStatistics.getOfferId(),
-                tradeStatistics.getTradePrice().getValue(),
-                tradeStatistics.getTradeAmount().getValue(),
-                tradeStatistics.getTradeDate().getTime(),
-                tradeStatistics.getDepositTxId(),
-                null,
-                tradeStatistics.getExtraDataMap());
-    }
-
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final ReferralIdService referralIdService;
+    private final AssetService assetService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
 
@@ -91,11 +80,13 @@ public class TradeStatisticsManager {
                                   TradeStatistics2StorageService tradeStatistics2StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
                                   ReferralIdService referralIdService,
+                                  AssetService assetService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.referralIdService = referralIdService;
+        this.assetService = assetService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
@@ -130,8 +121,7 @@ public class TradeStatisticsManager {
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
         dump();
 
-        // print all currencies sorted by nr. of trades
-        // printAllCurrencyStats();
+        checkTradeActivity();
     }
 
     public void publishTradeStatistics(List<Trade> trades) {
@@ -208,151 +198,103 @@ public class TradeStatisticsManager {
         }
     }
 
-    // To have automatic check and removal we would need new fields in the asset class for the date when it was
-    // added/released and a property if it was removed due either getting blocked by the DAO stakehodlers in voting or
-    // removed due lack of activity.
-    // For now we use the old script below to print the usage of the coins.
-    private void printAllCurrencyStats() {
-        Map<String, Set<TradeStatistics2>> map1 = new HashMap<>();
-        for (TradeStatistics2 tradeStatistics : observableTradeStatisticsSet) {
-            if (CurrencyUtil.isFiatCurrency(tradeStatistics.getCounterCurrency())) {
-                String counterCurrency = CurrencyUtil.getNameAndCode(tradeStatistics.getCounterCurrency());
-                if (!map1.containsKey(counterCurrency))
-                    map1.put(counterCurrency, new HashSet<>());
+    private void checkTradeActivity() {
+        Date compareDate = new Date(new Date().getTime() - Duration.ofDays(120).toMillis());
+        long minTradeAmount = Coin.parseCoin("0.01").value;
+        long minNumOfTrades = 3;
 
-                map1.get(counterCurrency).add(tradeStatistics);
+        Map<String, Tuple2<Long, Integer>> tradeStatMap = new HashMap<>();
+        observableTradeStatisticsSet.stream()
+                .filter(e -> CurrencyUtil.isCryptoCurrency(e.getBaseCurrency()))
+                .filter(e -> e.getTradeDate().getTime() > compareDate.getTime())
+                .forEach(e -> {
+                    tradeStatMap.putIfAbsent(e.getBaseCurrency(), new Tuple2<>(0L, 0));
+                    Tuple2<Long, Integer> tuple2 = tradeStatMap.get(e.getBaseCurrency());
+                    long accumulatedTradeAmount = tuple2.first + e.getTradeAmount().getValue();
+                    int numTrades = tuple2.second + 1;
+                    tradeStatMap.put(e.getBaseCurrency(), new Tuple2<>(accumulatedTradeAmount, numTrades));
+                });
+        log.error(tradeStatMap.toString());
+        StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
+        StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
+        StringBuilder notTraded = new StringBuilder("\nNot traded assets:");
+        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService);
+        Set<CryptoCurrency> assetsToRemove = new HashSet<>(whiteListedSortedCryptoCurrencies);
+        whiteListedSortedCryptoCurrencies.forEach(e -> {
+            String code = e.getCode();
+            if (!isWarmingUp(code) && !hasPaidBSQFee(code)) {
+                String nameAndCode = CurrencyUtil.getNameAndCode(code);
+                if (tradeStatMap.containsKey(code)) {
+                    Tuple2<Long, Integer> tuple = tradeStatMap.get(code);
+                    Long tradeAmount = tuple.first;
+                    Integer numTrades = tuple.second;
+                    if (tradeAmount >= minTradeAmount || numTrades >= minNumOfTrades) {
+                        assetsToRemove.remove(e);
+                        sufficientlyTraded.append("\n")
+                                .append(nameAndCode)
+                                .append(": Trade amount: ")
+                                .append(Coin.valueOf(tradeAmount).toFriendlyString())
+                                .append(", number of trades: ")
+                                .append(numTrades);
+                    } else {
+                        insufficientlyTraded.append("\n")
+                                .append(nameAndCode)
+                                .append(": Trade amount: ")
+                                .append(Coin.valueOf(tradeAmount).toFriendlyString())
+                                .append(", number of trades: ")
+                                .append(numTrades);
+                    }
+                } else {
+                    assetsToRemove.remove(e);
+                    notTraded.append("\n").append(nameAndCode);
+                }
             }
-        }
+        });
 
-        StringBuilder sb1 = new StringBuilder("\nAll traded Fiat currencies:\n");
-        map1.entrySet().stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getValue().size(), o1.getValue().size()))
-                .forEach(e -> sb1.append(e.getKey()).append(": ").append(e.getValue().size()).append("\n"));
-        log.error(sb1.toString());
+        log.info(sufficientlyTraded.toString());
+        log.info(insufficientlyTraded.toString());
+        log.info(notTraded.toString());
+    }
 
-        Map<String, Set<TradeStatistics2>> map2 = new HashMap<>();
-        for (TradeStatistics2 tradeStatistics : observableTradeStatisticsSet) {
-            if (CurrencyUtil.isCryptoCurrency(tradeStatistics.getBaseCurrency())) {
-                final String code = CurrencyUtil.getNameAndCode(tradeStatistics.getBaseCurrency());
-                if (!map2.containsKey(code))
-                    map2.put(code, new HashSet<>());
+    private boolean hasPaidBSQFee(String code) {
+        return assetService.hasPaidBSQFee(code);
+    }
 
-                map2.get(code).add(tradeStatistics);
-            }
-        }
-
-        List<String> allCryptoCurrencies = new ArrayList<>();
-        Set<String> coinsWithValidator = new HashSet<>();
-
-        // List of coins with validator before 0.6.0 hard requirements for address validator
-        coinsWithValidator.add("BTC");
-        coinsWithValidator.add("BSQ");
-        coinsWithValidator.add("LTC");
-        coinsWithValidator.add("DOGE");
-        coinsWithValidator.add("DASH");
-        coinsWithValidator.add("ETH");
-        coinsWithValidator.add("PIVX");
-        coinsWithValidator.add("IOP");
-        coinsWithValidator.add("888");
-        coinsWithValidator.add("ZEC");
-        coinsWithValidator.add("GBYTE");
-        coinsWithValidator.add("NXT");
-
-        // All those need to have a address validator
+    private boolean isWarmingUp(String code) {
         Set<String> newlyAdded = new HashSet<>();
-        // v0.6.0
-        newlyAdded.add("DCT");
-        newlyAdded.add("PNC");
-        newlyAdded.add("WAC");
-        newlyAdded.add("ZEN");
-        newlyAdded.add("ELLA");
-        newlyAdded.add("XCN");
-        newlyAdded.add("TRC");
-        newlyAdded.add("INXT");
-        newlyAdded.add("PART");
-        // v0.6.1
-        newlyAdded.add("MAD");
-        newlyAdded.add("BCH");
-        newlyAdded.add("BCHC");
-        newlyAdded.add("BTG");
-        // v0.6.2
-        newlyAdded.add("CAGE");
-        newlyAdded.add("CRED");
-        newlyAdded.add("XSPEC");
-        // v0.6.3
-        newlyAdded.add("WILD");
-        newlyAdded.add("ONION");
-        // v0.6.4
-        newlyAdded.add("CREA");
-        newlyAdded.add("XIN");
-        // v0.6.5
-        newlyAdded.add("BETR");
-        newlyAdded.add("MVT");
-        newlyAdded.add("REF");
-        // v0.6.6
-        newlyAdded.add("STL");
-        newlyAdded.add("DAI");
-        newlyAdded.add("YTN");
-        newlyAdded.add("DARX");
-        newlyAdded.add("ODN");
-        newlyAdded.add("CDT");
-        newlyAdded.add("DGM");
-        newlyAdded.add("SCS");
-        newlyAdded.add("SOS");
-        newlyAdded.add("ACH");
-        newlyAdded.add("VDN");
-        // v0.7.0
-        newlyAdded.add("ALC");
-        newlyAdded.add("DIN");
-        newlyAdded.add("NAH");
-        newlyAdded.add("ROI");
-        newlyAdded.add("WMCC");
-        newlyAdded.add("RTO");
-        newlyAdded.add("KOTO");
-        newlyAdded.add("PHR");
-        newlyAdded.add("UBQ");
-        newlyAdded.add("QWARK");
-        newlyAdded.add("GEO");
-        newlyAdded.add("GRANS");
-        newlyAdded.add("ICH");
 
-        // TODO add remaining coins since 0.7.0
-        //newlyAdded.clear();
-       /* new AssetRegistry().stream()
-                .sorted(Comparator.comparing(o -> o.getName().toLowerCase()))
-                .filter(e -> !e.getTickerSymbol().equals("BSQ")) // BSQ is not out yet...
-                .filter(e -> !e.getTickerSymbol().equals("BTC"))
-                .map(e -> e.getTickerSymbol()) // We want to get rid of duplicated entries for regtest/testnet...
-                .distinct()
-                .forEach(e -> newlyAdded.add(e));*/
+        // v0.7.1 Jul 4 2018
+        newlyAdded.add("ZOC");
+        newlyAdded.add("AQUA");
+        newlyAdded.add("BTDX");
+        newlyAdded.add("BTCC");
+        newlyAdded.add("BTI");
+        newlyAdded.add("CRDS");
+        newlyAdded.add("CNMC");
+        newlyAdded.add("TARI");
+        newlyAdded.add("DAC");
+        newlyAdded.add("DRIP");
+        newlyAdded.add("FTO");
+        newlyAdded.add("GRFT");
+        newlyAdded.add("LIKE");
+        newlyAdded.add("LOBS");
+        newlyAdded.add("MAX");
+        newlyAdded.add("MEC");
+        newlyAdded.add("MCC");
+        newlyAdded.add("XMN");
+        newlyAdded.add("XMY");
+        newlyAdded.add("NANO");
+        newlyAdded.add("NPW");
+        newlyAdded.add("NIM");
+        newlyAdded.add("PIX");
+        newlyAdded.add("PXL");
+        newlyAdded.add("PRIV");
+        newlyAdded.add("TRIT");
+        newlyAdded.add("WAVI");
 
-        coinsWithValidator.addAll(newlyAdded);
+        // v0.8.0 Aug 22 2018
+        // none added
 
-        CurrencyUtil.getAllSortedCryptoCurrencies()
-                .forEach(e -> allCryptoCurrencies.add(e.getNameAndCode()));
-        StringBuilder sb2 = new StringBuilder("\nAll traded Crypto currencies:\n");
-        StringBuilder sb3 = new StringBuilder("\nNever traded Crypto currencies:\n");
-        map2.entrySet().stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getValue().size(), o1.getValue().size()))
-                .forEach(e -> {
-                    String key = e.getKey();
-                    sb2.append(key).append(": ").append(e.getValue().size()).append("\n");
-                    // key is: USD Tether (USDT)
-                    String code = key.substring(key.indexOf("(") + 1, key.length() - 1);
-                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                        allCryptoCurrencies.remove(key);
-                });
-        log.error(sb2.toString());
-
-        // Not considered age of newly added coins, so take care with removal if coin was added recently.
-        allCryptoCurrencies.sort(String::compareTo);
-        allCryptoCurrencies
-                .forEach(e -> {
-                    // key is: USD Tether (USDT)
-                    String code = e.substring(e.indexOf("(") + 1, e.length() - 1);
-                    if (!coinsWithValidator.contains(code) && !newlyAdded.contains(code))
-                        sb3.append(e).append("\n");
-                });
-        log.error(sb3.toString());
+        return newlyAdded.contains(code);
     }
 }

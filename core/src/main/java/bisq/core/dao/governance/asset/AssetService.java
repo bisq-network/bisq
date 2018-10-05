@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.asset;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.dao.state.BsqStateService;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -26,7 +27,6 @@ import bisq.common.storage.Storage;
 import javax.inject.Inject;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -35,16 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AssetService implements PersistedDataHost {
 
-    public interface RemovedAssetListChangeListener {
-        void onListChanged(List<RemovedAsset> list);
-    }
 
-    private Storage<RemovedAssetsList> storage;
+    private final Storage<RemovedAssetsList> storage;
+    private final BsqStateService bsqStateService;
     @Getter
     private final RemovedAssetsList removedAssetsList = new RemovedAssetsList();
-
-    @Getter
-    private final List<AssetService.RemovedAssetListChangeListener> listeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +47,9 @@ public class AssetService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AssetService(Storage<RemovedAssetsList> storage) {
+    public AssetService(Storage<RemovedAssetsList> storage, BsqStateService bsqStateService) {
         this.storage = storage;
+        this.bsqStateService = bsqStateService;
     }
 
 
@@ -80,9 +76,14 @@ public class AssetService implements PersistedDataHost {
     public void addToRemovedAssetsListByVoting(String tickerSymbol) {
         log.info("Asset '{}' was removed by DAO voting", CurrencyUtil.getNameAndCode(tickerSymbol));
         removedAssetsList.add(new RemovedAsset(tickerSymbol, RemoveReason.VOTING));
-        listeners.forEach(l -> l.onListChanged(removedAssetsList.getList()));
         persist();
     }
+
+    public boolean hasPaidBSQFee(String tickerSymbol) {
+        //TODO
+        return false;
+    }
+
 
     public boolean isAssetRemoved(String tickerSymbol) {
         boolean isRemoved = removedAssetsList.getList().stream()
@@ -100,10 +101,6 @@ public class AssetService implements PersistedDataHost {
             log.info("Asset '{}' was removed by DAO voting", CurrencyUtil.getNameAndCode(tickerSymbol));
 
         return isRemoved;
-    }
-
-    public void addListener(RemovedAssetListChangeListener listener) {
-        listeners.add(listener);
     }
 
 

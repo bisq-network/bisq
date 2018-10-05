@@ -351,7 +351,6 @@ public class CurrencyUtil {
         return new FiatCurrency(currency.getCurrencyCode());
     }
 
-
     public static String getNameByCode(String currencyCode) {
         if (isCryptoCurrency(currencyCode))
             return getCryptoCurrency(currencyCode).get().getName();
@@ -362,6 +361,12 @@ public class CurrencyUtil {
             log.debug("No currency name available " + t.getMessage());
             return currencyCode;
         }
+    }
+
+    public static Optional<CryptoCurrency> findCryptoCurrencyByName(String currencyName) {
+        return getAllSortedCryptoCurrencies().stream()
+                .filter(e -> e.getName().equals(currencyName))
+                .findAny();
     }
 
     public static String getNameAndCode(String currencyCode) {
