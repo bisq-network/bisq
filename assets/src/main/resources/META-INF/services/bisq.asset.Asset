@@ -3,6 +3,7 @@
 # See bisq.asset.Asset and bisq.asset.AssetRegistry for further details.
 # See https://bisq.network/list-asset for complete instructions.
 bisq.asset.coins.Achievecoin
+bisq.asset.coins.Actinium
 bisq.asset.coins.Angelcoin
 bisq.asset.coins.Aquachain
 bisq.asset.coins.Arto
