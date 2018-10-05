@@ -1336,7 +1336,6 @@ message Tx {
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
     int64 burnt_fee = 3;
-    int32 unlock_block_height = 4;
 }
 
 enum TxType {
@@ -1351,8 +1350,8 @@ enum TxType {
     COMPENSATION_REQUEST = 8;
     BLIND_VOTE = 9;
     VOTE_REVEAL = 10;
-    LOCK_UP = 11;
-    UN_LOCK = 12;
+    LOCKUP = 11;
+    UNLOCK = 12;
 }
 
 message TxInput {
@@ -1381,25 +1380,26 @@ message RawTxOutput {
 message TxOutput {
     TxOutputType tx_output_type = 1;
     int32 lock_time = 2;
+    int32 unlock_block_height = 3;
 }
 
 enum TxOutputType {
     PB_ERROR_TX_OUTPUT_TYPE = 0;
-    UNDEFINED = 1;
+    UNDEFINED_OUTPUT = 1;
     GENESIS_OUTPUT = 2;
     BSQ_OUTPUT = 3;
     BTC_OUTPUT = 4;
     PROPOSAL_OP_RETURN_OUTPUT = 5;
     COMP_REQ_OP_RETURN_OUTPUT = 6;
-    ISSUANCE_CANDIDATE_OUTPUT = 7;
-    BLIND_VOTE_LOCK_STAKE_OUTPUT = 8;
-    BLIND_VOTE_OP_RETURN_OUTPUT = 9;
-    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 10;
-    VOTE_REVEAL_OP_RETURN_OUTPUT = 11;
-    BOND_LOCK = 12;
-    BOND_LOCK_OP_RETURN_OUTPUT = 13;
-    BOND_UNLOCK = 14;
-    BOND_UNLOCK_OP_RETURN_OUTPUT = 15;
+    CONFISCATE_BOND_OP_RETURN_OUTPUT = 7;
+    ISSUANCE_CANDIDATE_OUTPUT = 8;
+    BLIND_VOTE_LOCK_STAKE_OUTPUT = 9;
+    BLIND_VOTE_OP_RETURN_OUTPUT = 10;
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 11;
+    VOTE_REVEAL_OP_RETURN_OUTPUT = 12;
+    LOCKUP_OUTPUT = 13;
+    LOCKUP_OP_RETURN_OUTPUT = 14;
+    UNLOCK_OUTPUT = 15;
     INVALID_OUTPUT = 16;
 }
 
