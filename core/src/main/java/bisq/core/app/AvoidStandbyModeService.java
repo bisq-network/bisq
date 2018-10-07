@@ -40,18 +40,18 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
 @Slf4j
-public class AvoidStandbyMode {
+public class AvoidStandbyModeService {
     private final Preferences preferences;
     private volatile boolean isStopped;
 
     @Inject
-    public AvoidStandbyMode(Preferences preferences) {
+    public AvoidStandbyModeService(Preferences preferences) {
         this.preferences = preferences;
 
         preferences.getUseStandbyModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 isStopped = true;
-                log.info("AvoidStandbyMode stopped");
+                log.info("AvoidStandbyModeService stopped");
             } else {
                 start();
             }
@@ -67,9 +67,9 @@ public class AvoidStandbyMode {
 
     private void start() {
         isStopped = false;
-        log.info("AvoidStandbyMode started");
+        log.info("AvoidStandbyModeService started");
         Thread thread = new Thread(this::play);
-        thread.setName("AvoidStandbyMode-thread");
+        thread.setName("AvoidStandbyModeService-thread");
         thread.start();
     }
 
