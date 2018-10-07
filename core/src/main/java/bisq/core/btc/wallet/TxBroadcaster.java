@@ -92,7 +92,7 @@ public class TxBroadcaster {
         void onFailure(TxBroadcastException exception);
     }
 
-    private static final int DEFAULT_BROADCAST_TIMEOUT = 20;
+    private static final int DEFAULT_BROADCAST_TIMEOUT = 30;
     private static Map<String, Timer> broadcastTimerMap = new HashMap<>();
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction localTx, Callback callback) {
