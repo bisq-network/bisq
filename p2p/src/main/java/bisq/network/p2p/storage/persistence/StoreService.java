@@ -139,9 +139,9 @@ public abstract class StoreService<T extends PersistableEnvelope, R extends Pers
         final String fileName = getFileName();
         store = storage.initAndGetPersistedWithFileName(fileName, 100);
         if (store != null) {
-            log.info("{}: size of {}: {} kb", this.getClass().getSimpleName(),
+            log.info("{}: size of {}: {} MB", this.getClass().getSimpleName(),
                     storage.getClass().getSimpleName(),
-                    store.toProtoMessage().toByteArray().length / 100D);
+                    store.toProtoMessage().toByteArray().length / 1_000_000D);
         } else {
             store = createStore();
         }

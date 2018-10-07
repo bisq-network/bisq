@@ -130,8 +130,7 @@ public class MobileNotificationService {
     }
 
     public boolean sendMessage(MobileMessage message, boolean useSound) throws Exception {
-        log.info("sendMessage\n" +
-                "Title: " + message.getTitle() + "\nMessage: " + message.getMessage());
+        log.info("Send message: '{}'", message.getMessage());
         if (mobileModel.getKey() == null)
             return false;
 

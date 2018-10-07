@@ -297,7 +297,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 referralIdService.setReferralId(newValue);
         };
 
-        // AvoidStandbyMode
+        // AvoidStandbyModeService
         avoidStandbyModeCheckBox = addLabelCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.avoidStandbyMode"), "").second;
     }
