@@ -52,6 +52,7 @@ import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
+@Deprecated
 public class OKPayForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(OKPayForm.class);
 
