@@ -29,8 +29,6 @@ import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.dao.governance.proposal.compensation.CompensationConsensus.getMaxCompensationRequestAmount;
-import static bisq.core.dao.governance.proposal.compensation.CompensationConsensus.getMinCompensationRequestAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
@@ -54,10 +52,13 @@ public class CompensationValidator extends ProposalValidator {
             compensationProposal.getAddress(); // throws AddressFormatException if wrong address
 
             Coin requestedBsq = compensationProposal.getRequestedBsq();
-            checkArgument(requestedBsq.compareTo(getMaxCompensationRequestAmount()) <= 0,
-                    "Requested BSQ must not exceed MaxCompensationRequestAmount");
-            checkArgument(requestedBsq.compareTo(getMinCompensationRequestAmount()) >= 0,
-                    "Requested BSQ must not be less than MinCompensationRequestAmount");
+            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+            checkArgument(requestedBsq.compareTo(maxCompensationRequestAmount) <= 0,
+                    "Requested BSQ must not exceed " + (maxCompensationRequestAmount.value / 100L) + " BSQ");
+            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+            checkArgument(requestedBsq.compareTo(minCompensationRequestAmount) >= 0,
+                    "Requested BSQ must not be less than " + (minCompensationRequestAmount.value / 100L) + " BSQ");
+
         } catch (Throwable throwable) {
             throw new ValidationException(throwable);
         }

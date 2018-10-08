@@ -31,6 +31,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -103,6 +104,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
     private final BisqEnvironment bisqEnvironment;
+    private final AssetService assetService;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -131,12 +133,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
-                           ReferralIdService referralIdService, BisqEnvironment bisqEnvironment, BSFormatter formatter) {
+                           ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
+                           AssetService assetService, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
         this.bisqEnvironment = bisqEnvironment;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -150,10 +154,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         tradeCurrencies = preferences.getTradeCurrenciesAsObservable();
 
         allFiatCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies());
-        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies());
-
         allFiatCurrencies.removeAll(fiatCurrencies);
-        allCryptoCurrencies.removeAll(cryptoCurrencies);
 
         initializeGeneralOptions();
         initializeDisplayCurrencies();
@@ -163,6 +164,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     protected void activate() {
+        // We want to have it updated in case an asset got removed
+        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService));
+        allCryptoCurrencies.removeAll(cryptoCurrencies);
+
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();

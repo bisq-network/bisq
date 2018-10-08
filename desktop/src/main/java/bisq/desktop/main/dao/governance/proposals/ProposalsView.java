@@ -306,7 +306,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 2, 4);
         tableView.layout();
         root.layout();
     }

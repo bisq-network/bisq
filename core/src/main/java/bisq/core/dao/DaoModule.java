@@ -19,6 +19,7 @@ package bisq.core.dao;
 
 import bisq.core.dao.bonding.lockup.LockupService;
 import bisq.core.dao.bonding.unlock.UnlockService;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
@@ -37,8 +38,12 @@ import bisq.core.dao.governance.proposal.compensation.CompensationProposalServic
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondValidator;
+import bisq.core.dao.governance.proposal.generic.GenericProposalService;
+import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
@@ -134,6 +139,12 @@ public class DaoModule extends AppModule {
         bind(ConfiscateBondValidator.class).in(Singleton.class);
         bind(ConfiscateBondProposalService.class).in(Singleton.class);
 
+        bind(GenericProposalValidator.class).in(Singleton.class);
+        bind(GenericProposalService.class).in(Singleton.class);
+
+        bind(RemoveAssetValidator.class).in(Singleton.class);
+        bind(RemoveAssetProposalService.class).in(Singleton.class);
+
 
         // Ballot
         bind(BallotListService.class).in(Singleton.class);
@@ -167,6 +178,9 @@ public class DaoModule extends AppModule {
         bind(LockupService.class).in(Singleton.class);
         bind(UnlockService.class).in(Singleton.class);
         bind(BondedRolesService.class).in(Singleton.class);
+
+        // Asset
+        bind(AssetService.class).in(Singleton.class);
 
         // Options
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));

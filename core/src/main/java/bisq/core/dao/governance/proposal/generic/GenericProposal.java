@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.role;
+package bisq.core.dao.governance.proposal.generic;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -39,13 +38,12 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BondedRoleProposal extends Proposal {
-    private final BondedRole bondedRole;
+public final class GenericProposal extends Proposal {
 
-    BondedRoleProposal(BondedRole bondedRole) {
-        this(bondedRole.getName(),
-                bondedRole.getLink(),
-                bondedRole,
+    GenericProposal(String name,
+                    String link) {
+        this(name,
+                link,
                 Version.PROPOSAL,
                 new Date().getTime(),
                 "");
@@ -56,33 +54,27 @@ public final class BondedRoleProposal extends Proposal {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BondedRoleProposal(String name,
-                               String link,
-                               BondedRole bondedRole,
-                               byte version,
-                               long creationDate,
-                               String txId) {
+    private GenericProposal(String name,
+                            String link,
+                            byte version,
+                            long creationDate,
+                            String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId);
-
-        this.bondedRole = bondedRole;
     }
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
-        final PB.BondedRoleProposal.Builder builder = PB.BondedRoleProposal.newBuilder()
-                .setBondedRole(bondedRole.toProtoMessage());
-        return super.getProposalBuilder().setBondedRoleProposal(builder);
+        final PB.GenericProposal.Builder builder = PB.GenericProposal.newBuilder();
+        return super.getProposalBuilder().setGenericProposal(builder);
     }
 
-    public static BondedRoleProposal fromProto(PB.Proposal proto) {
-        final PB.BondedRoleProposal proposalProto = proto.getBondedRoleProposal();
-        return new BondedRoleProposal(proto.getName(),
+    public static GenericProposal fromProto(PB.Proposal proto) {
+        return new GenericProposal(proto.getName(),
                 proto.getLink(),
-                BondedRole.fromProto(proposalProto.getBondedRole()),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
@@ -95,17 +87,17 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public ProposalType getType() {
-        return ProposalType.BONDED_ROLE;
+        return ProposalType.GENERIC;
     }
 
     @Override
     public Param getQuorumParam() {
-        return Param.QUORUM_ROLE;
+        return Param.QUORUM_GENERIC;
     }
 
     @Override
     public Param getThresholdParam() {
-        return Param.THRESHOLD_ROLE;
+        return Param.THRESHOLD_GENERIC;
     }
 
     @Override
@@ -115,9 +107,8 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
-        return new BondedRoleProposal(getName(),
+        return new GenericProposal(getName(),
                 getLink(),
-                getBondedRole(),
                 getVersion(),
                 getCreationDate().getTime(),
                 txId);
@@ -125,8 +116,7 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public String toString() {
-        return "BondedRoleProposal{" +
-                "\n     bondedRole=" + bondedRole +
+        return "GenericProposal{" +
                 "\n} " + super.toString();
     }
 }

@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -34,6 +35,7 @@ import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
@@ -49,6 +51,7 @@ import bisq.core.dao.state.governance.ConfiscateBond;
 import bisq.core.dao.state.governance.ParamChange;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
+import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -98,6 +101,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
     private final BlindVoteListService blindVoteListService;
     private final BondedRolesService bondedRolesService;
     private final IssuanceService issuanceService;
+    private final AssetService assetService;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
     // Use a list to have order by cycle
@@ -121,7 +125,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
                              BondedRolesService bondedRolesService,
-                             IssuanceService issuanceService) {
+                             IssuanceService issuanceService,
+                             AssetService assetService) {
         this.voteRevealService = voteRevealService;
         this.proposalListPresentation = proposalListPresentation;
         this.bsqStateService = bsqStateService;
@@ -130,6 +135,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
         this.blindVoteListService = blindVoteListService;
         this.bondedRolesService = bondedRolesService;
         this.issuanceService = issuanceService;
+        this.assetService = assetService;
     }
 
 
@@ -545,6 +551,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
         applyParamChange(acceptedEvaluatedProposals, chainHeight);
         applyBondedRole(acceptedEvaluatedProposals, chainHeight);
         applyConfiscateBond(acceptedEvaluatedProposals, chainHeight);
+        applyRemoveAsset(acceptedEvaluatedProposals, chainHeight);
     }
 
     private void applyIssuance(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
@@ -601,7 +608,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
         StringBuilder sb = new StringBuilder();
         sb.append("\n################################################################################\n");
         sb.append("We changed a parameter. ProposalTxId=").append(changeParamProposal.getTxId())
-                .append("\nfor changeParamProposal with UID ").append(changeParamProposal.getTxId())
                 .append("\nParam: ").append(changeParamProposal.getParam().name())
                 .append(" new value: ").append(changeParamProposal.getParamValue())
                 .append("\n################################################################################\n");
@@ -627,7 +633,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We added a bonded role. ProposalTxId=").append(bondedRoleProposal.getTxId())
-                        .append("\nfor bondedRoleProposal with UID ").append(bondedRoleProposal.getTxId())
                         .append("\nBondedRole: ").append(bondedRole.getDisplayString())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
@@ -643,9 +648,25 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
-                sb.append("We confiscated  bond. ProposalTxId=").append(confiscateBondProposal.getTxId())
-                        .append("\nfor confiscateBondProposal with UID ").append(confiscateBondProposal.getTxId())
+                sb.append("We confiscated a bond. ProposalTxId=").append(confiscateBondProposal.getTxId())
                         .append("\nHashOfBondId: ").append(Utilities.encodeToHex(confiscateBondProposal.getHash()))
+                        .append("\n################################################################################\n");
+                log.info(sb.toString());
+            }
+        });
+    }
+
+    private void applyRemoveAsset(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
+        acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
+            if (evaluatedProposal.getProposal() instanceof RemoveAssetProposal) {
+                RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) evaluatedProposal.getProposal();
+                String tickerSymbol = removeAssetProposal.getTickerSymbol();
+                assetService.addToRemovedAssetsListByVoting(tickerSymbol);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("\n################################################################################\n");
+                sb.append("We removed an asset. ProposalTxId=").append(removeAssetProposal.getTxId())
+                        .append("\nAsset: ").append(CurrencyUtil.getNameByCode(tickerSymbol))
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
             }

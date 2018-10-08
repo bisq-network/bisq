@@ -114,6 +114,8 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
@@ -582,9 +584,12 @@ public class GUIUtil {
                 .show();
     }
 
-    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minHeight) {
+    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minNumRows, int maxNumRows) {
         int size = tableView.getItems().size();
-        int height = Math.max(minHeight, size * rowHeight + headerHeight);
+        int minHeight = rowHeight * minNumRows + headerHeight;
+        int maxHeight = rowHeight * maxNumRows + headerHeight;
+        checkArgument(maxHeight >= minHeight, "maxHeight cannot be smaller as minHeight");
+        int height = Math.min(maxHeight, Math.max(minHeight, size * rowHeight + headerHeight));
         tableView.setMaxHeight(-1);
         tableView.setMinHeight(-1);
         tableView.setMaxHeight(height);
