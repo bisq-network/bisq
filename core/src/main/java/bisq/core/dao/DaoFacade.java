@@ -490,16 +490,16 @@ public class DaoFacade implements DaoSetupService {
         return periodService.isInPhaseButNotLastBlock(phase);
     }
 
-    public boolean isTxInCorrectCycle(int txHeight, int chainHeadHeight) {
-        return periodService.isTxInCorrectCycle(txHeight, chainHeadHeight);
+    public boolean isTxInCorrectCycle(int txHeight, int chainHeight) {
+        return periodService.isTxInCorrectCycle(txHeight, chainHeight);
     }
 
-    public boolean isTxInCorrectCycle(String txId, int chainHeadHeight) {
-        return periodService.isTxInCorrectCycle(txId, chainHeadHeight);
+    public boolean isTxInCorrectCycle(String txId, int chainHeight) {
+        return periodService.isTxInCorrectCycle(txId, chainHeight);
     }
 
-    public boolean isTxInPhaseAndCycle(String txId, DaoPhase.Phase phase, int chainHeadHeight) {
-        return periodService.isTxInPhaseAndCycle(txId, phase, chainHeadHeight);
+    public boolean isTxInPhaseAndCycle(String txId, DaoPhase.Phase phase, int chainHeight) {
+        return periodService.isTxInPhaseAndCycle(txId, phase, chainHeight);
     }
 
     public boolean isUnspent(TxOutputKey key) {

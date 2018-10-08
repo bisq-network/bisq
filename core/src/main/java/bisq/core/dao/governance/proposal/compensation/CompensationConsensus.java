@@ -27,12 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CompensationConsensus extends ProposalConsensus {
-    public static Coin getMinCompensationRequestAmount(BsqStateService bsqStateService, int chainHeadHeight) {
-        return Coin.valueOf(bsqStateService.getParamValue(Param.COMPENSATION_REQUEST_MIN_AMOUNT, chainHeadHeight));
+    public static Coin getMinCompensationRequestAmount(BsqStateService bsqStateService, int chainHeight) {
+        return Coin.valueOf(bsqStateService.getParamValue(Param.COMPENSATION_REQUEST_MIN_AMOUNT, chainHeight));
     }
 
-    public static Coin getMaxCompensationRequestAmount(BsqStateService bsqStateService, int chainHeadHeight) {
-        return Coin.valueOf(bsqStateService.getParamValue(Param.COMPENSATION_REQUEST_MAX_AMOUNT, chainHeadHeight));
+    public static Coin getMaxCompensationRequestAmount(BsqStateService bsqStateService, int chainHeight) {
+        return Coin.valueOf(bsqStateService.getParamValue(Param.COMPENSATION_REQUEST_MAX_AMOUNT, chainHeight));
     }
 
 }

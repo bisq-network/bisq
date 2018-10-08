@@ -34,8 +34,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProposalConsensus {
-    public Coin getFee(BsqStateService bsqStateService, int chainHeadHeight) {
-        return Coin.valueOf(bsqStateService.getParamValue(Param.PROPOSAL_FEE, chainHeadHeight));
+    public Coin getFee(BsqStateService bsqStateService, int chainHeight) {
+        return Coin.valueOf(bsqStateService.getParamValue(Param.PROPOSAL_FEE, chainHeight));
     }
 
     public byte[] getHashOfPayload(Proposal payload) {
