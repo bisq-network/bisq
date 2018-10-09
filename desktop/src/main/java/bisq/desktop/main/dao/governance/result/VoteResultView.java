@@ -245,7 +245,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
-            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getAllEvaluatedProposals().stream()
+            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getEvaluatedProposalList().stream()
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 

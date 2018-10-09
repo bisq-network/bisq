@@ -932,6 +932,7 @@ message PersistableEnvelope {
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
         RemovedAssetList removed_asset_list = 25;
+        EvaluatedProposalList evaluated_proposal_list = 26;
     }
 }
 
@@ -1623,6 +1624,26 @@ message Merit {
 
 message MeritList {
     repeated Merit merit = 1;
+}
+
+message ProposalVoteResult {
+    Proposal proposal = 1;
+    int64 stake_of_Accepted_votes = 2;
+    int64 stake_of_Rejected_votes = 3;
+    int32 num_accepted_votes = 4;
+    int32 num_rejected_votes = 5;
+    int32 num_ignored_votes = 6;
+}
+
+message EvaluatedProposal {
+    bool is_accepted = 1;
+    ProposalVoteResult proposal_vote_result = 2;
+    int64 required_quorum = 3;
+    int64 required_threshold = 4;
+}
+
+message EvaluatedProposalList {
+    repeated EvaluatedProposal evaluated_proposal = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

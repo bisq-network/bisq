@@ -418,7 +418,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
-            EvaluatedProposal evaluatedProposal = voteResultService.getAllEvaluatedProposals().stream()
+            EvaluatedProposal evaluatedProposal = voteResultService.getEvaluatedProposalList().stream()
                     .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
                             daoFacade.getChainHeight()))
                     .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))

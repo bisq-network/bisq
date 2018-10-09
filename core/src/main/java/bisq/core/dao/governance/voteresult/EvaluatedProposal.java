@@ -19,10 +19,14 @@ package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.proposal.Proposal;
 
+import bisq.common.proto.persistable.PersistablePayload;
+
+import io.bisq.generated.protobuffer.PB;
+
 import lombok.Value;
 
 @Value
-public class EvaluatedProposal {
+public class EvaluatedProposal implements PersistablePayload {
     private final boolean isAccepted;
     private final ProposalVoteResult proposalVoteResult;
     private final long requiredQuorum;
@@ -34,6 +38,33 @@ public class EvaluatedProposal {
         this.requiredQuorum = requiredQuorum;
         this.requiredThreshold = requiredThreshold;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.EvaluatedProposal toProtoMessage() {
+        PB.EvaluatedProposal.Builder builder = PB.EvaluatedProposal.newBuilder()
+                .setIsAccepted(isAccepted)
+                .setProposalVoteResult(proposalVoteResult.toProtoMessage())
+                .setRequiredQuorum(requiredQuorum)
+                .setRequiredThreshold(requiredThreshold);
+        return builder.build();
+    }
+
+    public static EvaluatedProposal fromProto(PB.EvaluatedProposal evaluatedProposal) {
+        return new EvaluatedProposal(evaluatedProposal.getIsAccepted(),
+                ProposalVoteResult.fromProto(evaluatedProposal.getProposalVoteResult()),
+                evaluatedProposal.getRequiredQuorum(),
+                evaluatedProposal.getRequiredThreshold());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Proposal getProposal() {
         return proposalVoteResult.getProposal();

@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.voteresult;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.Ballot;
@@ -55,6 +56,8 @@ import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -92,7 +95,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * the missing blindVotes from the network.
  */
 @Slf4j
-public class VoteResultService implements BsqStateListener, DaoSetupService {
+public class VoteResultService implements BsqStateListener, DaoSetupService, PersistedDataHost {
     private final VoteRevealService voteRevealService;
     private final ProposalListPresentation proposalListPresentation;
     private final BsqStateService bsqStateService;
@@ -102,13 +105,14 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
     private final BondedRolesService bondedRolesService;
     private final IssuanceService issuanceService;
     private final AssetService assetService;
+    private final Storage<EvaluatedProposalList> storage;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
     // Use a list to have order by cycle
 
-    // TODO persist, PB
     @Getter
-    private final Set<EvaluatedProposal> allEvaluatedProposals = new HashSet<>();
+    private final EvaluatedProposalList evaluatedProposalList = new EvaluatedProposalList();
+
     @Getter
     private final Set<DecryptedBallotsWithMerits> allDecryptedBallotsWithMerits = new HashSet<>();
 
@@ -126,7 +130,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
                              BlindVoteListService blindVoteListService,
                              BondedRolesService bondedRolesService,
                              IssuanceService issuanceService,
-                             AssetService assetService) {
+                             AssetService assetService,
+                             Storage<EvaluatedProposalList> storage) {
         this.voteRevealService = voteRevealService;
         this.proposalListPresentation = proposalListPresentation;
         this.bsqStateService = bsqStateService;
@@ -136,6 +141,23 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
         this.bondedRolesService = bondedRolesService;
         this.issuanceService = issuanceService;
         this.assetService = assetService;
+        this.storage = storage;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void readPersisted() {
+        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+            EvaluatedProposalList persisted = storage.initAndGetPersisted(evaluatedProposalList, 100);
+            if (persisted != null) {
+                evaluatedProposalList.clear();
+                evaluatedProposalList.addAll(persisted.getList());
+            }
+        }
     }
 
 
@@ -151,19 +173,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
     @Override
     public void start() {
         maybeCalculateVoteResult(bsqStateService.getChainHeight());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Set<EvaluatedProposal> getAllAcceptedEvaluatedProposals() {
-        return getAcceptedEvaluatedProposals(allEvaluatedProposals);
-    }
-
-    public Set<EvaluatedProposal> getAllRejectedEvaluatedProposals() {
-        return getRejectedEvaluatedProposals(allEvaluatedProposals);
     }
 
 
@@ -221,7 +230,10 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
                         Set<EvaluatedProposal> acceptedEvaluatedProposals = getAcceptedEvaluatedProposals(evaluatedProposals);
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
 
-                        allEvaluatedProposals.addAll(evaluatedProposals);
+                        evaluatedProposals.stream()
+                                .filter(e -> !evaluatedProposalList.getList().contains(e))
+                                .forEach(evaluatedProposalList::add);
+                        persist();
                         log.info("processAllVoteResults completed");
                     } else {
                         log.warn("Our list of received blind votes do not match the list from the majority of voters.");
@@ -687,6 +699,10 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
 
     private boolean isInVoteResultPhase(int chainHeight) {
         return periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT) == chainHeight;
+    }
+
+    private void persist() {
+        storage.queueUpForSave(20);
     }
 
 
