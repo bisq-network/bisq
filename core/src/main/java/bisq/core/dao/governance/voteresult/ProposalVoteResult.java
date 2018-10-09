@@ -65,13 +65,13 @@ public class ProposalVoteResult implements PersistablePayload {
         return builder.build();
     }
 
-    public static ProposalVoteResult fromProto(PB.ProposalVoteResult proposalVoteResult) {
-        return new ProposalVoteResult(Proposal.fromProto(proposalVoteResult.getProposal()),
-                proposalVoteResult.getStakeOfAcceptedVotes(),
-                proposalVoteResult.getStakeOfRejectedVotes(),
-                proposalVoteResult.getNumAcceptedVotes(),
-                proposalVoteResult.getNumRejectedVotes(),
-                proposalVoteResult.getNumIgnoredVotes());
+    public static ProposalVoteResult fromProto(PB.ProposalVoteResult proto) {
+        return new ProposalVoteResult(Proposal.fromProto(proto.getProposal()),
+                proto.getStakeOfAcceptedVotes(),
+                proto.getStakeOfRejectedVotes(),
+                proto.getNumAcceptedVotes(),
+                proto.getNumRejectedVotes(),
+                proto.getNumIgnoredVotes());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.merit;
+package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
@@ -23,21 +23,24 @@ import bisq.common.proto.persistable.PersistableList;
 
 import io.bisq.generated.protobuffer.PB;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 
-// We don't persist that list but use it only for encoding the MeritList list
-// to PB bytes in the blindVote.
+/**
+ * PersistableEnvelope wrapper for list of decryptedBallotsWithMerits.
+ */
 @EqualsAndHashCode(callSuper = true)
-public class MeritList extends PersistableList<Merit> implements ConsensusCritical {
+public class DecryptedBallotsWithMeritsList extends PersistableList<DecryptedBallotsWithMerits> implements ConsensusCritical {
 
-    public MeritList(List<Merit> list) {
+    public DecryptedBallotsWithMeritsList(List<DecryptedBallotsWithMerits> list) {
         super(list);
+    }
+
+    public DecryptedBallotsWithMeritsList() {
+        super();
     }
 
 
@@ -46,24 +49,28 @@ public class MeritList extends PersistableList<Merit> implements ConsensusCritic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.MeritList toProtoMessage() {
-        return getBuilder().build();
+    public PB.PersistableEnvelope toProtoMessage() {
+        return PB.PersistableEnvelope.newBuilder().setDecryptedBallotsWithMeritsList(getBuilder()).build();
     }
 
-    public PB.MeritList.Builder getBuilder() {
-        return PB.MeritList.newBuilder()
-                .addAllMerit(getList().stream()
-                        .map(Merit::toProtoMessage)
+    private PB.DecryptedBallotsWithMeritsList.Builder getBuilder() {
+        return PB.DecryptedBallotsWithMeritsList.newBuilder()
+                .addAllDecryptedBallotsWithMerits(getList().stream()
+                        .map(DecryptedBallotsWithMerits::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MeritList fromProto(PB.MeritList proto) {
-        return new MeritList(new ArrayList<>(proto.getMeritList().stream()
-                .map(Merit::fromProto)
+    public static DecryptedBallotsWithMeritsList fromProto(PB.DecryptedBallotsWithMeritsList proto) {
+        return new DecryptedBallotsWithMeritsList(new ArrayList<>(proto.getDecryptedBallotsWithMeritsList().stream()
+                .map(DecryptedBallotsWithMerits::fromProto)
                 .collect(Collectors.toList())));
     }
 
-    public static MeritList getMeritListFromBytes(byte[] bytes) throws InvalidProtocolBufferException {
-        return MeritList.fromProto(PB.MeritList.parseFrom(bytes));
+    @Override
+    public String toString() {
+        return "List of blindVoteTxId's in DecryptedBallotsWithMeritsList: " + getList().stream()
+                .map(DecryptedBallotsWithMerits::getBlindVoteTxId)
+                .collect(Collectors.toList());
     }
 }
+

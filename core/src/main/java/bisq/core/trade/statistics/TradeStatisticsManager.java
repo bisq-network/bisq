@@ -214,7 +214,6 @@ public class TradeStatisticsManager {
                     int numTrades = tuple2.second + 1;
                     tradeStatMap.put(e.getBaseCurrency(), new Tuple2<>(accumulatedTradeAmount, numTrades));
                 });
-        log.error(tradeStatMap.toString());
         StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
         StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
         StringBuilder notTraded = new StringBuilder("\nNot traded assets:");

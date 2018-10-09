@@ -30,6 +30,7 @@ import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.governance.role.BondedRoleList;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMeritsList;
 import bisq.core.dao.governance.voteresult.EvaluatedProposalList;
 import bisq.core.dao.state.BsqState;
 import bisq.core.payment.AccountAgeWitnessStore;
@@ -138,6 +139,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 case EVALUATED_PROPOSAL_LIST:
                     return EvaluatedProposalList.fromProto(proto.getEvaluatedProposalList());
+                case DECRYPTED_BALLOTS_WITH_MERITS_LIST:
+                    return DecryptedBallotsWithMeritsList.fromProto(proto.getDecryptedBallotsWithMeritsList());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

@@ -54,11 +54,11 @@ public class EvaluatedProposal implements PersistablePayload {
         return builder.build();
     }
 
-    public static EvaluatedProposal fromProto(PB.EvaluatedProposal evaluatedProposal) {
-        return new EvaluatedProposal(evaluatedProposal.getIsAccepted(),
-                ProposalVoteResult.fromProto(evaluatedProposal.getProposalVoteResult()),
-                evaluatedProposal.getRequiredQuorum(),
-                evaluatedProposal.getRequiredThreshold());
+    public static EvaluatedProposal fromProto(PB.EvaluatedProposal proto) {
+        return new EvaluatedProposal(proto.getIsAccepted(),
+                ProposalVoteResult.fromProto(proto.getProposalVoteResult()),
+                proto.getRequiredQuorum(),
+                proto.getRequiredThreshold());
     }
 
 
