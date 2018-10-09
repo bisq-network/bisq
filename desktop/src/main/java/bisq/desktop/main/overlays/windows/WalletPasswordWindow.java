@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
@@ -248,7 +247,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         cancelButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
-            BisqApp.getShutDownHandler().run();
         });
 
         HBox hBox = new HBox();
@@ -257,7 +255,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(unlockButton, forgotPasswordButton, cancelButton, busyAnimation, deriveStatusLabel);
+        if (hideCloseButton)
+            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, busyAnimation, deriveStatusLabel);
+        else
+            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, cancelButton, busyAnimation, deriveStatusLabel);
         gridPane.getChildren().add(hBox);
 
 
