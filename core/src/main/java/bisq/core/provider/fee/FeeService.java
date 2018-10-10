@@ -63,7 +63,7 @@ public class FeeService {
 
     // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
     // fees are per byte
-    public static final long BTC_DEFAULT_TX_FEE = 200; // fees are between 20-600 sat/byte. We try to stay on  the safe side.
+    public static final long BTC_DEFAULT_TX_FEE = 50; // fees are between 1-600 sat/byte. We try to stay on  the safe side.
     public static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
     public static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
 
