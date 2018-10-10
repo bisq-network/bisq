@@ -104,6 +104,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private ChangeListener<String> wordsTextAreaChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
     private LocalDate walletCreationDate;
+    private boolean hideForgotPasswordButton = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +150,11 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     public WalletPasswordWindow onAesKey(AesKeyHandler aesKeyHandler) {
         this.aesKeyHandler = aesKeyHandler;
+        return this;
+    }
+
+    public WalletPasswordWindow hideForgotPasswordButton() {
+        this.hideForgotPasswordButton = true;
         return this;
     }
 
@@ -255,10 +261,12 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        if (hideCloseButton)
-            hBox.getChildren().addAll(unlockButton, forgotPasswordButton, busyAnimation, deriveStatusLabel);
-        else
-            hBox.getChildren().addAll(unlockButton, cancelButton);
+        hBox.getChildren().add(unlockButton);
+        if (!hideForgotPasswordButton)
+            hBox.getChildren().add(forgotPasswordButton);
+        if (!hideCloseButton)
+            hBox.getChildren().add(cancelButton);
+        hBox.getChildren().addAll(busyAnimation, deriveStatusLabel);
         gridPane.getChildren().add(hBox);
 
 
