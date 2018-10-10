@@ -55,17 +55,17 @@ public class FeeService {
     // fee service would not deliver data.
     private static final long BTC_DEFAULT_TX_FEE = 50;
 
-    private static long MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.005%. 0.5 USD at BTC price 10_000 USD;
-    private static long MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
-    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 0.2%. 20 USD at BTC price 10000 USD for a 1 BTC trade;
-    private static long DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
+    private static long MIN_MAKER_FEE_BTC = 5_000; // 0.005%. 0.5 USD at BTC price 10_000 USD;
+    private static long MIN_TAKER_FEE_BTC = 5_000;
+    private static long DEFAULT_MAKER_FEE_BTC = 200_000; // 0.2%. 20 USD at BTC price 10000 USD for a 1 BTC trade;
+    private static long DEFAULT_TAKER_FEE_BTC = 200_000;
 
     // 0.05 BSQ (5 satoshi) for a 1 BTC trade -> 0.005%. 0.05 USD if 1 BSQ = 1 USD, 10 % of BTC fee
-    private static final long MIN_MAKER_FEE_IN_BSQ = 5;
-    private static final long MIN_TAKER_FEE_IN_BSQ = 5;
+    private static final long MIN_MAKER_FEE_BSQ = 5;
+    private static final long MIN_TAKER_FEE_BSQ = 5;
     // 2 BSQ or 200 BSQ-satoshi. About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of a normal BTC fee.
-    private static final long DEFAULT_TAKER_FEE_IN_BSQ = 200;
-    private static final long DEFAULT_MAKER_FEE_IN_BSQ = 200;
+    private static final long DEFAULT_TAKER_FEE_BSQ = 200;
+    private static final long DEFAULT_MAKER_FEE_BSQ = 200;
 
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
@@ -157,20 +157,20 @@ public class FeeService {
         return Coin.valueOf(txFeePerByte);
     }
 
-    public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_BSQ);
+    public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeIsBtc) {
+        return currencyForMakerFeeIsBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_BTC) : Coin.valueOf(DEFAULT_MAKER_FEE_BSQ);
     }
 
-    public static Coin getMinMakerFee(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_MAKER_FEE_IN_BSQ);
+    public static Coin getMinMakerFee(boolean currencyForMakerFeeIsBtc) {
+        return currencyForMakerFeeIsBtc ? Coin.valueOf(MIN_MAKER_FEE_BTC) : Coin.valueOf(MIN_MAKER_FEE_BSQ);
     }
 
-    public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_BSQ);
+    public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeIsBtc) {
+        return currencyForTakerFeeIsBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_BTC) : Coin.valueOf(DEFAULT_TAKER_FEE_BSQ);
     }
 
-    public static Coin getMinTakerFee(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BASE_CUR) : Coin.valueOf(MIN_TAKER_FEE_IN_BSQ);
+    public static Coin getMinTakerFee(boolean currencyForTakerFeeIsBtc) {
+        return currencyForTakerFeeIsBtc ? Coin.valueOf(MIN_TAKER_FEE_BTC) : Coin.valueOf(MIN_TAKER_FEE_BSQ);
     }
 
     public ReadOnlyIntegerProperty feeUpdateCounterProperty() {
