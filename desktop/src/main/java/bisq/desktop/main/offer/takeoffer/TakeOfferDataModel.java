@@ -218,7 +218,7 @@ class TakeOfferDataModel extends OfferDataModel {
                 log.debug("We received the tx fee response after we have shown the funding screen and ignore that " +
                         "to avoid that the total funds to pay changes due changed tx fees.");
             }
-        }, null);
+        });
 
         calculateVolume();
         calculateTotalToPay();

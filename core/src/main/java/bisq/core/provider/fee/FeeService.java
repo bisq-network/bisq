@@ -24,7 +24,6 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
 
@@ -53,19 +52,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class FeeService {
 
-    // fixed min fee
-    public static final Coin BTC_REFERENCE_DEFAULT_MIN_TX_FEE_PER_KB = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; // 5000
     // https://litecoin.info/Transaction_fees min fee is 100_000
     public static final Coin LTC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(100_000);
-    //TODO check
     // min tx fee per tx is 10000 now, 1000 in sept 2017
     public static final Coin DASH_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
 
     // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
     // fees are per byte
-    public static final long BTC_DEFAULT_TX_FEE = 50; // fees are between 1-600 sat/byte. We try to stay on  the safe side.
-    public static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
-    public static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
+    private static final long BTC_DEFAULT_TX_FEE = 50; // fees are between 1-600 sat/byte. We try to stay on  the safe side.
+    private static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
+    private static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
 
     private static long MIN_MAKER_FEE_IN_BASE_CUR;
     private static long MIN_TAKER_FEE_IN_BASE_CUR;
@@ -74,10 +70,10 @@ public class FeeService {
 
     private static final long MIN_MAKER_FEE_IN_BSQ = 5;
     private static final long MIN_TAKER_FEE_IN_BSQ = 5;
-    private static final long DEFAULT_MAKER_FEE_IN_BSQ = 200; // about 2 USD at 1 BSQ = 1 USD for a 1 BTC trade
+    private static final long DEFAULT_MAKER_FEE_IN_BSQ = 200; // 2 BSQ or 200 BSQ-satoshi. About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of a normal BTC fee which is about 20 USD.
     private static final long DEFAULT_TAKER_FEE_IN_BSQ = 200;
 
-    public static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
+    private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
     private final FeeProvider feeProvider;
     private final String baseCurrencyCode;
@@ -134,10 +130,18 @@ public class FeeService {
     public void onAllServicesInitialized() {
         minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
 
-        requestFees(null, null);
+        requestFees();
 
         // We update all 5 min.
-        UserThread.runPeriodically(() -> requestFees(null, null), 5, TimeUnit.MINUTES);
+        UserThread.runPeriodically(this::requestFees, 5, TimeUnit.MINUTES);
+    }
+
+    public void requestFees() {
+        requestFees(null, null);
+    }
+
+    public void requestFees(Runnable resultHandler) {
+        requestFees(resultHandler, null);
     }
 
     public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
