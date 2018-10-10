@@ -281,6 +281,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                     .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
                     .show();
         });
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> {
+            new Popup<>().error(voteResultException.toString()).show();
+        });
 
         bisqSetup.setChainFileLockedExceptionHandler(msg -> {
             new Popup<>().warning(msg)
