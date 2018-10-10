@@ -60,7 +60,7 @@ public enum Param {
     MIN_TAKER_FEE_BTC(5_000),
 
     // Fees proposal/voting. Atm we don't use diff. fees for diff. proposal types
-    // See https://github.com/bisq-network/proposals/issues/46
+    // See: https://github.com/bisq-network/proposals/issues/46
     PROPOSAL_FEE(200),          // 2 BSQ
     BLIND_VOTE_FEE(200),        // 2 BSQ
 
@@ -68,20 +68,27 @@ public enum Param {
     COMPENSATION_REQUEST_MIN_AMOUNT(1_000),         // 10 BSQ
     COMPENSATION_REQUEST_MAX_AMOUNT(10_000_000),    // 100 000 BSQ
 
-    // Quorum for voting in BSQ stake
-    QUORUM_COMP_REQUEST(100),       // 10 000 BSQ  TODO change low dev value
-    QUORUM_CHANGE_PARAM(300),       // 100 000 BSQ TODO change low dev value
-    QUORUM_ROLE(500),       // 10 000 BSQ  TODO change low dev value
-    QUORUM_CONFISCATION(500),       // 10 000 BSQ  TODO change low dev value
-    QUORUM_GENERIC(100),           // 10 000 BSQ  TODO change low dev value
-    QUORUM_REMOVE_ASSET(400),       // 10 000 BSQ  TODO change low dev value
+    // Quorum required for voting result to be valid.
+    // Quorum is the min. amount of total BSQ (earned+stake) which was used for voting on a request.
+    // E.g. If only 2000 BSQ was used on a vote but 10 000 is required the result is invalid even if the voters voted
+    // 100% for acceptance. This should prevent that changes can be done with low stakeholder participation.
+    QUORUM_COMP_REQUEST(2_000_000),         // 20 000 BSQ
+    QUORUM_CHANGE_PARAM(10_000_000),        // 100 000 BSQ
+    QUORUM_ROLE(5_000_000),                 // 50 000 BSQ
+    QUORUM_CONFISCATION(20_000_000),        // 200 000 BSQ
+    QUORUM_GENERIC(500_000),                // 5 000 BSQ
+    QUORUM_REMOVE_ASSET(1_000_000),         // 10 000 BSQ
 
     // Threshold for voting in % with precision of 2 (e.g. 5000 -> 50.00%)
+    // This is the required amount of weighted vote result needed for acceptance of the result.
+    // E.g. If the result ends up in 65% weighted vote for acceptance and threshold was 50% it is accepted.
+    // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
+    // it requires min. 50.01%.
     THRESHOLD_COMP_REQUEST(5_000),      // 50%
-    THRESHOLD_CHANGE_PARAM(7_500),      // 75% -> that might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM!
-    THRESHOLD_ROLE(5_000),      // 50%
-    THRESHOLD_CONFISCATION(8_500),      // 85%
-    THRESHOLD_GENERIC(5_000),          // 50%
+    THRESHOLD_CHANGE_PARAM(7_500),      // 75% That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
+    THRESHOLD_ROLE(5_000),              // 50%
+    THRESHOLD_CONFISCATION(8_500),      // 85% Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
+    THRESHOLD_GENERIC(5_000),           // 50%
     THRESHOLD_REMOVE_ASSET(5_000),      // 50%
 
     //TODO add asset listing params (nr. of trades, volume, time, fee which defines listing state)
@@ -96,7 +103,7 @@ public enum Param {
     PHASE_BREAK3(1),        // 10 blocks
     PHASE_RESULT(2);        // 1 block
 
-    // See https://github.com/bisq-network/proposals/issues/46
+    // See: https://github.com/bisq-network/proposals/issues/46
     /*
     PHASE_UNDEFINED(0),
     PHASE_PROPOSAL(3600),      // 24 days
