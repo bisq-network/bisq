@@ -51,22 +51,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // TODO use dao parameters for fee
 @Slf4j
 public class FeeService {
-
-    // https://litecoin.info/Transaction_fees min fee is 100_000
-    public static final Coin LTC_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(100_000);
-    // min tx fee per tx is 10000 now, 1000 in sept 2017
-    public static final Coin DASH_REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10_000);
-
-    // DEFAULT_TX_FEE used in FeeRequestService for non-BTC currencies and for BTC only if we cannot access fee service
-    // fees are per byte
     private static final long BTC_DEFAULT_TX_FEE = 50; // fees are between 1-600 sat/byte. We try to stay on  the safe side.
-    private static final long LTC_DEFAULT_TX_FEE = LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200;
-    private static final long DASH_DEFAULT_TX_FEE = DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value / 200; // 200 bytes tx -> 200*50=10000
 
-    private static long MIN_MAKER_FEE_IN_BASE_CUR;
-    private static long MIN_TAKER_FEE_IN_BASE_CUR;
-    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR;
-    private static long DEFAULT_TAKER_FEE_IN_BASE_CUR;
+    private static long MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.5 USD at BTC price 10000 USD;
+    private static long MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
+    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD for a 1 BTC trade;
+    private static long DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
 
     private static final long MIN_MAKER_FEE_IN_BSQ = 5;
     private static final long MIN_TAKER_FEE_IN_BSQ = 5;
@@ -75,9 +65,8 @@ public class FeeService {
 
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
+    private long txFeePerByte = BTC_DEFAULT_TX_FEE;
     private final FeeProvider feeProvider;
-    private final String baseCurrencyCode;
-    private long txFeePerByte;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
     private long lastRequest;
@@ -92,39 +81,6 @@ public class FeeService {
     @Inject
     public FeeService(FeeProvider feeProvider) {
         this.feeProvider = feeProvider;
-        baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
-
-        /* How to calculate:
-              MIN_MAKER_FEE_IN_BASE_CUR = target fiat price * 100000000 / price (in btc: 0.5*100000000/2500)
-              DEFAULT_MAKER_FEE_IN_BASE_CUR = target fiat price * (100000000 / price) / maxTradeAmount
-                                             (in btc: 5*100000000/2500 / 1)
-                                             (in ltc: 5*100000000/40 / 50)
-         */
-        switch (baseCurrencyCode) {
-            case "BTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.5 USD at BTC price 10000 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD for a 1 BTC trade
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
-                txFeePerByte = BTC_DEFAULT_TX_FEE;
-                break;
-            case "LTC":
-                MIN_MAKER_FEE_IN_BASE_CUR = 1_200_000; // 0.5 USD at LTC price 40 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 1_200_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 240_000; // 5 USD at LTC price 40 USD for 50 LTC (maxTradeAmount)
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 360_000; // 7.5 USD at LTC price 40 USD
-                txFeePerByte = LTC_DEFAULT_TX_FEE;
-                break;
-            case "DASH":
-                MIN_MAKER_FEE_IN_BASE_CUR = 300_000; // 0.5 USD at DASH price 150 USD
-                MIN_TAKER_FEE_IN_BASE_CUR = 300_000;
-                DEFAULT_MAKER_FEE_IN_BASE_CUR = 160_000; // 5 USD at DASH price 150 USD
-                DEFAULT_TAKER_FEE_IN_BASE_CUR = 240_000; // 7.5 USD at DASH price 150 USD  for 20 DASH (maxTradeAmount)
-                txFeePerByte = DASH_DEFAULT_TX_FEE;
-                break;
-            default:
-                throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
-        }
     }
 
     public void onAllServicesInitialized() {
@@ -159,7 +115,7 @@ public class FeeService {
                         timeStampMap = result.first;
                         epochInSecondAtLastRequest = timeStampMap.get("bitcoinFeesTs");
                         final Map<String, Long> map = result.second;
-                        txFeePerByte = map.get(baseCurrencyCode);
+                        txFeePerByte = map.get("BTC");
 
                         if (txFeePerByte < minFeePerByte) {
                             log.warn("The delivered fee per byte is smaller than the min. default fee of 5 sat/byte");
@@ -167,7 +123,7 @@ public class FeeService {
                         }
 
                         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
-                        log.info("{} tx fee: txFeePerByte={}", baseCurrencyCode, txFeePerByte);
+                        log.info("BTC tx fee: txFeePerByte={}", txFeePerByte);
                         if (resultHandler != null)
                             resultHandler.run();
                     });
