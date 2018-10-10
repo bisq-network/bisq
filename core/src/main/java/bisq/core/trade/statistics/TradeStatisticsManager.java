@@ -250,9 +250,9 @@ public class TradeStatisticsManager {
             }
         });
 
-        log.info(sufficientlyTraded.toString());
-        log.info(insufficientlyTraded.toString());
-        log.info(notTraded.toString());
+        log.debug(sufficientlyTraded.toString());
+        log.debug(insufficientlyTraded.toString());
+        log.debug(notTraded.toString());
     }
 
     private boolean hasPaidBSQFee(String code) {
