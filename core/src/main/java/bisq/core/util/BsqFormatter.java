@@ -160,7 +160,6 @@ public class BsqFormatter extends BSFormatter {
             case PHASE_VOTE_REVEAL:
             case PHASE_BREAK3:
             case PHASE_RESULT:
-            case PHASE_BREAK4:
                 return Res.get("dao.param.blocks", value);
 
             default:
@@ -212,7 +211,6 @@ public class BsqFormatter extends BSFormatter {
             case PHASE_VOTE_REVEAL:
             case PHASE_BREAK3:
             case PHASE_RESULT:
-            case PHASE_BREAK4:
                 return Long.valueOf(inputValue);
 
             default:

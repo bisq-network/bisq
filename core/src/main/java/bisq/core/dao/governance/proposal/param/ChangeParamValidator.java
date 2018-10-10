@@ -133,8 +133,6 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case PHASE_RESULT:
                 break;
-            case PHASE_BREAK4:
-                break;
         }
     }
 

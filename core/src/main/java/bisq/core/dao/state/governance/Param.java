@@ -44,15 +44,16 @@ public enum Param {
 
     // TODO trade fee is not implemented yet to be actually used.
     // FeeService is setting the fee atm....
-    // 0.2% 100 = 1%, 1 is 0.01%
-    BSQ_MAKER_FEE_IN_PERCENT(20),
-    BSQ_TAKER_FEE_IN_PERCENT(20),
-    BTC_MAKER_FEE_IN_PERCENT(20),
-    BTC_TAKER_FEE_IN_PERCENT(20),
+    // Value of 100 means 1%, value of 1 means 0.01%
+    BSQ_MAKER_FEE_IN_PERCENT(5),    // 0.05%
+    BSQ_TAKER_FEE_IN_PERCENT(5),
+    BTC_MAKER_FEE_IN_PERCENT(20),   // 0.2% base fee for 1% distance to market price
+    BTC_TAKER_FEE_IN_PERCENT(20),   // 0.2%
 
     // Fees proposal/voting. Atm we don't use diff. fees for diff. proposal types
-    PROPOSAL_FEE(100),          // 5 BSQ    TODO change low dev
-    BLIND_VOTE_FEE(200),        // 10 BSQ   TODO change low dev
+    // See https://github.com/bisq-network/proposals/issues/46
+    PROPOSAL_FEE(200),          // 2 BSQ
+    BLIND_VOTE_FEE(200),        // 2 BSQ
 
     // As BSQ based validation values can change over time if BSQ value rise we need to support that in the Params as well
     COMPENSATION_REQUEST_MIN_AMOUNT(1_000),         // 10 BSQ
@@ -66,7 +67,6 @@ public enum Param {
     QUORUM_GENERIC(100),           // 10 000 BSQ  TODO change low dev value
     QUORUM_REMOVE_ASSET(400),       // 10 000 BSQ  TODO change low dev value
 
-
     // Threshold for voting in % with precision of 2 (e.g. 5000 -> 50.00%)
     THRESHOLD_COMP_REQUEST(5_000),      // 50%
     THRESHOLD_CHANGE_PARAM(7_500),      // 75% -> that might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM!
@@ -74,6 +74,8 @@ public enum Param {
     THRESHOLD_CONFISCATION(8_500),      // 85%
     THRESHOLD_GENERIC(5_000),          // 50%
     THRESHOLD_REMOVE_ASSET(5_000),      // 50%
+
+    //TODO add asset listing params (nr. of trades, volume, time, fee which defines listing state)
 
     // Period phase (16 blocks atm)
     PHASE_UNDEFINED(0),
@@ -83,18 +85,19 @@ public enum Param {
     PHASE_BREAK2(1),        // 10 blocks
     PHASE_VOTE_REVEAL(2),   // 2 days
     PHASE_BREAK3(1),        // 10 blocks
-    PHASE_RESULT(2),        // 1 block
-    PHASE_BREAK4(1);        // 10 blocks
+    PHASE_RESULT(2);        // 1 block
 
-    /*PHASE_UNDEFINED(0),
-    PHASE_PROPOSAL(3456),      // 24 days
-    PHASE_BREAK1(10),        // 10 blocks
-    PHASE_BLIND_VOTE(576),    // 4 days
+    // See https://github.com/bisq-network/proposals/issues/46
+    /*
+    PHASE_UNDEFINED(0),
+    PHASE_PROPOSAL(3600),      // 24 days
+    PHASE_BREAK1(150),        // 1 day
+    PHASE_BLIND_VOTE(600),    // 4 days
     PHASE_BREAK2(10),        // 10 blocks
-    PHASE_VOTE_REVEAL(432),   // 2 days
+    PHASE_VOTE_REVEAL(300),   // 2 days
     PHASE_BREAK3(10),        // 10 blocks
-    PHASE_RESULT(1),        // 1 block
-    PHASE_BREAK4(10);        // 10 blocks*/
+    PHASE_RESULT(10);        // 10 block
+    */
 
     @Getter
     private long defaultValue;
