@@ -203,7 +203,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         walletPasswordWindow.headLine(Res.get("account.seed.enterPw")).onAesKey(aesKey -> {
             initSeedWords(walletsManager.getDecryptedSeed(aesKey, btcWalletService.getKeyChainSeed(), btcWalletService.getKeyCrypter()));
             showSeedScreen();
-        }).show();
+        }).hideForgotPasswordButton().show();
     }
 
     private void initSeedWords(DeterministicSeed seed) {
