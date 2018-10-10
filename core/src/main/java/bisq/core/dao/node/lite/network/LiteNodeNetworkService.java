@@ -117,7 +117,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init() {
+    public void start() {
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
         peerManager.addListener(this);

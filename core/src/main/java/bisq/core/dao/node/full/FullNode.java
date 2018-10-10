@@ -80,6 +80,8 @@ public class FullNode extends BsqNode {
 
     @Override
     public void start() {
+        fullNodeNetworkService.start();
+
         rpcService.setup(() -> {
                     super.onInitialized();
                     startParseBlocks();

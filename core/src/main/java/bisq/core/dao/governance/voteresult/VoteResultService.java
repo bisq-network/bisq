@@ -105,10 +105,12 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
     private final BondedRolesService bondedRolesService;
     private final IssuanceService issuanceService;
     private final AssetService assetService;
-    private final Storage<EvaluatedProposalList> evaluatedProposalStorage;
-    private Storage<DecryptedBallotsWithMeritsList> decryptedBallotsWithMeritsStorage;
+    private final MissingDataRequestService missingDataRequestService;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
+
+    private final Storage<EvaluatedProposalList> evaluatedProposalStorage;
+    private Storage<DecryptedBallotsWithMeritsList> decryptedBallotsWithMeritsStorage;
     @Getter
     private final EvaluatedProposalList evaluatedProposalList = new EvaluatedProposalList();
     @Getter
@@ -129,6 +131,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                              BondedRolesService bondedRolesService,
                              IssuanceService issuanceService,
                              AssetService assetService,
+                             MissingDataRequestService missingDataRequestService,
                              Storage<EvaluatedProposalList> evaluatedProposalStorage,
                              Storage<DecryptedBallotsWithMeritsList> decryptedBallotsWithMeritsStorage) {
         this.voteRevealService = voteRevealService;
@@ -140,6 +143,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
         this.bondedRolesService = bondedRolesService;
         this.issuanceService = issuanceService;
         this.assetService = assetService;
+        this.missingDataRequestService = missingDataRequestService;
         this.evaluatedProposalStorage = evaluatedProposalStorage;
         this.decryptedBallotsWithMeritsStorage = decryptedBallotsWithMeritsStorage;
     }
@@ -249,13 +253,19 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                         // TODO request missing blind votes
                     }
 
-                } catch (VoteResultException e) {
+                } catch (VoteResultException.ValidationException e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    voteResultExceptions.add(e);
+                } catch (VoteResultException.ConsensusException e) {
                     log.error(e.toString());
                     e.printStackTrace();
 
                     //TODO notify application of that case (e.g. add error handler)
                     // The vote cycle is invalid as conflicting data views of the blind vote data exist and the winner
                     // did not reach super majority of 80%.
+
+                    voteResultExceptions.add(e);
                 }
             } else {
                 log.info("There have not been any votes in that cycle. chainHeight={}", chainHeight);
@@ -301,28 +311,41 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                                 .findAny();
                         if (optionalBlindVote.isPresent()) {
                             BlindVote blindVote = optionalBlindVote.get();
-                            VoteWithProposalTxIdList voteWithProposalTxIdList = VoteResultConsensus.decryptVotes(blindVote.getEncryptedVotes(), secretKey);
-                            MeritList meritList = MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
-
-                            // We lookup for the proposals we have in our local list which match the txId from the
-                            // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
-                            // the voteWithProposalTxIdList
-                            BallotList ballotList = createBallotList(voteWithProposalTxIdList);
-                            return new DecryptedBallotsWithMerits(hashOfBlindVoteList, voteRevealTxId, blindVoteTxId, blindVoteStake, ballotList, meritList);
+                            try {
+                                VoteWithProposalTxIdList voteWithProposalTxIdList = VoteResultConsensus.decryptVotes(blindVote.getEncryptedVotes(), secretKey);
+                                MeritList meritList = MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
+                                // We lookup for the proposals we have in our local list which match the txId from the
+                                // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
+                                // the voteWithProposalTxIdList
+                                BallotList ballotList = createBallotList(voteWithProposalTxIdList);
+                                return new DecryptedBallotsWithMerits(hashOfBlindVoteList, voteRevealTxId, blindVoteTxId, blindVoteStake, ballotList, meritList);
+                            } catch (VoteResultException.MissingBallotException missingBallotException) {
+                                //TODO handle case that we are missing proposals
+                                log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
+                                missingDataRequestService.addVoteResultException(missingBallotException);
+                                return null;
+                            } catch (VoteResultException.DecryptionException decryptionException) {
+                                log.error("Could not decrypt data: " + decryptionException.toString());
+                                voteResultExceptions.add(decryptionException);
+                                return null;
+                            }
                         } else {
                             //TODO handle recovering
                             log.warn("We have a blindVoteTx but we do not have the corresponding blindVote in our local list.\n" +
                                     "That can happen if the blindVote item was not properly broadcast. We will go on " +
                                     "and see if that blindVote was part of the majority data view. If so we should " +
                                     "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
+
+                            missingDataRequestService.addVoteResultException(new VoteResultException.MissingBlindVoteDataException(blindVoteTxId));
                             return null;
                         }
-                    } catch (MissingBallotException e) {
-                        //TODO handle case that we are missing proposals
-                        log.error("We are missing proposals to create the vote result: " + e.toString());
+                    } catch (VoteResultException.ValidationException e) {
+                        log.error("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
+                        voteResultExceptions.add(e);
                         return null;
                     } catch (Throwable e) {
-                        log.error("Could not create DecryptedBallotsWithMerits: " + e.toString());
+                        log.error("Could not create DecryptedBallotsWithMerits because of an unknown exception: " + e.toString());
+                        voteResultExceptions.add(new VoteResultException(e));
                         return null;
                     }
                 })
@@ -330,7 +353,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                 .collect(Collectors.toSet());
     }
 
-    private BallotList createBallotList(VoteWithProposalTxIdList voteWithProposalTxIdList) throws MissingBallotException {
+    private BallotList createBallotList(VoteWithProposalTxIdList voteWithProposalTxIdList)
+            throws VoteResultException.MissingBallotException {
         // We convert the list to a map with proposalTxId as key and the vote as value
         Map<String, Vote> voteByTxIdMap = voteWithProposalTxIdList.stream()
                 .filter(voteWithProposalTxId -> voteWithProposalTxId.getVote() != null)
@@ -366,7 +390,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                 .collect(Collectors.toList());
 
         if (!missingBallots.isEmpty())
-            throw new MissingBallotException(ballots, missingBallots);
+            throw new VoteResultException.MissingBallotException(ballots, missingBallots);
 
         // Let's keep the data more deterministic by sorting it by txId. Though we are not using the sorting.
         ballots.sort(Comparator.comparing(Ballot::getTxId));
@@ -393,7 +417,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
         return map;
     }
 
-    private byte[] getMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> map) throws VoteResultException {
+    private byte[] getMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> map)
+            throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         List<HashWithStake> list = map.entrySet().stream()
                 .map(entry -> new HashWithStake(entry.getKey().bytes, entry.getValue()))
                 .collect(Collectors.toList());

@@ -73,7 +73,7 @@ public class LiteNode extends BsqNode {
     public void start() {
         super.onInitialized();
 
-        liteNodeNetworkService.init();
+        liteNodeNetworkService.start();
     }
 
     @Override

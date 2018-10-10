@@ -39,6 +39,7 @@ import javafx.collections.ObservableList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -49,7 +50,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
     private final BsqStateService bsqStateService;
     private final P2PService p2PService;
     private final BlindVoteValidator blindVoteValidator;
-
+    @Getter
     private final ObservableList<BlindVotePayload> appendOnlyStoreList = FXCollections.observableArrayList();
 
 

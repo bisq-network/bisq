@@ -26,6 +26,7 @@ import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.arbitration.messages.OpenNewDisputeMessage;
 import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
 import bisq.core.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
+import bisq.core.dao.governance.blindvote.network.messages.RepublishBlindVotesRequest;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
@@ -157,6 +158,9 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return AddPersistableNetworkPayloadMessage.fromProto(proto.getAddPersistableNetworkPayloadMessage(), this, messageVersion);
                 case ACK_MESSAGE:
                     return AckMessage.fromProto(proto.getAckMessage(), messageVersion);
+                case REPUBLISH_BLIND_VOTES_REQUEST:
+                    return RepublishBlindVotesRequest.fromProto(proto.getRepublishBlindVotesRequest(), messageVersion);
+
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
                             proto.getMessageCase() + "; proto raw data=" + proto.toString());
