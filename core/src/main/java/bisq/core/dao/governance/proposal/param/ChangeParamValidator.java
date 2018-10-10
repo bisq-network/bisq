@@ -68,13 +68,13 @@ public class ChangeParamValidator extends ProposalValidator {
             case UNDEFINED:
                 break;
 
-            case BSQ_MAKER_FEE_IN_PERCENT:
+            case DEFAULT_MAKER_FEE_BSQ:
                 break;
-            case BSQ_TAKER_FEE_IN_PERCENT:
+            case DEFAULT_TAKER_FEE_BSQ:
                 break;
-            case BTC_MAKER_FEE_IN_PERCENT:
+            case DEFAULT_MAKER_FEE_BTC:
                 break;
-            case BTC_TAKER_FEE_IN_PERCENT:
+            case DEFAULT_TAKER_FEE_BTC:
                 break;
 
             case PROPOSAL_FEE:

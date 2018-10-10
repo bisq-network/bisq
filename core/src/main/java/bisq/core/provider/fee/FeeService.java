@@ -18,6 +18,9 @@
 package bisq.core.provider.fee;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.period.PeriodService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.FaultHandler;
@@ -51,31 +54,54 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // TODO use dao parameters for fee
 @Slf4j
 public class FeeService {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // Miner fees are between 1-600 sat/byte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
     // fee service would not deliver data.
     private static final long BTC_DEFAULT_TX_FEE = 50;
-
-    private static long MIN_MAKER_FEE_BTC = 5_000; // 0.005%. 0.5 USD at BTC price 10_000 USD;
-    private static long MIN_TAKER_FEE_BTC = 5_000;
-    private static long DEFAULT_MAKER_FEE_BTC = 200_000; // 0.2%. 20 USD at BTC price 10000 USD for a 1 BTC trade;
-    private static long DEFAULT_TAKER_FEE_BTC = 200_000;
-
-    // 0.05 BSQ (5 satoshi) for a 1 BTC trade -> 0.005%. 0.05 USD if 1 BSQ = 1 USD, 10 % of BTC fee
-    private static final long MIN_MAKER_FEE_BSQ = 5;
-    private static final long MIN_TAKER_FEE_BSQ = 5;
-    // 2 BSQ or 200 BSQ-satoshi. About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of a normal BTC fee.
-    private static final long DEFAULT_TAKER_FEE_BSQ = 200;
-    private static final long DEFAULT_MAKER_FEE_BSQ = 200;
-
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
+    private static BsqStateService bsqStateService;
+    private static PeriodService periodService;
+
+    private static long getFeeFromParam(Param parm) {
+        return bsqStateService != null && periodService != null ? bsqStateService.getParamValue(parm, periodService.getChainHeight()) : 0;
+    }
+
+    public static Coin getMakerFeePerBtc(boolean currencyForFeeIsBtc) {
+        long fee = currencyForFeeIsBtc ? getFeeFromParam(Param.DEFAULT_MAKER_FEE_BTC) : getFeeFromParam(Param.DEFAULT_MAKER_FEE_BSQ);
+        return Coin.valueOf(fee);
+    }
+
+    public static Coin getMinMakerFee(boolean currencyForFeeIsBtc) {
+        long fee = currencyForFeeIsBtc ? getFeeFromParam(Param.MIN_MAKER_FEE_BTC) : getFeeFromParam(Param.MIN_MAKER_FEE_BSQ);
+        return Coin.valueOf(fee);
+    }
+
+    public static Coin getTakerFeePerBtc(boolean currencyForFeeIsBtc) {
+        long fee = currencyForFeeIsBtc ? getFeeFromParam(Param.DEFAULT_TAKER_FEE_BTC) : getFeeFromParam(Param.DEFAULT_TAKER_FEE_BSQ);
+        return Coin.valueOf(fee);
+    }
+
+    public static Coin getMinTakerFee(boolean currencyForFeeIsBtc) {
+        long fee = currencyForFeeIsBtc ? getFeeFromParam(Param.MIN_TAKER_FEE_BTC) : getFeeFromParam(Param.MIN_TAKER_FEE_BSQ);
+        return Coin.valueOf(fee);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Class fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final FeeProvider feeProvider;
     private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
     private long txFeePerByte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
-    private long epochInSecondAtLastRequest;
     private long lastRequest;
     private long minFeePerByte;
+    private long epochInSecondAtLastRequest;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,9 +109,16 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(FeeProvider feeProvider) {
+    public FeeService(FeeProvider feeProvider, BsqStateService bsqStateService, PeriodService periodService) {
         this.feeProvider = feeProvider;
+        FeeService.bsqStateService = bsqStateService;
+        FeeService.periodService = periodService;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
         minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
@@ -95,6 +128,7 @@ public class FeeService {
         // We update all 5 min.
         UserThread.runPeriodically(this::requestFees, 5, TimeUnit.MINUTES);
     }
+
 
     public void requestFees() {
         requestFees(null, null);
@@ -155,22 +189,6 @@ public class FeeService {
 
     public Coin getTxFeePerByte() {
         return Coin.valueOf(txFeePerByte);
-    }
-
-    public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeIsBtc) {
-        return currencyForMakerFeeIsBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_BTC) : Coin.valueOf(DEFAULT_MAKER_FEE_BSQ);
-    }
-
-    public static Coin getMinMakerFee(boolean currencyForMakerFeeIsBtc) {
-        return currencyForMakerFeeIsBtc ? Coin.valueOf(MIN_MAKER_FEE_BTC) : Coin.valueOf(MIN_MAKER_FEE_BSQ);
-    }
-
-    public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeIsBtc) {
-        return currencyForTakerFeeIsBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_BTC) : Coin.valueOf(DEFAULT_TAKER_FEE_BSQ);
-    }
-
-    public static Coin getMinTakerFee(boolean currencyForTakerFeeIsBtc) {
-        return currencyForTakerFeeIsBtc ? Coin.valueOf(MIN_TAKER_FEE_BTC) : Coin.valueOf(MIN_TAKER_FEE_BSQ);
     }
 
     public ReadOnlyIntegerProperty feeUpdateCounterProperty() {

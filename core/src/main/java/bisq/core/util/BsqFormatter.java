@@ -123,10 +123,10 @@ public class BsqFormatter extends BSFormatter {
             case UNDEFINED:
                 return Res.get("shared.na");
 
-            case BSQ_MAKER_FEE_IN_PERCENT:
-            case BSQ_TAKER_FEE_IN_PERCENT:
-            case BTC_MAKER_FEE_IN_PERCENT:
-            case BTC_TAKER_FEE_IN_PERCENT:
+            case DEFAULT_MAKER_FEE_BSQ:
+            case DEFAULT_TAKER_FEE_BSQ:
+            case DEFAULT_MAKER_FEE_BTC:
+            case DEFAULT_TAKER_FEE_BTC:
                 return formatToPercentWithSymbol(value / 10000d);
 
             case PROPOSAL_FEE:
@@ -172,10 +172,10 @@ public class BsqFormatter extends BSFormatter {
             case UNDEFINED:
                 return 0;
 
-            case BSQ_MAKER_FEE_IN_PERCENT:
-            case BSQ_TAKER_FEE_IN_PERCENT:
-            case BTC_MAKER_FEE_IN_PERCENT:
-            case BTC_TAKER_FEE_IN_PERCENT:
+            case DEFAULT_MAKER_FEE_BSQ:
+            case DEFAULT_TAKER_FEE_BSQ:
+            case DEFAULT_MAKER_FEE_BTC:
+            case DEFAULT_TAKER_FEE_BTC:
                 return (long) (parsePercentStringToDouble(inputValue) * 10000);
 
             case PROPOSAL_FEE:
