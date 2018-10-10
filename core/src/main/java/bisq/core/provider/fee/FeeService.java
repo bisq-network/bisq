@@ -51,26 +51,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // TODO use dao parameters for fee
 @Slf4j
 public class FeeService {
-    private static final long BTC_DEFAULT_TX_FEE = 50; // fees are between 1-600 sat/byte. We try to stay on  the safe side.
+    // Miner fees are between 1-600 sat/byte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
+    // fee service would not deliver data.
+    private static final long BTC_DEFAULT_TX_FEE = 50;
 
-    private static long MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.5 USD at BTC price 10000 USD;
+    private static long MIN_MAKER_FEE_IN_BASE_CUR = 5_000; // 0.005%. 0.5 USD at BTC price 10_000 USD;
     private static long MIN_TAKER_FEE_IN_BASE_CUR = 5_000;
-    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 20 USD at BTC price 10000 USD for a 1 BTC trade;
+    private static long DEFAULT_MAKER_FEE_IN_BASE_CUR = 200_000; // 0.2%. 20 USD at BTC price 10000 USD for a 1 BTC trade;
     private static long DEFAULT_TAKER_FEE_IN_BASE_CUR = 200_000;
 
+    // 0.05 BSQ (5 satoshi) for a 1 BTC trade -> 0.005%. 0.05 USD if 1 BSQ = 1 USD, 10 % of BTC fee
     private static final long MIN_MAKER_FEE_IN_BSQ = 5;
     private static final long MIN_TAKER_FEE_IN_BSQ = 5;
-    private static final long DEFAULT_MAKER_FEE_IN_BSQ = 200; // 2 BSQ or 200 BSQ-satoshi. About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of a normal BTC fee which is about 20 USD.
+    // 2 BSQ or 200 BSQ-satoshi. About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of a normal BTC fee.
     private static final long DEFAULT_TAKER_FEE_IN_BSQ = 200;
+    private static final long DEFAULT_MAKER_FEE_IN_BSQ = 200;
 
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
 
-    private long txFeePerByte = BTC_DEFAULT_TX_FEE;
     private final FeeProvider feeProvider;
+    private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
+    private long txFeePerByte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
     private long epochInSecondAtLastRequest;
     private long lastRequest;
-    private IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
     private long minFeePerByte;
 
 
