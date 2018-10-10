@@ -74,8 +74,15 @@ public class VoteResultException extends Exception {
     }
 
     @EqualsAndHashCode(callSuper = true)
+    public static abstract class MissingDataException extends VoteResultException {
+        private MissingDataException(String message) {
+            super(message);
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = true)
     @Value
-    public static class MissingBlindVoteDataException extends VoteResultException {
+    public static class MissingBlindVoteDataException extends MissingDataException {
         private String blindVoteTxId;
 
         MissingBlindVoteDataException(String blindVoteTxId) {
@@ -93,7 +100,7 @@ public class VoteResultException extends Exception {
 
     @EqualsAndHashCode(callSuper = true)
     @Value
-    public static class MissingBallotException extends VoteResultException {
+    public static class MissingBallotException extends MissingDataException {
         private List<Ballot> existingBallots;
         private List<String> proposalTxIdsOfMissingBallots;
 

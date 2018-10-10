@@ -25,7 +25,7 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.BlindVoteValidator;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.governance.blindvote.network.RepublishBlindVotesHandler;
+import bisq.core.dao.governance.blindvote.network.RepublishGovernanceDataHandler;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.myvote.MyVoteListService;
@@ -169,7 +169,7 @@ public class DaoModule extends AppModule {
         bind(VoteResultService.class).in(Singleton.class);
         bind(MissingDataRequestService.class).in(Singleton.class);
         bind(IssuanceService.class).in(Singleton.class);
-        bind(RepublishBlindVotesHandler.class).in(Singleton.class);
+        bind(RepublishGovernanceDataHandler.class).in(Singleton.class);
 
         // Genesis
         String genesisTxId = environment.getProperty(DaoOptionKeys.GENESIS_TX_ID, String.class, "");

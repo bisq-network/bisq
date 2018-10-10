@@ -18,8 +18,10 @@
 package bisq.core.dao.node.full.network;
 
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
-import bisq.core.dao.governance.blindvote.network.messages.RepublishBlindVotesRequest;
+import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
+import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.state.BsqStateService;
@@ -67,6 +69,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     private final PeerManager peerManager;
     private final Broadcaster broadcaster;
     private final BlindVoteListService blindVoteListService;
+    private final ProposalService proposalService;
     private final P2PService p2PService;
     private final BsqStateService bsqStateService;
 
@@ -84,12 +87,14 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                                   PeerManager peerManager,
                                   Broadcaster broadcaster,
                                   BlindVoteListService blindVoteListService,
+                                  ProposalService proposalService,
                                   P2PService p2PService,
                                   BsqStateService bsqStateService) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         this.blindVoteListService = blindVoteListService;
+        this.proposalService = proposalService;
         this.p2PService = p2PService;
         this.bsqStateService = bsqStateService;
     }
@@ -189,24 +194,39 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }
-        } else if (networkEnvelope instanceof RepublishBlindVotesRequest) {
-            ObservableList<BlindVotePayload> appendOnlyStoreList = blindVoteListService.getAppendOnlyStoreList();
-            appendOnlyStoreList
+        } else if (networkEnvelope instanceof RepublishGovernanceDataRequest) {
+            ObservableList<BlindVotePayload> blindVotePayloads = blindVoteListService.getBlindVotePayloads();
+            blindVotePayloads
                     .forEach(blindVotePayload -> {
                         // We want a random delay between 0.1 and 30 sec. depending on the number of items
-                        int delay = Math.max(100, Math.min(30_000, new Random().nextInt(appendOnlyStoreList.size() * 500)));
+                        int delay = Math.max(100, Math.min(30_000, new Random().nextInt(blindVotePayloads.size() * 500)));
                         UserThread.runAfter(() -> {
                             boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
                             String txId = blindVotePayload.getBlindVote().getTxId();
                             if (success) {
-                                log.info("We received a RepublishBlindVotesRequest and re-published a blindVotePayload to " +
-                                                "the P2P network as append only data. blindVoteTxId={}",
-                                        txId);
+                                log.info("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
+                                        "the P2P network as append only data. blindVoteTxId={}", txId);
                             } else {
-                                log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId=" + txId);
+                                log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
                             }
                         }, delay, TimeUnit.MILLISECONDS);
                     });
+
+            ObservableList<ProposalPayload> proposalPayloads = proposalService.getProposalPayloads();
+            proposalPayloads.forEach(proposalPayload -> {
+                // We want a random delay between 0.1 and 30 sec. depending on the number of items
+                int delay = Math.max(100, Math.min(30_000, new Random().nextInt(proposalPayloads.size() * 500)));
+                UserThread.runAfter(() -> {
+                    boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
+                    String txId = proposalPayload.getProposal().getTxId();
+                    if (success) {
+                        log.info("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
+                                "the P2P network as append only data. proposalTxId={}", txId);
+                    } else {
+                        log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);
+                    }
+                }, delay, TimeUnit.MILLISECONDS);
+            });
         }
     }
 }

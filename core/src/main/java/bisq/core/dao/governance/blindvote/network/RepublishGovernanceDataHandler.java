@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.blindvote.network;
 
-import bisq.core.dao.governance.blindvote.network.messages.RepublishBlindVotesRequest;
+import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -49,11 +49,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Responsible for sending a RepublishBlindVotesRequest to full nodes.
+ * Responsible for sending a RepublishGovernanceDataRequest to full nodes.
  * Processing of RepublishBlindVotesRequests at full nodes is done in the FullNodeNetworkService.
  */
 @Slf4j
-public final class RepublishBlindVotesHandler {
+public final class RepublishGovernanceDataHandler {
     private static final long TIMEOUT = 120;
 
     private final Collection<NodeAddress> seedNodeAddresses;
@@ -64,9 +64,9 @@ public final class RepublishBlindVotesHandler {
     private Timer timeoutTimer;
 
     @Inject
-    public RepublishBlindVotesHandler(NetworkNode networkNode,
-                                      PeerManager peerManager,
-                                      SeedNodeRepository seedNodesRepository) {
+    public RepublishGovernanceDataHandler(NetworkNode networkNode,
+                                          PeerManager peerManager,
+                                          SeedNodeRepository seedNodesRepository) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
@@ -77,7 +77,7 @@ public final class RepublishBlindVotesHandler {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestBlindVotePayload() {
+    public void sendRepublishRequest() {
         // First try if we have a seed node in our connections. All seed nodes are full nodes.
         if (!stopped)
             connectToNextNode();
@@ -88,12 +88,12 @@ public final class RepublishBlindVotesHandler {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void sendRepublishBlindVotesRequest(NodeAddress nodeAddress) {
-        RepublishBlindVotesRequest republishBlindVotesRequest = new RepublishBlindVotesRequest();
+    private void sendRepublishRequest(NodeAddress nodeAddress) {
+        RepublishGovernanceDataRequest republishGovernanceDataRequest = new RepublishGovernanceDataRequest();
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                         if (!stopped) {
-                            String errorMessage = "A timeout occurred at sending republishBlindVotesRequest:" +
+                            String errorMessage = "A timeout occurred at sending republishGovernanceDataRequest:" +
                                     " to nodeAddress:" + nodeAddress;
                             log.warn(errorMessage);
                             connectToNextNode();
@@ -105,13 +105,13 @@ public final class RepublishBlindVotesHandler {
                     TIMEOUT);
         }
 
-        log.info("We send to peer {} a republishBlindVotesRequest.", nodeAddress);
-        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, republishBlindVotesRequest);
+        log.info("We send to peer {} a republishGovernanceDataRequest.", nodeAddress);
+        SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, republishGovernanceDataRequest);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
-                    log.info("Sending of RepublishBlindVotesRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
+                    log.info("Sending of RepublishGovernanceDataRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
                     stop();
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
@@ -122,7 +122,7 @@ public final class RepublishBlindVotesHandler {
             @Override
             public void onFailure(@NotNull Throwable throwable) {
                 if (!stopped) {
-                    String errorMessage = "Sending republishBlindVotesRequest to " + nodeAddress +
+                    String errorMessage = "Sending republishGovernanceDataRequest to " + nodeAddress +
                             " failed. That is expected if the peer is offline.\n\t" +
                             "\n\tException=" + throwable.getMessage();
                     log.info(errorMessage);
@@ -144,7 +144,7 @@ public final class RepublishBlindVotesHandler {
         if (connectionToSeedNodeOptional.isPresent() &&
                 connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().isPresent()) {
             NodeAddress nodeAddress = connectionToSeedNodeOptional.get().getPeersNodeAddressOptional().get();
-            sendRepublishBlindVotesRequest(nodeAddress);
+            sendRepublishRequest(nodeAddress);
         } else {
             // If connected seed nodes did not confirm receipt of message we try next seed node from seedNodeAddresses
             List<NodeAddress> list = seedNodeAddresses.stream()
@@ -155,7 +155,7 @@ public final class RepublishBlindVotesHandler {
             if (!list.isEmpty()) {
                 NodeAddress nodeAddress = list.get(0);
                 seedNodeAddresses.remove(nodeAddress);
-                sendRepublishBlindVotesRequest(nodeAddress);
+                sendRepublishRequest(nodeAddress);
             } else {
                 log.warn("No more seed nodes available. We try any of our other peers.");
                 connectToAnyFullNode();
@@ -189,7 +189,7 @@ public final class RepublishBlindVotesHandler {
             list = new ArrayList<>(list.subList(0, Math.min(list.size(), 4)));
             list.stream()
                     .map(Peer::getNodeAddress)
-                    .forEach(this::sendRepublishBlindVotesRequest);
+                    .forEach(this::sendRepublishRequest);
         } else {
             log.warn("No other nodes found. We try again in 60 seconds.");
             UserThread.runAfter(this::connectToNextNode, 60);

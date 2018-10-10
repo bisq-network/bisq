@@ -56,7 +56,7 @@ message NetworkEnvelope {
 
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
-        RepublishBlindVotesRequest republish_blind_votes_request = 33;
+        RepublishGovernanceDataRequest republish_governance_data_request = 33;
     }
 }
 
@@ -320,7 +320,7 @@ message NewBlockBroadcastMessage {
     BaseBlock raw_block = 1;
 }
 
-message RepublishBlindVotesRequest {
+message RepublishGovernanceDataRequest {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

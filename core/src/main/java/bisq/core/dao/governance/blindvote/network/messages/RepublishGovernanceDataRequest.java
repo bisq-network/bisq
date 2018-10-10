@@ -35,9 +35,9 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class RepublishBlindVotesRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
+public final class RepublishGovernanceDataRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
 
-    public RepublishBlindVotesRequest() {
+    public RepublishGovernanceDataRequest() {
         this(Version.getP2PMessageVersion());
     }
 
@@ -46,19 +46,19 @@ public final class RepublishBlindVotesRequest extends NetworkEnvelope implements
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RepublishBlindVotesRequest(int messageVersion) {
+    private RepublishGovernanceDataRequest(int messageVersion) {
         super(messageVersion);
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRepublishBlindVotesRequest(PB.RepublishBlindVotesRequest.newBuilder())
+                .setRepublishGovernanceDataRequest(PB.RepublishGovernanceDataRequest.newBuilder())
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.RepublishBlindVotesRequest proto, int messageVersion) {
-        return new RepublishBlindVotesRequest(messageVersion);
+    public static NetworkEnvelope fromProto(PB.RepublishGovernanceDataRequest proto, int messageVersion) {
+        return new RepublishGovernanceDataRequest(messageVersion);
     }
 
     @Override
@@ -70,7 +70,7 @@ public final class RepublishBlindVotesRequest extends NetworkEnvelope implements
 
     @Override
     public String toString() {
-        return "RepublishBlindVotesRequest{" +
+        return "RepublishGovernanceDataRequest{" +
                 "\n} " + super.toString();
     }
 }

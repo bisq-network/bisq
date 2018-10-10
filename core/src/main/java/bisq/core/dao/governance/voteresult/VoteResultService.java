@@ -323,6 +323,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                                 //TODO handle case that we are missing proposals
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
                                 missingDataRequestService.addVoteResultException(missingBallotException);
+                                voteResultExceptions.add(missingBallotException);
                                 return null;
                             } catch (VoteResultException.DecryptionException decryptionException) {
                                 log.error("Could not decrypt data: " + decryptionException.toString());
@@ -336,7 +337,9 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                                     "and see if that blindVote was part of the majority data view. If so we should " +
                                     "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
 
-                            missingDataRequestService.addVoteResultException(new VoteResultException.MissingBlindVoteDataException(blindVoteTxId));
+                            VoteResultException.MissingBlindVoteDataException voteResultException = new VoteResultException.MissingBlindVoteDataException(blindVoteTxId);
+                            missingDataRequestService.addVoteResultException(voteResultException);
+                            voteResultExceptions.add(voteResultException);
                             return null;
                         }
                     } catch (VoteResultException.ValidationException e) {
