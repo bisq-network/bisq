@@ -21,7 +21,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
-import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.BsqStateService;
@@ -47,12 +46,10 @@ public class GenericProposalService extends BaseProposalService<GenericProposal>
     public GenericProposalService(BsqWalletService bsqWalletService,
                                   BtcWalletService btcWalletService,
                                   BsqStateService bsqStateService,
-                                  ProposalConsensus proposalConsensus,
                                   GenericProposalValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 bsqStateService,
-                proposalConsensus,
                 proposalValidator);
     }
 

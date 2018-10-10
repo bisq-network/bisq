@@ -34,16 +34,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProposalConsensus {
-    public Coin getFee(BsqStateService bsqStateService, int chainHeight) {
+    public static Coin getFee(BsqStateService bsqStateService, int chainHeight) {
         return Coin.valueOf(bsqStateService.getParamValue(Param.PROPOSAL_FEE, chainHeight));
     }
 
-    public byte[] getHashOfPayload(Proposal payload) {
+    public static byte[] getHashOfPayload(Proposal payload) {
         final byte[] bytes = payload.toProtoMessage().toByteArray();
         return Hash.getSha256Ripemd160hash(bytes);
     }
 
-    public byte[] getOpReturnData(byte[] hashOfPayload, byte opReturnType, byte version) {
+    public static byte[] getOpReturnData(byte[] hashOfPayload, byte opReturnType, byte version) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(opReturnType);
             outputStream.write(version);

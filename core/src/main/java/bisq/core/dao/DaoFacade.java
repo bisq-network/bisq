@@ -107,7 +107,6 @@ public class DaoFacade implements DaoSetupService {
     private final BondedRolesService bondedRolesService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
-    private final ProposalConsensus proposalConsensus;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
 
@@ -128,8 +127,7 @@ public class DaoFacade implements DaoSetupService {
                      RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
                      LockupService lockupService,
-                     UnlockService unlockService,
-                     ProposalConsensus proposalConsensus) {
+                     UnlockService unlockService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
         this.ballotListPresentation = ballotListPresentation;
@@ -147,7 +145,6 @@ public class DaoFacade implements DaoSetupService {
         this.bondedRolesService = bondedRolesService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
-        this.proposalConsensus = proposalConsensus;
     }
 
 
@@ -264,7 +261,7 @@ public class DaoFacade implements DaoSetupService {
 
     // Show fee
     public Coin getProposalFee(int chainHeight) {
-        return proposalConsensus.getFee(bsqStateService, chainHeight);
+        return ProposalConsensus.getFee(bsqStateService, chainHeight);
     }
 
     // Publish proposal tx, proposal payload and and persist it to myProposalList

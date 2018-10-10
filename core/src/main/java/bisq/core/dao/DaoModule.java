@@ -30,11 +30,9 @@ import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
-import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
@@ -116,7 +114,6 @@ public class DaoModule extends AppModule {
         bind(TxParser.class).in(Singleton.class);
 
         // Proposal
-        bind(ProposalConsensus.class).in(Singleton.class);
         bind(ProposalService.class).in(Singleton.class);
 
         bind(MyProposalListService.class).in(Singleton.class);
@@ -129,7 +126,6 @@ public class DaoModule extends AppModule {
         bind(ProposalValidator.class).in(Singleton.class);
 
         bind(CompensationValidator.class).in(Singleton.class);
-        bind(CompensationConsensus.class).in(Singleton.class);
         bind(CompensationProposalService.class).in(Singleton.class);
 
         bind(ChangeParamValidator.class).in(Singleton.class);
