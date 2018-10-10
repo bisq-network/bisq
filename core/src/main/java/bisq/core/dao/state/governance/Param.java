@@ -93,15 +93,16 @@ public enum Param {
 
     //TODO add asset listing params (nr. of trades, volume, time, fee which defines listing state)
 
-    // Period phase (16 blocks atm)
+    // TODO for dev testing we use short periods...
+    // Period phase (11 blocks atm)
     PHASE_UNDEFINED(0),
-    PHASE_PROPOSAL(2),      // 24 days
-    PHASE_BREAK1(1),        // 10 blocks
-    PHASE_BLIND_VOTE(2),    // 4 days
-    PHASE_BREAK2(1),        // 10 blocks
-    PHASE_VOTE_REVEAL(2),   // 2 days
-    PHASE_BREAK3(1),        // 10 blocks
-    PHASE_RESULT(2);        // 1 block
+    PHASE_PROPOSAL(2),
+    PHASE_BREAK1(1),
+    PHASE_BLIND_VOTE(2),
+    PHASE_BREAK2(1),
+    PHASE_VOTE_REVEAL(2),
+    PHASE_BREAK3(1),
+    PHASE_RESULT(2);
 
     // See: https://github.com/bisq-network/proposals/issues/46
     /*
