@@ -19,6 +19,7 @@ bisq.asset.coins.Bitcoin$Testnet
 bisq.asset.coins.Bitcore
 bisq.asset.coins.BitDaric
 bisq.asset.coins.BitZeny
+bisq.asset.coins.Blur
 bisq.asset.coins.BSQ$Mainnet
 bisq.asset.coins.BSQ$Regtest
 bisq.asset.coins.BSQ$Testnet
