@@ -30,6 +30,8 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.governance.voteresult.VoteResultException;
+import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
@@ -147,6 +149,7 @@ public class BisqSetup {
     private final DisputeMsgEvents disputeMsgEvents;
     private final PriceAlert priceAlert;
     private final MarketAlerts marketAlerts;
+    private final VoteResultService voteResultService;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -171,6 +174,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private BiConsumer<Alert, String> displayUpdateHandler;
+    @Setter
+    @Nullable
+    private Consumer<VoteResultException> voteResultExceptionHandler;
     @Setter
     @Nullable
     private Consumer<PrivateNotificationPayload> displayPrivateNotificationHandler;
@@ -216,6 +222,7 @@ public class BisqSetup {
                      DisputeMsgEvents disputeMsgEvents,
                      PriceAlert priceAlert,
                      MarketAlerts marketAlerts,
+                     VoteResultService voteResultService,
                      BSFormatter formatter) {
 
 
@@ -251,6 +258,7 @@ public class BisqSetup {
         this.disputeMsgEvents = disputeMsgEvents;
         this.priceAlert = priceAlert;
         this.marketAlerts = marketAlerts;
+        this.voteResultService = voteResultService;
         this.formatter = formatter;
     }
 
@@ -629,6 +637,15 @@ public class BisqSetup {
 
                 if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
                     filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+            }
+        });
+
+        voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
+            c.next();
+            if (c.wasAdded() && voteResultExceptionHandler != null) {
+                c.getAddedSubList().forEach(e -> {
+                    voteResultExceptionHandler.accept(e);
+                });
             }
         });
 

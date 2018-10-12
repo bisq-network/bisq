@@ -306,7 +306,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 2, 4);
         tableView.layout();
         root.layout();
     }
@@ -418,7 +418,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
-            EvaluatedProposal evaluatedProposal = voteResultService.getAllEvaluatedProposals().stream()
+            EvaluatedProposal evaluatedProposal = voteResultService.getEvaluatedProposalList().stream()
                     .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
                             daoFacade.getChainHeight()))
                     .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))

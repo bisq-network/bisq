@@ -472,8 +472,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         paymentAccountsComboBox = FormBuilder.<PaymentAccount>addLabelComboBox(root, gridRow,
                 Res.getWithCol("account.notifications.marketAlert.selectPaymentAccount"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText(Res.get("shared.select"));
-        paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
+        paymentAccountsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
                 return paymentAccount.getAccountName();

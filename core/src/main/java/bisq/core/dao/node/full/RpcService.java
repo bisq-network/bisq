@@ -188,9 +188,9 @@ public class RpcService {
 
     void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
-        Futures.addCallback(future, new FutureCallback<Integer>() {
-            public void onSuccess(Integer chainHeadHeight) {
-                UserThread.execute(() -> resultHandler.accept(chainHeadHeight));
+        Futures.addCallback(future, new FutureCallback<>() {
+            public void onSuccess(Integer chainHeight) {
+                UserThread.execute(() -> resultHandler.accept(chainHeight));
             }
 
             public void onFailure(@NotNull Throwable throwable) {

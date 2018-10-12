@@ -37,9 +37,12 @@ import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
+import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
+import bisq.core.dao.governance.proposal.generic.GenericProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
@@ -78,6 +81,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+
+
+import bisq.asset.Asset;
+
 /**
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
  * by providing a reduced API and/or aggregating subroutines.
@@ -95,10 +102,11 @@ public class DaoFacade implements DaoSetupService {
     private final ChangeParamProposalService changeParamProposalService;
     private final ConfiscateBondProposalService confiscateBondProposalService;
     private final BondedRoleProposalService bondedRoleProposalService;
+    private final GenericProposalService genericProposalService;
+    private final RemoveAssetProposalService removeAssetProposalService;
     private final BondedRolesService bondedRolesService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
-    private final ProposalConsensus proposalConsensus;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
 
@@ -115,10 +123,11 @@ public class DaoFacade implements DaoSetupService {
                      ChangeParamProposalService changeParamProposalService,
                      ConfiscateBondProposalService confiscateBondProposalService,
                      BondedRoleProposalService bondedRoleProposalService,
+                     GenericProposalService genericProposalService,
+                     RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
                      LockupService lockupService,
-                     UnlockService unlockService,
-                     ProposalConsensus proposalConsensus) {
+                     UnlockService unlockService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
         this.ballotListPresentation = ballotListPresentation;
@@ -131,10 +140,11 @@ public class DaoFacade implements DaoSetupService {
         this.changeParamProposalService = changeParamProposalService;
         this.confiscateBondProposalService = confiscateBondProposalService;
         this.bondedRoleProposalService = bondedRoleProposalService;
+        this.genericProposalService = genericProposalService;
+        this.removeAssetProposalService = removeAssetProposalService;
         this.bondedRolesService = bondedRolesService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
-        this.proposalConsensus = proposalConsensus;
     }
 
 
@@ -232,13 +242,26 @@ public class DaoFacade implements DaoSetupService {
         return bondedRoleProposalService.createProposalWithTransaction(bondedRole);
     }
 
+    public ProposalWithTransaction getGenericProposalWithTransaction(String name,
+                                                                     String link)
+            throws ValidationException, InsufficientMoneyException, TxException {
+        return genericProposalService.createProposalWithTransaction(name, link);
+    }
+
+    public ProposalWithTransaction getRemoveAssetProposalWithTransaction(String name,
+                                                                         String link,
+                                                                         Asset asset)
+            throws ValidationException, InsufficientMoneyException, TxException {
+        return removeAssetProposalService.createProposalWithTransaction(name, link, asset);
+    }
+
     public List<BondedRole> getBondedRoleList() {
         return bondedRolesService.getBondedRoleList();
     }
 
     // Show fee
     public Coin getProposalFee(int chainHeight) {
-        return proposalConsensus.getFee(bsqStateService, chainHeight);
+        return ProposalConsensus.getFee(bsqStateService, chainHeight);
     }
 
     // Publish proposal tx, proposal payload and and persist it to myProposalList
@@ -464,16 +487,16 @@ public class DaoFacade implements DaoSetupService {
         return periodService.isInPhaseButNotLastBlock(phase);
     }
 
-    public boolean isTxInCorrectCycle(int txHeight, int chainHeadHeight) {
-        return periodService.isTxInCorrectCycle(txHeight, chainHeadHeight);
+    public boolean isTxInCorrectCycle(int txHeight, int chainHeight) {
+        return periodService.isTxInCorrectCycle(txHeight, chainHeight);
     }
 
-    public boolean isTxInCorrectCycle(String txId, int chainHeadHeight) {
-        return periodService.isTxInCorrectCycle(txId, chainHeadHeight);
+    public boolean isTxInCorrectCycle(String txId, int chainHeight) {
+        return periodService.isTxInCorrectCycle(txId, chainHeight);
     }
 
-    public boolean isTxInPhaseAndCycle(String txId, DaoPhase.Phase phase, int chainHeadHeight) {
-        return periodService.isTxInPhaseAndCycle(txId, phase, chainHeadHeight);
+    public boolean isTxInPhaseAndCycle(String txId, DaoPhase.Phase phase, int chainHeight) {
+        return periodService.isTxInPhaseAndCycle(txId, phase, chainHeight);
     }
 
     public boolean isUnspent(TxOutputKey key) {
@@ -486,5 +509,17 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isUnlocking(BondedRole bondedRole) {
         return bsqStateService.isUnlocking(bondedRole);
+    }
+
+    public Coin getMinCompensationRequestAmount() {
+        return CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+    }
+
+    public Coin getMaxCompensationRequestAmount() {
+        return CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+    }
+
+    public long getPramValue(Param param) {
+        return bsqStateService.getParamValue(param, periodService.getChainHeight());
     }
 }

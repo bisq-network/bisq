@@ -15,23 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.voteresult;
+package bisq.core.dao.governance.asset;
 
-import bisq.core.dao.governance.ballot.Ballot;
-
-import java.util.List;
-
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-
-@EqualsAndHashCode(callSuper = true)
-@Value
-public class MissingBallotException extends Exception {
-    private List<Ballot> existingBallots;
-    private List<String> proposalTxIdsOfMissingBallots;
-
-    public MissingBallotException(List<Ballot> existingBallots, List<String> proposalTxIdsOfMissingBallots) {
-        this.existingBallots = existingBallots;
-        this.proposalTxIdsOfMissingBallots = proposalTxIdsOfMissingBallots;
-    }
+public enum RemoveReason {
+    VOTING,
+    INACTIVITY
 }

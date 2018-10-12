@@ -76,22 +76,22 @@ public class SnapshotManager implements BsqStateListener {
 
     @Override
     public void onParseTxsComplete(Block block) {
-        final int chainHeadHeight = block.getHeight();
-        if (isSnapshotHeight(chainHeadHeight) &&
+        int chainHeight = block.getHeight();
+        if (isSnapshotHeight(chainHeight) &&
                 (snapshotCandidate == null ||
-                        snapshotCandidate.getChainHeight() != chainHeadHeight)) {
+                        snapshotCandidate.getChainHeight() != chainHeight)) {
             // At trigger event we store the latest snapshotCandidate to disc
             if (snapshotCandidate != null) {
                 // We clone because storage is in a threaded context
                 final BsqState cloned = bsqState.getClone(snapshotCandidate);
                 if (cloned.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
                     storage.queueUpForSave(cloned);
-                log.info("Saved snapshotCandidate to Disc at height " + chainHeadHeight);
+                log.info("Saved snapshotCandidate to Disc at height " + chainHeight);
             }
             // Now we clone and keep it in memory for the next trigger
             snapshotCandidate = bsqState.getClone();
             // don't access cloned anymore with methods as locks are transient!
-            log.info("Cloned new snapshotCandidate at height " + chainHeadHeight);
+            log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
     }
 
@@ -108,7 +108,7 @@ public class SnapshotManager implements BsqStateListener {
         checkNotNull(storage, "storage must not be null");
         BsqState persisted = storage.initAndGetPersisted(bsqState, 100);
         if (persisted != null) {
-            log.info("applySnapshot persisted.chainHeadHeight=" + new LinkedList<>(persisted.getBlocks()).getLast().getHeight());
+            log.info("applySnapshot persisted.chainHeight=" + new LinkedList<>(persisted.getBlocks()).getLast().getHeight());
             if (persisted.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
                 bsqStateService.applySnapshot(persisted);
         } else {
