@@ -90,7 +90,7 @@ public class BlindVoteValidator {
         String txId = blindVote.getTxId();
         Optional<Tx> optionalTx = bsqStateService.getTx(txId);
         if (!optionalTx.isPresent()) {
-            log.warn("Tx is not in bsqStateService. blindVoteTxId={}", txId);
+            log.debug("Tx is not in bsqStateService. blindVoteTxId={}", txId);
             return false;
         }
 
@@ -100,7 +100,7 @@ public class BlindVoteValidator {
             return false;
         }
         if (!periodService.isTxInPhase(txId, DaoPhase.Phase.BLIND_VOTE)) {
-            log.warn("Tx is not in BLIND_VOTE phase. blindVote={}", blindVote);
+            log.debug("Tx is not in BLIND_VOTE phase. blindVote={}", blindVote);
             return false;
         }
         return true;

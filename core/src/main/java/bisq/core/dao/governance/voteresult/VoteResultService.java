@@ -310,7 +310,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService {
                 .collect(Collectors.toMap(VoteWithProposalTxId::getProposalTxId, VoteWithProposalTxId::getVote));
 
         // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list
-        Map<String, Ballot> ballotByTxIdMap = ballotListService.getBallotList().stream()
+        Map<String, Ballot> ballotByTxIdMap = ballotListService.getValidatedBallotList().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
 
         List<String> missingBallots = new ArrayList<>();

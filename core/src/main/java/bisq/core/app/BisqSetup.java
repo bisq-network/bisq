@@ -400,7 +400,6 @@ public class BisqSetup {
                     step3();
                 });
             } catch (Throwable e) {
-                log.info("Localhost Bitcoin node not detected.");
                 UserThread.execute(BisqSetup.this::step3);
             } finally {
                 if (socket != null) {

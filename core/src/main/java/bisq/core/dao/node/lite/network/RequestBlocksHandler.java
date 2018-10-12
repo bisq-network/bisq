@@ -178,7 +178,8 @@ public class RequestBlocksHandler implements MessageListener {
                                 "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
                                         "at that moment");
                         cleanup();
-                        log.info("We received from peer {} a {}", nodeAddress.getFullAddress(), getBlocksResponse);
+                        log.info("We received from peer {} a BlocksResponse with {} blocks",
+                                nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
                         listener.onComplete(getBlocksResponse);
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +

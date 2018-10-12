@@ -55,6 +55,9 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
+import bisq.core.offer.Offer;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
@@ -79,6 +82,8 @@ import javafx.scene.layout.GridPane;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -284,6 +289,25 @@ public class BuyerStep2View extends TradeStepView {
                 !(paymentAccountPayload instanceof F2FAccountPayload))
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
+
+        Trade trade = model.getTrade();
+        if (trade != null && model.getUser().getPaymentAccounts() != null) {
+            Offer offer = trade.getOffer();
+            List<PaymentAccount> possiblePaymentAccounts = PaymentAccountUtil.getPossiblePaymentAccounts(offer,
+                    model.getUser().getPaymentAccounts());
+            PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
+            if (buyersPaymentAccountPayload != null && possiblePaymentAccounts.size() > 1) {
+                String id = buyersPaymentAccountPayload.getId();
+                possiblePaymentAccounts.stream()
+                        .filter(paymentAccount -> paymentAccount.getId().equals(id))
+                        .findFirst()
+                        .ifPresent(paymentAccount -> {
+                            String accountName = paymentAccount.getAccountName();
+                            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                                    Res.getWithCol("portfolio.pending.step2_buyer.buyerAccount"), accountName);
+                        });
+            }
+        }
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 

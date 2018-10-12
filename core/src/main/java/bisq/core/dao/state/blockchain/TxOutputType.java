@@ -22,7 +22,7 @@ import bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 
 public enum TxOutputType {
-    UNDEFINED,
+    UNDEFINED_OUTPUT,
     GENESIS_OUTPUT,
     BSQ_OUTPUT,
     BTC_OUTPUT,
@@ -34,9 +34,9 @@ public enum TxOutputType {
     BLIND_VOTE_OP_RETURN_OUTPUT,
     VOTE_REVEAL_UNLOCK_STAKE_OUTPUT,
     VOTE_REVEAL_OP_RETURN_OUTPUT,
-    LOCKUP,
+    LOCKUP_OUTPUT,
     LOCKUP_OP_RETURN_OUTPUT,
-    UNLOCK,
+    UNLOCK_OUTPUT,
     INVALID_OUTPUT;
 
 

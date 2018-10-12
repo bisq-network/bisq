@@ -178,8 +178,19 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     @Override
     public void readPersisted() {
         PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
-        if (persistedPeerList != null)
+        if (persistedPeerList != null) {
+            long peesWithNoCapabilitiesSet = persistedPeerList.getList().stream()
+                    .filter(e -> e.getSupportedCapabilities().isEmpty())
+                    .mapToInt(e -> 1)
+                    .count();
+            if (peesWithNoCapabilitiesSet > 100) {
+                log.warn("peesWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peesWithNoCapabilitiesSet, persistedPeerList.size());
+            } else {
+                log.info("peesWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peesWithNoCapabilitiesSet, persistedPeerList.size());
+            }
+
             this.persistedPeers.addAll(persistedPeerList.getList());
+        }
     }
 
     public int getMaxConnections() {
@@ -648,7 +659,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 .filter(peer -> peer.getDate().getTime() > maxAge)
                 .collect(Collectors.toSet());
         if (oldNumLatestLivePeers != latestLivePeers.size())
-            log.info("Num of latestLivePeers={}, latestLivePeers={}", latestLivePeers.size(), latestLivePeers);
+            log.info("Num of latestLivePeers={}", latestLivePeers.size());
         return latestLivePeers;
     }
 

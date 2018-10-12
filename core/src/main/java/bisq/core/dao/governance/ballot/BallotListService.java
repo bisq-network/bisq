@@ -21,6 +21,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -52,15 +53,18 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     private final ProposalService proposalService;
     private final PeriodService periodService;
+    private final ProposalValidator proposalValidator;
     private final Storage<BallotList> storage;
 
     private final BallotList ballotList = new BallotList();
     private final List<BallotListChangeListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public BallotListService(ProposalService proposalService, PeriodService periodService, Storage<BallotList> storage) {
+    public BallotListService(ProposalService proposalService, PeriodService periodService,
+                             ProposalValidator proposalValidator, Storage<BallotList> storage) {
         this.proposalService = proposalService;
         this.periodService = periodService;
+        this.proposalValidator = proposalValidator;
         this.storage = storage;
     }
 
@@ -125,12 +129,15 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
         listeners.add(listener);
     }
 
-    public BallotList getBallotList() {
-        return ballotList;
+    public List<Ballot> getValidatedBallotList() {
+        return ballotList.stream()
+                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
+                .collect(Collectors.toList());
     }
 
-    public List<Ballot> getBallotsOfCycle() {
+    public List<Ballot> getValidBallotsOfCycle() {
         return ballotList.stream()
+                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
                 .filter(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), periodService.getChainHeight()))
                 .collect(Collectors.toList());
     }

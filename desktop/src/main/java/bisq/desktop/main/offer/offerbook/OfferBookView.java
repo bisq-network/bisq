@@ -57,6 +57,7 @@ import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -393,7 +394,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     Res.get("popup.warning.noTradingAccountSetup.msg"),
                     FiatAccountsView.class,
                     "navigation.account");
-        } else if (!model.hasPaymentAccountForCurrency()) {
+        } else if (!model.hasPaymentAccountForCurrency() && !DevEnv.isDevMode()) {
             new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                     .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                     .actionButtonText(Res.get("offerbook.yesCreateOffer"))
@@ -715,6 +716,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
+                                        setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
                                                 model.getNumberOfDecimalsForVolume(offerBookListItem)));
                                         model.priceFeedService.updateCounterProperty().removeListener(listener);

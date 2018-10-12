@@ -50,12 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BsqState implements PersistableEnvelope {
-    //TODO not sure if we will use that
-  /*  private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
-
-    static int getIssuanceMaturity() {
-        return ISSUANCE_MATURITY;
-    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
