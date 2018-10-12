@@ -1,17 +1,9 @@
 package bisq.httpapi;
 
-import bisq.core.btc.AddressEntry;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
-
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.model.TakeOffer;
-import bisq.httpapi.model.WalletAddress;
-import bisq.httpapi.model.WithdrawFundsForm;
-import bisq.httpapi.model.payment.SepaPaymentAccount;
 
 import org.json.simple.JSONObject;
 
@@ -32,6 +24,13 @@ import static org.hamcrest.Matchers.*;
 
 
 
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.model.TakeOffer;
+import bisq.httpapi.model.WalletAddress;
+import bisq.httpapi.model.WithdrawFundsForm;
+import bisq.httpapi.model.payment.SepaPaymentAccount;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;

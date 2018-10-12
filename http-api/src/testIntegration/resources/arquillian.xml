@@ -8,6 +8,6 @@
         <property name="tlsVerify">false</property>
     </extension>
     <extension qualifier="cubeLogger">
-        <property name="enable">${CUBE_LOGGER_ENABLE:false}</property>
+        <property name="enable">true</property>
     </extension>
 </arquillian>
