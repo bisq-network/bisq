@@ -29,14 +29,14 @@ public class DSTRATest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("FJ4Mt5BKK3TtB3u1kCHq8TWJ9BZSzbpidY");
-        assertValidAddress("fMZictACJc9dKhrMxCKRMkWNpq8Ni2ZBx8");
+        assertValidAddress("DGiwGS8n3tJZuKxUdWF6MyTYvv6xgDcyd7");
+        assertValidAddress("EZQkDh6T8HWwoAPzCffW2X4NgmXzkmHQwm");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("FJ4Mt5BKK3TtB3u1kCHq8TWJ9BZSzbpidYY");
-        assertInvalidAddress("FJ4Mt5BKK3TtB3u1kCHq8TWJ9BZSzbpid");
-        assertInvalidAddress("fMZictACJc9dKhrMxCKRMkWNpq8Ni2ZBx8#");
+        assertInvalidAddress("DGiwGS8n3tJZuKxUdWF6MyTYvv6xgDcyd77");
+        assertInvalidAddress("DGiwGS8n3tJZuKxUdWF6MyTYvv6xgDcyd");
+        assertInvalidAddress("EZQkDh6T8HWwoAPzCffW2X4NgmXzkmHQwm1");
     }
 }

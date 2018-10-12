@@ -31,8 +31,8 @@ public class DSTRA extends Coin {
     public static class DSTRAParams extends NetworkParametersAdapter {
 
         public DSTRAParams() {
-            addressHeader = 35;
-            p2shHeader = 95;
+            addressHeader = 30;
+            p2shHeader = 33;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
