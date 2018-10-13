@@ -204,7 +204,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                 return null;
             }
         });
-        languageComboBox.setOnAction(e -> onAddLanguage());
+        languageComboBox.setOnHiding(e -> onAddLanguage());
     }
 
     private void addArbitratorsGroup() {
