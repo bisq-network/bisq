@@ -360,8 +360,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
-                                    if (!allFiatCurrencies.contains(item))
+                                    if (!allFiatCurrencies.contains(item)) {
                                         allFiatCurrencies.add(item);
+                                        allFiatCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
@@ -410,8 +412,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
-                                    if (!allCryptoCurrencies.contains(item))
+                                    if (!allCryptoCurrencies.contains(item)) {
                                         allCryptoCurrencies.add(item);
+                                        allCryptoCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
