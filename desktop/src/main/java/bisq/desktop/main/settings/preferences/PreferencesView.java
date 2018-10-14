@@ -426,6 +426,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
+        fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
+            @Override
+            protected void updateItem(final FiatCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addFiat"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
             @Override
             public String toString(FiatCurrency tradeCurrency) {
@@ -442,6 +453,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
+        cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
+            @Override
+            protected void updateItem(final CryptoCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addAltcoin"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
