@@ -604,7 +604,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);
         fiatCurrenciesListView.setItems(fiatCurrencies);
-        fiatCurrenciesComboBox.setOnAction(e -> {
+        fiatCurrenciesComboBox.setOnHiding(e -> {
             FiatCurrency selectedItem = fiatCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addFiatCurrency(selectedItem);
@@ -619,7 +619,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         cryptoCurrenciesComboBox.setItems(allCryptoCurrencies);
         cryptoCurrenciesListView.setItems(cryptoCurrencies);
-        cryptoCurrenciesComboBox.setOnAction(e -> {
+        cryptoCurrenciesComboBox.setOnHiding(e -> {
             CryptoCurrency selectedItem = cryptoCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addCryptoCurrency(selectedItem);
