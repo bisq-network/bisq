@@ -418,6 +418,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1.setVisible(false);
         cancelButton1.setManaged(false);
         cancelButton1.setOnAction(null);
+        offerAvailabilityBusyAnimation.stop();
         offerAvailabilityLabel.setVisible(false);
         offerAvailabilityLabel.setManaged(false);
 
@@ -457,7 +458,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .show();
         }
 
-        offerAvailabilityBusyAnimation.stop();
         cancelButton2.setVisible(true);
 
         waitingForFundsBusyAnimation.play();
