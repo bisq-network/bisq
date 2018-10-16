@@ -489,6 +489,7 @@ public abstract class Overlay<T extends Overlay> {
                     event.consume();
                     doClose();
                 });
+                stage.sizeToScene();
                 stage.show();
 
                 layout();
