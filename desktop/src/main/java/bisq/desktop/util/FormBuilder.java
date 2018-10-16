@@ -55,6 +55,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
@@ -683,6 +684,24 @@ public class FormBuilder {
             label = addLabel(gridPane, rowIndex, title, top);
 
         ComboBox<T> comboBox = new ComboBox<>();
+        // We want always the promptText
+        comboBox.setPromptText(Res.get("shared.select"));
+
+        // Default ComboBox does not show promptText after clear selection.
+        // https://stackoverflow.com/questions/50569330/how-to-reset-combobox-and-display-prompttext?noredirect=1&lq=1
+        comboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(Res.get("shared.select"));
+                } else {
+                    setText(comboBox.getConverter().toString(item));
+                }
+            }
+        });
+
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));

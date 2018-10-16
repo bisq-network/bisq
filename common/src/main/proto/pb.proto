@@ -932,6 +932,7 @@ message PersistableEnvelope {
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
+        RemovedAssetList removed_asset_list = 25;
     }
 }
 
@@ -1472,11 +1473,11 @@ message Proposal {
     string tx_id = 5;
     oneof message {
         CompensationProposal compensation_proposal = 6;
-        GenericProposal generic_proposal = 7;
-        ChangeParamProposal change_param_proposal = 8;
-        RemoveAltcoinProposal remove_altcoin_proposal = 9;
-        ConfiscateBondProposal confiscate_bond_proposal = 10;
-        BondedRoleProposal bonded_role_proposal = 11;
+        ChangeParamProposal change_param_proposal = 7;
+        BondedRoleProposal bonded_role_proposal = 8;
+        ConfiscateBondProposal confiscate_bond_proposal = 9;
+        GenericProposal generic_proposal = 10;
+        RemoveAssetProposal remove_asset_proposal = 11;
     }
 }
 
@@ -1485,24 +1486,32 @@ message CompensationProposal {
     string bsq_address = 2;
 }
 
-message GenericProposal {
-}
-
 message ChangeParamProposal {
     string param = 1; // name of enum
     int64 param_value = 2;
 }
 
-message RemoveAltcoinProposal {
-    string currency_code = 1;
+message BondedRoleProposal {
+    BondedRole bonded_role = 1;
 }
 
 message ConfiscateBondProposal {
     bytes hash = 1;
 }
 
-message BondedRoleProposal {
-    BondedRole bonded_role = 1;
+message GenericProposal {
+}
+
+message RemoveAssetProposal {
+    string ticker_symbol = 1;
+}
+
+message RemovedAsset {
+    string ticker_symbol = 1;
+    string remove_reason = 2;
+}
+message RemovedAssetList {
+    repeated RemovedAsset removed_asset = 1;
 }
 
 message BondedRole {

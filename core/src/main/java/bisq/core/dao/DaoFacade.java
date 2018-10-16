@@ -37,9 +37,12 @@ import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
+import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
+import bisq.core.dao.governance.proposal.generic.GenericProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
@@ -78,6 +81,10 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+
+
+import bisq.asset.Asset;
+
 /**
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
  * by providing a reduced API and/or aggregating subroutines.
@@ -95,6 +102,8 @@ public class DaoFacade implements DaoSetupService {
     private final ChangeParamProposalService changeParamProposalService;
     private final ConfiscateBondProposalService confiscateBondProposalService;
     private final BondedRoleProposalService bondedRoleProposalService;
+    private final GenericProposalService genericProposalService;
+    private final RemoveAssetProposalService removeAssetProposalService;
     private final BondedRolesService bondedRolesService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
@@ -115,6 +124,8 @@ public class DaoFacade implements DaoSetupService {
                      ChangeParamProposalService changeParamProposalService,
                      ConfiscateBondProposalService confiscateBondProposalService,
                      BondedRoleProposalService bondedRoleProposalService,
+                     GenericProposalService genericProposalService,
+                     RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
                      LockupService lockupService,
                      UnlockService unlockService,
@@ -131,6 +142,8 @@ public class DaoFacade implements DaoSetupService {
         this.changeParamProposalService = changeParamProposalService;
         this.confiscateBondProposalService = confiscateBondProposalService;
         this.bondedRoleProposalService = bondedRoleProposalService;
+        this.genericProposalService = genericProposalService;
+        this.removeAssetProposalService = removeAssetProposalService;
         this.bondedRolesService = bondedRolesService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
@@ -230,6 +243,19 @@ public class DaoFacade implements DaoSetupService {
     public ProposalWithTransaction getBondedRoleProposalWithTransaction(BondedRole bondedRole)
             throws ValidationException, InsufficientMoneyException, TxException {
         return bondedRoleProposalService.createProposalWithTransaction(bondedRole);
+    }
+
+    public ProposalWithTransaction getGenericProposalWithTransaction(String name,
+                                                                     String link)
+            throws ValidationException, InsufficientMoneyException, TxException {
+        return genericProposalService.createProposalWithTransaction(name, link);
+    }
+
+    public ProposalWithTransaction getRemoveAssetProposalWithTransaction(String name,
+                                                                         String link,
+                                                                         Asset asset)
+            throws ValidationException, InsufficientMoneyException, TxException {
+        return removeAssetProposalService.createProposalWithTransaction(name, link, asset);
     }
 
     public List<BondedRole> getBondedRoleList() {
@@ -486,5 +512,17 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isUnlocking(BondedRole bondedRole) {
         return bsqStateService.isUnlocking(bondedRole);
+    }
+
+    public Coin getMinCompensationRequestAmount() {
+        return CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+    }
+
+    public Coin getMaxCompensationRequestAmount() {
+        return CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+    }
+
+    public long getPramValue(Param param) {
+        return bsqStateService.getParamValue(param, periodService.getChainHeight());
     }
 }

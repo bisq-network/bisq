@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.role;
+package bisq.core.dao.governance.proposal.removeAsset;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -39,13 +38,15 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BondedRoleProposal extends Proposal {
-    private final BondedRole bondedRole;
+public final class RemoveAssetProposal extends Proposal {
+    private final String tickerSymbol;
 
-    BondedRoleProposal(BondedRole bondedRole) {
-        this(bondedRole.getName(),
-                bondedRole.getLink(),
-                bondedRole,
+    RemoveAssetProposal(String name,
+                        String link,
+                        String tickerSymbol) {
+        this(name,
+                link,
+                tickerSymbol,
                 Version.PROPOSAL,
                 new Date().getTime(),
                 "");
@@ -56,33 +57,33 @@ public final class BondedRoleProposal extends Proposal {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BondedRoleProposal(String name,
-                               String link,
-                               BondedRole bondedRole,
-                               byte version,
-                               long creationDate,
-                               String txId) {
+    private RemoveAssetProposal(String name,
+                                String link,
+                                String tickerSymbol,
+                                byte version,
+                                long creationDate,
+                                String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId);
 
-        this.bondedRole = bondedRole;
+        this.tickerSymbol = tickerSymbol;
     }
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
-        final PB.BondedRoleProposal.Builder builder = PB.BondedRoleProposal.newBuilder()
-                .setBondedRole(bondedRole.toProtoMessage());
-        return super.getProposalBuilder().setBondedRoleProposal(builder);
+        final PB.RemoveAssetProposal.Builder builder = PB.RemoveAssetProposal.newBuilder()
+                .setTickerSymbol(tickerSymbol);
+        return super.getProposalBuilder().setRemoveAssetProposal(builder);
     }
 
-    public static BondedRoleProposal fromProto(PB.Proposal proto) {
-        final PB.BondedRoleProposal proposalProto = proto.getBondedRoleProposal();
-        return new BondedRoleProposal(proto.getName(),
+    public static RemoveAssetProposal fromProto(PB.Proposal proto) {
+        final PB.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
+        return new RemoveAssetProposal(proto.getName(),
                 proto.getLink(),
-                BondedRole.fromProto(proposalProto.getBondedRole()),
+                proposalProto.getTickerSymbol(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
@@ -95,17 +96,17 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public ProposalType getType() {
-        return ProposalType.BONDED_ROLE;
+        return ProposalType.REMOVE_ASSET;
     }
 
     @Override
     public Param getQuorumParam() {
-        return Param.QUORUM_ROLE;
+        return Param.QUORUM_REMOVE_ASSET;
     }
 
     @Override
     public Param getThresholdParam() {
-        return Param.THRESHOLD_ROLE;
+        return Param.THRESHOLD_REMOVE_ASSET;
     }
 
     @Override
@@ -115,9 +116,9 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
-        return new BondedRoleProposal(getName(),
+        return new RemoveAssetProposal(getName(),
                 getLink(),
-                getBondedRole(),
+                getTickerSymbol(),
                 getVersion(),
                 getCreationDate().getTime(),
                 txId);
@@ -125,8 +126,8 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public String toString() {
-        return "BondedRoleProposal{" +
-                "\n     bondedRole=" + bondedRole +
+        return "GenericProposal{" +
+                "\n     tickerSymbol=" + tickerSymbol +
                 "\n} " + super.toString();
     }
 }
