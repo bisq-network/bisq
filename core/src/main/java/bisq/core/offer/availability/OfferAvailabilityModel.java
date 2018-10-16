@@ -27,6 +27,9 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.Model;
 
 import lombok.Getter;
+import lombok.Setter;
+
+import javax.annotation.Nullable;
 
 public class OfferAvailabilityModel implements Model {
     @Getter
@@ -38,6 +41,10 @@ public class OfferAvailabilityModel implements Model {
 
     private NodeAddress peerNodeAddress;  // maker
     private OfferAvailabilityResponse message;
+    @Nullable
+    @Setter
+    @Getter
+    private NodeAddress selectedArbitrator;
 
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,

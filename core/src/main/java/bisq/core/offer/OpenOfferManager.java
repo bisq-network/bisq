@@ -17,10 +17,12 @@
 
 package bisq.core.offer;
 
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
@@ -29,6 +31,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
@@ -100,6 +103,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final ClosedTradableManager closedTradableManager;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
+    private final TradeStatisticsManager tradeStatisticsManager;
+    private final ArbitratorManager arbitratorManager;
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private boolean stopped;
@@ -124,6 +129,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             PersistenceProtoResolver persistenceProtoResolver,
+                            TradeStatisticsManager tradeStatisticsManager,
+                            ArbitratorManager arbitratorManager,
                             @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
@@ -135,6 +142,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.closedTradableManager = closedTradableManager;
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
+        this.tradeStatisticsManager = tradeStatisticsManager;
+        this.arbitratorManager = arbitratorManager;
 
         openOfferTradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -324,6 +333,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
+                arbitratorManager,
+                tradeStatisticsManager,
                 user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
@@ -548,11 +559,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         try {
             Optional<OpenOffer> openOfferOptional = getOpenOfferById(request.offerId);
             AvailabilityResult availabilityResult;
+            NodeAddress arbitratorNodeAddress = null;
             if (openOfferOptional.isPresent()) {
-                if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-                    final Offer offer = openOfferOptional.get().getOffer();
-                    if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostNameWithoutPostFix()))) {
+                OpenOffer openOffer = openOfferOptional.get();
+                if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
+                    final Offer offer = openOffer.getOffer();
+                    if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostName()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
+
+                        arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
@@ -586,7 +602,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
-            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId, availabilityResult);
+            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId, availabilityResult, arbitratorNodeAddress);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getOfferId(),
                     offerAvailabilityResponse.getUid(), peer);
