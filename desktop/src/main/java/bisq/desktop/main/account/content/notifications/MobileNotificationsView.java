@@ -91,7 +91,6 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private QrCodeReader qrCodeReader;
 
     private TextField tokenInputTextField;
-    private Label tokenInputLabel;
     private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField, marketAlertTriggerInputTextField;
     private CheckBox useSoundCheckBox, tradeCheckBox, marketCheckBox, priceCheckBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -402,16 +401,12 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         webCamButton = tuple.second;
         noWebCamButton = tuple.third;
 
-        Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(root, ++gridRow,
+        tokenInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
                 Res.get("account.notifications.email.label"));
-        tokenInputLabel = tuple2.first;
-        tokenInputTextField = tuple2.second;
         tokenInputTextField.setPromptText(Res.get("account.notifications.email.prompt"));
         tokenInputTextFieldListener = (observable, oldValue, newValue) -> {
             applyKeyAndToken(newValue);
         };
-        tokenInputLabel.setManaged(false);
-        tokenInputLabel.setVisible(false);
         tokenInputTextField.setManaged(false);
         tokenInputTextField.setVisible(false);
 
@@ -545,8 +540,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             }
         });
 
-        priceAlertHighInputTextField = FormBuilder.addLabelInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.high.label")).second;
+        priceAlertHighInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
+                Res.getWithCol("account.notifications.priceAlert.high.label"));
         priceAlertHighListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
@@ -571,8 +566,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 }
             }
         };
-        priceAlertLowInputTextField = FormBuilder.addLabelInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.low.label")).second;
+        priceAlertLowInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
+                Res.getWithCol("account.notifications.priceAlert.low.label"));
         priceAlertLowListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
@@ -644,8 +639,6 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void setPairingTokenFieldsVisible() {
-        tokenInputLabel.setManaged(true);
-        tokenInputLabel.setVisible(true);
         tokenInputTextField.setManaged(true);
         tokenInputTextField.setVisible(true);
     }

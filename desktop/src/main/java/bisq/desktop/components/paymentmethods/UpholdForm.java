@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
 
@@ -45,7 +46,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
@@ -73,7 +73,7 @@ public class UpholdForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             upholdAccount.setAccountId(newValue);

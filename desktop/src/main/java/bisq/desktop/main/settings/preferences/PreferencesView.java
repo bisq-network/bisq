@@ -212,7 +212,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockChainExplorerComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer"));
 
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
+        Tuple3<Label, InputTextField, CheckBox> tuple = addTopLabelInputTextFieldCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
         useCustomFeeCheckbox = tuple.third;
@@ -263,8 +263,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
 
         // deviation
-        deviationInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("setting.preferences.deviation")).second;
+        deviationInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.deviation"));
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {
@@ -291,15 +291,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Res.get("setting.preferences.autoSelectArbitrators"));
 
         // ignoreTraders
-        ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("setting.preferences.ignorePeers")).second;
+        ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.ignorePeers"));
         ignoreTradersListListener = (observable, oldValue, newValue) ->
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue)
                         .replace(":9999", "").replace(".onion", "")
                         .split(",")));
 
         // referralId
-        referralIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId")).second;
+        referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
         referralIdListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue))
                 referralIdService.setReferralId(newValue);

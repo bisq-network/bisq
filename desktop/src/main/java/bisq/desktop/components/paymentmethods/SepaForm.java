@@ -105,22 +105,22 @@ public class SepaForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        ibanInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
+        ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, "IBAN:");
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setIban(newValue);
             updateFromInputs();
 
         });
-        InputTextField bicInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
+        InputTextField bicInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, "BIC:");
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setBic(newValue);

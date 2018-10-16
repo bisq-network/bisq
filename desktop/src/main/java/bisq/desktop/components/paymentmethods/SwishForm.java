@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.SwishValidator;
 
@@ -39,7 +40,6 @@ import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 public class SwishForm extends PaymentMethodForm {
@@ -69,16 +69,16 @@ public class SwishForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.get("payment.mobile")).second;
+        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.mobile"));
         mobileNrInputTextField.setValidator(swishValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setMobileNr(newValue);

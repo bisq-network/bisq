@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PopmoneyValidator;
 
@@ -36,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
@@ -62,15 +62,15 @@ public class PopmoneyForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue);
             updateFromInputs();
         });
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setAccountId(newValue);

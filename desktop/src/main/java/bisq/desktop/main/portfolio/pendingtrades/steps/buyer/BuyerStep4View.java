@@ -48,7 +48,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -71,7 +70,6 @@ public class BuyerStep4View extends TradeStepView {
     private InputTextField withdrawAddressTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
     private TitledGroupBg withdrawTitledGroupBg;
-    private Label withdrawAddressLabel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -136,11 +134,7 @@ public class BuyerStep4View extends TradeStepView {
         FormBuilder.addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
         withdrawTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
         FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        final Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
-        withdrawAddressLabel = tuple2.first;
-        withdrawAddressLabel.setManaged(false);
-        withdrawAddressLabel.setVisible(false);
-        withdrawAddressTextField = tuple2.second;
+        withdrawAddressTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
 
@@ -176,8 +170,6 @@ public class BuyerStep4View extends TradeStepView {
     }
 
     private void onWithdrawal() {
-        withdrawAddressLabel.setManaged(true);
-        withdrawAddressLabel.setVisible(true);
         withdrawAddressTextField.setManaged(true);
         withdrawAddressTextField.setVisible(true);
         GridPane.setRowSpan(withdrawTitledGroupBg, 2);

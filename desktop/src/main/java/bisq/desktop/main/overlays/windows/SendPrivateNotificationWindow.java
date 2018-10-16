@@ -45,7 +45,7 @@ import javafx.geometry.Insets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 
 public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificationWindow> {
@@ -115,8 +115,8 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10).second;
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 

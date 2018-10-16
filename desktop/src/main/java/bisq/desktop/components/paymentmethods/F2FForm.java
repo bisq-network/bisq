@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.F2FValidator;
@@ -47,7 +48,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
@@ -93,8 +93,8 @@ public class F2FForm extends PaymentMethodForm {
         currencyComboBox = tuple.first;
         gridRow = tuple.second;
 
-        InputTextField contactInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.f2f.contact")).second;
+        InputTextField contactInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.f2f.contact"));
         contactInputTextField.setPromptText(Res.get("payment.f2f.contact.prompt"));
         contactInputTextField.setValidator(f2fValidator);
         contactInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -102,8 +102,8 @@ public class F2FForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        cityInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.f2f.city")).second;
+        cityInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.f2f.city"));
         cityInputTextField.setPromptText(Res.get("payment.f2f.city.prompt"));
         cityInputTextField.setValidator(f2fValidator);
         cityInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {

@@ -391,16 +391,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addPayoutAmountTextFields() {
-        buyerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.buyer")).second;
+        buyerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.buyer"));
         buyerPayoutAmountInputTextField.setEditable(false);
 
-        sellerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.seller")).second;
+        sellerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.seller"));
         sellerPayoutAmountInputTextField.setEditable(false);
 
         isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.invert")).second;
+                Res.get("disputeSummaryWindow.payoutAmount.invert"));
     }
 
     private void addReasonControls() {

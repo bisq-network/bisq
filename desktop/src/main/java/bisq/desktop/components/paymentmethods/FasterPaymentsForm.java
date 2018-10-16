@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
@@ -40,7 +41,6 @@ import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 
 public class FasterPaymentsForm extends PaymentMethodForm {
@@ -71,7 +71,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
         // do not translate as it is used in english only
-        sortCodeInputTextField = addLabelInputTextField(gridPane, ++gridRow, "UK sort code:").second;
+        sortCodeInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, "UK sort code:");
         sortCodeInputTextField.setValidator(inputValidator);
         sortCodeInputTextField.setValidator(new BranchIdValidator("GB"));
         sortCodeInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -79,7 +79,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr")).second;
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr"));
         accountNrInputTextField.setValidator(new AccountNrValidator("GB"));
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             fasterPaymentsAccount.setAccountNr(newValue);

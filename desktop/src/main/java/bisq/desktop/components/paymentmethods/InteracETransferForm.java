@@ -70,29 +70,29 @@ public class InteracETransferForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile")).second;
+        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"));
         mobileNrInputTextField.setValidator(interacETransferValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setEmail(newValue);
             updateFromInputs();
         });
 
-        InputTextField questionInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.secret")).second;
+        InputTextField questionInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.secret"));
         questionInputTextField.setValidator(inputValidator);
         questionInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setQuestion(newValue);
             updateFromInputs();
         });
 
-        InputTextField answerInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.answer")).second;
+        InputTextField answerInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.answer"));
         answerInputTextField.setValidator(inputValidator);
         answerInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setAnswer(newValue);

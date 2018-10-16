@@ -50,6 +50,8 @@ import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.asset.Asset;
+
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
@@ -85,10 +87,6 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import bisq.asset.Asset;
 
 @SuppressWarnings("ConstantConditions")
 @Slf4j
@@ -194,13 +192,12 @@ public class ProposalDisplay {
         if (!isMakeProposalScreen)
             uidTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.id")).second;
 
-        nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name")).second;
+        nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
         nameTextField.setValidator(new InputValidator());
         inputControls.add(nameTextField);
 
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow,
+        linkInputTextField = addInputTextField(gridPane, ++gridRow,
                 Res.get("dao.proposal.display.link"));
-        linkInputTextField = tuple.second;
         linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
         linkInputTextField.setValidator(new InputValidator());
         inputControls.add(linkInputTextField);
@@ -212,8 +209,8 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
-                requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.requestedBsq")).second;
+                requestedBsqTextField = addInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.requestedBsq"));
                 BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
                 bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
                 bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
@@ -222,8 +219,8 @@ public class ProposalDisplay {
                 inputControls.add(requestedBsqTextField);
 
                 // TODO validator, addressTF
-                bsqAddressTextField = addLabelInputTextField(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.bsqAddress")).second;
+                bsqAddressTextField = addInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.bsqAddress"));
                 checkNotNull(bsqAddressTextField, "bsqAddressTextField must not be null");
                 bsqAddressTextField.setText("B" + bsqWalletService.getUnusedAddress().toBase58());
                 bsqAddressTextField.setValidator(new BsqAddressValidator(bsqFormatter));
@@ -250,8 +247,8 @@ public class ProposalDisplay {
                     }
                 });
                 comboBoxes.add(paramComboBox);
-                paramValueTextField = addLabelInputTextField(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.paramValue")).second;
+                paramValueTextField = addInputTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.paramValue"));
                 //noinspection ConstantConditions
 
                 //TODO use custom param validator

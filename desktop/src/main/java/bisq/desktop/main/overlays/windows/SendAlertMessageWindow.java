@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
@@ -39,8 +40,8 @@ import javafx.scene.layout.HBox;
 
 import javafx.geometry.Insets;
 
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
@@ -110,8 +111,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10).second;
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
@@ -125,8 +126,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 Res.get("sendAlertMessageWindow.isUpdate"));
         isUpdateCheckBox.setSelected(true);
 
-        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("sendAlertMessageWindow.version")).second;
+        InputTextField versionInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.version"));
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
         Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));

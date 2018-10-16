@@ -373,20 +373,21 @@ public class FormBuilder {
     // Label  + InputTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, InputTextField> addLabelInputTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelInputTextField(gridPane, rowIndex, title, 0);
+    public static InputTextField addInputTextField(GridPane gridPane, int rowIndex, String title) {
+        return addInputTextField(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, InputTextField> addLabelInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
+    public static InputTextField addInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
 
         InputTextField inputTextField = new InputTextField();
+        inputTextField.setLabelFloat(true);
+        inputTextField.setPromptText(title);
         GridPane.setRowIndex(inputTextField, rowIndex);
-        GridPane.setColumnIndex(inputTextField, 1);
-        GridPane.setMargin(inputTextField, new Insets(top, 0, 0, 0));
+        GridPane.setColumnIndex(inputTextField, 0);
+        GridPane.setMargin(inputTextField, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(inputTextField);
 
-        return new Tuple2<>(label, inputTextField);
+        return inputTextField;
     }
 
 

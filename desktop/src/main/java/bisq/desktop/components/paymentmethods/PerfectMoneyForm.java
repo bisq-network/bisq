@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 
@@ -42,7 +43,6 @@ import javafx.collections.FXCollections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
@@ -69,7 +69,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.no")).second;
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
         accountNrInputTextField.setValidator(perfectMoneyValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             perfectMoneyAccount.setAccountNr(newValue);

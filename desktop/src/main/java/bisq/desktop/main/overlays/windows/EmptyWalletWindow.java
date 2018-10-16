@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -60,7 +61,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
@@ -152,7 +152,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
         if (isBtc) {
-            addressInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address")).second;
+            addressInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         } else {
             addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
                     bsqFormatter.formatBtcSatoshi(bsqWalletService.getAvailableNonBsqBalance().value), 10);

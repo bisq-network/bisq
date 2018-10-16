@@ -100,7 +100,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow,
+        Tuple3<Label, InputTextField, CheckBox> tuple = addTopLabelInputTextFieldCheckBox(gridPane, ++gridRow,
                 Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
@@ -172,7 +172,7 @@ public abstract class PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
-            InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
+            InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
             inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
             inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
                 if (!newValue.isEmpty()) {

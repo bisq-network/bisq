@@ -19,7 +19,6 @@ package bisq.desktop.main.account.content.backup;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -38,7 +37,6 @@ import javax.inject.Inject;
 import javafx.stage.DirectoryChooser;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -82,8 +80,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         FormBuilder.addTitledGroupBg(root, gridRow, 1, Res.get("account.backup.title"));
-        Tuple2<Label, InputTextField> tuple = FormBuilder.addLabelInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
-        backUpLocationTextField = tuple.second;
+        backUpLocationTextField = FormBuilder.addInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
         String backupDirectory = preferences.getBackupDirectory();
         if (backupDirectory != null)
             backUpLocationTextField.setText(backupDirectory);

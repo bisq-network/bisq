@@ -49,7 +49,6 @@ import javafx.util.StringConverter;
 
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
@@ -61,7 +60,6 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     private InputTextField addressInputTextField;
 
     private ComboBox<TradeCurrency> currencyComboBox;
-    private Label addressLabel;
 
     public static int addFormForBuyer(GridPane gridPane,
                                       int gridRow,
@@ -92,10 +90,8 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
-        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow,
+        addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
-        addressLabel = tuple2.first;
-        addressInputTextField = tuple2.second;
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -109,8 +105,8 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     public void updateFromInputs() {
-        if (addressLabel != null && cryptoCurrencyAccount.getSingleTradeCurrency() != null)
-            addressLabel.setText(Res.get("payment.altcoin.address.dyn",
+        if (addressInputTextField != null && cryptoCurrencyAccount.getSingleTradeCurrency() != null)
+            addressInputTextField.setPromptText(Res.get("payment.altcoin.address.dyn",
                     cryptoCurrencyAccount.getSingleTradeCurrency().getName()));
         super.updateFromInputs();
     }
@@ -136,7 +132,6 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                 Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"), cryptoCurrencyAccount.getAddress());
-        addressLabel = tuple2.first;
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();

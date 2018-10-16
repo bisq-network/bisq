@@ -54,7 +54,7 @@ import javafx.util.StringConverter;
 import java.util.Arrays;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -108,12 +108,12 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
 
         addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.bonding.lock.lockBSQ"), Layout.GROUP_DISTANCE);
 
-        amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        amountInputTextField = addInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         amountInputTextField.setPromptText(Res.get("dao.bonding.lock.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
 
-        timeInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time")).second;
+        timeInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"));
         timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
         timeInputTextField.setValidator(timeInputTextFieldValidator);

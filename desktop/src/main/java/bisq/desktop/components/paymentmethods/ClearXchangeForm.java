@@ -60,16 +60,16 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             clearXchangeAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.get("payment.email.mobile")).second;
+        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.email.mobile"));
         mobileNrInputTextField.setValidator(clearXchangeValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             clearXchangeAccount.setEmailOrMobileNr(newValue);

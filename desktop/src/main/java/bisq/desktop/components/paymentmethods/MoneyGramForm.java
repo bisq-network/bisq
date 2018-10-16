@@ -37,8 +37,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.util.Tuple2;
-
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.CheckBox;
@@ -77,7 +75,6 @@ public class MoneyGramForm extends PaymentMethodForm {
 
     protected final MoneyGramAccountPayload moneyGramAccountPayload;
     protected InputTextField holderNameInputTextField, emailInputTextField, stateInputTextField;
-    private Label stateLabel;
     private final EmailValidator emailValidator;
 
     public MoneyGramForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
@@ -113,17 +110,15 @@ public class MoneyGramForm extends PaymentMethodForm {
 
         gridRow = GUIUtil.addRegionCountry(gridPane, gridRow, this::onCountrySelected);
 
-        holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane,
-                ++gridRow, Res.getWithCol("payment.account.fullName")).second;
+        holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
+                ++gridRow, Res.getWithCol("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
         holderNameInputTextField.setValidator(inputValidator);
 
-        final Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
-        stateLabel = tuple2.first;
-        stateInputTextField = tuple2.second;
+        stateInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
         stateInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setState(newValue);
             updateFromInputs();
@@ -131,7 +126,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         });
         applyIsStateRequired();
 
-        emailInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.email")).second;
+        emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setEmail(newValue);
             updateFromInputs();
@@ -192,8 +187,6 @@ public class MoneyGramForm extends PaymentMethodForm {
 
     private void applyIsStateRequired() {
         final boolean stateRequired = BankUtil.isStateRequired(moneyGramAccountPayload.getCountryCode());
-        stateLabel.setManaged(stateRequired);
-        stateLabel.setVisible(stateRequired);
         stateInputTextField.setManaged(stateRequired);
         stateInputTextField.setVisible(stateRequired);
     }

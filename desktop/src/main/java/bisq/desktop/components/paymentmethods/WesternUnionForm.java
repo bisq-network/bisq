@@ -43,7 +43,6 @@ import bisq.common.util.Tuple2;
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +69,6 @@ public class WesternUnionForm extends PaymentMethodForm {
 
     private final WesternUnionAccountPayload westernUnionAccountPayload;
     private InputTextField holderNameInputTextField, emailInputTextField, cityInputTextField, stateInputTextField;
-    private Label stateLabel;
     private final EmailValidator emailValidator;
     private Country selectedCountry;
 
@@ -150,24 +148,22 @@ public class WesternUnionForm extends PaymentMethodForm {
         currencyComboBox = tuple.first;
         gridRow = tuple.second;
 
-        holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane,
-                ++gridRow, Res.getWithCol("payment.account.fullName")).second;
+        holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
+                ++gridRow, Res.getWithCol("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
         holderNameInputTextField.setValidator(inputValidator);
 
-        cityInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.city")).second;
+        cityInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.city"));
         cityInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setCity(newValue);
             updateFromInputs();
 
         });
 
-        final Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
-        stateLabel = tuple2.first;
-        stateInputTextField = tuple2.second;
+        stateInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
         stateInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setState(newValue);
             updateFromInputs();
@@ -175,7 +171,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         });
         applyIsStateRequired();
 
-        emailInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.email")).second;
+        emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setEmail(newValue);
             updateFromInputs();
@@ -190,8 +186,6 @@ public class WesternUnionForm extends PaymentMethodForm {
 
     private void applyIsStateRequired() {
         final boolean stateRequired = BankUtil.isStateRequired(westernUnionAccountPayload.getCountryCode());
-        stateLabel.setManaged(stateRequired);
-        stateLabel.setVisible(stateRequired);
         stateInputTextField.setManaged(stateRequired);
         stateInputTextField.setVisible(stateRequired);
     }

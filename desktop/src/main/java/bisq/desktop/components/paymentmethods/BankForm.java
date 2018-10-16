@@ -222,10 +222,6 @@ abstract class BankForm extends PaymentMethodForm {
             holderIdInputTextField, nationalAccountIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
-    private Label bankIdLabel, branchIdLabel, accountNrLabel, nationalAccountIdLabel;
-    private Tuple2<Label, InputTextField> bankIdTuple, accountNrTuple, branchIdTuple,
-            bankNameTuple, nationalAccountIdTuple;
-    private Tuple2<Label, ComboBox<String>> accountTypeTuple;
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
     private boolean useHolderID;
@@ -295,9 +291,7 @@ abstract class BankForm extends PaymentMethodForm {
 
         addHolderNameAndId();
 
-        nationalAccountIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(""));
-        nationalAccountIdLabel = nationalAccountIdTuple.first;
-        nationalAccountIdInputTextField = nationalAccountIdTuple.second;
+        nationalAccountIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(""));
 
         nationalAccountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setNationalAccountId(newValue);
@@ -305,8 +299,7 @@ abstract class BankForm extends PaymentMethodForm {
 
         });
 
-        bankNameTuple = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
-        bankNameInputTextField = bankNameTuple.second;
+        bankNameInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
 
         bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setBankName(newValue);
@@ -314,27 +307,21 @@ abstract class BankForm extends PaymentMethodForm {
 
         });
 
-        bankIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
-        bankIdLabel = bankIdTuple.first;
-        bankIdInputTextField = bankIdTuple.second;
+        bankIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setBankId(newValue);
             updateFromInputs();
 
         });
 
-        branchIdTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
-        branchIdLabel = branchIdTuple.first;
-        branchIdInputTextField = branchIdTuple.second;
+        branchIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setBranchId(newValue);
             updateFromInputs();
 
         });
 
-        accountNrTuple = addLabelInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
-        accountNrLabel = accountNrTuple.first;
-        accountNrInputTextField = accountNrTuple.second;
+        accountNrInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setAccountNr(newValue);
             updateFromInputs();
@@ -366,10 +353,10 @@ abstract class BankForm extends PaymentMethodForm {
             currencyComboBox.setDisable(false);
             currencyComboBox.getSelectionModel().select(currency);
 
-            bankIdLabel.setText(BankUtil.getBankIdLabel(countryCode));
-            branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
-            nationalAccountIdLabel.setText(BankUtil.getNationalAccountIdLabel(countryCode));
-            accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
+            bankIdInputTextField.setPromptText(BankUtil.getBankIdLabel(countryCode));
+            branchIdInputTextField.setPromptText(BankUtil.getBranchIdLabel(countryCode));
+            nationalAccountIdInputTextField.setPromptText(BankUtil.getNationalAccountIdLabel(countryCode));
+            accountNrInputTextField.setPromptText(BankUtil.getAccountNrLabel(countryCode));
             accountTypeComboBox.setPromptText(BankUtil.getAccountTypeLabel(countryCode));
 
             bankNameInputTextField.setText("");
@@ -431,40 +418,26 @@ abstract class BankForm extends PaymentMethodForm {
             }
 
             boolean nationalAccountIdRequired = BankUtil.isNationalAccountIdRequired(countryCode);
-            nationalAccountIdTuple.first.setVisible(nationalAccountIdRequired);
-            nationalAccountIdTuple.first.setManaged(nationalAccountIdRequired);
             nationalAccountIdInputTextField.setVisible(nationalAccountIdRequired);
             nationalAccountIdInputTextField.setManaged(nationalAccountIdRequired);
 
             boolean bankNameRequired = BankUtil.isBankNameRequired(countryCode);
-            bankNameTuple.first.setVisible(bankNameRequired);
-            bankNameTuple.first.setManaged(bankNameRequired);
             bankNameInputTextField.setVisible(bankNameRequired);
             bankNameInputTextField.setManaged(bankNameRequired);
 
             boolean bankIdRequired = BankUtil.isBankIdRequired(countryCode);
-            bankIdTuple.first.setVisible(bankIdRequired);
-            bankIdTuple.first.setManaged(bankIdRequired);
             bankIdInputTextField.setVisible(bankIdRequired);
             bankIdInputTextField.setManaged(bankIdRequired);
 
             boolean branchIdRequired = BankUtil.isBranchIdRequired(countryCode);
-            branchIdTuple.first.setVisible(branchIdRequired);
-            branchIdTuple.first.setManaged(branchIdRequired);
             branchIdInputTextField.setVisible(branchIdRequired);
             branchIdInputTextField.setManaged(branchIdRequired);
 
             boolean accountNrRequired = BankUtil.isAccountNrRequired(countryCode);
-            accountNrTuple.first.setVisible(accountNrRequired);
-            accountNrTuple.first.setManaged(accountNrRequired);
             accountNrInputTextField.setVisible(accountNrRequired);
             accountNrInputTextField.setManaged(accountNrRequired);
 
             boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
-            accountTypeTuple.first.setVisible(accountTypeRequired);
-            accountTypeTuple.first.setManaged(accountTypeRequired);
-            accountTypeTuple.second.setVisible(accountTypeRequired);
-            accountTypeTuple.second.setManaged(accountTypeRequired);
 
             updateFromInputs();
 

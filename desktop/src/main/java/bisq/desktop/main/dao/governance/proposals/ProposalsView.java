@@ -665,12 +665,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteFields.add(meritLabel);
         voteFields.add(meritTextField);
 
-        Tuple2<Label, InputTextField> stakeTuple = addLabelInputTextField(root, ++gridRow,
+        stakeInputTextField = addInputTextField(root, ++gridRow,
                 Res.getWithCol("dao.proposal.myVote.stake"));
-        Label stakeLabel = stakeTuple.first;
-        stakeInputTextField = stakeTuple.second;
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
-        voteFields.add(stakeLabel);
         voteFields.add(stakeInputTextField);
 
         Tuple2<Label, TxIdTextField> blindVoteTxIdTuple = addLabelTxIdTextField(root, ++gridRow,

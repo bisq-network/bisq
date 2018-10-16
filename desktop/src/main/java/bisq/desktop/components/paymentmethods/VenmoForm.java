@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.VenmoValidator;
 
@@ -36,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
@@ -64,15 +64,15 @@ public class VenmoForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue);
             updateFromInputs();
         });
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setVenmoUserName(newValue);
