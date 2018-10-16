@@ -469,9 +469,9 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private void createMarketAlertFields() {
         FormBuilder.addTitledGroupBg(root, ++gridRow, 3, Res.get("account.notifications.marketAlert.title"),
                 Layout.GROUP_DISTANCE);
-        paymentAccountsComboBox = FormBuilder.<PaymentAccount>addLabelComboBox(root, gridRow,
+        paymentAccountsComboBox = FormBuilder.<PaymentAccount>addComboBox(root, gridRow,
                 Res.getWithCol("account.notifications.marketAlert.selectPaymentAccount"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentAccountsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
@@ -531,8 +531,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private void createPriceAlertFields() {
         FormBuilder.addTitledGroupBg(root, ++gridRow, 3,
                 Res.get("account.notifications.priceAlert.title"), 20);
-        currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(root, gridRow,
-                Res.getWithCol("list.currency.select"), 40).second;
+        currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(root, gridRow,
+                Res.getWithCol("list.currency.select"), 40);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override

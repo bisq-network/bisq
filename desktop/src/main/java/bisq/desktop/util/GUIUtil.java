@@ -673,8 +673,8 @@ public class GUIUtil {
                                                                                                    Consumer<TradeCurrency> onTradeCurrencySelectedHandler) {
         gridRow = addRegionCountry(gridPane, gridRow, onCountrySelectedHandler);
 
-        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(gridPane, ++gridRow,
-                Res.getWithCol("shared.currency")).second;
+        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow,
+                Res.getWithCol("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 

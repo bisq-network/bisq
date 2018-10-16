@@ -22,8 +22,6 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
-import bisq.common.util.Tuple2;
-
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -95,9 +93,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        Tuple2<Label, ComboBox<Transaction>> tuple = FormBuilder.addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
-
-        transactionsComboBox = tuple.second;
+        transactionsComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));;
         transactionsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transaction transaction) {

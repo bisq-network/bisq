@@ -215,7 +215,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
     }
 
     private void addGroup(String title, ObservableList<Class<? extends Task>> list) {
-        ComboBox<Class<? extends Task>> comboBox = FormBuilder.<Class<? extends Task>>addLabelComboBox(root, ++rowIndex, title).second;
+        ComboBox<Class<? extends Task>> comboBox = FormBuilder.<Class<? extends Task>>addComboBox(root, ++rowIndex, title);
         comboBox.setVisibleRowCount(list.size());
         comboBox.setItems(list);
         comboBox.setPromptText("Select task to intercept");

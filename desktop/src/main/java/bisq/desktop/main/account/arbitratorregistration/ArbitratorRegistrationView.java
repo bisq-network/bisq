@@ -192,7 +192,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        languageComboBox = FormBuilder.<String>addLabelComboBox(gridPane, ++gridRow).second;
+        languageComboBox = FormBuilder.<String>addComboBox(gridPane, ++gridRow);
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {

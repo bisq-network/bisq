@@ -239,8 +239,6 @@ public class CashDepositForm extends PaymentMethodForm {
     private Label bankIdLabel, branchIdLabel, accountNrLabel, nationalAccountIdLabel;
     private Tuple2<Label, InputTextField> bankIdTuple, accountNrTuple, branchIdTuple,
             bankNameTuple, nationalAccountIdTuple;
-    private Tuple2<Label, ComboBox<String>> accountTypeTuple;
-    private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
     private boolean useHolderID;
@@ -372,10 +370,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
         });
 
-        accountTypeTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, "");
-        accountTypeLabel = accountTypeTuple.first;
-
-        accountTypeComboBox = accountTypeTuple.second;
+        accountTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow, "");
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {
             if (BankUtil.isAccountTypeRequired(cashDepositAccountPayload.getCountryCode())) {
@@ -430,7 +425,7 @@ public class CashDepositForm extends PaymentMethodForm {
             branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
             nationalAccountIdLabel.setText(BankUtil.getNationalAccountIdLabel(countryCode));
             accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
-            accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
+            accountTypeComboBox.setPromptText(BankUtil.getAccountTypeLabel(countryCode));
 
             bankNameInputTextField.setText("");
             bankIdInputTextField.setText("");
@@ -522,10 +517,6 @@ public class CashDepositForm extends PaymentMethodForm {
             accountNrInputTextField.setManaged(accountNrRequired);
 
             boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
-            accountTypeTuple.first.setVisible(accountTypeRequired);
-            accountTypeTuple.first.setManaged(accountTypeRequired);
-            accountTypeTuple.second.setVisible(accountTypeRequired);
-            accountTypeTuple.second.setManaged(accountTypeRequired);
 
             updateFromInputs();
 

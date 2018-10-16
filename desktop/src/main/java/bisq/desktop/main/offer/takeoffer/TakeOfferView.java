@@ -129,7 +129,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private HBox fundingHBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Label directionLabel, amountDescriptionLabel,
-            paymentAccountsLabel, paymentMethodLabel,
+            paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, offerAvailabilityLabel, amountCurrency, priceAsPercentageDescription;
@@ -304,8 +304,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
-        paymentAccountsLabel.setVisible(showComboBox);
-        paymentAccountsLabel.setManaged(showComboBox);
         paymentAccountsComboBox.setVisible(showComboBox);
         paymentAccountsComboBox.setManaged(showComboBox);
         paymentMethodTextField.setVisible(!showComboBox);
@@ -715,11 +713,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 2, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 3);
 
-        Tuple2<Label, ComboBox<PaymentAccount>> tuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
-        paymentAccountsLabel = tuple.first;
-        paymentAccountsLabel.setVisible(false);
-        paymentAccountsLabel.setManaged(false);
-        paymentAccountsComboBox = tuple.second;
+        paymentAccountsComboBox = FormBuilder.addComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
         paymentAccountsComboBox.setVisible(false);

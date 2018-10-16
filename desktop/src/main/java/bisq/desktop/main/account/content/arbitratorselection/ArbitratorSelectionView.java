@@ -191,7 +191,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             }
         });
 
-        languageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow, "", 15).second;
+        languageComboBox = FormBuilder.<String>addComboBox(root, ++gridRow, "", 15);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setButtonCell(new ListCell<String>() {
             @Override

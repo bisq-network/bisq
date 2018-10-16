@@ -118,7 +118,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
-        lockupTypeComboBox = FormBuilder.<LockupType>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
+        lockupTypeComboBox = FormBuilder.<LockupType>addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type"));
         lockupTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(LockupType lockupType) {
@@ -139,7 +139,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         //TODO handle trade type
         lockupTypeComboBox.getSelectionModel().select(0);
 
-        bondedRolesComboBox = FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
+        bondedRolesComboBox = FormBuilder.<BondedRole>addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRole bondedRole) {

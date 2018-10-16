@@ -758,22 +758,20 @@ public class FormBuilder {
     // Label  + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex) {
-        return addLabelComboBox(gridPane, rowIndex, null, 0);
+    public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex) {
+        return addComboBox(gridPane, rowIndex, null, 0);
     }
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelComboBox(gridPane, rowIndex, title, 0);
+    public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, String title) {
+        return addComboBox(gridPane, rowIndex, title, 0);
     }
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+    public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = null;
-        if (title != null)
-            label = addLabel(gridPane, rowIndex, title, top);
 
-        ComboBox<T> comboBox = new JFXComboBox<>();
-        // We want always the promptText
-        comboBox.setPromptText(Res.get("shared.select"));
+        JFXComboBox<T> comboBox = new JFXComboBox<>();
+        comboBox.setLabelFloat(true);
+        comboBox.setPromptText(title);
 
         // Default ComboBox does not show promptText after clear selection.
         // https://stackoverflow.com/questions/50569330/how-to-reset-combobox-and-display-prompttext?noredirect=1&lq=1
@@ -783,7 +781,7 @@ public class FormBuilder {
                 super.updateItem(item, empty);
 
                 if (empty || item == null) {
-                    setText(Res.get("shared.select"));
+                    setText(title);
                 } else {
                     setText(comboBox.getConverter().toString(item));
                 }
@@ -791,11 +789,12 @@ public class FormBuilder {
         });
 
         GridPane.setRowIndex(comboBox, rowIndex);
-        GridPane.setColumnIndex(comboBox, 1);
+        GridPane.setHalignment(comboBox, HPos.LEFT);
+        GridPane.setColumnIndex(comboBox, 0);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(comboBox);
 
-        return new Tuple2<>(label, comboBox);
+        return comboBox;
     }
 
 

@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -99,7 +100,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private Label enterBridgeLabel;
     private ComboBox<Transport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
-    private Label transportTypeLabel;
     private BridgeOption selectedBridgeOption = BridgeOption.NONE;
     private Transport selectedTorTransportOrdinal = Transport.OBFS_4;
     private String customBridges = "";
@@ -251,9 +251,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         // providedBridges
         providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
-        final Tuple2<Label, ComboBox<Transport>> labelComboBoxTuple2 = addLabelComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
-        transportTypeLabel = labelComboBoxTuple2.first;
-        transportTypeComboBox = labelComboBoxTuple2.second;
+        transportTypeComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
                 Transport.OBFS_4,
                 Transport.OBFS_3,
@@ -358,7 +356,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private void applyToggleSelection() {
         switch (selectedBridgeOption) {
             case PROVIDED:
-                transportTypeLabel.setDisable(false);
                 transportTypeComboBox.setDisable(false);
                 enterBridgeLabel.setDisable(true);
                 bridgeEntriesTextArea.setDisable(true);
@@ -368,14 +365,12 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             case CUSTOM:
                 enterBridgeLabel.setDisable(false);
                 bridgeEntriesTextArea.setDisable(false);
-                transportTypeLabel.setDisable(true);
                 transportTypeComboBox.setDisable(true);
 
                 setBridgeAddressesByCustomBridges();
                 break;
             default:
             case NONE:
-                transportTypeLabel.setDisable(true);
                 transportTypeComboBox.setDisable(true);
                 enterBridgeLabel.setDisable(true);
                 bridgeEntriesTextArea.setDisable(true);

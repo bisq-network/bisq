@@ -231,8 +231,8 @@ public class ProposalDisplay {
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = FormBuilder.<Param>addLabelComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.paramComboBox.label")).second;
+                paramComboBox = FormBuilder.<Param>addComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.paramComboBox.label"));
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
                 List<Param> list = Arrays.stream(Param.values())
                         .filter(e -> e != Param.UNDEFINED && e != Param.PHASE_UNDEFINED)
@@ -269,8 +269,8 @@ public class ProposalDisplay {
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addLabelComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label")).second;
+                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label"));
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
                 bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
                 bondedRoleTypeComboBox.setConverter(new StringConverter<>() {
@@ -287,8 +287,8 @@ public class ProposalDisplay {
                 comboBoxes.add(bondedRoleTypeComboBox);
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<BondedRole>addLabelComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label")).second;
+                confiscateBondComboBox = FormBuilder.<BondedRole>addComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label"));
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
@@ -307,8 +307,8 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case REMOVE_ASSET:
-                assetComboBox = FormBuilder.<Asset>addLabelComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.assetComboBox.label")).second;
+                assetComboBox = FormBuilder.<Asset>addComboBox(gridPane, ++gridRow,
+                        Res.getWithCol("dao.proposal.display.assetComboBox.label"));
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
                 List<Asset> assetList = CurrencyUtil.getAssetRegistry().stream()
                         .filter(e -> !e.getTickerSymbol().equals("BSQ"))

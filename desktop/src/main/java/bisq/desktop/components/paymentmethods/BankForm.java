@@ -226,7 +226,6 @@ abstract class BankForm extends PaymentMethodForm {
     private Tuple2<Label, InputTextField> bankIdTuple, accountNrTuple, branchIdTuple,
             bankNameTuple, nationalAccountIdTuple;
     private Tuple2<Label, ComboBox<String>> accountTypeTuple;
-    private Label accountTypeLabel;
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
     private boolean useHolderID;
@@ -342,10 +341,7 @@ abstract class BankForm extends PaymentMethodForm {
 
         });
 
-        accountTypeTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, "");
-        accountTypeLabel = accountTypeTuple.first;
-
-        accountTypeComboBox = accountTypeTuple.second;
+        accountTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow, "");
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {
             if (BankUtil.isAccountTypeRequired(bankAccountPayload.getCountryCode())) {
@@ -374,7 +370,7 @@ abstract class BankForm extends PaymentMethodForm {
             branchIdLabel.setText(BankUtil.getBranchIdLabel(countryCode));
             nationalAccountIdLabel.setText(BankUtil.getNationalAccountIdLabel(countryCode));
             accountNrLabel.setText(BankUtil.getAccountNrLabel(countryCode));
-            accountTypeLabel.setText(BankUtil.getAccountTypeLabel(countryCode));
+            accountTypeComboBox.setPromptText(BankUtil.getAccountTypeLabel(countryCode));
 
             bankNameInputTextField.setText("");
             bankIdInputTextField.setText("");

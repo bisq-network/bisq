@@ -189,8 +189,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
-        selectBaseCurrencyNetworkComboBox = FormBuilder.<BaseCurrencyNetwork>addLabelComboBox(root, gridRow,
-                Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
+        selectBaseCurrencyNetworkComboBox = FormBuilder.<BaseCurrencyNetwork>addComboBox(root, gridRow,
+                Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
 
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -206,12 +206,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        userLanguageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("shared.language")).second;
-        userCountryComboBox = FormBuilder.<Country>addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("shared.country")).second;
-        blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addLabelComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer")).second;
+        userLanguageComboBox = FormBuilder.<String>addComboBox(root, ++gridRow,
+                Res.get("shared.language"));
+        userCountryComboBox = FormBuilder.<Country>addComboBox(root, ++gridRow,
+                Res.get("shared.country"));
+        blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addComboBox(root, ++gridRow,
+                Res.get("setting.preferences.explorer"));
 
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
@@ -317,8 +317,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 4);
 
 
-        preferredTradeCurrencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        preferredTradeCurrencyComboBox = FormBuilder.<TradeCurrency>addComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -433,12 +433,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
+        fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addComboBox(root, ++gridRow);
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
         fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
             @Override
             protected void updateItem(final FiatCurrency item, boolean empty) {
                 super.updateItem(item, empty);
+                this.setVisible(item != null || !empty);
+
                 if (empty || item == null) {
                     setText(Res.get("setting.preferences.addFiat"));
                 } else {
@@ -458,14 +460,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        Tuple2<Label, ComboBox<CryptoCurrency>> labelComboBoxTuple2 = FormBuilder.addLabelComboBox(root, gridRow);
-        cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
+        cryptoCurrenciesComboBox = FormBuilder.addComboBox(root, gridRow);
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
         cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
             @Override
             protected void updateItem(final CryptoCurrency item, boolean empty) {
                 super.updateItem(item, empty);
+                this.setVisible(item != null || !empty);
+
+
                 if (empty || item == null) {
                     setText(Res.get("setting.preferences.addAltcoin"));
                 } else {
