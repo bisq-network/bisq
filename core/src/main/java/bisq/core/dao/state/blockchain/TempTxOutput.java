@@ -43,8 +43,11 @@ public class TempTxOutput extends BaseTxOutput {
     }
 
     private TxOutputType txOutputType;
+
+    // The lockTime is stored in the first output of the LOCKUP tx.
     // If not set it is -1, 0 is a valid value.
     private int lockTime;
+    // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
     private int unlockBlockHeight;
 
     private TempTxOutput(int index,

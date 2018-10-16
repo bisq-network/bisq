@@ -21,6 +21,7 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
@@ -47,6 +48,7 @@ public class DaoSetup {
     private final VoteRevealService voteRevealService;
     private final VoteResultService voteResultService;
     private final BsqNode bsqNode;
+    private final MissingDataRequestService missingDataRequestService;
     private final DaoFacade daoFacade;
     private final ExportJsonFilesService exportJsonFilesService;
 
@@ -60,6 +62,7 @@ public class DaoSetup {
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
                     VoteResultService voteResultService,
+                    MissingDataRequestService missingDataRequestService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
         this.bsqStateService = bsqStateService;
@@ -70,6 +73,7 @@ public class DaoSetup {
         this.myBlindVoteListService = myBlindVoteListService;
         this.voteRevealService = voteRevealService;
         this.voteResultService = voteResultService;
+        this.missingDataRequestService = missingDataRequestService;
         this.daoFacade = daoFacade;
         this.exportJsonFilesService = exportJsonFilesService;
 
@@ -87,8 +91,9 @@ public class DaoSetup {
         myBlindVoteListService.addListeners();
         voteRevealService.addListeners();
         voteResultService.addListeners();
-        exportJsonFilesService.addListeners();
+        missingDataRequestService.addListeners();
         daoFacade.addListeners();
+        exportJsonFilesService.addListeners();
 
         bsqStateService.start();
         cycleService.start();
@@ -98,8 +103,9 @@ public class DaoSetup {
         myBlindVoteListService.start();
         voteRevealService.start();
         voteResultService.start();
-        exportJsonFilesService.start();
+        missingDataRequestService.start();
         daoFacade.start();
+        exportJsonFilesService.start();
 
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.start();

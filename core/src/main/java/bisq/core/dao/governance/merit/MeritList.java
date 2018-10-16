@@ -50,7 +50,7 @@ public class MeritList extends PersistableList<Merit> implements ConsensusCritic
         return getBuilder().build();
     }
 
-    private PB.MeritList.Builder getBuilder() {
+    public PB.MeritList.Builder getBuilder() {
         return PB.MeritList.newBuilder()
                 .addAllMerit(getList().stream()
                         .map(Merit::toProtoMessage)

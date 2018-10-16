@@ -72,7 +72,7 @@ public class IssuanceService {
                         StringBuilder sb = new StringBuilder();
                         sb.append("\n################################################################################\n");
                         sb.append("We issued new BSQ to tx with ID ").append(txOutput.getTxId())
-                                .append("\nfor compensationProposal with UID ").append(compensationProposal.getTxId())
+                                .append("\nIssued BSQ: ").append(compensationProposal.getRequestedBsq())
                                 .append("\n################################################################################\n");
                         log.info(sb.toString());
                     } else {

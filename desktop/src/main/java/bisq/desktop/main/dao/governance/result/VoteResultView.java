@@ -245,11 +245,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
-            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getAllEvaluatedProposals().stream()
+            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getEvaluatedProposalList().stream()
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 
-            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = voteResultService.getAllDecryptedBallotsWithMerits().stream()
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = voteResultService.getDecryptedBallotsWithMeritsList().stream()
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getBlindVoteTxId()))
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getVoteRevealTxId()))
                     .collect(Collectors.toList());
@@ -270,7 +270,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
         });
         Collections.reverse(cycleListItemList);
 
-        GUIUtil.setFitToRowsForTableView(cyclesTableView, 24, 28, 80);
+        GUIUtil.setFitToRowsForTableView(cyclesTableView, 24, 28, 2, 4);
     }
 
 
@@ -337,7 +337,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(proposalsTableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(proposalsTableView, 33, 28, 2, 4);
     }
 
 
@@ -406,7 +406,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                 });
 
         voteListItemList.sort(Comparator.comparing(VoteListItem::getBlindVoteTxId));
-        GUIUtil.setFitToRowsForTableView(votesTableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(votesTableView, 33, 28, 2, 4);
     }
 
 

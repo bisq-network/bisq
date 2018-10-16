@@ -80,6 +80,8 @@ public class FullNode extends BsqNode {
 
     @Override
     public void start() {
+        fullNodeNetworkService.start();
+
         rpcService.setup(() -> {
                     super.onInitialized();
                     startParseBlocks();
@@ -153,12 +155,12 @@ public class FullNode extends BsqNode {
             fullNodeNetworkService.publishNewBlock(block);
     }
 
-    private void parseBlocksIfNewBlockAvailable(int chainHeadHeight) {
-        rpcService.requestChainHeadHeight(newChainHeadHeight -> {
-                    if (newChainHeadHeight > chainHeadHeight) {
+    private void parseBlocksIfNewBlockAvailable(int chainHeight) {
+        rpcService.requestChainHeadHeight(newChainHeight -> {
+                    if (newChainHeight > chainHeight) {
                         log.info("During parsing new blocks have arrived. We parse again with those missing blocks." +
-                                "ChainHeadHeight={}, newChainHeadHeight={}", chainHeadHeight, newChainHeadHeight);
-                        parseBlocksOnHeadHeight(chainHeadHeight + 1, newChainHeadHeight);
+                                "ChainHeadHeight={}, newChainHeadHeight={}", chainHeight, newChainHeight);
+                        parseBlocksOnHeadHeight(chainHeight + 1, newChainHeight);
                     } else {
                         log.info("parseBlocksIfNewBlockAvailable did not result in a new block, so we complete.");
                         onParseBlockChainComplete();
@@ -169,23 +171,23 @@ public class FullNode extends BsqNode {
 
     private void requestChainHeadHeightAndParseBlocks(int startBlockHeight) {
         log.info("requestChainHeadHeightAndParseBlocks with startBlockHeight={}", startBlockHeight);
-        rpcService.requestChainHeadHeight(chainHeadHeight -> parseBlocksOnHeadHeight(startBlockHeight, chainHeadHeight),
+        rpcService.requestChainHeadHeight(chainHeight -> parseBlocksOnHeadHeight(startBlockHeight, chainHeight),
                 this::handleError);
     }
 
-    private void parseBlocksOnHeadHeight(int startBlockHeight, int chainHeadHeight) {
-        if (startBlockHeight <= chainHeadHeight) {
-            log.info("parseBlocks with startBlockHeight={} and chainHeadHeight={}", startBlockHeight, chainHeadHeight);
+    private void parseBlocksOnHeadHeight(int startBlockHeight, int chainHeight) {
+        if (startBlockHeight <= chainHeight) {
+            log.info("parseBlocks with startBlockHeight={} and chainHeight={}", startBlockHeight, chainHeight);
             parseBlocks(startBlockHeight,
-                    chainHeadHeight,
+                    chainHeight,
                     this::onNewBlock,
                     () -> {
                         // We are done but it might be that new blocks have arrived in the meantime,
-                        // so we try again with startBlockHeight set to current chainHeadHeight
+                        // so we try again with startBlockHeight set to current chainHeight
                         // We also set up the listener in the else main branch where we check
                         // if we are at chainTip, so do not include here another check as it would
                         // not trigger the listener registration.
-                        parseBlocksIfNewBlockAvailable(chainHeadHeight);
+                        parseBlocksIfNewBlockAvailable(chainHeight);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
                             startReOrgFromLastSnapshot();
@@ -202,15 +204,15 @@ public class FullNode extends BsqNode {
     }
 
     private void parseBlocks(int startBlockHeight,
-                             int chainHeadHeight,
+                             int chainHeight,
                              Consumer<Block> newBlockHandler,
                              ResultHandler resultHandler,
                              Consumer<Throwable> errorHandler) {
-        parseBlock(startBlockHeight, chainHeadHeight, newBlockHandler, resultHandler, errorHandler);
+        parseBlock(startBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
     }
 
     // Recursively request and parse all blocks
-    private void parseBlock(int blockHeight, int chainHeadHeight,
+    private void parseBlock(int blockHeight, int chainHeight,
                             Consumer<Block> newBlockHandler, ResultHandler resultHandler,
                             Consumer<Throwable> errorHandler) {
         rpcService.requestBtcBlock(blockHeight,
@@ -220,10 +222,10 @@ public class FullNode extends BsqNode {
                             Block block = blockParser.parseBlock(rawBlock);
                             newBlockHandler.accept(block);
 
-                            // Increment blockHeight and recursively call parseBlockAsync until we reach chainHeadHeight
-                            if (blockHeight < chainHeadHeight) {
+                            // Increment blockHeight and recursively call parseBlockAsync until we reach chainHeight
+                            if (blockHeight < chainHeight) {
                                 final int newBlockHeight = blockHeight + 1;
-                                parseBlock(newBlockHeight, chainHeadHeight, newBlockHandler, resultHandler, errorHandler);
+                                parseBlock(newBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
                             } else {
                                 // We are done
                                 resultHandler.handleResult();

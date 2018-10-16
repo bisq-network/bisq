@@ -54,35 +54,41 @@ public class VoteResultConsensus {
         return Arrays.copyOfRange(opReturnData, 2, 22);
     }
 
-    public static VoteWithProposalTxIdList decryptVotes(byte[] encryptedVotes, SecretKey secretKey) throws VoteResultException {
+    public static VoteWithProposalTxIdList decryptVotes(byte[] encryptedVotes, SecretKey secretKey)
+            throws VoteResultException.DecryptionException {
         try {
             byte[] decrypted = Encryption.decrypt(encryptedVotes, secretKey);
             return VoteWithProposalTxIdList.getVoteWithProposalTxIdListFromBytes(decrypted);
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.DecryptionException(t);
         }
     }
 
     // We compare first by stake and in case we have multiple entries with same stake we use the
     // hex encoded hashOfProposalList for comparision
     @Nullable
-    public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList) throws VoteResultException {
-        checkArgument(!hashWithStakeList.isEmpty(), "hashWithStakeList must not be empty");
-        hashWithStakeList.sort(Comparator.comparingLong(VoteResultService.HashWithStake::getStake).reversed()
-                .thenComparing(hashWithStake -> Utilities.encodeToHex(hashWithStake.getHash())));
+    public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList)
+            throws VoteResultException.ConsensusException, VoteResultException.ValidationException {
+        try {
+            checkArgument(!hashWithStakeList.isEmpty(), "hashWithStakeList must not be empty");
+            hashWithStakeList.sort(Comparator.comparingLong(VoteResultService.HashWithStake::getStake).reversed()
+                    .thenComparing(hashWithStake -> Utilities.encodeToHex(hashWithStake.getHash())));
 
-        // If there are conflicting data views (multiple hashes) we only consider the voting round as valid if
-        // the majority is a super majority with > 80%.
-        if (hashWithStakeList.size() > 1) {
-            long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
-            long stakeOfFirst = hashWithStakeList.get(0).getStake();
-            if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
-                throw new VoteResultException("The winning data view has less then 80% of the total stake of " +
-                        "all data views. We consider the voting cycle as invalid if the winning data view does not " +
-                        "reach a super majority.");
+            // If there are conflicting data views (multiple hashes) we only consider the voting round as valid if
+            // the majority is a super majority with > 80%.
+            if (hashWithStakeList.size() > 1) {
+                long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
+                long stakeOfFirst = hashWithStakeList.get(0).getStake();
+                if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
+                    throw new VoteResultException.ConsensusException("The winning data view has less then 80% of the " +
+                            "total stake of all data views. We consider the voting cycle as invalid if the " +
+                            "winning data view does not reach a super majority.");
+                }
             }
+            return hashWithStakeList.get(0).getHash();
+        } catch (Throwable t) {
+            throw new VoteResultException.ValidationException(t);
         }
-        return hashWithStakeList.get(0).getHash();
     }
 
     // Key is stored after version and type bytes and list of Blind votes. It has 16 bytes
@@ -92,24 +98,24 @@ public class VoteResultConsensus {
     }
 
     public static TxOutput getConnectedBlindVoteStakeOutput(Tx voteRevealTx, BsqStateService bsqStateService)
-            throws VoteResultException {
+            throws VoteResultException.ValidationException {
         try {
             // We use the stake output of the blind vote tx as first input
-            final TxInput stakeTxInput = voteRevealTx.getTxInputs().get(0);
+            TxInput stakeTxInput = voteRevealTx.getTxInputs().get(0);
             Optional<TxOutput> optionalBlindVoteStakeOutput = bsqStateService.getConnectedTxOutput(stakeTxInput);
             checkArgument(optionalBlindVoteStakeOutput.isPresent(), "blindVoteStakeOutput must be present");
-            final TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
+            TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
             checkArgument(blindVoteStakeOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT,
                     "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT");
             return blindVoteStakeOutput;
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.ValidationException(t);
         }
     }
 
     public static Tx getBlindVoteTx(TxOutput blindVoteStakeOutput, BsqStateService bsqStateService,
                                     PeriodService periodService, int chainHeight)
-            throws VoteResultException {
+            throws VoteResultException.ValidationException {
         try {
             String blindVoteTxId = blindVoteStakeOutput.getTxId();
             Optional<Tx> optionalBlindVoteTx = bsqStateService.getTx(blindVoteTxId);
@@ -128,7 +134,7 @@ public class VoteResultConsensus {
                             + blindVoteTx.getBlockHeight());
             return blindVoteTx;
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.ValidationException(t);
         }
     }
 }

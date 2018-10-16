@@ -588,7 +588,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         feeService.requestFees(() -> {
             txFeeFromFeeService = feeService.getTxFee(feeTxSize);
             calculateTotalToPay();
-        }, null);
+        });
     }
 
     void setPreferredCurrencyForMakerFeeBtc(boolean preferredCurrencyForMakerFeeBtc) {

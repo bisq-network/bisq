@@ -19,8 +19,11 @@ package bisq.core.offer.availability.tasks;
 
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
@@ -39,6 +42,13 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             if (model.getOffer().getState() != Offer.State.REMOVED) {
                 if (offerAvailabilityResponse.getAvailabilityResult() == AvailabilityResult.AVAILABLE) {
                     model.getOffer().setState(Offer.State.AVAILABLE);
+                    if (ArbitratorSelection.isNewRuleActivated()) {
+                        NodeAddress selectedArbitrator = offerAvailabilityResponse.getArbitrator();
+                        if (selectedArbitrator == null)
+                            failed("You cannot take that offer because the offer maker is running an incompatible version.");
+                        else
+                            model.setSelectedArbitrator(selectedArbitrator);
+                    }
                 } else {
                     model.getOffer().setState(Offer.State.NOT_AVAILABLE);
                     failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.getAvailabilityResult());

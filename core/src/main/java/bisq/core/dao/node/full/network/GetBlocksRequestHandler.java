@@ -99,7 +99,8 @@ class GetBlocksRequestHandler {
                 connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight());
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                        String errorMessage = "A timeout occurred for getBlocksResponse:" + getBlocksResponse +
+                        String errorMessage = "A timeout occurred for getBlocksResponse.requestNonce:" +
+                                getBlocksResponse.getRequestNonce() +
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
@@ -111,8 +112,8 @@ class GetBlocksRequestHandler {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
-                    log.info("Send DataResponse to {} succeeded. getBlocksResponse={}",
-                            connection.getPeersNodeAddressOptional(), getBlocksResponse);
+                    log.info("Send DataResponse to {} succeeded. getBlocksResponse.getBlocks().size()={}",
+                            connection.getPeersNodeAddressOptional(), getBlocksResponse.getBlocks().size());
                     cleanup();
                     listener.onComplete();
                 } else {
