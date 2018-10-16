@@ -99,6 +99,8 @@ public class ArbitratorSelection {
                     .count();
             tuple.second.set(count);
         });
+
+        arbitratorTuples.sort(Comparator.comparing(e -> e.first));
         arbitratorTuples.sort(Comparator.comparingInt(e -> e.second.get()));
         return arbitratorTuples.get(0).first;
     }

@@ -30,9 +30,13 @@ public class ArbitratorSelectionTest {
     @Test
     public void testGetLeastUsedArbitrator() {
         // We get least used selected
-        List<String> lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb1");
-        Set<String> arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
-        String result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
+        List<String> lastAddressesUsedInTrades;
+        Set<String> arbitrators;
+        String result;
+
+        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb1");
+        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
+        result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb2", result);
 
         // if all are same we use first according to alphanumeric sorting
