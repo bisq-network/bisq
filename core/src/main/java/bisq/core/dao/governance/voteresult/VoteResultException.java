@@ -17,35 +17,112 @@
 
 package bisq.core.dao.governance.voteresult;
 
-import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
+import bisq.core.dao.governance.ballot.Ballot;
 
-import lombok.Getter;
+import java.util.List;
 
-import javax.annotation.Nullable;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 public class VoteResultException extends Exception {
-    @Getter
-    @Nullable
-    private BlindVotePayload blindVotePayload;
 
-    public VoteResultException(String message, Exception cause, BlindVotePayload blindVotePayload) {
-        super(message, cause);
-        this.blindVotePayload = blindVotePayload;
+    VoteResultException(Throwable cause) {
+        super(cause);
     }
 
-    public VoteResultException(String message) {
+    private VoteResultException(String message) {
         super(message);
     }
 
-    public VoteResultException(Throwable cause) {
-        super(cause);
+    private VoteResultException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     @Override
     public String toString() {
         return "VoteResultException{" +
-                "\n     blindVotePayload=" + blindVotePayload +
-                "\n     cause=" + getCause() +
                 "\n} " + super.toString();
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    public static class ConsensusException extends VoteResultException {
+
+        ConsensusException(String message) {
+            super(message);
+        }
+
+        @Override
+        public String toString() {
+            return "ConsensusException{" +
+                    "\n} " + super.toString();
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    public static class ValidationException extends VoteResultException {
+
+        ValidationException(Throwable cause) {
+            super("Validation of vote result failed.", cause);
+        }
+
+        @Override
+        public String toString() {
+            return "VoteResultException{" +
+                    "\n     cause=" + getCause() +
+                    "\n} " + super.toString();
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    public static abstract class MissingDataException extends VoteResultException {
+        private MissingDataException(String message) {
+            super(message);
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Value
+    public static class MissingBlindVoteDataException extends MissingDataException {
+        private String blindVoteTxId;
+
+        MissingBlindVoteDataException(String blindVoteTxId) {
+            super("Blind vote tx ID " + blindVoteTxId + " is missing");
+            this.blindVoteTxId = blindVoteTxId;
+        }
+
+        @Override
+        public String toString() {
+            return "MissingBlindVoteDataException{" +
+                    "\n     blindVoteTxId='" + blindVoteTxId + '\'' +
+                    "\n} " + super.toString();
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Value
+    public static class MissingBallotException extends MissingDataException {
+        private List<Ballot> existingBallots;
+        private List<String> proposalTxIdsOfMissingBallots;
+
+        MissingBallotException(List<Ballot> existingBallots, List<String> proposalTxIdsOfMissingBallots) {
+            super("Missing ballots. proposalTxIdsOfMissingBallots=" + proposalTxIdsOfMissingBallots);
+            this.existingBallots = existingBallots;
+            this.proposalTxIdsOfMissingBallots = proposalTxIdsOfMissingBallots;
+        }
+    }
+
+
+    @EqualsAndHashCode(callSuper = true)
+    @Value
+    public static class DecryptionException extends VoteResultException {
+        public DecryptionException(Throwable cause) {
+            super(cause);
+        }
+
+        @Override
+        public String toString() {
+            return "DecryptionException{" +
+                    "\n} " + super.toString();
+        }
     }
 }

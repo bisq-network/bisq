@@ -22,11 +22,11 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
@@ -218,7 +218,7 @@ class TakeOfferDataModel extends OfferDataModel {
                 log.debug("We received the tx fee response after we have shown the funding screen and ignore that " +
                         "to avoid that the total funds to pay changes due changed tx fees.");
             }
-        }, null);
+        });
 
         calculateVolume();
         calculateTotalToPay();

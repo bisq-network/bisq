@@ -26,9 +26,9 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 
-import bisq.core.btc.Restrictions;
-import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
@@ -119,8 +119,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
         lockupTypeComboBox = FormBuilder.<LockupType>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type")).second;
-        lockupTypeComboBox.setPromptText(Res.get("shared.select"));
-        lockupTypeComboBox.setConverter(new StringConverter<LockupType>() {
+        lockupTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(LockupType lockupType) {
                 return lockupType.getDisplayString();
@@ -141,8 +140,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         lockupTypeComboBox.getSelectionModel().select(0);
 
         bondedRolesComboBox = FormBuilder.<BondedRole>addLabelComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles")).second;
-        bondedRolesComboBox.setPromptText(Res.get("shared.select"));
-        bondedRolesComboBox.setConverter(new StringConverter<BondedRole>() {
+        bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRole bondedRole) {
                 return bondedRole.getDisplayString();

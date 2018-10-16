@@ -36,8 +36,8 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 @Slf4j
 public class ProposalValidator {
 
-    private final BsqStateService bsqStateService;
-    private final PeriodService periodService;
+    protected final BsqStateService bsqStateService;
+    protected final PeriodService periodService;
 
     @Inject
     public ProposalValidator(BsqStateService bsqStateService, PeriodService periodService) {
@@ -69,6 +69,19 @@ public class ProposalValidator {
 
     public boolean isValidAndConfirmed(Proposal proposal) {
         return isValid(proposal, false);
+    }
+
+    public boolean isTxTypeValid(Proposal proposal) {
+        String txId = proposal.getTxId();
+        if (txId == null || txId.equals("")) {
+            log.warn("txId must be set. proposal.getTxId()={}", proposal.getTxId());
+            return false;
+        }
+        Optional<TxType> optionalTxType = bsqStateService.getOptionalTxType(txId);
+        boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
+        if (!present)
+            log.debug("optionalTxType not present for proposal {}" + proposal);
+        return present;
     }
 
     private boolean isValid(Proposal proposal, boolean allowUnconfirmed) {

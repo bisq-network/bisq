@@ -37,12 +37,18 @@ public class TempTxOutput extends BaseTxOutput {
                 txOutput.getAddress(),
                 txOutput.getOpReturnData(),
                 txOutput.getBlockHeight(),
-                TxOutputType.UNDEFINED,
+                TxOutputType.UNDEFINED_OUTPUT,
+                -1,
                 0);
     }
 
     private TxOutputType txOutputType;
+
+    // The lockTime is stored in the first output of the LOCKUP tx.
+    // If not set it is -1, 0 is a valid value.
     private int lockTime;
+    // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
+    private int unlockBlockHeight;
 
     private TempTxOutput(int index,
                          long value,
@@ -52,7 +58,8 @@ public class TempTxOutput extends BaseTxOutput {
                          @Nullable byte[] opReturnData,
                          int blockHeight,
                          TxOutputType txOutputType,
-                         int lockTime) {
+                         int lockTime,
+                         int unlockBlockHeight) {
         super(index,
                 value,
                 txId,
@@ -63,6 +70,7 @@ public class TempTxOutput extends BaseTxOutput {
 
         this.txOutputType = txOutputType;
         this.lockTime = lockTime;
+        this.unlockBlockHeight = unlockBlockHeight;
     }
 
 
@@ -71,6 +79,12 @@ public class TempTxOutput extends BaseTxOutput {
         return "TempTxOutput{" +
                 "\n     txOutputType=" + txOutputType +
                 "\n     lockTime=" + lockTime +
+                "\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
+    }
+
+    public boolean isOpReturnOutput() {
+        // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
+        return getOpReturnData() != null;
     }
 }

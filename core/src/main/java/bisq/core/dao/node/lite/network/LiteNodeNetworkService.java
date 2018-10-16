@@ -117,7 +117,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init() {
+    public void start() {
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
         peerManager.addListener(this);
@@ -139,7 +139,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     }
 
     public void requestBlocks(int startBlockHeight) {
-        Log.traceCall();
         lastRequestedBlockHeight = startBlockHeight;
         Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()
                 .filter(peerManager::isSeedNode)
@@ -219,6 +218,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof NewBlockBroadcastMessage) {
+            log.info("We received blocks from peer {}", connection.getPeersNodeAddressOptional());
             listeners.forEach(listener -> listener.onNewBlockReceived((NewBlockBroadcastMessage) networkEnvelope));
         }
     }
@@ -239,7 +239,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                             new RequestBlocksHandler.Listener() {
                                 @Override
                                 public void onComplete(GetBlocksResponse getBlocksResponse) {
-                                    log.trace("requestBlocksHandler of outbound connection complete. nodeAddress={}",
+                                    log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
                                             peersNodeAddress);
                                     stopRetryTimer();
 
@@ -270,6 +270,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                 }
                             });
                     requestBlocksHandlerMap.put(key, requestBlocksHandler);
+                    log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
                     requestBlocksHandler.requestBlocks();
                 } else {
                     //TODO check with re-orgs

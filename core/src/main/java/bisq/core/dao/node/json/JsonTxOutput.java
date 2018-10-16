@@ -21,26 +21,34 @@ import bisq.common.app.Version;
 
 import lombok.Value;
 
-//TODO sync up with data model
+import javax.annotation.Nullable;
+
 @Value
-public class JsonTxOutput {
+class JsonTxOutput {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String txId;
-    private final int outputIndex;
+    private final int index;
     private final long bsqAmount;
     private final long btcAmount;
     private final int height;
-    private final boolean isVerified;
+    private final boolean isVerified; // isBsqTxOutputType
     private final long burntFee;
     private final String address;
+    @Nullable
     private final JsonScriptPubKey scriptPubKey;
+    @Nullable
     private final JsonSpentInfo spentInfo;
     private final long time;
     private final JsonTxType txType;
     private final String txTypeDisplayString;
+    private final JsonTxOutputType txOutputType;
+    private final String txOutputTypeDisplayString;
+    @Nullable
     private final String opReturn;
+    private final int lockTime;
+    private final boolean isUnspent;
 
-    public String getId() {
-        return txId + ":" + outputIndex;
+    String getId() {
+        return txId + ":" + index;
     }
 }

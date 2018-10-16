@@ -28,8 +28,8 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;

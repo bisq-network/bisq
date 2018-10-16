@@ -309,8 +309,11 @@ public class SellerStep3View extends TradeStepView {
         String id = trade.getShortId();
         if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
             String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
+            String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
+                    Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
+                    Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
             //noinspection UnusedAssignment
-            message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
+            message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);

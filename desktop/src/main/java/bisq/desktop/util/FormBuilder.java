@@ -771,6 +771,24 @@ public class FormBuilder {
             label = addLabel(gridPane, rowIndex, title, top);
 
         ComboBox<T> comboBox = new JFXComboBox<>();
+        // We want always the promptText
+        comboBox.setPromptText(Res.get("shared.select"));
+
+        // Default ComboBox does not show promptText after clear selection.
+        // https://stackoverflow.com/questions/50569330/how-to-reset-combobox-and-display-prompttext?noredirect=1&lq=1
+        comboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(Res.get("shared.select"));
+                } else {
+                    setText(comboBox.getConverter().toString(item));
+                }
+            }
+        });
+
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));

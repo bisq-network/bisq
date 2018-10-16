@@ -17,8 +17,6 @@
 
 package bisq.network;
 
-import org.libdohj.params.AbstractLitecoinParams;
-
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
@@ -52,12 +50,6 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
                 break;
             case NetworkParameters.ID_TESTNET:
                 seedAddresses = testNet3Seeds();
-                break;
-            case AbstractLitecoinParams.ID_LITE_MAINNET:
-                seedAddresses = LitecoinMainNetSeeds();
-                break;
-            case AbstractLitecoinParams.ID_LITE_TESTNET:
-                seedAddresses = LitecoinTestNet4Seeds();
                 break;
         }
 

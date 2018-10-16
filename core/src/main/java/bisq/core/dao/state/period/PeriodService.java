@@ -129,9 +129,9 @@ public final class PeriodService {
                 .orElse(0);
     }
 
-    public boolean isTxInPastCycle(String txId, int chainHeadHeight) {
+    public boolean isTxInPastCycle(String txId, int chainHeight) {
         return getOptionalTx(txId)
-                .filter(tx -> isTxInPastCycle(tx.getBlockHeight(), chainHeadHeight))
+                .filter(tx -> isTxInPastCycle(tx.getBlockHeight(), chainHeight))
                 .isPresent();
     }
 

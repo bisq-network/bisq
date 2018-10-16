@@ -19,21 +19,52 @@ package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.proposal.Proposal;
 
+import bisq.common.proto.persistable.PersistablePayload;
+
+import io.bisq.generated.protobuffer.PB;
+
 import lombok.Value;
 
 @Value
-public class EvaluatedProposal {
+public class EvaluatedProposal implements PersistablePayload {
     private final boolean isAccepted;
     private final ProposalVoteResult proposalVoteResult;
     private final long requiredQuorum;
     private final long requiredThreshold;
 
-    public EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult, long requiredQuorum, long requiredThreshold) {
+    EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult, long requiredQuorum, long requiredThreshold) {
         this.isAccepted = isAccepted;
         this.proposalVoteResult = proposalVoteResult;
         this.requiredQuorum = requiredQuorum;
         this.requiredThreshold = requiredThreshold;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.EvaluatedProposal toProtoMessage() {
+        PB.EvaluatedProposal.Builder builder = PB.EvaluatedProposal.newBuilder()
+                .setIsAccepted(isAccepted)
+                .setProposalVoteResult(proposalVoteResult.toProtoMessage())
+                .setRequiredQuorum(requiredQuorum)
+                .setRequiredThreshold(requiredThreshold);
+        return builder.build();
+    }
+
+    public static EvaluatedProposal fromProto(PB.EvaluatedProposal proto) {
+        return new EvaluatedProposal(proto.getIsAccepted(),
+                ProposalVoteResult.fromProto(proto.getProposalVoteResult()),
+                proto.getRequiredQuorum(),
+                proto.getRequiredThreshold());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Proposal getProposal() {
         return proposalVoteResult.getProposal();

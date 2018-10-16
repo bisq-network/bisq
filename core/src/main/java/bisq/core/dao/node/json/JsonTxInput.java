@@ -21,14 +21,13 @@ import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 
-//TODO sync up with data model
 @Value
 @Immutable
-public class JsonTxInput {
-    private final int spendingTxOutputIndex;
-    private final String spendingTxId;
+class JsonTxInput {
+    private final int spendingTxOutputIndex; // connectedTxOutputIndex
+    private final String spendingTxId; // connectedTxOutputTxId
     private final long bsqAmount;
-    private final boolean isVerified;
+    private final boolean isVerified; // isBsqTxOutputType
     private final String address;
     private final long time;
 }

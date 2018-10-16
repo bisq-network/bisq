@@ -24,7 +24,7 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import lombok.EqualsAndHashCode;
 
-//TODO missing support for selected trade currency
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 public final class OKPayAccount extends PaymentAccount {
     public OKPayAccount() {

@@ -18,8 +18,8 @@
 package bisq.core.offer;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.Restrictions;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;
@@ -89,13 +89,14 @@ public class OfferUtil {
     @Nullable
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
         if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
             if (marketPriceAvailable) {
                 if (marketPriceMargin > 0)
                     makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
                 else
                     makerFeeAsDouble = 0;
+
                 // For BTC we round so min value change is 100 satoshi
                 if (isCurrencyForMakerFeeBtc)
                     makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;

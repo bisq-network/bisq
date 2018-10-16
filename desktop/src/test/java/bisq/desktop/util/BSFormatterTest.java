@@ -37,11 +37,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static bisq.core.monetary.PriceMaker.priceString;
-import static bisq.core.monetary.PriceMaker.usdPrice;
-import static bisq.core.monetary.VolumeMaker.usdVolume;
-import static bisq.core.monetary.VolumeMaker.volumeString;
-import static bisq.core.offer.OfferMaker.btcUsdOffer;
+import static bisq.desktop.maker.OfferMaker.btcUsdOffer;
+import static bisq.desktop.maker.PriceMaker.priceString;
+import static bisq.desktop.maker.PriceMaker.usdPrice;
+import static bisq.desktop.maker.VolumeMaker.usdVolume;
+import static bisq.desktop.maker.VolumeMaker.volumeString;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;

@@ -56,7 +56,7 @@ public class BlindVoteConsensus {
     }
 
     public static BallotList getSortedBallotList(BallotListService ballotListService) {
-        List<Ballot> ballotList = ballotListService.getBallotList().stream()
+        List<Ballot> ballotList = ballotListService.getValidBallotsOfCycle().stream()
                 .sorted(Comparator.comparing(Ballot::getTxId))
                 .collect(Collectors.toList());
         log.info("Sorted ballotList: " + ballotList);
@@ -115,8 +115,8 @@ public class BlindVoteConsensus {
         }
     }
 
-    public static Coin getFee(BsqStateService bsqStateService, int chainHeadHeight) {
-        Coin fee = Coin.valueOf(bsqStateService.getParamValue(Param.BLIND_VOTE_FEE, chainHeadHeight));
+    public static Coin getFee(BsqStateService bsqStateService, int chainHeight) {
+        Coin fee = Coin.valueOf(bsqStateService.getParamValue(Param.BLIND_VOTE_FEE, chainHeight));
         log.info("Fee for blind vote: " + fee);
         return fee;
     }

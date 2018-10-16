@@ -51,6 +51,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // time in blocks (average 10 min for one block confirmation
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
+    @Deprecated
     public static final String OK_PAY_ID = "OK_PAY";
     public static final String UPHOLD_ID = "UPHOLD";
     @Deprecated
@@ -81,6 +82,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String F2F_ID = "F2F";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
 
+    @Deprecated
     public static PaymentMethod OK_PAY;
     public static PaymentMethod UPHOLD;
     @Deprecated

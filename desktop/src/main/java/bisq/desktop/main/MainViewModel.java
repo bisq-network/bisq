@@ -17,6 +17,7 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
@@ -33,8 +34,8 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqSetup;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -281,6 +282,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                     .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
                     .show();
         });
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> {
+            new Popup<>().error(voteResultException.toString()).show();
+        });
 
         bisqSetup.setChainFileLockedExceptionHandler(msg -> {
             new Popup<>().warning(msg)
@@ -291,7 +295,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
                 .onAesKey(aesKeyHandler::accept)
-                .hideCloseButton()
+                .onClose(() -> BisqApp.getShutDownHandler().run())
                 .show());
 
         bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert)

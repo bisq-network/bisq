@@ -29,20 +29,24 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
 
+import java.util.LinkedList;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Manages snapshots of BsqState.
- * // FIXME not working correctly anymore
+ *
+ * One BSQ block with empty txs adds 152 bytes which results in about 8 MB/year
  */
 @Slf4j
 public class SnapshotManager implements BsqStateListener {
-    private static final int SNAPSHOT_GRID = 11000;
+    private static final int SNAPSHOT_GRID = 100;
 
     private final BsqState bsqState;
     private final BsqStateService bsqStateService;
+    private final GenesisTxInfo genesisTxInfo;
     private final Storage<BsqState> storage;
 
     private BsqState snapshotCandidate;
@@ -51,9 +55,11 @@ public class SnapshotManager implements BsqStateListener {
     public SnapshotManager(BsqState bsqState,
                            BsqStateService bsqStateService,
                            PersistenceProtoResolver persistenceProtoResolver,
+                           GenesisTxInfo genesisTxInfo,
                            @Named(Storage.STORAGE_DIR) File storageDir) {
         this.bsqState = bsqState;
         this.bsqStateService = bsqStateService;
+        this.genesisTxInfo = genesisTxInfo;
         storage = new Storage<>(storageDir, persistenceProtoResolver);
 
         this.bsqStateService.addBsqStateListener(this);
@@ -70,21 +76,22 @@ public class SnapshotManager implements BsqStateListener {
 
     @Override
     public void onParseTxsComplete(Block block) {
-        final int chainHeadHeight = block.getHeight();
-        if (isSnapshotHeight(chainHeadHeight) &&
+        int chainHeight = block.getHeight();
+        if (isSnapshotHeight(chainHeight) &&
                 (snapshotCandidate == null ||
-                        snapshotCandidate.getChainHeight() != chainHeadHeight)) {
+                        snapshotCandidate.getChainHeight() != chainHeight)) {
             // At trigger event we store the latest snapshotCandidate to disc
             if (snapshotCandidate != null) {
                 // We clone because storage is in a threaded context
                 final BsqState cloned = bsqState.getClone(snapshotCandidate);
-                storage.queueUpForSave(cloned);
-                log.info("Saved snapshotCandidate to Disc at height " + chainHeadHeight);
+                if (cloned.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
+                    storage.queueUpForSave(cloned);
+                log.info("Saved snapshotCandidate to Disc at height " + chainHeight);
             }
             // Now we clone and keep it in memory for the next trigger
             snapshotCandidate = bsqState.getClone();
             // don't access cloned anymore with methods as locks are transient!
-            log.debug("Cloned new snapshotCandidate at height " + chainHeadHeight);
+            log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
     }
 
@@ -101,8 +108,9 @@ public class SnapshotManager implements BsqStateListener {
         checkNotNull(storage, "storage must not be null");
         BsqState persisted = storage.initAndGetPersisted(bsqState, 100);
         if (persisted != null) {
-            log.info("applySnapshot persisted.chainHeadHeight=" + bsqStateService.getBlocksFromState(persisted).getLast().getHeight());
-            bsqStateService.applySnapshot(persisted);
+            log.info("applySnapshot persisted.chainHeight=" + new LinkedList<>(persisted.getBlocks()).getLast().getHeight());
+            if (persisted.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
+                bsqStateService.applySnapshot(persisted);
         } else {
             log.info("Try to apply snapshot but no stored snapshot available");
         }

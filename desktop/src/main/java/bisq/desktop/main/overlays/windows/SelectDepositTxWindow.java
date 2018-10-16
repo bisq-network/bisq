@@ -98,8 +98,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         Tuple2<Label, ComboBox<Transaction>> tuple = FormBuilder.addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
 
         transactionsComboBox = tuple.second;
-        transactionsComboBox.setPromptText(Res.get("shared.select"));
-        transactionsComboBox.setConverter(new StringConverter<Transaction>() {
+        transactionsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transaction transaction) {
                 return transaction.getHashAsString();

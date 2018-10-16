@@ -56,6 +56,7 @@ message NetworkEnvelope {
 
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
+        RepublishGovernanceDataRequest republish_governance_data_request = 33;
     }
 }
 
@@ -317,6 +318,9 @@ message GetBlocksResponse {
 message NewBlockBroadcastMessage {
     // Because of the way how PB implements inheritence we need to use the super class as type
     BaseBlock raw_block = 1;
+}
+
+message RepublishGovernanceDataRequest {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -931,6 +935,9 @@ message PersistableEnvelope {
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
+        RemovedAssetList removed_asset_list = 25;
+        EvaluatedProposalList evaluated_proposal_list = 26;
+        DecryptedBallotsWithMeritsList decrypted_ballots_with_merits_list = 27;
     }
 }
 
@@ -1336,7 +1343,6 @@ message Tx {
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
     int64 burnt_fee = 3;
-    int32 unlock_block_height = 4;
 }
 
 enum TxType {
@@ -1351,8 +1357,8 @@ enum TxType {
     COMPENSATION_REQUEST = 8;
     BLIND_VOTE = 9;
     VOTE_REVEAL = 10;
-    LOCK_UP = 11;
-    UN_LOCK = 12;
+    LOCKUP = 11;
+    UNLOCK = 12;
 }
 
 message TxInput {
@@ -1381,25 +1387,26 @@ message RawTxOutput {
 message TxOutput {
     TxOutputType tx_output_type = 1;
     int32 lock_time = 2;
+    int32 unlock_block_height = 3;
 }
 
 enum TxOutputType {
     PB_ERROR_TX_OUTPUT_TYPE = 0;
-    UNDEFINED = 1;
+    UNDEFINED_OUTPUT = 1;
     GENESIS_OUTPUT = 2;
     BSQ_OUTPUT = 3;
     BTC_OUTPUT = 4;
     PROPOSAL_OP_RETURN_OUTPUT = 5;
     COMP_REQ_OP_RETURN_OUTPUT = 6;
-    ISSUANCE_CANDIDATE_OUTPUT = 7;
-    BLIND_VOTE_LOCK_STAKE_OUTPUT = 8;
-    BLIND_VOTE_OP_RETURN_OUTPUT = 9;
-    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 10;
-    VOTE_REVEAL_OP_RETURN_OUTPUT = 11;
-    BOND_LOCK = 12;
-    BOND_LOCK_OP_RETURN_OUTPUT = 13;
-    BOND_UNLOCK = 14;
-    BOND_UNLOCK_OP_RETURN_OUTPUT = 15;
+    CONFISCATE_BOND_OP_RETURN_OUTPUT = 7;
+    ISSUANCE_CANDIDATE_OUTPUT = 8;
+    BLIND_VOTE_LOCK_STAKE_OUTPUT = 9;
+    BLIND_VOTE_OP_RETURN_OUTPUT = 10;
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 11;
+    VOTE_REVEAL_OP_RETURN_OUTPUT = 12;
+    LOCKUP_OUTPUT = 13;
+    LOCKUP_OP_RETURN_OUTPUT = 14;
+    UNLOCK_OUTPUT = 15;
     INVALID_OUTPUT = 16;
 }
 
@@ -1470,11 +1477,11 @@ message Proposal {
     string tx_id = 5;
     oneof message {
         CompensationProposal compensation_proposal = 6;
-        GenericProposal generic_proposal = 7;
-        ChangeParamProposal change_param_proposal = 8;
-        RemoveAltcoinProposal remove_altcoin_proposal = 9;
-        ConfiscateBondProposal confiscate_bond_proposal = 10;
-        BondedRoleProposal bonded_role_proposal = 11;
+        ChangeParamProposal change_param_proposal = 7;
+        BondedRoleProposal bonded_role_proposal = 8;
+        ConfiscateBondProposal confiscate_bond_proposal = 9;
+        GenericProposal generic_proposal = 10;
+        RemoveAssetProposal remove_asset_proposal = 11;
     }
 }
 
@@ -1483,24 +1490,32 @@ message CompensationProposal {
     string bsq_address = 2;
 }
 
-message GenericProposal {
-}
-
 message ChangeParamProposal {
     string param = 1; // name of enum
     int64 param_value = 2;
 }
 
-message RemoveAltcoinProposal {
-    string currency_code = 1;
+message BondedRoleProposal {
+    BondedRole bonded_role = 1;
 }
 
 message ConfiscateBondProposal {
     bytes hash = 1;
 }
 
-message BondedRoleProposal {
-    BondedRole bonded_role = 1;
+message GenericProposal {
+}
+
+message RemoveAssetProposal {
+    string ticker_symbol = 1;
+}
+
+message RemovedAsset {
+    string ticker_symbol = 1;
+    string remove_reason = 2;
+}
+message RemovedAssetList {
+    repeated RemovedAsset removed_asset = 1;
 }
 
 message BondedRole {
@@ -1614,6 +1629,39 @@ message Merit {
 
 message MeritList {
     repeated Merit merit = 1;
+}
+
+message ProposalVoteResult {
+    Proposal proposal = 1;
+    int64 stake_of_Accepted_votes = 2;
+    int64 stake_of_Rejected_votes = 3;
+    int32 num_accepted_votes = 4;
+    int32 num_rejected_votes = 5;
+    int32 num_ignored_votes = 6;
+}
+
+message EvaluatedProposal {
+    bool is_accepted = 1;
+    ProposalVoteResult proposal_vote_result = 2;
+    int64 required_quorum = 3;
+    int64 required_threshold = 4;
+}
+
+message EvaluatedProposalList {
+    repeated EvaluatedProposal evaluated_proposal = 1;
+}
+
+message DecryptedBallotsWithMerits {
+    bytes hash_of_blind_vote_list = 1;
+    string vote_reveal_tx_id = 2;
+    string blind_vote_tx_id = 3;
+    int64 stake = 4;
+    BallotList ballot_list = 5;
+    MeritList merit_list = 6;
+}
+
+message DecryptedBallotsWithMeritsList {
+    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -395,6 +395,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VENMO_ID))
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.CASH_APP_ID))
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.OK_PAY_ID))
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {

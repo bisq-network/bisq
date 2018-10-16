@@ -20,7 +20,9 @@ package bisq.core.dao.governance.proposal;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
+import bisq.core.dao.governance.proposal.generic.GenericProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
@@ -91,16 +93,16 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
         switch (proto.getMessageCase()) {
             case COMPENSATION_PROPOSAL:
                 return CompensationProposal.fromProto(proto);
-            case GENERIC_PROPOSAL:
-                throw new ProtobufferRuntimeException("Not implemented yet: " + proto);
             case CHANGE_PARAM_PROPOSAL:
                 return ChangeParamProposal.fromProto(proto);
-            case REMOVE_ALTCOIN_PROPOSAL:
-                throw new ProtobufferRuntimeException("Not implemented yet: " + proto);
-            case CONFISCATE_BOND_PROPOSAL:
-                return ConfiscateBondProposal.fromProto(proto);
             case BONDED_ROLE_PROPOSAL:
                 return BondedRoleProposal.fromProto(proto);
+            case CONFISCATE_BOND_PROPOSAL:
+                return ConfiscateBondProposal.fromProto(proto);
+            case GENERIC_PROPOSAL:
+                return GenericProposal.fromProto(proto);
+            case REMOVE_ASSET_PROPOSAL:
+                return RemoveAssetProposal.fromProto(proto);
             case MESSAGE_NOT_SET:
             default:
                 throw new ProtobufferRuntimeException("Unknown message case: " + proto);
@@ -130,7 +132,6 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     public abstract Param getQuorumParam();
 
     public abstract Param getThresholdParam();
-
 
     @Override
     public String toString() {

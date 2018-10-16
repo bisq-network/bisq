@@ -30,8 +30,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeAlreadyOpenException;
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -318,6 +318,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public PaymentAccountPayload getSellersPaymentAccountPayload() {
         if (getTrade() != null && getTrade().getContract() != null)
             return getTrade().getContract().getSellerPaymentAccountPayload();
+        else
+            return null;
+    }
+
+    @Nullable
+    public PaymentAccountPayload getBuyersPaymentAccountPayload() {
+        if (getTrade() != null && getTrade().getContract() != null)
+            return getTrade().getContract().getBuyerPaymentAccountPayload();
         else
             return null;
     }

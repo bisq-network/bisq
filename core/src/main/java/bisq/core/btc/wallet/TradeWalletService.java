@@ -18,13 +18,15 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.data.InputsAndChangeOutput;
-import bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
-import bisq.core.btc.data.RawTransactionInput;
 import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.InputsAndChangeOutput;
+import bisq.core.btc.model.PreparedDepositTxAndMakerInputs;
+import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.setup.WalletConfig;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 
 import bisq.common.app.Log;

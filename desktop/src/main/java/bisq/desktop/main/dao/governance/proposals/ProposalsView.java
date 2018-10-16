@@ -36,7 +36,7 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
-import bisq.core.btc.wallet.BsqBalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
@@ -306,7 +306,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 80);
+        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 2, 4);
         tableView.layout();
         root.layout();
     }
@@ -418,7 +418,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
-            EvaluatedProposal evaluatedProposal = voteResultService.getAllEvaluatedProposals().stream()
+            EvaluatedProposal evaluatedProposal = voteResultService.getEvaluatedProposalList().stream()
                     .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
                             daoFacade.getChainHeight()))
                     .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))

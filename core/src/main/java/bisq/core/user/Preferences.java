@@ -20,9 +20,9 @@ package bisq.core.user;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
-import bisq.core.btc.BitcoinNodes;
 import bisq.core.btc.BtcOptionKeys;
-import bisq.core.btc.Restrictions;
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -283,7 +283,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                         "The Bitcoin node(s) {} from the program argument will be used.", btcNodesFromOptions);
             }
             setBitcoinNodes(btcNodesFromOptions);
-            setBitcoinNodesOptionOrdinal(BitcoinNodes.BitcoinNodesOption.CUSTOM.ordinal());
+            setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.CUSTOM.ordinal());
         }
         if (referralIdFromOptions != null && !referralIdFromOptions.isEmpty())
             setReferralId(referralIdFromOptions);

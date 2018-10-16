@@ -44,11 +44,17 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
                 tempTxOutput.getOpReturnData(),
                 tempTxOutput.getBlockHeight(),
                 tempTxOutput.getTxOutputType(),
-                tempTxOutput.getLockTime());
+                tempTxOutput.getLockTime(),
+                tempTxOutput.getUnlockBlockHeight());
     }
 
     private final TxOutputType txOutputType;
+
+    // The lockTime is stored in the first output of the LOCKUP tx.
+    // If not set it is -1, 0 is a valid value.
     private final int lockTime;
+    // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
+    private final int unlockBlockHeight;
 
     public TxOutput(int index,
                     long value,
@@ -58,7 +64,8 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
                     @Nullable byte[] opReturnData,
                     int blockHeight,
                     TxOutputType txOutputType,
-                    int lockTime) {
+                    int lockTime,
+                    int unlockBlockHeight) {
         super(index,
                 value,
                 txId,
@@ -69,6 +76,7 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
 
         this.txOutputType = txOutputType;
         this.lockTime = lockTime;
+        this.unlockBlockHeight = unlockBlockHeight;
     }
 
 
@@ -80,11 +88,13 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
     public PB.BaseTxOutput toProtoMessage() {
         PB.TxOutput.Builder builder = PB.TxOutput.newBuilder()
                 .setTxOutputType(txOutputType.toProtoMessage())
-                .setLockTime(lockTime);
+                .setLockTime(lockTime)
+                .setUnlockBlockHeight(unlockBlockHeight);
         return getRawTxOutputBuilder().setTxOutput(builder).build();
     }
 
     public static TxOutput fromProto(PB.BaseTxOutput proto) {
+        PB.TxOutput protoTxOutput = proto.getTxOutput();
         return new TxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId(),
@@ -92,8 +102,9 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
                 proto.getAddress().isEmpty() ? null : proto.getAddress(),
                 proto.getOpReturnData().isEmpty() ? null : proto.getOpReturnData().toByteArray(),
                 proto.getBlockHeight(),
-                TxOutputType.fromProto(proto.getTxOutput().getTxOutputType()),
-                proto.getTxOutput().getLockTime());
+                TxOutputType.fromProto(protoTxOutput.getTxOutputType()),
+                protoTxOutput.getLockTime(),
+                protoTxOutput.getUnlockBlockHeight());
     }
 
 
@@ -102,6 +113,7 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
         return "TxOutput{" +
                 "\n     txOutputType=" + txOutputType +
                 "\n     lockTime=" + lockTime +
+                ",\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
     }
 }

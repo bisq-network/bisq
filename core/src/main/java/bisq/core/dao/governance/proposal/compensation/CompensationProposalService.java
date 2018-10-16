@@ -53,12 +53,10 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
     public CompensationProposalService(BsqWalletService bsqWalletService,
                                        BtcWalletService btcWalletService,
                                        BsqStateService bsqStateService,
-                                       ProposalConsensus proposalConsensus,
                                        CompensationValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 bsqStateService,
-                proposalConsensus,
                 proposalValidator);
     }
 
@@ -84,7 +82,7 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
 
     @Override
     protected byte[] getOpReturnData(byte[] hashOfPayload) {
-        return proposalConsensus.getOpReturnData(hashOfPayload,
+        return ProposalConsensus.getOpReturnData(hashOfPayload,
                 OpReturnType.COMPENSATION_REQUEST.getType(),
                 Version.COMPENSATION_REQUEST);
     }

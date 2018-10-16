@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.settings.preferences;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -30,6 +31,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -45,7 +47,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -92,7 +93,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    // private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
+    private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, avoidStandbyModeCheckBox,
             showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
@@ -102,6 +103,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final Preferences preferences;
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
+    private final BisqEnvironment bisqEnvironment;
+    private final AssetService assetService;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -129,12 +132,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService, ReferralIdService referralIdService,
-                           BSFormatter formatter) {
+    public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
+                           ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
+                           AssetService assetService, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
+        this.bisqEnvironment = bisqEnvironment;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -148,10 +154,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         tradeCurrencies = preferences.getTradeCurrenciesAsObservable();
 
         allFiatCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies());
-        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies());
-
         allFiatCurrencies.removeAll(fiatCurrencies);
-        allCryptoCurrencies.removeAll(cryptoCurrencies);
 
         initializeGeneralOptions();
         initializeDisplayCurrencies();
@@ -161,6 +164,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     protected void activate() {
+        // We want to have it updated in case an asset got removed
+        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService));
+        allCryptoCurrencies.removeAll(cryptoCurrencies);
+
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
@@ -178,28 +185,29 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 10, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
-       /* selectBaseCurrencyNetworkComboBox = addTopLabelComboBox(root, gridRow,
+        selectBaseCurrencyNetworkComboBox = FormBuilder.<BaseCurrencyNetwork>addLabelComboBox(root, gridRow,
                 Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
 
-        selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
+        selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return DevEnv.isDevMode() ? (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork()) :
-                        baseCurrencyNetwork.getCurrencyName();
+                return baseCurrencyNetwork != null ?
+                        (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork())
+                        : "";
             }
 
             @Override
             public BaseCurrencyNetwork fromString(String string) {
                 return null;
             }
-        });*/
+        });
 
-        userLanguageComboBox = FormBuilder.<String>addLabelComboBox(root, gridRow,
-                Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
+        userLanguageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow,
+                Res.getWithCol("shared.language")).second;
         userCountryComboBox = FormBuilder.<Country>addLabelComboBox(root, ++gridRow,
                 Res.getWithCol("shared.country")).second;
         blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addLabelComboBox(root, ++gridRow,
@@ -298,7 +306,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 referralIdService.setReferralId(newValue);
         };
 
-        // AvoidStandbyMode
+        // AvoidStandbyModeService
         avoidStandbyModeCheckBox = addLabelCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.avoidStandbyMode"), "").second;
     }
@@ -472,17 +480,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void activateGeneralOptions() {
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
-        // We don't support Dash anymore due lack of activity but leave it in the code in case it will get
-        // re-activated some day
-        // show ony mainnet in production version
-        if (!DevEnv.isDevMode())
-            baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                    .filter(e -> !e.isDash())
-                    .filter(BaseCurrencyNetwork::isMainnet)
-                    .collect(Collectors.toList());
-       /* selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
+        // We allow switching to testnet to make it easier for users to test the testnet DAO version
+        baseCurrencyNetworks = baseCurrencyNetworks.stream()
+                .filter(BaseCurrencyNetwork::isBitcoin)
+                .filter(e -> !e.isRegtest())
+                .collect(Collectors.toList());
+        selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());*/
+        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
 
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
@@ -658,29 +663,29 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         avoidStandbyModeCheckBox.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyModeCheckBox.isSelected()));
     }
 
-   /* private void onSelectNetwork() {
+    private void onSelectNetwork() {
         if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
-    }*/
+    }
 
-   /* private void selectNetwork() {
+    private void selectNetwork() {
         new Popup().warning(Res.get("settings.net.needRestart"))
                 .onAction(() -> {
                     bisqEnvironment.saveBaseCryptoNetwork(selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem());
-                    UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
                 })
                 .actionButtonText(Res.get("shared.shutDown"))
                 .closeButtonText(Res.get("shared.cancel"))
                 .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
                 .show();
-    }*/
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void deactivateGeneralOptions() {
-        // selectBaseCurrencyNetworkComboBox.setOnAction(null);
+        selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);

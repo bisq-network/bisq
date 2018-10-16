@@ -17,9 +17,6 @@
 
 package bisq.core.btc;
 
-import bisq.core.app.BisqEnvironment;
-import bisq.core.provider.fee.FeeService;
-
 import org.libdohj.params.DashMainNetParams;
 import org.libdohj.params.DashRegTestParams;
 import org.libdohj.params.DashTestNet3Params;
@@ -67,6 +64,10 @@ public enum BaseCurrencyNetwork {
         return "MAINNET".equals(network);
     }
 
+    public boolean isTestnet() {
+        return "TESTNET".equals(network);
+    }
+
     public boolean isRegtest() {
         return "REGTEST".equals(network);
     }
@@ -84,15 +85,6 @@ public enum BaseCurrencyNetwork {
     }
 
     public long getDefaultMinFeePerByte() {
-        switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-            case "BTC":
-                return 1;
-            case "LTC":
-                return FeeService.LTC_REFERENCE_DEFAULT_MIN_TX_FEE.value;
-            case "DASH":
-                return FeeService.DASH_REFERENCE_DEFAULT_MIN_TX_FEE.value;
-            default:
-                throw new RuntimeException("Unsupported code at getDefaultMinFee: " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
-        }
+        return 1;
     }
 }

@@ -17,6 +17,10 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.exceptions.TxBroadcastTimeoutException;
+import bisq.core.btc.exceptions.TxMalleabilityException;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
 
@@ -44,8 +48,7 @@ public class TxBroadcaster {
         default void onTimeout(TxBroadcastTimeoutException exception) {
             Transaction tx = exception.getLocalTx();
             if (tx != null) {
-                String txId = tx.getHashAsString();
-                log.warn("TxBroadcaster.onTimeout called: {}\n" +
+                log.warn("TxBroadcaster.onTimeout called: {} \n" +
                                 "We optimistically assume that the tx broadcast succeeds later and call onSuccess on the " +
                                 "callback handler. This behaviour carries less potential problems than if we would trigger " +
                                 "a failure (e.g. which would cause a failed create offer attempt of failed take offer attempt).\n" +
@@ -68,7 +71,11 @@ public class TxBroadcaster {
                 // inconsistency if the tx was committed twice. It should be prevented by the maybeCommitTx methods but
                 // not 100% if that is always the case. Just added that comment to make clear that this might be a risky
                 // strategy and might need improvement if we get problems.
-                exception.getWallet().maybeCommitTx(tx);
+                // UPDATE: We got reported an wallet problem that a tx was added twice and wallet could not be loaded anymore even after a SPV resync.
+                // So it seems that this trategy is too risky to cause more problems as it tries to solve.
+                // Need more work from a BitcoinJ expert! For now we comment the call out here but leave it as reference
+                // for future improvements.
+                // exception.getWallet().maybeCommitTx(tx);
 
                 onSuccess(tx);
             } else {
@@ -85,7 +92,7 @@ public class TxBroadcaster {
         void onFailure(TxBroadcastException exception);
     }
 
-    private static final int DEFAULT_BROADCAST_TIMEOUT = 20;
+    private static final int DEFAULT_BROADCAST_TIMEOUT = 30;
     private static Map<String, Timer> broadcastTimerMap = new HashMap<>();
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction localTx, Callback callback) {

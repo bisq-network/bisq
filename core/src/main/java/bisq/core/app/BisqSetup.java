@@ -23,13 +23,15 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.AddressEntry;
-import bisq.core.btc.BalanceModel;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.BalanceModel;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.btc.wallet.WalletsSetup;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.governance.voteresult.VoteResultException;
+import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
@@ -61,6 +63,7 @@ import bisq.common.Clock;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.SealedAndSigned;
@@ -88,8 +91,6 @@ import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.security.Security;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -100,6 +101,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -146,6 +149,7 @@ public class BisqSetup {
     private final DisputeMsgEvents disputeMsgEvents;
     private final PriceAlert priceAlert;
     private final MarketAlerts marketAlerts;
+    private final VoteResultService voteResultService;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -170,6 +174,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private BiConsumer<Alert, String> displayUpdateHandler;
+    @Setter
+    @Nullable
+    private Consumer<VoteResultException> voteResultExceptionHandler;
     @Setter
     @Nullable
     private Consumer<PrivateNotificationPayload> displayPrivateNotificationHandler;
@@ -215,6 +222,7 @@ public class BisqSetup {
                      DisputeMsgEvents disputeMsgEvents,
                      PriceAlert priceAlert,
                      MarketAlerts marketAlerts,
+                     VoteResultService voteResultService,
                      BSFormatter formatter) {
 
 
@@ -250,6 +258,7 @@ public class BisqSetup {
         this.disputeMsgEvents = disputeMsgEvents;
         this.priceAlert = priceAlert;
         this.marketAlerts = marketAlerts;
+        this.voteResultService = voteResultService;
         this.formatter = formatter;
     }
 
@@ -404,7 +413,6 @@ public class BisqSetup {
                     step3();
                 });
             } catch (Throwable e) {
-                log.info("Localhost Bitcoin node not detected.");
                 UserThread.execute(BisqSetup.this::step3);
             } finally {
                 if (socket != null) {
@@ -471,6 +479,11 @@ public class BisqSetup {
                 walletInitialized.addListener(walletInitializedListener);
             else if (displayTorNetworkSettingsHandler != null)
                 displayTorNetworkSettingsHandler.accept(true);
+
+            log.info("Set log level for org.berndpruenster.netlayer classes to DEBUG to show more details for " +
+                    "Tor network connection issues");
+            Log.setCustomLogLevel("org.berndpruenster.netlayer", Level.DEBUG);
+
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
@@ -624,6 +637,15 @@ public class BisqSetup {
 
                 if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
                     filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+            }
+        });
+
+        voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
+            c.next();
+            if (c.wasAdded() && voteResultExceptionHandler != null) {
+                c.getAddedSubList().forEach(e -> {
+                    voteResultExceptionHandler.accept(e);
+                });
             }
         });
 

@@ -41,12 +41,13 @@ public class MeritConsensus {
     // Value with 144 blocks a day and 365 days would be 52560. We take a close round number instead.
     private static final int BLOCKS_PER_YEAR = 50_000;
 
-    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey) throws VoteResultException {
+    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey)
+            throws VoteResultException.DecryptionException {
         try {
-            final byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
+            byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
             return MeritList.getMeritListFromBytes(decrypted);
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.DecryptionException(t);
         }
     }
 
@@ -84,7 +85,7 @@ public class MeritConsensus {
         // We verify if signature of hash of blindVoteTxId is correct. EC key from first input for blind vote tx is
         // used for signature.
         if (pubKeyAsHex == null) {
-            log.error("Error at getMeritStake: pubKeyAsHex is null");
+            log.error("Error at isSignatureValid: pubKeyAsHex is null");
             return false;
         }
 
@@ -110,16 +111,15 @@ public class MeritConsensus {
 
     public static long getWeightedMeritAmount(long amount, int issuanceHeight, int blockHeight, int blocksPerYear) {
         if (issuanceHeight > blockHeight)
-            throw new IllegalArgumentException("issuanceHeight must not be larger than blockHeight");
+            throw new IllegalArgumentException("issuanceHeight must not be larger than blockHeight. issuanceHeight=" + issuanceHeight + "; blockHeight=" + blockHeight);
         if (blockHeight < 0)
-            throw new IllegalArgumentException("blockHeight must not be negative");
+            throw new IllegalArgumentException("blockHeight must not be negative. blockHeight=" + blockHeight);
         if (amount < 0)
-            throw new IllegalArgumentException("amount must not be negative");
+            throw new IllegalArgumentException("amount must not be negative. amount" + amount);
         if (blocksPerYear < 0)
-            throw new IllegalArgumentException("blocksPerYear must not be negative");
+            throw new IllegalArgumentException("blocksPerYear must not be negative. blocksPerYear=" + blocksPerYear);
         if (issuanceHeight < 0)
-            throw new IllegalArgumentException("issuanceHeight must not be negative");
-
+            throw new IllegalArgumentException("issuanceHeight must not be negative. issuanceHeight=" + issuanceHeight);
 
         // We use a linear function  to apply a factor for the issuance amount of 1 if the issuance was recent and 0
         // if the issuance was 2 years old or older.

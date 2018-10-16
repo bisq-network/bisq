@@ -43,7 +43,6 @@ public abstract class BaseProposalService<R extends Proposal> {
     protected final BsqWalletService bsqWalletService;
     protected final BtcWalletService btcWalletService;
     protected final BsqStateService bsqStateService;
-    protected final ProposalConsensus proposalConsensus;
     protected final ProposalValidator proposalValidator;
     @Nullable
     protected String name;
@@ -58,12 +57,10 @@ public abstract class BaseProposalService<R extends Proposal> {
     public BaseProposalService(BsqWalletService bsqWalletService,
                                BtcWalletService btcWalletService,
                                BsqStateService bsqStateService,
-                               ProposalConsensus proposalConsensus,
                                ProposalValidator proposalValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqStateService = bsqStateService;
-        this.proposalConsensus = proposalConsensus;
         this.proposalValidator = proposalValidator;
     }
 
@@ -87,12 +84,12 @@ public abstract class BaseProposalService<R extends Proposal> {
     // The hashOfPayload used in the opReturnData is created with the txId set to null.
     protected Transaction createTransaction(R proposal) throws InsufficientMoneyException, TxException {
         try {
-            final Coin fee = proposalConsensus.getFee(bsqStateService, bsqStateService.getChainHeight());
+            final Coin fee = ProposalConsensus.getFee(bsqStateService, bsqStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.
             final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee);
 
             // payload does not have txId at that moment
-            byte[] hashOfPayload = proposalConsensus.getHashOfPayload(proposal);
+            byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal);
             byte[] opReturnData = getOpReturnData(hashOfPayload);
 
             // We add the BTC inputs for the miner fee.
@@ -108,7 +105,7 @@ public abstract class BaseProposalService<R extends Proposal> {
     }
 
     protected byte[] getOpReturnData(byte[] hashOfPayload) {
-        return proposalConsensus.getOpReturnData(hashOfPayload, OpReturnType.PROPOSAL.getType(), Version.PROPOSAL);
+        return ProposalConsensus.getOpReturnData(hashOfPayload, OpReturnType.PROPOSAL.getType(), Version.PROPOSAL);
     }
 
     protected Transaction completeTx(Transaction preparedBurnFeeTx, byte[] opReturnData, Proposal proposal)

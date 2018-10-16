@@ -154,17 +154,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     public void hide() {
-        animateHide(() -> {
-            removeEffectFromBackground();
-
-            if (stage != null)
-                stage.hide();
-            else
-                log.warn("Stage is null");
-
-            cleanup();
-            onHidden();
-        });
+        animateHide();
     }
 
     @Override
