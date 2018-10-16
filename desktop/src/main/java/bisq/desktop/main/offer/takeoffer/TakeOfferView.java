@@ -254,7 +254,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowClearXchangeWarning();
 
         if (!model.isRange()) {
-            showNextStepAfterAmountIsSet();
+            nextButton.setVisible(false);
+            cancelButton1.setVisible(false);
+            if (model.isOfferAvailable.get())
+                showNextStepAfterAmountIsSet();
         }
 
         if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode())) {
@@ -587,8 +590,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, isOfferAvailable -> {
-            if (isOfferAvailable)
+            if (isOfferAvailable) {
                 offerAvailabilityBusyAnimation.stop();
+                if (!model.isRange() && !model.showPayFundsScreenDisplayed.get())
+                    showNextStepAfterAmountIsSet();
+            }
 
             offerAvailabilityLabel.setVisible(!isOfferAvailable);
             offerAvailabilityLabel.setManaged(!isOfferAvailable);
