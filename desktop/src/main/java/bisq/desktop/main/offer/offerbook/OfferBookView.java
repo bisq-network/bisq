@@ -805,7 +805,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
-                            final Button button = new AutoTooltipButton();
+                            final AutoTooltipButton button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
