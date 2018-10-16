@@ -193,6 +193,17 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
         languageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow, "", 15).second;
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
+        languageComboBox.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(final String item, boolean empty) {
+                super.updateItem(item, empty) ;
+                if (empty || item == null) {
+                    setText(Res.get("shared.addLanguage"));
+                } else {
+                    setText(LanguageUtil.getDisplayName(item));
+                }
+            }
+        });
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String code) {
@@ -204,7 +215,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                 return null;
             }
         });
-        languageComboBox.setOnAction(e -> onAddLanguage());
+        languageComboBox.setOnHiding(e -> onAddLanguage());
     }
 
     private void addArbitratorsGroup() {
