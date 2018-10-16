@@ -17,11 +17,13 @@
 
 package bisq.core.offer.placeoffer;
 
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.common.taskrunner.Model;
@@ -44,6 +46,8 @@ public class PlaceOfferModel implements Model {
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
+    private final ArbitratorManager arbitratorManager;
+    private final TradeStatisticsManager tradeStatisticsManager;
     private final User user;
 
     // Mutable
@@ -59,6 +63,8 @@ public class PlaceOfferModel implements Model {
                            TradeWalletService tradeWalletService,
                            BsqWalletService bsqWalletService,
                            OfferBookService offerBookService,
+                           ArbitratorManager arbitratorManager,
+                           TradeStatisticsManager tradeStatisticsManager,
                            User user) {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
@@ -67,6 +73,8 @@ public class PlaceOfferModel implements Model {
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
+        this.arbitratorManager = arbitratorManager;
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.user = user;
     }
 

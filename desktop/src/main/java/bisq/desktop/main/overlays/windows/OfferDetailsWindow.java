@@ -19,10 +19,6 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.account.AccountView;
-import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
@@ -398,9 +394,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     takeOfferHandlerOptional.get().run();
                 }
             } else {
-                new Popup<>().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
-                        ArbitratorSelectionView.class);
+                new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             }
         });
     }

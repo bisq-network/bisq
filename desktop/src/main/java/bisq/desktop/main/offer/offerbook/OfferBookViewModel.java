@@ -536,19 +536,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         });
     }
 
-    boolean hasMatchingArbitrator(Offer offer) {
-        final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
-        if (acceptedArbitratorAddresses != null) {
-            for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
-                for (NodeAddress acceptedArbitratorNodeAddress : acceptedArbitratorAddresses) {
-                    if (offerArbitratorNodeAddress.equals(acceptedArbitratorNodeAddress))
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
-
     boolean isIgnored(Offer offer) {
         return preferences.getIgnoreTradersList().stream()
                 .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()));

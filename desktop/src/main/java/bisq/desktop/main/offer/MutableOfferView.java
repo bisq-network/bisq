@@ -30,7 +30,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
-import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.dao.DaoView;
@@ -352,13 +351,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                         });
                     }
                 } else {
-                    new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
-                            .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
-                            .actionButtonTextWithGoTo("navigation.arbitratorSelection")
-                            .onAction(() -> {
-                                navigation.setReturnPath(navigation.getCurrentPath());
-                                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
-                            }).show();
+                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
@@ -728,9 +721,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         };
 
         volumeListener = (observable, oldValue, newValue) -> {
-          if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
-              volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
-          }
+            if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
+                volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
+            }
         };
 
         marketPriceMarginListener = (observable, oldValue, newValue) -> {
