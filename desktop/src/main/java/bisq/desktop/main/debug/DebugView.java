@@ -40,7 +40,6 @@ import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessag
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyArbitratorSelection;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyMediatorSelection;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -108,7 +107,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
-                        MakerVerifyArbitratorSelection.class,
                         MakerVerifyMediatorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
@@ -187,7 +185,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
-                        MakerVerifyArbitratorSelection.class,
                         MakerVerifyMediatorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,

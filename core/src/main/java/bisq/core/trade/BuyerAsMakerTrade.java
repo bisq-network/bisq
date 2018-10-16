@@ -35,6 +35,8 @@ import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
 
@@ -46,10 +48,10 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              Coin txFee,
                              Coin takeOfferFee,
                              boolean isCurrencyForTakerFeeBtc,
+                             @Nullable NodeAddress arbitratorNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc,
-                storage, btcWalletService);
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,11 +71,12 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         PB.Trade proto = buyerAsMakerTradeProto.getTrade();
-        final BuyerAsMakerTrade trade = new BuyerAsMakerTrade(
+        BuyerAsMakerTrade trade = new BuyerAsMakerTrade(
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getTxFeeAsLong()),
                 Coin.valueOf(proto.getTakerFeeAsLong()),
                 proto.getIsCurrencyForTakerFeeBtc(),
+                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 storage,
                 btcWalletService);
 

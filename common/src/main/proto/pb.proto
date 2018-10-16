@@ -125,6 +125,7 @@ message OfferAvailabilityResponse {
     AvailabilityResult availability_result = 2;
     repeated int32 supported_capabilities = 3;
     string uid = 4;
+    NodeAddress arbitrator = 5;
 }
 
 message RefreshOfferMessage {
@@ -1056,6 +1057,7 @@ message OpenOffer {
 
     Offer offer = 1;
     State state = 2;
+    NodeAddress arbitrator_node_address = 3;
 }
 
 message Tradable {

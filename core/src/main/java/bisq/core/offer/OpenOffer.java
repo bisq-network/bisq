@@ -20,6 +20,8 @@ package bisq.core.offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradableList;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.ProtoUtil;
@@ -28,10 +30,14 @@ import bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Date;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @EqualsAndHashCode
 @Slf4j
@@ -52,6 +58,10 @@ public final class OpenOffer implements Tradable {
     private final Offer offer;
     @Getter
     private State state;
+    @Getter
+    @Setter
+    @Nullable
+    private NodeAddress arbitratorNodeAddress;
 
     transient private Storage<TradableList<OpenOffer>> storage;
 
@@ -65,9 +75,10 @@ public final class OpenOffer implements Tradable {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OpenOffer(Offer offer, State state) {
+    private OpenOffer(Offer offer, State state, @Nullable NodeAddress arbitratorNodeAddress) {
         this.offer = offer;
         this.state = state;
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
 
         if (this.state == State.RESERVED)
             setState(State.AVAILABLE);
@@ -75,15 +86,19 @@ public final class OpenOffer implements Tradable {
 
     @Override
     public PB.Tradable toProtoMessage() {
-        return PB.Tradable.newBuilder().setOpenOffer(PB.OpenOffer.newBuilder()
+        PB.OpenOffer.Builder builder = PB.OpenOffer.newBuilder()
                 .setOffer(offer.toProtoMessage())
-                .setState(PB.OpenOffer.State.valueOf(state.name())))
-                .build();
+                .setState(PB.OpenOffer.State.valueOf(state.name()));
+
+        Optional.ofNullable(arbitratorNodeAddress).ifPresent(nodeAddress -> builder.setArbitratorNodeAddress(nodeAddress.toProtoMessage()));
+
+        return PB.Tradable.newBuilder().setOpenOffer(builder).build();
     }
 
     public static Tradable fromProto(PB.OpenOffer proto) {
         return new OpenOffer(Offer.fromProto(proto.getOffer()),
-                ProtoUtil.enumFromProto(OpenOffer.State.class, proto.getState().name()));
+                ProtoUtil.enumFromProto(OpenOffer.State.class, proto.getState().name()),
+                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
     }
 
 
