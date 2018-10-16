@@ -20,6 +20,8 @@ package bisq.core.dao;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.dao.bonding.bond.BondWithHash;
+import bisq.core.dao.bonding.bond.BondedReputation;
+import bisq.core.dao.bonding.bond.BondedReputationService;
 import bisq.core.dao.bonding.lockup.LockupService;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.bonding.unlock.UnlockService;
@@ -106,6 +108,7 @@ public class DaoFacade implements DaoSetupService {
     private final GenericProposalService genericProposalService;
     private final RemoveAssetProposalService removeAssetProposalService;
     private final BondedRolesService bondedRolesService;
+    private final BondedReputationService bondedReputationService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
 
@@ -127,6 +130,7 @@ public class DaoFacade implements DaoSetupService {
                      GenericProposalService genericProposalService,
                      RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
+                     BondedReputationService bondedReputationService,
                      LockupService lockupService,
                      UnlockService unlockService) {
         this.proposalListPresentation = proposalListPresentation;
@@ -144,6 +148,7 @@ public class DaoFacade implements DaoSetupService {
         this.genericProposalService = genericProposalService;
         this.removeAssetProposalService = removeAssetProposalService;
         this.bondedRolesService = bondedRolesService;
+        this.bondedReputationService = bondedReputationService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
     }
@@ -258,6 +263,10 @@ public class DaoFacade implements DaoSetupService {
 
     public List<BondedRole> getBondedRoleList() {
         return bondedRolesService.getBondedRoleList();
+    }
+
+    public List<BondedReputation> getBondedReputationList() {
+        return bondedReputationService.getBondedReputationList();
     }
 
     // Show fee
@@ -411,6 +420,10 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesService.getValidBondedRoleList();
     }
 
+    public List<BondedReputation> getValidBondedReputationList() {
+        return bondedReputationService.getValidBondedReputationList();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Use case: Present transaction related state
@@ -506,6 +519,10 @@ public class DaoFacade implements DaoSetupService {
 
     public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
         return bondedRolesService.getBondedRoleFromHash(hash);
+    }
+
+    public Optional<BondedReputation> getBondedReputationFromHash(byte[] hash) {
+        return bondedReputationService.getBondedReputationFromHash(hash);
     }
 
     public boolean isUnlocking(BondWithHash bondWithHash) {

@@ -33,13 +33,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
 
+@Getter
 public final class BondedReputation implements PersistablePayload, NetworkPayload, BondWithHash {
-    @Nullable
-    @Setter
     private final String salt;
 
     @Setter

@@ -938,6 +938,7 @@ message PersistableEnvelope {
         RemovedAssetList removed_asset_list = 25;
         EvaluatedProposalList evaluated_proposal_list = 26;
         DecryptedBallotsWithMeritsList decrypted_ballots_with_merits_list = 27;
+        BondedReputationList bonded_reputation_list = 28;
     }
 }
 
@@ -1537,6 +1538,10 @@ message BondedReputation {
     string salt = 1;
     string lockup_tx_id = 2;
     string unlock_tx_id = 3;
+}
+
+message BondedReputationList {
+    repeated BondedReputation bonded_reputation = 1;
 }
 
 message TempProposalPayload {

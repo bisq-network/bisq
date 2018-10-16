@@ -20,6 +20,7 @@ package bisq.core.setup;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.dao.DaoOptionKeys;
+import bisq.core.dao.bonding.bond.BondedReputationService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
@@ -69,6 +70,7 @@ public class CorePersistedDataHost {
             persistedDataHosts.add(injector.getInstance(MyVoteListService.class));
             persistedDataHosts.add(injector.getInstance(MyProposalListService.class));
             persistedDataHosts.add(injector.getInstance(BondedRolesService.class));
+            persistedDataHosts.add(injector.getInstance(BondedReputationService.class));
             persistedDataHosts.add(injector.getInstance(AssetService.class));
             persistedDataHosts.add(injector.getInstance(VoteResultService.class));
         }
