@@ -88,7 +88,7 @@ public class ArbitratorSelection {
     }
 
     static String getLeastUsedArbitrator(List<String> lastAddressesUsedInTrades, Set<String> arbitrators) {
-        checkArgument(!arbitrators.isEmpty(), "arbitrators must nto be empty");
+        checkArgument(!arbitrators.isEmpty(), "arbitrators must not be empty");
         List<Tuple2<String, AtomicInteger>> arbitratorTuples = arbitrators.stream()
                 .map(e -> new Tuple2<>(e, new AtomicInteger(0)))
                 .collect(Collectors.toList());
