@@ -3,6 +3,7 @@
 # See bisq.asset.Asset and bisq.asset.AssetRegistry for further details.
 # See https://bisq.network/list-asset for complete instructions.
 bisq.asset.coins.Achievecoin
+bisq.asset.coins.Actinium
 bisq.asset.coins.Angelcoin
 bisq.asset.coins.Aquachain
 bisq.asset.coins.Arto
@@ -19,6 +20,7 @@ bisq.asset.coins.Bitcoin$Testnet
 bisq.asset.coins.Bitcore
 bisq.asset.coins.BitDaric
 bisq.asset.coins.BitZeny
+bisq.asset.coins.Blur
 bisq.asset.coins.BSQ$Mainnet
 bisq.asset.coins.BSQ$Regtest
 bisq.asset.coins.BSQ$Testnet
@@ -47,6 +49,7 @@ bisq.asset.coins.Diamond
 bisq.asset.coins.DigiMoney
 bisq.asset.coins.Dinero
 bisq.asset.coins.Dogecoin
+bisq.asset.coins.Dragonglass
 bisq.asset.coins.DRIP
 bisq.asset.coins.DSTRA
 bisq.asset.coins.DynamicCoin
@@ -137,10 +140,12 @@ bisq.asset.coins.Yenten
 bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
 bisq.asset.coins.ZenCash
+bisq.asset.coins.Zero
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.BetterBetting
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.Ellaism
+bisq.asset.tokens.EtherStone
 bisq.asset.tokens.Exceed
 bisq.asset.tokens.GeoCoin
 bisq.asset.tokens.Grans
