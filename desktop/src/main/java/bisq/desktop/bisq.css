@@ -274,6 +274,11 @@ bg color of non edit textFields: fafafa
     -jfx-unfocus-color: -bs-rd-grey-line;
 }
 
+.jfx-combo-box > .list-cell {
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
 .jfx-combo-box > .arrow-button > .arrow {
     -fx-background-color: null;
     -fx-border-color: -jfx-unfocus-color;

@@ -432,8 +432,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
         useSoundCheckBox = FormBuilder.addLabelCheckBox(root, gridRow,
                 Res.get("account.notifications.useSound.label"),
-                "",
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         useSoundCheckBox.setSelected(preferences.isUseSoundForMobileNotifications());
         useSoundCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseSoundProperty().set(newValue);
@@ -441,7 +440,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         };
 
         tradeCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
-                Res.get("account.notifications.trade.label")).second;
+                Res.get("account.notifications.trade.label"));
         tradeCheckBox.setSelected(preferences.isUseTradeNotifications());
         tradeCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseTradeNotificationsProperty().set(newValue);
@@ -449,7 +448,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         };
 
         marketCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
-                Res.get("account.notifications.market.label")).second;
+                Res.get("account.notifications.market.label"));
         marketCheckBox.setSelected(preferences.isUseMarketNotifications());
         marketCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseMarketNotificationsProperty().set(newValue);
@@ -457,7 +456,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             updateMarketAlertFields();
         };
         priceCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
-                Res.get("account.notifications.price.label")).second;
+                Res.get("account.notifications.price.label"));
         priceCheckBox.setSelected(preferences.isUsePriceNotifications());
         priceCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUsePriceNotificationsProperty().set(newValue);

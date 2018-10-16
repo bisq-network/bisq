@@ -436,19 +436,19 @@ public class FormBuilder {
     // Label  + InputTextField + CheckBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, InputTextField, CheckBox> addLabelInputTextFieldCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+    public static Tuple3<Label, InputTextField, CheckBox> addTopLabelInputTextFieldCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
+        Label label = getTopLabel(title);
 
         InputTextField inputTextField = new InputTextField();
         CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
-        HBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
+        VBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
 
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(inputTextField, checkBox);
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        gridPane.getChildren().add(hBox);
+        VBox vBox = getTopLabelVBox(0);
+
+        vBox.getChildren().addAll(label, inputTextField, checkBox);
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setColumnIndex(vBox, 0);
+        gridPane.getChildren().add(vBox);
 
         return new Tuple3<>(label, inputTextField, checkBox);
     }
@@ -617,25 +617,6 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Label  + RadioButton
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static Tuple2<Label, RadioButton> addLabelRadioButton(GridPane gridPane, int rowIndex, ToggleGroup toggleGroup, String title, String
-            radioButtonTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
-
-        RadioButton radioButton = new AutoTooltipRadioButton(radioButtonTitle);
-        radioButton.setToggleGroup(toggleGroup);
-        radioButton.setPadding(new Insets(6, 0, 0, 0));
-        GridPane.setRowIndex(radioButton, rowIndex);
-        GridPane.setColumnIndex(radioButton, 1);
-        gridPane.getChildren().add(radioButton);
-
-        return new Tuple2<>(label, radioButton);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + RadioButton + RadioButton
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -672,25 +653,18 @@ public class FormBuilder {
     // Label + CheckBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelCheckBox(gridPane, rowIndex, title, "", 0);
+    public static CheckBox addLabelCheckBox(GridPane gridPane, int rowIndex, String title) {
+        return addLabelCheckBox(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
-        return addLabelCheckBox(gridPane, rowIndex, title, checkBoxTitle, 0);
-    }
-
-    public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, -3);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
-
-        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
+    public static CheckBox addLabelCheckBox(GridPane gridPane, int rowIndex, String title, double top) {
+        CheckBox checkBox = new AutoTooltipCheckBox(title);
         GridPane.setRowIndex(checkBox, rowIndex);
-        GridPane.setColumnIndex(checkBox, 1);
-        GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
+        GridPane.setColumnIndex(checkBox, 0);
+        GridPane.setMargin(checkBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(checkBox);
 
-        return new Tuple2<>(label, checkBox);
+        return checkBox;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -767,11 +741,10 @@ public class FormBuilder {
     }
 
     public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = null;
-
         JFXComboBox<T> comboBox = new JFXComboBox<>();
         comboBox.setLabelFloat(true);
         comboBox.setPromptText(title);
+        comboBox.setMaxWidth(Double.MAX_VALUE);
 
         // Default ComboBox does not show promptText after clear selection.
         // https://stackoverflow.com/questions/50569330/how-to-reset-combobox-and-display-prompttext?noredirect=1&lq=1
@@ -789,9 +762,8 @@ public class FormBuilder {
         });
 
         GridPane.setRowIndex(comboBox, rowIndex);
-        GridPane.setHalignment(comboBox, HPos.LEFT);
         GridPane.setColumnIndex(comboBox, 0);
-        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(comboBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(comboBox);
 
         return comboBox;
@@ -1051,7 +1023,7 @@ public class FormBuilder {
         BalanceTextField balanceTextField = new BalanceTextField(title);
         GridPane.setRowIndex(balanceTextField, rowIndex);
         GridPane.setColumnIndex(balanceTextField, 0);
-        GridPane.setMargin(balanceTextField, new Insets(20, 0,0,0));
+        GridPane.setMargin(balanceTextField, new Insets(20, 0, 0, 0));
         gridPane.getChildren().add(balanceTextField);
 
         return balanceTextField;

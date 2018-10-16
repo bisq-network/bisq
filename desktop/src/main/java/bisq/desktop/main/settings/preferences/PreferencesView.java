@@ -189,9 +189,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
-        selectBaseCurrencyNetworkComboBox = FormBuilder.<BaseCurrencyNetwork>addComboBox(root, gridRow,
+        selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
-
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
@@ -206,11 +205,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        userLanguageComboBox = FormBuilder.<String>addComboBox(root, ++gridRow,
+        userLanguageComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("shared.language"));
-        userCountryComboBox = FormBuilder.<Country>addComboBox(root, ++gridRow,
+        userCountryComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("shared.country"));
-        blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addComboBox(root, ++gridRow,
+        blockChainExplorerComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer"));
 
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
@@ -289,7 +288,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         // autoSelectArbitrators
         autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
+                Res.get("setting.preferences.autoSelectArbitrators"));
 
         // ignoreTraders
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
@@ -308,7 +307,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         // AvoidStandbyModeService
         avoidStandbyModeCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.avoidStandbyMode"), "").second;
+                Res.get("setting.preferences.avoidStandbyMode"));
     }
 
     private void initializeDisplayCurrencies() {
@@ -317,7 +316,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 4);
 
 
-        preferredTradeCurrencyComboBox = FormBuilder.<TradeCurrency>addComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
+        preferredTradeCurrencyComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
@@ -433,7 +432,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addComboBox(root, ++gridRow);
+        fiatCurrenciesComboBox = FormBuilder.addComboBox(root, ++gridRow);
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
         fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
             @Override
@@ -495,10 +494,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
 
-        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.useAnimations"), "").second;
+        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
-        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"), "").second;
+        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"),
                 Res.get("setting.preferences.reset"), 0).second;
     }

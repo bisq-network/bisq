@@ -122,7 +122,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(150);
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("sendAlertMessageWindow.isUpdate"), "").second;
+                Res.get("sendAlertMessageWindow.isUpdate"));
         isUpdateCheckBox.setSelected(true);
 
         InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
