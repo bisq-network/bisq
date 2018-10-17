@@ -65,9 +65,8 @@ public abstract class StoreService<T extends PersistableEnvelope> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODO why 2 seconds? seems too much...
     protected void persist() {
-        storage.queueUpForSave(store, 2000);
+        storage.queueUpForSave(store, 200);
     }
 
     protected T getStore() {
