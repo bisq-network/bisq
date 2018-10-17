@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.asset;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -37,7 +37,7 @@ public class AssetService implements PersistedDataHost {
 
 
     private final Storage<RemovedAssetsList> storage;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     @Getter
     private final RemovedAssetsList removedAssetsList = new RemovedAssetsList();
 
@@ -47,9 +47,9 @@ public class AssetService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AssetService(Storage<RemovedAssetsList> storage, BsqStateService bsqStateService) {
+    public AssetService(Storage<RemovedAssetsList> storage, DaoStateService daoStateService) {
         this.storage = storage;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
     }
 
 

@@ -36,8 +36,8 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.CycleService;
 import bisq.core.locale.Res;
@@ -82,10 +82,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class VoteResultView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class VoteResultView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final PhasesView phasesView;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
     private final ProposalService proposalService;
@@ -120,7 +120,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     @Inject
     public VoteResultView(DaoFacade daoFacade,
                           PhasesView phasesView,
-                          BsqStateService bsqStateService,
+                          DaoStateService daoStateService,
                           CycleService cycleService,
                           VoteResultService voteResultService,
                           ProposalService proposalService,
@@ -129,7 +129,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                           BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
         this.proposalService = proposalService;
@@ -176,7 +176,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -240,21 +240,21 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     private void fillCycleList() {
         cycleListItemList.clear();
-        bsqStateService.getCycles().forEach(cycle -> {
+        daoStateService.getCycles().forEach(cycle -> {
             List<Proposal> proposalsForCycle = proposalService.getValidatedProposals().stream()
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
-            List<EvaluatedProposal> evaluatedProposalsForCycle = bsqStateService.getEvaluatedProposalList().stream()
+            List<EvaluatedProposal> evaluatedProposalsForCycle = daoStateService.getEvaluatedProposalList().stream()
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 
-            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = bsqStateService.getDecryptedBallotsWithMeritsList().stream()
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = daoStateService.getDecryptedBallotsWithMeritsList().stream()
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getBlindVoteTxId()))
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getVoteRevealTxId()))
                     .collect(Collectors.toList());
 
-            long cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+            long cycleStartTime = daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
                     .map(Block::getTime)
                     .orElse(0L);
             int cycleIndex = cycleService.getCycleIndex(cycle);
@@ -264,8 +264,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     proposalsForCycle,
                     evaluatedProposalsForCycle,
                     decryptedVotesForCycle,
-                    bsqStateService);
-            CycleListItem cycleListItem = new CycleListItem(resultsOfCycle, bsqStateService, bsqFormatter);
+                    daoStateService);
+            CycleListItem cycleListItem = new CycleListItem(resultsOfCycle, daoStateService, bsqFormatter);
             cycleListItemList.add(cycleListItem);
         });
         Collections.reverse(cycleListItemList);
@@ -401,7 +401,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                 .forEach(evaluatedProposal -> {
                     resultsOfCycle.getDecryptedVotesForCycle().forEach(decryptedBallotsWithMerits -> {
                         voteListItemList.add(new VoteListItem(evaluatedProposal.getProposal(), decryptedBallotsWithMerits,
-                                bsqStateService, bsqFormatter));
+                                daoStateService, bsqFormatter));
                     });
                 });
 

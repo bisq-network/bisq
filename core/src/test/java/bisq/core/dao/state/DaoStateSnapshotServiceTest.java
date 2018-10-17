@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({BsqStateService.class, GenesisTxInfo.class, DaoStateStorageService.class})
+@PrepareForTest({DaoStateService.class, GenesisTxInfo.class, DaoStateStorageService.class})
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class DaoStateSnapshotServiceTest {
 
@@ -39,7 +39,7 @@ public class DaoStateSnapshotServiceTest {
 
     @Before
     public void setup() {
-        daoStateSnapshotService = new DaoStateSnapshotService(mock(BsqStateService.class),
+        daoStateSnapshotService = new DaoStateSnapshotService(mock(DaoStateService.class),
                 mock(GenesisTxInfo.class),
                 mock(DaoStateStorageService.class));
     }

@@ -22,7 +22,7 @@ import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -100,8 +100,8 @@ public class DecryptedBallotsWithMerits implements PersistablePayload {
                 .findAny();
     }
 
-    public long getMerit(BsqStateService bsqStateService) {
-        return MeritConsensus.getMeritStake(blindVoteTxId, meritList, bsqStateService);
+    public long getMerit(DaoStateService daoStateService) {
+        return MeritConsensus.getMeritStake(blindVoteTxId, meritList, daoStateService);
     }
 
     @Override

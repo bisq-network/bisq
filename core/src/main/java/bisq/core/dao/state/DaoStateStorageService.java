@@ -30,13 +30,13 @@ import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manages persistence of the bsqState.
+ * Manages persistence of the daoState.
  */
 @Slf4j
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private static final String FILE_NAME = "DaoStateStore";
 
-    private BsqState bsqState;
+    private DaoState daoState;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,11 +45,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Inject
     public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
-                                  BsqState bsqState,
+                                  DaoState daoState,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   Storage<DaoStateStore> daoSnapshotStorage) {
         super(storageDir, daoSnapshotStorage);
-        this.bsqState = bsqState;
+        this.daoState = daoState;
 
         resourceDataStoreService.addService(this);
     }
@@ -64,13 +64,13 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void persist(BsqState bsqState) {
-        store.setBsqState(bsqState);
+    public void persist(DaoState daoState) {
+        store.setDaoState(daoState);
         storage.queueUpForSave(store);
     }
 
-    public BsqState getPersistedBsqState() {
-        return store.getBsqState();
+    public DaoState getPersistedBsqState() {
+        return store.getDaoState();
     }
 
 
@@ -80,6 +80,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected DaoStateStore createStore() {
-        return new DaoStateStore(bsqState.getClone());
+        return new DaoStateStore(daoState.getClone());
     }
 }

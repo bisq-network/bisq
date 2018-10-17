@@ -34,15 +34,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DaoStateStore implements PersistableEnvelope {
-    // BsqState is always a clone and must not be used for read access beside initial read from disc when we apply
+    // DaoState is always a clone and must not be used for read access beside initial read from disc when we apply
     // the snapshot!
     @Nullable
     @Getter
     @Setter
-    BsqState bsqState;
+    DaoState daoState;
 
-    DaoStateStore(BsqState bsqState) {
-        this.bsqState = bsqState;
+    DaoStateStore(DaoState daoState) {
+        this.daoState = daoState;
     }
 
 
@@ -51,15 +51,15 @@ public class DaoStateStore implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Message toProtoMessage() {
-        checkNotNull(bsqState, "bsqState must not be null when toProtoMessage is invoked");
+        checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
         PB.DaoStateStore.Builder builder = PB.DaoStateStore.newBuilder()
-                .setBsqState(bsqState.getBsqStateBuilder());
+                .setBsqState(daoState.getBsqStateBuilder());
         return PB.PersistableEnvelope.newBuilder()
                 .setDaoStateStore(builder)
                 .build();
     }
 
     public static PersistableEnvelope fromProto(PB.DaoStateStore proto) {
-        return new DaoStateStore(BsqState.fromProto(proto.getBsqState()));
+        return new DaoStateStore(DaoState.fromProto(proto.getBsqState()));
     }
 }

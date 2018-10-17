@@ -23,7 +23,7 @@ import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.blockchain.RawBlock;
 
@@ -55,11 +55,11 @@ public class LiteNode extends BsqNode {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public LiteNode(BlockParser blockParser,
-                    BsqStateService bsqStateService,
+                    DaoStateService daoStateService,
                     DaoStateSnapshotService daoStateSnapshotService,
                     P2PService p2PService,
                     LiteNodeNetworkService liteNodeNetworkService) {
-        super(blockParser, bsqStateService, daoStateSnapshotService, p2PService);
+        super(blockParser, daoStateService, daoStateSnapshotService, p2PService);
 
         this.liteNodeNetworkService = liteNodeNetworkService;
     }

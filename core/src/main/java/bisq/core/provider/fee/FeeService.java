@@ -18,7 +18,7 @@
 package bisq.core.provider.fee;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -63,11 +63,11 @@ public class FeeService {
     // fee service would not deliver data.
     private static final long BTC_DEFAULT_TX_FEE = 50;
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
-    private static BsqStateService bsqStateService;
+    private static DaoStateService daoStateService;
     private static PeriodService periodService;
 
     private static long getFeeFromParam(Param parm) {
-        return bsqStateService != null && periodService != null ? bsqStateService.getParamValue(parm, periodService.getChainHeight()) : 0;
+        return daoStateService != null && periodService != null ? daoStateService.getParamValue(parm, periodService.getChainHeight()) : 0;
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForFeeIsBtc) {
@@ -109,9 +109,9 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(FeeProvider feeProvider, BsqStateService bsqStateService, PeriodService periodService) {
+    public FeeService(FeeProvider feeProvider, DaoStateService daoStateService, PeriodService periodService) {
         this.feeProvider = feeProvider;
-        FeeService.bsqStateService = bsqStateService;
+        FeeService.daoStateService = daoStateService;
         FeeService.periodService = periodService;
     }
 

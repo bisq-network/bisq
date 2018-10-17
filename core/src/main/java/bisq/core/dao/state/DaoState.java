@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
  * One BSQ block with empty txs adds 152 bytes which results in about 8 MB/year
  */
 @Slf4j
-public class BsqState implements PersistablePayload {
+public class DaoState implements PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
@@ -96,7 +96,7 @@ public class BsqState implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqState() {
+    public DaoState() {
         this(0,
                 new LinkedList<>(),
                 new LinkedList<>(),
@@ -116,7 +116,7 @@ public class BsqState implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BsqState(int chainHeight,
+    private DaoState(int chainHeight,
                      LinkedList<Block> blocks,
                      LinkedList<Cycle> cycles,
                      Map<TxOutputKey, TxOutput> unspentTxOutputMap,
@@ -168,7 +168,7 @@ public class BsqState implements PersistablePayload {
         return builder;
     }
 
-    public static BsqState fromProto(PB.BsqState proto) {
+    public static DaoState fromProto(PB.BsqState proto) {
         LinkedList<Block> blocks = proto.getBlocksList().stream()
                 .map(Block::fromProto)
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -190,7 +190,7 @@ public class BsqState implements PersistablePayload {
                 .map(EvaluatedProposal::fromProto).collect(Collectors.toCollection(ArrayList::new));
         List<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsList = proto.getDecryptedBallotsWithMeritsListList().stream()
                 .map(DecryptedBallotsWithMerits::fromProto).collect(Collectors.toCollection(ArrayList::new));
-        return new BsqState(proto.getChainHeight(),
+        return new DaoState(proto.getChainHeight(),
                 blocks,
                 cycles,
                 unspentTxOutputMap,
@@ -212,11 +212,11 @@ public class BsqState implements PersistablePayload {
         this.chainHeight = chainHeight;
     }
 
-    BsqState getClone() {
-        return BsqState.fromProto(getBsqStateBuilder().build());
+    DaoState getClone() {
+        return DaoState.fromProto(getBsqStateBuilder().build());
     }
 
-    BsqState getClone(BsqState snapshotCandidate) {
-        return BsqState.fromProto(snapshotCandidate.getBsqStateBuilder().build());
+    DaoState getClone(DaoState snapshotCandidate) {
+        return DaoState.fromProto(snapshotCandidate.getBsqStateBuilder().build());
     }
 }

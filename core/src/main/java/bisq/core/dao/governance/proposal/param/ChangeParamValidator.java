@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
 import bisq.core.locale.Res;
@@ -41,8 +41,8 @@ public class ChangeParamValidator extends ProposalValidator {
     private BsqFormatter bsqFormatter;
 
     @Inject
-    public ChangeParamValidator(BsqStateService bsqStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
-        super(bsqStateService, periodService);
+    public ChangeParamValidator(DaoStateService daoStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
+        super(daoStateService, periodService);
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -159,6 +159,6 @@ public class ChangeParamValidator extends ProposalValidator {
     }
 
     private long getCurrentValue(Param param) {
-        return bsqStateService.getParamValue(param, periodService.getChainHeight());
+        return daoStateService.getParamValue(param, periodService.getChainHeight());
     }
 }

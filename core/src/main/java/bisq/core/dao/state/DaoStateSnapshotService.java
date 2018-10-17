@@ -28,40 +28,40 @@ import java.util.LinkedList;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manages periodical snapshots of the BsqState.
+ * Manages periodical snapshots of the DaoState.
  * At startup we apply a snapshot if available.
- * At each trigger height we persist the latest snapshot candidate and set the current bsqState as new candidate.
+ * At each trigger height we persist the latest snapshot candidate and set the current daoState as new candidate.
  * The trigger height is determined by the SNAPSHOT_GRID. The latest persisted snapshot is min. the height of
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
  */
 @Slf4j
-public class DaoStateSnapshotService implements BsqStateListener {
+public class DaoStateSnapshotService implements DaoStateListener {
     private static final int SNAPSHOT_GRID = 10;
 
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
     private final DaoStateStorageService daoStateStorageService;
 
-    private BsqState snapshotCandidate;
+    private DaoState snapshotCandidate;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoStateSnapshotService(BsqStateService bsqStateService,
+    public DaoStateSnapshotService(DaoStateService daoStateService,
                                    GenesisTxInfo genesisTxInfo,
                                    DaoStateStorageService daoStateStorageService) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
 
-        this.bsqStateService.addBsqStateListener(this);
+        this.daoStateService.addBsqStateListener(this);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -76,20 +76,20 @@ public class DaoStateSnapshotService implements BsqStateListener {
         // different to our current height.
         boolean noSnapshotCandidateOrDifferentHeight = snapshotCandidate == null || snapshotCandidate.getChainHeight() != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
-                isValidHeight(bsqStateService.getBlocks().getLast().getHeight()) &&
+                isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
                 noSnapshotCandidateOrDifferentHeight) {
             // At trigger event we store the latest snapshotCandidate to disc
             if (snapshotCandidate != null) {
                 // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
                 // state in the next step
-                BsqState cloned = bsqStateService.getClone(snapshotCandidate);
+                DaoState cloned = daoStateService.getClone(snapshotCandidate);
                 daoStateStorageService.persist(cloned);
                 log.info("Saved snapshotCandidate with height {} to Disc at height {} ",
                         snapshotCandidate.getChainHeight(), chainHeight);
             }
 
             // Now we clone and keep it in memory for the next trigger event
-            snapshotCandidate = bsqStateService.getClone();
+            snapshotCandidate = daoStateService.getClone();
             log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
     }
@@ -108,14 +108,14 @@ public class DaoStateSnapshotService implements BsqStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot() {
-        BsqState persisted = daoStateStorageService.getPersistedBsqState();
+        DaoState persisted = daoStateStorageService.getPersistedBsqState();
         if (persisted != null) {
             LinkedList<Block> blocks = persisted.getBlocks();
             if (!blocks.isEmpty()) {
                 int heightOfLastBlock = blocks.getLast().getHeight();
-                log.info("applySnapshot from persisted bsqState with height of last block {}", heightOfLastBlock);
+                log.info("applySnapshot from persisted daoState with height of last block {}", heightOfLastBlock);
                 if (isValidHeight(heightOfLastBlock))
-                    bsqStateService.applySnapshot(persisted);
+                    daoStateService.applySnapshot(persisted);
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");

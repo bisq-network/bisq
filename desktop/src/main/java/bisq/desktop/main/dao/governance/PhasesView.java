@@ -21,7 +21,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
-public class PhasesView implements BsqStateListener {
+public class PhasesView implements DaoStateListener {
     private final DaoFacade daoFacade;
     private SeparatedPhaseBars separatedPhaseBars;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
@@ -90,7 +90,7 @@ public class PhasesView implements BsqStateListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
