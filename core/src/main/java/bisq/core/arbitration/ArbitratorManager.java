@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -229,30 +230,14 @@ public class ArbitratorManager {
                     );
                 });
 
-        if (preferences.isAutoSelectArbitrators()) {
-            arbitratorsObservableMap.values().stream()
-                    .filter(user::hasMatchingLanguage)
-                    .forEach(a -> {
-                        user.addAcceptedArbitrator(a);
-                        user.addAcceptedMediator(getMediator(a)
-                        );
-                    });
-        } else {
-            // if we don't have any arbitrator we set all matching
-            // we use a delay as we might get our matching arbitrator a bit delayed (first we get one we did not selected
-            // then we get our selected one - we don't want to activate the first in that case)
-            UserThread.runAfter(() -> {
-                if (user.getAcceptedArbitrators().isEmpty()) {
-                    arbitratorsObservableMap.values().stream()
-                            .filter(user::hasMatchingLanguage)
-                            .forEach(a -> {
-                                user.addAcceptedArbitrator(a);
-                                user.addAcceptedMediator(getMediator(a)
-                                );
-                            });
-                }
-            }, 100, TimeUnit.MILLISECONDS);
-        }
+        // We keep the domain with storing the arbitrators in user as it might be still useful for mediators
+        arbitratorsObservableMap.values().forEach(a -> {
+            user.addAcceptedArbitrator(a);
+            user.addAcceptedMediator(getMediator(a)
+            );
+        });
+
+        log.info("Available arbitrators: {}", arbitratorsObservableMap.keySet());
     }
 
     // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
@@ -380,5 +365,11 @@ public class ArbitratorManager {
             republishArbitratorTimer.stop();
             republishArbitratorTimer = null;
         }
+    }
+
+    public Optional<Arbitrator> getArbitratorByNodeAddress(NodeAddress nodeAddress) {
+        return arbitratorsObservableMap.containsKey(nodeAddress) ?
+                Optional.of(arbitratorsObservableMap.get(nodeAddress)) :
+                Optional.empty();
     }
 }

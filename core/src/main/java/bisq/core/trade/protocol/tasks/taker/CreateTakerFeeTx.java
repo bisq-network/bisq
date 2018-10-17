@@ -25,12 +25,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.ArbitratorSelectionRule;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.user.User;
-
-import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
@@ -41,8 +38,6 @@ import org.bitcoinj.core.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
@@ -58,13 +53,8 @@ public class CreateTakerFeeTx extends TradeTask {
         try {
             runInterceptHook();
 
-            User user = processModel.getUser();
-            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(user.getAcceptedArbitratorAddresses(),
-                    processModel.getOffer());
-            log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
-            Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
-            checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateTakeOfferFeeTx");
-
+            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(processModel.getTradeStatisticsManager(),
+                    processModel.getArbitratorManager());
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
@@ -83,7 +73,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
-                        selectedArbitrator.getBtcAddress(),
+                        arbitrator.getBtcAddress(),
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {

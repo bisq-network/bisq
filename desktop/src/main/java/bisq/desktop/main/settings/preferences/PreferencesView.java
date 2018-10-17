@@ -95,7 +95,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
     private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, avoidStandbyModeCheckBox,
+    private CheckBox useAnimationsCheckBox, avoidStandbyModeCheckBox,
             showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField;
@@ -185,7 +185,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 10, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
@@ -287,10 +287,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        // autoSelectArbitrators
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
-
         // ignoreTraders
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers")).second;
@@ -365,8 +361,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
-                                    if (!allFiatCurrencies.contains(item))
+                                    if (!allFiatCurrencies.contains(item)) {
                                         allFiatCurrencies.add(item);
+                                        allFiatCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
@@ -415,8 +413,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
-                                    if (!allCryptoCurrencies.contains(item))
+                                    if (!allCryptoCurrencies.contains(item)) {
                                         allCryptoCurrencies.add(item);
+                                        allCryptoCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
@@ -431,6 +431,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
+        fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
+            @Override
+            protected void updateItem(final FiatCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addFiat"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
             @Override
             public String toString(FiatCurrency tradeCurrency) {
@@ -447,6 +458,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
+        cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
+            @Override
+            protected void updateItem(final CryptoCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addAltcoin"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
@@ -609,7 +631,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);
         fiatCurrenciesListView.setItems(fiatCurrencies);
-        fiatCurrenciesComboBox.setOnAction(e -> {
+        fiatCurrenciesComboBox.setOnHiding(e -> {
             FiatCurrency selectedItem = fiatCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addFiatCurrency(selectedItem);
@@ -624,7 +646,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         cryptoCurrenciesComboBox.setItems(allCryptoCurrencies);
         cryptoCurrenciesListView.setItems(cryptoCurrencies);
-        cryptoCurrenciesComboBox.setOnAction(e -> {
+        cryptoCurrenciesComboBox.setOnHiding(e -> {
             CryptoCurrency selectedItem = cryptoCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addCryptoCurrency(selectedItem);
@@ -653,9 +675,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
-
-        autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
-        autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
@@ -708,7 +727,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // useStickyMarketPriceCheckBox.setOnAction(null);
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
-        autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         avoidStandbyModeCheckBox.setOnAction(null);
     }

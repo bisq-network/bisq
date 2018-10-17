@@ -30,9 +30,6 @@ import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.account.AccountView;
-import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
@@ -393,14 +390,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         });
                     }
                 } else {
-                    new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
-                            .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
-                            .actionButtonTextWithGoTo("navigation.arbitratorSelection")
-                            .onAction(() -> {
-                                navigation.setReturnPath(navigation.getCurrentPath());
-                                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
-                                        ArbitratorSelectionView.class);
-                            }).show();
+                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
