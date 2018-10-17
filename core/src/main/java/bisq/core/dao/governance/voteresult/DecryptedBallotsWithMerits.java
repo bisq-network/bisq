@@ -24,7 +24,12 @@ import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
 import bisq.core.dao.state.BsqStateService;
 
+import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
+
+import io.bisq.generated.protobuffer.PB;
+
+import com.google.protobuf.ByteString;
 
 import java.util.Optional;
 
@@ -36,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Value
-public class DecryptedBallotsWithMerits {
+public class DecryptedBallotsWithMerits implements PersistablePayload {
     private final byte[] hashOfBlindVoteList;
     private final String voteRevealTxId; // not used yet but keep it for now
     private final String blindVoteTxId; // not used yet but keep it for now
@@ -53,6 +58,37 @@ public class DecryptedBallotsWithMerits {
         this.ballotList = ballotList;
         this.meritList = meritList;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.DecryptedBallotsWithMerits toProtoMessage() {
+        PB.DecryptedBallotsWithMerits.Builder builder = PB.DecryptedBallotsWithMerits.newBuilder()
+                .setHashOfBlindVoteList(ByteString.copyFrom(hashOfBlindVoteList))
+                .setVoteRevealTxId(voteRevealTxId)
+                .setBlindVoteTxId(blindVoteTxId)
+                .setStake(stake)
+                .setBallotList(ballotList.getBuilder())
+                .setMeritList(meritList.getBuilder());
+        return builder.build();
+    }
+
+    public static DecryptedBallotsWithMerits fromProto(PB.DecryptedBallotsWithMerits proto) {
+        return new DecryptedBallotsWithMerits(proto.getHashOfBlindVoteList().toByteArray(),
+                proto.getVoteRevealTxId(),
+                proto.getBlindVoteTxId(),
+                proto.getStake(),
+                BallotList.fromProto(proto.getBallotList()),
+                MeritList.fromProto(proto.getMeritList()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<Vote> getVote(String proposalTxId) {
         return ballotList.stream()

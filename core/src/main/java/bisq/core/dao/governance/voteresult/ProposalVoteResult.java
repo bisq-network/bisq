@@ -19,6 +19,10 @@ package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.proposal.Proposal;
 
+import bisq.common.proto.persistable.PersistablePayload;
+
+import io.bisq.generated.protobuffer.PB;
+
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
 @Slf4j
-public class ProposalVoteResult {
+public class ProposalVoteResult implements PersistablePayload {
     private final Proposal proposal;
     private final long stakeOfAcceptedVotes;
     private final long stakeOfRejectedVotes;
@@ -43,6 +47,36 @@ public class ProposalVoteResult {
         this.numRejectedVotes = numRejectedVotes;
         this.numIgnoredVotes = numIgnoredVotes;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.ProposalVoteResult toProtoMessage() {
+        PB.ProposalVoteResult.Builder builder = PB.ProposalVoteResult.newBuilder()
+                .setProposal(proposal.toProtoMessage())
+                .setStakeOfAcceptedVotes(stakeOfAcceptedVotes)
+                .setStakeOfRejectedVotes(stakeOfRejectedVotes)
+                .setNumAcceptedVotes(numAcceptedVotes)
+                .setNumRejectedVotes(numRejectedVotes)
+                .setNumIgnoredVotes(numIgnoredVotes);
+        return builder.build();
+    }
+
+    public static ProposalVoteResult fromProto(PB.ProposalVoteResult proto) {
+        return new ProposalVoteResult(Proposal.fromProto(proto.getProposal()),
+                proto.getStakeOfAcceptedVotes(),
+                proto.getStakeOfRejectedVotes(),
+                proto.getNumAcceptedVotes(),
+                proto.getNumRejectedVotes(),
+                proto.getNumIgnoredVotes());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getNumActiveVotes() {
         return numAcceptedVotes + numRejectedVotes;

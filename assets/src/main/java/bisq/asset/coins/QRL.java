@@ -15,23 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.voteresult;
+package bisq.asset.coins;
 
-import bisq.core.dao.governance.ballot.Ballot;
+import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
-import java.util.List;
+public class QRL extends Coin {
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-
-@EqualsAndHashCode(callSuper = true)
-@Value
-public class MissingBallotException extends Exception {
-    private List<Ballot> existingBallots;
-    private List<String> proposalTxIdsOfMissingBallots;
-
-    public MissingBallotException(List<Ballot> existingBallots, List<String> proposalTxIdsOfMissingBallots) {
-        this.existingBallots = existingBallots;
-        this.proposalTxIdsOfMissingBallots = proposalTxIdsOfMissingBallots;
+    public QRL() {
+        super("Quantum Resistant Ledger", "QRL", new RegexAddressValidator("([Q]\\d{6}[0-9a-fA-F]{72})"));
     }
 }

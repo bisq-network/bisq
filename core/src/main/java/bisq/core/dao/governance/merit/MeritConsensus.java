@@ -41,12 +41,13 @@ public class MeritConsensus {
     // Value with 144 blocks a day and 365 days would be 52560. We take a close round number instead.
     private static final int BLOCKS_PER_YEAR = 50_000;
 
-    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey) throws VoteResultException {
+    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey)
+            throws VoteResultException.DecryptionException {
         try {
-            final byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
+            byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
             return MeritList.getMeritListFromBytes(decrypted);
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.DecryptionException(t);
         }
     }
 

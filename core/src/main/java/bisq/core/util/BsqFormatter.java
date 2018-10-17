@@ -18,6 +18,8 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.dao.state.governance.Param;
+import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
 import bisq.common.app.DevEnv;
@@ -112,6 +114,107 @@ public class BsqFormatter extends BSFormatter {
             return Coin.valueOf(Long.valueOf(satoshi));
         } catch (Throwable e) {
             return Coin.ZERO;
+        }
+    }
+
+
+    public String formatParamValue(Param param, long value) {
+        switch (param) {
+            case UNDEFINED:
+                return Res.get("shared.na");
+
+            case DEFAULT_MAKER_FEE_BSQ:
+            case DEFAULT_TAKER_FEE_BSQ:
+            case DEFAULT_MAKER_FEE_BTC:
+            case DEFAULT_TAKER_FEE_BTC:
+                return formatToPercentWithSymbol(value / 10000d);
+
+            case PROPOSAL_FEE:
+            case BLIND_VOTE_FEE:
+            case COMPENSATION_REQUEST_MIN_AMOUNT:
+            case COMPENSATION_REQUEST_MAX_AMOUNT:
+                return formatCoinWithCode(Coin.valueOf(value));
+
+            case QUORUM_COMP_REQUEST:
+            case QUORUM_CHANGE_PARAM:
+            case QUORUM_ROLE:
+            case QUORUM_CONFISCATION:
+            case QUORUM_GENERIC:
+            case QUORUM_REMOVE_ASSET:
+                return formatCoinWithCode(Coin.valueOf(value));
+
+            case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_CHANGE_PARAM:
+            case THRESHOLD_ROLE:
+            case THRESHOLD_CONFISCATION:
+            case THRESHOLD_GENERIC:
+            case THRESHOLD_REMOVE_ASSET:
+                return formatToPercentWithSymbol(value / 10000d);
+
+            case PHASE_UNDEFINED:
+                return Res.get("shared.na");
+            case PHASE_PROPOSAL:
+            case PHASE_BREAK1:
+            case PHASE_BLIND_VOTE:
+            case PHASE_BREAK2:
+            case PHASE_VOTE_REVEAL:
+            case PHASE_BREAK3:
+            case PHASE_RESULT:
+                return Res.get("dao.param.blocks", value);
+
+            default:
+                return Res.get("shared.na");
+        }
+    }
+
+    public long parseParamValue(Param param, String inputValue) {
+        switch (param) {
+            case UNDEFINED:
+                return 0;
+
+            case DEFAULT_MAKER_FEE_BSQ:
+            case DEFAULT_TAKER_FEE_BSQ:
+            case DEFAULT_MAKER_FEE_BTC:
+            case DEFAULT_TAKER_FEE_BTC:
+                return (long) (parsePercentStringToDouble(inputValue) * 10000);
+
+            case PROPOSAL_FEE:
+            case BLIND_VOTE_FEE:
+            case COMPENSATION_REQUEST_MIN_AMOUNT:
+            case COMPENSATION_REQUEST_MAX_AMOUNT:
+                return parseToCoin(inputValue).value;
+
+
+            case QUORUM_COMP_REQUEST:
+            case QUORUM_CHANGE_PARAM:
+            case QUORUM_ROLE:
+            case QUORUM_CONFISCATION:
+            case QUORUM_GENERIC:
+            case QUORUM_REMOVE_ASSET:
+                return parseToCoin(inputValue).value;
+
+
+            case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_CHANGE_PARAM:
+            case THRESHOLD_ROLE:
+            case THRESHOLD_CONFISCATION:
+            case THRESHOLD_GENERIC:
+            case THRESHOLD_REMOVE_ASSET:
+                return (long) (parsePercentStringToDouble(inputValue) * 10000);
+
+            case PHASE_UNDEFINED:
+                return 0;
+            case PHASE_PROPOSAL:
+            case PHASE_BREAK1:
+            case PHASE_BLIND_VOTE:
+            case PHASE_BREAK2:
+            case PHASE_VOTE_REVEAL:
+            case PHASE_BREAK3:
+            case PHASE_RESULT:
+                return Long.valueOf(inputValue);
+
+            default:
+                return 0;
         }
     }
 }

@@ -89,7 +89,8 @@ class FiatAccountsDataModel extends ActivatableDataModel {
             List<PaymentAccount> toRemove = new ArrayList<>();
             paymentAccounts.stream()
                     .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.VENMO_ID) ||
-                            paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_APP_ID))
+                            paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_APP_ID) ||
+                            paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.OK_PAY_ID))
                     .forEach(toRemove::add);
 
             toRemove.forEach(paymentAccount -> {

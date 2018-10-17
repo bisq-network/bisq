@@ -49,8 +49,11 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
     }
 
     private final TxOutputType txOutputType;
+
+    // The lockTime is stored in the first output of the LOCKUP tx.
     // If not set it is -1, 0 is a valid value.
     private final int lockTime;
+    // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
     private final int unlockBlockHeight;
 
     public TxOutput(int index,

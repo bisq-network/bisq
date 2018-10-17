@@ -39,6 +39,7 @@ import javafx.collections.ObservableList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -49,8 +50,8 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
     private final BsqStateService bsqStateService;
     private final P2PService p2PService;
     private final BlindVoteValidator blindVoteValidator;
-
-    private final ObservableList<BlindVotePayload> appendOnlyStoreList = FXCollections.observableArrayList();
+    @Getter
+    private final ObservableList<BlindVotePayload> blindVotePayloads = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +123,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<BlindVote> getBlindVotesInPhaseAndCycle() {
-        return appendOnlyStoreList.stream()
+        return blindVotePayloads.stream()
                 .filter(blindVotePayload -> blindVoteValidator.isTxInPhaseAndCycle(blindVotePayload.getBlindVote()))
                 .map(BlindVotePayload::getBlindVote)
                 .collect(Collectors.toList());
@@ -140,14 +141,14 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
     private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload) {
         if (persistableNetworkPayload instanceof BlindVotePayload) {
             BlindVotePayload blindVotePayload = (BlindVotePayload) persistableNetworkPayload;
-            if (!appendOnlyStoreList.contains(blindVotePayload)) {
+            if (!blindVotePayloads.contains(blindVotePayload)) {
                 BlindVote blindVote = blindVotePayload.getBlindVote();
                 String txId = blindVote.getTxId();
                 // We don't check the phase and the cycle as we want to add all object independently when we receive it
                 // (or when we start the app to fill our list from the data we gor from the seed node).
                 if (blindVoteValidator.areDataFieldsValid(blindVote)) {
                     // We don't validate as we might receive blindVotes from other cycles or phases at startup.
-                    appendOnlyStoreList.add(blindVotePayload);
+                    blindVotePayloads.add(blindVotePayload);
                     log.info("We received a blindVotePayload. blindVoteTxId={}", txId);
                 } else {
                     log.warn("We received an invalid blindVotePayload. blindVoteTxId={}", txId);

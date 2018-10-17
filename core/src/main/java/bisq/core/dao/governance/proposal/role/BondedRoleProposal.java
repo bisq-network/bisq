@@ -100,12 +100,12 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public Param getQuorumParam() {
-        return Param.QUORUM_PROPOSAL;
+        return Param.QUORUM_ROLE;
     }
 
     @Override
     public Param getThresholdParam() {
-        return Param.THRESHOLD_PROPOSAL;
+        return Param.THRESHOLD_ROLE;
     }
 
     @Override
