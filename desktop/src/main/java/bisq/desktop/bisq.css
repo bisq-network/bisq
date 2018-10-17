@@ -89,7 +89,8 @@ bg color of non edit textFields: fafafa
     -bs-rd-nav-selected: #20C133;
     -bs-rd-grey: #373737;
     -fx-accent: -bs-rd-green; /* 18 usages */
-    /* replace with derive later */
+
+    /* TODO: refactor all colors to use derive from base colors, to enable easy re-coloring */
     -bs-rd-white: #ffffff; /* 30 usages */
     -bs-rd-grey-light: #D8D8D8;
     -bs-rd-grey-medium-light:#E9E9E9;
@@ -98,13 +99,13 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-background-bottom: #f6f6f6; /* 1 usages */
     -bs-rd-grey-background-dark: #DDDDDD;
     -bs-rd-grey-background-darker: #D0D0D0;
+    -bs-rd-grey-background-darker-2: #9A9A9A;
     -bs-rd-grey-background-darkest: #444444;
     -bs-rd-grey-darker: #E1E1E1;
     -bs-rd-font-lighter: #A7A7A7;
     -bs-rd-font-light: #8D8D8D;
     -bs-rd-font-dark: #4B4B4B;
     -bs-rd-font-dark-grey: #3c3c3c;
-    -bs-rd-nav-deselected: #9A9A9A;
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-background-dark: #0E0E0E;
     -bs-rd-black: #000000; /* 13 usages */
@@ -113,6 +114,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-grey-line: #979797;
     -bs-rd-separator: #DBDBDB;
     -bs-rd-error-red: #dd0000; /* 5 usages */
+    -bs-rd-nav-deselected: -bs-rd-grey-background-darker-2;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-medium-light;
@@ -344,7 +346,7 @@ bg color of non edit textFields: fafafa
 }
 
 .scroll-bar{
-    -fx-background-color: -bs-rd-grey-background-dark;
+    -fx-background-color: transparent;
     -fx-background-radius: 0;
 }
 .scroll-bar:horizontal .track,
@@ -360,22 +362,22 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 0;
 }
 .scroll-bar:horizontal .thumb {
-    -fx-background-color: -bs-rd-black;
+    -fx-background-color: -bs-rd-grey-background-darker;
     -fx-background-insets: 2 0 2 0;
-    -fx-background-radius: 0;
+    -fx-background-radius: 3;
 }
 .scroll-bar:vertical .thumb {
-    -fx-background-color: -bs-rd-black;
+    -fx-background-color: -bs-rd-grey-background-darker;
     -fx-background-insets: 0 2 0 2;
-    -fx-background-radius: 0;
+    -fx-background-radius: 3;
 }
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
-    -fx-background-color: -bs-rd-grey-background-darkest;
+    -fx-background-color: -bs-rd-grey-background-darker-2;
 }
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bs-rd-black;
+    -fx-background-color: -bs-rd-grey-background-darkest;
 }
 .scroll-bar:vertical .increment-button,
 .scroll-bar:vertical .decrement-button,
