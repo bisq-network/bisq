@@ -119,8 +119,7 @@ public class PhasesView implements DaoStateListener {
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }
 
