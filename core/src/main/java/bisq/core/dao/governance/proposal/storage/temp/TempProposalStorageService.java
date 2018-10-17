@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.storage.temp;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.persistence.StoreService;
+import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.storage.Storage;
 
@@ -34,7 +34,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TempProposalStorageService extends StoreService<TempProposalStore, ProtectedStorageEntry> {
+public class TempProposalStorageService extends MapStoreService<TempProposalStore, ProtectedStorageEntry> {
     private static final String FILE_NAME = "TempProposalStore";
 
 

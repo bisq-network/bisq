@@ -43,6 +43,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.Timer;
@@ -107,6 +108,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
     private final ProtectedDataStoreService protectedDataStoreService;
+    private final ResourceDataStoreService resourceDataStoreService;
 
     @Getter
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
@@ -129,10 +131,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           Broadcaster broadcaster,
                           AppendOnlyDataStoreService appendOnlyDataStoreService,
                           ProtectedDataStoreService protectedDataStoreService,
+                          ResourceDataStoreService resourceDataStoreService,
                           Storage<SequenceNumberMap> sequenceNumberMapStorage) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
+        this.resourceDataStoreService = resourceDataStoreService;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -154,6 +158,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public synchronized void readFromResources(String postFix) {
         appendOnlyDataStoreService.readFromResources(postFix);
         protectedDataStoreService.readFromResources(postFix);
+        resourceDataStoreService.readFromResources(postFix);
 
         map.putAll(protectedDataStoreService.getMap());
     }

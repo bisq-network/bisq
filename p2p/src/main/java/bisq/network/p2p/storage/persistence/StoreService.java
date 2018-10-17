@@ -17,10 +17,7 @@
 
 package bisq.network.p2p.storage.persistence;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.ResourceNotFoundException;
 import bisq.common.storage.Storage;
@@ -30,12 +27,21 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Base class for handling of persisted data.
+ * <p>
+ * We handle several different cases:
+ * <p>
+ * 1   Check if local db file exists.
+ * 1a  If it does not exist try to read the resource file.
+ * 1aa If the resource file exists we copy it and use that as our local db file. We are done.
+ * 1ab If the resource file does not exist we create a new fresh/empty db file. We are done.
+ * 1b  If we have already a local db file we read it. We are done.
+ */
 @Slf4j
-public abstract class StoreService<T extends PersistableEnvelope, R extends PersistablePayload> {
+public abstract class StoreService<T extends PersistableEnvelope> {
 
     protected final Storage<T> storage;
     protected final String absolutePathOfStorageDir;
@@ -59,6 +65,7 @@ public abstract class StoreService<T extends PersistableEnvelope, R extends Pers
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO why 2 seconds? seems too much...
     protected void persist() {
         storage.queueUpForSave(store, 2000);
     }
@@ -68,26 +75,6 @@ public abstract class StoreService<T extends PersistableEnvelope, R extends Pers
     }
 
     abstract public String getFileName();
-
-    abstract public Map<P2PDataStorage.ByteArray, R> getMap();
-
-    abstract public boolean canHandle(R payload);
-
-    R putIfAbsent(P2PDataStorage.ByteArray hash, R payload) {
-        R previous = getMap().putIfAbsent(hash, payload);
-        persist();
-        return previous;
-    }
-
-    R remove(P2PDataStorage.ByteArray hash) {
-        final R result = getMap().remove(hash);
-        persist();
-        return result;
-    }
-
-    boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return getMap().containsKey(hash);
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
