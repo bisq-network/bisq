@@ -20,7 +20,7 @@ package bisq.core.dao.node;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.state.SnapshotManager;
+import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.blockchain.RawBlock;
 
 import bisq.network.p2p.P2PService;
@@ -45,7 +45,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected final BsqStateService bsqStateService;
     private final String genesisTxId;
     private final int genesisBlockHeight;
-    private final SnapshotManager snapshotManager;
+    private final DaoStateSnapshotService daoStateSnapshotService;
     private final P2PServiceListener p2PServiceListener;
     protected boolean parseBlockchainComplete;
     protected boolean p2pNetworkReady;
@@ -60,11 +60,11 @@ public abstract class BsqNode implements DaoSetupService {
     @Inject
     public BsqNode(BlockParser blockParser,
                    BsqStateService bsqStateService,
-                   SnapshotManager snapshotManager,
+                   DaoStateSnapshotService daoStateSnapshotService,
                    P2PService p2PService) {
         this.blockParser = blockParser;
         this.bsqStateService = bsqStateService;
-        this.snapshotManager = snapshotManager;
+        this.daoStateSnapshotService = daoStateSnapshotService;
         this.p2PService = p2PService;
 
         genesisTxId = bsqStateService.getGenesisTxId();
@@ -201,6 +201,6 @@ public abstract class BsqNode implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applySnapshot() {
-        snapshotManager.applySnapshot();
+        daoStateSnapshotService.applySnapshot();
     }
 }

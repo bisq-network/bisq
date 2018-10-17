@@ -245,11 +245,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
-            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getEvaluatedProposalList().stream()
+            List<EvaluatedProposal> evaluatedProposalsForCycle = bsqStateService.getEvaluatedProposalList().stream()
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 
-            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = voteResultService.getDecryptedBallotsWithMeritsList().stream()
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = bsqStateService.getDecryptedBallotsWithMeritsList().stream()
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getBlindVoteTxId()))
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getVoteRevealTxId()))
                     .collect(Collectors.toList());

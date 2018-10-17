@@ -23,7 +23,7 @@ import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.state.SnapshotManager;
+import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
@@ -61,12 +61,12 @@ public class FullNode extends BsqNode {
     @Inject
     public FullNode(BlockParser blockParser,
                     BsqStateService bsqStateService,
-                    SnapshotManager snapshotManager,
+                    DaoStateSnapshotService daoStateSnapshotService,
                     P2PService p2PService,
                     RpcService rpcService,
                     ExportJsonFilesService exportJsonFilesService,
                     FullNodeNetworkService fullNodeNetworkService) {
-        super(blockParser, bsqStateService, snapshotManager, p2PService);
+        super(blockParser, bsqStateService, daoStateSnapshotService, p2PService);
         this.rpcService = rpcService;
 
         this.exportJsonFilesService = exportJsonFilesService;

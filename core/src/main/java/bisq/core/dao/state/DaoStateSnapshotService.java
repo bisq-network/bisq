@@ -19,48 +19,42 @@ package bisq.core.dao.state;
 
 import bisq.core.dao.state.blockchain.Block;
 
-import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.Storage;
-
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import java.io.File;
 
 import java.util.LinkedList;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
- * Manages snapshots of BsqState.
- *
- * One BSQ block with empty txs adds 152 bytes which results in about 8 MB/year
+ * Manages periodical snapshots of the BsqState.
+ * At startup we apply a snapshot if available.
+ * At each trigger height we persist the latest snapshot candidate and set the current bsqState as new candidate.
+ * The trigger height is determined by the SNAPSHOT_GRID. The latest persisted snapshot is min. the height of
+ * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
  */
 @Slf4j
-public class SnapshotManager implements BsqStateListener {
-    private static final int SNAPSHOT_GRID = 100;
+public class DaoStateSnapshotService implements BsqStateListener {
+    private static final int SNAPSHOT_GRID = 10;
 
-    private final BsqState bsqState;
     private final BsqStateService bsqStateService;
     private final GenesisTxInfo genesisTxInfo;
-    private final Storage<BsqState> storage;
+    private final DaoStateStorageService daoStateStorageService;
 
     private BsqState snapshotCandidate;
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
-    public SnapshotManager(BsqState bsqState,
-                           BsqStateService bsqStateService,
-                           PersistenceProtoResolver persistenceProtoResolver,
-                           GenesisTxInfo genesisTxInfo,
-                           @Named(Storage.STORAGE_DIR) File storageDir) {
-        this.bsqState = bsqState;
+    public DaoStateSnapshotService(BsqStateService bsqStateService,
+                                   GenesisTxInfo genesisTxInfo,
+                                   DaoStateStorageService daoStateStorageService) {
         this.bsqStateService = bsqStateService;
         this.genesisTxInfo = genesisTxInfo;
-        storage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.daoStateStorageService = daoStateStorageService;
 
         this.bsqStateService.addBsqStateListener(this);
     }
@@ -77,22 +71,31 @@ public class SnapshotManager implements BsqStateListener {
     @Override
     public void onParseTxsComplete(Block block) {
         int chainHeight = block.getHeight();
+
+        // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
+        // different to our current height.
+        boolean noSnapshotCandidateOrDifferentHeight = snapshotCandidate == null || snapshotCandidate.getChainHeight() != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
-                (snapshotCandidate == null ||
-                        snapshotCandidate.getChainHeight() != chainHeight)) {
+                isValidHeight(bsqStateService.getBlocks().getLast().getHeight()) &&
+                noSnapshotCandidateOrDifferentHeight) {
             // At trigger event we store the latest snapshotCandidate to disc
             if (snapshotCandidate != null) {
-                // We clone because storage is in a threaded context
-                final BsqState cloned = bsqState.getClone(snapshotCandidate);
-                if (cloned.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
-                    storage.queueUpForSave(cloned);
-                log.info("Saved snapshotCandidate to Disc at height " + chainHeight);
+                // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
+                // state in the next step
+                BsqState cloned = bsqStateService.getClone(snapshotCandidate);
+                daoStateStorageService.persist(cloned);
+                log.info("Saved snapshotCandidate with height {} to Disc at height {} ",
+                        snapshotCandidate.getChainHeight(), chainHeight);
             }
-            // Now we clone and keep it in memory for the next trigger
-            snapshotCandidate = bsqState.getClone();
-            // don't access cloned anymore with methods as locks are transient!
+
+            // Now we clone and keep it in memory for the next trigger event
+            snapshotCandidate = bsqStateService.getClone();
             log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
+    }
+
+    private boolean isValidHeight(int heightOfLastBlock) {
+        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
     }
 
     @Override
@@ -105,14 +108,17 @@ public class SnapshotManager implements BsqStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot() {
-        checkNotNull(storage, "storage must not be null");
-        BsqState persisted = storage.initAndGetPersisted(bsqState, 100);
+        BsqState persisted = daoStateStorageService.getPersistedBsqState();
         if (persisted != null) {
-            log.info("applySnapshot persisted.chainHeight=" + new LinkedList<>(persisted.getBlocks()).getLast().getHeight());
-            if (persisted.getBlocks().getLast().getHeight() >= genesisTxInfo.getGenesisBlockHeight())
-                bsqStateService.applySnapshot(persisted);
+            LinkedList<Block> blocks = persisted.getBlocks();
+            if (!blocks.isEmpty()) {
+                int heightOfLastBlock = blocks.getLast().getHeight();
+                log.info("applySnapshot from persisted bsqState with height of last block {}", heightOfLastBlock);
+                if (isValidHeight(heightOfLastBlock))
+                    bsqStateService.applySnapshot(persisted);
+            }
         } else {
-            log.info("Try to apply snapshot but no stored snapshot available");
+            log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
         }
     }
 
@@ -132,6 +138,6 @@ public class SnapshotManager implements BsqStateListener {
     }
 
     private boolean isSnapshotHeight(int height) {
-        return isSnapshotHeight(bsqStateService.getGenesisBlockHeight(), height, SNAPSHOT_GRID);
+        return isSnapshotHeight(genesisTxInfo.getGenesisBlockHeight(), height, SNAPSHOT_GRID);
     }
 }

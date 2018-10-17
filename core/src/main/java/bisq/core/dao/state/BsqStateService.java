@@ -20,6 +20,8 @@ package bisq.core.dao.state;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.Tx;
@@ -55,6 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Provides access methods to BsqState data.
+ */
 @Slf4j
 public class BsqStateService implements DaoSetupService {
     private final BsqState bsqState;
@@ -114,10 +119,20 @@ public class BsqStateService implements DaoSetupService {
 
         bsqState.getParamChangeList().clear();
         bsqState.getParamChangeList().addAll(snapshot.getParamChangeList());
+
+        bsqState.getEvaluatedProposalList().clear();
+        bsqState.getEvaluatedProposalList().addAll(snapshot.getEvaluatedProposalList());
+
+        bsqState.getDecryptedBallotsWithMeritsList().clear();
+        bsqState.getDecryptedBallotsWithMeritsList().addAll(snapshot.getDecryptedBallotsWithMeritsList());
     }
 
     public BsqState getClone() {
         return bsqState.getClone();
+    }
+
+    BsqState getClone(BsqState snapshotCandidate) {
+        return bsqState.getClone(snapshotCandidate);
     }
 
 
@@ -196,8 +211,8 @@ public class BsqStateService implements DaoSetupService {
      * Whether specified block hash belongs to a block we already know about.
      *
      * @param blockHash The hash of a {@link Block}.
-     * @return          True if the hash belongs to a {@link Block} we know about, otherwise
-     *                  {@code false}.
+     * @return True if the hash belongs to a {@link Block} we know about, otherwise
+     * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
         // TODO(chirhonul): If performance of O(n) time in number of blocks becomes an issue,
@@ -769,6 +784,19 @@ public class BsqStateService implements DaoSetupService {
 
     public Optional<SpentInfo> getSpentInfo(TxOutput txOutput) {
         return Optional.ofNullable(bsqState.getSpentInfoMap().getOrDefault(txOutput.getKey(), null));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Vote result data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<EvaluatedProposal> getEvaluatedProposalList() {
+        return bsqState.getEvaluatedProposalList();
+    }
+
+    public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
+        return bsqState.getDecryptedBallotsWithMeritsList();
     }
 
 

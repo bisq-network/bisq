@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.voteresult;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.Ballot;
@@ -56,8 +55,6 @@ import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -95,7 +92,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * the missing blindVotes from the network.
  */
 @Slf4j
-public class VoteResultService implements BsqStateListener, DaoSetupService, PersistedDataHost {
+public class VoteResultService implements BsqStateListener, DaoSetupService {
     private final VoteRevealService voteRevealService;
     private final ProposalListPresentation proposalListPresentation;
     private final BsqStateService bsqStateService;
@@ -108,13 +105,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
     private final MissingDataRequestService missingDataRequestService;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
-
-    private final Storage<EvaluatedProposalList> evaluatedProposalStorage;
-    private Storage<DecryptedBallotsWithMeritsList> decryptedBallotsWithMeritsStorage;
-    @Getter
-    private final EvaluatedProposalList evaluatedProposalList = new EvaluatedProposalList();
-    @Getter
-    private final DecryptedBallotsWithMeritsList decryptedBallotsWithMeritsList = new DecryptedBallotsWithMeritsList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,9 +121,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                              BondedRolesService bondedRolesService,
                              IssuanceService issuanceService,
                              AssetService assetService,
-                             MissingDataRequestService missingDataRequestService,
-                             Storage<EvaluatedProposalList> evaluatedProposalStorage,
-                             Storage<DecryptedBallotsWithMeritsList> decryptedBallotsWithMeritsStorage) {
+                             MissingDataRequestService missingDataRequestService) {
         this.voteRevealService = voteRevealService;
         this.proposalListPresentation = proposalListPresentation;
         this.bsqStateService = bsqStateService;
@@ -144,30 +132,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
         this.issuanceService = issuanceService;
         this.assetService = assetService;
         this.missingDataRequestService = missingDataRequestService;
-        this.evaluatedProposalStorage = evaluatedProposalStorage;
-        this.decryptedBallotsWithMeritsStorage = decryptedBallotsWithMeritsStorage;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PersistedDataHost
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            EvaluatedProposalList persisted1 = evaluatedProposalStorage.initAndGetPersisted(evaluatedProposalList, 100);
-            if (persisted1 != null) {
-                evaluatedProposalList.clear();
-                evaluatedProposalList.addAll(persisted1.getList());
-            }
-
-            DecryptedBallotsWithMeritsList persisted2 = decryptedBallotsWithMeritsStorage.initAndGetPersisted(decryptedBallotsWithMeritsList, 100);
-            if (persisted2 != null) {
-                decryptedBallotsWithMeritsList.clear();
-                decryptedBallotsWithMeritsList.addAll(persisted2.getList());
-            }
-        }
     }
 
 
@@ -213,9 +177,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
         if (isInVoteResultPhase(chainHeight)) {
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             decryptedBallotsWithMeritsSet.stream()
-                    .filter(e -> !decryptedBallotsWithMeritsList.getList().contains(e))
-                    .forEach(decryptedBallotsWithMeritsList::add);
-            persistDecryptedBallotsWithMerits();
+                    .filter(e -> !bsqStateService.getDecryptedBallotsWithMeritsList().contains(e))
+                    .forEach(bsqStateService.getDecryptedBallotsWithMeritsList()::add);
 
             if (!decryptedBallotsWithMeritsSet.isEmpty()) {
                 // From the decryptedBallotsWithMerits we create a map with the hash of the blind vote list as key and the
@@ -244,9 +207,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
 
                         evaluatedProposals.stream()
-                                .filter(e -> !evaluatedProposalList.getList().contains(e))
-                                .forEach(evaluatedProposalList::add);
-                        persistEvaluatedProposals();
+                                .filter(e -> !bsqStateService.getEvaluatedProposalList().contains(e))
+                                .forEach(bsqStateService.getEvaluatedProposalList()::add);
                         log.info("processAllVoteResults completed");
                     } else {
                         log.warn("Our list of received blind votes do not match the list from the majority of voters.");
@@ -303,8 +265,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                         Tx blindVoteTx = VoteResultConsensus.getBlindVoteTx(blindVoteStakeOutput, bsqStateService, periodService, chainHeight);
                         String blindVoteTxId = blindVoteTx.getId();
 
-                        // Here we deal with eventual consistency of the p2p network data!
-                        // TODO make more clear we are in p2p domain now
                         List<BlindVote> blindVoteList = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
                         Optional<BlindVote> optionalBlindVote = blindVoteList.stream()
                                 .filter(blindVote -> blindVote.getTxId().equals(blindVoteTxId))
@@ -318,9 +278,8 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                                 // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
                                 // the voteWithProposalTxIdList
                                 BallotList ballotList = createBallotList(voteWithProposalTxIdList);
-                                return new DecryptedBallotsWithMerits(hashOfBlindVoteList, voteRevealTxId, blindVoteTxId, blindVoteStake, ballotList, meritList);
+                                return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
                             } catch (VoteResultException.MissingBallotException missingBallotException) {
-                                //TODO handle case that we are missing proposals
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
                                 missingDataRequestService.addVoteResultException(missingBallotException);
                                 voteResultExceptions.add(missingBallotException);
@@ -331,8 +290,7 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
                                 return null;
                             }
                         } else {
-                            //TODO handle recovering
-                            log.warn("We have a blindVoteTx but we do not have the corresponding blindVote in our local list.\n" +
+                            log.warn("We have a blindVoteTx but we do not have the corresponding blindVote payload in our local database.\n" +
                                     "That can happen if the blindVote item was not properly broadcast. We will go on " +
                                     "and see if that blindVote was part of the majority data view. If so we should " +
                                     "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
@@ -736,14 +694,6 @@ public class VoteResultService implements BsqStateListener, DaoSetupService, Per
 
     private boolean isInVoteResultPhase(int chainHeight) {
         return periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT) == chainHeight;
-    }
-
-    private void persistEvaluatedProposals() {
-        evaluatedProposalStorage.queueUpForSave(20);
-    }
-
-    private void persistDecryptedBallotsWithMerits() {
-        decryptedBallotsWithMeritsStorage.queueUpForSave(20);
     }
 
 

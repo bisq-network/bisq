@@ -65,8 +65,9 @@ import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.state.BsqState;
 import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
-import bisq.core.dao.state.SnapshotManager;
 import bisq.core.dao.state.period.CycleService;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -103,7 +104,9 @@ public class DaoModule extends AppModule {
         bind(GenesisTxInfo.class).in(Singleton.class);
         bind(BsqState.class).in(Singleton.class);
         bind(BsqStateService.class).in(Singleton.class);
-        bind(SnapshotManager.class).in(Singleton.class);
+        bind(DaoStateSnapshotService.class).in(Singleton.class);
+        bind(DaoStateStorageService.class).in(Singleton.class);
+
         bind(ExportJsonFilesService.class).in(Singleton.class);
 
         // Period

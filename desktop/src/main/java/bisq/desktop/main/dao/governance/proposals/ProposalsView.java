@@ -44,8 +44,8 @@ import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -103,7 +103,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
-    private final VoteResultService voteResultService;
+    private final BsqStateService bsqStateService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -142,13 +142,13 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ProposalsView(DaoFacade daoFacade,
                           BsqWalletService bsqWalletService,
                           PhasesView phasesView,
-                          VoteResultService voteResultService,
+                          BsqStateService bsqStateService,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
-        this.voteResultService = voteResultService;
+        this.bsqStateService = bsqStateService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -418,7 +418,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
-            EvaluatedProposal evaluatedProposal = voteResultService.getEvaluatedProposalList().stream()
+            EvaluatedProposal evaluatedProposal = bsqStateService.getEvaluatedProposalList().stream()
                     .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
                             daoFacade.getChainHeight()))
                     .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))
