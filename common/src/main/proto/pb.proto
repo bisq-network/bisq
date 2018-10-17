@@ -916,7 +916,7 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        BsqState bsq_state = 12;
+        // BsqState bsq_state = 12; // not used but as other non-dao data have a higher index number we leave it to make clear that we cannot change following indexes
 
         AccountAgeWitnessStore account_age_witness_store = 13;
         TradeStatistics2Store trade_statistics2_store = 14;
