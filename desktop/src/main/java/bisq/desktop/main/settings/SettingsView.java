@@ -58,9 +58,9 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
-        preferencesTab.setText(Res.get("settings.tab.preferences"));
-        networkTab.setText(Res.get("settings.tab.network"));
-        aboutTab.setText(Res.get("settings.tab.about"));
+        preferencesTab.setText(Res.get("settings.tab.preferences").toUpperCase());
+        networkTab.setText(Res.get("settings.tab.network").toUpperCase());
+        aboutTab.setText(Res.get("settings.tab.about").toUpperCase());
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)

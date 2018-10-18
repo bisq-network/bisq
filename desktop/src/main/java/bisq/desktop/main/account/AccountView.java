@@ -86,7 +86,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
                     arbitratorRegistrationTab == null) {
-                arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration"));
+                arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
                 arbitratorRegistrationTab.setClosable(false);
                 root.getTabs().add(arbitratorRegistrationTab);
             }
@@ -150,7 +150,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         if (view instanceof AccountSettingsView) {
             selectedTab = accountSettingsTab;
             accountSettingsView = (AccountSettingsView) view;
-            selectedTab.setText(Res.get("account.tab.account"));
+            selectedTab.setText(Res.get("account.tab.account").toUpperCase());
             if (arbitratorRegistrationTab != null) {
                 arbitratorRegistrationTab.setDisable(false);
                 if (arbitratorRegistrationView != null)

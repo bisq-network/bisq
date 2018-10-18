@@ -48,6 +48,8 @@ import bisq.common.util.Tuple4;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.jfoenix.controls.JFXTabPane;
+
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -56,7 +58,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -181,7 +182,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = GUIUtil.getParentOfType(root, TabPane.class).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
 
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());

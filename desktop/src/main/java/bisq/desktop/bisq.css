@@ -114,6 +114,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-font-balance-label: #8E8E8E;
     -bs-rd-font-dark-grey: #3c3c3c;
     -bs-rd-nav-border: #535353;
+    -bs-rd-tab-border: #E2E0E0;
     -bs-rd-nav-background-dark: #0E0E0E;
     -bs-rd-black: #000000; /* 13 usages */
     -bs-rd-black-transparent-dark: rgba(0, 0, 0, 0.54);
@@ -457,7 +458,6 @@ bg color of non edit textFields: fafafa
 
 .content-pane {
     -fx-background-color: linear-gradient(-bs-rd-grey-background 0%, -bs-rd-grey-background-bottom 100%);
-    /*-fx-background-color: linear-gradient(red 0%, green 100%);*/
 }
 
 #footer-pane {
@@ -528,7 +528,6 @@ bg color of non edit textFields: fafafa
 
 .nav-button .text {
     -fx-font-size: 0.769em;
-    /*-fx-font-family: "IBM Plex Sans Bold";*/
     -fx-font-weight: bold;
     -fx-fill: -bs-rd-nav-deselected;
 }
@@ -887,71 +886,79 @@ textfield */
  *                                                                             *
  ******************************************************************************/
 
-.tab-pane {
-    -fx-border-color: -bs-rd-grey-light;
+.jfx-tab-pane {
+    -fx-padding: 0;
+    -jfx-disable-animation: true;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab {
-    -fx-background-insets: 1 2 0 2;
-    -fx-background-radius: 0 0 0 0;
-    -fx-padding: 0.083333em 2em 0.0769em 2em; /* 1 6 0.99 6 -fx-padding: 0 30 0 30;*/
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-background-color: transparent;
+    -fx-pref-width: 20;
+    -fx-pref-height: 20;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab:top {
-    -fx-background-color: -bs-rd-grey-darker;
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab:right {
-    -fx-background-color: -bs-rd-grey-darker;
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-shape: "M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z";
+    -jfx-size: 9;
+    -fx-background-color: -bs-rd-font-light;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab:bottom {
-    -fx-background-color: -bs-rd-grey-darker;
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-padding: 0 0 2 0;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab:left {
-    -fx-background-color: -bs-rd-grey-darker;
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-background-color: -fx-accent;
 }
 
-.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
-    -fx-border-width: 0, 0;
-    -fx-border-color: -fx-focus-color, -fx-faint-focus-color;
-    -fx-border-insets: -4 -4 -6 -5, -2 -2 -5 -3;
-    -fx-border-radius: 0, 0; /* looks sharper if outer border has a tighter radius (2 instead of 3) */
-}
-
-.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+.jfx-tab-pane .tab-header-background {
     -fx-background-color: -bs-rd-grey-background;
-    -fx-background-insets: 0 1 0 1;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-tab-border;
 }
 
-.tab-pane:focused > .tab-header-area > .headers-region > .tab:bottom:selected .focus-indicator {
-    -fx-border-insets: -6 -5 -4 -4, -5 -3 -2 -2;
+.jfx-tab-pane .headers-region .tab-selected-line {
+    -fx-background-color: -fx-accent;
+    -fx-pref-height: 1;
 }
 
-.tab-pane > .tab-header-area > .tab-header-background {
-    /* TODO should not be using text-box-border I think? */
-    -fx-background-color: -bs-rd-grey-background-darker;
-}
-
-.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+.jfx-tab-pane .headers-region .tab .tab-container .tab-label {
     -fx-text-fill: -bs-rd-font-light;
+    -fx-padding: 14;
+    -fx-font-size: 0.769em;
+    -fx-font-weight: normal;
 }
 
-.tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
-    -fx-text-fill: -bs-rd-font-dark;
+.jfx-tab-pane .depth-container {
+    -fx-effect: none;
 }
 
-.tab-pane:focused {
-    -fx-background-color: transparent;
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-label {
+    -fx-text-fill: -fx-accent;
 }
 
-.tab-header-area:focused {
-    -fx-background-color: transparent;
+.jfx-tab-pane .headers-region > .tab > .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
 }
 
-.tab:focused {
-    -fx-background-color: transparent;
+.jfx-tab-pane .headers-region .tab:closable {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-style: none;
+    -fx-border-insets: 0;
+    -fx-padding: 9;
+}
+
+.jfx-tab-pane .headers-region .tab:closable .tab-container .tab-label {
+    -fx-padding: 5;
 }
 
 #form-header-text {
@@ -1384,6 +1391,7 @@ textfield */
 .grid-pane {
     -fx-background-color: -bs-content-bg-grey;
     -fx-background-radius: 5;
+    -fx-effect: null;
     -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
     -fx-background-insets: 10;
 }

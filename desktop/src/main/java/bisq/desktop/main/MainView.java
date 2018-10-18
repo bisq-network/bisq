@@ -286,7 +286,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             getStyleClass().add("content-pane");
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
-            setTopAnchor(this, 60d);
+            setTopAnchor(this, 57d);
             setBottomAnchor(this, 0d);
         }};
 
