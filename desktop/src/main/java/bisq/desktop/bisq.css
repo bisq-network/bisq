@@ -86,12 +86,17 @@ bg color of non edit textFields: fafafa
     /* Redesign colors */
     -bs-rd-green: #25B135; /* 6 usages */
     -bs-rd-green-dark: #3EA34A;
-    -bs-rd-nav-selected: #20C133;
+    -bs-rd-nav-selected: #25B135;
+    -bs-rd-nav-deselected: rgba(255, 255, 255, 0.59);
+    -bs-rd-nav-background: #2EA33C;
+    -bs-rd-nav-primary-background: #25B135;
+    -bs-rd-nav-primary-border: #189E27;
     -bs-rd-grey: #373737;
     -fx-accent: -bs-rd-green; /* 18 usages */
 
     /* TODO: refactor all colors to use derive from base colors, to enable easy re-coloring */
     -bs-rd-white: #ffffff; /* 30 usages */
+    -bs-rd-white-transparent: rgba(255, 255, 255, 0.31);
     -bs-rd-grey-light: #D8D8D8;
     -bs-rd-grey-medium-light:#E9E9E9;
     -bs-rd-grey-very-light: #f8f8f8; /* 10 usages */
@@ -105,6 +110,8 @@ bg color of non edit textFields: fafafa
     -bs-rd-font-lighter: #A7A7A7;
     -bs-rd-font-light: #8D8D8D;
     -bs-rd-font-dark: #4B4B4B;
+    -bs-rd-font-balance: #4F4F4F;
+    -bs-rd-font-balance-label: #8E8E8E;
     -bs-rd-font-dark-grey: #3c3c3c;
     -bs-rd-nav-border: #535353;
     -bs-rd-nav-background-dark: #0E0E0E;
@@ -113,8 +120,8 @@ bg color of non edit textFields: fafafa
     -bs-rd-black-transparent: rgba(0, 0, 0, 0.2);
     -bs-rd-grey-line: #979797;
     -bs-rd-separator: #DBDBDB;
+    -bs-rd-separator-dark: #D5E0D6;
     -bs-rd-error-red: #dd0000; /* 5 usages */
-    -bs-rd-nav-deselected: -bs-rd-grey-background-darker-2;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-medium-light;
@@ -314,6 +321,19 @@ bg color of non edit textFields: fafafa
     -fx-font-size: 1em;
 }
 
+.jfx-badge .badge-pane {
+    -fx-background-color: -bs-red;
+    -fx-background-radius: 15;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.jfx-badge .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-rd-white;
+}
+
 .input-with-border {
     -fx-background-color:-bs-rd-white;
     -fx-border-width: 1;
@@ -321,7 +341,7 @@ bg color of non edit textFields: fafafa
     -fx-border-radius: 3;
     -fx-pref-height: 43;
     -fx-pref-width: 243;
-    -fx-effect: innershadow(gaussian, rgba(0,0,0,0.15), 3, 0, 0, 1);
+    -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
 }
 
 .input-with-border .text-field {
@@ -339,10 +359,6 @@ bg color of non edit textFields: fafafa
 
 .input-with-border .icon {
     -fx-padding:10;
-}
-
-.market-price-box > .jfx-combo-box > .input-line {
-    -fx-pref-height: 0px;
 }
 
 .scroll-bar{
@@ -462,54 +478,86 @@ bg color of non edit textFields: fafafa
 /* Main navigation */
 
 .top-navigation {
-    -fx-background-color: -bs-rd-grey-background-darkest;
+    -fx-background-color: -bs-rd-nav-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+    -fx-pref-height: 57;
+    -fx-padding: 0 11 0 0;
 }
 
-#nav-button {
+.top-navigation .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent -bs-rd-white-transparent;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-primary {
+    -fx-background-color: -bs-rd-nav-primary-background;
+    -fx-padding: 0 0 0 11;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+}
+
+.nav-secondary {
+    -fx-padding: 0 0 0 11;
+}
+
+.nav-price-balance {
+    -fx-background-color: -bs-rd-grey-background;
+    -fx-background-radius: 3;
+    -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
+    -fx-pref-width: 585;
+    -fx-pref-height: 41;
+}
+
+.nav-price-balance .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent -bs-rd-separator-dark;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-price-balance .jfx-combo-box > .input-line {
+    -fx-pref-height: 0px;
+}
+
+.nav-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
+    -fx-padding: 11;
 }
 
-#nav-button .text {
+.nav-button .text {
     -fx-font-size: 0.769em;
+    /*-fx-font-family: "IBM Plex Sans Bold";*/
+    -fx-font-weight: bold;
     -fx-fill: -bs-rd-nav-deselected;
 }
 
-#nav-button:selected {
-    -fx-background-image:  url("../../images/nav/nav-selected.png");
+.nav-button:selected {
+    -fx-background-color: -bs-rd-white;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
 }
 
-#nav-button:selected .text {
+.nav-button:selected .text {
     -fx-fill: -bs-rd-nav-selected;
 }
 
 .nav-balance-display {
     -fx-alignment: center-left;
-    -fx-text-fill: -bs-rd-white;
+    -fx-text-fill: -bs-rd-font-balance;
 }
 
 .nav-balance-label {
     -fx-font-size: 0.769em;
     -fx-alignment: center-left;
-    -fx-text-fill: -bs-rd-nav-deselected;
+    -fx-text-fill: -bs-rd-font-balance-label;
 }
 
 #nav-alert-label {
     -fx-font-weight: bold;
     -fx-alignment: center;
     -fx-font-size: 0.846em;
-    -fx-text-fill: -bs-rd-white;
-}
-
-.market-price-box {
-    -fx-background-color:-bs-rd-nav-background-dark;
-    -fx-border-width: 0 1 0 1;
-    -fx-border-color: -bs-rd-nav-border;
-}
-
-.nav-market-price-label {
-    -fx-font-size: 0.769em;
-    -fx-alignment: top-left;
     -fx-text-fill: -bs-rd-white;
 }
 
@@ -522,10 +570,6 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-bg-light;
 }
 
-
-.balance-box {
-    -fx-border-color: transparent -bs-rd-nav-border transparent transparent;
-}
 
 .text-area:readonly .content {
     -fx-background-color: -bs-bg-light;
@@ -1509,8 +1553,11 @@ textfield */
 
 #price-feed-combo {
     -fx-background-color:none;
-    -fx-text-fill: -bs-rd-white;
-    -fx-alignment: center;
+}
+
+#price-feed-combo > .list-cell {
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 #invert-market-price {

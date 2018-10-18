@@ -48,17 +48,18 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXProgressBar;
 import com.jfoenix.controls.JFXSpinner;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ProgressBar;
@@ -66,29 +67,30 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
 import static javafx.scene.layout.AnchorPane.setLeftAnchor;
@@ -170,17 +172,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     protected void initialize() {
         MainView.rootContainer = root;
 
-        ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market"));
-        ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc"));
-        ToggleButton sellButton = new NavButton(SellOfferView.class, Res.get("mainView.menu.sellBtc"));
-        ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio"));
-        ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds"));
+        ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market").toUpperCase());
+        ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc").toUpperCase());
+        ToggleButton sellButton = new NavButton(SellOfferView.class, Res.get("mainView.menu.sellBtc").toUpperCase());
+        ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio").toUpperCase());
+        ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds").toUpperCase());
+
         ToggleButton disputesButton = new NavButton(DisputesView.class, Res.get("mainView.menu.support"));
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
-        Pane portfolioButtonHolder = new Pane(portfolioButton);
-        Pane disputesButtonHolder = new Pane(disputesButton);
+
+        JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
+        JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
 
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             daoButton.setVisible(false);
@@ -221,7 +225,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
 
-        Tuple2<ComboBox<PriceFeedComboBoxItem>, GridPane> marketPriceBox = getMarketPriceBox();
+        Tuple3<ComboBox<PriceFeedComboBoxItem>, VBox, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -244,27 +248,39 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple2<Label, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
 
+        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
+                sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
+
+        primaryNav.setAlignment(Pos.CENTER);
+        primaryNav.getStyleClass().add("nav-primary");
+
+        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSeparator(), settingsButton,
+                getNavigationSeparator(), accountButton, getNavigationSeparator(), daoButton);
+        secondaryNav.getStyleClass().add("nav-secondary");
+
+        secondaryNav.setAlignment(Pos.CENTER);
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox navPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton,
-                spacer, marketPriceBox.second, availableBalanceBox.second,
-                reservedBalanceBox.second, lockedBalanceBox.second,
-                disputesButtonHolder, settingsButton, accountButton, daoButton) {{
+        HBox priceAndBalance = new HBox(marketPriceBox.second, marketPriceBox.third, getNavigationSeparator(), availableBalanceBox.second,
+                getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second);
+        priceAndBalance.setMaxWidth(585);
+        priceAndBalance.setMaxHeight(41);
+
+        priceAndBalance.setAlignment(Pos.CENTER);
+        priceAndBalance.setSpacing(11);
+        priceAndBalance.getStyleClass().add("nav-price-balance");
+
+        HBox navPane = new HBox(primaryNav, secondaryNav,
+                spacer, priceAndBalance) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
-            setPadding(new Insets(0, 11, 0, 11));
+            setPadding(new Insets(0, 0, 0, 0));
             getStyleClass().add("top-navigation");
         }};
-
-        root.widthProperty().addListener((observable, oldValue, newValue) -> {
-            double w = (double) newValue;
-            if (w > 0) {
-                //leftNavPane.setSpacing(w >= 1080 ? 12 : 6);
-                navPane.setSpacing(w >= 1080 ? 12 : 6);
-            }
-        });
+        navPane.setAlignment(Pos.CENTER);
 
         AnchorPane contentContainer = new AnchorPane() {{
             getStyleClass().add("content-pane");
@@ -283,9 +299,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
         baseApplicationContainer.setBottom(createFooter());
 
-        setupNotificationIcon(portfolioButtonHolder);
-
-        setupDisputesIcon(disputesButtonHolder);
+        setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
+        setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -319,6 +334,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         UserThread.execute(() -> onUiReadyHandler.run());
     }
 
+    @NotNull
+    private Separator getNavigationSeparator() {
+        final Separator separator = new Separator(Orientation.VERTICAL);
+        separator.setMaxHeight(22);
+        return separator;
+    }
+
     private Tuple2<Label, VBox> getBalanceBox(String text) {
         Label balanceDisplay = new Label();
         balanceDisplay.setPrefWidth(93); //140
@@ -329,9 +351,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         label.setPadding(new Insets(0, 0, 0, 0));
         label.setPrefWidth(balanceDisplay.getPrefWidth());
         VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.getStyleClass().add("balance-box");
-        vBox.setPadding(new Insets(12, 12, 0, 12));
+        vBox.setAlignment(Pos.CENTER);
         vBox.getChildren().addAll(balanceDisplay, label);
         return new Tuple2<>(balanceDisplay, vBox);
     }
@@ -351,11 +371,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple2<ComboBox<PriceFeedComboBoxItem>, GridPane> getMarketPriceBox() {
+    private Tuple3<ComboBox<PriceFeedComboBoxItem>, VBox, VBox> getMarketPriceBox() {
 
-        GridPane gridPane = new GridPane();
-        gridPane.setPrefWidth(270);
-        gridPane.getStyleClass().add("market-price-box");
+        VBox marketPriceBox = new VBox();
+        marketPriceBox.setAlignment(Pos.CENTER_LEFT);
+
+        VBox priceproviderBox = new VBox();
+        priceproviderBox.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
         priceComboBox.setVisibleRowCount(20);
@@ -363,18 +385,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         priceComboBox.setMinWidth(165);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
+        priceComboBox.setPadding(new Insets(0, 0, -4, 0));
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
         ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
-        GridPane.setRowIndex(priceComboBox, 0);
-        GridPane.setMargin(priceComboBox, new Insets(4, 0, 0, 0));
-        gridPane.getChildren().add(priceComboBox);
+
+        Label marketPriceLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.label"));
+        marketPriceLabel.getStyleClass().add("nav-balance-label");
+        marketPriceLabel.setPadding(new Insets(-2, 0, 4, 9));
+
+        marketPriceBox.getChildren().addAll(priceComboBox, marketPriceLabel);
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
         final Button btcAverageIconButton = new AutoTooltipButton("", btcAverageIcon);
-        btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
+        btcAverageIconButton.setPadding(new Insets(0, 0, 0, 0));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.getStyleClass().add("hidden-icon-button");
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
@@ -394,16 +420,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 }
         );
 
-        GridPane.setRowIndex(btcAverageIconButton, 0);
-        GridPane.setColumnIndex(btcAverageIconButton, 1);
-        GridPane.setMargin(btcAverageIconButton, new Insets(15, 0, 0, 0));
-        gridPane.getChildren().add(btcAverageIconButton);
-
-
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
         final Button poloniexIconButton = new AutoTooltipButton("", poloniexIcon);
-        poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
+        poloniexIconButton.setPadding(new Insets(0, 0, 0, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.getStyleClass().add("hidden-icon-button");
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
@@ -423,33 +443,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             );
         });
 
-        GridPane.setRowIndex(poloniexIconButton, 0);
-        GridPane.setColumnIndex(poloniexIconButton, 1);
-        GridPane.setMargin(poloniexIconButton, new Insets(15, 0, 0, 0));
-        gridPane.getChildren().add(poloniexIconButton);
-
         Label marketPriceProviderLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
-        marketPriceProviderLabel.getStyleClass().add("nav-market-price-label");
+        marketPriceProviderLabel.getStyleClass().add("nav-balance-label");
+        marketPriceProviderLabel.setPadding(new Insets(-2, 0, 3, 0));
 
-        GridPane.setRowIndex(marketPriceProviderLabel, 1);
-        GridPane.setColumnIndex(marketPriceProviderLabel, 1);
-        GridPane.setMargin(marketPriceProviderLabel, new Insets(-10, 0, 0, 0));
-        gridPane.getChildren().add(marketPriceProviderLabel);
+        priceproviderBox.getChildren().addAll(btcAverageIconButton, poloniexIconButton, marketPriceProviderLabel);
 
-        /*model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
+        model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
             updateMarketPriceLabel(marketPriceProviderLabel);
-        });*/
+        });
 
-        Label marketPriceLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.label"));
-        marketPriceLabel.getStyleClass().add("nav-market-price-label");
-        //marketPriceLabel.setPadding(new Insets(0, 5, 0, 2));
-
-        GridPane.setRowIndex(marketPriceLabel, 1);
-        GridPane.setColumnIndex(marketPriceLabel, 0);
-        GridPane.setMargin(marketPriceLabel, new Insets(-10, 0, 0, 12));
-        gridPane.getChildren().add(marketPriceLabel);
-
-        return new Tuple2<>(priceComboBox, gridPane);
+        return new Tuple3<>(priceComboBox, marketPriceBox, priceproviderBox);
     }
 
     private void updateMarketPriceLabel(Label label) {
@@ -706,40 +710,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
     }
 
-    private void setupNotificationIcon(Pane buttonHolder) {
-        Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.getNumPendingTrades());
-        label.relocate(5, 1);
-        label.setId("nav-alert-label");
+    private void setupBadge(JFXBadge buttonWithBadge, StringProperty badgeNumber, BooleanProperty badgeEnabled) {
+        buttonWithBadge.textProperty().bind(badgeNumber);
+        buttonWithBadge.setEnabled(badgeEnabled.get());
+        badgeEnabled.addListener((observable, oldValue, newValue) -> {
+            buttonWithBadge.setEnabled(newValue);
+            buttonWithBadge.refreshBadge();
+        });
 
-        ImageView icon = new ImageView();
-        icon.setId("image-alert-round");
-
-        Pane notification = new Pane();
-        notification.relocate(30, 9);
-        notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-        notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.getShowPendingTradesNotification());
-        buttonHolder.getChildren().add(notification);
-    }
-
-    private void setupDisputesIcon(Pane buttonHolder) {
-        Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.getNumOpenDisputes());
-        label.relocate(5, 1);
-        label.setId("nav-alert-label");
-
-        ImageView icon = new ImageView();
-        icon.setId("image-alert-round");
-
-        Pane notification = new Pane();
-        notification.relocate(30, 9);
-        notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-        notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.getShowOpenDisputesNotification());
-        buttonHolder.getChildren().add(notification);
+        buttonWithBadge.setPosition(Pos.TOP_RIGHT);
+        buttonWithBadge.setMinHeight(34);
+        buttonWithBadge.setMaxHeight(34);
     }
 
     private class NavButton extends AutoTooltipToggleButton {
@@ -747,43 +728,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         private final Class<? extends View> viewClass;
 
         NavButton(Class<? extends View> viewClass, String title) {
-            super(title, new ImageView() {{
-                setId("image-nav-" + viewId(viewClass));
-            }});
+            super(title);
 
             this.viewClass = viewClass;
 
             this.setToggleGroup(navButtons);
-            this.setId("nav-button");
-            this.setPadding(new Insets(0, -10, -10, -10));
-            this.setMinSize(50, 60);
-            this.setMaxSize(50, 60);
-            this.setContentDisplay(ContentDisplay.TOP);
-            this.setGraphicTextGap(0);
+            this.getStyleClass().add("nav-button");
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> {
                 this.setMouseTransparent(newValue);
-                this.setMinSize(50, 60);
-                this.setMaxSize(50, 60);
-                this.setGraphicTextGap(newValue ? -1 : 0);
-                if (newValue) {
-                    this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
-                } else {
-                    this.getGraphic().setId("image-nav-" + viewId(viewClass));
-                }
             });
 
             this.setOnAction(e -> navigation.navigateTo(MainView.class, viewClass));
         }
 
-    }
-
-    private static String viewId(Class<? extends View> viewClass) {
-        String viewName = viewClass.getSimpleName();
-        String suffix = "View";
-        int suffixIdx = viewName.indexOf(suffix);
-        if (suffixIdx != viewName.length() - suffix.length())
-            throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
-        return viewName.substring(0, suffixIdx).toLowerCase();
     }
 }
