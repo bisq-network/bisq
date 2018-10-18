@@ -48,6 +48,7 @@ import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
@@ -107,6 +108,7 @@ public class DaoFacade implements DaoSetupService {
     private final BondedRolesService bondedRolesService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
+    private final DaoStateStorageService daoStateStorageService;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
 
@@ -127,7 +129,8 @@ public class DaoFacade implements DaoSetupService {
                      RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
                      LockupService lockupService,
-                     UnlockService unlockService) {
+                     UnlockService unlockService,
+                     DaoStateStorageService daoStateStorageService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
         this.ballotListPresentation = ballotListPresentation;
@@ -145,6 +148,7 @@ public class DaoFacade implements DaoSetupService {
         this.bondedRolesService = bondedRolesService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
+        this.daoStateStorageService = daoStateStorageService;
     }
 
 
@@ -521,5 +525,9 @@ public class DaoFacade implements DaoSetupService {
 
     public long getPramValue(Param param) {
         return daoStateService.getParamValue(param, periodService.getChainHeight());
+    }
+
+    public void resyncDao(Runnable resultHandler) {
+        daoStateStorageService.resetDaoState(resultHandler);
     }
 }

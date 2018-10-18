@@ -20,12 +20,15 @@ package bisq.core.dao.state;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
+import bisq.common.UserThread;
 import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import java.io.File;
+
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,12 +68,21 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void persist(DaoState daoState) {
+        persist(daoState, 200);
+    }
+
+    public void persist(DaoState daoState, long delayInMilli) {
         store.setDaoState(daoState);
-        storage.queueUpForSave(store);
+        storage.queueUpForSave(store, delayInMilli);
     }
 
     public DaoState getPersistedBsqState() {
         return store.getDaoState();
+    }
+
+    public void resetDaoState(Runnable resultHandler) {
+        persist(new DaoState(), 1);
+        UserThread.runAfter(resultHandler::run, 300, TimeUnit.MILLISECONDS);
     }
 
 
