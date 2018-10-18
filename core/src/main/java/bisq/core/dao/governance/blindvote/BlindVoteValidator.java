@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
@@ -35,12 +35,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BlindVoteValidator {
 
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final PeriodService periodService;
 
     @Inject
-    public BlindVoteValidator(BsqStateService bsqStateService, PeriodService periodService) {
-        this.bsqStateService = bsqStateService;
+    public BlindVoteValidator(DaoStateService daoStateService, PeriodService periodService) {
+        this.daoStateService = daoStateService;
         this.periodService = periodService;
     }
 
@@ -78,8 +78,8 @@ public class BlindVoteValidator {
             return false;
         }
 
-        // Check if tx is already confirmed and in BsqState
-        boolean isConfirmed = bsqStateService.getTx(blindVote.getTxId()).isPresent();
+        // Check if tx is already confirmed and in DaoState
+        boolean isConfirmed = daoStateService.getTx(blindVote.getTxId()).isPresent();
         if (!isConfirmed)
             log.warn("blindVoteTx is not confirmed. blindVoteTxId={}", blindVote.getTxId());
 
@@ -88,14 +88,14 @@ public class BlindVoteValidator {
 
     public boolean isTxInPhaseAndCycle(BlindVote blindVote) {
         String txId = blindVote.getTxId();
-        Optional<Tx> optionalTx = bsqStateService.getTx(txId);
+        Optional<Tx> optionalTx = daoStateService.getTx(txId);
         if (!optionalTx.isPresent()) {
-            log.debug("Tx is not in bsqStateService. blindVoteTxId={}", txId);
+            log.debug("Tx is not in daoStateService. blindVoteTxId={}", txId);
             return false;
         }
 
         int txHeight = optionalTx.get().getBlockHeight();
-        if (!periodService.isTxInCorrectCycle(txHeight, bsqStateService.getChainHeight())) {
+        if (!periodService.isTxInCorrectCycle(txHeight, daoStateService.getChainHeight())) {
             log.debug("Tx is not in current cycle. blindVote={}", blindVote);
             return false;
         }
@@ -108,8 +108,8 @@ public class BlindVoteValidator {
 
    /* public boolean isAppendOnlyPayloadValid(BlindVotePayload appendOnlyPayload,
                                             int publishTriggerBlockHeight,
-                                            BsqStateService bsqStateService) {
-        final Optional<Block> optionalBlock = bsqStateService.getBlockAtHeight(publishTriggerBlockHeight);
+                                            DaoStateService daoStateService) {
+        final Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(publishTriggerBlockHeight);
         if (optionalBlock.isPresent()) {
             final long blockTimeInMs = optionalBlock.get().getTime() * 1000L;
             final long tolerance = TimeUnit.HOURS.toMillis(5);

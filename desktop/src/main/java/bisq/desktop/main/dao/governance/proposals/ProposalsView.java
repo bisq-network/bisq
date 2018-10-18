@@ -44,8 +44,8 @@ import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.governance.voteresult.VoteResultService;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -99,11 +99,11 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class ProposalsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
+public class ProposalsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
-    private final VoteResultService voteResultService;
+    private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -142,13 +142,13 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ProposalsView(DaoFacade daoFacade,
                           BsqWalletService bsqWalletService,
                           PhasesView phasesView,
-                          VoteResultService voteResultService,
+                          DaoStateService daoStateService,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
-        this.voteResultService = voteResultService;
+        this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -250,7 +250,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -418,7 +418,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void onSelectProposal(ProposalsListItem item) {
         selectedItem = item;
         if (selectedItem != null) {
-            EvaluatedProposal evaluatedProposal = voteResultService.getEvaluatedProposalList().stream()
+            EvaluatedProposal evaluatedProposal = daoStateService.getEvaluatedProposalList().stream()
                     .filter(e -> daoFacade.isTxInCorrectCycle(e.getProposal().getTxId(),
                             daoFacade.getChainHeight()))
                     .filter(e -> e.getProposalTxId().equals(selectedItem.getProposal().getTxId()))

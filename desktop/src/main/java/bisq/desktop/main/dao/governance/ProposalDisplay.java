@@ -447,7 +447,7 @@ public class ProposalDisplay {
             checkNotNull(paramComboBox, "paramComboBox must not be null");
             paramComboBox.getSelectionModel().select(changeParamProposal.getParam());
             checkNotNull(paramValueTextField, "paramValueTextField must not be null");
-            paramValueTextField.setText(String.valueOf(changeParamProposal.getParamValue()));
+            paramValueTextField.setText(bsqFormatter.formatParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue()));
         } else if (proposal instanceof BondedRoleProposal) {
             BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");

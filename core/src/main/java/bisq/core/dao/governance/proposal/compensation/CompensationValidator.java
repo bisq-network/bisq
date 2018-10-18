@@ -20,7 +20,7 @@ package bisq.core.dao.governance.proposal.compensation;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.PeriodService;
 
 import org.bitcoinj.core.Coin;
@@ -36,8 +36,8 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 public class CompensationValidator extends ProposalValidator {
 
     @Inject
-    public CompensationValidator(BsqStateService bsqStateService, PeriodService periodService) {
-        super(bsqStateService, periodService);
+    public CompensationValidator(DaoStateService daoStateService, PeriodService periodService) {
+        super(daoStateService, periodService);
     }
 
     @Override
@@ -52,10 +52,10 @@ public class CompensationValidator extends ProposalValidator {
             compensationProposal.getAddress(); // throws AddressFormatException if wrong address
 
             Coin requestedBsq = compensationProposal.getRequestedBsq();
-            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, periodService.getChainHeight());
             checkArgument(requestedBsq.compareTo(maxCompensationRequestAmount) <= 0,
                     "Requested BSQ must not exceed " + (maxCompensationRequestAmount.value / 100L) + " BSQ");
-            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());
             checkArgument(requestedBsq.compareTo(minCompensationRequestAmount) >= 0,
                     "Requested BSQ must not be less than " + (minCompensationRequestAmount.value / 100L) + " BSQ");
 

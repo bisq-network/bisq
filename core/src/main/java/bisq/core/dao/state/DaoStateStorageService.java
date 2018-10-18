@@ -15,29 +15,31 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.statistics;
+package bisq.core.dao.state;
 
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.MapStoreService;
+import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
+import bisq.network.p2p.storage.persistence.StoreService;
 
+import bisq.common.UserThread;
 import bisq.common.storage.Storage;
 
-import com.google.inject.name.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.File;
 
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
+/**
+ * Manages persistence of the daoState.
+ */
 @Slf4j
-public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
-    private static final String FILE_NAME = "TradeStatistics2Store";
+public class DaoStateStorageService extends StoreService<DaoStateStore> {
+    private static final String FILE_NAME = "DaoStateStore";
+
+    private DaoState daoState;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,9 +47,14 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeStatistics2StorageService(@Named(Storage.STORAGE_DIR) File storageDir,
-                                          Storage<TradeStatistics2Store> persistableNetworkPayloadMapStorage) {
-        super(storageDir, persistableNetworkPayloadMapStorage);
+    public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
+                                  DaoState daoState,
+                                  @Named(Storage.STORAGE_DIR) File storageDir,
+                                  Storage<DaoStateStore> daoSnapshotStorage) {
+        super(storageDir, daoSnapshotStorage);
+        this.daoState = daoState;
+
+        resourceDataStoreService.addService(this);
     }
 
 
@@ -60,14 +67,22 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
         return FILE_NAME;
     }
 
-    @Override
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
-        return store.getMap();
+    public void persist(DaoState daoState) {
+        persist(daoState, 200);
     }
 
-    @Override
-    public boolean canHandle(PersistableNetworkPayload payload) {
-        return payload instanceof TradeStatistics2;
+    public void persist(DaoState daoState, long delayInMilli) {
+        store.setDaoState(daoState);
+        storage.queueUpForSave(store, delayInMilli);
+    }
+
+    public DaoState getPersistedBsqState() {
+        return store.getDaoState();
+    }
+
+    public void resetDaoState(Runnable resultHandler) {
+        persist(new DaoState(), 1);
+        UserThread.runAfter(resultHandler::run, 300, TimeUnit.MILLISECONDS);
     }
 
 
@@ -76,15 +91,7 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected TradeStatistics2Store createStore() {
-        return new TradeStatistics2Store();
-    }
-
-    @Override
-    protected void readStore() {
-        super.readStore();
-        checkArgument(store instanceof TradeStatistics2Store,
-                "Store is not instance of TradeStatistics2Store. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
+    protected DaoStateStore createStore() {
+        return new DaoStateStore(daoState.getClone());
     }
 }

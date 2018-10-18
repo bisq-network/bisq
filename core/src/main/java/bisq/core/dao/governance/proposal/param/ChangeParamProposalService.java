@@ -23,7 +23,7 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -48,11 +48,11 @@ public class ChangeParamProposalService extends BaseProposalService<ChangeParamP
     @Inject
     public ChangeParamProposalService(BsqWalletService bsqWalletService,
                                       BtcWalletService btcWalletService,
-                                      BsqStateService bsqStateService,
+                                      DaoStateService daoStateService,
                                       ChangeParamValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
+                daoStateService,
                 proposalValidator);
     }
 

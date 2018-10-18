@@ -20,7 +20,7 @@ package bisq.desktop.main.dao.governance.result;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.Cycle;
 
@@ -37,7 +37,7 @@ class ResultsOfCycle {
     private final int numVotes;
     private final int numAcceptedVotes;
     private final int numRejectedVotes;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private long cycleStartTime;
 
     // All available proposals of cycle
@@ -54,7 +54,7 @@ class ResultsOfCycle {
                    List<Proposal> proposals,
                    List<EvaluatedProposal> evaluatedProposals,
                    List<DecryptedBallotsWithMerits> decryptedVotesForCycle,
-                   BsqStateService bsqStateService) {
+                   DaoStateService daoStateService) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
         this.cycleStartTime = cycleStartTime;
@@ -71,14 +71,14 @@ class ResultsOfCycle {
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
                 .sum();
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
     }
 
     public long getCycleStartTime() {
         // At a new cycle we have cycleStartTime 0 as the block is not processed yet.
-        // To display a correct value we access again from the bsqStateService
+        // To display a correct value we access again from the daoStateService
         if (cycleStartTime == 0)
-            cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+            cycleStartTime = daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
                     .map(Block::getTime)
                     .orElse(0L);
         return cycleStartTime;

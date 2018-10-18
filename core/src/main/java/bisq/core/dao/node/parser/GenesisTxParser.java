@@ -18,7 +18,7 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.node.parser.exceptions.InvalidGenesisTxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.RawTx;
 import bisq.core.dao.state.blockchain.TempTx;
 import bisq.core.dao.state.blockchain.TempTxOutput;
@@ -39,17 +39,17 @@ public class GenesisTxParser {
         return rawTx.getBlockHeight() == genesisBlockHeight && rawTx.getId().equals(genesisTxId);
     }
 
-    public static Tx getGenesisTx(RawTx rawTx, Coin genesisTotalSupply, BsqStateService bsqStateService) {
+    public static Tx getGenesisTx(RawTx rawTx, Coin genesisTotalSupply, DaoStateService daoStateService) {
         TempTx genesisTx = getGenesisTempTx(rawTx, genesisTotalSupply);
-        commitUTXOs(bsqStateService, genesisTx);
+        commitUTXOs(daoStateService, genesisTx);
         return Tx.fromTempTx(genesisTx);
     }
 
-    private static void commitUTXOs(BsqStateService bsqStateService, TempTx genesisTx) {
+    private static void commitUTXOs(DaoStateService daoStateService, TempTx genesisTx) {
         ImmutableList<TempTxOutput> outputs = genesisTx.getTempTxOutputs();
         for (int i = 0; i < outputs.size(); ++i) {
             TempTxOutput tempTxOutput = outputs.get(i);
-            bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
+            daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
         }
     }
 

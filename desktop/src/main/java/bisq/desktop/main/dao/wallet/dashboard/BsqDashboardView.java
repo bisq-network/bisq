@@ -26,7 +26,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -57,7 +57,7 @@ import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class BsqDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class BsqDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
 
     private final BsqBalanceUtil bsqBalanceUtil;
     private final DaoFacade daoFacade;
@@ -151,7 +151,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

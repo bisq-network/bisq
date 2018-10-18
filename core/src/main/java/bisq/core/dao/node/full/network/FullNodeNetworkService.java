@@ -24,7 +24,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.RawBlock;
 
@@ -71,7 +71,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     private final BlindVoteListService blindVoteListService;
     private final ProposalService proposalService;
     private final P2PService p2PService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
 
     // Key is connection UID
     private final Map<String, GetBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
@@ -89,14 +89,14 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                                   BlindVoteListService blindVoteListService,
                                   ProposalService proposalService,
                                   P2PService p2PService,
-                                  BsqStateService bsqStateService) {
+                                  DaoStateService daoStateService) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         this.blindVoteListService = blindVoteListService;
         this.proposalService = proposalService;
         this.p2PService = p2PService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                 final String uid = connection.getUid();
                 if (!getBlocksRequestHandlers.containsKey(uid)) {
                     GetBlocksRequestHandler requestHandler = new GetBlocksRequestHandler(networkNode,
-                            bsqStateService,
+                            daoStateService,
                             new GetBlocksRequestHandler.Listener() {
                                 @Override
                                 public void onComplete() {
