@@ -1,5 +1,8 @@
 language: java
-jdk: oraclejdk10
+jdk: openjdk10
+script:
+  - export JAVA_HOME=$HOME/openjdk10
+  - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk10 --target $JAVA_HOME
 before_install:
   grep -v '^#' src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
 notifications:
