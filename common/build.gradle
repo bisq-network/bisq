@@ -20,6 +20,8 @@ ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'wi
 group = 'network.bisq'
 version = '-SNAPSHOT'
 
+mainClassName = 'bisq.common'
+
 ext {
     protobufVersion = '3.5.1'
 }
