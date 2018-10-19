@@ -31,7 +31,7 @@
     </padding>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="ALWAYS" halignment="LEFT" minWidth="243.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
         <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
