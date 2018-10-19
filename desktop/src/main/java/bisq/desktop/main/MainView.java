@@ -36,7 +36,6 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
@@ -48,7 +47,6 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -225,7 +223,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
 
-        Tuple3<ComboBox<PriceFeedComboBoxItem>, VBox, VBox> marketPriceBox = getMarketPriceBox();
+        Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -251,21 +249,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
                 sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
-        primaryNav.setAlignment(Pos.CENTER);
+        primaryNav.setAlignment(Pos.CENTER_LEFT);
         primaryNav.getStyleClass().add("nav-primary");
+        HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSeparator(), settingsButton,
-                getNavigationSeparator(), accountButton, getNavigationSeparator(), daoButton);
+        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
+        HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
         secondaryNav.setAlignment(Pos.CENTER);
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox priceAndBalance = new HBox(marketPriceBox.second, marketPriceBox.third, getNavigationSeparator(), availableBalanceBox.second,
+        HBox priceAndBalance = new HBox(marketPriceBox.second, getNavigationSeparator(), availableBalanceBox.second,
                 getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second);
-        priceAndBalance.setMaxWidth(585);
+        priceAndBalance.setMaxWidth(520);
         priceAndBalance.setMaxHeight(41);
 
         priceAndBalance.setAlignment(Pos.CENTER);
@@ -273,7 +270,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         priceAndBalance.getStyleClass().add("nav-price-balance");
 
         HBox navPane = new HBox(primaryNav, secondaryNav,
-                spacer, priceAndBalance) {{
+                priceAndBalance) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
             setTopAnchor(this, 0d);
@@ -337,8 +334,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @NotNull
     private Separator getNavigationSeparator() {
         final Separator separator = new Separator(Orientation.VERTICAL);
+        HBox.setHgrow(separator, Priority.ALWAYS);
         separator.setMaxHeight(22);
+        separator.setMaxWidth(Double.MAX_VALUE);
         return separator;
+    }
+
+    @NotNull
+    private Region getNavigationSpacer() {
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
     }
 
     private Tuple2<Label, VBox> getBalanceBox(String text) {
@@ -371,13 +377,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple3<ComboBox<PriceFeedComboBoxItem>, VBox, VBox> getMarketPriceBox() {
+    private Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> getMarketPriceBox() {
 
         VBox marketPriceBox = new VBox();
         marketPriceBox.setAlignment(Pos.CENTER_LEFT);
-
-        VBox priceproviderBox = new VBox();
-        priceproviderBox.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
         priceComboBox.setVisibleRowCount(20);
@@ -391,76 +394,32 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        Label marketPriceLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.label"));
+        Label marketPriceLabel = new Label();
+
+        updateMarketPriceLabel(marketPriceLabel);
+
         marketPriceLabel.getStyleClass().add("nav-balance-label");
         marketPriceLabel.setPadding(new Insets(-2, 0, 4, 9));
 
         marketPriceBox.getChildren().addAll(priceComboBox, marketPriceLabel);
 
-        final ImageView btcAverageIcon = new ImageView();
-        btcAverageIcon.setId("btcaverage");
-        final Button btcAverageIconButton = new AutoTooltipButton("", btcAverageIcon);
-        btcAverageIconButton.setPadding(new Insets(0, 0, 0, 0));
-        btcAverageIconButton.setFocusTraversable(false);
-        btcAverageIconButton.getStyleClass().add("hidden-icon-button");
-        btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
-        btcAverageIconButton.setVisible(model.getIsFiatCurrencyPriceFeedSelected().get());
-        btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
-        btcAverageIconButton.visibleProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
-        btcAverageIconButton.managedProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
-        btcAverageIconButton.setOnMouseEntered(e -> {
-                    String res = Res.get("mainView.marketPrice.tooltip",
-                            "https://bitcoinaverage.com",
-                            "",
-                            formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
-                            model.getPriceFeedService().getProviderNodeAddress());
-                    btcAverageIconButton.setTooltip(
-                            new Tooltip(res)
-                    );
-                }
-        );
-
-        final ImageView poloniexIcon = new ImageView();
-        poloniexIcon.setId("poloniex");
-        final Button poloniexIconButton = new AutoTooltipButton("", poloniexIcon);
-        poloniexIconButton.setPadding(new Insets(0, 0, 0, 0));
-        poloniexIconButton.setFocusTraversable(false);
-        poloniexIconButton.getStyleClass().add("hidden-icon-button");
-        poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
-        poloniexIconButton.setVisible(model.getIsCryptoCurrencyPriceFeedSelected().get());
-        poloniexIconButton.setManaged(poloniexIconButton.isVisible());
-        poloniexIconButton.visibleProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
-        poloniexIconButton.managedProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
-        poloniexIconButton.setOnMouseEntered(e -> {
-            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
-            String res = Res.get("mainView.marketPrice.tooltip",
-                    "https://poloniex.com",
-                    altcoinExtra,
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-            poloniexIconButton.setTooltip(
-                    new Tooltip(res)
-            );
-        });
-
-        Label marketPriceProviderLabel = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
-        marketPriceProviderLabel.getStyleClass().add("nav-balance-label");
-        marketPriceProviderLabel.setPadding(new Insets(-2, 0, 3, 0));
-
-        priceproviderBox.getChildren().addAll(btcAverageIconButton, poloniexIconButton, marketPriceProviderLabel);
-
         model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
-            updateMarketPriceLabel(marketPriceProviderLabel);
+            updateMarketPriceLabel(marketPriceLabel);
         });
 
-        return new Tuple3<>(priceComboBox, marketPriceBox, priceproviderBox);
+        return new Tuple2<>(priceComboBox, marketPriceBox);
+    }
+
+    @NotNull
+    private String getPriceProvider() {
+        return model.getIsFiatCurrencyPriceFeedSelected().get() ? "BitcoinAverage" : "Poloniex";
     }
 
     private void updateMarketPriceLabel(Label label) {
         if (model.getIsPriceAvailable().get()) {
             if (model.getIsExternallyProvidedPrice().get()) {
-                label.setText(Res.get("mainView.marketPrice.provider"));
-                label.setTooltip(null);
+                label.setText(Res.get("mainView.marketPriceWithProvider.label", getPriceProvider()));
+                label.setTooltip(new Tooltip(Res.get("mainView.marketPrice.tooltip.provider", getPriceProvider())));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));

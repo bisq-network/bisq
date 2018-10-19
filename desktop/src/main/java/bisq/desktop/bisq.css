@@ -493,13 +493,13 @@ bg color of non edit textFields: fafafa
 
 .nav-primary {
     -fx-background-color: -bs-rd-nav-primary-background;
-    -fx-padding: 0 0 0 11;
+    -fx-padding: 0 11 0 11;
     -fx-border-width: 0 1 0 0;
     -fx-border-color: -bs-rd-nav-primary-border;
 }
 
 .nav-secondary {
-    -fx-padding: 0 0 0 11;
+    -fx-padding: 0 11 0 11;
 }
 
 .nav-price-balance {
@@ -693,10 +693,6 @@ textfield */
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-underline: false;
-}
-
-.market-price-tooltip {
-    -fx-font-size: 0.923em;
 }
 
 /*******************************************************************************
