@@ -69,7 +69,6 @@ import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
@@ -100,7 +99,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 
 import javafx.util.Callback;
-import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -179,23 +177,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         paymentMethodComboBox = paymentBoxTuple.third;
         paymentMethodComboBox.setVisibleRowCount(20);
-        paymentMethodComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(PaymentMethod paymentMethod) {
-                String id = paymentMethod.getId();
-                if (id.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ " + Res.get("list.currency.showAll");
-                else if (paymentMethod.equals(PaymentMethod.BLOCK_CHAINS))
-                    return "✦ " + Res.get(id);
-                else
-                    return "★ " + Res.get(id);
-            }
-
-            @Override
-            public PaymentMethod fromString(String s) {
-                return null;
-            }
-        });
+        paymentMethodComboBox.setButtonCell(GUIUtil.getPaymentMethodButtonCell());
+        paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
 
         tableView = new TableView<>();
 
@@ -273,10 +256,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         currencyComboBox.setItems(model.getTradeCurrencies());
-        currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter(
-                Res.get("shared.oneOffer"),
+        currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+
+        currencyComboBox.setButtonCell(GUIUtil.getTradeCurrencyButtonCell(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"),
+                (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 

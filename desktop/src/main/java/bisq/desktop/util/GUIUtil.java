@@ -32,6 +32,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
@@ -284,7 +285,7 @@ public class GUIUtil {
                     String code = item.tradeCurrency.getCode();
 
                     AnchorPane pane = new AnchorPane();
-                    Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode() + " - " + item.tradeCurrency.getName());
+                    Label currency = new AutoTooltipLabel(code + " - " + item.tradeCurrency.getName());
                     currency.getStyleClass().add("currency-label-selected");
                     AnchorPane.setLeftAnchor(currency, 0.0);
                     pane.getChildren().add(currency);
@@ -331,10 +332,10 @@ public class GUIUtil {
                     HBox box = new HBox();
                     box.setSpacing(20);
                     Label currencyType = new AutoTooltipLabel(
-                            CurrencyUtil.isFiatCurrency(item.tradeCurrency.getCode()) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+                            CurrencyUtil.isFiatCurrency(code) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
 
                     currencyType.getStyleClass().add("currency-label-small");
-                    Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode());
+                    Label currency = new AutoTooltipLabel(code);
                     currency.getStyleClass().add("currency-label");
                     box.getChildren().addAll(currencyType, currency);
 
@@ -392,6 +393,164 @@ public class GUIUtil {
             @Override
             public TradeCurrency fromString(String s) {
                 return null;
+            }
+        };
+    }
+
+    public static ListCell<TradeCurrency> getTradeCurrencyButtonCell(String postFixSingle,
+                                                                     String postFixMulti,
+                                                                     Map<String, Integer> offerCounts) {
+        return new ListCell<>() {
+
+            @Override
+            protected void updateItem(TradeCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String code = item.getCode();
+
+                    AnchorPane pane = new AnchorPane();
+                    Label currency = new AutoTooltipLabel(code + " - " + item.getName());
+                    currency.getStyleClass().add("currency-label-selected");
+                    AnchorPane.setLeftAnchor(currency, 0.0);
+                    pane.getChildren().add(currency);
+
+                    Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            break;
+                        default:
+                            if (offerCountOptional.isPresent()) {
+                                Label numberOfOffers = new AutoTooltipLabel(offerCountOptional.get() + " " +
+                                        (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti));
+                                numberOfOffers.getStyleClass().add("offer-label-small");
+                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                pane.getChildren().add(numberOfOffers);
+                            }
+                    }
+
+                    setGraphic(pane);
+                    setText("");
+                } else {
+                    setGraphic(null);
+                    setText("");
+                }
+            }
+        };
+    }
+
+    public static Callback<ListView<TradeCurrency>, ListCell<TradeCurrency>> getTradeCurrencyCellFactory(String postFixSingle,
+                                                                                                         String postFixMulti,
+                                                                                                         Map<String, Integer> offerCounts) {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(TradeCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    String code = item.getCode();
+
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    Label currencyType = new AutoTooltipLabel(
+                            CurrencyUtil.isFiatCurrency(item.getCode()) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+
+                    currencyType.getStyleClass().add("currency-label-small");
+                    Label currency = new AutoTooltipLabel(item.getCode());
+                    currency.getStyleClass().add("currency-label");
+                    box.getChildren().addAll(currencyType, currency);
+
+                    Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currencyType.setText("▶");
+                            currency.setText(Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currencyType.setText("▼");
+                            currency.setText(Res.get("list.currency.editList"));
+                            break;
+                        default:
+                            if (offerCountOptional.isPresent()) {
+                                Label offers = new AutoTooltipLabel(item.getName() + " (" + offerCountOptional.get() + " " +
+                                        (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti) + ")");
+                                offers.getStyleClass().add("currency-label");
+                                box.getChildren().add(offers);
+                            }
+                    }
+
+                    setGraphic(box);
+
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    public static ListCell<PaymentMethod> getPaymentMethodButtonCell() {
+        return new ListCell<>() {
+
+            @Override
+            protected void updateItem(PaymentMethod item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String id = item.getId();
+
+                    this.getStyleClass().add("currency-label-selected");
+
+                    if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
+                        setText("▶ " + Res.get("list.currency.showAll"));
+                    } else {
+                        setText(Res.get(id));
+                    }
+                } else {
+                    setText("");
+                }
+            }
+        };
+    }
+
+    public static Callback<ListView<PaymentMethod>, ListCell<PaymentMethod>> getPaymentMethodCellFactory() {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(PaymentMethod item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    String id = item.getId();
+
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    final boolean isBlockchainPaymentMethod = item.equals(PaymentMethod.BLOCK_CHAINS);
+                    Label paymentType = new AutoTooltipLabel(
+                            isBlockchainPaymentMethod ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+
+                    paymentType.getStyleClass().add("currency-label-small");
+                    Label paymentMethod = new AutoTooltipLabel(Res.get(id));
+                    paymentMethod.getStyleClass().add("currency-label");
+                    box.getChildren().addAll(paymentType, paymentMethod);
+
+                    if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
+                        paymentType.setText("▶");
+                        paymentMethod.setText(Res.get("list.currency.showAll"));
+                    }
+
+                    setGraphic(box);
+
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }
