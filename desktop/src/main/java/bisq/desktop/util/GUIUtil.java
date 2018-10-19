@@ -272,34 +272,6 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFixSingle, String postFixMulti, Preferences preferences) {
-        return new StringConverter<CurrencyListItem>() {
-            @Override
-            public String toString(CurrencyListItem item) {
-                TradeCurrency tradeCurrency = item.tradeCurrency;
-                String code = tradeCurrency.getCode();
-                switch (code) {
-                    case GUIUtil.SHOW_ALL_FLAG:
-                        return "▶ " + Res.get("list.currency.showAll");
-                    case GUIUtil.EDIT_FLAG:
-                        return "▼ " + Res.get("list.currency.editList");
-                    default:
-                        String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.isSortMarketCurrenciesNumerically()) {
-                            final int numTrades = item.numTrades;
-                            displayString += " - " + numTrades + " " + (numTrades == 1 ? postFixSingle : postFixMulti);
-                        }
-                        return tradeCurrency.getDisplayPrefix() + displayString;
-                }
-            }
-
-            @Override
-            public CurrencyListItem fromString(String s) {
-                return null;
-            }
-        };
-    }
-
     public static ListCell<CurrencyListItem> getCurrencyListItemButtonCell(String postFixSingle, String postFixMulti,
                                                                            Preferences preferences) {
         return new ListCell<>() {
@@ -309,19 +281,30 @@ public class GUIUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+                    String code = item.tradeCurrency.getCode();
+
                     AnchorPane pane = new AnchorPane();
                     Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode() + " - " + item.tradeCurrency.getName());
                     currency.getStyleClass().add("currency-label-selected");
                     AnchorPane.setLeftAnchor(currency, 0.0);
                     pane.getChildren().add(currency);
 
-                    if (preferences.isSortMarketCurrenciesNumerically()) {
-                        Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
-                                (item.numTrades == 1 ? postFixSingle : postFixMulti));
-                        numberOfOffers.getStyleClass().add("offer-label-small");
-                        AnchorPane.setRightAnchor(numberOfOffers, 0.0);
-                        AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
-                        pane.getChildren().add(numberOfOffers);
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            break;
+                        default:
+                            if (preferences.isSortMarketCurrenciesNumerically()) {
+                                Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
+                                        (item.numTrades == 1 ? postFixSingle : postFixMulti));
+                                numberOfOffers.getStyleClass().add("offer-label-small");
+                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                pane.getChildren().add(numberOfOffers);
+                            }
                     }
 
                     setGraphic(pane);
@@ -342,22 +325,39 @@ public class GUIUtil {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
+
+                    String code = item.tradeCurrency.getCode();
+
                     HBox box = new HBox();
                     box.setSpacing(20);
                     Label currencyType = new AutoTooltipLabel(
                             CurrencyUtil.isFiatCurrency(item.tradeCurrency.getCode()) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+
                     currencyType.getStyleClass().add("currency-label-small");
                     Label currency = new AutoTooltipLabel(item.tradeCurrency.getCode());
                     currency.getStyleClass().add("currency-label");
                     box.getChildren().addAll(currencyType, currency);
 
-                    if (preferences.isSortMarketCurrenciesNumerically()) {
-                        Label offers = new AutoTooltipLabel(item.tradeCurrency.getName() + " (" + item.numTrades + " " +
-                                (item.numTrades == 1 ? postFixSingle : postFixMulti) + ")");
-                        offers.getStyleClass().add("currency-label");
-                        box.getChildren().add(offers);
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currencyType.setText("▶");
+                            currency.setText(Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currencyType.setText("▼");
+                            currency.setText(Res.get("list.currency.editList"));
+                            break;
+                        default:
+                            if (preferences.isSortMarketCurrenciesNumerically()) {
+                                Label offers = new AutoTooltipLabel(item.tradeCurrency.getName() + " (" + item.numTrades + " " +
+                                        (item.numTrades == 1 ? postFixSingle : postFixMulti) + ")");
+                                offers.getStyleClass().add("currency-label");
+                                box.getChildren().add(offers);
+                            }
                     }
+
                     setGraphic(box);
+
                 } else {
                     setGraphic(null);
                 }

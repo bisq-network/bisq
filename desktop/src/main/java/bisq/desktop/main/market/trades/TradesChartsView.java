@@ -26,6 +26,7 @@ import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
 import bisq.desktop.util.CurrencyListItem;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
@@ -38,12 +39,12 @@ import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTabPane;
 
 import javafx.scene.chart.NumberAxis;
@@ -441,14 +442,15 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private HBox getToolBox() {
-        Label currencyLabel = new AutoTooltipLabel(Res.getWithCol("shared.currency"));
-        currencyLabel.setPadding(new Insets(0, 4, 0, 0));
 
-        currencyComboBox = new JFXComboBox<>();
+        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 10);
+        currencyComboBox = currencyComboBoxTuple.third;
+        currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"), model.preferences));
+        currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
+                Res.get("shared.multipleOffers"), model.preferences));
+
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(GUIUtil.getCurrencyListItemConverter(Res.get("shared.trade"),
-                Res.get("shared.trades"),
-                model.preferences));
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -468,7 +470,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         hBox.setSpacing(0);
         hBox.setPadding(new Insets(5, 9, -10, 10));
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(currencyLabel, currencyComboBox, spacer, label, year, month, week, day, hour, minute10);
+        hBox.getChildren().addAll(currencyComboBoxTuple.first, spacer, label, year, month, week, day, hour, minute10);
         return hBox;
     }
 
