@@ -98,8 +98,15 @@ public class BSFormatter {
         return formatCoin(coin, decimalPlaces, false, 0);
     }
 
+    public String formatCoin(long value, MonetaryFormat coinFormat) {
+        return formatCoin(Coin.valueOf(value), -1, false, 0, coinFormat);
+    }
 
     public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
+        return formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, coinFormat);
+    }
+
+    public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits, MonetaryFormat coinFormat) {
         String formattedCoin = "";
 
         if (coin != null) {
@@ -122,6 +129,14 @@ public class BSFormatter {
     }
 
     public String formatCoinWithCode(Coin coin) {
+        return formatCoinWithCode(coin, coinFormat);
+    }
+
+    public String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
+        return formatCoinWithCode(Coin.valueOf(value), coinFormat);
+    }
+
+    public String formatCoinWithCode(Coin coin, MonetaryFormat coinFormat) {
         if (coin != null) {
             try {
                 // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
@@ -137,6 +152,10 @@ public class BSFormatter {
     }
 
     public Coin parseToCoin(String input) {
+        return parseToCoin(input, coinFormat);
+    }
+
+    public Coin parseToCoin(String input, MonetaryFormat coinFormat) {
         if (input != null && input.length() > 0) {
             try {
                 return coinFormat.parse(cleanDoubleInput(input));
@@ -458,9 +477,13 @@ public class BSFormatter {
     }
 
     public String formatDateTime(Date date) {
+        return formatDateTime(date,
+                DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale()),
+                DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale()));
+    }
+
+    public String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
         if (date != null) {
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
-            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
             return dateFormatter.format(date) + " " + timeFormatter.format(date);
         } else {
             return "";
@@ -564,10 +587,10 @@ public class BSFormatter {
     }
 
     public String formatDurationAsWords(long durationMillis) {
-        return formatDurationAsWords(durationMillis, false);
+        return formatDurationAsWords(durationMillis, false, true);
     }
 
-    public static String formatDurationAsWords(long durationMillis, boolean showSeconds) {
+    public String formatDurationAsWords(long durationMillis, boolean showSeconds, boolean showZeroValues) {
         String format = "";
         String second = Res.get("time.second");
         String minute = Res.get("time.minute");
@@ -593,9 +616,18 @@ public class BSFormatter {
         duration = StringUtils.replacePattern(duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
         duration = StringUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
         duration = StringUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
+
+        if (!showZeroValues) {
+            duration = duration.replace(", 0 seconds", "");
+            duration = duration.replace(", 0 minutes", "");
+            duration = duration.replace(", 0 hours", "");
+            duration = duration.replace("0 days", "");
+            duration = duration.replace("0 hours, ", "");
+            duration = duration.replace("0 minutes, ", "");
+            duration = duration.replace("0 seconds", "");
+        }
         return duration.trim();
     }
-
 
     public String booleanToYesNo(boolean value) {
         return value ? Res.get("shared.yes") : Res.get("shared.no");

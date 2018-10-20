@@ -67,14 +67,14 @@ public class ProposalListItem {
         if (vote != null) {
             if ((vote).isAccepted()) {
                 myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
-                myVoteIcon.getStyleClass().addAll("icon", "dao-accepted-icon");
+                myVoteIcon.getStyleClass().add("dao-accepted-icon");
             } else {
                 myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
-                myVoteIcon.getStyleClass().addAll("icon", "dao-rejected-icon");
+                myVoteIcon.getStyleClass().add("dao-rejected-icon");
             }
         } else {
             myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);
-            myVoteIcon.getStyleClass().addAll("icon", "dao-ignored-icon");
+            myVoteIcon.getStyleClass().add("dao-ignored-icon");
         }
         return myVoteIcon;
     }

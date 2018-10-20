@@ -72,9 +72,17 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case DEFAULT_TAKER_FEE_BSQ:
                 break;
+            case MIN_MAKER_FEE_BSQ:
+                break;
+            case MIN_TAKER_FEE_BSQ:
+                break;
             case DEFAULT_MAKER_FEE_BTC:
                 break;
             case DEFAULT_TAKER_FEE_BTC:
+                break;
+            case MIN_MAKER_FEE_BTC:
+                break;
+            case MIN_TAKER_FEE_BTC:
                 break;
 
             case PROPOSAL_FEE:
