@@ -39,7 +39,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.BankAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
-import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SepaAccount;
@@ -83,7 +82,6 @@ import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -352,25 +350,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Map<String, String> extraDataMap = null;
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
-        }
 
-        if (referralIdService.getOptionalReferralId().isPresent()) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
-        }
-
-        if (paymentAccount instanceof F2FAccount) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
-            extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
-        }
+        Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService, referralIdService, paymentAccount, currencyCode);
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
