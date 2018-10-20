@@ -19,6 +19,7 @@ package bisq.core.locale;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.governance.asset.AssetService;
 
 import bisq.common.app.DevEnv;
 
@@ -33,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,6 +54,7 @@ public class CurrencyUtil {
         setBaseCurrencyCode(BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
     }
 
+    @Getter
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
@@ -348,7 +351,6 @@ public class CurrencyUtil {
         return new FiatCurrency(currency.getCurrencyCode());
     }
 
-
     public static String getNameByCode(String currencyCode) {
         if (isCryptoCurrency(currencyCode))
             return getCryptoCurrency(currencyCode).get().getName();
@@ -359,6 +361,12 @@ public class CurrencyUtil {
             log.debug("No currency name available " + t.getMessage());
             return currencyCode;
         }
+    }
+
+    public static Optional<CryptoCurrency> findCryptoCurrencyByName(String currencyName) {
+        return getAllSortedCryptoCurrencies().stream()
+                .filter(e -> e.getName().equals(currencyName))
+                .findAny();
     }
 
     public static String getNameAndCode(String currencyCode) {
@@ -436,5 +444,18 @@ public class CurrencyUtil {
 
         // If we are in mainnet we need have a mainet asset defined.
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
+    }
+
+    public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
+        return assetRegistry.stream()
+                .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
+                .filter(asset -> assetMatchesNetwork(asset, baseCurrencyNetwork))
+                .findAny();
+    }
+
+    public static List<CryptoCurrency> getWhiteListedSortedCryptoCurrencies(AssetService assetService) {
+        return getAllSortedCryptoCurrencies().stream()
+                .filter(e -> !assetService.isAssetRemoved(e.getCode()))
+                .collect(Collectors.toList());
     }
 }

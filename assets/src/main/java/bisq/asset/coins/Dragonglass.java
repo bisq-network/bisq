@@ -15,23 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.voteresult;
+package bisq.asset.coins;
 
-import bisq.core.dao.governance.ballot.Ballot;
+import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
-import java.util.List;
+public class Dragonglass extends Coin {
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-
-@EqualsAndHashCode(callSuper = true)
-@Value
-public class MissingBallotException extends Exception {
-    private List<Ballot> existingBallots;
-    private List<String> proposalTxIdsOfMissingBallots;
-
-    public MissingBallotException(List<Ballot> existingBallots, List<String> proposalTxIdsOfMissingBallots) {
-        this.existingBallots = existingBallots;
-        this.proposalTxIdsOfMissingBallots = proposalTxIdsOfMissingBallots;
+    public Dragonglass() {
+        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
     }
 }

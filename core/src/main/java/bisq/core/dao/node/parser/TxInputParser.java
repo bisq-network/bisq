@@ -17,7 +17,7 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputKey;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TxInputParser {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
 
     // Getters
     @Getter
@@ -58,8 +58,8 @@ public class TxInputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TxInputParser(BsqStateService bsqStateService) {
-        this.bsqStateService = bsqStateService;
+    public TxInputParser(DaoStateService daoStateService) {
+        this.daoStateService = daoStateService;
     }
 
 
@@ -68,7 +68,7 @@ public class TxInputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void process(TxOutputKey txOutputKey, int blockHeight, String txId, int inputIndex) {
-        bsqStateService.getUnspentTxOutput(txOutputKey)
+        daoStateService.getUnspentTxOutput(txOutputKey)
                 .ifPresent(connectedTxOutput -> {
                     long inputValue = connectedTxOutput.getValue();
                     accumulatedInputValue += inputValue;
@@ -131,8 +131,8 @@ public class TxInputParser {
                             break;
                     }
 
-                    bsqStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
-                    bsqStateService.removeUnspentTxOutput(connectedTxOutput);
+                    daoStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
+                    daoStateService.removeUnspentTxOutput(connectedTxOutput);
                 });
     }
 

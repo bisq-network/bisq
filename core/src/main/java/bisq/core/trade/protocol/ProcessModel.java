@@ -18,9 +18,10 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
@@ -35,6 +36,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.AckMessage;
@@ -82,6 +84,8 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private User user;
     transient private FilterManager filterManager;
     transient private AccountAgeWitnessService accountAgeWitnessService;
+    transient private TradeStatisticsManager tradeStatisticsManager;
+    transient private ArbitratorManager arbitratorManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
     transient private ReferralIdService referralIdService;
@@ -229,6 +233,8 @@ public class ProcessModel implements Model, PersistablePayload {
                                          User user,
                                          FilterManager filterManager,
                                          AccountAgeWitnessService accountAgeWitnessService,
+                                         TradeStatisticsManager tradeStatisticsManager,
+                                         ArbitratorManager arbitratorManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -242,6 +248,8 @@ public class ProcessModel implements Model, PersistablePayload {
         this.user = user;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.tradeStatisticsManager = tradeStatisticsManager;
+        this.arbitratorManager = arbitratorManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;

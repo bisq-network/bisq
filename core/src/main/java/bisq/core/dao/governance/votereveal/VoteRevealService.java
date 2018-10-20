@@ -33,8 +33,8 @@ import bisq.core.dao.governance.blindvote.BlindVoteValidator;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.period.DaoPhase;
@@ -73,8 +73,8 @@ import lombok.extern.slf4j.Slf4j;
  * the blind vote payloads. Republishes also all blindVotes of that cycle to add more resilience.
  */
 @Slf4j
-public class VoteRevealService implements BsqStateListener, DaoSetupService {
-    private final BsqStateService bsqStateService;
+public class VoteRevealService implements DaoStateListener, DaoSetupService {
+    private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
     private final BlindVoteValidator blindVoteValidator;
     private final PeriodService periodService;
@@ -94,7 +94,7 @@ public class VoteRevealService implements BsqStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public VoteRevealService(BsqStateService bsqStateService,
+    public VoteRevealService(DaoStateService daoStateService,
                              BlindVoteListService blindVoteListService,
                              BlindVoteValidator blindVoteValidator,
                              PeriodService periodService,
@@ -103,7 +103,7 @@ public class VoteRevealService implements BsqStateListener, DaoSetupService {
                              BtcWalletService btcWalletService,
                              P2PService p2PService,
                              WalletsManager walletsManager) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.blindVoteListService = blindVoteListService;
         this.blindVoteValidator = blindVoteValidator;
         this.periodService = periodService;
@@ -126,12 +126,12 @@ public class VoteRevealService implements BsqStateListener, DaoSetupService {
             if (c.wasAdded())
                 c.getAddedSubList().forEach(exception -> log.error(exception.toString()));
         });
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
     @Override
     public void start() {
-        maybeRevealVotes(bsqStateService.getChainHeight());
+        maybeRevealVotes(daoStateService.getChainHeight());
     }
 
 
@@ -146,7 +146,7 @@ public class VoteRevealService implements BsqStateListener, DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -215,7 +215,7 @@ public class VoteRevealService implements BsqStateListener, DaoSetupService {
         // We search for my unspent stake output.
         // myVote is already tested if it is in current cycle at maybeRevealVotes
         // We expect that the blind vote tx and stake output is available. If not we throw an exception.
-        TxOutput stakeTxOutput = bsqStateService.getUnspentBlindVoteStakeTxOutputs().stream()
+        TxOutput stakeTxOutput = daoStateService.getUnspentBlindVoteStakeTxOutputs().stream()
                 .filter(txOutput -> txOutput.getTxId().equals(myVote.getTxId()))
                 .findFirst()
                 .orElseThrow(() -> new VoteRevealException("stakeTxOutput is not found for myVote.", myVote));

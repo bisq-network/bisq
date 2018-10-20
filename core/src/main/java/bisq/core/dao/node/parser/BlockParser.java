@@ -18,7 +18,7 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.RawBlock;
 import bisq.core.dao.state.blockchain.Tx;
@@ -44,7 +44,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class BlockParser {
     private final TxParser txParser;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private final Coin genesisTotalSupply;
@@ -57,12 +57,12 @@ public class BlockParser {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public BlockParser(TxParser txParser,
-                       BsqStateService bsqStateService) {
+                       DaoStateService daoStateService) {
         this.txParser = txParser;
-        this.bsqStateService = bsqStateService;
-        this.genesisTxId = bsqStateService.getGenesisTxId();
-        this.genesisBlockHeight = bsqStateService.getGenesisBlockHeight();
-        this.genesisTotalSupply = bsqStateService.getGenesisTotalSupply();
+        this.daoStateService = daoStateService;
+        this.genesisTxId = daoStateService.getGenesisTxId();
+        this.genesisBlockHeight = daoStateService.getGenesisBlockHeight();
+        this.genesisTotalSupply = daoStateService.getGenesisTotalSupply();
     }
 
 
@@ -82,7 +82,7 @@ public class BlockParser {
 
         validateIfBlockIsConnecting(rawBlock);
 
-        bsqStateService.onNewBlockHeight(blockHeight);
+        daoStateService.onNewBlockHeight(blockHeight);
 
         // We create a block from the rawBlock but the transaction list is not set yet (is empty)
         final Block block = new Block(blockHeight,
@@ -95,7 +95,7 @@ public class BlockParser {
             log.warn("Block was already added.");
             DevEnv.logErrorAndThrowIfDevMode("Block was already added. rawBlock=" + rawBlock);
         } else {
-            bsqStateService.onNewBlockWithEmptyTxs(block);
+            daoStateService.onNewBlockWithEmptyTxs(block);
         }
 
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
@@ -115,12 +115,12 @@ public class BlockParser {
                     .ifPresent(txList::add));
         log.debug("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
 
-        bsqStateService.onParseBlockComplete(block);
+        daoStateService.onParseBlockComplete(block);
         return block;
     }
 
     private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockNotConnectingException {
-        LinkedList<Block> blocks = bsqStateService.getBlocks();
+        LinkedList<Block> blocks = daoStateService.getBlocks();
         if (!isBlockConnecting(rawBlock, blocks)) {
             Block last = blocks.getLast();
             log.warn("addBlock called with a not connecting block. New block:\n" +
@@ -134,7 +134,7 @@ public class BlockParser {
     }
 
     private boolean isBlockAlreadyAdded(RawBlock rawBlock) {
-        return bsqStateService.isBlockHashKnown(rawBlock.getHash());
+        return daoStateService.isBlockHashKnown(rawBlock.getHash());
     }
 
     private boolean isBlockConnecting(RawBlock rawBlock, LinkedList<Block> blocks) {

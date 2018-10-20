@@ -21,12 +21,13 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.json.ExportJsonFilesService;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.CycleService;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -38,7 +39,7 @@ import com.google.inject.Inject;
  * We initialize all main service classes here to be sure they are started.
  */
 public class DaoSetup {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final ProposalService proposalService;
     private final BallotListService ballotListService;
@@ -47,12 +48,13 @@ public class DaoSetup {
     private final VoteRevealService voteRevealService;
     private final VoteResultService voteResultService;
     private final BsqNode bsqNode;
+    private final MissingDataRequestService missingDataRequestService;
     private final DaoFacade daoFacade;
     private final ExportJsonFilesService exportJsonFilesService;
 
     @Inject
     public DaoSetup(BsqNodeProvider bsqNodeProvider,
-                    BsqStateService bsqStateService,
+                    DaoStateService daoStateService,
                     CycleService cycleService,
                     ProposalService proposalService,
                     BallotListService ballotListService,
@@ -60,9 +62,10 @@ public class DaoSetup {
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
                     VoteResultService voteResultService,
+                    MissingDataRequestService missingDataRequestService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.proposalService = proposalService;
         this.ballotListService = ballotListService;
@@ -70,6 +73,7 @@ public class DaoSetup {
         this.myBlindVoteListService = myBlindVoteListService;
         this.voteRevealService = voteRevealService;
         this.voteResultService = voteResultService;
+        this.missingDataRequestService = missingDataRequestService;
         this.daoFacade = daoFacade;
         this.exportJsonFilesService = exportJsonFilesService;
 
@@ -79,7 +83,7 @@ public class DaoSetup {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         // We need to take care of order of execution. Let's keep both addListeners and start for all main classes even
         // if they are not used to have a consistent startup sequence.
-        bsqStateService.addListeners();
+        daoStateService.addListeners();
         cycleService.addListeners();
         proposalService.addListeners();
         ballotListService.addListeners();
@@ -87,10 +91,11 @@ public class DaoSetup {
         myBlindVoteListService.addListeners();
         voteRevealService.addListeners();
         voteResultService.addListeners();
-        exportJsonFilesService.addListeners();
+        missingDataRequestService.addListeners();
         daoFacade.addListeners();
+        exportJsonFilesService.addListeners();
 
-        bsqStateService.start();
+        daoStateService.start();
         cycleService.start();
         proposalService.start();
         ballotListService.start();
@@ -98,8 +103,9 @@ public class DaoSetup {
         myBlindVoteListService.start();
         voteRevealService.start();
         voteResultService.start();
-        exportJsonFilesService.start();
+        missingDataRequestService.start();
         daoFacade.start();
+        exportJsonFilesService.start();
 
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.start();

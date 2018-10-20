@@ -27,6 +27,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -137,5 +138,14 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Persis
         return new ArrayList<>(Collections.singletonList(
                 Capabilities.Capability.BLIND_VOTE.ordinal()
         ));
+    }
+
+    @Override
+    public String toString() {
+        return "BlindVotePayload{" +
+                "\n     blindVote=" + blindVote +
+                ",\n     date=" + new Date(date) +
+                ",\n     hash=" + Utilities.bytesAsHexString(hash) +
+                "\n}";
     }
 }

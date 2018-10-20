@@ -40,16 +40,39 @@ public class CryptonoteAddressValidator implements AddressValidator {
             // Invalid characters
             return AddressValidationResult.invalidStructure();
         }
-
-        if (address.startsWith(prefix) && address.length() == 94 + prefix.length()) {
-            // Standard address
-            return AddressValidationResult.validAddress();
-        } else if (address.startsWith(subAddressPrefix) && address.length() == 94 + subAddressPrefix.length()) {
-            // Subaddress
-            return AddressValidationResult.validAddress();
-        } else {
-            // Integrated? Invalid? Doesn't matter
+		if (address.startsWith(prefix)) {
+			if (prefix.length() == 1 && address.length() == 94 + prefix.length()) {
+				// XMR-type Standard address
+				return AddressValidationResult.validAddress();
+			}
+			else if (prefix.length() == 2 && address.length() == 95 + prefix.length()) {
+				//Aeon & Blur-type addresses
+				return AddressValidationResult.validAddress();
+			}
+			else {
+				//Non-supported prefix
+				return AddressValidationResult.invalidStructure();
+			}
+		} 		
+		if (address.startsWith(subAddressPrefix)) {
+			if (subAddressPrefix.length() == 1 && address.length() == 94 + subAddressPrefix.length()) {
+				// XMR-type subaddress
+				return AddressValidationResult.validAddress();
+			}	
+			else if (subAddressPrefix.length() == 2 && address.length() == 95 + subAddressPrefix.length()) {
+				// Aeon & Blur-type subaddress
+				return AddressValidationResult.validAddress();
+			}
+			else {
+            // Non-supported subAddress
             return AddressValidationResult.invalidStructure();
-        }
-    }
+			}
+		}
+		else {
+		//Integrated? Invalid? Doesn't matter
+		return AddressValidationResult.invalidStructure();
+		}
+	}
 }
+
+

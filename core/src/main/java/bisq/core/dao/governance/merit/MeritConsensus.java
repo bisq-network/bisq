@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.voteresult.VoteResultException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.governance.Issuance;
 
@@ -41,17 +41,18 @@ public class MeritConsensus {
     // Value with 144 blocks a day and 365 days would be 52560. We take a close round number instead.
     private static final int BLOCKS_PER_YEAR = 50_000;
 
-    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey) throws VoteResultException {
+    public static MeritList decryptMeritList(byte[] encryptedMeritList, SecretKey secretKey)
+            throws VoteResultException.DecryptionException {
         try {
-            final byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
+            byte[] decrypted = Encryption.decrypt(encryptedMeritList, secretKey);
             return MeritList.getMeritListFromBytes(decrypted);
         } catch (Throwable t) {
-            throw new VoteResultException(t);
+            throw new VoteResultException.DecryptionException(t);
         }
     }
 
-    public static long getMeritStake(String blindVoteTxId, MeritList meritList, BsqStateService bsqStateService) {
-        int txChainHeight = bsqStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
+    public static long getMeritStake(String blindVoteTxId, MeritList meritList, DaoStateService daoStateService) {
+        int txChainHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
         return getMeritStake(blindVoteTxId, meritList, txChainHeight);
     }
 
@@ -59,7 +60,7 @@ public class MeritConsensus {
         // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
         // later blocks (merit decreases with each block).
         if (txChainHeight == 0) {
-            log.error("Error at getMeritStake: blindVoteTx not found in bsqStateService. blindVoteTxId=" + blindVoteTxId);
+            log.error("Error at getMeritStake: blindVoteTx not found in daoStateService. blindVoteTxId=" + blindVoteTxId);
             return 0;
         }
 

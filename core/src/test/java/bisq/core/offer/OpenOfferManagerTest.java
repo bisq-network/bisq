@@ -37,7 +37,7 @@ public class OpenOfferManagerTest {
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null, null,
-                null);
+                null, null, null);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -72,7 +72,7 @@ public class OpenOfferManagerTest {
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null, null,
-                null);
+                null, null, null);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -99,7 +99,7 @@ public class OpenOfferManagerTest {
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
                 null, null, null, null,
-                null);
+                null, null, null);
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

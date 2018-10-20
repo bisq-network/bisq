@@ -18,8 +18,8 @@
 package bisq.core.dao.state.period;
 
 import bisq.core.dao.DaoSetupService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.Param;
@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CycleService implements BsqStateListener, DaoSetupService {
-    private final BsqStateService bsqStateService;
+public class CycleService implements DaoStateListener, DaoSetupService {
+    private final DaoStateService daoStateService;
     private final int genesisBlockHeight;
 
 
@@ -48,9 +48,9 @@ public class CycleService implements BsqStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CycleService(BsqStateService bsqStateService,
+    public CycleService(DaoStateService daoStateService,
                         GenesisTxInfo genesisTxInfo) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
     }
 
@@ -61,24 +61,24 @@ public class CycleService implements BsqStateListener, DaoSetupService {
 
     @Override
     public void addListeners() {
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
     @Override
     public void start() {
-        bsqStateService.getCycles().add(getFirstCycle());
+        daoStateService.getCycles().add(getFirstCycle());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
         if (blockHeight != genesisBlockHeight)
-            maybeCreateNewCycle(blockHeight, bsqStateService.getCycles())
-                    .ifPresent(bsqStateService.getCycles()::add);
+            maybeCreateNewCycle(blockHeight, daoStateService.getCycles())
+                    .ifPresent(daoStateService.getCycles()::add);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class CycleService implements BsqStateListener, DaoSetupService {
         // first block of the new cycle.
         Cycle cycle = null;
         if (blockHeight != genesisBlockHeight && isFirstBlockAfterPreviousCycle(blockHeight, cycles)) {
-            // We have the not update bsqStateService.getCurrentCycle() so we grab here the previousCycle
+            // We have the not update daoStateService.getCurrentCycle() so we grab here the previousCycle
             final Cycle previousCycle = cycles.getLast();
             // We create the new cycle as clone of the previous cycle and only if there have been change events we use
             // the new values from the change event.
@@ -131,7 +131,7 @@ public class CycleService implements BsqStateListener, DaoSetupService {
     }
 
     public boolean isTxInCycle(Cycle cycle, String txId) {
-        return bsqStateService.getTx(txId).filter(tx -> isBlockHeightInCycle(tx.getBlockHeight(), cycle)).isPresent();
+        return daoStateService.getTx(txId).filter(tx -> isBlockHeightInCycle(tx.getBlockHeight(), cycle)).isPresent();
     }
 
     private boolean isBlockHeightInCycle(int blockHeight, Cycle cycle) {
@@ -150,7 +150,7 @@ public class CycleService implements BsqStateListener, DaoSetupService {
                     DaoPhase.Phase phase = daoPhase.getPhase();
                     try {
                         Param param = Param.valueOf("PHASE_" + phase.name());
-                        long value = bsqStateService.getParamValue(param, blockHeight);
+                        long value = daoStateService.getParamValue(param, blockHeight);
                         return new DaoPhase(phase, (int) value);
                     } catch (Throwable ignore) {
                         return null;

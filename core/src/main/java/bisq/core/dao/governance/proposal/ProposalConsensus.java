@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proposal;
 
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 
 import bisq.common.crypto.Hash;
@@ -34,16 +34,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProposalConsensus {
-    public Coin getFee(BsqStateService bsqStateService, int chainHeadHeight) {
-        return Coin.valueOf(bsqStateService.getParamValue(Param.PROPOSAL_FEE, chainHeadHeight));
+    public static Coin getFee(DaoStateService daoStateService, int chainHeight) {
+        return Coin.valueOf(daoStateService.getParamValue(Param.PROPOSAL_FEE, chainHeight));
     }
 
-    public byte[] getHashOfPayload(Proposal payload) {
+    public static byte[] getHashOfPayload(Proposal payload) {
         final byte[] bytes = payload.toProtoMessage().toByteArray();
         return Hash.getSha256Ripemd160hash(bytes);
     }
 
-    public byte[] getOpReturnData(byte[] hashOfPayload, byte opReturnType, byte version) {
+    public static byte[] getOpReturnData(byte[] hashOfPayload, byte opReturnType, byte version) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(opReturnType);
             outputStream.write(version);

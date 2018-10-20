@@ -27,7 +27,7 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
 
 import bisq.common.app.Version;
@@ -52,13 +52,11 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
     @Inject
     public CompensationProposalService(BsqWalletService bsqWalletService,
                                        BtcWalletService btcWalletService,
-                                       BsqStateService bsqStateService,
-                                       ProposalConsensus proposalConsensus,
+                                       DaoStateService daoStateService,
                                        CompensationValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
-                proposalConsensus,
+                daoStateService,
                 proposalValidator);
     }
 
@@ -84,7 +82,7 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
 
     @Override
     protected byte[] getOpReturnData(byte[] hashOfPayload) {
-        return proposalConsensus.getOpReturnData(hashOfPayload,
+        return ProposalConsensus.getOpReturnData(hashOfPayload,
                 OpReturnType.COMPENSATION_REQUEST.getType(),
                 Version.COMPENSATION_REQUEST);
     }

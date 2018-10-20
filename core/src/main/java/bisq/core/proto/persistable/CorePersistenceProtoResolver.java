@@ -20,6 +20,7 @@ package bisq.core.proto.persistable;
 import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.governance.asset.RemovedAssetsList;
 import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
@@ -29,7 +30,7 @@ import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.governance.role.BondedRoleList;
-import bisq.core.dao.state.BsqState;
+import bisq.core.dao.state.DaoStateStore;
 import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -118,8 +119,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return ProposalStore.fromProto(proto.getProposalStore());
                 case TEMP_PROPOSAL_STORE:
                     return TempProposalStore.fromProto(proto.getTempProposalStore(), networkProtoResolver);
-                case BSQ_STATE:
-                    return BsqState.fromProto(proto.getBsqState());
                 case MY_PROPOSAL_LIST:
                     return MyProposalList.fromProto(proto.getMyProposalList());
                 case BALLOT_LIST:
@@ -132,6 +131,10 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MeritList.fromProto(proto.getMeritList());
                 case BONDED_ROLE_LIST:
                     return BondedRoleList.fromProto(proto.getBondedRoleList());
+                case REMOVED_ASSET_LIST:
+                    return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
+                case DAO_STATE_STORE:
+                    return DaoStateStore.fromProto(proto.getDaoStateStore());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());
