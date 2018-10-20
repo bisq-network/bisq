@@ -193,8 +193,10 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
-
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
+            referralId, daoActivated;
+    @Getter
+    protected final String httpApiHost, httpApiPort;
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -237,6 +239,12 @@ public class BisqEnvironment extends StandardEnvironment {
         referralId = commandLineProperties.containsProperty(AppOptionKeys.REFERRAL_ID) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.REFERRAL_ID) :
                 "";
+        httpApiHost = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_HOST) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_HOST) :
+                "127.0.0.1";
+        httpApiPort = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_PORT) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_PORT) :
+                "8080";
         useDevMode = commandLineProperties.containsProperty(CommonOptionKeys.USE_DEV_MODE) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.USE_DEV_MODE) :
                 "";
