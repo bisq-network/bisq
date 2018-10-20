@@ -42,10 +42,8 @@ import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.SameBankAccount;
 import bisq.core.payment.SepaAccount;
 import bisq.core.payment.SepaInstantAccount;
-import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -333,13 +331,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
         }
 
-        ArrayList<String> acceptedBanks = null;
-        if (paymentAccount instanceof SpecificBanksAccount) {
-            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-        } else if (paymentAccount instanceof SameBankAccount) {
-            acceptedBanks = new ArrayList<>();
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-        }
+        ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
 
         String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
 
