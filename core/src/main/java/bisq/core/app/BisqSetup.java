@@ -82,6 +82,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 
 import org.spongycastle.crypto.params.KeyParameter;
