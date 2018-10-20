@@ -74,7 +74,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
     static {
         Utilities.removeCryptographyRestrictions();
     }
@@ -244,8 +244,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
+        bisqSetup.addBisqSetupCompleteListener(this);
         bisqSetup.start();
     }
+
+    public abstract void onSetupComplete();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
