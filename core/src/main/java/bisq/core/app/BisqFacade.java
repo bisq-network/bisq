@@ -17,7 +17,7 @@
 
 package bisq.core.app;
 
-import bisq.core.btc.model.BalanceModel;
+import bisq.core.btc.Balances;
 import bisq.core.presentation.BalancePresentation;
 
 import bisq.common.app.Version;
@@ -29,12 +29,12 @@ import javax.inject.Inject;
  * E.g. useful for different APIs to access data of different domains of Bisq.
  */
 public class BisqFacade {
-    private final BalanceModel balanceModel;
+    private final Balances balances;
     private final BalancePresentation balancePresentation;
 
     @Inject
-    public BisqFacade(BalanceModel balanceModel, BalancePresentation balancePresentation) {
-        this.balanceModel = balanceModel;
+    public BisqFacade(Balances balances, BalancePresentation balancePresentation) {
+        this.balances = balances;
         this.balancePresentation = balancePresentation;
     }
 
@@ -43,8 +43,7 @@ public class BisqFacade {
     }
 
     public long getAvailableBalance() {
-        balanceModel.updateBalance();
-        return balanceModel.getAvailableBalance().get().getValue();
+        return balances.getAvailableBalance().get().getValue();
     }
 
     public String getAvailableBalanceAsString() {
