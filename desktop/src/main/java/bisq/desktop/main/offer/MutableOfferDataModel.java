@@ -37,8 +37,6 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.BankAccount;
-import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -319,10 +317,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
 
-        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
+        String bankId = OfferUtil.getBankId(paymentAccount);
 
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
-        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
+        String countryCode = OfferUtil.getCountryCode(paymentAccount);
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
