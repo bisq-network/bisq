@@ -41,8 +41,6 @@ import bisq.core.payment.BankAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.SepaAccount;
-import bisq.core.payment.SepaInstantAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -317,17 +315,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
-        ArrayList<String> acceptedCountryCodes = null;
-        if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof SepaInstantAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
-        }
+        ArrayList<String> acceptedCountryCodes = OfferUtil.getAcceptedCountryCodes(paymentAccount);
 
         ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
 
