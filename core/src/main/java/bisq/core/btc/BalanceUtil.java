@@ -51,7 +51,7 @@ public class BalanceUtil {
     }
 
     public Stream<AddressEntry> getAddressEntriesForAvailableFunds() {
-        return tradeManager.getAddressEntriesForAvailableFundsStream();
+        return tradeManager.getAddressEntriesForAvailableBalanceStream();
     }
 
     public Stream<AddressEntry> getAddressEntriesForReservedFunds() {

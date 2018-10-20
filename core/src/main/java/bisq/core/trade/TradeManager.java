@@ -240,7 +240,7 @@ public class TradeManager implements PersistedDataHost {
         tradableList.getList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
-        getAddressEntriesForAvailableFundsStream()
+        getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
                     log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
@@ -591,7 +591,7 @@ public class TradeManager implements PersistedDataHost {
         return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
     }
 
-    public Stream<AddressEntry> getAddressEntriesForAvailableFundsStream() {
+    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
         Stream<AddressEntry> availableOrPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
                 .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
         Stream<AddressEntry> available = Stream.concat(availableOrPayout,
