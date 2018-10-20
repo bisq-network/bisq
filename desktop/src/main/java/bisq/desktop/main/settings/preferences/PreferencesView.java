@@ -749,7 +749,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         isDaoFullNodeCheckBox.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
             if (isDaoFullNodeCheckBox.isSelected() && preferences.showAgain(key)) {
-                String url = "https://bisq.network/docs/dao/full-node";
+                String url = "https://bisq.network/docs/dao-full-node";
                 new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
                         .onAction(() -> {
                             GUIUtil.openWebPage(url);
