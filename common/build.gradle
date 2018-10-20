@@ -1,6 +1,9 @@
+// Note, version 1.6.0 of osdetector-gradle-plugin cannot be applied with a plugins block
+// So a buildscript block is used
+// See https://github.com/google/osdetector-gradle-plugin/issues/15
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
