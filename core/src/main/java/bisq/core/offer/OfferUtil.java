@@ -309,6 +309,7 @@ public class OfferUtil {
         }
     }
 
+    // TODO remove
     public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
         if (paymentAccount != null)
             return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
@@ -316,6 +317,7 @@ public class OfferUtil {
             return 0;
     }
 
+    // TODO remove
     public static long getMaxTradePeriod(PaymentAccount paymentAccount) {
         return paymentAccount.getPaymentMethod().getMaxTradePeriod();
     }
@@ -346,6 +348,7 @@ public class OfferUtil {
 
         return extraDataMap;
     }
+
 
     public static void validateOfferData(FilterManager filterManager,
                                          P2PService p2PService,
