@@ -110,6 +110,11 @@ public final class PreferencesPayload implements PersistableEnvelope {
     boolean useMarketNotifications = true;
     boolean usePriceNotifications = true;
     boolean useStandbyMode = false;
+    boolean isDaoFullNode = false;
+    @Nullable
+    String rpcUser;
+    @Nullable
+    String rpcPw;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +169,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseTradeNotifications(useTradeNotifications)
                 .setUseMarketNotifications(useMarketNotifications)
                 .setUsePriceNotifications(usePriceNotifications)
-                .setUseStandbyMode(useStandbyMode);
+                .setUseStandbyMode(useStandbyMode)
+                .setIsDaoFullNode(isDaoFullNode);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -177,6 +183,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(customBridges).ifPresent(builder::setCustomBridges);
         Optional.ofNullable(referralId).ifPresent(builder::setReferralId);
         Optional.ofNullable(phoneKeyAndToken).ifPresent(builder::setPhoneKeyAndToken);
+        Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
+        Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
 
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
@@ -238,6 +246,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseTradeNotifications(),
                 proto.getUseMarketNotifications(),
                 proto.getUsePriceNotifications(),
-                proto.getUseStandbyMode());
+                proto.getUseStandbyMode(),
+                proto.getIsDaoFullNode(),
+                proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
+                proto.getRpcPw().isEmpty() ? null : proto.getRpcPw());
     }
 }

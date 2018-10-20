@@ -17,13 +17,11 @@
 
 package bisq.core.dao.node;
 
-import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.node.full.FullNode;
 import bisq.core.dao.node.lite.LiteNode;
+import bisq.core.user.Preferences;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +37,14 @@ public class BsqNodeProvider {
     @Inject
     public BsqNodeProvider(LiteNode bsqLiteNode,
                            FullNode bsqFullNode,
-                           @Named(DaoOptionKeys.FULL_DAO_NODE) boolean fullDaoNode) {
-        bsqNode = fullDaoNode ? bsqFullNode : bsqLiteNode;
+                           Preferences preferences) {
+
+        boolean rpcDataSet = preferences.getRpcUser() != null && !preferences.getRpcUser().isEmpty()
+                && preferences.getRpcPw() != null && !preferences.getRpcPw().isEmpty();
+        boolean daoFullNode = preferences.isDaoFullNode();
+        if (daoFullNode && !rpcDataSet)
+            log.warn("daoFullNode is set but RPC user and pw are missing");
+
+        bsqNode = rpcDataSet && daoFullNode ? bsqFullNode : bsqLiteNode;
     }
 }

@@ -20,11 +20,9 @@ package bisq.seednode;
 import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2P;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
-import bisq.core.dao.DaoOptionKeys;
+import bisq.core.user.Preferences;
 
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +37,8 @@ public class SeedNode {
     }
 
     public void startApplication() {
-        Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
-        appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
+        boolean isDaoFullNode = injector.getInstance(Preferences.class).isDaoFullNode();
+        appSetup = isDaoFullNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
         appSetup.start();
     }
 }

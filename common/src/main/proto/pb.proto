@@ -1273,6 +1273,9 @@ message PreferencesPayload {
     bool use_market_notifications = 43;
     bool use_price_notifications = 44;
     bool use_standby_mode = 45;
+    bool is_dao_full_node = 46;
+    string rpc_user = 47;
+    string rpc_pw = 48;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
