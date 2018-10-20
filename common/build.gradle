@@ -13,18 +13,15 @@ plugins {
     id 'com.google.protobuf' version '0.8.5'
 }
 
-apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
-ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-
-group = 'network.bisq'
-version = '-SNAPSHOT'
-
-mainClassName = 'bisq.common'
 
 ext {
     protobufVersion = '3.5.1'
+    platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 }
+
+group = 'network.bisq'
+version = '-SNAPSHOT'
 
 sourceCompatibility = 1.10
 
@@ -34,7 +31,6 @@ tasks.withType(JavaCompile) {
 
 repositories {
     jcenter()
-    mavenCentral()
     maven { url 'https://jitpack.io' }
 }
 
@@ -84,15 +80,6 @@ dependencies {
 compileJava {
     doFirst {
         options.compilerArgs = [
-            '--module-path', classpath.asPath,
-            '--add-modules', 'javafx.controls'
-        ]
-    }
-}
-
-run {
-    doFirst {
-        jvmArgs = [
             '--module-path', classpath.asPath,
             '--add-modules', 'javafx.controls'
         ]
