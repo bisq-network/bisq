@@ -308,19 +308,6 @@ public class OfferUtil {
         }
     }
 
-    // TODO remove
-    public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
-        if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
-        else
-            return 0;
-    }
-
-    // TODO remove
-    public static long getMaxTradePeriod(PaymentAccount paymentAccount) {
-        return paymentAccount.getPaymentMethod().getMaxTradePeriod();
-    }
-
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
@@ -369,23 +356,11 @@ public class OfferUtil {
         checkNotNull(p2PService.getAddress(), "Address must not be null");
     }
 
-    public static Coin getFundsNeededForMaker(Coin tradeAmount, Coin buyerSecurityDeposit, OfferPayload.Direction direction) {
+    public static Coin getFundsNeededForOffer(Coin tradeAmount, Coin buyerSecurityDeposit, OfferPayload.Direction direction) {
         boolean buyOffer = isBuyOffer(direction);
         Coin needed = buyOffer ? buyerSecurityDeposit : Restrictions.getSellerSecurityDeposit();
         if (!buyOffer)
             needed = needed.add(tradeAmount);
-
-        return needed;
-    }
-
-    public static Coin getFundsNeededForTaker(Coin tradeAmount, Coin txFeeForDepositTx, Coin txFeeForPayoutTx, Offer offer) {
-        boolean buyOffer = isBuyOffer(offer.getDirection());
-        Coin needed = buyOffer ? offer.getSellerSecurityDeposit() : offer.getBuyerSecurityDeposit();
-
-        if (buyOffer)
-            needed = needed.add(tradeAmount);
-
-        needed = needed.add(txFeeForDepositTx).add(txFeeForPayoutTx);
 
         return needed;
     }

@@ -35,6 +35,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.TakerUtil;
 import bisq.core.offer.TxFeeEstimation;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
@@ -328,7 +329,7 @@ class TakeOfferDataModel extends OfferDataModel {
     public void estimateTxSize() {
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
-            Coin fundsNeededForTaker = OfferUtil.getFundsNeededForTaker(amount.get(), getTxFeeForDepositTx(), getTxFeeForPayoutTx(), offer);
+            Coin fundsNeededForTaker = TakerUtil.getFundsNeededForTakeOffer(amount.get(), getTxFeeForDepositTx(), getTxFeeForPayoutTx(), offer);
 
             // As taker we pay 3 times the fee and currently the fee is the same for all 3 txs (trade fee tx, deposit
             // tx and payout tx).
@@ -409,6 +410,8 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isCurrencyForTakerFeeBtc() {
+        // TODO do more testing before applying TakerUtil
+        //return TakerUtil.isCurrencyForTakerFeeBtc(amount.get(), preferences, bsqWalletService);
         return preferences.isPayFeeInBtc() || !isBsqForFeeAvailable();
     }
 
@@ -417,6 +420,9 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
+        // TODO do more testing before applying TakerUtil
+        //return TakerUtil.isBsqForFeeAvailable(amount.get(), bsqWalletService);
+
         final Coin takerFee = getTakerFee(false);
         return BisqEnvironment.isBaseCurrencySupportingBsq() &&
                 takerFee != null &&
@@ -496,6 +502,9 @@ class TakeOfferDataModel extends OfferDataModel {
 
     @Nullable
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
+        // TODO do more testing before applying TakerUtil
+        // return TakerUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
+
         Coin amount = this.amount.get();
         if (amount != null) {
             // TODO write unit test for that
