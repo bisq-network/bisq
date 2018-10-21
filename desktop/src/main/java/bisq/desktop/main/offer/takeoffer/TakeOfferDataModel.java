@@ -328,9 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
     public void estimateTxSize() {
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
-            Coin fundsNeededForTrade = getFundsNeededForTrade();
-            if (isBuyOffer())
-                fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
+            Coin fundsNeededForTaker = OfferUtil.getFundsNeededForTaker(amount.get(), getTxFeeForDepositTx(), getTxFeeForPayoutTx(), offer);
 
             // As taker we pay 3 times the fee and currently the fee is the same for all 3 txs (trade fee tx, deposit
             // tx and payout tx).
@@ -344,7 +342,7 @@ class TakeOfferDataModel extends OfferDataModel {
             // We sum the taker fee tx and the deposit tx together as it can be assumed that both be in the same block and
             // as they are dependent txs the miner will pick both if the fee in total is good enough.
             // We make sure that the fee is sufficient to meet our intended fee/byte for the larger payout tx with 380 bytes.
-            Tuple2<Coin, Integer> estimatedFeeAndTxSize = TxFeeEstimation.getEstimatedFeeAndTxSizeForTaker(fundsNeededForTrade,
+            Tuple2<Coin, Integer> estimatedFeeAndTxSize = TxFeeEstimation.getEstimatedFeeAndTxSizeForTaker(fundsNeededForTaker,
                     getTakerFee(),
                     feeService,
                     btcWalletService,
