@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.takeoffer;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -35,6 +34,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.TakerUtil;
 import bisq.core.offer.TxFeeEstimation;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
@@ -47,7 +47,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
 
 import bisq.common.util.Tuple2;
 
@@ -328,7 +327,7 @@ class TakeOfferDataModel extends OfferDataModel {
     public void estimateTxSize() {
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
-            Coin fundsNeededForTaker = OfferUtil.getFundsNeededForTaker(amount.get(), getTxFeeForDepositTx(), getTxFeeForPayoutTx(), offer);
+            Coin fundsNeededForTaker = TakerUtil.getFundsNeededForTakeOffer(amount.get(), getTxFeeForDepositTx(), getTxFeeForPayoutTx(), offer);
 
             // As taker we pay 3 times the fee and currently the fee is the same for all 3 txs (trade fee tx, deposit
             // tx and payout tx).
@@ -409,7 +408,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isCurrencyForTakerFeeBtc() {
-        return preferences.isPayFeeInBtc() || !isBsqForFeeAvailable();
+        return TakerUtil.isCurrencyForTakerFeeBtc(amount.get(), preferences, bsqWalletService);
     }
 
     boolean isTakerFeeValid() {
@@ -417,11 +416,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
-        final Coin takerFee = getTakerFee(false);
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                takerFee != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
+        return TakerUtil.isBsqForFeeAvailable(amount.get(), bsqWalletService);
     }
 
     long getMaxTradeLimit() {
@@ -496,14 +491,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
     @Nullable
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        Coin amount = this.amount.get();
-        if (amount != null) {
-            // TODO write unit test for that
-            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
-            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
-        } else {
-            return null;
-        }
+        return TakerUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
     }
 
     @Nullable

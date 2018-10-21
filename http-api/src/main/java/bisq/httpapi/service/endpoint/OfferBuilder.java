@@ -151,8 +151,8 @@ public class OfferBuilder {
         ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
         String bankId = OfferUtil.getBankId(paymentAccount);
         String countryCode = OfferUtil.getCountryCode(paymentAccount);
-        long maxTradeLimit = OfferUtil.getMaxTradeLimit(accountAgeWitnessService, paymentAccount, currencyCode);
-        long maxTradePeriod = OfferUtil.getMaxTradePeriod(paymentAccount);
+        long maxTradeLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
+        long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         boolean isPrivateOffer = false;
         boolean useAutoClose = false;
@@ -172,7 +172,7 @@ public class OfferBuilder {
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         long sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit().value;
 
-        Coin fundsNeededForMaker = OfferUtil.getFundsNeededForMaker(amountAsCoin, buyerSecurityDepositAsCoin, direction);
+        Coin fundsNeededForMaker = OfferUtil.getFundsNeededForOffer(amountAsCoin, buyerSecurityDepositAsCoin, direction);
         Coin makerFee = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         if (makerFee == null)
             throw new ValidationException("makerFee must not be null");
