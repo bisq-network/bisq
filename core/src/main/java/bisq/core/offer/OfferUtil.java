@@ -176,9 +176,8 @@ public class OfferUtil {
     }
 
     /**
-     *
-     * @param volumeByAmount      The volume generated from an amount
-     * @param factor              The factor used for rounding. E.g. 1 means rounded to units of 1 EUR, 10 means rounded to 10 EUR...
+     * @param volumeByAmount The volume generated from an amount
+     * @param factor         The factor used for rounding. E.g. 1 means rounded to units of 1 EUR, 10 means rounded to 10 EUR...
      * @return The adjusted Fiat volume
      */
     @VisibleForTesting
@@ -195,9 +194,9 @@ public class OfferUtil {
      * Calculate the possibly adjusted amount for {@code amount}, taking into account the
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
-     * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
-     * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
+     * @param amount        Bitcoin amount which is a candidate for getting rounded.
+     * @param price         Price used in relation ot that amount.
+     * @param maxTradeLimit The max. trade limit of the users account, in satoshis.
      * @return The adjusted amount
      */
     public static Coin getRoundedFiatAmount(Coin amount, Price price, long maxTradeLimit) {
@@ -212,11 +211,11 @@ public class OfferUtil {
      * Calculate the possibly adjusted amount for {@code amount}, taking into account the
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
-     * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
-     * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
-     * @param factor            The factor used for rounding. E.g. 1 means rounded to units of
-     *                          1 EUR, 10 means rounded to 10 EUR, etc.
+     * @param amount        Bitcoin amount which is a candidate for getting rounded.
+     * @param price         Price used in relation ot that amount.
+     * @param maxTradeLimit The max. trade limit of the users account, in satoshis.
+     * @param factor        The factor used for rounding. E.g. 1 means rounded to units of
+     *                      1 EUR, 10 means rounded to 10 EUR, etc.
      * @return The adjusted amount
      */
     @VisibleForTesting
@@ -368,5 +367,26 @@ public class OfferUtil {
                 Res.get("offerbook.warning.paymentMethodBanned"));
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+    }
+
+    public static Coin getFundsNeededForMaker(Coin tradeAmount, Coin buyerSecurityDeposit, OfferPayload.Direction direction) {
+        boolean buyOffer = isBuyOffer(direction);
+        Coin needed = buyOffer ? buyerSecurityDeposit : Restrictions.getSellerSecurityDeposit();
+        if (!buyOffer)
+            needed = needed.add(tradeAmount);
+
+        return needed;
+    }
+
+    public static Coin getFundsNeededForTaker(Coin tradeAmount, Coin txFeeForDepositTx, Coin txFeeForPayoutTx, Offer offer) {
+        boolean buyOffer = isBuyOffer(offer.getDirection());
+        Coin needed = buyOffer ? offer.getSellerSecurityDeposit() : offer.getBuyerSecurityDeposit();
+
+        if (buyOffer)
+            needed = needed.add(tradeAmount);
+
+        needed = needed.add(txFeeForDepositTx).add(txFeeForPayoutTx);
+
+        return needed;
     }
 }
