@@ -103,7 +103,9 @@ public class CreateOfferViewModelTest {
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
         when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, null, feeService, null, bsFormatter);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService,
+                bsqWalletService, empty, user, null, null, priceFeedService,
+                null, accountAgeWitnessService, feeService, null, bsFormatter);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
