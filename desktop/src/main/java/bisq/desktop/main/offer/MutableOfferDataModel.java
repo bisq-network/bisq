@@ -25,7 +25,6 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -36,16 +35,10 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.TxFeeEstimation;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.BankAccount;
-import bisq.core.payment.CountryBasedPaymentAccount;
-import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.SameBankAccount;
-import bisq.core.payment.SepaAccount;
-import bisq.core.payment.SepaInstantAccount;
-import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -58,11 +51,10 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
@@ -85,7 +77,6 @@ import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +97,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
     private final BSFormatter formatter;
@@ -138,7 +128,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected Coin txFeeFromFeeService;
     protected boolean marketPriceAvailable;
     protected int feeTxSize = 260; // size of typical tx with 1 input
-    protected int feeTxSizeEstimationRecursionCounter;
     protected boolean allowAmountUpdate = true;
 
 
@@ -150,8 +139,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     public MutableOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
                                  Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                                  PriceFeedService priceFeedService, FilterManager filterManager,
-                                 AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
-                                 FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
+                                 AccountAgeWitnessService accountAgeWitnessService, FeeService feeService,
+                                 ReferralIdService referralIdService,
+                                 BSFormatter formatter) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -163,7 +153,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
         this.formatter = formatter;
@@ -321,30 +310,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
-        ArrayList<String> acceptedCountryCodes = null;
-        if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof SepaInstantAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
-        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
-        }
+        ArrayList<String> acceptedCountryCodes = OfferUtil.getAcceptedCountryCodes(paymentAccount);
 
-        ArrayList<String> acceptedBanks = null;
-        if (paymentAccount instanceof SpecificBanksAccount) {
-            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
-        } else if (paymentAccount instanceof SameBankAccount) {
-            acceptedBanks = new ArrayList<>();
-            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
-        }
+        ArrayList<String> acceptedBanks = OfferUtil.getAcceptedBanks(paymentAccount);
 
-        String bankId = paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
+        String bankId = OfferUtil.getBankId(paymentAccount);
 
         // That is optional and set to null if not supported (AltCoins, OKPay,...)
-        String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
+        String countryCode = OfferUtil.getCountryCode(paymentAccount);
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(getMakerFee(), "makerFee must not be null");
@@ -360,25 +333,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Map<String, String> extraDataMap = null;
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
-        }
 
-        if (referralIdService.getOptionalReferralId().isPresent()) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
-        }
-
-        if (paymentAccount instanceof F2FAccount) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
-            extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
-            extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
-        }
+        Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService, referralIdService, paymentAccount, currencyCode);
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
@@ -438,57 +394,17 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     // This works only if we have already funds in the wallet
     public void estimateTxSize() {
-        txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-        Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
-        Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-        Address changeAddress = btcWalletService.getFreshAddressEntry().getAddress();
-
         Coin reservedFundsForOffer = getSecurityDeposit();
         if (!isBuyOffer())
             reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
 
-        checkNotNull(user.getAcceptedArbitrators(), "user.getAcceptedArbitrators() must not be null");
-        checkArgument(!user.getAcceptedArbitrators().isEmpty(), "user.getAcceptedArbitrators() must not be empty");
-        String dummyArbitratorAddress = user.getAcceptedArbitrators().get(0).getBtcAddress();
-        try {
-            log.info("We create a dummy tx to see if our estimated size is in the accepted range. feeTxSize={}," +
-                            " txFee based on feeTxSize: {}, recommended txFee is {} sat/byte",
-                    feeTxSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
-            Transaction tradeFeeTx = tradeWalletService.estimateBtcTradingFeeTxSize(
-                    fundingAddress,
-                    reservedForTradeAddress,
-                    changeAddress,
-                    reservedFundsForOffer,
-                    true,
-                    getMakerFee(),
-                    txFeeFromFeeService,
-                    dummyArbitratorAddress);
-
-            final int txSize = tradeFeeTx.bitcoinSerialize().length;
-            // use feeTxSizeEstimationRecursionCounter to avoid risk for endless loop
-            if (txSize > feeTxSize * 1.2 && feeTxSizeEstimationRecursionCounter < 10) {
-                feeTxSizeEstimationRecursionCounter++;
-                log.info("txSize is {} bytes but feeTxSize used for txFee calculation was {} bytes. We try again with an " +
-                        "adjusted txFee to reach the target tx fee.", txSize, feeTxSize);
-                feeTxSize = txSize;
-                txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-                // lets try again with the adjusted txSize and fee.
-                estimateTxSize();
-            } else {
-                log.info("feeTxSize {} bytes", feeTxSize);
-                log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                        txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
-            }
-        } catch (InsufficientMoneyException e) {
-            // If we need to fund from an external wallet we can assume we only have 1 input (260 bytes).
-            log.warn("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
-                    "if the user pays from an external wallet. In that case we use an estimated tx size of 260 bytes.");
-            feeTxSize = 260;
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-            log.info("feeTxSize {} bytes", feeTxSize);
-            log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                    txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
-        }
+        Tuple2<Coin, Integer> estimatedFeeAndTxSize = TxFeeEstimation.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer,
+                getMakerFee(),
+                feeService,
+                btcWalletService,
+                preferences);
+        txFeeFromFeeService = estimatedFeeAndTxSize.first;
+        feeTxSize = estimatedFeeAndTxSize.second;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -647,7 +563,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     boolean isMakerFeeValid() {
-        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
+        return preferences.isPayFeeInBtc() || isBsqForFeeAvailable();
     }
 
     long getMaxTradeLimit() {
