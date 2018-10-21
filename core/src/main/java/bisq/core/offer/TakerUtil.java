@@ -28,7 +28,6 @@ import org.bitcoinj.core.Coin;
 import javax.annotation.Nullable;
 
 public class TakerUtil {
-
     public static Coin getFundsNeededForTakeOffer(Coin tradeAmount, Coin txFeeForDepositTx, Coin txFeeForPayoutTx, Offer offer) {
         boolean buyOffer = OfferUtil.isBuyOffer(offer.getDirection());
         Coin needed = buyOffer ? offer.getSellerSecurityDeposit() : offer.getBuyerSecurityDeposit();
@@ -46,7 +45,6 @@ public class TakerUtil {
         boolean currencyForTakerFeeBtc = isCurrencyForTakerFeeBtc(amount, preferences, bsqWalletService);
         return getTakerFee(currencyForTakerFeeBtc, amount);
     }
-
 
     @Nullable
     public static Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, Coin amount) {

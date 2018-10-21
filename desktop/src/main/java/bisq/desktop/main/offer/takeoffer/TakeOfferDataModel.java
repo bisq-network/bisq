@@ -408,7 +408,9 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isCurrencyForTakerFeeBtc() {
-        return TakerUtil.isCurrencyForTakerFeeBtc(amount.get(), preferences, bsqWalletService);
+        // TODO do more testing before applying TakerUtil
+        //return TakerUtil.isCurrencyForTakerFeeBtc(amount.get(), preferences, bsqWalletService);
+        return preferences.isPayFeeInBtc() || !isBsqForFeeAvailable();
     }
 
     boolean isTakerFeeValid() {
@@ -416,7 +418,14 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean isBsqForFeeAvailable() {
-        return TakerUtil.isBsqForFeeAvailable(amount.get(), bsqWalletService);
+        // TODO do more testing before applying TakerUtil
+        //return TakerUtil.isBsqForFeeAvailable(amount.get(), bsqWalletService);
+
+        final Coin takerFee = getTakerFee(false);
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                takerFee != null &&
+                bsqWalletService.getAvailableBalance() != null &&
+                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
 
     long getMaxTradeLimit() {
@@ -491,7 +500,17 @@ class TakeOfferDataModel extends OfferDataModel {
 
     @Nullable
     Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
-        return TakerUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
+        // TODO do more testing before applying TakerUtil
+        // return TakerUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount.get());
+
+        Coin amount = this.amount.get();
+        if (amount != null) {
+            // TODO write unit test for that
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
+        } else {
+            return null;
+        }
     }
 
     @Nullable
