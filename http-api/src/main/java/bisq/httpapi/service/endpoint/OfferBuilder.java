@@ -16,14 +16,13 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
-import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -167,25 +166,24 @@ public class OfferBuilder {
         boolean marketPriceAvailable = MarketEndpoint.isMarketPriceAvailable();
         Coin makerFeeAsCoin = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         // Throws runtime exception if data are invalid
-        OfferUtil.validateOfferData(filterManager, p2PService, Coin.valueOf(buyerSecurityDeposit), paymentAccount, currencyCode, makerFeeAsCoin);
+        Coin buyerSecurityDepositAsCoin = Coin.valueOf(buyerSecurityDeposit);
+        OfferUtil.validateOfferData(filterManager, p2PService, buyerSecurityDepositAsCoin, paymentAccount, currencyCode, makerFeeAsCoin);
 
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amountAsCoin, marketPriceAvailable, marketPriceMargin);
         long sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit().value;
 
-        TxFeeEstimation txFeeEstimation = new TxFeeEstimation(btcWalletService,
-                bsqWalletService,
-                preferences,
-                user,
-                tradeWalletService,
+        Coin fundsNeededForMaker = OfferUtil.getFundsNeededForMaker(amountAsCoin, buyerSecurityDepositAsCoin, direction);
+        Coin makerFee = OfferUtil.getMakerFee(bsqWalletService, preferences, amountAsCoin, marketPriceAvailable, marketPriceMargin);
+        if (makerFee == null)
+            throw new ValidationException("makerFee must not be null");
+
+        Tuple2<Coin, Integer> estimatedFeeAndTxSize = TxFeeEstimation.getEstimatedFeeAndTxSizeForMaker(fundsNeededForMaker,
+                makerFee,
                 feeService,
-                offerId,
-                direction,
-                Coin.valueOf(amount),
-                Coin.valueOf(buyerSecurityDeposit),
-                marketPriceMargin,
-                marketPriceAvailable,
-                260);
-        Coin txFeeFromFeeService = txFeeEstimation.getEstimatedFee();
+                btcWalletService,
+                preferences);
+
+        Coin txFeeFromFeeService = estimatedFeeAndTxSize.first;
 
         OfferPayload offerPayload = new OfferPayload(
                 offerId,
@@ -236,32 +234,9 @@ public class OfferBuilder {
             throw new IncompatiblePaymentAccountException(errorMessage);
         }
 
-        if (null == getMakerFee(false, Coin.valueOf(amount), marketPriceMargin)) {
-            throw new ValidationException("makerFee must not be null");
-        }
         return offer;
     }
 
-    @Nullable
-    private Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount, double marketPriceMargin) {
-        if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            double makerFeeAsDouble = (double) feePerBtc.value;
-            if (MarketEndpoint.isMarketPriceAvailable()) {
-                if (marketPriceMargin > 0)
-                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
-                else
-                    makerFeeAsDouble = 0;
-                // For BTC we round so min value change is 100 satoshi
-                if (isCurrencyForMakerFeeBtc)
-                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
-            }
-
-            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
 
     private Set<PaymentAccount> getPaymentAccounts() {
         final Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();

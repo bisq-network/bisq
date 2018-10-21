@@ -256,7 +256,7 @@ public class OfferFacade {
 
 
     private boolean isCurrencyForTakerFeeBtc(Coin amount) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
+        return preferences.isPayFeeInBtc() || !isBsqForFeeAvailable(amount);
     }
 
     private boolean isBsqForFeeAvailable(Coin amount) {
