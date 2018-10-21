@@ -17,132 +17,121 @@
 
 package bisq.core.offer;
 
-import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
-import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
-import org.bitcoinj.core.Address;
+import bisq.common.util.Tuple2;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
-import org.bitcoinj.core.Transaction;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Util class for getting  a fee estimation.
+ * Util class for getting the estimated tx fee for maker or taker fee tx.
  */
 @Slf4j
 public class TxFeeEstimation {
-    private final BtcWalletService btcWalletService;
-    private final BsqWalletService bsqWalletService;
-    private final Preferences preferences;
-    private final User user;
-    private final TradeWalletService tradeWalletService;
-    private final FeeService feeService;
+    private static int counter;
 
-    private int feeTxSize = 260; // size of typical tx with 1 input
-    private int feeTxSizeEstimationRecursionCounter;
-    private String offerId;
-    private OfferPayload.Direction direction;
-    private Coin amount;
-    private Coin buyerSecurityDeposit;
-    private double marketPriceMargin;
-    private boolean marketPriceAvailable;
-
-    public TxFeeEstimation(BtcWalletService btcWalletService,
-                           BsqWalletService bsqWalletService,
-                           Preferences preferences,
-                           User user,
-                           TradeWalletService tradeWalletService,
-                           FeeService feeService,
-                           String offerId,
-                           OfferPayload.Direction direction,
-                           Coin amount,
-                           Coin buyerSecurityDeposit,
-                           double marketPriceMargin,
-                           boolean marketPriceAvailable,
-                           int feeTxSize) {
-
-
-        this.btcWalletService = btcWalletService;
-        this.bsqWalletService = bsqWalletService;
-        this.preferences = preferences;
-        this.user = user;
-        this.tradeWalletService = tradeWalletService;
-        this.feeService = feeService;
-
-        this.offerId = offerId;
-        this.direction = direction;
-        this.amount = amount;
-        this.buyerSecurityDeposit = buyerSecurityDeposit;
-        this.marketPriceMargin = marketPriceMargin;
-        this.marketPriceAvailable = marketPriceAvailable;
-        this.feeTxSize = feeTxSize;
-    }
-
-    public Coin getEstimatedFee() {
-        Coin sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit();
-        Coin txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-        Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
-        Address reservedForTradeAddress = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-        Address changeAddress = btcWalletService.getFreshAddressEntry().getAddress();
-
-        Coin reservedFundsForOffer = OfferUtil.isBuyOffer(direction) ? buyerSecurityDeposit : sellerSecurityDeposit;
-        if (!OfferUtil.isBuyOffer(direction))
-            reservedFundsForOffer = reservedFundsForOffer.add(amount);
-
-        checkNotNull(user.getAcceptedArbitrators(), "user.getAcceptedArbitrators() must not be null");
-        checkArgument(!user.getAcceptedArbitrators().isEmpty(), "user.getAcceptedArbitrators() must not be empty");
-        String dummyArbitratorAddress = user.getAcceptedArbitrators().get(0).getBtcAddress();
+    public static Tuple2<Coin, Integer> getEstimatedFeeAndTxSizeForTaker(Coin reservedFundsForOffer,
+                                                                         Coin tradeFee,
+                                                                         FeeService feeService,
+                                                                         BtcWalletService btcWalletService,
+                                                                         Preferences preferences) {
+        Coin txFeePerByte = feeService.getTxFeePerByte();
+        // We start with min taker fee size of 260
+        int estimatedTxSize = 260;
         try {
-            log.info("We create a dummy tx to see if our estimated size is in the accepted range. feeTxSize={}," +
-                            " txFee based on feeTxSize: {}, recommended txFee is {} sat/byte",
-                    feeTxSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
-            Transaction tradeFeeTx = tradeWalletService.estimateBtcTradingFeeTxSize(
-                    fundingAddress,
-                    reservedForTradeAddress,
-                    changeAddress,
-                    reservedFundsForOffer,
-                    true,
-                    OfferUtil.getMakerFee(bsqWalletService, preferences, amount, marketPriceAvailable, marketPriceMargin),
-                    txFeeFromFeeService,
-                    dummyArbitratorAddress);
-
-            final int txSize = tradeFeeTx.bitcoinSerialize().length;
-            // use feeTxSizeEstimationRecursionCounter to avoid risk for endless loop
-            if (txSize > feeTxSize * 1.2 && feeTxSizeEstimationRecursionCounter < 10) {
-                feeTxSizeEstimationRecursionCounter++;
-                log.info("txSize is {} bytes but feeTxSize used for txFee calculation was {} bytes. We try again with an " +
-                        "adjusted txFee to reach the target tx fee.", txSize, feeTxSize);
-                feeTxSize = txSize;
-                txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-                // lets try again with the adjusted txSize and fee.
-                getEstimatedFee();
-            } else {
-                log.info("feeTxSize {} bytes", feeTxSize);
-                log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                        txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
-            }
+            estimatedTxSize = getEstimatedTxSize(List.of(tradeFee, reservedFundsForOffer), estimatedTxSize, txFeePerByte, btcWalletService);
         } catch (InsufficientMoneyException e) {
-            // If we need to fund from an external wallet we can assume we only have 1 input (260 bytes).
-            log.warn("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
-                    "if the user pays from an external wallet. In that case we use an estimated tx size of 260 bytes.");
-            feeTxSize = 260;
-            txFeeFromFeeService = feeService.getTxFee(feeTxSize);
-            log.info("feeTxSize {} bytes", feeTxSize);
-            log.info("txFee based on estimated size: {}, recommended txFee is {} sat/byte",
-                    txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());
+            // if we cannot do the estimation we use the payout tx size
+            estimatedTxSize = 380;
+            log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
+                    "if the user pays from an external wallet. In that case we use an estimated tx size of {} bytes.", estimatedTxSize);
         }
 
-        return txFeeFromFeeService;
+        if (!preferences.isPayFeeInBtc()) {
+            // If we pay the fee in BSQ we have one input more which adds about 150 bytes
+            estimatedTxSize += 150;
+        }
+
+        int averageSize = (estimatedTxSize + 320) / 2;
+        // We use at least the size of the payout tx to not underpay at payout.
+        int minSize = Math.max(380, averageSize);
+        Coin txFee = txFeePerByte.multiply(minSize);
+        log.info("Fee estimation resulted in a tx size of {} bytes.\n" +
+                "We use an average between the taker fee tx and the deposit tx (320 bytes) which results in {} bytes.\n" +
+                "The payout tx has 380 bytes so we use that as our min value which is {} bytes.\n" +
+                "The tx fee of {}", estimatedTxSize, averageSize, minSize, txFee.toFriendlyString());
+        return new Tuple2<>(txFee, minSize);
+    }
+
+    public static Tuple2<Coin, Integer> getEstimatedFeeAndTxSizeForMaker(Coin reservedFundsForOffer,
+                                                                         Coin tradeFee,
+                                                                         FeeService feeService,
+                                                                         BtcWalletService btcWalletService,
+                                                                         Preferences preferences) {
+        Coin txFeePerByte = feeService.getTxFeePerByte();
+        // We start with min maker fee size of 260
+        int estimatedTxSize = 260;
+        try {
+            estimatedTxSize = getEstimatedTxSize(List.of(tradeFee, reservedFundsForOffer), estimatedTxSize, txFeePerByte, btcWalletService);
+        } catch (InsufficientMoneyException e) {
+            log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
+                    "if the user pays from an external wallet. In that case we use an estimated tx size of {} bytes.", estimatedTxSize);
+        }
+
+        if (!preferences.isPayFeeInBtc()) {
+            // If we pay the fee in BSQ we have one input more which adds about 150 bytes
+            estimatedTxSize += 150;
+        }
+
+        Coin txFee = txFeePerByte.multiply(estimatedTxSize);
+        log.info("Fee estimation resulted in a tx size of {} bytes and a tx fee of {}", estimatedTxSize, txFee.toFriendlyString());
+        return new Tuple2<>(txFee, estimatedTxSize);
+    }
+
+    @VisibleForTesting
+    static int getEstimatedTxSize(List<Coin> outputValues,
+                                  int initialEstimatedTxSize,
+                                  Coin txFeePerByte,
+                                  BtcWalletService btcWalletService)
+            throws InsufficientMoneyException {
+        boolean isInTolerance;
+        int estimatedTxSize = initialEstimatedTxSize;
+        int realTxSize;
+        do {
+            Coin txFee = txFeePerByte.multiply(estimatedTxSize);
+            realTxSize = btcWalletService.getEstimatedFeeTxSize(outputValues, txFee);
+            isInTolerance = isInTolerance(estimatedTxSize, realTxSize, 0.2);
+            if (!isInTolerance) {
+                estimatedTxSize = realTxSize;
+            }
+            counter++;
+        }
+        while (!isInTolerance && counter < 10);
+        if (!isInTolerance) {
+            log.warn("We could not find a tx which satisfies our tolerance requirement of 20%. " +
+                            "realTxSize={}, estimatedTxSize={}",
+                    realTxSize, estimatedTxSize);
+        }
+        return estimatedTxSize;
+    }
+
+    @VisibleForTesting
+    static boolean isInTolerance(int estimatedSize, int txSize, double tolerance) {
+        checkArgument(estimatedSize > 0, "estimatedSize must be positive");
+        checkArgument(txSize > 0, "txSize must be positive");
+        checkArgument(tolerance > 0, "tolerance must be positive");
+        double deviation = Math.abs(1 - ((double) estimatedSize / (double) txSize));
+        return deviation <= tolerance;
     }
 }
-
