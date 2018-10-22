@@ -82,7 +82,7 @@ public class RevolutForm extends PaymentMethodForm {
 
         addCurrenciesGrid(true);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
@@ -123,7 +123,7 @@ public class RevolutForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String AccountId = accountIdInputTextField.getText();
             AccountId = StringUtils.abbreviate(AccountId, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());

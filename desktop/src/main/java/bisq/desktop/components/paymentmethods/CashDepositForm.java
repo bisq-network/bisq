@@ -375,7 +375,7 @@ public class CashDepositForm extends PaymentMethodForm {
         });
 
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();
     }
@@ -542,7 +542,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String bankId = null;
             String countryCode = cashDepositAccountPayload.getCountryCode();
             if (countryCode == null)

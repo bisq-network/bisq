@@ -87,7 +87,7 @@ public class OKPayForm extends PaymentMethodForm {
 
         addCurrenciesGrid(true);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
@@ -129,7 +129,7 @@ public class OKPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());

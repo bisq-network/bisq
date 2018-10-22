@@ -179,7 +179,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         emailInputTextField.setValidator(emailValidator);
 
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();
     }
@@ -196,7 +196,7 @@ public class WesternUnionForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             accountNameTextField.setText(Res.get(paymentAccount.getPaymentMethod().getId())
                     .concat(": ")
                     .concat(StringUtils.abbreviate(holderNameInputTextField.getText(), 9)));

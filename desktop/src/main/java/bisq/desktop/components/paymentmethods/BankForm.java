@@ -338,7 +338,7 @@ abstract class BankForm extends PaymentMethodForm {
         });
 
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();
     }
@@ -498,7 +498,7 @@ abstract class BankForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String bankId = null;
             String countryCode = bankAccountPayload.getCountryCode();
             if (countryCode == null)

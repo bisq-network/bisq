@@ -177,7 +177,7 @@ public class SepaForm extends PaymentMethodForm {
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaCountries()));
         Country country = CountryUtil.getDefaultCountry();
@@ -304,7 +304,7 @@ public class SepaForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             TradeCurrency singleTradeCurrency = this.paymentAccount.getSingleTradeCurrency();
             String currency = singleTradeCurrency != null ? singleTradeCurrency.getCode() : null;
             if (currency != null) {

@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipRadioButton;
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
@@ -50,6 +51,7 @@ import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.JFXToggleButton;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -62,6 +64,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
@@ -438,21 +441,22 @@ public class FormBuilder {
     // Label  + InputTextField + CheckBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, InputTextField, CheckBox> addTopLabelInputTextFieldCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
+    public static Tuple3<Label, InputTextField, ToggleButton> addTopLabelInputTextFieldSlideToggleButton(GridPane gridPane, int rowIndex, String title, String toggleButtonTitle) {
         Label label = getTopLabel(title);
 
         InputTextField inputTextField = new InputTextField();
-        CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
-        VBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
+        ToggleButton toggleButton = new JFXToggleButton();
+        toggleButton.setText(toggleButtonTitle);
+        VBox.setMargin(toggleButton, new Insets(4, 0, 0, 0));
 
         VBox vBox = getTopLabelVBox(0);
 
-        vBox.getChildren().addAll(label, inputTextField, checkBox);
+        vBox.getChildren().addAll(label, inputTextField, toggleButton);
         GridPane.setRowIndex(vBox, rowIndex);
         GridPane.setColumnIndex(vBox, 0);
         gridPane.getChildren().add(vBox);
 
-        return new Tuple3<>(label, inputTextField, checkBox);
+        return new Tuple3<>(label, inputTextField, toggleButton);
     }
 
 
@@ -663,10 +667,29 @@ public class FormBuilder {
         CheckBox checkBox = new AutoTooltipCheckBox(title);
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 0);
-        GridPane.setMargin(checkBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(checkBox);
 
         return checkBox;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // SlideToggleButton
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static ToggleButton addSlideToggleButton(GridPane gridPane, int rowIndex, String title) {
+        return addSlideToggleButton(gridPane, rowIndex, title, 0);
+    }
+
+    public static ToggleButton addSlideToggleButton(GridPane gridPane, int rowIndex, String title, double top) {
+        ToggleButton toggleButton = new AutoTooltipSlideToggleButton();
+        toggleButton.setText(title);
+        GridPane.setRowIndex(toggleButton, rowIndex);
+        GridPane.setColumnIndex(toggleButton, 0);
+        GridPane.setMargin(toggleButton, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(toggleButton);
+
+        return toggleButton;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

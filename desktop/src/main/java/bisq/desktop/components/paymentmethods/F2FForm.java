@@ -122,7 +122,7 @@ public class F2FForm extends PaymentMethodForm {
         });
 
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void onCountrySelected(Country country) {
@@ -159,7 +159,7 @@ public class F2FForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String city = cityInputTextField.getText();
             city = StringUtils.abbreviate(city, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());

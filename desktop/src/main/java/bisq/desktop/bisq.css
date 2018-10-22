@@ -335,6 +335,16 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-rd-white;
 }
 
+.jfx-toggle-button,
+.jfx-toggle-button:armed,
+.jfx-toggle-button:hover,
+.jfx-toggle-button:focused,
+.jfx-toggle-button:selected,
+.jfx-toggle-button:focused:selected {
+    -jfx-toggle-color: -bs-rd-green-dark;
+    -jfx-size: 8;
+}
+
 .input-with-border {
     -fx-background-color:-bs-rd-white;
     -fx-border-width: 1;

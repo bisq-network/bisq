@@ -37,9 +37,9 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.property.BooleanProperty;
@@ -65,7 +65,7 @@ public abstract class PaymentMethodForm {
 
     protected int gridRowFrom;
     protected InputTextField accountNameTextField;
-    protected CheckBox useCustomAccountNameCheckBox;
+    protected ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -99,8 +99,8 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    protected void addAccountNameTextFieldWithAutoFillCheckBox() {
-        Tuple3<Label, InputTextField, CheckBox> tuple = addTopLabelInputTextFieldCheckBox(gridPane, ++gridRow,
+    protected void addAccountNameTextFieldWithAutoFillToggleButton() {
+        Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(gridPane, ++gridRow,
                 Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
@@ -111,10 +111,10 @@ public abstract class PaymentMethodForm {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
         });
-        useCustomAccountNameCheckBox = tuple.third;
-        useCustomAccountNameCheckBox.setSelected(false);
-        useCustomAccountNameCheckBox.setOnAction(e -> {
-            boolean selected = useCustomAccountNameCheckBox.isSelected();
+        useCustomAccountNameToggleButton = tuple.third;
+        useCustomAccountNameToggleButton.setSelected(false);
+        useCustomAccountNameToggleButton.setOnAction(e -> {
+            boolean selected = useCustomAccountNameToggleButton.isSelected();
             accountNameTextField.setEditable(selected);
             accountNameTextField.setFocusTraversable(selected);
             autoFillNameTextField();
