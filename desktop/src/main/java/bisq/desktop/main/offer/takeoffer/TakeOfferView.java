@@ -674,7 +674,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
         AnchorPane.setLeftAnchor(scrollPane, 0d);
         AnchorPane.setTopAnchor(scrollPane, 0d);
         AnchorPane.setRightAnchor(scrollPane, 0d);

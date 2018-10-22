@@ -21,7 +21,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
@@ -37,8 +36,6 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
-
-import bisq.common.UserThread;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -88,7 +85,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 loadView(viewPath.tip());
         };
         tabChangeListener = (observableValue, oldValue, newValue) -> {
-            UserThread.execute(InputTextField::hideErrorMessageDisplay);
             if (newValue != null) {
                 if (newValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(true);

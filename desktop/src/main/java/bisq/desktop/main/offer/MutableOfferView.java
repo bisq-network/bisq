@@ -23,7 +23,6 @@ import bisq.desktop.components.AddressTextField;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BalanceTextField;
-import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
@@ -92,7 +91,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import javafx.geometry.HPos;
@@ -837,7 +835,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
         AnchorPane.setLeftAnchor(scrollPane, 0d);
         AnchorPane.setTopAnchor(scrollPane, 0d);
         AnchorPane.setRightAnchor(scrollPane, 0d);
