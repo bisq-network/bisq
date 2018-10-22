@@ -31,9 +31,12 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Used for data which can be added and removed. ProtectedStorageEntry is used for verifying ownership.
+ */
 @Slf4j
 public class ProtectedDataStoreService {
-    private List<StoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new ArrayList<>();
+    private List<MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry>> services = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +47,7 @@ public class ProtectedDataStoreService {
     public ProtectedDataStoreService() {
     }
 
-    public void addService(StoreService<? extends PersistableEnvelope, ProtectedStorageEntry> service) {
+    public void addService(MapStoreService<? extends PersistableEnvelope, ProtectedStorageEntry> service) {
         services.add(service);
     }
 

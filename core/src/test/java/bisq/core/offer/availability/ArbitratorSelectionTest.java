@@ -44,6 +44,17 @@ public class ArbitratorSelectionTest {
         arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
         assertEquals("arb1", result);
+
+        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3", "arb1");
+        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
+        result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
+        assertEquals("arb2", result);
+
+        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3", "arb1", "arb2");
+        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
+        result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
+        assertEquals("arb3", result);
+
         lastAddressesUsedInTrades = Arrays.asList("xxx", "ccc", "aaa");
         arbitrators = new HashSet<>(Arrays.asList("aaa", "ccc", "xxx"));
         result = ArbitratorSelection.getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);

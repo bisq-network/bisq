@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.voteresult.VoteResultException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.governance.Issuance;
 
@@ -51,8 +51,8 @@ public class MeritConsensus {
         }
     }
 
-    public static long getMeritStake(String blindVoteTxId, MeritList meritList, BsqStateService bsqStateService) {
-        int txChainHeight = bsqStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
+    public static long getMeritStake(String blindVoteTxId, MeritList meritList, DaoStateService daoStateService) {
+        int txChainHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
         return getMeritStake(blindVoteTxId, meritList, txChainHeight);
     }
 
@@ -60,7 +60,7 @@ public class MeritConsensus {
         // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
         // later blocks (merit decreases with each block).
         if (txChainHeight == 0) {
-            log.error("Error at getMeritStake: blindVoteTx not found in bsqStateService. blindVoteTxId=" + blindVoteTxId);
+            log.error("Error at getMeritStake: blindVoteTx not found in daoStateService. blindVoteTxId=" + blindVoteTxId);
             return 0;
         }
 

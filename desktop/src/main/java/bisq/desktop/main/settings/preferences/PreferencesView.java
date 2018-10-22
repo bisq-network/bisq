@@ -32,6 +32,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -110,13 +111,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final ReferralIdService referralIdService;
     private final BisqEnvironment bisqEnvironment;
     private final AssetService assetService;
+    private final DaoFacade daoFacade;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
-    private Button resetDontShowAgainButton;
+    private Button resetDontShowAgainButton, resyncDaoButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
     private ObservableList<BlockChainExplorer> blockExplorers;
     private ObservableList<String> languageCodes;
@@ -139,13 +141,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
                            ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
-                           AssetService assetService, BSFormatter formatter) {
+                           AssetService assetService, DaoFacade daoFacade, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
         this.bisqEnvironment = bisqEnvironment;
         this.assetService = assetService;
+        this.daoFacade = daoFacade;
         this.formatter = formatter;
     }
 
@@ -166,6 +169,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         initializeSeparator();
         initializeDisplayCurrencies();
         initializeDisplayOptions();
+        initializeDaoOptions();
     }
 
 
@@ -178,6 +182,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
+        activateDaoPreferences();
     }
 
     @Override
@@ -185,6 +190,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
+        deactivateDaoPreferences();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -515,7 +521,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
     }
 
-
     private void initializeDisplayOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
@@ -528,6 +533,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         GridPane.setColumnIndex(resetDontShowAgainButton, 0);
+    }
+
+    private void initializeDaoOptions() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 4);
+        resyncDaoButton = addLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
+                Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -717,6 +729,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
     }
 
+    private void activateDaoPreferences() {
+        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() -> {
+            new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show();
+        }));
+    }
+
     private void onSelectNetwork() {
         if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
@@ -764,5 +785,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         avoidStandbyMode.setOnAction(null);
+    }
+
+    private void deactivateDaoPreferences() {
+        resyncDaoButton.setOnAction(null);
     }
 }

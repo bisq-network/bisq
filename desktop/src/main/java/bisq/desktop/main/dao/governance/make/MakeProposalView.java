@@ -38,7 +38,7 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
@@ -82,7 +82,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import bisq.asset.Asset;
 
 @FxmlView
-public class MakeProposalView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class MakeProposalView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
@@ -181,7 +181,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

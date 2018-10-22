@@ -21,7 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @Data
-class BondedRolesListItem implements BsqStateListener {
+class BondedRolesListItem implements DaoStateListener {
     private final BondedRole bondedRole;
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
@@ -118,7 +118,7 @@ class BondedRolesListItem implements BsqStateListener {
     }
 
 
-    // BsqStateListener
+    // DaoStateListener
     @Override
     public void onNewBlockHeight(int blockHeight) {
     }

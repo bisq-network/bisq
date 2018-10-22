@@ -19,8 +19,8 @@ package bisq.core.dao.node.json;
 
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
-import bisq.core.dao.state.BsqState;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoState;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.PubKeyScript;
 import bisq.core.dao.state.blockchain.Tx;
@@ -60,7 +60,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class ExportJsonFilesService implements DaoSetupService {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final File storageDir;
     private final boolean dumpBlockchainData;
 
@@ -69,10 +69,10 @@ public class ExportJsonFilesService implements DaoSetupService {
     private JsonFileManager txFileManager, txOutputFileManager, bsqStateFileManager;
 
     @Inject
-    public ExportJsonFilesService(BsqStateService bsqStateService,
+    public ExportJsonFilesService(DaoStateService daoStateService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.storageDir = storageDir;
         this.dumpBlockchainData = dumpBlockchainData;
     }
@@ -136,21 +136,21 @@ public class ExportJsonFilesService implements DaoSetupService {
     public void exportToJson() {
         if (dumpBlockchainData) {
             // We store the data we need once we write the data to disk (in the thread) locally.
-            // Access to bsqStateService is single threaded, we must not access bsqStateService from the thread.
+            // Access to daoStateService is single threaded, we must not access daoStateService from the thread.
             List<JsonTxOutput> allJsonTxOutputs = new ArrayList<>();
 
-            List<JsonTx> jsonTxs = bsqStateService.getTxStream()
+            List<JsonTx> jsonTxs = daoStateService.getTxStream()
                     .map(tx -> {
                         JsonTx jsonTx = getJsonTx(tx);
                         allJsonTxOutputs.addAll(jsonTx.getOutputs());
                         return jsonTx;
                     }).collect(Collectors.toList());
 
-            BsqState bsqState = bsqStateService.getClone();
-            List<JsonBlock> jsonBlockList = bsqState.getBlocks().stream()
+            DaoState daoState = daoStateService.getClone();
+            List<JsonBlock> jsonBlockList = daoState.getBlocks().stream()
                     .map(this::getJsonBlock)
                     .collect(Collectors.toList());
-            JsonBlocks jsonBlocks = new JsonBlocks(bsqState.getChainHeight(), jsonBlockList);
+            JsonBlocks jsonBlocks = new JsonBlocks(daoState.getChainHeight(), jsonBlockList);
 
             ListenableFuture<Void> future = executor.submit(() -> {
                 bsqStateFileManager.writeToDisc(Utilities.objectToJson(jsonBlocks), "blocks");
@@ -194,17 +194,17 @@ public class ExportJsonFilesService implements DaoSetupService {
                 getJsonTxOutputs(tx),
                 jsonTxType,
                 jsonTxTypeDisplayString,
-                bsqStateService.getBurntFee(tx.getId()),
+                daoStateService.getBurntFee(tx.getId()),
                 tx.getUnlockBlockHeight());
     }
 
     private List<JsonTxInput> getJsonTxInputs(Tx tx) {
         return tx.getTxInputs().stream()
                 .map(txInput -> {
-                    Optional<TxOutput> optionalTxOutput = bsqStateService.getConnectedTxOutput(txInput);
+                    Optional<TxOutput> optionalTxOutput = daoStateService.getConnectedTxOutput(txInput);
                     if (optionalTxOutput.isPresent()) {
                         TxOutput connectedTxOutput = optionalTxOutput.get();
-                        boolean isBsqTxOutputType = bsqStateService.isBsqTxOutputType(connectedTxOutput);
+                        boolean isBsqTxOutputType = daoStateService.isBsqTxOutputType(connectedTxOutput);
                         return new JsonTxInput(txInput.getConnectedTxOutputIndex(),
                                 txInput.getConnectedTxOutputTxId(),
                                 connectedTxOutput.getValue(),
@@ -224,23 +224,23 @@ public class ExportJsonFilesService implements DaoSetupService {
         String jsonTxTypeDisplayString = getJsonTxTypeDisplayString(jsonTxType);
         return tx.getTxOutputs().stream()
                 .map(txOutput -> {
-                    boolean isBsqTxOutputType = bsqStateService.isBsqTxOutputType(txOutput);
+                    boolean isBsqTxOutputType = daoStateService.isBsqTxOutputType(txOutput);
                     long bsqAmount = isBsqTxOutputType ? txOutput.getValue() : 0;
                     long btcAmount = !isBsqTxOutputType ? txOutput.getValue() : 0;
                     PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
                     JsonScriptPubKey scriptPubKey = pubKeyScript != null ? new JsonScriptPubKey(pubKeyScript) : null;
-                    JsonSpentInfo spentInfo = bsqStateService.getSpentInfo(txOutput).map(JsonSpentInfo::new).orElse(null);
+                    JsonSpentInfo spentInfo = daoStateService.getSpentInfo(txOutput).map(JsonSpentInfo::new).orElse(null);
                     JsonTxOutputType txOutputType = JsonTxOutputType.valueOf(txOutput.getTxOutputType().name());
                     int lockTime = txOutput.getLockTime();
                     String opReturn = txOutput.getOpReturnData() != null ? Utils.HEX.encode(txOutput.getOpReturnData()) : null;
-                    boolean isUnspent = bsqStateService.isUnspent(txOutput.getKey());
+                    boolean isUnspent = daoStateService.isUnspent(txOutput.getKey());
                     return new JsonTxOutput(tx.getId(),
                             txOutput.getIndex(),
                             bsqAmount,
                             btcAmount,
                             tx.getBlockHeight(),
                             isBsqTxOutputType,
-                            bsqStateService.getBurntFee(tx.getId()),
+                            daoStateService.getBurntFee(tx.getId()),
                             txOutput.getAddress(),
                             scriptPubKey,
                             spentInfo,

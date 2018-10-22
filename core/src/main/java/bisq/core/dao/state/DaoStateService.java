@@ -20,6 +20,8 @@ package bisq.core.dao.state;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.Tx;
@@ -55,11 +57,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Provides access methods to DaoState data.
+ */
 @Slf4j
-public class BsqStateService implements DaoSetupService {
-    private final BsqState bsqState;
+public class DaoStateService implements DaoSetupService {
+    private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
-    private final List<BsqStateListener> bsqStateListeners = new CopyOnWriteArrayList<>();
+    private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +72,8 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqStateService(BsqState bsqState, GenesisTxInfo genesisTxInfo) {
-        this.bsqState = bsqState;
+    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo) {
+        this.daoState = daoState;
         this.genesisTxInfo = genesisTxInfo;
     }
 
@@ -83,7 +88,7 @@ public class BsqStateService implements DaoSetupService {
 
     @Override
     public void start() {
-        bsqState.setChainHeight(genesisTxInfo.getGenesisBlockHeight());
+        daoState.setChainHeight(genesisTxInfo.getGenesisBlockHeight());
     }
 
 
@@ -91,33 +96,43 @@ public class BsqStateService implements DaoSetupService {
     // Snapshot
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applySnapshot(BsqState snapshot) {
-        bsqState.setChainHeight(snapshot.getChainHeight());
+    public void applySnapshot(DaoState snapshot) {
+        daoState.setChainHeight(snapshot.getChainHeight());
 
-        bsqState.getBlocks().clear();
-        bsqState.getBlocks().addAll(snapshot.getBlocks());
+        daoState.getBlocks().clear();
+        daoState.getBlocks().addAll(snapshot.getBlocks());
 
-        bsqState.getCycles().clear();
-        bsqState.getCycles().addAll(snapshot.getCycles());
+        daoState.getCycles().clear();
+        daoState.getCycles().addAll(snapshot.getCycles());
 
-        bsqState.getUnspentTxOutputMap().clear();
-        bsqState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
+        daoState.getUnspentTxOutputMap().clear();
+        daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
-        bsqState.getConfiscatedTxOutputMap().clear();
-        bsqState.getConfiscatedTxOutputMap().putAll(snapshot.getConfiscatedTxOutputMap());
+        daoState.getConfiscatedTxOutputMap().clear();
+        daoState.getConfiscatedTxOutputMap().putAll(snapshot.getConfiscatedTxOutputMap());
 
-        bsqState.getIssuanceMap().clear();
-        bsqState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
+        daoState.getIssuanceMap().clear();
+        daoState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
 
-        bsqState.getSpentInfoMap().clear();
-        bsqState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
+        daoState.getSpentInfoMap().clear();
+        daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
 
-        bsqState.getParamChangeList().clear();
-        bsqState.getParamChangeList().addAll(snapshot.getParamChangeList());
+        daoState.getParamChangeList().clear();
+        daoState.getParamChangeList().addAll(snapshot.getParamChangeList());
+
+        daoState.getEvaluatedProposalList().clear();
+        daoState.getEvaluatedProposalList().addAll(snapshot.getEvaluatedProposalList());
+
+        daoState.getDecryptedBallotsWithMeritsList().clear();
+        daoState.getDecryptedBallotsWithMeritsList().addAll(snapshot.getDecryptedBallotsWithMeritsList());
     }
 
-    public BsqState getClone() {
-        return bsqState.getClone();
+    public DaoState getClone() {
+        return daoState.getClone();
+    }
+
+    DaoState getClone(DaoState snapshotCandidate) {
+        return daoState.getClone(snapshotCandidate);
     }
 
 
@@ -126,7 +141,7 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getChainHeight() {
-        return bsqState.getChainHeight();
+        return daoState.getChainHeight();
     }
 
 
@@ -135,7 +150,7 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public LinkedList<Cycle> getCycles() {
-        return bsqState.getCycles();
+        return daoState.getCycles();
     }
 
     public Cycle getCurrentCycle() {
@@ -165,39 +180,39 @@ public class BsqStateService implements DaoSetupService {
 
     // First we get the blockHeight set
     public void onNewBlockHeight(int blockHeight) {
-        bsqState.setChainHeight(blockHeight);
-        bsqStateListeners.forEach(listener -> listener.onNewBlockHeight(blockHeight));
+        daoState.setChainHeight(blockHeight);
+        daoStateListeners.forEach(listener -> listener.onNewBlockHeight(blockHeight));
     }
 
     // Second we get the block added with empty txs
     public void onNewBlockWithEmptyTxs(Block block) {
-        bsqState.getBlocks().add(block);
-        bsqStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
+        daoState.getBlocks().add(block);
+        daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
         log.info("New Block added at blockHeight " + block.getHeight());
     }
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        bsqStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
-        bsqStateListeners.forEach(BsqStateListener::onParseBlockChainComplete);
+        daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
 
     public LinkedList<Block> getBlocks() {
-        return bsqState.getBlocks();
+        return daoState.getBlocks();
     }
 
     /**
      * Whether specified block hash belongs to a block we already know about.
      *
      * @param blockHash The hash of a {@link Block}.
-     * @return          True if the hash belongs to a {@link Block} we know about, otherwise
-     *                  {@code false}.
+     * @return True if the hash belongs to a {@link Block} we know about, otherwise
+     * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
         // TODO(chirhonul): If performance of O(n) time in number of blocks becomes an issue,
@@ -350,7 +365,7 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Map<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
-        return bsqState.getUnspentTxOutputMap();
+        return daoState.getUnspentTxOutputMap();
     }
 
     public void addUnspentTxOutput(TxOutput txOutput) {
@@ -484,16 +499,16 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addIssuance(Issuance issuance) {
-        bsqState.getIssuanceMap().put(issuance.getTxId(), issuance);
+        daoState.getIssuanceMap().put(issuance.getTxId(), issuance);
     }
 
     public Set<Issuance> getIssuanceSet() {
-        return new HashSet<>(bsqState.getIssuanceMap().values());
+        return new HashSet<>(daoState.getIssuanceMap().values());
     }
 
     public Optional<Issuance> getIssuance(String txId) {
-        if (bsqState.getIssuanceMap().containsKey(txId))
-            return Optional.of(bsqState.getIssuanceMap().get(txId));
+        if (daoState.getIssuanceMap().containsKey(txId))
+            return Optional.of(daoState.getIssuanceMap().get(txId));
         else
             return Optional.empty();
     }
@@ -524,12 +539,12 @@ public class BsqStateService implements DaoSetupService {
     public void addNonBsqTxOutput(TxOutput txOutput) {
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
-        bsqState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
+        daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
     public Optional<TxOutput> getBtcTxOutput(TxOutputKey key) {
         // Issuance candidates which did not got accepted in voting are covered here
-        Map<TxOutputKey, TxOutput> nonBsqTxOutputMap = bsqState.getNonBsqTxOutputMap();
+        Map<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
         if (nonBsqTxOutputMap.containsKey(key))
             return Optional.of(nonBsqTxOutputMap.get(key));
 
@@ -713,7 +728,7 @@ public class BsqStateService implements DaoSetupService {
     }
 
     public void applyConfiscateBond(TxOutput txOutput) {
-        bsqState.getConfiscatedTxOutputMap().put(txOutput.getKey(), txOutput);
+        daoState.getConfiscatedTxOutputMap().put(txOutput.getKey(), txOutput);
 
         // TODO SQ TxOutputType is immutable after parsing
         // We need to add new checks if a txo is not confiscated by using the map similar like utxo map
@@ -731,7 +746,7 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setNewParam(int blockHeight, Param param, long paramValue) {
-        List<ParamChange> paramChangeList = bsqState.getParamChangeList();
+        List<ParamChange> paramChangeList = daoState.getParamChangeList();
         getStartHeightOfNextCycle(blockHeight)
                 .ifPresent(heightOfNewCycle -> {
                     ParamChange paramChange = new ParamChange(param.name(), paramValue, heightOfNewCycle);
@@ -742,7 +757,7 @@ public class BsqStateService implements DaoSetupService {
     }
 
     public long getParamValue(Param param, int blockHeight) {
-        List<ParamChange> paramChangeList = new ArrayList<>(bsqState.getParamChangeList());
+        List<ParamChange> paramChangeList = new ArrayList<>(daoState.getParamChangeList());
         if (!paramChangeList.isEmpty()) {
             // List is sorted by height, we start from latest entries to find most recent entry.
             for (int i = paramChangeList.size() - 1; i >= 0; i--) {
@@ -764,11 +779,24 @@ public class BsqStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setSpentInfo(TxOutputKey txOutputKey, SpentInfo spentInfo) {
-        bsqState.getSpentInfoMap().put(txOutputKey, spentInfo);
+        daoState.getSpentInfoMap().put(txOutputKey, spentInfo);
     }
 
     public Optional<SpentInfo> getSpentInfo(TxOutput txOutput) {
-        return Optional.ofNullable(bsqState.getSpentInfoMap().getOrDefault(txOutput.getKey(), null));
+        return Optional.ofNullable(daoState.getSpentInfoMap().getOrDefault(txOutput.getKey(), null));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Vote result data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<EvaluatedProposal> getEvaluatedProposalList() {
+        return daoState.getEvaluatedProposalList();
+    }
+
+    public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
+        return daoState.getDecryptedBallotsWithMeritsList();
     }
 
 
@@ -776,12 +804,12 @@ public class BsqStateService implements DaoSetupService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBsqStateListener(BsqStateListener listener) {
-        bsqStateListeners.add(listener);
+    public void addBsqStateListener(DaoStateListener listener) {
+        daoStateListeners.add(listener);
     }
 
-    public void removeBsqStateListener(BsqStateListener listener) {
-        bsqStateListeners.remove(listener);
+    public void removeBsqStateListener(DaoStateListener listener) {
+        daoStateListeners.remove(listener);
     }
 }
 

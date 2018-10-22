@@ -23,7 +23,7 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -45,11 +45,11 @@ public class GenericProposalService extends BaseProposalService<GenericProposal>
     @Inject
     public GenericProposalService(BsqWalletService bsqWalletService,
                                   BtcWalletService btcWalletService,
-                                  BsqStateService bsqStateService,
+                                  DaoStateService daoStateService,
                                   GenericProposalValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
+                daoStateService,
                 proposalValidator);
     }
 

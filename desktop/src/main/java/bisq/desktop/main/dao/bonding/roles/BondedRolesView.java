@@ -29,7 +29,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.role.BondedRoleType;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -61,7 +61,7 @@ import javafx.util.Callback;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BondedRolesView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class BondedRolesView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private TableView<BondedRolesListItem> tableView;
 
     private final BsqFormatter bsqFormatter;
@@ -129,7 +129,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

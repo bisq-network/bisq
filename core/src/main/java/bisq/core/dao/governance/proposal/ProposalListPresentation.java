@@ -19,8 +19,8 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 
 import org.bitcoinj.core.TransactionConfidence;
@@ -46,9 +46,9 @@ import lombok.extern.slf4j.Slf4j;
  * our own proposal that is not critical). Foreign proposals are only shown if confirmed and fully validated.
  */
 @Slf4j
-public class ProposalListPresentation implements BsqStateListener, MyProposalListService.Listener {
+public class ProposalListPresentation implements DaoStateListener, MyProposalListService.Listener {
     private final ProposalService proposalService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;
     private final BsqWalletService bsqWalletService;
     private final ProposalValidator proposalValidator;
@@ -63,17 +63,17 @@ public class ProposalListPresentation implements BsqStateListener, MyProposalLis
 
     @Inject
     public ProposalListPresentation(ProposalService proposalService,
-                                    BsqStateService bsqStateService,
+                                    DaoStateService daoStateService,
                                     MyProposalListService myProposalListService,
                                     BsqWalletService bsqWalletService,
                                     ProposalValidator proposalValidator) {
         this.proposalService = proposalService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.myProposalListService = myProposalListService;
         this.bsqWalletService = bsqWalletService;
         this.proposalValidator = proposalValidator;
 
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
         myProposalListService.addListener(this);
 
         proposalService.getTempProposals().addListener((ListChangeListener<Proposal>) c -> {
@@ -86,7 +86,7 @@ public class ProposalListPresentation implements BsqStateListener, MyProposalLis
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // At new cycle we don't get a list change but we want to update our predicates
@@ -129,12 +129,12 @@ public class ProposalListPresentation implements BsqStateListener, MyProposalLis
 
         // We want to show our own unconfirmed proposals. Unconfirmed proposals from other users are not included
         // in the list.
-        // If a tx is not found in the bsqStateService it can be that it is either unconfirmed or invalid.
+        // If a tx is not found in the daoStateService it can be that it is either unconfirmed or invalid.
         // To avoid inclusion of invalid txs we add a check for the confidence type PENDING from the bsqWalletService.
         // So we only add proposals if they are unconfirmed and therefor not yet parsed. Once confirmed they have to be
-        // found in the bsqStateService.
+        // found in the daoStateService.
         List<Proposal> myUnconfirmedProposals = myProposalListService.getList().stream()
-                .filter(p -> !bsqStateService.getTx(p.getTxId()).isPresent()) // Tx is still not in our bsq blocks
+                .filter(p -> !daoStateService.getTx(p.getTxId()).isPresent()) // Tx is still not in our bsq blocks
                 .filter(p -> {
                     TransactionConfidence confidenceForTxId = bsqWalletService.getConfidenceForTxId(p.getTxId());
                     return confidenceForTxId != null &&

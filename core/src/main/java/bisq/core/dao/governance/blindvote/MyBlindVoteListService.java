@@ -38,8 +38,8 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
@@ -90,9 +90,9 @@ import javax.annotation.Nullable;
  * Publishes a BlindVote and the blind vote transaction.
  */
 @Slf4j
-public class MyBlindVoteListService implements PersistedDataHost, BsqStateListener, DaoSetupService {
+public class MyBlindVoteListService implements PersistedDataHost, DaoStateListener, DaoSetupService {
     private final P2PService p2PService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final WalletsManager walletsManager;
     private final Storage<MyBlindVoteList> storage;
@@ -112,7 +112,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
     @Inject
     public MyBlindVoteListService(P2PService p2PService,
-                                  BsqStateService bsqStateService,
+                                  DaoStateService daoStateService,
                                   PeriodService periodService,
                                   WalletsManager walletsManager,
                                   Storage<MyBlindVoteList> storage,
@@ -122,7 +122,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
                                   MyVoteListService myVoteListService,
                                   MyProposalListService myProposalListService) {
         this.p2PService = p2PService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.walletsManager = walletsManager;
         this.storage = storage;
@@ -142,7 +142,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
     @Override
     public void addListeners() {
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -191,7 +191,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
     public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin stake)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         // We set dummy opReturn data
-        Coin blindVoteFee = BlindVoteConsensus.getFee(bsqStateService, bsqStateService.getChainHeight());
+        Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
         Transaction dummyTx = getBlindVoteTx(stake, blindVoteFee, new byte[22]);
         Coin miningFee = dummyTx.getFee();
         int txSize = dummyTx.bitcoinSerialize().length;
@@ -204,7 +204,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
             BallotList sortedBallotList = BlindVoteConsensus.getSortedBallotList(ballotListService);
             byte[] encryptedVotes = getEncryptedVotes(sortedBallotList, secretKey);
             byte[] opReturnData = getOpReturnData(encryptedVotes);
-            Coin blindVoteFee = BlindVoteConsensus.getFee(bsqStateService, bsqStateService.getChainHeight());
+            Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             Transaction blindVoteTx = getBlindVoteTx(stake, blindVoteFee, opReturnData);
             String blindVoteTxId = blindVoteTx.getHashAsString();
 
@@ -234,7 +234,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
 
     public long getCurrentlyAvailableMerit() {
         MeritList meritList = getMerits(null);
-        return MeritConsensus.getCurrentlyAvailableMerit(meritList, bsqStateService.getChainHeight());
+        return MeritConsensus.getCurrentlyAvailableMerit(meritList, daoStateService.getChainHeight());
     }
 
 
@@ -278,7 +278,7 @@ public class MyBlindVoteListService implements PersistedDataHost, BsqStateListen
                 .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
-        return new MeritList(bsqStateService.getIssuanceSet().stream()
+        return new MeritList(daoStateService.getIssuanceSet().stream()
                 .map(issuance -> {
                     // We check if it is our proposal
                     if (!myCompensationProposalTxIs.contains(issuance.getTxId()))

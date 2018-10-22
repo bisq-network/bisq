@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
+import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxOutput;
@@ -25,7 +27,7 @@ import bisq.core.dao.state.governance.Issuance;
 import bisq.core.dao.state.governance.ParamChange;
 import bisq.core.dao.state.period.Cycle;
 
-import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -47,9 +49,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Root class for mutable state of the DAO.
  * Holds both blockchain data as well as data derived from the governance process (voting).
+ * <p>
+ * One BSQ block with empty txs adds 152 bytes which results in about 8 MB/year
  */
 @Slf4j
-public class BsqState implements PersistableEnvelope {
+public class DaoState implements PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
@@ -78,13 +82,21 @@ public class BsqState implements PersistableEnvelope {
     @Getter
     private final List<ParamChange> paramChangeList;
 
+    // Vote result data
+    // All evaluated proposals which get added at the result phase
+    @Getter
+    private final List<EvaluatedProposal> evaluatedProposalList;
+    // All voting data which get added at the result phase
+    @Getter
+    private final List<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsList;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqState() {
+    public DaoState() {
         this(0,
                 new LinkedList<>(),
                 new LinkedList<>(),
@@ -93,6 +105,8 @@ public class BsqState implements PersistableEnvelope {
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
+                new ArrayList<>(),
+                new ArrayList<>(),
                 new ArrayList<>()
         );
     }
@@ -102,7 +116,7 @@ public class BsqState implements PersistableEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BsqState(int chainHeight,
+    private DaoState(int chainHeight,
                      LinkedList<Block> blocks,
                      LinkedList<Cycle> cycles,
                      Map<TxOutputKey, TxOutput> unspentTxOutputMap,
@@ -110,7 +124,9 @@ public class BsqState implements PersistableEnvelope {
                      Map<TxOutputKey, SpentInfo> spentInfoMap,
                      Map<TxOutputKey, TxOutput> confiscatedTxOutputMap,
                      Map<String, Issuance> issuanceMap,
-                     List<ParamChange> paramChangeList) {
+                     List<ParamChange> paramChangeList,
+                     List<EvaluatedProposal> evaluatedProposalList,
+                     List<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsList) {
         this.chainHeight = chainHeight;
         this.blocks = blocks;
         this.cycles = cycles;
@@ -122,14 +138,16 @@ public class BsqState implements PersistableEnvelope {
         this.confiscatedTxOutputMap = confiscatedTxOutputMap;
         this.issuanceMap = issuanceMap;
         this.paramChangeList = paramChangeList;
+        this.evaluatedProposalList = evaluatedProposalList;
+        this.decryptedBallotsWithMeritsList = decryptedBallotsWithMeritsList;
     }
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBsqState(getBsqStateBuilder()).build();
+        return getBsqStateBuilder().build();
     }
 
-    private PB.BsqState.Builder getBsqStateBuilder() {
+    public PB.BsqState.Builder getBsqStateBuilder() {
         final PB.BsqState.Builder builder = PB.BsqState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllBlocks(blocks.stream().map(Block::toProtoMessage).collect(Collectors.toList()))
@@ -144,15 +162,17 @@ public class BsqState implements PersistableEnvelope {
                         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
                 .putAllIssuanceMap(issuanceMap.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProtoMessage())))
-                .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()));
+                .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
+                .addAllEvaluatedProposalList(evaluatedProposalList.stream().map(EvaluatedProposal::toProtoMessage).collect(Collectors.toList()))
+                .addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsList.stream().map(DecryptedBallotsWithMerits::toProtoMessage).collect(Collectors.toList()));
         return builder;
     }
 
-    public static PersistableEnvelope fromProto(PB.BsqState proto) {
+    public static DaoState fromProto(PB.BsqState proto) {
         LinkedList<Block> blocks = proto.getBlocksList().stream()
                 .map(Block::fromProto)
                 .collect(Collectors.toCollection(LinkedList::new));
-        final LinkedList<Cycle> cycles = proto.getCyclesList().stream()
+        LinkedList<Cycle> cycles = proto.getCyclesList().stream()
                 .map(Cycle::fromProto).collect(Collectors.toCollection(LinkedList::new));
         Map<TxOutputKey, TxOutput> unspentTxOutputMap = proto.getUnspentTxOutputMapMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue())));
@@ -164,9 +184,13 @@ public class BsqState implements PersistableEnvelope {
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue())));
         Map<String, Issuance> issuanceMap = proto.getIssuanceMapMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Issuance.fromProto(e.getValue())));
-        final List<ParamChange> paramChangeList = proto.getParamChangeListList().stream()
+        List<ParamChange> paramChangeList = proto.getParamChangeListList().stream()
                 .map(ParamChange::fromProto).collect(Collectors.toCollection(ArrayList::new));
-        return new BsqState(proto.getChainHeight(),
+        List<EvaluatedProposal> evaluatedProposalList = proto.getEvaluatedProposalListList().stream()
+                .map(EvaluatedProposal::fromProto).collect(Collectors.toCollection(ArrayList::new));
+        List<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsList = proto.getDecryptedBallotsWithMeritsListList().stream()
+                .map(DecryptedBallotsWithMerits::fromProto).collect(Collectors.toCollection(ArrayList::new));
+        return new DaoState(proto.getChainHeight(),
                 blocks,
                 cycles,
                 unspentTxOutputMap,
@@ -174,7 +198,9 @@ public class BsqState implements PersistableEnvelope {
                 spentInfoMap,
                 confiscatedTxOutputMap,
                 issuanceMap,
-                paramChangeList);
+                paramChangeList,
+                evaluatedProposalList,
+                decryptedBallotsWithMeritsList);
     }
 
 
@@ -186,11 +212,11 @@ public class BsqState implements PersistableEnvelope {
         this.chainHeight = chainHeight;
     }
 
-    BsqState getClone() {
-        return (BsqState) BsqState.fromProto(getBsqStateBuilder().build());
+    DaoState getClone() {
+        return DaoState.fromProto(getBsqStateBuilder().build());
     }
 
-    BsqState getClone(BsqState snapshotCandidate) {
-        return (BsqState) BsqState.fromProto(snapshotCandidate.getBsqStateBuilder().build());
+    DaoState getClone(DaoState snapshotCandidate) {
+        return DaoState.fromProto(snapshotCandidate.getBsqStateBuilder().build());
     }
 }
