@@ -147,7 +147,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
 
-        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 10);
+        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 5);
         this.currencyComboBox = currencyComboBoxTuple.third;
         this.currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
