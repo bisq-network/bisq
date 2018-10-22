@@ -225,8 +225,10 @@ bg color of non edit textFields: fafafa
 
 /* Other UI Elements */
 
-.separator {
-    -fx-background: -bs-light-grey;
+.separator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -bs-rd-separator;
 }
 
 .jfx-progress-bar > .bar,
@@ -257,6 +259,10 @@ bg color of non edit textFields: fafafa
 .action-button {
     -fx-background-color: -bs-rd-green-dark;
     -fx-text-fill: -bs-rd-white;
+}
+
+.compact-button {
+    -fx-padding: 0 10 0 10;
 }
 
 .jfx-checkbox {
