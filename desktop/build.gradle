@@ -59,12 +59,6 @@ dependencies {
     compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compile 'com.github.sarxos:webcam-capture:0.3.12'
-    compile "org.openjfx:javafx-base:11:$platform"
-    compile "org.openjfx:javafx-graphics:11:$platform"
-    compile "org.openjfx:javafx-controls:11:$platform"
-    compile "org.openjfx:javafx-fxml:11:$platform"
-    compile "org.openjfx:javafx-swing:11:$platform"
-
 
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
