@@ -106,6 +106,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.VPos;
@@ -339,7 +340,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView<PaymentAccount>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
+        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = FormBuilder.addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         tuple.first.setTextAlignment(TextAlignment.RIGHT);
         paymentAccountsListView = tuple.second;

@@ -1324,20 +1324,24 @@ public class FormBuilder {
     // Label  + List
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title) {
-        return addLabelListView(gridPane, rowIndex, title, 0);
+    public static <T> Tuple3<Label, ListView<T>, VBox> addTopLabelListView(GridPane gridPane, int rowIndex, String title) {
+        return addTopLabelListView(gridPane, rowIndex, title, 0);
     }
 
-    public static <T> Tuple2<Label, ListView<T>> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
+    public static <T> Tuple3<Label, ListView<T>, VBox> addTopLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(0);
 
         ListView<T> listView = new ListView<>();
-        GridPane.setRowIndex(listView, rowIndex);
-        GridPane.setColumnIndex(listView, 1);
-        GridPane.setMargin(listView, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(listView);
 
-        return new Tuple2<>(label, listView);
+        vBox.getChildren().addAll(label, listView);
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setColumnIndex(vBox, 0);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+
+        return new Tuple3<>(label, listView, vBox);
     }
 
 

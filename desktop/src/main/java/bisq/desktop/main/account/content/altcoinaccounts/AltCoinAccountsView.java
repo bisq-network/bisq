@@ -56,6 +56,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import javafx.geometry.VPos;
 
@@ -226,7 +227,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView<PaymentAccount>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
+        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = FormBuilder.addTopLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);

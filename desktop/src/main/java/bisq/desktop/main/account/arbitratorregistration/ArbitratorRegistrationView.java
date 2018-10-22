@@ -34,7 +34,7 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import com.google.inject.name.Named;
 
@@ -156,7 +156,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
+        Tuple3<Label, ListView<String>, VBox> tuple = FormBuilder.addTopLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
