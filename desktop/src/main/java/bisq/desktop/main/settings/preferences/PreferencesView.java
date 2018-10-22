@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
@@ -191,6 +192,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // selectBaseCurrencyNetwork
         selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
+
+        selectBaseCurrencyNetworkComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("settings.preferences.selectCurrencyNetwork"),
+                selectBaseCurrencyNetworkComboBox, false));
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
@@ -209,8 +213,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Res.get("shared.language"));
         userCountryComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("shared.country"));
+        userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
+                false));
         blockChainExplorerComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer"));
+        blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
+                blockChainExplorerComboBox, false));
 
         Tuple3<Label, InputTextField, CheckBox> tuple = addTopLabelInputTextFieldCheckBox(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));

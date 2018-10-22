@@ -205,6 +205,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         balanceTextField.setFormatter(model.getBtcFormatter());
 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
+        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
+                paymentAccountsComboBox, false));
 
         doSetFocus();
     }

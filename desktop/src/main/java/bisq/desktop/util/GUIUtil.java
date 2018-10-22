@@ -121,6 +121,8 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -877,5 +879,30 @@ public class GUIUtil {
         });
 
         return gridRow;
+    }
+
+    @NotNull
+    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox) {
+        return getComboBoxButtonCell(title, comboBox, true);
+    }
+
+    @NotNull
+    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox, Boolean hideOriginalPrompt) {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+
+                // See https://github.com/jfoenixadmin/JFoenix/issues/610
+                if (hideOriginalPrompt)
+                    this.setVisible(item != null || !empty);
+
+                if (empty || item == null) {
+                    setText(title);
+                } else {
+                    setText(comboBox.getConverter().toString(item));
+                }
+            }
+        };
     }
 }
