@@ -337,7 +337,10 @@ public class GUIUtil {
                     currencyType.getStyleClass().add("currency-label-small");
                     Label currency = new AutoTooltipLabel(code);
                     currency.getStyleClass().add("currency-label");
-                    box.getChildren().addAll(currencyType, currency);
+                    Label offers = new AutoTooltipLabel(item.tradeCurrency.getName());
+                    offers.getStyleClass().add("currency-label");
+
+                    box.getChildren().addAll(currencyType, currency, offers);
 
                     switch (code) {
                         case GUIUtil.SHOW_ALL_FLAG:
@@ -350,10 +353,8 @@ public class GUIUtil {
                             break;
                         default:
                             if (preferences.isSortMarketCurrenciesNumerically()) {
-                                Label offers = new AutoTooltipLabel(item.tradeCurrency.getName() + " (" + item.numTrades + " " +
+                                offers.setText(offers.getText() + " (" + item.numTrades + " " +
                                         (item.numTrades == 1 ? postFixSingle : postFixMulti) + ")");
-                                offers.getStyleClass().add("currency-label");
-                                box.getChildren().add(offers);
                             }
                     }
 
@@ -434,7 +435,10 @@ public class GUIUtil {
                     currencyType.getStyleClass().add("currency-label-small");
                     Label currency = new AutoTooltipLabel(item.getCode());
                     currency.getStyleClass().add("currency-label");
-                    box.getChildren().addAll(currencyType, currency);
+                    Label offers = new AutoTooltipLabel(item.getName());
+                    offers.getStyleClass().add("currency-label");
+
+                    box.getChildren().addAll(currencyType, currency, offers);
 
                     Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
 
@@ -449,10 +453,8 @@ public class GUIUtil {
                             break;
                         default:
                             if (offerCountOptional.isPresent()) {
-                                Label offers = new AutoTooltipLabel(item.getName() + " (" + offerCountOptional.get() + " " +
+                                offers.setText(offers.getText() + " (" + offerCountOptional.get() + " " +
                                         (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti) + ")");
-                                offers.getStyleClass().add("currency-label");
-                                box.getChildren().add(offers);
                             }
                     }
 
