@@ -45,6 +45,13 @@ dependencies {
     compile('com.fasterxml.jackson.core:jackson-databind:2.8.10') {
         exclude(module: 'jackson-annotations')
     }
+
+    compile "org.openjfx:javafx-base:11:$platform"
+    compile "org.openjfx:javafx-graphics:11:$platform"
+    compile "org.openjfx:javafx-controls:11:$platform"
+    compile "org.openjfx:javafx-fxml:11:$platform"
+    compile "org.openjfx:javafx-swing:11:$platform"
+
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
 
