@@ -65,7 +65,7 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
                                                                  Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
         this.requestedBsq = requestedBsq;
-        this.bsqAddress = "B" + bsqWalletService.getUnusedAddress().toBase58();
+        this.bsqAddress = bsqWalletService.getUnusedBsqAddressAsString();
 
         return super.createProposalWithTransaction(name, link);
     }
