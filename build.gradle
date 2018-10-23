@@ -1,6 +1,11 @@
 buildscript {
+    repositories {
+        jcenter()
+    }
     dependencies {
         classpath files('gradle/witness/gradle-witness.jar')
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
     }
 }
 
