@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath files('gradle/witness/gradle-witness.jar')
+    }
+}
+
 plugins {
     id 'java-base'
 }
