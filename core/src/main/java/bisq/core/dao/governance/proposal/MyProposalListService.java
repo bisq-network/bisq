@@ -256,9 +256,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {
-        return daoStateService.getTx(proposal.getTxId())
-                .filter(tx -> isTxInProposalPhaseAndCycle(tx, periodService, daoStateService))
-                .isPresent();
+        boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+        return isMine(proposal) && inPhase;
 
     }
 
