@@ -32,7 +32,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private final WalletsManager walletsManager;
@@ -77,7 +77,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     }
 
     private void addContent() {
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
                 Res.getWithCol("showWalletDataWindow.walletData"), "");
         TextArea textArea = labelTextAreaTuple2.second;
         Label label = labelTextAreaTuple2.first;

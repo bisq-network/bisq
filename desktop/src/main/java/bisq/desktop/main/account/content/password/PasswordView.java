@@ -50,6 +50,8 @@ import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
 
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
+import static bisq.desktop.util.FormBuilder.addPasswordTextField;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
@@ -81,22 +83,22 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        headline = FormBuilder.addTitledGroupBg(root, gridRow, 2, "");
-        passwordField = FormBuilder.addPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE);
+        headline = FormBuilder.addTitledGroupBg(root, gridRow, 3, "");
+        passwordField = addPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE);
         final RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator();
         passwordField.getValidators().addAll(requiredFieldValidator, passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> {
             if (!newValue) validatePasswords();
         };
 
-        repeatedPasswordField = FormBuilder.addPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
+        repeatedPasswordField = addPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
         requiredFieldValidator.setMessage("Password can't be empty");
         repeatedPasswordField.getValidators().addAll(requiredFieldValidator, passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> {
             if (oldValue != newValue) validatePasswords();
         };
 
-        Tuple3<Button, BusyAnimation, Label> tuple = FormBuilder.addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", 10);
         pwButton = (AutoTooltipButton) tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;

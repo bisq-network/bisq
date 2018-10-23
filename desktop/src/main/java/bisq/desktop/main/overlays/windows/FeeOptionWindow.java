@@ -52,8 +52,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelRadioButtonRadioButton;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelRadioButtonRadioButton;
 
 @Slf4j
 public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
@@ -138,12 +138,12 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         GridPane.setHalignment(label, HPos.LEFT);
 
         toggleGroup = new ToggleGroup();
-        Tuple3<Label, RadioButton, RadioButton> tuple = addLabelRadioButtonRadioButton(gridPane,
+        Tuple3<Label, RadioButton, RadioButton> tuple = addTopLabelRadioButtonRadioButton(gridPane,
                 ++rowIndex,
                 toggleGroup,
                 Res.get("feeOptionWindow.optionsLabel"),
                 "BTC",
-                "BSQ");
+                "BSQ", 0);
         RadioButton radioButtonBTC = tuple.second;
         RadioButton radioButtonBSQ = tuple.third;
 

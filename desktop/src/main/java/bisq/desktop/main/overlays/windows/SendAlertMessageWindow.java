@@ -42,7 +42,7 @@ import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private final boolean useDevPrivilegeKeys;
@@ -116,7 +116,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
                 Res.get("sendAlertMessageWindow.alertMsg"),
                 Res.get("sendAlertMessageWindow.enterMsg"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;

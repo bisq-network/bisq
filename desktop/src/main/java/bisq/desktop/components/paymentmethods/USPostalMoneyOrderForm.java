@@ -37,9 +37,9 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private final USPostalMoneyOrderAccount usPostalMoneyOrderAccount;
@@ -50,7 +50,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
@@ -78,7 +78,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        postalAddressTextArea = addLabelTextArea(gridPane, ++gridRow,
+        postalAddressTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.postal.address"), "").second;
         postalAddressTextArea.setPrefHeight(60);
         //postalAddressTextArea.setValidator(usPostalMoneyOrderValidator);
@@ -115,7 +115,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
                 Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 usPostalMoneyOrderAccount.getHolderName());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);

@@ -538,7 +538,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void initializeDaoOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
-        resyncDaoButton = addLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
+        resyncDaoButton = addTopLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
                 Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
     }
 

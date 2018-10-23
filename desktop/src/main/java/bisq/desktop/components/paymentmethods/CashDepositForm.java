@@ -219,7 +219,7 @@ public class CashDepositForm extends PaymentMethodForm {
                             " / " + data.getAccountNr());
 
         if (showRequirements) {
-            TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
+            TextArea textArea = FormBuilder.addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
             textArea.setMinHeight(45);
             textArea.setMaxHeight(45);
             textArea.setEditable(false);
@@ -296,7 +296,7 @@ public class CashDepositForm extends PaymentMethodForm {
         String requirements = cashDepositAccountPayload.getRequirements();
         boolean showRequirements = requirements != null && !requirements.isEmpty();
         if (showRequirements) {
-            TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
+            TextArea textArea = FormBuilder.addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
             textArea.setMinHeight(30);
             textArea.setMaxHeight(30);
             textArea.setEditable(false);
@@ -366,7 +366,7 @@ public class CashDepositForm extends PaymentMethodForm {
             }
         });
 
-        TextArea requirementsTextArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
+        TextArea requirementsTextArea = FormBuilder.addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
         requirementsTextArea.setMinHeight(30);
         requirementsTextArea.setMaxHeight(30);
         requirementsTextArea.textProperty().addListener((ov, oldValue, newValue) -> {

@@ -239,7 +239,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setHalignment(bridgesLabel, HPos.LEFT);
         GridPane.setValignment(bridgesLabel, VPos.TOP);
 
-        //addLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        //addTopLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
@@ -283,7 +283,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
         customBridgesRadioButton.setUserData(BridgeOption.CUSTOM);
 
-        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
+        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
         enterBridgeLabel = labelTextAreaTuple2.first;
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
 

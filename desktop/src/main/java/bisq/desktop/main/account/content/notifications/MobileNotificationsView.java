@@ -57,12 +57,12 @@ import bisq.common.util.Tuple3;
 import javax.inject.Inject;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 
@@ -78,6 +78,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addSlideToggleButton;
+
 @FxmlView
 public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
@@ -92,7 +95,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private TextField tokenInputTextField;
     private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField, marketAlertTriggerInputTextField;
-    private CheckBox useSoundCheckBox, tradeCheckBox, marketCheckBox, priceCheckBox;
+    private ToggleButton useSoundToggleButton, tradeToggleButton, marketToggleButton, priceToggleButton;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Button downloadButton, webCamButton, noWebCamButton, eraseButton, setPriceAlertButton,
@@ -133,7 +136,6 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        root.setGridLinesVisible(true);
         createSetupFields();
         createSettingsFields();
         createMarketAlertFields();
@@ -151,10 +153,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         eraseButton.setOnAction(e -> onErase());
 
         // settings
-        useSoundCheckBox.selectedProperty().addListener(useSoundCheckBoxListener);
-        tradeCheckBox.selectedProperty().addListener(tradeCheckBoxListener);
-        marketCheckBox.selectedProperty().addListener(marketCheckBoxListener);
-        priceCheckBox.selectedProperty().addListener(priceCheckBoxListener);
+        useSoundToggleButton.selectedProperty().addListener(useSoundCheckBoxListener);
+        tradeToggleButton.selectedProperty().addListener(tradeCheckBoxListener);
+        marketToggleButton.selectedProperty().addListener(marketCheckBoxListener);
+        priceToggleButton.selectedProperty().addListener(priceCheckBoxListener);
 
         // market alert
         marketAlertTriggerInputTextField.textProperty().addListener(marketAlertTriggerListener);
@@ -203,10 +205,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         eraseButton.setOnAction(null);
 
         // settings
-        useSoundCheckBox.selectedProperty().removeListener(useSoundCheckBoxListener);
-        tradeCheckBox.selectedProperty().removeListener(tradeCheckBoxListener);
-        marketCheckBox.selectedProperty().removeListener(marketCheckBoxListener);
-        priceCheckBox.selectedProperty().removeListener(priceCheckBoxListener);
+        useSoundToggleButton.selectedProperty().removeListener(useSoundCheckBoxListener);
+        tradeToggleButton.selectedProperty().removeListener(tradeCheckBoxListener);
+        marketToggleButton.selectedProperty().removeListener(marketCheckBoxListener);
+        priceToggleButton.selectedProperty().removeListener(priceCheckBoxListener);
 
         // market alert
         marketAlertTriggerInputTextField.textProperty().removeListener(marketAlertTriggerListener);
@@ -314,11 +316,11 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
         try {
             if (message != null) {
-                mobileNotificationService.sendMessage(message, useSoundCheckBox.isSelected());
+                mobileNotificationService.sendMessage(message, useSoundToggleButton.isSelected());
             } else if (messages != null) {
                 messages.forEach(msg -> {
                     try {
-                        mobileNotificationService.sendMessage(msg, useSoundCheckBox.isSelected());
+                        mobileNotificationService.sendMessage(msg, useSoundToggleButton.isSelected());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -392,12 +394,12 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void createSetupFields() {
         FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
-        downloadButton = FormBuilder.addLabelButton(root, gridRow,
-                Res.getWithCol("account.notifications.download.label"), Res.get("account.notifications.download.button"),
-                Layout.FIRST_ROW_DISTANCE).second;
+        downloadButton = addButton(root, gridRow,
+                Res.get("account.notifications.download.label"),
+                Layout.FIRST_ROW_DISTANCE);
 
-        Tuple3<Label, Button, Button> tuple = FormBuilder.addLabel2Buttons(root, ++gridRow,
-                Res.getWithCol("account.notifications.webcam.label"),
+        Tuple3<Label, Button, Button> tuple = FormBuilder.addTopLabel2Buttons(root, ++gridRow,
+                Res.get("account.notifications.webcam.label"),
                 Res.get("account.notifications.webcam.button"), Res.get("account.notifications.noWebcam.button"), 0);
         webCamButton = tuple.second;
         noWebCamButton = tuple.third;
@@ -411,11 +413,11 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         tokenInputTextField.setManaged(false);
         tokenInputTextField.setVisible(false);
 
-        /*testMsgButton = FormBuilder.addLabelButton(root, ++gridRow, Res.get("account.notifications.testMsg.label"),
+        /*testMsgButton = FormBuilder.addTopLabelButton(root, ++gridRow, Res.get("account.notifications.testMsg.label"),
                 Res.get("account.notifications.testMsg.title")).second;
         testMsgButton.setDefaultButton(false);*/
 
-        eraseButton = FormBuilder.addLabelButton(root, ++gridRow,
+        eraseButton = FormBuilder.addTopLabelButton(root, ++gridRow,
                 Res.get("account.notifications.erase.label"),
                 Res.get("account.notifications.erase.title")).second;
         eraseButton.setId("notification-erase-button");
@@ -426,34 +428,34 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 Res.get("account.notifications.settings.title"),
                 Layout.GROUP_DISTANCE);
 
-        useSoundCheckBox = FormBuilder.addLabelCheckBox(root, gridRow,
+        useSoundToggleButton = addSlideToggleButton(root, gridRow,
                 Res.get("account.notifications.useSound.label"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        useSoundCheckBox.setSelected(preferences.isUseSoundForMobileNotifications());
+        useSoundToggleButton.setSelected(preferences.isUseSoundForMobileNotifications());
         useSoundCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseSoundProperty().set(newValue);
             preferences.setUseSoundForMobileNotifications(newValue);
         };
 
-        tradeCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
+        tradeToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("account.notifications.trade.label"));
-        tradeCheckBox.setSelected(preferences.isUseTradeNotifications());
+        tradeToggleButton.setSelected(preferences.isUseTradeNotifications());
         tradeCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseTradeNotificationsProperty().set(newValue);
             preferences.setUseTradeNotifications(newValue);
         };
 
-        marketCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
+        marketToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("account.notifications.market.label"));
-        marketCheckBox.setSelected(preferences.isUseMarketNotifications());
+        marketToggleButton.setSelected(preferences.isUseMarketNotifications());
         marketCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUseMarketNotificationsProperty().set(newValue);
             preferences.setUseMarketNotifications(newValue);
             updateMarketAlertFields();
         };
-        priceCheckBox = FormBuilder.addLabelCheckBox(root, ++gridRow,
+        priceToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("account.notifications.price.label"));
-        priceCheckBox.setSelected(preferences.isUsePriceNotifications());
+        priceToggleButton.setSelected(preferences.isUsePriceNotifications());
         priceCheckBoxListener = (observable, oldValue, newValue) -> {
             mobileNotificationService.getUsePriceNotificationsProperty().set(newValue);
             preferences.setUsePriceNotifications(newValue);
@@ -462,10 +464,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void createMarketAlertFields() {
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 3, Res.get("account.notifications.marketAlert.title"),
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 4, Res.get("account.notifications.marketAlert.title"),
                 Layout.GROUP_DISTANCE);
         paymentAccountsComboBox = FormBuilder.<PaymentAccount>addComboBox(root, gridRow,
-                Res.getWithCol("account.notifications.marketAlert.selectPaymentAccount"),
+                Res.get("account.notifications.marketAlert.selectPaymentAccount"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentAccountsComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -480,10 +482,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         });
 
         offerTypeRadioButtonsToggleGroup = new ToggleGroup();
-        Tuple3<Label, RadioButton, RadioButton> tuple = FormBuilder.addLabelRadioButtonRadioButton(root, ++gridRow,
-                offerTypeRadioButtonsToggleGroup, Res.getWithCol("account.notifications.marketAlert.offerType.label"),
+        Tuple3<Label, RadioButton, RadioButton> tuple = FormBuilder.addTopLabelRadioButtonRadioButton(root, ++gridRow,
+                offerTypeRadioButtonsToggleGroup, Res.get("account.notifications.marketAlert.offerType.label"),
                 Res.get("account.notifications.marketAlert.offerType.buy"),
-                Res.get("account.notifications.marketAlert.offerType.sell"));
+                Res.get("account.notifications.marketAlert.offerType.sell"), 10);
         buyOffersRadioButton = tuple.second;
         sellOffersRadioButton = tuple.third;
         offerTypeListener = (observable, oldValue, newValue) -> {
@@ -491,8 +493,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             marketAlertTriggerInputTextField.resetValidation();
             updateMarketAlertFields();
         };
-        InfoInputTextField infoInputTextField = FormBuilder.addLabelInfoInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.marketAlert.trigger")).second;
+        InfoInputTextField infoInputTextField = FormBuilder.addTopLabelInfoInputTextField(root, ++gridRow,
+                Res.get("account.notifications.marketAlert.trigger"), 10).second;
         marketAlertTriggerInputTextField = infoInputTextField.getInputTextField();
         marketAlertTriggerInputTextField.setPromptText(Res.get("account.notifications.marketAlert.trigger.prompt"));
         PercentageNumberValidator validator = new PercentageNumberValidator();
@@ -524,7 +526,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void createPriceAlertFields() {
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 3,
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("account.notifications.priceAlert.title"), 20);
         currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(root, gridRow,
                 Res.getWithCol("list.currency.select"), 40);
@@ -633,10 +635,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         // testMsgButton.setDisable(disable);
         eraseButton.setDisable(disable);
 
-        useSoundCheckBox.setDisable(disable);
-        tradeCheckBox.setDisable(disable);
-        marketCheckBox.setDisable(disable);
-        priceCheckBox.setDisable(disable);
+        useSoundToggleButton.setDisable(disable);
+        tradeToggleButton.setDisable(disable);
+        marketToggleButton.setDisable(disable);
+        priceToggleButton.setDisable(disable);
     }
 
     private void setPairingTokenFieldsVisible() {
@@ -667,7 +669,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void updateMarketAlertFields() {
         boolean setupConfirmationSent = mobileNotificationService.isSetupConfirmationSent();
-        boolean selected = marketCheckBox.isSelected();
+        boolean selected = marketToggleButton.isSelected();
         boolean disabled = !selected || !setupConfirmationSent;
         boolean isPaymentAccountSelected = paymentAccountsComboBox.getSelectionModel().getSelectedItem() != null;
         boolean isOfferTypeSelected = offerTypeRadioButtonsToggleGroup.getSelectedToggle() != null;
@@ -710,7 +712,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void updatePriceAlertFields() {
         boolean setupConfirmationSent = mobileNotificationService.isSetupConfirmationSent();
-        boolean selected = priceCheckBox.isSelected();
+        boolean selected = priceToggleButton.isSelected();
         boolean disable = !setupConfirmationSent ||
                 !selected;
         priceAlertHighInputTextField.setDisable(selectedPriceAlertTradeCurrency == null || disable);

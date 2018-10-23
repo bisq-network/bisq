@@ -48,9 +48,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class F2FForm extends PaymentMethodForm {
     private final F2FAccount f2fAccount;
@@ -67,7 +67,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccountPayload.getContact());
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
                 offer.getF2FCity());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.getWithCol("payment.f2f.extra"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.getWithCol("payment.f2f.extra"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
@@ -111,7 +111,7 @@ public class F2FForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        TextArea extraTextArea = addLabelTextArea(gridPane, ++gridRow,
+        TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.getWithCol("payment.f2f.optionalExtra"), "").second;
         extraTextArea.setPromptText(Res.get("payment.f2f.extra.prompt"));
         extraTextArea.setPrefHeight(60);
@@ -184,7 +184,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccount.getContact());
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);

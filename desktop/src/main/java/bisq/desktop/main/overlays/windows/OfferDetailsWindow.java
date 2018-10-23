@@ -283,7 +283,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (isF2F) {
             addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.city"), offer.getF2FCity());
-            TextArea textArea = addLabelTextArea(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.extra"), "").second;
+            TextArea textArea = addTopLabelTextArea(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.extra"), "").second;
             textArea.setText(offer.getF2FExtraInfo());
             textArea.setMinHeight(33);
             textArea.setMaxHeight(textArea.getMinHeight());

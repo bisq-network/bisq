@@ -23,9 +23,9 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
-import bisq.desktop.util.validation.PasswordValidator;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
@@ -81,8 +81,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addLabelDatePicker;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelDatePicker;
 import static com.google.common.base.Preconditions.checkArgument;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
@@ -296,13 +295,13 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         gridPane.getChildren().add(separator);
 
-        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
+        Tuple2<Label, TextArea> tuple = FormBuilder.addTopLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
         seedWordsTextArea.setPrefHeight(60);
         seedWordsTextArea.getStyleClass().add("text-area");
 
-        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
-                Res.get("seed.creationDate"));
+        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addTopLabelDatePicker(gridPane, ++rowIndex,
+                Res.get("seed.creationDate"), 10);
         datePicker = labelDatePickerTuple2.second;
         restoreButton = addButton(gridPane, ++rowIndex, Res.get("seed.restore"));
         restoreButton.setDefaultButton(true);

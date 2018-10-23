@@ -107,7 +107,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 
 import javafx.beans.value.ChangeListener;
 
@@ -123,6 +122,7 @@ import java.util.stream.Collectors;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
@@ -336,10 +336,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
+        addTitledGroupBg(root, gridRow, 2, Res.get("shared.manageAccounts"));
 
-        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = FormBuilder.addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
-        tuple.first.setTextAlignment(TextAlignment.RIGHT);
+        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {

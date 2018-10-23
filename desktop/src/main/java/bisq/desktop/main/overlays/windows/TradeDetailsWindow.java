@@ -243,7 +243,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
-            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
+            Button viewContractButton = addTopLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                     Res.get("shared.viewContractAsJson"), 0).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
@@ -278,7 +278,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         if (trade.hasFailed()) {
-            textArea = addLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "").second;
+            textArea = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "").second;
             textArea.setText(trade.getErrorMessage());
             textArea.setEditable(false);
 

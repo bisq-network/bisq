@@ -252,6 +252,7 @@ bg color of non edit textFields: fafafa
     -fx-font-weight: normal;
     -fx-background-radius: 2px;
     -fx-pref-height: 32;
+    -fx-min-height: -fx-pref-height;
     -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow( gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
 }
@@ -349,6 +350,35 @@ bg color of non edit textFields: fafafa
 .jfx-toggle-button:focused:selected {
     -jfx-toggle-color: -bs-rd-green-dark;
     -jfx-size: 8;
+}
+
+.jfx-text-area {
+    -jfx-focus-color: -bs-rd-green;
+    -jfx-unfocus-color: -bs-rd-grey-line;
+}
+
+.wallet-seed-words {
+    -fx-font-family: "IBM Plex Mono";
+}
+
+.wallet-seed-words .content,
+.wallet-seed-words:focused .content {
+    -fx-padding: 12 12 0 12;
+}
+
+.jfx-date-picker {
+    -jfx-default-color: -bs-rd-green;
+}
+
+.jfx-date-picker > .arrow-button > .arrow {
+    -fx-shape: "M320 384h128v128h-128zM512 384h128v128h-128zM704 384h128v128h-128zM128 768h128v128h-128zM320 768h128v128h-128zM512 768h128v128h-128zM320 576h128v128h-128zM512 576h128v128h-128zM704 576h128v128h-128zM128 576h128v128h-128zM832 0v64h-128v-64h-448v64h-128v-64h-128v1024h960v-1024h-128zM896 960h-832v-704h832v704z";
+    -fx-background-color: -jfx-default-color;
+    -fx-background-insets: 0;
+    -fx-padding: 10;
+}
+
+.jfx-date-picker > .arrow-button > .jfx-svg-glyph {
+    -fx-background-color: -jfx-default-color;
 }
 
 .input-with-border {

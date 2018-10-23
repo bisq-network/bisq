@@ -101,18 +101,22 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     @Override
     protected void initialize() {
         addTitledGroupBg(root, gridRow, 2, Res.get("account.seed.backup.title"));
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
-        displaySeedWordsTextArea.setPrefHeight(60);
+        displaySeedWordsTextArea = addTopLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
+        displaySeedWordsTextArea.getStyleClass().add("wallet-seed-words");
+        displaySeedWordsTextArea.setPrefHeight(40);
+        displaySeedWordsTextArea.setMaxHeight(40);
         displaySeedWordsTextArea.setEditable(false);
 
-        datePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
+        datePicker = addTopLabelDatePicker(root, ++gridRow, Res.get("seed.date"), 10).second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("seed.restore.title"), Layout.GROUP_DISTANCE);
-        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        seedWordsTextArea.setPrefHeight(60);
+        addTitledGroupBg(root, ++gridRow, 3, Res.get("seed.restore.title"), Layout.GROUP_DISTANCE);
+        seedWordsTextArea = addTopLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        seedWordsTextArea.getStyleClass().add("wallet-seed-words");
+        seedWordsTextArea.setPrefHeight(40);
+        seedWordsTextArea.setMaxHeight(40);
 
-        restoreDatePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
+        restoreDatePicker = addTopLabelDatePicker(root, ++gridRow, Res.get("seed.date"), 10).second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("seed.restore"));
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);

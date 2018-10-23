@@ -189,7 +189,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
             addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
                     Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
-        Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
+        Button viewContractButton = addTopLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                 Res.get("shared.viewContractAsJson"), 0).second;
         viewContractButton.setDefaultButton(false);
         viewContractButton.setOnAction(e -> {
