@@ -15,18 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.asset.coins;
 
-import bisq.core.dao.state.blockchain.Block;
+import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Coin;
+import bisq.asset.NetworkParametersAdapter;
 
-public interface BsqStateListener {
-    void onNewBlockHeight(int blockHeight);
+public class Actinium extends Coin {
 
-    void onParseTxsComplete(Block block);
+    public Actinium() {
+        super("Actinium", "ACM", new Base58BitcoinAddressValidator(new ActiniumParams()));
+    }
 
-    void onParseBlockChainComplete();
 
-    // Never used but we still want to provide the event
-    default void onEmptyBlockAdded(Block block) {
+    public static class ActiniumParams extends NetworkParametersAdapter {
+
+        public ActiniumParams() {
+            addressHeader = 53;
+            p2shHeader = 5;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
     }
 }

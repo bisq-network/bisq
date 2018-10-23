@@ -23,7 +23,7 @@ import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -44,7 +44,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 // block. The event from the ChainHeightListener is sent before parsing starts.
 // The event from the ChainHeightListener would notify after parsing a new block.
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final PhasesView phasesView;
     private final BSFormatter formatter;
@@ -103,7 +103,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

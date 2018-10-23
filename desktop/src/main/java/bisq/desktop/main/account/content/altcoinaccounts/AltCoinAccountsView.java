@@ -29,6 +29,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -76,6 +77,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AssetService assetService;
     private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -89,12 +91,14 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                                InputValidator inputValidator,
                                AltCoinAddressValidator altCoinAddressValidator,
                                AccountAgeWitnessService accountAgeWitnessService,
+                               AssetService assetService,
                                BSFormatter formatter) {
         super(model);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -316,7 +320,8 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator, inputValidator, root, gridRow, formatter);
+        return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
+                inputValidator, root, gridRow, formatter, assetService);
     }
 
     private void removeNewAccountForm() {

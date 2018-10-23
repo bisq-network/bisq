@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -116,6 +117,7 @@ public class TradeManager implements PersistedDataHost {
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final ArbitratorManager arbitratorManager;
     private final Clock clock;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
@@ -149,6 +151,7 @@ public class TradeManager implements PersistedDataHost {
                         ReferralIdService referralIdService,
                         PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
+                        ArbitratorManager arbitratorManager,
                         Clock clock,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
@@ -165,6 +168,7 @@ public class TradeManager implements PersistedDataHost {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.arbitratorManager = arbitratorManager;
         this.clock = clock;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
@@ -236,7 +240,7 @@ public class TradeManager implements PersistedDataHost {
         tradableList.getList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
 
-        getAddressEntriesForAvailableFundsStream()
+        getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
                     log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
@@ -320,14 +324,16 @@ public class TradeManager implements PersistedDataHost {
 
         Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(payDepositRequest.getTradeId());
         if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
-            Offer offer = openOfferOptional.get().getOffer();
-            openOfferManager.reserveOpenOffer(openOfferOptional.get());
+            OpenOffer openOffer = openOfferOptional.get();
+            Offer offer = openOffer.getOffer();
+            openOfferManager.reserveOpenOffer(openOffer);
             Trade trade;
             if (offer.isBuyOffer())
                 trade = new BuyerAsMakerTrade(offer,
                         Coin.valueOf(payDepositRequest.getTxFee()),
                         Coin.valueOf(payDepositRequest.getTakerFee()),
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
+                        openOffer.getArbitratorNodeAddress(),
                         tradableListStorage,
                         btcWalletService);
             else
@@ -335,6 +341,7 @@ public class TradeManager implements PersistedDataHost {
                         Coin.valueOf(payDepositRequest.getTxFee()),
                         Coin.valueOf(payDepositRequest.getTakerFee()),
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
+                        openOffer.getArbitratorNodeAddress(),
                         tradableListStorage,
                         btcWalletService);
 
@@ -363,6 +370,8 @@ public class TradeManager implements PersistedDataHost {
                 user,
                 filterManager,
                 accountAgeWitnessService,
+                tradeStatisticsManager,
+                arbitratorManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
@@ -443,6 +452,7 @@ public class TradeManager implements PersistedDataHost {
                     isCurrencyForTakerFeeBtc,
                     tradePrice,
                     model.getPeerNodeAddress(),
+                    model.getSelectedArbitrator(),
                     tradableListStorage,
                     btcWalletService);
         else
@@ -453,6 +463,7 @@ public class TradeManager implements PersistedDataHost {
                     isCurrencyForTakerFeeBtc,
                     tradePrice,
                     model.getPeerNodeAddress(),
+                    model.getSelectedArbitrator(),
                     tradableListStorage,
                     btcWalletService);
 
@@ -580,7 +591,7 @@ public class TradeManager implements PersistedDataHost {
         return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
     }
 
-    public Stream<AddressEntry> getAddressEntriesForAvailableFundsStream() {
+    public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
         Stream<AddressEntry> availableOrPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
                 .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
         Stream<AddressEntry> available = Stream.concat(availableOrPayout,

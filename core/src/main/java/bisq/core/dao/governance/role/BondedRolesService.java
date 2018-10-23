@@ -19,8 +19,8 @@ package bisq.core.dao.governance.role;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxType;
@@ -39,13 +39,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondedRolesService implements PersistedDataHost, BsqStateListener {
+public class BondedRolesService implements PersistedDataHost, DaoStateListener {
 
     public interface BondedRoleListChangeListener {
         void onListChanged(List<BondedRole> list);
     }
 
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final Storage<BondedRoleList> storage;
     private final BondedRoleList bondedRoleList = new BondedRoleList();
 
@@ -58,11 +58,11 @@ public class BondedRolesService implements PersistedDataHost, BsqStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedRolesService(Storage<BondedRoleList> storage, BsqStateService bsqStateService) {
+    public BondedRolesService(Storage<BondedRoleList> storage, DaoStateService daoStateService) {
         this.storage = storage;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
 
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
 
@@ -83,7 +83,7 @@ public class BondedRolesService implements PersistedDataHost, BsqStateListener {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -94,11 +94,11 @@ public class BondedRolesService implements PersistedDataHost, BsqStateListener {
     public void onParseTxsComplete(Block block) {
         bondedRoleList.getList().forEach(bondedRole -> {
 
-            bsqStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
+            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
                 String lockupTxId = lockupTxOutput.getTxId();
                 // log.error("lockupTxId " + lockupTxId);
 
-                bsqStateService.getTx(lockupTxId)
+                daoStateService.getTx(lockupTxId)
                         .ifPresent(lockupTx -> {
                             byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
                             byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
@@ -111,10 +111,10 @@ public class BondedRolesService implements PersistedDataHost, BsqStateListener {
                                     persist();
                                 }
 
-                                if (!bsqStateService.isUnspent(lockupTxOutput.getKey())) {
-                                    bsqStateService.getSpentInfo(lockupTxOutput)
+                                if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
+                                    daoStateService.getSpentInfo(lockupTxOutput)
                                             .map(SpentInfo::getTxId)
-                                            .map(bsqStateService::getTx)
+                                            .map(daoStateService::getTx)
                                             .map(Optional::get)
                                             .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
                                             .ifPresent(unlockTx -> {

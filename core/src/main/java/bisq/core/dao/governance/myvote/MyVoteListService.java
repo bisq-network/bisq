@@ -22,7 +22,7 @@ import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class MyVoteListService implements PersistedDataHost {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final Storage<MyVoteList> storage;
     private final MyVoteList myVoteList = new MyVoteList();
 
@@ -55,9 +55,9 @@ public class MyVoteListService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MyVoteListService(BsqStateService bsqStateService,
+    public MyVoteListService(DaoStateService daoStateService,
                              Storage<MyVoteList> storage) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.storage = storage;
     }
 
@@ -87,7 +87,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     public void createAndAddMyVote(BallotList sortedBallotListForCycle, SecretKey secretKey, BlindVote blindVote) {
         final byte[] secretKeyBytes = Encryption.getSecretKeyBytes(secretKey);
-        MyVote myVote = new MyVote(bsqStateService.getChainHeight(), sortedBallotListForCycle, secretKeyBytes, blindVote);
+        MyVote myVote = new MyVote(daoStateService.getChainHeight(), sortedBallotListForCycle, secretKeyBytes, blindVote);
         log.info("Add new MyVote to myVotesList list.\nMyVote=" + myVote);
         myVoteList.add(myVote);
         persist();
@@ -107,7 +107,7 @@ public class MyVoteListService implements PersistedDataHost {
         for (MyVote myVote : list) {
             for (Ballot ballot : myVote.getBallotList()) {
                 if (ballot.getTxId().equals(proposalTxId)) {
-                    merit = myVote.getMerit(myBlindVoteListService, bsqStateService);
+                    merit = myVote.getMerit(myBlindVoteListService, daoStateService);
                     stake = myVote.getBlindVote().getStake();
                     break;
                 }
@@ -122,7 +122,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     public List<MyVote> getMyVoteListForCycle() {
         return myVoteList.getList().stream()
-                .filter(e -> bsqStateService.getCurrentCycle().isInCycle(e.getHeight()))
+                .filter(e -> daoStateService.getCurrentCycle().isInCycle(e.getHeight()))
                 .collect(Collectors.toList());
     }
 

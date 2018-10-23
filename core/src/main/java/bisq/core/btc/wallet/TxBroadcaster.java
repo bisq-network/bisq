@@ -112,6 +112,7 @@ public class TxBroadcaster {
             broadcastTimerMap.put(txId, timeoutTimer);
         } else {
             // Would be due a wrong way how to use the API (calling 2 times a broadcast with same tx).
+            // An arbitrator reported to got the error after a manual payout, need to investigate why...
             stopAndRemoveTimer(txId);
             UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got broadcastTx called with a tx " +
                     "which has an open timeoutTimer. txId=" + txId, txId)));

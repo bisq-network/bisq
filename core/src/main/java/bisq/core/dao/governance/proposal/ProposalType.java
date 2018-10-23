@@ -21,11 +21,11 @@ import bisq.core.locale.Res;
 
 public enum ProposalType {
     COMPENSATION_REQUEST,
-    BONDED_ROLE,
-    REMOVE_ALTCOIN,
     CHANGE_PARAM,
+    BONDED_ROLE,
+    CONFISCATE_BOND,
     GENERIC,
-    CONFISCATE_BOND;
+    REMOVE_ASSET;
 
     public String getDisplayName() {
         return Res.get("dao.proposal.type." + name());

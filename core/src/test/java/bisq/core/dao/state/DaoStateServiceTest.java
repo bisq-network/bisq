@@ -22,11 +22,11 @@ import org.junit.Test;
 
 import org.junit.Assert;
 
-public class BsqStateServiceTest {
+public class DaoStateServiceTest {
     @Test
     public void testIsBlockHashKnown() {
-        BsqStateService stateService = new BsqStateService(
-                new BsqState(),
+        DaoStateService stateService = new DaoStateService(
+                new DaoState(),
                 new GenesisTxInfo("fakegenesistxid", 100));
         Assert.assertEquals(
                 "Unknown block should not exist.",

@@ -21,6 +21,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -48,18 +49,15 @@ import javafx.util.StringConverter;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
 
 public class CryptoCurrencyForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(CryptoCurrencyForm.class);
-
     private final CryptoCurrencyAccount cryptoCurrencyAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
+    private final AssetService assetService;
+
     private InputTextField addressInputTextField;
 
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -80,10 +78,12 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                               InputValidator inputValidator,
                               GridPane gridPane,
                               int gridRow,
-                              BSFormatter formatter) {
+                              BSFormatter formatter,
+                              AssetService assetService) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
+        this.assetService = assetService;
     }
 
     @Override
@@ -162,7 +162,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         currencyComboBox = FormBuilder.<TradeCurrency>addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService)));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override

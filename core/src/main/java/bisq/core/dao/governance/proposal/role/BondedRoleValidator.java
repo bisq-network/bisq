@@ -21,7 +21,7 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.PeriodService;
 
 import javax.inject.Inject;
@@ -34,8 +34,8 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 public class BondedRoleValidator extends ProposalValidator {
 
     @Inject
-    public BondedRoleValidator(BsqStateService bsqStateService, PeriodService periodService) {
-        super(bsqStateService, periodService);
+    public BondedRoleValidator(DaoStateService daoStateService, PeriodService periodService) {
+        super(daoStateService, periodService);
     }
 
     @Override

@@ -44,8 +44,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Deprecated
 @Slf4j
-public final class PersistableNetworkPayloadListService extends StoreService<PersistableNetworkPayloadList, PersistableNetworkPayload> {
-    public static final String FILE_NAME = "PersistableNetworkPayloadMap";
+public final class PersistableNetworkPayloadListService extends MapStoreService<PersistableNetworkPayloadList, PersistableNetworkPayload> {
+    private static final String FILE_NAME = "PersistableNetworkPayloadMap";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
