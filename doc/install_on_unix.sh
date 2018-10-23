@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# TODO that script is outdated. See https://github.com/bisq-network/bisq/blob/master/README.md for new setup with OpenJdk10.
+
 sudo -i
 
 JAVA_HOME=/usr/lib/jvm/java-8-oracle

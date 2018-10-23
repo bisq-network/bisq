@@ -45,6 +45,7 @@ dependencies {
     compile('com.fasterxml.jackson.core:jackson-databind:2.8.10') {
         exclude(module: 'jackson-annotations')
     }
+
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
 
