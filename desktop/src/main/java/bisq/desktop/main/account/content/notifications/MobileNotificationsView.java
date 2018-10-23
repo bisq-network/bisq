@@ -133,6 +133,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        root.setGridLinesVisible(true);
         createSetupFields();
         createSettingsFields();
         createMarketAlertFields();

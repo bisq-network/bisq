@@ -30,7 +30,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
@@ -292,7 +291,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
-                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                     }).show();
         }
 

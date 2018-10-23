@@ -30,7 +30,6 @@ import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
@@ -403,7 +402,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     .closeButtonText(Res.get("offerbook.setupNewAccount"))
                     .onClose(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
-                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                     })
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
@@ -513,7 +512,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);
+                    navigation.navigateTo(MainView.class, AccountView.class, target);
                 }).show();
     }
 

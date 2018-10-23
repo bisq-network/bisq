@@ -27,7 +27,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -113,7 +112,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         .actionButtonTextWithGoTo("navigation.account.walletSeed")
                         .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
-                            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, SeedWordsView.class);
+                            navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
                         })
                         .show();
             } else {

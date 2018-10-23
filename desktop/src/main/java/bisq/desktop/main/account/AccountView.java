@@ -25,8 +25,12 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.arbitratorregistration.ArbitratorRegistrationView;
+import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
+import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
-import bisq.desktop.main.account.settings.AccountSettingsView;
+import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
+import bisq.desktop.main.account.content.password.PasswordView;
+import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
@@ -39,6 +43,7 @@ import javax.inject.Inject;
 import javafx.fxml.FXML;
 
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.input.KeyCode;
@@ -52,7 +57,8 @@ import javafx.event.EventHandler;
 public class AccountView extends ActivatableView<TabPane, Void> {
 
     @FXML
-    Tab accountSettingsTab;
+    Tab fiatAccountsTab, altcoinAccountsTab, notificationTab,
+            passwordTab, seedwordsTab, backupTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -62,7 +68,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private Tab selectedTab;
     private Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
-    private AccountSettingsView accountSettingsView;
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
@@ -74,10 +79,18 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     @Override
     public void initialize() {
+
+        fiatAccountsTab.setText(Res.get("account.menu.paymentAccount").toUpperCase());
+        altcoinAccountsTab.setText(Res.get("account.menu.altCoinsAccountView").toUpperCase());
+        notificationTab.setText(Res.get("account.menu.notifications").toUpperCase());
+        passwordTab.setText(Res.get("account.menu.password").toUpperCase());
+        seedwordsTab.setText(Res.get("account.menu.seedWords").toUpperCase());
+        backupTab.setText(Res.get("account.menu.backup").toUpperCase());
+
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
                 if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class))
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 else
                     loadView(viewPath.tip());
             }
@@ -93,16 +106,22 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == accountSettingsTab) {
-                Class<? extends View> selectedViewClass = accountSettingsView.getSelectedViewClass();
-                if (selectedViewClass == null)
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
-                else
-                    navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, selectedViewClass);
-            } else if (arbitratorRegistrationTab != null) {
+            if (arbitratorRegistrationTab != null) {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            } else if (newValue == fiatAccountsTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+            } else if (newValue == altcoinAccountsTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
+            } else if (newValue == notificationTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, MobileNotificationsView.class);
+            } else if (newValue == passwordTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, PasswordView.class);
+            } else if (newValue == seedwordsTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
+            } else if (newValue == backupTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
             } else {
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
+                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             }
         };
     }
@@ -117,12 +136,22 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
-            if (root.getSelectionModel().getSelectedItem() == accountSettingsTab)
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
-            else if (arbitratorRegistrationTab != null)
+            if (arbitratorRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            else if (root.getSelectionModel().getSelectedItem() == fiatAccountsTab)
+                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+            else if (root.getSelectionModel().getSelectedItem() == altcoinAccountsTab)
+                navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
+            else if (root.getSelectionModel().getSelectedItem() == notificationTab)
+                navigation.navigateTo(MainView.class, AccountView.class, MobileNotificationsView.class);
+            else if (root.getSelectionModel().getSelectedItem() == passwordTab)
+                navigation.navigateTo(MainView.class, AccountView.class, PasswordView.class);
+            else if (root.getSelectionModel().getSelectedItem() == seedwordsTab)
+                navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
+            else if (root.getSelectionModel().getSelectedItem() == backupTab)
+                navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
             else
-                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class);
+                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
         }
 
         //noinspection UnusedAssignment
@@ -147,26 +176,33 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof AccountSettingsView) {
-            selectedTab = accountSettingsTab;
-            accountSettingsView = (AccountSettingsView) view;
-            selectedTab.setText(Res.get("account.tab.account").toUpperCase());
-            if (arbitratorRegistrationTab != null) {
-                arbitratorRegistrationTab.setDisable(false);
-                if (arbitratorRegistrationView != null)
-                    arbitratorRegistrationView.onTabSelection(false);
-            }
-        } else if (view instanceof ArbitratorRegistrationView) {
+        if (view instanceof ArbitratorRegistrationView) {
             if (arbitratorRegistrationTab != null) {
                 selectedTab = arbitratorRegistrationTab;
                 arbitratorRegistrationView = (ArbitratorRegistrationView) view;
                 arbitratorRegistrationView.onTabSelection(true);
             }
+        } else if (view instanceof FiatAccountsView) {
+            selectedTab = fiatAccountsTab;
+        } else if (view instanceof AltCoinAccountsView) {
+            selectedTab = altcoinAccountsTab;
+        } else if (view instanceof MobileNotificationsView) {
+            selectedTab = notificationTab;
+        } else if (view instanceof PasswordView) {
+            selectedTab = passwordTab;
+        } else if (view instanceof SeedWordsView) {
+            selectedTab = seedwordsTab;
+        } else if (view instanceof BackupView) {
+            selectedTab = backupTab;
         } else {
             throw new IllegalArgumentException("View not supported: " + view);
         }
 
-        selectedTab.setContent(view.getRoot());
+        if (selectedTab.getContent() != null && selectedTab.getContent() instanceof ScrollPane) {
+            ((ScrollPane) selectedTab.getContent()).setContent(view.getRoot());
+        } else {
+            selectedTab.setContent(view.getRoot());
+        }
         root.getSelectionModel().select(selectedTab);
     }
 }
