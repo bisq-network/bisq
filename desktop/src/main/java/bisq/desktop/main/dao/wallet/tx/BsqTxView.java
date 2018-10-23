@@ -44,7 +44,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
@@ -569,7 +568,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             style = "dao-tx-type-unverified-icon";
                                             break;
                                     }
-                                    Label label = AwesomeDude.createIconLabel(awesomeIcon);
+                                    Label label = FormBuilder.getIcon(awesomeIcon);
                                     label.getStyleClass().addAll("icon", style);
                                     label.setTooltip(new Tooltip(toolTipText));
                                     if (doRotate)

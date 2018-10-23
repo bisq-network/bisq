@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.dao.governance.proposals;
 
+import bisq.desktop.util.FormBuilder;
+
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.vote.Vote;
@@ -25,7 +27,6 @@ import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Button;
@@ -120,8 +121,7 @@ public class ProposalsListItem {
         //noinspection IfCanBeSwitch
         Label icon;
         if (phase == DaoPhase.Phase.PROPOSAL) {
-            //icon = AwesomeDude.createIconLabel(AwesomeIcon.TRASH);
-            icon = AwesomeDude.createIconLabel(AwesomeIcon.TRASH);
+            icon = FormBuilder.getIcon(AwesomeIcon.TRASH);
 
             icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
             iconButton = new Button("", icon);
@@ -143,18 +143,18 @@ public class ProposalsListItem {
 
             if (vote != null) {
                 if ((vote).isAccepted()) {
-                    icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
+                    icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
                     icon.getStyleClass().addAll("icon", "dao-accepted-icon");
                     iconButton = new Button("", icon);
                     iconButton.setUserData(IconButtonTypes.ACCEPT);
                 } else {
-                    icon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
+                    icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
                     icon.getStyleClass().addAll("icon", "dao-rejected-icon");
                     iconButton = new Button("", icon);
                     iconButton.setUserData(IconButtonTypes.REJECT);
                 }
             } else {
-                icon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);
+                icon = FormBuilder.getIcon(AwesomeIcon.MINUS);
                 icon.getStyleClass().addAll("icon", "dao-ignored-icon");
                 iconButton = new Button("", icon);
                 iconButton.setUserData(IconButtonTypes.IGNORE);
