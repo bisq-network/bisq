@@ -17,7 +17,7 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
 import bisq.core.dao.state.blockchain.RawTx;
 import bisq.core.dao.state.blockchain.TempTx;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TxParser {
     private final PeriodService periodService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private TxOutputParser txOutputParser;
     private TxInputParser txInputParser;
 
@@ -60,9 +60,9 @@ public class TxParser {
 
     @Inject
     public TxParser(PeriodService periodService,
-                    BsqStateService bsqStateService) {
+                    DaoStateService daoStateService) {
         this.periodService = periodService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
     }
 
 
@@ -72,7 +72,7 @@ public class TxParser {
 
     public Optional<Tx> findTx(RawTx rawTx, String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply) {
         if (GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight))
-            return Optional.of(GenesisTxParser.getGenesisTx(rawTx, genesisTotalSupply, bsqStateService));
+            return Optional.of(GenesisTxParser.getGenesisTx(rawTx, genesisTotalSupply, daoStateService));
         else
             return findTx(rawTx);
     }
@@ -90,7 +90,7 @@ public class TxParser {
         // Parse Inputs
         //****************************************************************************************
 
-        txInputParser = new TxInputParser(bsqStateService);
+        txInputParser = new TxInputParser(daoStateService);
         for (int inputIndex = 0; inputIndex < tempTx.getTxInputs().size(); inputIndex++) {
             TxInput input = tempTx.getTxInputs().get(inputIndex);
             TxOutputKey outputKey = input.getConnectedTxOutputKey();
@@ -116,7 +116,7 @@ public class TxParser {
         // Parse Outputs
         //****************************************************************************************
 
-        txOutputParser = new TxOutputParser(bsqStateService);
+        txOutputParser = new TxOutputParser(daoStateService);
         txOutputParser.setAvailableInputValue(accumulatedInputValue);
         txOutputParser.setUnlockBlockHeight(unlockBlockHeight);
         txOutputParser.setOptionalSpentLockupTxOutput(optionalSpentLockupTxOutput);
@@ -298,7 +298,7 @@ public class TxParser {
             return false;
         }
 
-        long paramValue = bsqStateService.getParamValue(param, blockHeight);
+        long paramValue = daoStateService.getParamValue(param, blockHeight);
         boolean isFeeCorrect = bsqFee == paramValue;
         if (!isFeeCorrect) {
             log.warn("Invalid fee. used fee={}, required fee={}", bsqFee, paramValue);

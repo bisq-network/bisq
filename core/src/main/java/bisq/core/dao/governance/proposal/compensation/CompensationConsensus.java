@@ -17,19 +17,21 @@
 
 package bisq.core.dao.governance.proposal.compensation;
 
-import bisq.core.dao.governance.proposal.ProposalConsensus;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.governance.Param;
 
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CompensationConsensus extends ProposalConsensus {
-    public static Coin getMinCompensationRequestAmount() {
-        return Coin.valueOf(1_000); // 10 BSQ
+public class CompensationConsensus {
+    public static Coin getMinCompensationRequestAmount(DaoStateService daoStateService, int chainHeight) {
+        return Coin.valueOf(daoStateService.getParamValue(Param.COMPENSATION_REQUEST_MIN_AMOUNT, chainHeight));
     }
 
-    static Coin getMaxCompensationRequestAmount() {
-        return Coin.valueOf(20_000_000); // 200 000 BSQ
+    public static Coin getMaxCompensationRequestAmount(DaoStateService daoStateService, int chainHeight) {
+        return Coin.valueOf(daoStateService.getParamValue(Param.COMPENSATION_REQUEST_MAX_AMOUNT, chainHeight));
     }
+
 }

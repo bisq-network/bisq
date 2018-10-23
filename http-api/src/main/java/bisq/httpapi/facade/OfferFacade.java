@@ -1,6 +1,5 @@
 package bisq.httpapi.facade;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -10,17 +9,19 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.TakerUtil;
+import bisq.core.offer.TxFeeEstimation;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -29,8 +30,6 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import javax.annotation.Nullable;
 
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -105,7 +104,7 @@ public class OfferFacade {
     public CompletableFuture<Void> cancelOffer(String offerId) {
         final CompletableFuture<Void> futureResult = new CompletableFuture<>();
         UserThread.execute(() -> {
-            if (!isBootstrapped())
+            if (!p2PService.isBootstrapped())
                 futureResult.completeExceptionally(new NotBootstrappedException());
 
             Optional<OpenOffer> openOfferById = openOfferManager.getOpenOfferById(offerId);
@@ -183,8 +182,8 @@ public class OfferFacade {
 
     public CompletableFuture<Trade> offerTake(String offerId, String paymentAccountId, long amount, boolean useSavingsWallet) {
         //TODO use UserThread.execute
-        final CompletableFuture<Trade> futureResult = new CompletableFuture<>();
-        final Offer offer;
+        CompletableFuture<Trade> futureResult = new CompletableFuture<>();
+        Offer offer;
         try {
             offer = findOffer(offerId);
         } catch (NotFoundException e) {
@@ -196,7 +195,7 @@ public class OfferFacade {
         }
 
         // check the paymentAccountId is valid
-        final PaymentAccount paymentAccount = getPaymentAccount(paymentAccountId);
+        PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
         if (paymentAccount == null) {
             return ResourceHelper.completeExceptionally(futureResult, new PaymentAccountNotFoundException("Could not find payment account with id: " + paymentAccountId));
         }
@@ -208,43 +207,34 @@ public class OfferFacade {
         }
 
         // check the amount is within the range
-        Coin coinAmount = Coin.valueOf(amount);
-        //if(coinAmount.isLessThan(offer.getMinAmount()) || coinAmount.isGreaterThan(offer.getma)
-
+        Coin amountAsCoin = Coin.valueOf(amount);
         // workaround because TradeTask does not have an error handler to notify us that something went wrong
-        if (btcWalletService.getAvailableBalance().isLessThan(coinAmount)) {
-            final String errorMessage = "Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + coinAmount;
+        if (btcWalletService.getAvailableBalance().isLessThan(amountAsCoin)) {
+            String errorMessage = "Available balance " + btcWalletService.getAvailableBalance() + " is less than needed amount: " + amountAsCoin;
             return ResourceHelper.completeExceptionally(futureResult, new InsufficientMoneyException(errorMessage));
         }
 
         // check that the price is correct ??
 
-        // check taker fee
-
-        // check security deposit for BTC buyer
-        // check security deposit for BTC seller
-
-        Coin securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
-                offer.getBuyerSecurityDeposit() :
-                offer.getSellerSecurityDeposit();
-        Coin txFeeFromFeeService = feeService.getTxFee(600);
-        Coin fundsNeededForTradeTemp = securityDeposit.add(txFeeFromFeeService).add(txFeeFromFeeService);
-        final Coin fundsNeededForTrade;
-        if (offer.isBuyOffer())
-            fundsNeededForTrade = fundsNeededForTradeTemp.add(coinAmount);
-        else
-            fundsNeededForTrade = fundsNeededForTradeTemp;
-
-        Coin takerFee = getTakerFee(coinAmount);
-        checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
+        Coin txFeeFromFeeService = feeService.getTxFee(380);
+        Coin fundsNeededForTaker = TakerUtil.getFundsNeededForTakeOffer(amountAsCoin, txFeeFromFeeService, txFeeFromFeeService, offer);
+        Coin takerFee = TakerUtil.getTakerFee(amountAsCoin, preferences, bsqWalletService);
         checkNotNull(takerFee, "takerFee must not be null");
+        Tuple2<Coin, Integer> estimatedFeeAndTxSize = TxFeeEstimation.getEstimatedFeeAndTxSizeForTaker(fundsNeededForTaker,
+                takerFee,
+                feeService,
+                btcWalletService,
+                preferences);
+        txFeeFromFeeService = estimatedFeeAndTxSize.first;
+        checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
 
-        tradeManager.onTakeOffer(coinAmount,
+        boolean currencyForTakerFeeBtc = TakerUtil.isCurrencyForTakerFeeBtc(amountAsCoin, preferences, bsqWalletService);
+        tradeManager.onTakeOffer(amountAsCoin,
                 txFeeFromFeeService,
                 takerFee,
-                isCurrencyForTakerFeeBtc(coinAmount),
+                currencyForTakerFeeBtc,
                 offer.getPrice().getValue(),
-                fundsNeededForTrade,
+                fundsNeededForTaker,
                 offer,
                 paymentAccount.getId(),
                 useSavingsWallet,
@@ -252,43 +242,5 @@ public class OfferFacade {
                 error -> futureResult.completeExceptionally(new RuntimeException(error))
         );
         return futureResult;
-    }
-
-
-    private boolean isCurrencyForTakerFeeBtc(Coin amount) {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable(amount);
-    }
-
-    private boolean isBsqForFeeAvailable(Coin amount) {
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                getTakerFee(amount, false) != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                getTakerFee(amount, false) != null &&
-                !bsqWalletService.getAvailableBalance().subtract(getTakerFee(amount, false)).isNegative();
-    }
-
-
-    @Nullable
-    private Coin getTakerFee(Coin amount, boolean isCurrencyForTakerFeeBtc) {
-        if (amount != null) {
-            // TODO write unit test for that
-            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
-            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
-    private Coin getTakerFee(Coin amount) {
-        return getTakerFee(amount, isCurrencyForTakerFeeBtc(amount));
-    }
-
-    private PaymentAccount getPaymentAccount(String paymentAccountId) {
-        return user.getPaymentAccount(paymentAccountId);
-    }
-
-    private boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
     }
 }

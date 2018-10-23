@@ -17,7 +17,7 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.TxOutputKey;
 
 import org.bitcoinj.core.Transaction;
@@ -34,12 +34,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
-    private BsqStateService bsqStateService;
+    private DaoStateService daoStateService;
 
     @Inject
-    public NonBsqCoinSelector(BsqStateService bsqStateService) {
+    public NonBsqCoinSelector(DaoStateService daoStateService) {
         super(true);
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
         TxOutputKey key = new TxOutputKey(parentTransaction.getHashAsString(), output.getIndex());
         // It might be that we received BTC in a non-BSQ tx so that will not be stored in out state and not found.
         // So we consider any txOutput which is not in the state as BTC output.
-        boolean outputIsNotInBsqState = !bsqStateService.existsTxOutput(key);
-        return outputIsNotInBsqState || bsqStateService.getBtcTxOutput(key).isPresent();
+        boolean outputIsNotInBsqState = !daoStateService.existsTxOutput(key);
+        return outputIsNotInBsqState || daoStateService.getBtcTxOutput(key).isPresent();
     }
 }

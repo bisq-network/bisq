@@ -21,11 +21,10 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
-import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -48,13 +47,11 @@ public class BondedRoleProposalService extends BaseProposalService<BondedRolePro
     @Inject
     public BondedRoleProposalService(BsqWalletService bsqWalletService,
                                      BtcWalletService btcWalletService,
-                                     BsqStateService bsqStateService,
-                                     ProposalConsensus proposalConsensus,
+                                     DaoStateService daoStateService,
                                      BondedRoleValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
-                proposalConsensus,
+                daoStateService,
                 proposalValidator);
     }
 

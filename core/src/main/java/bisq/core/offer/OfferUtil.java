@@ -110,13 +110,14 @@ public class OfferUtil {
     @Nullable
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
         if (amount != null) {
-            final Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
             double makerFeeAsDouble = (double) feePerBtc.value;
             if (marketPriceAvailable) {
                 if (marketPriceMargin > 0)
                     makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
                 else
                     makerFeeAsDouble = 0;
+
                 // For BTC we round so min value change is 100 satoshi
                 if (isCurrencyForMakerFeeBtc)
                     makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
@@ -141,7 +142,7 @@ public class OfferUtil {
      * @return
      */
     public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() ||
+        return preferences.isPayFeeInBtc() ||
                 !isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
     }
 
@@ -175,9 +176,8 @@ public class OfferUtil {
     }
 
     /**
-     *
-     * @param volumeByAmount      The volume generated from an amount
-     * @param factor              The factor used for rounding. E.g. 1 means rounded to units of 1 EUR, 10 means rounded to 10 EUR...
+     * @param volumeByAmount The volume generated from an amount
+     * @param factor         The factor used for rounding. E.g. 1 means rounded to units of 1 EUR, 10 means rounded to 10 EUR...
      * @return The adjusted Fiat volume
      */
     @VisibleForTesting
@@ -194,9 +194,9 @@ public class OfferUtil {
      * Calculate the possibly adjusted amount for {@code amount}, taking into account the
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
-     * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
-     * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
+     * @param amount        Bitcoin amount which is a candidate for getting rounded.
+     * @param price         Price used in relation ot that amount.
+     * @param maxTradeLimit The max. trade limit of the users account, in satoshis.
      * @return The adjusted amount
      */
     public static Coin getRoundedFiatAmount(Coin amount, Price price, long maxTradeLimit) {
@@ -211,11 +211,11 @@ public class OfferUtil {
      * Calculate the possibly adjusted amount for {@code amount}, taking into account the
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
-     * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
-     * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
-     * @param factor            The factor used for rounding. E.g. 1 means rounded to units of
-     *                          1 EUR, 10 means rounded to 10 EUR, etc.
+     * @param amount        Bitcoin amount which is a candidate for getting rounded.
+     * @param price         Price used in relation ot that amount.
+     * @param maxTradeLimit The max. trade limit of the users account, in satoshis.
+     * @param factor        The factor used for rounding. E.g. 1 means rounded to units of
+     *                      1 EUR, 10 means rounded to 10 EUR, etc.
      * @return The adjusted amount
      */
     @VisibleForTesting
@@ -308,17 +308,6 @@ public class OfferUtil {
         }
     }
 
-    public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
-        if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
-        else
-            return 0;
-    }
-
-    public static long getMaxTradePeriod(PaymentAccount paymentAccount) {
-        return paymentAccount.getPaymentMethod().getMaxTradePeriod();
-    }
-
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
@@ -346,6 +335,7 @@ public class OfferUtil {
         return extraDataMap;
     }
 
+
     public static void validateOfferData(FilterManager filterManager,
                                          P2PService p2PService,
                                          Coin buyerSecurityDepositAsCoin,
@@ -364,5 +354,14 @@ public class OfferUtil {
                 Res.get("offerbook.warning.paymentMethodBanned"));
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
         checkNotNull(p2PService.getAddress(), "Address must not be null");
+    }
+
+    public static Coin getFundsNeededForOffer(Coin tradeAmount, Coin buyerSecurityDeposit, OfferPayload.Direction direction) {
+        boolean buyOffer = isBuyOffer(direction);
+        Coin needed = buyOffer ? buyerSecurityDeposit : Restrictions.getSellerSecurityDeposit();
+        if (!buyOffer)
+            needed = needed.add(tradeAmount);
+
+        return needed;
     }
 }

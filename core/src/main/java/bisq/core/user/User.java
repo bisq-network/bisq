@@ -380,6 +380,7 @@ public final class User implements PersistedDataHost {
         return userPayload.getRegisteredMediator();
     }
 
+    //TODO
     @Nullable
     public List<Arbitrator> getAcceptedArbitrators() {
         return userPayload.getAcceptedArbitrators();

@@ -22,7 +22,7 @@ import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -130,12 +130,12 @@ public class MyVote implements PersistablePayload {
         return blindVote.getTxId();
     }
 
-    public long getMerit(MyBlindVoteListService myBlindVoteListService, BsqStateService bsqStateService) {
+    public long getMerit(MyBlindVoteListService myBlindVoteListService, DaoStateService daoStateService) {
         MeritList meritList = myBlindVoteListService.getMerits(blindVote.getTxId());
-        if (bsqStateService.getTx(blindVote.getTxId()).isPresent())
-            return MeritConsensus.getMeritStake(blindVote.getTxId(), meritList, bsqStateService);
+        if (daoStateService.getTx(blindVote.getTxId()).isPresent())
+            return MeritConsensus.getMeritStake(blindVote.getTxId(), meritList, daoStateService);
         else
-            return MeritConsensus.getCurrentlyAvailableMerit(meritList, bsqStateService.getChainHeight());
+            return MeritConsensus.getCurrentlyAvailableMerit(meritList, daoStateService.getChainHeight());
     }
 
     @Override

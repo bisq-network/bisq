@@ -20,7 +20,7 @@ package bisq.desktop.main.dao.governance.result;
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;
@@ -51,7 +51,7 @@ public class VoteListItem {
 
     VoteListItem(Proposal proposal,
                  DecryptedBallotsWithMerits decryptedBallotsWithMerits,
-                 BsqStateService bsqStateService,
+                 DaoStateService daoStateService,
                  BsqFormatter bsqFormatter) {
         this.decryptedBallotsWithMerits = decryptedBallotsWithMerits;
         this.bsqFormatter = bsqFormatter;
@@ -59,7 +59,7 @@ public class VoteListItem {
         proposalTxId = proposal.getTxId();
 
         if (decryptedBallotsWithMerits != null) {
-            merit = decryptedBallotsWithMerits.getMerit(bsqStateService);
+            merit = decryptedBallotsWithMerits.getMerit(daoStateService);
             stake = decryptedBallotsWithMerits.getStake();
             blindVoteTxId = decryptedBallotsWithMerits.getBlindVoteTxId();
             voteRevealTxId = decryptedBallotsWithMerits.getVoteRevealTxId();

@@ -56,6 +56,7 @@ message NetworkEnvelope {
 
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
+        RepublishGovernanceDataRequest republish_governance_data_request = 33;
     }
 }
 
@@ -124,6 +125,7 @@ message OfferAvailabilityResponse {
     AvailabilityResult availability_result = 2;
     repeated int32 supported_capabilities = 3;
     string uid = 4;
+    NodeAddress arbitrator = 5;
 }
 
 message RefreshOfferMessage {
@@ -317,6 +319,9 @@ message GetBlocksResponse {
 message NewBlockBroadcastMessage {
     // Because of the way how PB implements inheritence we need to use the super class as type
     BaseBlock raw_block = 1;
+}
+
+message RepublishGovernanceDataRequest {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -912,7 +917,7 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        BsqState bsq_state = 12;
+        // BsqState bsq_state = 12; // not used but as other non-dao data have a higher index number we leave it to make clear that we cannot change following indexes
 
         AccountAgeWitnessStore account_age_witness_store = 13;
         TradeStatistics2Store trade_statistics2_store = 14;
@@ -931,6 +936,8 @@ message PersistableEnvelope {
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
+        RemovedAssetList removed_asset_list = 25;
+        DaoStateStore dao_state_store = 28;
     }
 }
 
@@ -1049,6 +1056,7 @@ message OpenOffer {
 
     Offer offer = 1;
     State state = 2;
+    NodeAddress arbitrator_node_address = 3;
 }
 
 message Tradable {
@@ -1453,6 +1461,8 @@ message BsqState {
     map<string, BaseTxOutput> confiscated_tx_output_map = 7;
     map<string, SpentInfo> spent_info_map = 8;
     repeated ParamChange param_change_list = 9;
+    repeated EvaluatedProposal evaluated_proposal_list = 10;
+    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits_list = 11;
 }
 
 message Issuance {
@@ -1470,11 +1480,11 @@ message Proposal {
     string tx_id = 5;
     oneof message {
         CompensationProposal compensation_proposal = 6;
-        GenericProposal generic_proposal = 7;
-        ChangeParamProposal change_param_proposal = 8;
-        RemoveAltcoinProposal remove_altcoin_proposal = 9;
-        ConfiscateBondProposal confiscate_bond_proposal = 10;
-        BondedRoleProposal bonded_role_proposal = 11;
+        ChangeParamProposal change_param_proposal = 7;
+        BondedRoleProposal bonded_role_proposal = 8;
+        ConfiscateBondProposal confiscate_bond_proposal = 9;
+        GenericProposal generic_proposal = 10;
+        RemoveAssetProposal remove_asset_proposal = 11;
     }
 }
 
@@ -1483,24 +1493,32 @@ message CompensationProposal {
     string bsq_address = 2;
 }
 
-message GenericProposal {
-}
-
 message ChangeParamProposal {
     string param = 1; // name of enum
     int64 param_value = 2;
 }
 
-message RemoveAltcoinProposal {
-    string currency_code = 1;
+message BondedRoleProposal {
+    BondedRole bonded_role = 1;
 }
 
 message ConfiscateBondProposal {
     bytes hash = 1;
 }
 
-message BondedRoleProposal {
-    BondedRole bonded_role = 1;
+message GenericProposal {
+}
+
+message RemoveAssetProposal {
+    string ticker_symbol = 1;
+}
+
+message RemovedAsset {
+    string ticker_symbol = 1;
+    string remove_reason = 2;
+}
+message RemovedAssetList {
+    repeated RemovedAsset removed_asset = 1;
 }
 
 message BondedRole {
@@ -1614,6 +1632,35 @@ message Merit {
 
 message MeritList {
     repeated Merit merit = 1;
+}
+
+message ProposalVoteResult {
+    Proposal proposal = 1;
+    int64 stake_of_Accepted_votes = 2;
+    int64 stake_of_Rejected_votes = 3;
+    int32 num_accepted_votes = 4;
+    int32 num_rejected_votes = 5;
+    int32 num_ignored_votes = 6;
+}
+
+message EvaluatedProposal {
+    bool is_accepted = 1;
+    ProposalVoteResult proposal_vote_result = 2;
+    int64 required_quorum = 3;
+    int64 required_threshold = 4;
+}
+
+message DecryptedBallotsWithMerits {
+    bytes hash_of_blind_vote_list = 1;
+    string blind_vote_tx_id = 2;
+    string vote_reveal_tx_id = 3;
+    int64 stake = 4;
+    BallotList ballot_list = 5;
+    MeritList merit_list = 6;
+}
+
+message DaoStateStore {
+    BsqState bsq_state = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

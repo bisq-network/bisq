@@ -18,7 +18,7 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
 import bisq.core.dao.state.blockchain.TempTxOutput;
 import bisq.core.dao.state.blockchain.TxOutput;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class TxOutputParser {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
 
     // Setters
     @Getter
@@ -77,8 +77,8 @@ public class TxOutputParser {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    TxOutputParser(BsqStateService bsqStateService) {
-        this.bsqStateService = bsqStateService;
+    TxOutputParser(DaoStateService daoStateService) {
+        this.daoStateService = daoStateService;
     }
 
 
@@ -123,11 +123,11 @@ public class TxOutputParser {
     }
 
     void commitUTXOCandidates() {
-        utxoCandidates.forEach(output -> bsqStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
+        utxoCandidates.forEach(output -> daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
     }
 
     /**
-     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in bsqStateService
+     * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in daoStateService
      */
     void invalidateUTXOCandidates() {
         utxoCandidates.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));

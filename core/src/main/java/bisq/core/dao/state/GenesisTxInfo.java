@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Encapsulate the genesis txId and height.
- * As we don't persist those data we don't want to have it in the BsqState directly and moved it to a separate class.
- * Using a static final field in BsqState would not work well as we want to support that the data can be overwritten by
+ * As we don't persist those data we don't want to have it in the DaoState directly and moved it to a separate class.
+ * Using a static final field in DaoState would not work well as we want to support that the data can be overwritten by
  * program arguments for development testing and therefore it is set in the constructor via Guice.
  */
 @Slf4j

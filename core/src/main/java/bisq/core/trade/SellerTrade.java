@@ -31,6 +31,8 @@ import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -42,19 +44,21 @@ public abstract class SellerTrade extends Trade {
                 boolean isCurrencyForTakerFeeBtc,
                 long tradePrice,
                 NodeAddress tradingPeerNodeAddress,
+                @Nullable NodeAddress arbitratorNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
         super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
-                tradingPeerNodeAddress, storage, btcWalletService);
+                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService);
     }
 
     SellerTrade(Offer offer,
                 Coin txFee,
                 Coin takeOfferFee,
                 boolean isCurrencyForTakerFeeBtc,
+                @Nullable NodeAddress arbitratorNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

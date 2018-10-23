@@ -30,7 +30,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
@@ -70,7 +70,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, BsqStateListener {
+public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
     private TableView<LockupTxListItem> tableView;
 
     private final BsqWalletService bsqWalletService;
@@ -193,7 +193,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

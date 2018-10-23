@@ -91,6 +91,7 @@ class DefaultSeedNodeAddresses {
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
+            new NodeAddress("4ie52dse64kaarxw.onion:8002"),
 
             // LTC mainnet
             new NodeAddress("acyvotgewx46pebw.onion:8003"),

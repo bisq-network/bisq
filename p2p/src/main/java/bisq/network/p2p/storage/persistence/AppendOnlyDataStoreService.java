@@ -31,9 +31,12 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Used for PersistableNetworkPayload data which gets appended to a map storage.
+ */
 @Slf4j
 public class AppendOnlyDataStoreService {
-    private List<StoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
+    private List<MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload>> services = new ArrayList<>();
 
     // We do not add PersistableNetworkPayloadListService to the services list as it it deprecated and used only to
     // transfer old persisted data to the new data structure.
@@ -49,7 +52,7 @@ public class AppendOnlyDataStoreService {
         this.persistableNetworkPayloadListService = persistableNetworkPayloadListService;
     }
 
-    public void addService(StoreService<? extends PersistableEnvelope, PersistableNetworkPayload> service) {
+    public void addService(MapStoreService<? extends PersistableEnvelope, PersistableNetworkPayload> service) {
         services.add(service);
     }
 

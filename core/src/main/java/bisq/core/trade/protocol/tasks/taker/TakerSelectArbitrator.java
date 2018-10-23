@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.taker;
 
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.ArbitratorSelectionRule;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -37,7 +38,10 @@ public class TakerSelectArbitrator extends TradeTask {
         try {
             runInterceptHook();
 
-            trade.setArbitratorNodeAddress(ArbitratorSelectionRule.select(processModel.getUser().getAcceptedArbitratorAddresses(), processModel.getOffer()));
+            // TODO can be removed after new rule is activated
+            if (!ArbitratorSelection.isNewRuleActivated()) {
+                trade.setArbitratorNodeAddress(ArbitratorSelectionRule.select(processModel.getUser().getAcceptedArbitratorAddresses(), processModel.getOffer()));
+            }
 
             complete();
         } catch (Throwable t) {

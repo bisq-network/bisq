@@ -19,7 +19,7 @@ package bisq.core.dao.node.full.network;
 
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.RawBlock;
 
@@ -68,7 +68,7 @@ class GetBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
@@ -78,9 +78,9 @@ class GetBlocksRequestHandler {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBlocksRequestHandler(NetworkNode networkNode, BsqStateService bsqStateService, Listener listener) {
+    public GetBlocksRequestHandler(NetworkNode networkNode, DaoStateService daoStateService, Listener listener) {
         this.networkNode = networkNode;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.listener = listener;
     }
 
@@ -91,7 +91,7 @@ class GetBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, final Connection connection) {
         Log.traceCall(getBlocksRequest + "\n\tconnection=" + connection);
-        List<Block> blocks = new LinkedList<>(bsqStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
+        List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         final GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
         log.debug("getBlocksResponse " + getBlocksResponse.getRequestNonce());
@@ -99,7 +99,8 @@ class GetBlocksRequestHandler {
                 connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight());
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
-                        String errorMessage = "A timeout occurred for getBlocksResponse:" + getBlocksResponse +
+                        String errorMessage = "A timeout occurred for getBlocksResponse.requestNonce:" +
+                                getBlocksResponse.getRequestNonce() +
                                 " on connection:" + connection;
                         handleFault(errorMessage, CloseConnectionReason.SEND_MSG_TIMEOUT, connection);
                     },
@@ -111,8 +112,8 @@ class GetBlocksRequestHandler {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
-                    log.info("Send DataResponse to {} succeeded. getBlocksResponse={}",
-                            connection.getPeersNodeAddressOptional(), getBlocksResponse);
+                    log.info("Send DataResponse to {} succeeded. getBlocksResponse.getBlocks().size()={}",
+                            connection.getPeersNodeAddressOptional(), getBlocksResponse.getBlocks().size());
                     cleanup();
                     listener.onComplete();
                 } else {
