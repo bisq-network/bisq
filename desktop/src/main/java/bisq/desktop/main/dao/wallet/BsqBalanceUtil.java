@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.wallet;
 
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
@@ -24,10 +25,13 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.util.Tuple2;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -47,6 +51,8 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
     // Displaying bond dashboard info
     private TextField lockupAmountTextField, unlockingAmountTextField;
+    private TitledGroupBg titledGroupBg;
+    private Label availableNonBsqBalanceLabel;
 
     @Inject
     private BsqBalanceUtil(BsqWalletService bsqWalletService,
@@ -56,15 +62,11 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public int addGroup(GridPane gridPane, int gridRow) {
-        addTitledGroupBg(gridPane, gridRow, 6, Res.get("shared.balance"));
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 5, Res.get("dao.wallet.dashboard.myBalance"));
         availableBalanceTextField = addLabelTextField(gridPane, gridRow,
                 Res.getWithCol("dao.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
         availableBalanceTextField.setMouseTransparent(false);
-
-        availableNonBsqBalanceTextField = addLabelTextField(gridPane, ++gridRow,
-                Res.getWithCol("dao.availableNonBsqBalance")).second;
-        availableNonBsqBalanceTextField.setMouseTransparent(false);
 
         unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.unverifiedBsqBalance")).second;
@@ -83,6 +85,14 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         totalBalanceTextField = addLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
+
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("dao.availableNonBsqBalance"));
+        availableNonBsqBalanceLabel = tuple2.first;
+        availableNonBsqBalanceTextField = tuple2.second;
+        availableNonBsqBalanceTextField.setMouseTransparent(false);
+        availableNonBsqBalanceTextField.setVisible(false);
+        availableNonBsqBalanceTextField.setManaged(false);
 
         return gridRow;
     }
@@ -125,8 +135,12 @@ public class BsqBalanceUtil implements BsqBalanceListener {
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
+
+        boolean isNonBsqBalanceAvailable = availableNonBsqBalance.value > 0;
+        int rowSpan = isNonBsqBalanceAvailable ? 6 : 5;
+        GridPane.setRowSpan(titledGroupBg, rowSpan);
+
         availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        availableNonBsqBalanceTextField.setText(bsqFormatter.formatBtcSatoshi(availableNonBsqBalance.value));
         unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
         lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
         lockedInBondsBalanceTextField.setText(bsqFormatter.formatCoinWithCode(
@@ -136,6 +150,12 @@ public class BsqBalanceUtil implements BsqBalanceListener {
             lockupAmountTextField.setText(bsqFormatter.formatCoinWithCode(lockupBondsBalance));
             unlockingAmountTextField.setText(bsqFormatter.formatCoinWithCode(unlockingBondsBalance));
         }
+
+        availableNonBsqBalanceLabel.setVisible(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceLabel.setManaged(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setVisible(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setManaged(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setText(bsqFormatter.formatBTCWithCode(availableNonBsqBalance.value));
 
         final Coin total = availableBalance
                 .add(unverifiedBalance)

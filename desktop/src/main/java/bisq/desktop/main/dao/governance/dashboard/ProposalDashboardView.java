@@ -34,7 +34,10 @@ import javax.inject.Inject;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import java.text.SimpleDateFormat;
+
 import java.util.Date;
+import java.util.Locale;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
@@ -134,11 +137,15 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     }
 
     private String getPhaseDuration(int height, DaoPhase.Phase phase) {
-        final long start = daoFacade.getFirstBlockOfPhase(height, phase);
-        final long end = daoFacade.getLastBlockOfPhase(height, phase);
+        long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase);
+        long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase);
+        long duration = daoFacade.getDurationForPhaseForDisplay(phase);
         long now = new Date().getTime();
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L));
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L));
-        return Res.get("dao.cycle.phaseDuration", start, end, startDateTime, endDateTime);
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("hh:mm", Locale.getDefault());
+        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
+        return Res.get("dao.cycle.phaseDuration", duration, durationTime, start, end, startDateTime, endDateTime);
     }
 }

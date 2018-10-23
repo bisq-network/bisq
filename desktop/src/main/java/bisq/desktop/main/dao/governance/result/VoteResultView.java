@@ -347,7 +347,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, bsqWalletService, daoFacade);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -850,74 +850,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.blindVoteTxId"));
-        column.setSortable(false);
-        column.setMinWidth(130);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String blindVoteTxId = item.getBlindVoteTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(blindVoteTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getBlindVoteTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", blindVoteTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.voteRevealTxId"));
-        column.setSortable(false);
-        column.setMinWidth(140);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String voteRevealTxId = item.getVoteRevealTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(voteRevealTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getVoteRevealTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", voteRevealTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
         votesTableView.getColumns().add(column);
     }
 

@@ -105,16 +105,21 @@ public enum Param {
     PHASE_RESULT(2);
 
     // See: https://github.com/bisq-network/proposals/issues/46
-    /*
-    PHASE_UNDEFINED(0),
-    PHASE_PROPOSAL(3600),      // 24 days
-    PHASE_BREAK1(150),        // 1 day
-    PHASE_BLIND_VOTE(600),    // 4 days
-    PHASE_BREAK2(10),        // 10 blocks
-    PHASE_VOTE_REVEAL(300),   // 2 days
-    PHASE_BREAK3(10),        // 10 blocks
-    PHASE_RESULT(10);        // 10 block
-    */
+    // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
+    // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
+    // blocks where the user can be active. To have still round numbers for the durations we add 1 block to those
+    // phases and subtract 1 block from the following breaks.
+    // So in the UI the user will see 3600 blocks and the last
+    // block of the technical 3601 blocks is displayed as part of the break1 phase.
+  /*  PHASE_UNDEFINED(0),
+    PHASE_PROPOSAL(3601),      // 24 days
+    PHASE_BREAK1(149),        // 1 day
+    PHASE_BLIND_VOTE(601),    // 4 days
+    PHASE_BREAK2(9),        // 10 blocks
+    PHASE_VOTE_REVEAL(301),   // 2 days
+    PHASE_BREAK3(9),        // 10 blocks
+    PHASE_RESULT(10);        // 10 block*/
+
 
     @Getter
     private long defaultValue;
