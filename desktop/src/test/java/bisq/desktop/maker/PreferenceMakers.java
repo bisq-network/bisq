@@ -42,7 +42,8 @@ public class PreferenceMakers {
             lookup.valueOf(bisqEnvironment, new SameValueDonor<BisqEnvironment>(null)),
             lookup.valueOf(btcNodesFromOptions, new SameValueDonor<String>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),
-            lookup.valueOf(referralID, new SameValueDonor<String>(null)));
+            lookup.valueOf(referralID, new SameValueDonor<String>(null)),
+            null, null, null);
 
     public static final Preferences empty = make(a(Preferences));
 

@@ -179,14 +179,14 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public void readPersisted() {
         PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
         if (persistedPeerList != null) {
-            long peesWithNoCapabilitiesSet = persistedPeerList.getList().stream()
+            long peersWithNoCapabilitiesSet = persistedPeerList.getList().stream()
                     .filter(e -> e.getSupportedCapabilities().isEmpty())
                     .mapToInt(e -> 1)
                     .count();
-            if (peesWithNoCapabilitiesSet > 100) {
-                log.warn("peesWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peesWithNoCapabilitiesSet, persistedPeerList.size());
+            if (peersWithNoCapabilitiesSet > 100) {
+                log.warn("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persistedPeerList.size());
             } else {
-                log.info("peesWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peesWithNoCapabilitiesSet, persistedPeerList.size());
+                log.info("peersWithNoCapabilitiesSet={}, persistedPeerList.size()={}", peersWithNoCapabilitiesSet, persistedPeerList.size());
             }
 
             this.persistedPeers.addAll(persistedPeerList.getList());

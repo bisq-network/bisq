@@ -217,8 +217,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
 
-        amountInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount"));
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoin(Restrictions.getMinNonDustOutput())));
+        amountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount"));
+        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
 
         focusOutListener = (observable, oldValue, newValue) -> {
@@ -278,17 +278,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         receiversBtcAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversBtcAddressInputTextField.setValidator(btcAddressValidator);
 
-        btcAmountInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
-        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount", Restrictions.getMinNonDustOutput().value));
+        btcAmountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
+        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount",
+                bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput().value)));
         btcAmountInputTextField.setValidator(btcValidator);
 
         sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
 
         sendBtcButton.setOnAction((event) -> {
-            // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 String receiversAddressString = receiversBtcAddressInputTextField.getText();
-                Coin receiverAmount = bsqFormatter.parseSatoshiToBtc(btcAmountInputTextField.getText());
+                Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
                 try {
                     Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount);
                     Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);

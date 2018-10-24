@@ -1,58 +1,13 @@
 #!/bin/sh
 
-# TODO that script is outdated. See https://github.com/bisq-network/bisq/blob/master/README.md for new setup with OpenJdk10.
+# not tested script based on what @devinbileck posted in https://github.com/bisq-network/bisq/issues/1791
 
-sudo -i
-
-JAVA_HOME=/usr/lib/jvm/java-8-oracle
-# or: /usr/lib/jvm/jdk1.8.0_112
-echo 'export JAVA_HOME=$(/usr/libexec/java_home)' >> ~/.bashrc
-
-echo "Install Oracle Java 8, Git, unzip"
-apt-get update
-add-apt-repository ppa:webupd8team/java
-apt-get update
-apt-get -y install oracle-java8-installer git unzip
-
-# Alternatively you can download the latest jdk and extract it to $JAVA_HOME
-# wget http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
-# If you had an older java version installed set the new java version as default by those commands:
-apt-get install update-alternatives
-# update-alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2000
-# update-alternatives --install /usr/bin/javac javac $JAVA_HOME/bin/javac 2000
-# Test with java -version and javac- version if the version is correct. Otherwise check here:
-# sudo update-alternatives --config java
-# sudo update-alternatives --config javac
-
-
-echo "Enable unlimited Strength for cryptographic keys"
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
-#apt-get install unzip
-unzip jce_policy-8.zip
-sudo cp UnlimitedJCEPolicyJDK8/US_export_policy.jar $JAVA_HOME/jre/lib/security/US_export_policy.jar
-sudo cp UnlimitedJCEPolicyJDK8/local_policy.jar $JAVA_HOME/jre/lib/security/local_policy.jar
-
-sudo chmod 777 $JAVA_HOME/jre/lib/security/US_export_policy.jar
-sudo chmod 777 $JAVA_HOME/jre/lib/security/local_policy.jar
-
-rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
-
-### 4. Install Protobuffer
-    $ wget https://github.com/google/protobuf/releases/download/v3.2.0/protobuf-java-3.2.0.tar.gz
-    $ tar xzf protobuf-3.2.0.tar.gz
-    $ cd protobuf-3.2.0
-    $ sudo apt-get update
-    $ sudo apt-get install build-essential
-    $ sudo ./configure
-    $ sudo make
-    $ sudo make check
-    $ sudo make install
-    $ sudo ldconfig
-    $ protoc --version
-
-
-echo "Install and resolve dependencies for Bisq"
-cd ~
-git clone -b DAO https://github.com/bisq-network/bisq-desktop.git
-cd bisq-desktop
+curl -L -O https://download.java.net/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_linux-x64_bin.tar.gz
+sudo mkdir /usr/local/jvm/openjdk-10
+sudo tar -zxf openjdk-10.0.2_linux-x64_bin.tar.gz -C /usr/local/jvm/openjdk-10
+sudo update-alternatives --install "/usr/bin/java" "java" "/usr/local/jvm/openjdk-10/jdk-10.0.2/bin/java" 1500
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/local/jvm/openjdk-10/jdk-10.0.2/bin/javac" 1500
+git clone https://github.com/bisq-network/bisq
+cd bisq
 ./gradlew build
+java -jar desktop/build/libs/desktop-0.8.0-SNAPSHOT-all.jar

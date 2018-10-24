@@ -23,6 +23,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
@@ -104,7 +105,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
             useCustomFee;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField, rpcUserTextField;
+    private ToggleButton isDaoFullNodeToggleButton;
+    private PasswordTextField rpcPwTextField;
+    private TitledGroupBg daoOptionsTitledGroupBg;
+
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
@@ -129,10 +134,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener;
+    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener, rpcUserListener, rpcPwListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -536,11 +542,26 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 4);
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         resyncDaoButton = addTopLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
                 Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+
+        isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
+        rpcUserTextField = addInputTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcUser"));
+        rpcUserTextField.setVisible(false);
+        rpcUserTextField.setManaged(false);
+        rpcPwTextField = addPasswordTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcPw"));
+        rpcPwTextField.setVisible(false);
+        rpcPwTextField.setManaged(false);
+
+        rpcUserListener = (observable, oldValue, newValue) -> {
+            preferences.setRpcUser(rpcUserTextField.getText());
+        };
+        rpcPwListener = (observable, oldValue, newValue) -> {
+            preferences.setRpcPw(rpcPwTextField.getText());
+        };
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
@@ -730,12 +751,63 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
+        boolean daoFullNode = preferences.isDaoFullNode();
+        isDaoFullNodeToggleButton.setSelected(daoFullNode);
+        String rpcUser = preferences.getRpcUser();
+        String rpcPw = preferences.getRpcPw();
+        if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() || rpcPw == null || rpcPw.isEmpty())) {
+            log.warn("You have full DAO node selected but have not provided the rpc username and password. We reset daoFullNode to false");
+            isDaoFullNodeToggleButton.setSelected(false);
+        }
+        rpcUserTextField.setText(rpcUser);
+        rpcPwTextField.setText(rpcPw);
+        updateDaoFields();
+
         resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() -> {
             new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
                     .useShutDownButton()
                     .hideCloseButton()
                     .show();
         }));
+
+        isDaoFullNodeToggleButton.setOnAction(e -> {
+            String key = "daoFullModeInfoShown";
+            if (isDaoFullNodeToggleButton.isSelected() && preferences.showAgain(key)) {
+                String url = "https://bisq.network/docs/dao-full-node";
+                new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
+                        .onAction(() -> {
+                            GUIUtil.openWebPage(url);
+                        })
+                        .actionButtonText(Res.get("setting.preferences.dao.fullNodeInfo.ok"))
+                        .closeButtonText(Res.get("setting.preferences.dao.fullNodeInfo.cancel"))
+                        .onClose(() -> UserThread.execute(() -> {
+                            isDaoFullNodeToggleButton.setSelected(false);
+                            updateDaoFields();
+                        }))
+                        .dontShowAgainId(key)
+                        .width(800)
+                        .show();
+            }
+
+            updateDaoFields();
+        });
+
+        rpcUserTextField.textProperty().addListener(rpcUserListener);
+        rpcPwTextField.textProperty().addListener(rpcPwListener);
+    }
+
+    private void updateDaoFields() {
+        boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 4 : 2);
+        rpcUserTextField.setVisible(isDaoFullNode);
+        rpcUserTextField.setManaged(isDaoFullNode);
+        rpcPwTextField.setVisible(isDaoFullNode);
+        rpcPwTextField.setManaged(isDaoFullNode);
+        preferences.setDaoFullNode(isDaoFullNode);
+        if (!isDaoFullNode) {
+            rpcPwTextField.clear();
+            rpcUserTextField.clear();
+        }
     }
 
     private void onSelectNetwork() {
@@ -789,5 +861,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void deactivateDaoPreferences() {
         resyncDaoButton.setOnAction(null);
+        isDaoFullNodeToggleButton.setOnAction(null);
+        rpcUserTextField.textProperty().removeListener(rpcUserListener);
+        rpcPwTextField.textProperty().removeListener(rpcUserListener);
     }
 }

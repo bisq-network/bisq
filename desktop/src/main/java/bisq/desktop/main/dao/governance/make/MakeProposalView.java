@@ -260,12 +260,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
-                checkNotNull(proposalDisplay.bsqAddressTextField,
-                        "proposalDisplay.bsqAddressTextField must not be null");
                 return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()),
-                        proposalDisplay.bsqAddressTextField.getText());
+                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
                         "proposalDisplay.paramComboBox must no tbe null");
@@ -324,7 +321,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, daoFacade);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
