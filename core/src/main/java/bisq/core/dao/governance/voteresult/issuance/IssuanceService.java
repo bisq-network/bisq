@@ -65,7 +65,7 @@ public class IssuanceService {
                     } else if (issuanceProposal instanceof ReimbursementProposal) {
                         issuanceType = IssuanceType.REIMBURSEMENT;
                     }
-                    checkArgument(issuanceType != IssuanceType.UNDEFINED, "issuanceType must nto be undefined");
+                    checkArgument(issuanceType != IssuanceType.UNDEFINED, "issuanceType must not be undefined");
 
                     // We don't check atm if the output is unspent. We cannot use the bsqWallet as that would not
                     // reflect our current block state (could have been spent at later block which is valid and
