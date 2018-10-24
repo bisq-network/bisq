@@ -25,6 +25,7 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
@@ -109,6 +110,10 @@ public class ProposalListItem {
             case COMPENSATION_REQUEST:
                 CompensationProposal compensationProposal = (CompensationProposal) proposal;
                 Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
+                return bsqFormatter.formatCoinWithCode(requestedBsq);
+            case REIMBURSEMENT_REQUEST:
+                ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
+                requestedBsq = evaluatedProposal.isAccepted() ? reimbursementProposal.getRequestedBsq() : Coin.ZERO;
                 return bsqFormatter.formatCoinWithCode(requestedBsq);
             case CHANGE_PARAM:
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;

@@ -263,6 +263,12 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+            case REIMBURSEMENT_REQUEST:
+                checkNotNull(proposalDisplay.requestedBsqTextField,
+                        "proposalDisplay.requestedBsqTextField must not be null");
+                return daoFacade.getReimbursementProposalWithTransaction(proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.linkInputTextField.getText(),
+                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
                         "proposalDisplay.paramComboBox must no tbe null");

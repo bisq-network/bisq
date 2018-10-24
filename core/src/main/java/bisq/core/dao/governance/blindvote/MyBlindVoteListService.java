@@ -41,6 +41,7 @@ import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -82,6 +83,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Publishes blind vote tx and blind vote payload to p2p network.
@@ -278,8 +281,10 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
-        return new MeritList(daoStateService.getIssuanceSet().stream()
+        return new MeritList(daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
                 .map(issuance -> {
+                    checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION,
+                            "IssuanceType must be COMPENSATION for MeritList");
                     // We check if it is our proposal
                     if (!myCompensationProposalTxIs.contains(issuance.getTxId()))
                         return null;

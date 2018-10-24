@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.compensation;
+package bisq.core.dao.governance.proposal.reimbursement;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
@@ -44,19 +44,19 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class CompensationProposal extends Proposal implements IssuanceProposal {
+public final class ReimbursementProposal extends Proposal implements IssuanceProposal {
     private final long requestedBsq;
     private final String bsqAddress;
 
-    CompensationProposal(String name,
-                         String link,
-                         Coin requestedBsq,
-                         String bsqAddress) {
+    ReimbursementProposal(String name,
+                          String link,
+                          Coin requestedBsq,
+                          String bsqAddress) {
         this(name,
                 link,
                 bsqAddress,
                 requestedBsq.value,
-                Version.COMPENSATION_REQUEST,
+                Version.REIMBURSEMENT_REQUEST,
                 new Date().getTime(),
                 "");
     }
@@ -66,13 +66,13 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompensationProposal(String name,
-                                 String link,
-                                 String bsqAddress,
-                                 long requestedBsq,
-                                 byte version,
-                                 long creationDate,
-                                 String txId) {
+    private ReimbursementProposal(String name,
+                                  String link,
+                                  String bsqAddress,
+                                  long requestedBsq,
+                                  byte version,
+                                  long creationDate,
+                                  String txId) {
         super(name,
                 link,
                 version,
@@ -85,15 +85,15 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
-        final PB.CompensationProposal.Builder builder = PB.CompensationProposal.newBuilder()
+        final PB.ReimbursementProposal.Builder builder = PB.ReimbursementProposal.newBuilder()
                 .setBsqAddress(bsqAddress)
                 .setRequestedBsq(requestedBsq);
-        return super.getProposalBuilder().setCompensationProposal(builder);
+        return super.getProposalBuilder().setReimbursementProposal(builder);
     }
 
-    public static CompensationProposal fromProto(PB.Proposal proto) {
-        final PB.CompensationProposal proposalProto = proto.getCompensationProposal();
-        return new CompensationProposal(proto.getName(),
+    public static ReimbursementProposal fromProto(PB.Proposal proto) {
+        final PB.ReimbursementProposal proposalProto = proto.getReimbursementProposal();
+        return new ReimbursementProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getBsqAddress(),
                 proposalProto.getRequestedBsq(),
@@ -120,27 +120,27 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
 
     @Override
     public ProposalType getType() {
-        return ProposalType.COMPENSATION_REQUEST;
+        return ProposalType.REIMBURSEMENT_REQUEST;
     }
 
     @Override
     public Param getQuorumParam() {
-        return Param.QUORUM_COMP_REQUEST;
+        return Param.QUORUM_REIMBURSEMENT;
     }
 
     @Override
     public Param getThresholdParam() {
-        return Param.THRESHOLD_COMP_REQUEST;
+        return Param.THRESHOLD_REIMBURSEMENT;
     }
 
     @Override
     public TxType getTxType() {
-        return TxType.COMPENSATION_REQUEST;
+        return TxType.REIMBURSEMENT_REQUEST;
     }
 
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
-        return new CompensationProposal(getName(),
+        return new ReimbursementProposal(getName(),
                 getLink(),
                 getBsqAddress(),
                 getRequestedBsq().value,
@@ -151,7 +151,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
 
     @Override
     public String toString() {
-        return "CompensationProposal{" +
+        return "ReimbursementProposal{" +
                 "\n     requestedBsq=" + requestedBsq +
                 ",\n     bsqAddress='" + bsqAddress + '\'' +
                 "\n} " + super.toString();
