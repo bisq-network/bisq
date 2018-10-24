@@ -917,7 +917,8 @@ message PersistableEnvelope {
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        BsqState bsq_state = 12;
+        // deprecated
+        // BsqState bsq_state = 12; // not used but as other non-dao data have a higher index number we leave it to make clear that we cannot change following indexes
 
         AccountAgeWitnessStore account_age_witness_store = 13;
         TradeStatistics2Store trade_statistics2_store = 14;
@@ -937,8 +938,7 @@ message PersistableEnvelope {
         MeritList merit_list = 23;
         BondedRoleList bonded_role_list = 24;
         RemovedAssetList removed_asset_list = 25;
-        EvaluatedProposalList evaluated_proposal_list = 26;
-        DecryptedBallotsWithMeritsList decrypted_ballots_with_merits_list = 27;
+        DaoStateStore dao_state_store = 28;
     }
 }
 
@@ -1273,6 +1273,9 @@ message PreferencesPayload {
     bool use_market_notifications = 43;
     bool use_price_notifications = 44;
     bool use_standby_mode = 45;
+    bool is_dao_full_node = 46;
+    string rpc_user = 47;
+    string rpc_pw = 48;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1462,6 +1465,8 @@ message BsqState {
     map<string, BaseTxOutput> confiscated_tx_output_map = 7;
     map<string, SpentInfo> spent_info_map = 8;
     repeated ParamChange param_change_list = 9;
+    repeated EvaluatedProposal evaluated_proposal_list = 10;
+    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits_list = 11;
 }
 
 message Issuance {
@@ -1649,21 +1654,17 @@ message EvaluatedProposal {
     int64 required_threshold = 4;
 }
 
-message EvaluatedProposalList {
-    repeated EvaluatedProposal evaluated_proposal = 1;
-}
-
 message DecryptedBallotsWithMerits {
     bytes hash_of_blind_vote_list = 1;
-    string vote_reveal_tx_id = 2;
-    string blind_vote_tx_id = 3;
+    string blind_vote_tx_id = 2;
+    string vote_reveal_tx_id = 3;
     int64 stake = 4;
     BallotList ballot_list = 5;
     MeritList merit_list = 6;
 }
 
-message DecryptedBallotsWithMeritsList {
-    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits = 1;
+message DaoStateStore {
+    BsqState bsq_state = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

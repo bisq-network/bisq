@@ -12,7 +12,7 @@ For more information, see https://bisq.network/intro and for step-by-step gettin
 
 ## Building Bisq
 
-You will need [JDK 10](https://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html) installed to complete the following instructions.
+You will need OpenJDK [JDK 10](https://jdk.java.net/10/) installed to complete the following instructions.
 
 1. Clone the Bisq source code and cd into `bisq`
 
@@ -46,7 +46,7 @@ _The following instructions have been tested on IDEA 2018.2_
  1. In the `Import Project from Gradle` screen, check the `Use auto-import` option and click `OK`
  1. When prompted whether to overwrite the existing `.idea` directory, click `Yes`
  1. In the `Project` tool window, right click on the root-level `.idea` folder, select `Git->Revert...` and click OK in the dialog that appears (to restore source-controlled `.idea` configuration files that get overwritten during project import)
- 1. Go to `Build->Build project`. Everything should build cleanly. You should be able to run tests, run `main` methods in any component, etc.
+ 1. Go to `Build->Build Project`. Everything should build cleanly. You should be able to run tests, run `main` methods in any component, etc.
 
-> TIP: If you encounter compilation errors related to the `io.bisq.generated.protobuffer.PB` class, it is probably because you didn't run the full Gradle build above. You need to run the `generateProto` task in the `common` project. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `cd common; ./gradlew generateProto`. Once you've done that, run `Build->Build project` again and you should have no errors.
+> TIP: If you encounter compilation errors related to the `io.bisq.generated.protobuffer.PB` class, it is probably because you didn't run the full Gradle build above. You need to run the `generateProto` task in the `common` project. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `cd common; ./gradlew generateProto`. Once you've done that, run `Build->Build Project` again and you should have no errors.
 

@@ -15,30 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.seednode;
+package bisq.network.p2p.storage.persistence;
 
-import bisq.core.app.misc.AppSetup;
-import bisq.core.app.misc.AppSetupWithP2P;
-import bisq.core.app.misc.AppSetupWithP2PAndDAO;
-import bisq.core.user.Preferences;
+import bisq.common.proto.persistable.PersistableEnvelope;
 
-import com.google.inject.Injector;
+import javax.inject.Inject;
 
-import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Used for handling data from resource files.
+ */
 @Slf4j
-public class SeedNode {
-    @Setter
-    private Injector injector;
-    private AppSetup appSetup;
+public class ResourceDataStoreService {
+    private List<StoreService<? extends PersistableEnvelope>> services;
 
-    public SeedNode() {
+    @Inject
+    public ResourceDataStoreService() {
+        services = new ArrayList<>();
     }
 
-    public void startApplication() {
-        boolean isDaoFullNode = injector.getInstance(Preferences.class).isDaoFullNode();
-        appSetup = isDaoFullNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
-        appSetup.start();
+    public void addService(StoreService<? extends PersistableEnvelope> service) {
+        services.add(service);
+    }
+
+    public void readFromResources(String postFix) {
+        services.forEach(service -> service.readFromResources(postFix));
     }
 }

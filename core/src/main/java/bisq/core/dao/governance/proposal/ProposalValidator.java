@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.period.DaoPhase;
@@ -36,12 +36,12 @@ import static org.apache.commons.lang3.Validate.notEmpty;
 @Slf4j
 public class ProposalValidator {
 
-    protected final BsqStateService bsqStateService;
+    protected final DaoStateService daoStateService;
     protected final PeriodService periodService;
 
     @Inject
-    public ProposalValidator(BsqStateService bsqStateService, PeriodService periodService) {
-        this.bsqStateService = bsqStateService;
+    public ProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
+        this.daoStateService = daoStateService;
         this.periodService = periodService;
     }
 
@@ -77,7 +77,7 @@ public class ProposalValidator {
             log.warn("txId must be set. proposal.getTxId()={}", proposal.getTxId());
             return false;
         }
-        Optional<TxType> optionalTxType = bsqStateService.getOptionalTxType(txId);
+        Optional<TxType> optionalTxType = daoStateService.getOptionalTxType(txId);
         boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
         if (!present)
             log.debug("optionalTxType not present for proposal {}" + proposal);
@@ -96,9 +96,9 @@ public class ProposalValidator {
             return false;
         }
 
-        Optional<Tx> optionalTx = bsqStateService.getTx(txId);
+        Optional<Tx> optionalTx = daoStateService.getTx(txId);
         boolean isTxConfirmed = optionalTx.isPresent();
-        int chainHeight = bsqStateService.getChainHeight();
+        int chainHeight = daoStateService.getChainHeight();
 
         if (isTxConfirmed) {
             int txHeight = optionalTx.get().getBlockHeight();

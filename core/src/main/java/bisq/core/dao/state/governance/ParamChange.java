@@ -26,7 +26,7 @@ import lombok.Value;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * Holds the data for a parameter change. Gets persisted with the BsqState.
+ * Holds the data for a parameter change. Gets persisted with the DaoState.
  */
 @Immutable
 @Value

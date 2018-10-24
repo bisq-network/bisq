@@ -21,7 +21,7 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
-public class PhasesView implements BsqStateListener {
+public class PhasesView implements DaoStateListener {
     private final DaoFacade daoFacade;
     private SeparatedPhaseBars separatedPhaseBars;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
@@ -90,7 +90,7 @@ public class PhasesView implements BsqStateListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -119,17 +119,16 @@ public class PhasesView implements BsqStateListener {
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK2, false),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.VOTE_REVEAL, true),
                 new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK3, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false),
-                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.BREAK4, false));
+                new SeparatedPhaseBars.SeparatedPhaseBarsItem(DaoPhase.Phase.RESULT, false));
         return new SeparatedPhaseBars(phaseBarsItems);
     }
 
     private void applyData(int height) {
         if (height > 0) {
             phaseBarsItems.forEach(item -> {
-                int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());
-                int lastBlock = daoFacade.getLastBlockOfPhase(height, item.getPhase());
-                final int duration = daoFacade.getDurationForPhase(item.getPhase());
+                int firstBlock = daoFacade.getFirstBlockOfPhaseForDisplay(height, item.getPhase());
+                int lastBlock = daoFacade.getLastBlockOfPhaseForDisplay(height, item.getPhase());
+                int duration = daoFacade.getDurationForPhaseForDisplay(item.getPhase());
                 item.setPeriodRange(firstBlock, lastBlock, duration);
                 double progress = 0;
                 if (height >= firstBlock && height <= lastBlock) {

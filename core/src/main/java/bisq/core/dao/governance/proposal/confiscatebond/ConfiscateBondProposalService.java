@@ -23,7 +23,7 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -46,11 +46,11 @@ public class ConfiscateBondProposalService extends BaseProposalService<Confiscat
     @Inject
     public ConfiscateBondProposalService(BsqWalletService bsqWalletService,
                                          BtcWalletService btcWalletService,
-                                         BsqStateService bsqStateService,
+                                         DaoStateService daoStateService,
                                          ConfiscateBondValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
+                daoStateService,
                 proposalValidator);
     }
 

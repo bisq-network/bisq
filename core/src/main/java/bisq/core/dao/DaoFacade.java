@@ -46,13 +46,15 @@ import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputKey;
 import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.state.governance.Issuance;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
@@ -79,6 +81,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
 
@@ -89,12 +93,13 @@ import bisq.asset.Asset;
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
  * by providing a reduced API and/or aggregating subroutines.
  */
+@Slf4j
 public class DaoFacade implements DaoSetupService {
     private final ProposalListPresentation proposalListPresentation;
     private final BallotListService ballotListService;
     private final BallotListPresentation ballotListPresentation;
     private final MyProposalListService myProposalListService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final MyBlindVoteListService myBlindVoteListService;
     private final MyVoteListService myVoteListService;
@@ -107,6 +112,7 @@ public class DaoFacade implements DaoSetupService {
     private final BondedRolesService bondedRolesService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
+    private final DaoStateStorageService daoStateStorageService;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
 
@@ -115,7 +121,7 @@ public class DaoFacade implements DaoSetupService {
                      ProposalListPresentation proposalListPresentation,
                      BallotListService ballotListService,
                      BallotListPresentation ballotListPresentation,
-                     BsqStateService bsqStateService,
+                     DaoStateService daoStateService,
                      PeriodService periodService,
                      MyBlindVoteListService myBlindVoteListService,
                      MyVoteListService myVoteListService,
@@ -127,12 +133,13 @@ public class DaoFacade implements DaoSetupService {
                      RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
                      LockupService lockupService,
-                     UnlockService unlockService) {
+                     UnlockService unlockService,
+                     DaoStateStorageService daoStateStorageService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
         this.ballotListPresentation = ballotListPresentation;
         this.myProposalListService = myProposalListService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.myBlindVoteListService = myBlindVoteListService;
         this.myVoteListService = myVoteListService;
@@ -145,6 +152,7 @@ public class DaoFacade implements DaoSetupService {
         this.bondedRolesService = bondedRolesService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
+        this.daoStateStorageService = daoStateStorageService;
     }
 
 
@@ -158,7 +166,7 @@ public class DaoFacade implements DaoSetupService {
 
     @Override
     public void start() {
-        bsqStateService.addBsqStateListener(new BsqStateListener() {
+        daoStateService.addBsqStateListener(new DaoStateListener() {
             @Override
             public void onNewBlockHeight(int blockHeight) {
                 if (blockHeight > 0 && periodService.getCurrentCycle() != null)
@@ -176,12 +184,12 @@ public class DaoFacade implements DaoSetupService {
     }
 
 
-    public void addBsqStateListener(BsqStateListener listener) {
-        bsqStateService.addBsqStateListener(listener);
+    public void addBsqStateListener(DaoStateListener listener) {
+        daoStateService.addBsqStateListener(listener);
     }
 
-    public void removeBsqStateListener(BsqStateListener listener) {
-        bsqStateService.removeBsqStateListener(listener);
+    public void removeBsqStateListener(DaoStateListener listener) {
+        daoStateService.removeBsqStateListener(listener);
     }
 
 
@@ -208,13 +216,11 @@ public class DaoFacade implements DaoSetupService {
     // Creation of Proposal and proposalTransaction
     public ProposalWithTransaction getCompensationProposalWithTransaction(String name,
                                                                           String link,
-                                                                          Coin requestedBsq,
-                                                                          String bsqAddress)
+                                                                          Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
         return compensationProposalService.createProposalWithTransaction(name,
                 link,
-                requestedBsq,
-                bsqAddress);
+                requestedBsq);
     }
 
     public ProposalWithTransaction getParamProposalWithTransaction(String name,
@@ -261,7 +267,7 @@ public class DaoFacade implements DaoSetupService {
 
     // Show fee
     public Coin getProposalFee(int chainHeight) {
-        return ProposalConsensus.getFee(bsqStateService, chainHeight);
+        return ProposalConsensus.getFee(daoStateService, chainHeight);
     }
 
     // Publish proposal tx, proposal payload and and persist it to myProposalList
@@ -329,7 +335,7 @@ public class DaoFacade implements DaoSetupService {
 
     // When creating blind vote we present fee
     public Coin getBlindVoteFeeForCycle() {
-        return BlindVoteConsensus.getFee(bsqStateService, bsqStateService.getChainHeight());
+        return BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
     }
 
     public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin stake)
@@ -354,16 +360,92 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Presentation of phases
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public int getFirstBlockOfPhase(int height, DaoPhase.Phase phase) {
-        return periodService.getFirstBlockOfPhase(height, phase);
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getFirstBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
+        int firstBlock = periodService.getFirstBlockOfPhase(height, phase);
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                break;
+            case BREAK1:
+                firstBlock++;
+                break;
+            case BLIND_VOTE:
+                break;
+            case BREAK2:
+                firstBlock++;
+                break;
+            case VOTE_REVEAL:
+                break;
+            case BREAK3:
+                firstBlock++;
+                break;
+            case RESULT:
+                break;
+        }
+
+        return firstBlock;
     }
 
-    public int getLastBlockOfPhase(int height, DaoPhase.Phase phase) {
-        return periodService.getLastBlockOfPhase(height, phase);
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getLastBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
+        int lastBlock = periodService.getLastBlockOfPhase(height, phase);
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                lastBlock--;
+                break;
+            case BREAK1:
+                break;
+            case BLIND_VOTE:
+                lastBlock--;
+                break;
+            case BREAK2:
+                break;
+            case VOTE_REVEAL:
+                lastBlock--;
+                break;
+            case BREAK3:
+                break;
+            case RESULT:
+                break;
+        }
+        return lastBlock;
     }
 
-    public int getDurationForPhase(DaoPhase.Phase phase) {
-        return periodService.getDurationForPhase(phase, bsqStateService.getChainHeight());
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getDurationForPhaseForDisplay(DaoPhase.Phase phase) {
+        int duration = periodService.getDurationForPhase(phase, daoStateService.getChainHeight());
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                duration--;
+                break;
+            case BREAK1:
+                duration++;
+                break;
+            case BLIND_VOTE:
+                duration--;
+                break;
+            case BREAK2:
+                duration++;
+                break;
+            case VOTE_REVEAL:
+                duration--;
+                break;
+            case BREAK3:
+                duration++;
+                break;
+            case RESULT:
+                break;
+        }
+        return duration;
     }
 
     // listeners for phase change
@@ -372,7 +454,7 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public int getChainHeight() {
-        return bsqStateService.getChainHeight();
+        return daoStateService.getChainHeight();
     }
 
 
@@ -391,19 +473,19 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public long getTotalLockupAmount() {
-        return bsqStateService.getTotalLockupAmount();
+        return daoStateService.getTotalLockupAmount();
     }
 
     public long getTotalAmountOfUnLockingTxOutputs() {
-        return bsqStateService.getTotalAmountOfUnLockingTxOutputs();
+        return daoStateService.getTotalAmountOfUnLockingTxOutputs();
     }
 
     public long getTotalAmountOfUnLockedTxOutputs() {
-        return bsqStateService.getTotalAmountOfUnLockedTxOutputs();
+        return daoStateService.getTotalAmountOfUnLockedTxOutputs();
     }
 
     public Optional<Integer> getLockTime(String txId) {
-        return bsqStateService.getLockTime(txId);
+        return daoStateService.getLockTime(txId);
     }
 
     public List<BondedRole> getValidBondedRoleList() {
@@ -416,71 +498,75 @@ public class DaoFacade implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<Tx> getTx(String txId) {
-        return bsqStateService.getTx(txId);
+        return daoStateService.getTx(txId);
     }
 
     public Set<TxOutput> getUnspentBlindVoteStakeTxOutputs() {
-        return bsqStateService.getUnspentBlindVoteStakeTxOutputs();
+        return daoStateService.getUnspentBlindVoteStakeTxOutputs();
     }
 
     public int getGenesisBlockHeight() {
-        return bsqStateService.getGenesisBlockHeight();
+        return daoStateService.getGenesisBlockHeight();
     }
 
     public String getGenesisTxId() {
-        return bsqStateService.getGenesisTxId();
+        return daoStateService.getGenesisTxId();
     }
 
     public Coin getGenesisTotalSupply() {
-        return bsqStateService.getGenesisTotalSupply();
+        return daoStateService.getGenesisTotalSupply();
+    }
+
+    public Set<Issuance> getIssuanceSet() {
+        return daoStateService.getIssuanceSet();
     }
 
     public Set<Tx> getFeeTxs() {
-        return bsqStateService.getBurntFeeTxs();
+        return daoStateService.getBurntFeeTxs();
     }
 
     public Set<TxOutput> getUnspentTxOutputs() {
-        return bsqStateService.getUnspentTxOutputs();
+        return daoStateService.getUnspentTxOutputs();
     }
 
     public Set<Tx> getTxs() {
-        return bsqStateService.getTxs();
+        return daoStateService.getTxs();
     }
 
     public Optional<TxOutput> getLockupTxOutput(String txId) {
-        return bsqStateService.getLockupTxOutput(txId);
+        return daoStateService.getLockupTxOutput(txId);
     }
 
     public long getTotalBurntFee() {
-        return bsqStateService.getTotalBurntFee();
+        return daoStateService.getTotalBurntFee();
     }
 
     public long getTotalIssuedAmountFromCompRequests() {
-        return bsqStateService.getTotalIssuedAmount();
+        return daoStateService.getTotalIssuedAmount();
     }
 
     public long getBlockTime(int issuanceBlockHeight) {
-        return bsqStateService.getBlockTime(issuanceBlockHeight);
+        return daoStateService.getBlockTime(issuanceBlockHeight);
     }
 
     public int getIssuanceBlockHeight(String txId) {
-        return bsqStateService.getIssuanceBlockHeight(txId);
+        return daoStateService.getIssuanceBlockHeight(txId);
     }
 
     public boolean isIssuanceTx(String txId) {
-        return bsqStateService.isIssuanceTx(txId);
+        return daoStateService.isIssuanceTx(txId);
     }
 
     public boolean hasTxBurntFee(String hashAsString) {
-        return bsqStateService.hasTxBurntFee(hashAsString);
+        return daoStateService.hasTxBurntFee(hashAsString);
     }
 
     public Optional<TxType> getOptionalTxType(String txId) {
-        return bsqStateService.getOptionalTxType(txId);
+        return daoStateService.getOptionalTxType(txId);
     }
 
     public TxType getTxType(String txId) {
-        return bsqStateService.getTx(txId).map(Tx::getTxType).orElse(TxType.UNDEFINED_TX_TYPE);
+        return daoStateService.getTx(txId).map(Tx::getTxType).orElse(TxType.UNDEFINED_TX_TYPE);
     }
 
     public boolean isInPhaseButNotLastBlock(DaoPhase.Phase phase) {
@@ -500,7 +586,7 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public boolean isUnspent(TxOutputKey key) {
-        return bsqStateService.isUnspent(key);
+        return daoStateService.isUnspent(key);
     }
 
     public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
@@ -508,18 +594,22 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public boolean isUnlocking(BondedRole bondedRole) {
-        return bsqStateService.isUnlocking(bondedRole);
+        return daoStateService.isUnlocking(bondedRole);
     }
 
     public Coin getMinCompensationRequestAmount() {
-        return CompensationConsensus.getMinCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+        return CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());
     }
 
     public Coin getMaxCompensationRequestAmount() {
-        return CompensationConsensus.getMaxCompensationRequestAmount(bsqStateService, periodService.getChainHeight());
+        return CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, periodService.getChainHeight());
     }
 
     public long getPramValue(Param param) {
-        return bsqStateService.getParamValue(param, periodService.getChainHeight());
+        return daoStateService.getParamValue(param, periodService.getChainHeight());
+    }
+
+    public void resyncDao(Runnable resultHandler) {
+        daoStateStorageService.resetDaoState(resultHandler);
     }
 }

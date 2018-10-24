@@ -23,8 +23,8 @@ import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
@@ -59,13 +59,13 @@ import lombok.extern.slf4j.Slf4j;
  * Triggers republishing of my proposals at startup.
  */
 @Slf4j
-public class MyProposalListService implements PersistedDataHost, BsqStateListener {
+public class MyProposalListService implements PersistedDataHost, DaoStateListener {
     public interface Listener {
         void onListChanged(List<Proposal> list);
     }
 
     private final P2PService p2PService;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final PeriodService periodService;
     private final WalletsManager walletsManager;
     private final Storage<MyProposalList> storage;
@@ -82,13 +82,13 @@ public class MyProposalListService implements PersistedDataHost, BsqStateListene
 
     @Inject
     public MyProposalListService(P2PService p2PService,
-                                 BsqStateService bsqStateService,
+                                 DaoStateService daoStateService,
                                  PeriodService periodService,
                                  WalletsManager walletsManager,
                                  Storage<MyProposalList> storage,
                                  KeyRing keyRing) {
         this.p2PService = p2PService;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.walletsManager = walletsManager;
         this.storage = storage;
@@ -96,7 +96,7 @@ public class MyProposalListService implements PersistedDataHost, BsqStateListene
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
 
@@ -118,7 +118,7 @@ public class MyProposalListService implements PersistedDataHost, BsqStateListene
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -178,7 +178,7 @@ public class MyProposalListService implements PersistedDataHost, BsqStateListene
     }
 
     public boolean remove(Proposal proposal) {
-        if (canRemoveProposal(proposal, bsqStateService, periodService)) {
+        if (canRemoveProposal(proposal, daoStateService, periodService)) {
             boolean success = p2PService.removeData(new TempProposalPayload(proposal, signaturePubKey), true);
             if (!success)
                 log.warn("Removal of proposal from p2p network failed. proposal={}", proposal);
@@ -255,15 +255,14 @@ public class MyProposalListService implements PersistedDataHost, BsqStateListene
         storage.queueUpForSave();
     }
 
-    private boolean canRemoveProposal(Proposal proposal, BsqStateService bsqStateService, PeriodService periodService) {
-        return bsqStateService.getTx(proposal.getTxId())
-                .filter(tx -> isTxInProposalPhaseAndCycle(tx, periodService, bsqStateService))
-                .isPresent();
+    private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {
+        boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+        return isMine(proposal) && inPhase;
 
     }
 
-    private boolean isTxInProposalPhaseAndCycle(Tx tx, PeriodService periodService, BsqStateService bsqStateService) {
+    private boolean isTxInProposalPhaseAndCycle(Tx tx, PeriodService periodService, DaoStateService daoStateService) {
         return periodService.isInPhase(tx.getBlockHeight(), DaoPhase.Phase.PROPOSAL) &&
-                periodService.isTxInCorrectCycle(tx.getBlockHeight(), bsqStateService.getChainHeight());
+                periodService.isTxInCorrectCycle(tx.getBlockHeight(), daoStateService.getChainHeight());
     }
 }

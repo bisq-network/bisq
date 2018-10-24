@@ -27,7 +27,7 @@ import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.json.ExportJsonFilesService;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.CycleService;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -39,7 +39,7 @@ import com.google.inject.Inject;
  * We initialize all main service classes here to be sure they are started.
  */
 public class DaoSetup {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final ProposalService proposalService;
     private final BallotListService ballotListService;
@@ -54,7 +54,7 @@ public class DaoSetup {
 
     @Inject
     public DaoSetup(BsqNodeProvider bsqNodeProvider,
-                    BsqStateService bsqStateService,
+                    DaoStateService daoStateService,
                     CycleService cycleService,
                     ProposalService proposalService,
                     BallotListService ballotListService,
@@ -65,7 +65,7 @@ public class DaoSetup {
                     MissingDataRequestService missingDataRequestService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.proposalService = proposalService;
         this.ballotListService = ballotListService;
@@ -83,7 +83,7 @@ public class DaoSetup {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         // We need to take care of order of execution. Let's keep both addListeners and start for all main classes even
         // if they are not used to have a consistent startup sequence.
-        bsqStateService.addListeners();
+        daoStateService.addListeners();
         cycleService.addListeners();
         proposalService.addListeners();
         ballotListService.addListeners();
@@ -95,7 +95,7 @@ public class DaoSetup {
         daoFacade.addListeners();
         exportJsonFilesService.addListeners();
 
-        bsqStateService.start();
+        daoStateService.start();
         cycleService.start();
         proposalService.start();
         ballotListService.start();

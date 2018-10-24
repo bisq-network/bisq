@@ -19,7 +19,7 @@ package bisq.core.dao.node.full.network;
 
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.RawBlock;
 
@@ -68,7 +68,7 @@ class GetBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
@@ -78,9 +78,9 @@ class GetBlocksRequestHandler {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBlocksRequestHandler(NetworkNode networkNode, BsqStateService bsqStateService, Listener listener) {
+    public GetBlocksRequestHandler(NetworkNode networkNode, DaoStateService daoStateService, Listener listener) {
         this.networkNode = networkNode;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.listener = listener;
     }
 
@@ -91,7 +91,7 @@ class GetBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, final Connection connection) {
         Log.traceCall(getBlocksRequest + "\n\tconnection=" + connection);
-        List<Block> blocks = new LinkedList<>(bsqStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
+        List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         final GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
         log.debug("getBlocksResponse " + getBlocksResponse.getRequestNonce());

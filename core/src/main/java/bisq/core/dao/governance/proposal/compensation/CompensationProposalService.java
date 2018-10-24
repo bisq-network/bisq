@@ -27,7 +27,7 @@ import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.OpReturnType;
 
 import bisq.common.app.Version;
@@ -52,21 +52,20 @@ public class CompensationProposalService extends BaseProposalService<Compensatio
     @Inject
     public CompensationProposalService(BsqWalletService bsqWalletService,
                                        BtcWalletService btcWalletService,
-                                       BsqStateService bsqStateService,
+                                       DaoStateService daoStateService,
                                        CompensationValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
-                bsqStateService,
+                daoStateService,
                 proposalValidator);
     }
 
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
-                                                                 Coin requestedBsq,
-                                                                 String bsqAddress)
+                                                                 Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
         this.requestedBsq = requestedBsq;
-        this.bsqAddress = bsqAddress;
+        this.bsqAddress = bsqWalletService.getUnusedBsqAddressAsString();
 
         return super.createProposalWithTransaction(name, link);
     }

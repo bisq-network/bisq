@@ -36,8 +36,8 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.CycleService;
 import bisq.core.locale.Res;
@@ -82,10 +82,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class VoteResultView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class VoteResultView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final PhasesView phasesView;
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
     private final ProposalService proposalService;
@@ -120,7 +120,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
     @Inject
     public VoteResultView(DaoFacade daoFacade,
                           PhasesView phasesView,
-                          BsqStateService bsqStateService,
+                          DaoStateService daoStateService,
                           CycleService cycleService,
                           VoteResultService voteResultService,
                           ProposalService proposalService,
@@ -129,7 +129,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                           BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
         this.proposalService = proposalService;
@@ -176,7 +176,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -240,21 +240,21 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     private void fillCycleList() {
         cycleListItemList.clear();
-        bsqStateService.getCycles().forEach(cycle -> {
+        daoStateService.getCycles().forEach(cycle -> {
             List<Proposal> proposalsForCycle = proposalService.getValidatedProposals().stream()
                     .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                     .collect(Collectors.toList());
 
-            List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultService.getEvaluatedProposalList().stream()
+            List<EvaluatedProposal> evaluatedProposalsForCycle = daoStateService.getEvaluatedProposalList().stream()
                     .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
                     .collect(Collectors.toList());
 
-            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = voteResultService.getDecryptedBallotsWithMeritsList().stream()
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = daoStateService.getDecryptedBallotsWithMeritsList().stream()
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getBlindVoteTxId()))
                     .filter(decryptedBallotsWithMerits -> cycleService.isTxInCycle(cycle, decryptedBallotsWithMerits.getVoteRevealTxId()))
                     .collect(Collectors.toList());
 
-            long cycleStartTime = bsqStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
+            long cycleStartTime = daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
                     .map(Block::getTime)
                     .orElse(0L);
             int cycleIndex = cycleService.getCycleIndex(cycle);
@@ -264,8 +264,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                     proposalsForCycle,
                     evaluatedProposalsForCycle,
                     decryptedVotesForCycle,
-                    bsqStateService);
-            CycleListItem cycleListItem = new CycleListItem(resultsOfCycle, bsqStateService, bsqFormatter);
+                    daoStateService);
+            CycleListItem cycleListItem = new CycleListItem(resultsOfCycle, daoStateService, bsqFormatter);
             cycleListItemList.add(cycleListItem);
         });
         Collections.reverse(cycleListItemList);
@@ -347,7 +347,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
 
     private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, bsqWalletService, daoFacade);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -401,7 +401,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                 .forEach(evaluatedProposal -> {
                     resultsOfCycle.getDecryptedVotesForCycle().forEach(decryptedBallotsWithMerits -> {
                         voteListItemList.add(new VoteListItem(evaluatedProposal.getProposal(), decryptedBallotsWithMerits,
-                                bsqStateService, bsqFormatter));
+                                daoStateService, bsqFormatter));
                     });
                 });
 
@@ -850,74 +850,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements B
                         };
                     }
                 });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.blindVoteTxId"));
-        column.setSortable(false);
-        column.setMinWidth(130);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String blindVoteTxId = item.getBlindVoteTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(blindVoteTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getBlindVoteTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", blindVoteTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.voteRevealTxId"));
-        column.setSortable(false);
-        column.setMinWidth(140);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String voteRevealTxId = item.getVoteRevealTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(voteRevealTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getVoteRevealTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", voteRevealTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
         votesTableView.getColumns().add(column);
     }
 
