@@ -126,9 +126,9 @@ public class PhasesView implements DaoStateListener {
     private void applyData(int height) {
         if (height > 0) {
             phaseBarsItems.forEach(item -> {
-                int firstBlock = daoFacade.getFirstBlockOfPhase(height, item.getPhase());
-                int lastBlock = daoFacade.getLastBlockOfPhase(height, item.getPhase());
-                final int duration = daoFacade.getDurationForPhase(item.getPhase());
+                int firstBlock = daoFacade.getFirstBlockOfPhaseForDisplay(height, item.getPhase());
+                int lastBlock = daoFacade.getLastBlockOfPhaseForDisplay(height, item.getPhase());
+                int duration = daoFacade.getDurationForPhaseForDisplay(item.getPhase());
                 item.setPeriodRange(firstBlock, lastBlock, duration);
                 double progress = 0;
                 if (height >= firstBlock && height <= lastBlock) {

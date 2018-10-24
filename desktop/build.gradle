@@ -75,23 +75,6 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
 
-compileJava {
-    doFirst {
-        options.compilerArgs = [
-            '--module-path', classpath.asPath,
-            '--add-modules', 'javafx.controls'
-        ]
-    }
-}
-run {
-    doFirst {
-        jvmArgs = [
-            '--module-path', classpath.asPath,
-            '--add-modules', 'javafx.controls'
-        ]
-    }
-}
-
 test {
     systemProperty 'jdk.attach.allowAttachSelf', true
 

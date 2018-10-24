@@ -132,6 +132,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ListChangeListener<Ballot> ballotListChangeListener;
     private ChangeListener<String> stakeListener;
     private Subscription selectedProposalSubscription, phaseSubscription;
+    private boolean areVoteButtonsVisible;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +307,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 4);
         tableView.layout();
         root.layout();
     }
@@ -346,7 +347,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         ignoreButton = tuple.third;
         acceptButton.setOnAction(event -> onAccept());
         rejectButton.setOnAction(event -> onReject());
-        ignoreButton.setOnAction(event -> onCancelVote());
+        ignoreButton.setOnAction(event -> onIgnore());
 
         voteButtons.clear();
         voteButtons.add(voteButton);
@@ -405,13 +406,18 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private void onRemoveProposal() {
         if (daoFacade.phaseProperty().get() == DaoPhase.Phase.PROPOSAL) {
-            final Proposal proposal = selectedItem.getProposal();
-            if (daoFacade.removeMyProposal(proposal)) {
-                hideProposalDisplay();
-            } else {
-                new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
-            }
-            tableView.getSelectionModel().clearSelection();
+            Proposal proposal = selectedItem.getProposal();
+            new Popup<>().warning(Res.get("dao.proposal.active.remove.confirm"))
+                    .actionButtonText(Res.get("dao.proposal.active.remove.doRemove"))
+                    .onAction(() -> {
+                        if (daoFacade.removeMyProposal(proposal)) {
+                            hideProposalDisplay();
+                        } else {
+                            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
+                        }
+                        tableView.getSelectionModel().clearSelection();
+                    })
+                    .show();
         }
     }
 
@@ -466,7 +472,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         updateStateAfterVote();
     }
 
-    private void onCancelVote() {
+    private void onIgnore() {
         daoFacade.setVote(getBallotListItem().getBallot(), null);
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
@@ -543,15 +549,17 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             stakeInputTextField.setMouseTransparent(true);
         }
 
-        boolean showVoteFields = isBlindVotePhaseButNotLastBlock || hasAlreadyVoted;
+        boolean hasProposals = !daoFacade.getActiveOrMyUnconfirmedProposals().isEmpty();
+        boolean showVoteFields = (isBlindVotePhaseButNotLastBlock && hasProposals) || hasAlreadyVoted;
 
         voteFields.forEach(node -> {
             node.setVisible(showVoteFields);
             node.setManaged(showVoteFields);
         });
+        areVoteButtonsVisible = hasProposals && isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted;
         voteButtons.forEach(button -> {
-            button.setVisible(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
-            button.setManaged(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
+            button.setVisible(areVoteButtonsVisible);
+            button.setManaged(areVoteButtonsVisible);
         });
 
         blindVoteTxIdTextField.setup("");
@@ -643,7 +651,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, bsqWalletService, daoFacade);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
@@ -819,32 +827,51 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
 
         column = new TableColumn<>();
-        column.setMinWidth(40);
+        column.setMinWidth(50);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<ProposalsListItem, ProposalsListItem>,
-                TableCell<ProposalsListItem, ProposalsListItem>>() {
-
+        column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
                     ProposalsListItem> column) {
-                return new TableCell<ProposalsListItem, ProposalsListItem>() {
-                    Label icon;
+                return new TableCell<>() {
+                    Button iconButton;
 
                     @Override
                     public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
-
                         if (item != null && !empty) {
-                            if (icon == null) {
+                            if (iconButton == null) {
                                 item.onPhaseChanged(currentPhase);
-                                icon = item.getIcon();
-                                setGraphic(icon);
+                                iconButton = item.getIconButton();
+                                log.error("1 areVoteButtonsVisible " + areVoteButtonsVisible);
+                                if (iconButton != null) {
+                                    iconButton.setOnAction(e -> {
+                                        log.error("2 areVoteButtonsVisible " + areVoteButtonsVisible);
+                                        if (areVoteButtonsVisible) {
+                                            onSelectProposal(item);
+                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                                onRemoveProposal();
+                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                                onReject();
+                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
+                                                onIgnore();
+                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
+                                                onAccept();
+                                        }
+                                    });
+
+                                    if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                        iconButton.setMouseTransparent(true);
+                                        iconButton.setStyle("-fx-cursor: default;");
+                                    }
+                                    setGraphic(iconButton);
+                                }
                             }
                         } else {
                             setGraphic(null);
-                            if (icon != null)
-                                icon = null;
+                            if (iconButton != null)
+                                iconButton = null;
                         }
                     }
                 };
