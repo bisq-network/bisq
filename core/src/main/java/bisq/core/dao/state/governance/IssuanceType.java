@@ -15,30 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.node.json;
+package bisq.core.dao.state.governance;
 
-import lombok.Getter;
-
-// Need to be in sync with TxOutputType
-enum JsonTxType {
-    UNDEFINED_TX_TYPE("Undefined"),
-    UNVERIFIED("Unverified"),
-    INVALID("Invalid"),
-    GENESIS("Genesis"),
-    TRANSFER_BSQ("Transfer BSQ"),
-    PAY_TRADE_FEE("Pay trade fee"),
-    PROPOSAL("Proposal"),
-    COMPENSATION_REQUEST("Compensation request"),
-    REIMBURSEMENT_REQUEST("Reimbursement request"),
-    BLIND_VOTE("Blind vote"),
-    VOTE_REVEAL("Vote reveal"),
-    LOCKUP("Lockup"),
-    UNLOCK("Unlock");
-
-    @Getter
-    private String displayString;
-
-    JsonTxType(String displayString) {
-        this.displayString = displayString;
-    }
+public enum IssuanceType {
+    UNDEFINED,
+    COMPENSATION,
+    REIMBURSEMENT
 }

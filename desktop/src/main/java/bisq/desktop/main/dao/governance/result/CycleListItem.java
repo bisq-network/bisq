@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.governance.result;
 
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
@@ -75,8 +75,8 @@ public class CycleListItem {
     public String getIssuance() {
         long totalIssuance = resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(EvaluatedProposal::isAccepted)
-                .filter(e -> e.getProposal() instanceof CompensationProposal)
-                .map(e -> (CompensationProposal) e.getProposal())
+                .filter(e -> e.getProposal() instanceof IssuanceProposal)
+                .map(e -> (IssuanceProposal) e.getProposal())
                 .mapToLong(e -> e.getRequestedBsq().value)
                 .sum();
         return bsqFormatter.formatCoinWithCode(Coin.valueOf(totalIssuance));

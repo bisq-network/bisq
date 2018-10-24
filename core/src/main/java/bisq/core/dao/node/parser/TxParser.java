@@ -195,7 +195,8 @@ public class TxParser {
                     processProposal(blockHeight, tempTx, bsqFee);
                     break;
                 case COMPENSATION_REQUEST:
-                    processCompensationRequest(blockHeight, tempTx, bsqFee);
+                case REIMBURSEMENT_REQUEST:
+                    processIssuance(blockHeight, tempTx, bsqFee);
                     break;
                 case BLIND_VOTE:
                     processBlindVote(blockHeight, tempTx, bsqFee);
@@ -211,7 +212,7 @@ public class TxParser {
 
         // We need to check if any tempTxOutput is available and if so and the OpReturn data is invalid we
         // set the output to a BTC output. We must not use `if else` cases here!
-        if (opReturnType != OpReturnType.COMPENSATION_REQUEST) {
+        if (opReturnType != OpReturnType.COMPENSATION_REQUEST && opReturnType != OpReturnType.REIMBURSEMENT_REQUEST) {
             txOutputParser.getOptionalIssuanceCandidate().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
         }
 
@@ -235,7 +236,7 @@ public class TxParser {
         }
     }
 
-    private void processCompensationRequest(int blockHeight, TempTx tempTx, long bsqFee) {
+    private void processIssuance(int blockHeight, TempTx tempTx, long bsqFee) {
         boolean isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         Optional<TempTxOutput> optionalIssuanceCandidate = txOutputParser.getOptionalIssuanceCandidate();
         if (isFeeAndPhaseValid) {
@@ -400,21 +401,24 @@ public class TxParser {
             case PROPOSAL:
                 return TxType.PROPOSAL;
             case COMPENSATION_REQUEST:
+            case REIMBURSEMENT_REQUEST:
                 boolean hasCorrectNumOutputs = tempTx.getTempTxOutputs().size() >= 3;
                 if (!hasCorrectNumOutputs) {
-                    log.warn("Compensation request tx need to have at least 3 outputs");
+                    log.warn("Compensation/reimbursement request tx need to have at least 3 outputs");
                     return TxType.INVALID;
                 }
 
                 TempTxOutput issuanceTxOutput = tempTx.getTempTxOutputs().get(1);
                 boolean hasIssuanceOutput = issuanceTxOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT;
                 if (!hasIssuanceOutput) {
-                    log.warn("Compensation request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
+                    log.warn("Compensation/reimbursement request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
                             "TxOutputType={}", issuanceTxOutput.getTxOutputType());
                     return TxType.INVALID;
                 }
 
-                return TxType.COMPENSATION_REQUEST;
+                return opReturnType == OpReturnType.COMPENSATION_REQUEST ?
+                        TxType.COMPENSATION_REQUEST :
+                        TxType.REIMBURSEMENT_REQUEST;
             case BLIND_VOTE:
                 return TxType.BLIND_VOTE;
             case VOTE_REVEAL:
