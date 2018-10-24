@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk
+FROM openjdk:10-jdk
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openjfx && rm -rf /var/lib/apt/lists/*
