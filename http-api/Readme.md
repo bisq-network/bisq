@@ -122,7 +122,7 @@ You have to build bisq-api image before running integration tests.
 Run integration tests:
 
     docker-compose build #just make sure our images are up to date
-    ./gradlew test
+    ../gradlew testIntegration
 
 
 ## Api naming guidelines:

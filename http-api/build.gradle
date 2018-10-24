@@ -61,6 +61,7 @@ dependencies {
     compile "org.slf4j:slf4j-api:1.7.22"
     compile "ch.qos.logback:logback-core:1.1.10"
     compile "ch.qos.logback:logback-classic:1.1.10"
+    compile "com.sun.activation:javax.activation:1.2.0"
     testCompile "junit:junit:4.12"
     testCompile "org.mockito:mockito-core:2.7.5"
     testCompile "org.jmockit:jmockit:1.30"

@@ -9,6 +9,5 @@ include 'pricenode'
 include 'relay'
 include 'seednode'
 include 'statsnode'
-include 'http-api'
 
 rootProject.name = 'bisq'

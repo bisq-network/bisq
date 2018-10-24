@@ -1,15 +1,5 @@
 #!/bin/bash
 
-if [ -d /root/.gradle-volume ] ; then
-    echo Copying /root/.gradle-volume to /root/.gradle/
-    mkdir -p /root/.gradle/
-    cp -R /root/.gradle-volume/* /root/.gradle/
-fi
-
-if [ "$SKIP_BUILD" != "true" ]; then
-    ../gradlew --no-daemon compileJava -x test
-fi
-
 IP=`ip -4 -o addr show eth0  | sed 's/.*inet \([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/'`
 ARGS="--myAddress $IP:${NODE_PORT:-9999}"
 if [ ! -z "$APP_NAME" ]; then
