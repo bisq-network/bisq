@@ -12,7 +12,7 @@ For more information, see https://bisq.network/intro and for step-by-step gettin
 
 ## Building Bisq
 
-You will need OpenJDK [JDK 10](https://jdk.java.net/10/) installed to complete the following instructions.
+You will need OpenJDK [JDK 11](https://jdk.java.net/11/) installed to complete the following instructions.
 
 1. Clone the Bisq source code and cd into `bisq`
 
