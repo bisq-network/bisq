@@ -191,7 +191,7 @@ public class BtcWalletService extends WalletService {
         // BSQ change outputs from BSQ fee inputs.
         feeTx.getOutputs().forEach(preparedTx::addOutput);
 
-        //
+        // For generic proposals there is no issuance output, for compensation and reimburse requests there is
         if (issuanceAmount != null && issuanceAddress != null) {
             // BSQ issuance output
             preparedTx.addOutput(issuanceAmount, issuanceAddress);
