@@ -12,19 +12,18 @@ ENV LANG=en_US
 CMD ./docker/startApi.sh
 
 #Fetch gradle and dependencies
-COPY gradlew /bisq/
 COPY gradle /bisq/gradle/
-COPY build.gradle gradle.properties settings.gradle /bisq/
+COPY gradlew build.gradle gradle.properties settings.gradle /bisq/
+RUN ../gradlew --no-daemon -v
+
 COPY http-api/build.gradle /bisq/http-api/
-COPY assets/build.gradle /bisq/assets/
-COPY common/build.gradle /bisq/common/
-COPY core/build.gradle /bisq/core/
-COPY p2p/build.gradle /bisq/p2p/
-COPY desktop/build.gradle settings.gradle /bisq/desktop/
-COPY desktop/gradle /bisq/desktop/gradle/
+COPY assets /bisq/assets/
+COPY common /bisq/common/
+COPY core /bisq/core/
+COPY p2p /bisq/p2p/
 RUN ../gradlew --no-daemon build -x test
 
-COPY . /bisq
+COPY http-api /bisq/http-api
 
 #Compile sources to speed up startup
-RUN ../gradlew --no-daemon compileJava -x test
+RUN ../gradlew --no-daemon --offline compileJava -x test
