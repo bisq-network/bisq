@@ -32,15 +32,9 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class InteracETransferForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(InteracETransferForm.class);
 
     private final InteracETransferAccount interacETransferAccount;
     private final InteracETransferValidator interacETransferValidator;
@@ -48,7 +42,7 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getHolderName());
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getEmail());
@@ -71,7 +65,7 @@ public class InteracETransferForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner"));
+                Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setHolderName(newValue);
@@ -108,12 +102,7 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
-        }
+        setAccountNameWithString(mobileNrInputTextField.getText());
     }
 
     @Override
@@ -123,7 +112,7 @@ public class InteracETransferForm extends PaymentMethodForm {
                 interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(interacETransferAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 interacETransferAccount.getHolderName());
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 interacETransferAccount.getEmail()).second.setMouseTransparent(false);

@@ -424,13 +424,13 @@ abstract class BankForm extends GeneralBankForm {
         String countryCode = bankAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addLabelTextFieldLabelTextField(gridPane, ++gridRow,
-                    Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
+                    Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(250);
             tuple.forth.setText(bankAccountPayload.getHolderTaxId());
         } else {
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), bankAccountPayload.getHolderName());
+            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
         }
     }
 

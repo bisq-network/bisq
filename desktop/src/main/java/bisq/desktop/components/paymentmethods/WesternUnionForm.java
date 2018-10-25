@@ -53,14 +53,14 @@ public class WesternUnionForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         final WesternUnionAccountPayload payload = (WesternUnionAccountPayload) paymentAccountPayload;
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.city"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.city"),
                 payload.getCity());
         if (BankUtil.isStateRequired(payload.getCountryCode()))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.state"),
+            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
                     payload.getState());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.email"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 payload.getEmail());
 
         return gridRow;
@@ -93,7 +93,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 westernUnionAccountPayload.getHolderName());
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.city"),
                 westernUnionAccountPayload.getCity()).second.setMouseTransparent(false);
@@ -135,7 +135,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         gridRow = tuple.second;
 
         holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
-                ++gridRow, Res.getWithCol("payment.account.fullName"));
+                ++gridRow, Res.get("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setHolderName(newValue);
             updateFromInputs();

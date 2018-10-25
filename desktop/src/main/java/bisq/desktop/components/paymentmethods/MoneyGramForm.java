@@ -59,7 +59,7 @@ public class MoneyGramForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         final MoneyGramAccountPayload payload = (MoneyGramAccountPayload) paymentAccountPayload;
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
         FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
@@ -93,7 +93,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 moneyGramAccountPayload.getHolderName());
         if (BankUtil.isStateRequired(moneyGramAccountPayload.getCountryCode()))
             FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
@@ -111,7 +111,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         gridRow = GUIUtil.addRegionCountry(gridPane, gridRow, this::onCountrySelected);
 
         holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
-                ++gridRow, Res.getWithCol("payment.account.fullName"));
+                ++gridRow, Res.get("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setHolderName(newValue);
             updateFromInputs();

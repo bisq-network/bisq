@@ -464,13 +464,13 @@ public class CashDepositForm extends GeneralBankForm {
         String countryCode = cashDepositAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = FormBuilder.addLabelTextFieldLabelTextField(gridPane, ++gridRow,
-                    Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
+                    Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(cashDepositAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(300);
             tuple.forth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                     cashDepositAccountPayload.getHolderName());
         }
     }

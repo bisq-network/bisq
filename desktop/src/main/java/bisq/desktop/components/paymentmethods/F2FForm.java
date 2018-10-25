@@ -62,11 +62,11 @@ public class F2FForm extends PaymentMethodForm {
         F2FAccountPayload f2fAccountPayload = (F2FAccountPayload) paymentAccountPayload;
         FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("shared.country"),
                 CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()), top);
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.city"),
                 offer.getF2FCity());
-        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.getWithCol("payment.f2f.extra"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
@@ -93,7 +93,7 @@ public class F2FForm extends PaymentMethodForm {
         gridRow = tuple.second;
 
         InputTextField contactInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.f2f.contact"));
+                Res.get("payment.f2f.contact"));
         contactInputTextField.setPromptText(Res.get("payment.f2f.contact.prompt"));
         contactInputTextField.setValidator(f2fValidator);
         contactInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -102,7 +102,7 @@ public class F2FForm extends PaymentMethodForm {
         });
 
         cityInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.f2f.city"));
+                Res.get("payment.f2f.city"));
         cityInputTextField.setPromptText(Res.get("payment.f2f.city.prompt"));
         cityInputTextField.setValidator(f2fValidator);
         cityInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -161,9 +161,9 @@ public class F2FForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact", f2fAccount.getContact()),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.contact", f2fAccount.getContact()),
                 f2fAccount.getContact());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city", f2fAccount.getCity()),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
         TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
