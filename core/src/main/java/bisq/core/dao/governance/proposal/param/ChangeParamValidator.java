@@ -61,10 +61,6 @@ public class ChangeParamValidator extends ProposalValidator {
 
     // TODO
     public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
-        // max 4 times the current value. min 25% of current value as general boundaries
-        //old
-//        checkMinMaxForProposedValue(param, paramValue, 300, -75);
-        //new more intuitive
         checkMinMaxForProposedValue(param, paramValue, 3, 4);
 
         switch (param) {
@@ -139,9 +135,6 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    //TODO add git branch, test and use
-    //consider using percentages instead of factors (or doubles)... maybe discuss with Manfred after a version 1 PR.
-    //hence finish smoke test and do the switch above and PR 1 is ready!
     @VisibleForTesting
     void checkMinMaxForProposedValue(Param param, long proposedNewValue, long maxFactorChange, long minFactorChange) throws ChangeParamValidationException {
         long currentValue = getCurrentValue(param);
