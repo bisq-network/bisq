@@ -245,7 +245,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                         paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
                         methodWithBankId);
             } else {
-                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"), method);
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), method);
             }
         }
         if (showAcceptedBanks) {

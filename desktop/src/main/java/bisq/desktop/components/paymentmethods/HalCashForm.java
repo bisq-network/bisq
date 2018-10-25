@@ -72,7 +72,7 @@ public class HalCashForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = halCashAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -92,14 +92,14 @@ public class HalCashForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 halCashAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(halCashAccount.getPaymentMethod().getId()));
         TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
                 halCashAccount.getMobileNr()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = halCashAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

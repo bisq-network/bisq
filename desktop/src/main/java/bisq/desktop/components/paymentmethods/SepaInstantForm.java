@@ -337,7 +337,7 @@ public class SepaInstantForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaInstantAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(sepaInstantAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaInstantAccount.getHolderName());
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, "IBAN:", sepaInstantAccount.getIban()).second.setMouseTransparent(false);
@@ -346,7 +346,7 @@ public class SepaInstantForm extends PaymentMethodForm {
                 sepaInstantAccount.getCountry() != null ? sepaInstantAccount.getCountry().name : "");
         TradeCurrency singleTradeCurrency = sepaInstantAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaInstantEuroCountries(sepaInstantAccount.getAcceptedCountryCodes())) {

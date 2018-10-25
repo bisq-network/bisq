@@ -141,7 +141,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 formatter.formatVolumeWithCode(trade.getTradeVolume()));
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 formatter.formatPrice(trade.getTradePrice()));
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
                 Res.get(offer.getPaymentMethod().getId()));
 
         // second group
@@ -225,7 +225,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
-                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
                         Res.get(contract.getPaymentMethodId()));
         }
 

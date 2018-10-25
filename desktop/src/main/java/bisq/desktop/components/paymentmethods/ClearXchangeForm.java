@@ -77,7 +77,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         });
         final TradeCurrency singleTradeCurrency = clearXchangeAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
@@ -98,7 +98,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(clearXchangeAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 clearXchangeAccount.getHolderName());
@@ -107,7 +107,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = clearXchangeAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
     }

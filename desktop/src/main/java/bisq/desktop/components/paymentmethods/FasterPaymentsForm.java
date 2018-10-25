@@ -88,7 +88,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
@@ -109,7 +109,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, "UK sort code:", fasterPaymentsAccount.getSortCode());
@@ -118,7 +118,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

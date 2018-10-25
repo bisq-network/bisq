@@ -186,13 +186,13 @@ abstract class BankForm extends GeneralBankForm {
 
         FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
 

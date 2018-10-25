@@ -90,7 +90,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         final Country country = getMoneyGramPaymentAccount().getCountry();
         FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),

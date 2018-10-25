@@ -142,7 +142,7 @@ public class OKPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(okPayAccount.getPaymentMethod().getId()));
         TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
                 okPayAccount.getAccountNr()).second;

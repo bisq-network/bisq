@@ -70,7 +70,7 @@ public class WeChatPayForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -89,12 +89,12 @@ public class WeChatPayForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), weChatPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(weChatPayAccount.getPaymentMethod().getId()));
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(weChatPayAccount.getPaymentMethod().getId()));
         TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), weChatPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = weChatPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

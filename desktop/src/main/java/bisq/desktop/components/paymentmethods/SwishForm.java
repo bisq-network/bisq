@@ -87,7 +87,7 @@ public class SwishForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -107,7 +107,7 @@ public class SwishForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(swishAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 swishAccount.getHolderName());
@@ -116,7 +116,7 @@ public class SwishForm extends PaymentMethodForm {
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

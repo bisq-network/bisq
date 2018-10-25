@@ -37,9 +37,9 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private final USPostalMoneyOrderAccount usPostalMoneyOrderAccount;
@@ -90,7 +90,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
@@ -111,7 +111,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
                 usPostalMoneyOrderAccount.getHolderName());
@@ -121,7 +121,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         textArea.setEditable(false);
         TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 
