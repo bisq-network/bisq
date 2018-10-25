@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -40,9 +41,12 @@ import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
 
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.property.BooleanProperty;
@@ -221,6 +225,25 @@ public abstract class PaymentMethodForm {
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(name));
         }
+    }
+
+    void fillUpFlowPaneWithCurrencies(boolean isEditable, FlowPane flowPane,
+                                      TradeCurrency e, PaymentAccount paymentAccount) {
+        CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
+        checkBox.setMouseTransparent(!isEditable);
+        checkBox.setSelected(paymentAccount.getTradeCurrencies().contains(e));
+        checkBox.setMinWidth(60);
+        checkBox.setMaxWidth(checkBox.getMinWidth());
+        checkBox.setTooltip(new Tooltip(e.getName()));
+        checkBox.setOnAction(event -> {
+            if (checkBox.isSelected())
+                paymentAccount.addCurrency(e);
+            else
+                paymentAccount.removeCurrency(e);
+
+            updateAllInputsValid();
+        });
+        flowPane.getChildren().add(checkBox);
     }
 
     abstract protected void autoFillNameTextField();

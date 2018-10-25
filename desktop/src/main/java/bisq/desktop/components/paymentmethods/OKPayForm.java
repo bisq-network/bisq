@@ -17,7 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -35,10 +34,8 @@ import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
@@ -104,23 +101,7 @@ public class OKPayForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         CurrencyUtil.getAllOKPayCurrencies().stream().forEach(e ->
-        {
-            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
-            checkBox.setMouseTransparent(!isEditable);
-            checkBox.setSelected(okPayAccount.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
-            checkBox.setTooltip(new Tooltip(e.getName()));
-            checkBox.setOnAction(event -> {
-                if (checkBox.isSelected())
-                    okPayAccount.addCurrency(e);
-                else
-                    okPayAccount.removeCurrency(e);
-
-                updateAllInputsValid();
-            });
-            flowPane.getChildren().add(checkBox);
-        });
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, okPayAccount));
 
         GridPane.setRowIndex(flowPane, gridRow);
         GridPane.setColumnIndex(flowPane, 1);

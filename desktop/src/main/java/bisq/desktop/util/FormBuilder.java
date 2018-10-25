@@ -70,6 +70,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -1343,6 +1344,19 @@ public class FormBuilder {
         return new Tuple3<>(topLabelWithVBox.first, listView, topLabelWithVBox.second);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + FlowPane
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple2<Label, FlowPane> addTopLabelFlowPane(GridPane gridPane, int rowIndex, String title, double top) {
+        FlowPane flowPane = new FlowPane();
+        flowPane.setPadding(new Insets(10, 10, 10, 10));
+        flowPane.setVgap(10);
+        flowPane.setHgap(10);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, flowPane, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, flowPane);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Remove

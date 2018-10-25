@@ -17,7 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -37,20 +36,18 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.util.Tuple2;
+
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 @Slf4j
@@ -73,8 +70,9 @@ public class MoneyGramForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    protected final MoneyGramAccountPayload moneyGramAccountPayload;
-    protected InputTextField holderNameInputTextField, emailInputTextField, stateInputTextField;
+    private final MoneyGramAccountPayload moneyGramAccountPayload;
+    private InputTextField holderNameInputTextField;
+    private InputTextField stateInputTextField;
     private final EmailValidator emailValidator;
 
     public MoneyGramForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
@@ -110,7 +108,7 @@ public class MoneyGramForm extends PaymentMethodForm {
 
         gridRow = GUIUtil.addRegionCountry(gridPane, gridRow, this::onCountrySelected);
 
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
+        holderNameInputTextField = addInputTextField(gridPane,
                 ++gridRow, Res.get("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setHolderName(newValue);
@@ -118,7 +116,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         });
         holderNameInputTextField.setValidator(inputValidator);
 
-        stateInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
+        stateInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.state"));
         stateInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setState(newValue);
             updateFromInputs();
@@ -126,7 +124,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         });
         applyIsStateRequired();
 
-        emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
+        InputTextField emailInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setEmail(newValue);
             updateFromInputs();
@@ -150,39 +148,17 @@ public class MoneyGramForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
-        GridPane.setValignment(label, VPos.TOP);
-        FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
+        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
+
+        FlowPane flowPane = labelFlowPaneTuple2.second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllMoneyGramCurrencies().forEach(e -> {
-            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
-            checkBox.setMouseTransparent(!isEditable);
-            checkBox.setSelected(paymentAccount.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
-            checkBox.setTooltip(new Tooltip(e.getName()));
-            checkBox.setOnAction(event -> {
-                if (checkBox.isSelected())
-                    paymentAccount.addCurrency(e);
-                else
-                    paymentAccount.removeCurrency(e);
-
-                updateAllInputsValid();
-            });
-            flowPane.getChildren().add(checkBox);
-        });
-
-        GridPane.setRowIndex(flowPane, gridRow);
-        GridPane.setColumnIndex(flowPane, 1);
-        gridPane.getChildren().add(flowPane);
+        CurrencyUtil.getAllMoneyGramCurrencies().forEach(e ->
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, paymentAccount));
     }
 
     private void applyIsStateRequired() {
