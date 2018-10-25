@@ -22,6 +22,7 @@ import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
@@ -31,6 +32,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -44,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
@@ -244,6 +247,20 @@ public abstract class PaymentMethodForm {
             updateAllInputsValid();
         });
         flowPane.getChildren().add(checkBox);
+    }
+
+    void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
+                                               TradeCurrency singleTradeCurrency) {
+        gridRowFrom = gridRow;
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
+        field.setMouseTransparent(false);
+
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+
+        addLimitations();
     }
 
     abstract protected void autoFillNameTextField();
