@@ -441,7 +441,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;
             cancelButton.setOnAction(event -> removeSelectAccountForm());
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             model.onSelectAccount(paymentAccount);
         }
     }
