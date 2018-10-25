@@ -529,7 +529,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void initializeDisplayOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 4);
+        GridPane.setColumnSpan(titledGroupBg, 1);
 
 //        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
