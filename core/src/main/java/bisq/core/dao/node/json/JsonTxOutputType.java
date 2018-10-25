@@ -27,6 +27,7 @@ enum JsonTxOutputType {
     BTC_OUTPUT("BTC"),
     PROPOSAL_OP_RETURN_OUTPUT("Proposal opReturn"),
     COMP_REQ_OP_RETURN_OUTPUT("Compensation request opReturn"),
+    REIMBURSEMENT_OP_RETURN_OUTPUT("Reimbursement request opReturn"),
     CONFISCATE_BOND_OP_RETURN_OUTPUT("Confiscate bond opReturn"),
     ISSUANCE_CANDIDATE_OUTPUT("Issuance candidate"),
     BLIND_VOTE_LOCK_STAKE_OUTPUT("Blind vote lock stake"),
