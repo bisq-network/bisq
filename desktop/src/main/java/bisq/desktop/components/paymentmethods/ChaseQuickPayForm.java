@@ -32,16 +32,10 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ChaseQuickPayForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(ChaseQuickPayForm.class);
 
     private final ChaseQuickPayAccount chaseQuickPayAccount;
     private final ChaseQuickPayValidator chaseQuickPayValidator;
@@ -90,12 +84,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
-        }
+        setAccountNameWithString(mobileNrInputTextField.getText());
     }
 
     @Override

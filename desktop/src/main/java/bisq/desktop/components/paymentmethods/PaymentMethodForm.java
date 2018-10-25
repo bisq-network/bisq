@@ -38,6 +38,8 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
@@ -130,7 +132,7 @@ public abstract class PaymentMethodForm {
                 getTimeText(hours)).second;
     }
 
-    protected static String getTimeText(long hours) {
+    private static String getTimeText(long hours) {
         String time = hours + " " + Res.get("time.hours");
         if (hours == 1)
             time = Res.get("time.1hour");
@@ -196,7 +198,7 @@ public abstract class PaymentMethodForm {
         }
     }
 
-    protected void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
+    void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
         if (!defaultCurrency.equals(tradeCurrency)) {
             new Popup<>().warning(Res.get("payment.foreign.currency"))
                     .actionButtonText(Res.get("shared.yes"))
@@ -210,6 +212,14 @@ public abstract class PaymentMethodForm {
         } else {
             paymentAccount.setSingleTradeCurrency(tradeCurrency);
             autoFillNameTextField();
+        }
+    }
+
+    void setAccountNameWithString(String name) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            name = StringUtils.abbreviate(name, 9);
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
+            accountNameTextField.setText(method.concat(": ").concat(name));
         }
     }
 

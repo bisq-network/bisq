@@ -32,8 +32,6 @@ import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -86,12 +84,7 @@ public class PopmoneyForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String accountNr = accountIdInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override

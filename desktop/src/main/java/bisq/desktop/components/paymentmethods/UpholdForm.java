@@ -33,8 +33,6 @@ import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -124,12 +122,7 @@ public class UpholdForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String AccountId = accountIdInputTextField.getText();
-            AccountId = StringUtils.abbreviate(AccountId, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(AccountId));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override
