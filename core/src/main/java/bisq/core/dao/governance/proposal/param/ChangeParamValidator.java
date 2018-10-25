@@ -62,7 +62,10 @@ public class ChangeParamValidator extends ProposalValidator {
     // TODO
     public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
         // max 4 times the current value. min 25% of current value as general boundaries
-        checkMinMax(param, paramValue, 300, -75);
+        //old
+//        checkMinMaxForProposedValue(param, paramValue, 300, -75);
+        //new more intuitive
+        checkMinMaxForProposedValue(param, paramValue, 3, 4);
 
         switch (param) {
             case UNDEFINED:
@@ -85,10 +88,10 @@ public class ChangeParamValidator extends ProposalValidator {
             case COMPENSATION_REQUEST_MIN_AMOUNT:
                 if (paramValue < Restrictions.getMinNonDustOutput().value)
                     throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                checkMinMax(param, paramValue, 100, -50);
+                checkMinMaxForProposedValue(param, paramValue, 100, -50);
                 break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
-                checkMinMax(param, paramValue, 100, -50);
+                checkMinMaxForProposedValue(param, paramValue, 100, -50);
                 break;
 
             case QUORUM_COMP_REQUEST:
@@ -136,29 +139,36 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    private void checkMinMax(Param param, long paramValue, long maxPercentChange, long minPercentChange) throws ChangeParamValidationException {
-        long max = getNewValueByPercentChange(param, maxPercentChange);
-        if (paramValue > max)
-            throw new ChangeParamValidationException(Res.get("validation.inputTooLarge", bsqFormatter.formatParamValue(param, max)));
-        long min = getNewValueByPercentChange(param, minPercentChange);
-        if (paramValue < min)
-            throw new ChangeParamValidationException(Res.get("validation.inputTooSmall", bsqFormatter.formatParamValue(param, min)));
+    //TODO add git branch, test and use
+    //consider using percentages instead of factors (or doubles)... maybe discuss with Manfred after a version 1 PR.
+    //hence finish smoke test and do the switch above and PR 1 is ready!
+    @VisibleForTesting
+    void checkMinMaxForProposedValue(Param param, long proposedNewValue, long maxFactorChange, long minFactorChange) throws ChangeParamValidationException {
+        long currentValue = getCurrentValue(param);
+        validateMinValue(param, currentValue, proposedNewValue, minFactorChange);
+        validateMaxValue(param, currentValue, proposedNewValue, maxFactorChange);
     }
 
-    /**
-     * @param param         The param to change
-     * @param percentChange 100 means 100% more than current value -> 2 times current value. -50 means half of the current value
-     * @return The new value.
-     */
-    //TODO add test
-    // TODO use multiplier to make it more intuitive? (4,4) means 4 times current value for max and divided by 4 to get min value)
     @VisibleForTesting
-    long getNewValueByPercentChange(Param param, long percentChange) {
-        checkArgument(percentChange > -100, "percentChange must be bigger than -100");
-        return (getCurrentValue(param) * 100 * (100 + percentChange)) / 10000;
+    void validateMinValue(Param param, long currentValue, long proposedNewValue, long factor) throws ChangeParamValidationException {
+        if ((proposedNewValue * factor) < currentValue){
+            throw new ChangeParamValidationException(Res.get("validation.inputTooSmall",
+                    bsqFormatter.formatParamValue(param,10000/factor))
+            );
+        }
+    }
+
+    @VisibleForTesting
+    void validateMaxValue(Param param, long currentValue, long proposedNewValue, long factor) throws ChangeParamValidationException {
+        if (proposedNewValue > (currentValue * factor)){
+            throw new ChangeParamValidationException(Res.get("validation.inputTooLarge",
+                    bsqFormatter.formatParamValue(param, (10000 * factor)))
+            );
+        }
     }
 
     private long getCurrentValue(Param param) {
-        return bsqStateService.getParamValue(param, periodService.getChainHeight());
+        return bsqStateService.getParamValue(param,
+                        periodService.getChainHeight());
     }
 }
