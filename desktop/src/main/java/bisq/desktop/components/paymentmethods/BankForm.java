@@ -47,16 +47,9 @@ import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addInputTextFieldInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.*;
 
 abstract class BankForm extends GeneralBankForm {
-    private static final Logger log = LoggerFactory.getLogger(BankForm.class);
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         BankAccountPayload data = (BankAccountPayload) paymentAccountPayload;
@@ -167,8 +160,8 @@ abstract class BankForm extends GeneralBankForm {
         return gridRow;
     }
 
-    protected final BankAccountPayload bankAccountPayload;
-    protected InputTextField holderNameInputTextField;
+    private final BankAccountPayload bankAccountPayload;
+    private InputTextField holderNameInputTextField;
     private ComboBox<String> accountTypeComboBox;
     private Country selectedCountry;
 
@@ -272,7 +265,7 @@ abstract class BankForm extends GeneralBankForm {
 
         });
 
-        accountTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow, "");
+        accountTypeComboBox = addComboBox(gridPane, ++gridRow, "");
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {
             if (BankUtil.isAccountTypeRequired(bankAccountPayload.getCountryCode())) {
@@ -354,6 +347,8 @@ abstract class BankForm extends GeneralBankForm {
             accountNrInputTextField.setManaged(accountNrRequired);
 
             boolean accountTypeRequired = BankUtil.isAccountTypeRequired(countryCode);
+            accountTypeComboBox.setVisible(accountTypeRequired);
+            accountTypeComboBox.setManaged(accountTypeRequired);
 
             updateFromInputs();
 
@@ -373,10 +368,10 @@ abstract class BankForm extends GeneralBankForm {
     protected void onCountryChanged() {
     }
 
-    protected void addHolderNameAndId() {
+    private void addHolderNameAndId() {
         Tuple2<InputTextField, InputTextField> tuple = addInputTextFieldInputTextField(gridPane,
                 ++gridRow, Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(""));
-        holderNameInputTextField = tuple.second;
+        holderNameInputTextField = tuple.first;
         holderNameInputTextField.setMinWidth(250);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setHolderName(newValue);
@@ -420,7 +415,7 @@ abstract class BankForm extends GeneralBankForm {
         allInputsValid.set(result);
     }
 
-    protected void addHolderNameAndIdForDisplayAccount() {
+    private void addHolderNameAndIdForDisplayAccount() {
         String countryCode = bankAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addLabelTextFieldLabelTextField(gridPane, ++gridRow,

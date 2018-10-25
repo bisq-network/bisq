@@ -47,6 +47,8 @@ public class InputTextField extends JFXTextField {
 
     private final JFXInputValidator jfxValidationWrapper = new JFXInputValidator();
 
+    private InputValidator validator;
+
     public InputValidator getValidator() {
         return validator;
     }
@@ -54,8 +56,6 @@ public class InputTextField extends JFXTextField {
     public void setValidator(InputValidator validator) {
         this.validator = validator;
     }
-
-    private InputValidator validator;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
