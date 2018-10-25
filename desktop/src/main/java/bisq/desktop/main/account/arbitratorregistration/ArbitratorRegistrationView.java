@@ -151,7 +151,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         root.getChildren().add(gridPane);
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
-        TextField pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
+        TextField pubKeyTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);

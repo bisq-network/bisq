@@ -720,10 +720,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
         });
 
-        Tuple2<Label, TextField> tuple2 = FormBuilder.addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
-        paymentMethodLabel = tuple2.first;
-        paymentMethodTextField = tuple2.second;
-        currencyTextField = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
+        Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
+        paymentMethodLabel = tuple3.first;
+        paymentMethodTextField = tuple3.second;
+        currencyTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
     }
 
     private void addAmountPriceGroup() {

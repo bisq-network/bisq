@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -166,50 +167,50 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String toSpend = " " + Res.get("shared.toSpend");
         double firstRowDistance = Layout.FIRST_ROW_DISTANCE;
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, offerTypeLabel,
+            FormBuilder.addTopLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, offerTypeLabel,
+            FormBuilder.addTopLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
-            addLabelTextField(gridPane, rowIndex, offerTypeLabel,
+            FormBuilder.addTopLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
         }
         String btcAmount = Res.get("shared.btcAmount");
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(tradeAmount));
-            addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
                     formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
-            addLabelTextField(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(offer.getAmount()));
-            addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
             String volume = formatter.formatVolumeWithCode(offer.getVolume());
             String minVolume = "";
             if (offer.getVolume() != null && offer.getMinVolume() != null &&
                     !offer.getVolume().equals(offer.getMinVolume()))
                 minVolume = " " + Res.get("offerDetailsWindow.min", formatter.formatVolumeWithCode(offer.getMinVolume()));
-            addLabelTextField(gridPane, ++rowIndex,
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                     formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
 
         String priceLabel = Res.getWithCol("shared.price");
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
         } else {
             Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
-                addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
                         formatter.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
-                addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price));
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
@@ -225,36 +226,36 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final PaymentAccount myPaymentAccount = user.getPaymentAccount(makerPaymentAccountId);
         String countryCode = offer.getCountryCode();
         if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && myPaymentAccount != null) {
-            addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
             String methodWithBankId = method + bankId;
             String paymentMethodLabel = Res.get("shared.paymentMethod");
             if (countryCode != null && (isNationalBanks || isSpecificBanks || isSepa)) {
                 if (BankUtil.isBankIdRequired(countryCode))
-                    addLabelTextField(gridPane, ++rowIndex,
+                    FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
                             methodWithBankId);
                 else if (BankUtil.isBankNameRequired(countryCode))
-                    addLabelTextField(gridPane, ++rowIndex,
+                    FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                             paymentMethodLabel + " " + Res.get("offerDetailsWindow.offerersBankName"),
                             methodWithBankId);
             } else if (paymentMethod.equals(PaymentMethod.CASH_DEPOSIT)) {
-                addLabelTextField(gridPane, ++rowIndex,
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                         paymentMethodLabel + " " + Res.get("offerDetailsWindow.offererBankId"),
                         methodWithBankId);
             } else {
-                addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"), method);
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"), method);
             }
         }
         if (showAcceptedBanks) {
             if (paymentMethod.equals(PaymentMethod.SAME_BANK)) {
-                addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.bankId"), acceptedBanks.get(0));
+                FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.bankId"), acceptedBanks.get(0));
             } else if (isSpecificBanks) {
                 String value = Joiner.on(", ").join(acceptedBanks);
                 String acceptedBanksLabel = Res.getWithCol("shared.acceptedBanks");
                 Tooltip tooltip = new Tooltip(acceptedBanksLabel + " " + value);
-                TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, acceptedBanksLabel, value).second;
+                TextField acceptedBanksTextField = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, acceptedBanksLabel, value).second;
                 acceptedBanksTextField.setMouseTransparent(false);
                 acceptedBanksTextField.setTooltip(tooltip);
             }
@@ -273,7 +274,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
                 }
             }
-            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex,
+            TextField acceptedCountries = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                     Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
             if (tooltip != null) {
                 acceptedCountries.setMouseTransparent(false);
@@ -282,7 +283,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
 
         if (isF2F) {
-            addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.city"), offer.getF2FCity());
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.city"), offer.getF2FCity());
             TextArea textArea = addTopLabelTextArea(gridPane, ++rowIndex, Res.getWithCol("payment.f2f.extra"), "").second;
             textArea.setText(offer.getF2FExtraInfo());
             textArea.setMinHeight(33);
@@ -300,11 +301,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
+        addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
                 offer.getMakerNodeAddress().getFullAddress());
-        addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
                 formatter.formatDateTime(offer.getDate()));
         String value = Res.getWithColAndCap("shared.buyer") +
                 " " +
@@ -313,26 +314,26 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 Res.getWithColAndCap("shared.seller") +
                 " " +
                 formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), value);
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), value);
 
         if (paymentMethodCountryCode != null && !isF2F)
-            addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(paymentMethodCountryCode));
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"), Res.get("createOffer.tac"),
+            FormBuilder.addTopLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"), Res.get("createOffer.tac"),
                     Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("shared.contract"), Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.tac"), Res.get("takeOffer.tac"),
+            FormBuilder.addTopLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.tac"), Res.get("takeOffer.tac"),
                     Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(false);

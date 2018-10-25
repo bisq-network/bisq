@@ -23,6 +23,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
@@ -169,7 +170,7 @@ public abstract class PaymentMethodForm {
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                         formatter.formatAccountAge(accountAge));
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        addTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
@@ -189,9 +190,26 @@ public abstract class PaymentMethodForm {
                 }
             });
         } else {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+        }
+    }
+
+    protected void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
+        if (!defaultCurrency.equals(tradeCurrency)) {
+            new Popup<>().warning(Res.get("payment.foreign.currency"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> {
+                        paymentAccount.setSingleTradeCurrency(tradeCurrency);
+                        autoFillNameTextField();
+                    })
+                    .closeButtonText(Res.get("payment.restore.default"))
+                    .onClose(() -> currencyComboBox.getSelectionModel().select(defaultCurrency))
+                    .show();
+        } else {
+            paymentAccount.setSingleTradeCurrency(tradeCurrency);
+            autoFillNameTextField();
         }
     }
 

@@ -24,6 +24,7 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
@@ -52,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelRadioButtonRadioButton;
 
 @Slf4j
@@ -147,7 +147,7 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         RadioButton radioButtonBTC = tuple.second;
         RadioButton radioButtonBSQ = tuple.third;
 
-        makerFeeTextField = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
+        makerFeeTextField = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             final boolean isBtc = newValue == radioButtonBTC;

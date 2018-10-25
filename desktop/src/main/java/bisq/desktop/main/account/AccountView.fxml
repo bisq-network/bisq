@@ -26,8 +26,16 @@
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
             AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
             xmlns:fx="http://javafx.com/fxml">
-    <Tab fx:id="fiatAccountsTab" closable="false"/>
-    <Tab fx:id="altcoinAccountsTab" closable="false"/>
+    <Tab fx:id="fiatAccountsTab" closable="false">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+    </Tab>
+    <Tab fx:id="altcoinAccountsTab" closable="false">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+    </Tab>
     <Tab fx:id="notificationTab" closable="false">
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"

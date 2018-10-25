@@ -188,54 +188,50 @@ public class FormBuilder {
     // TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<VBox, TextField> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, int top) {
+    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTextField(gridPane, rowIndex, title, value, 0);
+    }
 
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
-
-        final JFXTextField textField = new JFXTextField(value);
+    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        TextField textField = new JFXTextField(value);
+        ((JFXTextField) textField).setLabelFloat(true);
+        textField.setPromptText(title);
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
 
-        vBox.getChildren().addAll(label, textField);
+        GridPane.setRowIndex(textField, rowIndex);
+        GridPane.setMargin(textField, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(textField);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 1);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-        return new Tuple2<>(vBox, textField);
+        return textField;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelTextField(gridPane, rowIndex, title, "", 0);
+    public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title) {
+        return addTopLabelTextField(gridPane, rowIndex, title, "", 0);
     }
 
-    public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelTextField(gridPane, rowIndex, title, value, 0);
+    public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTopLabelTextField(gridPane, rowIndex, title, value, 0);
     }
 
-    public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        return addLabelTextField(gridPane, rowIndex, title, "", top);
+    public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        return addTopLabelTextField(gridPane, rowIndex, title, "", top);
     }
 
-    public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
-        TextField textField = new TextField(value);
+    public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        TextField textField = new JFXTextField(value);
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
-        GridPane.setRowIndex(textField, rowIndex);
-        GridPane.setColumnIndex(textField, 1);
-        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(textField);
 
-        return new Tuple2<>(label, textField);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
+
+        return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
     }
 
 
@@ -309,6 +305,28 @@ public class FormBuilder {
         return new Tuple2<>(label, hyperlinkWithIcon);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TextArea
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TextArea addTextArea(GridPane gridPane, int rowIndex, String prompt) {
+        return addTextArea(gridPane, rowIndex, prompt, 0);
+    }
+
+    public static TextArea addTextArea(GridPane gridPane, int rowIndex, String prompt, double top) {
+
+        TextArea textArea = new JFXTextArea();
+        textArea.setPromptText(prompt);
+        ((JFXTextArea) textArea).setLabelFloat(true);
+        textArea.setWrapText(true);
+
+        GridPane.setRowIndex(textArea, rowIndex);
+        GridPane.setColumnIndex(textArea, 0);
+        GridPane.setMargin(textArea, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(textArea);
+
+        return textArea;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextArea
@@ -319,22 +337,15 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
 
         TextArea textArea = new JFXTextArea();
         textArea.setPromptText(prompt);
         ((JFXTextArea) textArea).setLabelFloat(true);
         textArea.setWrapText(true);
 
-        vBox.getChildren().addAll(label, textArea);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-
-        return new Tuple2<>(label, textArea);
+        return new Tuple2<>(topLabelWithVBox.first, textArea);
     }
 
 
@@ -342,20 +353,12 @@ public class FormBuilder {
     // Label  + DatePicker
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, DatePicker> addTopLabelDatePicker(GridPane gridPane, int rowIndex, String title, int top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
-
+    public static Tuple2<Label, DatePicker> addTopLabelDatePicker(GridPane gridPane, int rowIndex, String title, double top) {
         DatePicker datePicker = new JFXDatePicker();
 
-        vBox.getChildren().addAll(label, datePicker);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, datePicker, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-
-        return new Tuple2<>(label, datePicker);
+        return new Tuple2<>(topLabelWithVBox.first, datePicker);
     }
 
 
@@ -412,19 +415,12 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, InfoInputTextField> addTopLabelInfoInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
 
         InfoInputTextField inputTextField = new InfoInputTextField();
 
-        vBox.getChildren().addAll(label, inputTextField);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-
-        return new Tuple2<>(label, inputTextField);
+        return new Tuple2<>(topLabelWithVBox.first, inputTextField);
     }
 
 
@@ -454,21 +450,17 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, InputTextField, ToggleButton> addTopLabelInputTextFieldSlideToggleButton(GridPane gridPane, int rowIndex, String title, String toggleButtonTitle) {
-        Label label = getTopLabel(title);
 
         InputTextField inputTextField = new InputTextField();
         ToggleButton toggleButton = new JFXToggleButton();
         toggleButton.setText(toggleButtonTitle);
         VBox.setMargin(toggleButton, new Insets(4, 0, 0, 0));
 
-        VBox vBox = getTopLabelVBox(0);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
 
-        vBox.getChildren().addAll(label, inputTextField, toggleButton);
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        gridPane.getChildren().add(vBox);
+        topLabelWithVBox.second.getChildren().add(toggleButton);
 
-        return new Tuple3<>(label, inputTextField, toggleButton);
+        return new Tuple3<>(topLabelWithVBox.first, inputTextField, toggleButton);
     }
 
 
@@ -506,7 +498,7 @@ public class FormBuilder {
     public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
-        TextField textField = new TextField();
+        TextField textField = new JFXTextField();
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
@@ -530,22 +522,24 @@ public class FormBuilder {
     // Label  + InputTextField + Label  + InputTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple4<Label, InputTextField, Label, InputTextField> addLabelInputTextFieldLabelInputTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
-        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
+    public static Tuple2<InputTextField, InputTextField> addInputTextFieldInputTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
 
         InputTextField inputTextField1 = new InputTextField();
-        Label label2 = new AutoTooltipLabel(title2);
-        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+        inputTextField1.setPromptText(title1);
+        inputTextField1.setLabelFloat(true);
         InputTextField inputTextField2 = new InputTextField();
+        inputTextField2.setLabelFloat(true);
+        inputTextField2.setPromptText(title2);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        hBox.getChildren().addAll(inputTextField1, label2, inputTextField2);
+        hBox.getChildren().addAll(inputTextField1, inputTextField2);
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
+        GridPane.setColumnIndex(hBox, 0);
+        GridPane.setMargin(hBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        return new Tuple4<>(label1, inputTextField1, label2, inputTextField2);
+        return new Tuple2<>(inputTextField1, inputTextField2);
     }
 
 
@@ -556,13 +550,13 @@ public class FormBuilder {
     public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
         Label label1 = addLabel(gridPane, rowIndex, title1, 0);
 
-        TextField textField1 = new TextField();
+        TextField textField1 = new JFXTextField();
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
         Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
-        TextField textField2 = new TextField();
+        TextField textField2 = new JFXTextField();
         textField2.setEditable(false);
         textField2.setMouseTransparent(true);
         textField2.setFocusTraversable(false);
@@ -645,9 +639,6 @@ public class FormBuilder {
                                                                                             String radioButtonTitle1,
                                                                                             String radioButtonTitle2,
                                                                                             int top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
-
         RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
         radioButton1.setToggleGroup(toggleGroup);
         radioButton1.setPadding(new Insets(6, 0, 0, 0));
@@ -660,14 +651,9 @@ public class FormBuilder {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(radioButton1, radioButton2);
 
-        vBox.getChildren().addAll(label, hBox);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-
-        return new Tuple3<>(label, radioButton1, radioButton2);
+        return new Tuple3<>(topLabelWithVBox.first, radioButton1, radioButton2);
     }
 
 
@@ -769,6 +755,22 @@ public class FormBuilder {
         return label;
     }
 
+    @NotNull
+    public static Tuple2 <Label, VBox> getTopLabelWithVBox(GridPane gridPane, int rowIndex,
+                                                           String title, Node node,
+                                                           double top) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(0);
+        vBox.getChildren().addAll(label, node);
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setColumnIndex(vBox, 0);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+
+        return new Tuple2<>(label, vBox);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -822,13 +824,11 @@ public class FormBuilder {
     // Label + ComboBox + ComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T, R> Tuple3<Label, ComboBox<R>, ComboBox<T>> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelComboBoxComboBox(gridPane, rowIndex, title, 0);
+    public static <T, R> Tuple3<Label, ComboBox<R>, ComboBox<T>> addTopLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title) {
+        return addTopLabelComboBoxComboBox(gridPane, rowIndex, title, 0);
     }
 
-    public static <T, R> Tuple3<Label, ComboBox<T>, ComboBox<R>> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
+    public static <T, R> Tuple3<Label, ComboBox<T>, ComboBox<R>> addTopLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
@@ -836,11 +836,9 @@ public class FormBuilder {
         ComboBox<R> comboBox2 = new JFXComboBox<>();
         hBox.getChildren().addAll(comboBox1, comboBox2);
 
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        gridPane.getChildren().add(hBox);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
-        return new Tuple3<>(label, comboBox1, comboBox2);
+        return new Tuple3<>(topLabelWithVBox.first, comboBox1, comboBox2);
     }
 
 
@@ -943,23 +941,19 @@ public class FormBuilder {
     // Label  + TextFieldWithCopyIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, TextFieldWithCopyIcon> addLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, 0);
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, 0);
     }
 
-    public static Tuple2<Label, TextFieldWithCopyIcon> addLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
 
         TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
         textFieldWithCopyIcon.setText(value);
-        GridPane.setRowIndex(textFieldWithCopyIcon, rowIndex);
-        GridPane.setColumnIndex(textFieldWithCopyIcon, 1);
-        GridPane.setMargin(textFieldWithCopyIcon, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(textFieldWithCopyIcon);
 
-        return new Tuple2<>(label, textFieldWithCopyIcon);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + AddressTextField
@@ -1068,19 +1062,12 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, Button> addTopLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
-        Label label = getTopLabel(labelText);
-        VBox vBox = getTopLabelVBox(0);
-
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
-        vBox.getChildren().addAll(label, button);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, labelText, button, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        gridPane.getChildren().add(vBox);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        return new Tuple2<>(label, button);
+        return new Tuple2<>(topLabelWithVBox.first, button);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1088,9 +1075,6 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, Button, Button> addTopLabel2Buttons(GridPane gridPane, int rowIndex, String labelText, String title1, String title2, double top) {
-        Label label = getTopLabel(labelText);
-        VBox vBox = getTopLabelVBox(0);
-
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         Button button1 = new AutoTooltipButton(title1);
@@ -1098,13 +1082,9 @@ public class FormBuilder {
         Button button2 = new AutoTooltipButton(title2);
         hBox.getChildren().addAll(button1, button2);
 
-        vBox.getChildren().addAll(label, hBox);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, labelText, hBox, top);
 
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 10, 0, 0));
-        gridPane.getChildren().add(vBox);
-        return new Tuple3<>(label, button1, button2);
+        return new Tuple3<>(topLabelWithVBox.first, button1, button2);
     }
 
 
@@ -1159,6 +1139,7 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         Button button1 = new AutoTooltipButton(title1);
+        button1.getStyleClass().add("action-button");
         button1.setDefaultButton(true);
         Button button2 = new AutoTooltipButton(title2);
         hBox.getChildren().addAll(button1, button2);
@@ -1356,19 +1337,10 @@ public class FormBuilder {
     }
 
     public static <T> Tuple3<Label, ListView<T>, VBox> addTopLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
-
         ListView<T> listView = new ListView<>();
 
-        vBox.getChildren().addAll(label, listView);
-
-        GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(vBox);
-
-        return new Tuple3<>(label, listView, vBox);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, listView, top);
+        return new Tuple3<>(topLabelWithVBox.first, listView, topLabelWithVBox.second);
     }
 
 

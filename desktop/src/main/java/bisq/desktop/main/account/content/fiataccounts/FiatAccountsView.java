@@ -383,7 +383,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
         paymentMethodComboBox = FormBuilder.<PaymentMethod>addComboBox(root, gridRow, Res.getWithCol("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
@@ -409,7 +409,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setOnAction(e -> {
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
             }
             gridRow = 2;
             paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
@@ -422,7 +422,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
                 Button cancelButton = tuple2.second;
                 cancelButton.setOnAction(event -> onCancelNewAccount());
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
             }
         });
     }
@@ -431,7 +431,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();

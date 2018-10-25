@@ -289,6 +289,7 @@ bg color of non edit textFields: fafafa
 .jfx-combo-box {
     -jfx-focus-color: -bs-rd-green;
     -jfx-unfocus-color: -bs-rd-grey-line;
+    -fx-background-color:-bs-rd-white;
 }
 
 .jfx-combo-box > .list-cell {
@@ -304,6 +305,12 @@ bg color of non edit textFields: fafafa
 
 .jfx-text-field {
     -jfx-focus-color: -bs-rd-green;
+    -fx-background-color:-bs-rd-white;
+    -fx-background-radius: 3 3 0 0;
+}
+
+.jfx-text-field:readonly {
+    -fx-background-color: transparent;
 }
 
 #info-field {
@@ -355,6 +362,11 @@ bg color of non edit textFields: fafafa
 .jfx-text-area {
     -jfx-focus-color: -bs-rd-green;
     -jfx-unfocus-color: -bs-rd-grey-line;
+    -fx-background-color: -bs-rd-white;
+}
+
+.jfx-text-area:readonly {
+    -fx-background-color: transparent;
 }
 
 .wallet-seed-words {
@@ -608,16 +620,6 @@ bg color of non edit textFields: fafafa
 
 .text-field {
     -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
-}
-
-.text-field:readonly {
-    -fx-text-fill: -bs-rd-black;
-    -fx-background-color: -bs-bg-light;
-}
-
-
-.text-area:readonly .content {
-    -fx-background-color: -bs-bg-light;
 }
 
 .text-area {
@@ -1436,21 +1438,6 @@ textfield */
     -fx-effect: null;
     -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
     -fx-background-insets: 10;
-}
-
-/********************************************************************************************************************
- *                                                                                                                  *
- * Text validation                                                                                                  *
- *                                                                                                                  *
- ********************************************************************************************************************/
-
-.text-field.validation_error, .text-area.validation_error .content, .date-picker.validation_error > .text-field {
-    -fx-background-color: -bs-red,
-    linear-gradient(
-            to bottom,
-            derive(-bs-pink, 40%) 5%,
-            derive(-bs-pink, 70%) 40%
-    );
 }
 
 /********************************************************************************************************************

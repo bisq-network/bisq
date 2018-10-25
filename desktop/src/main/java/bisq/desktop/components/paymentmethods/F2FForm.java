@@ -48,8 +48,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class F2FForm extends PaymentMethodForm {
@@ -61,11 +61,11 @@ public class F2FForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload, Offer offer, double top) {
         F2FAccountPayload f2fAccountPayload = (F2FAccountPayload) paymentAccountPayload;
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.country"),
+        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.country"),
                 CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()), top);
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city"),
                 offer.getF2FCity());
         TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.getWithCol("payment.f2f.extra"), "").second;
         textArea.setPrefHeight(60);
@@ -141,20 +141,7 @@ public class F2FForm extends PaymentMethodForm {
 
     private void onTradeCurrencySelected(TradeCurrency tradeCurrency) {
         FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(selectedCountry.code);
-        if (!defaultCurrency.equals(tradeCurrency)) {
-            new Popup<>().warning(Res.get("payment.foreign.currency"))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        paymentAccount.setSingleTradeCurrency(tradeCurrency);
-                        autoFillNameTextField();
-                    })
-                    .closeButtonText(Res.get("payment.restore.default"))
-                    .onClose(() -> currencyComboBox.getSelectionModel().select(defaultCurrency))
-                    .show();
-        } else {
-            paymentAccount.setSingleTradeCurrency(tradeCurrency);
-            autoFillNameTextField();
-        }
+        applyTradeCurrency(tradeCurrency, defaultCurrency);
     }
 
     @Override
@@ -171,18 +158,18 @@ public class F2FForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
 
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact", f2fAccount.getContact()),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.contact", f2fAccount.getContact()),
                 f2fAccount.getContact());
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city", f2fAccount.getCity()),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
         TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());

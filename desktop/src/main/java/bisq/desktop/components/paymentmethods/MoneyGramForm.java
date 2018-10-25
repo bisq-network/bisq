@@ -51,7 +51,7 @@ import javafx.geometry.VPos;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 @Slf4j
 public class MoneyGramForm extends PaymentMethodForm {
@@ -59,15 +59,15 @@ public class MoneyGramForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         final MoneyGramAccountPayload payload = (MoneyGramAccountPayload) paymentAccountPayload;
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
                 payload.getHolderName());
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(((MoneyGramAccountPayload) paymentAccountPayload).getCountryCode()));
         if (BankUtil.isStateRequired(payload.getCountryCode()))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
                     payload.getState());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 payload.getEmail());
 
         return gridRow;
@@ -89,16 +89,16 @@ public class MoneyGramForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         final Country country = getMoneyGramPaymentAccount().getCountry();
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.fullName"),
                 moneyGramAccountPayload.getHolderName());
         if (BankUtil.isStateRequired(moneyGramAccountPayload.getCountryCode()))
-            FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
+            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
                     moneyGramAccountPayload.getState()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 moneyGramAccountPayload.getEmail());
         addLimitations();
         addCurrenciesGrid(false);

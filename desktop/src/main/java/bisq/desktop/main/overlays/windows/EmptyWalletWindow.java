@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
@@ -148,13 +148,13 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
 
         Coin totalBalance = getWalletService().getAvailableBalance();
-        balanceTextField = addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
+        balanceTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
                 getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
         if (isBtc) {
             addressInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         } else {
-            addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
+            addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
                     bsqFormatter.formatBTCWithCode(bsqWalletService.getAvailableNonBsqBalance().value), 10);
         }
         closeButton = new AutoTooltipButton(Res.get("shared.cancel"));

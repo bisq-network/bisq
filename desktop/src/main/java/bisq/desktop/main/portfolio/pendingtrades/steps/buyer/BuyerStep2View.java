@@ -194,7 +194,7 @@ public class BuyerStep2View extends TradeStepView {
         TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.GROUP_DISTANCE);
-        TextFieldWithCopyIcon field = FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
+        TextFieldWithCopyIcon field = FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
@@ -287,7 +287,7 @@ public class BuyerStep2View extends TradeStepView {
 
         if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
                 !(paymentAccountPayload instanceof F2FAccountPayload))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                     Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         Trade trade = model.getTrade();
@@ -303,7 +303,7 @@ public class BuyerStep2View extends TradeStepView {
                         .findFirst()
                         .ifPresent(paymentAccount -> {
                             String accountName = paymentAccount.getAccountName();
-                            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                            FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                                     Res.getWithCol("portfolio.pending.step2_buyer.buyerAccount"), accountName);
                         });
             }

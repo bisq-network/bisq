@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -37,7 +38,7 @@ import javafx.geometry.HPos;
 
 import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -83,17 +84,17 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        addLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
+        FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders",
                 "BitcoinAverage (https://bitcoinaverage.com)",
                 "Poloniex (https://poloniex.com)",
                 "Coinmarketcap (https://coinmarketcap.com)"));
         if (isBtc)
-            addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "21 (https://bitcoinfees.earn.com)");
+            FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), "21 (https://bitcoinfees.earn.com)");
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        addLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(root, ++gridRow,
+        addTopLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(root, ++gridRow,
                 Res.get("setting.about.subsystems.label"),
                 Res.get("setting.about.subsystems.val",
                         Version.P2P_NETWORK_VERSION,

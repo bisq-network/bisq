@@ -123,6 +123,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -806,7 +807,7 @@ public class GUIUtil {
         gridRow = addRegionCountry(gridPane, gridRow, onCountrySelectedHandler);
 
         ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow,
-                Res.getWithCol("shared.currency"));
+                Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 
@@ -833,7 +834,7 @@ public class GUIUtil {
     public static int addRegionCountry(GridPane gridPane,
                                        int gridRow,
                                        Consumer<Country> onCountrySelectedHandler) {
-        Tuple3<Label, ComboBox<bisq.core.locale.Region>, ComboBox<Country>> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
+        Tuple3<Label, ComboBox<bisq.core.locale.Region>, ComboBox<Country>> tuple3 = addTopLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
 
         ComboBox<bisq.core.locale.Region> regionComboBox = tuple3.second;
         regionComboBox.setPromptText(Res.get("payment.select.region"));

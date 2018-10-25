@@ -123,17 +123,17 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     protected void addContent() {
         FormBuilder.addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
-        FormBuilder.addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
 
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
         final String miningFee = model.dataModel.isMaker() ?
                 Res.get("portfolio.pending.step5_buyer.makersMiningFee") :
                 Res.get("portfolio.pending.step5_buyer.takersMiningFee");
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
         withdrawTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);

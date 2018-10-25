@@ -30,6 +30,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -72,6 +73,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
@@ -665,7 +667,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 Res.get("dao.proposal.votes.header"), 20);
         voteFields.add(voteTitledGroupBg);
 
-        Tuple2<Label, TextField> meritTuple = addLabelTextField(root, gridRow,
+        Tuple3<Label, TextField, VBox> meritTuple = addTopLabelTextField(root, gridRow,
                 Res.getWithCol("dao.proposal.myVote.merit"), 40);
         Label meritLabel = meritTuple.first;
         meritTextField = meritTuple.second;

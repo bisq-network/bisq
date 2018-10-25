@@ -34,7 +34,7 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -42,6 +42,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import javafx.collections.FXCollections;
 
@@ -49,8 +50,8 @@ import javafx.util.StringConverter;
 
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class CryptoCurrencyForm extends PaymentMethodForm {
     private final CryptoCurrencyAccount cryptoCurrencyAccount;
@@ -65,7 +66,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                                       int gridRow,
                                       PaymentAccountPayload paymentAccountPayload,
                                       String labelTitle) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
                 ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
         return gridRow;
     }
@@ -126,17 +127,17 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
                 Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow,
+        Tuple3<Label, TextField, VBox> tuple2 = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"), cryptoCurrencyAccount.getAddress());
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 nameAndCode);
         addLimitations();
     }

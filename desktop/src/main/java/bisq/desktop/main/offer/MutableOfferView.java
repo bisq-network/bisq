@@ -902,9 +902,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         });
 
-        final Tuple2<VBox, TextField> currencyTextFieldTuple = addTopLabelTextField(gridPane, gridRow, Res.get("shared.currency"), "", 5);
+        final Tuple3<Label, TextField, VBox> currencyTextFieldTuple = addTopLabelTextField(gridPane, gridRow, Res.get("shared.currency"), "", 5d);
         currencyTextField = currencyTextFieldTuple.second;
-        currencyTextFieldBox = currencyTextFieldTuple.first;
+        currencyTextFieldBox = currencyTextFieldTuple.third;
         currencyTextFieldBox.setVisible(false);
         editOfferElements.add(currencyTextFieldBox);
 

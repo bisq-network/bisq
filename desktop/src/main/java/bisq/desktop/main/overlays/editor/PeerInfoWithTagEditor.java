@@ -172,12 +172,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     private void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex,
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("peerInfo.nrOfTrades"),
                 numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
         if (accountAge != null)
-            FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
 
         inputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
         Map<String, String> peerTagMap = preferences.getPeerTagMap();

@@ -198,7 +198,7 @@ public abstract class TradeStepView extends AnchorPane {
             infoTextField.setContentForInfoPopOver(createInfoPopover());
         }
 
-        timeLeftTextField = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
+        timeLeftTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
