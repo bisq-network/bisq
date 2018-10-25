@@ -765,7 +765,7 @@ public class FormBuilder {
 
         GridPane.setRowIndex(vBox, rowIndex);
         GridPane.setColumnIndex(vBox, 0);
-        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(vBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(vBox);
 
         return new Tuple2<>(label, vBox);
