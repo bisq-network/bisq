@@ -32,6 +32,9 @@ public class BankUtil {
     @SuppressWarnings("SameReturnValue")
     public static boolean isBankNameRequired(String countryCode) {
         switch (countryCode) {
+            // We show always the bank name as it is needed in specific banks.
+            // Though that handling should be optimized in futures.
+            /*
             case "GB":
             case "US":
             case "NZ":
@@ -39,14 +42,12 @@ public class BankUtil {
             case "CA":
             case "SE":
             case "HK":
-                // We show always the bank name as it is needed in specific banks.
-                // Though that handling should be optimized in futures.
-                return true;
-            // return false;
+                return false;
             case "MX":
             case "BR":
             case "AR":
                 return true;
+                */
             default:
                 return true;
         }
