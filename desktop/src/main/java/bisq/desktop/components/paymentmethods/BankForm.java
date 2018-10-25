@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -364,20 +363,7 @@ abstract class BankForm extends GeneralBankForm {
 
     private void onTradeCurrencySelected(TradeCurrency tradeCurrency) {
         FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(selectedCountry.code);
-        if (!defaultCurrency.equals(tradeCurrency)) {
-            new Popup<>().warning(Res.get("payment.foreign.currency"))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        paymentAccount.setSingleTradeCurrency(tradeCurrency);
-                        autoFillNameTextField();
-                    })
-                    .closeButtonText(Res.get("payment.restore.default"))
-                    .onClose(() -> currencyComboBox.getSelectionModel().select(defaultCurrency))
-                    .show();
-        } else {
-            paymentAccount.setSingleTradeCurrency(tradeCurrency);
-            autoFillNameTextField();
-        }
+        applyTradeCurrency(tradeCurrency, defaultCurrency);
     }
 
     private CountryBasedPaymentAccount getCountryBasedPaymentAccount() {
