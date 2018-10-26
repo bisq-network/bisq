@@ -1360,10 +1360,11 @@ enum TxType {
     PAY_TRADE_FEE = 6;
     PROPOSAL = 7;
     COMPENSATION_REQUEST = 8;
-    BLIND_VOTE = 9;
-    VOTE_REVEAL = 10;
-    LOCKUP = 11;
-    UNLOCK = 12;
+    REIMBURSEMENT_REQUEST = 9;
+    BLIND_VOTE = 10;
+    VOTE_REVEAL = 11;
+    LOCKUP = 12;
+    UNLOCK = 13;
 }
 
 message TxInput {
@@ -1403,16 +1404,17 @@ enum TxOutputType {
     BTC_OUTPUT = 4;
     PROPOSAL_OP_RETURN_OUTPUT = 5;
     COMP_REQ_OP_RETURN_OUTPUT = 6;
-    CONFISCATE_BOND_OP_RETURN_OUTPUT = 7;
-    ISSUANCE_CANDIDATE_OUTPUT = 8;
-    BLIND_VOTE_LOCK_STAKE_OUTPUT = 9;
-    BLIND_VOTE_OP_RETURN_OUTPUT = 10;
-    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 11;
-    VOTE_REVEAL_OP_RETURN_OUTPUT = 12;
-    LOCKUP_OUTPUT = 13;
-    LOCKUP_OP_RETURN_OUTPUT = 14;
-    UNLOCK_OUTPUT = 15;
-    INVALID_OUTPUT = 16;
+    REIMBURSEMENT_OP_RETURN_OUTPUT = 7;
+    CONFISCATE_BOND_OP_RETURN_OUTPUT = 8;
+    ISSUANCE_CANDIDATE_OUTPUT = 9;
+    BLIND_VOTE_LOCK_STAKE_OUTPUT = 10;
+    BLIND_VOTE_OP_RETURN_OUTPUT = 11;
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT = 12;
+    VOTE_REVEAL_OP_RETURN_OUTPUT = 13;
+    LOCKUP_OUTPUT = 14;
+    LOCKUP_OP_RETURN_OUTPUT = 15;
+    UNLOCK_OUTPUT = 16;
+    INVALID_OUTPUT = 17;
 }
 
 message SpentInfo {
@@ -1474,6 +1476,7 @@ message Issuance {
     int32 chain_height = 2;
     int64 amount = 3;
     string pub_key = 4;
+    string issuance_type = 5;
 }
 
 message Proposal {
@@ -1484,15 +1487,21 @@ message Proposal {
     string tx_id = 5;
     oneof message {
         CompensationProposal compensation_proposal = 6;
-        ChangeParamProposal change_param_proposal = 7;
-        BondedRoleProposal bonded_role_proposal = 8;
-        ConfiscateBondProposal confiscate_bond_proposal = 9;
-        GenericProposal generic_proposal = 10;
-        RemoveAssetProposal remove_asset_proposal = 11;
+        ReimbursementProposal reimbursement_proposal = 7;
+        ChangeParamProposal change_param_proposal = 8;
+        BondedRoleProposal bonded_role_proposal = 9;
+        ConfiscateBondProposal confiscate_bond_proposal = 10;
+        GenericProposal generic_proposal = 11;
+        RemoveAssetProposal remove_asset_proposal = 12;
     }
 }
 
 message CompensationProposal {
+    int64 requested_bsq = 1;
+    string bsq_address = 2;
+}
+
+message ReimbursementProposal {
     int64 requested_bsq = 1;
     string bsq_address = 2;
 }

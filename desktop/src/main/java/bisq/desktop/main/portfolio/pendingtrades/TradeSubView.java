@@ -26,7 +26,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;

@@ -26,7 +26,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;

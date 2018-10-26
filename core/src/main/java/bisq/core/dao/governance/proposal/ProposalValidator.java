@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxType;
@@ -112,7 +113,12 @@ public class ProposalValidator {
             }
             if (proposal instanceof CompensationProposal) {
                 if (optionalTx.get().getTxType() != TxType.COMPENSATION_REQUEST) {
-                    log.error("TxType is not PROPOSAL. proposal.getTxId()={}", proposal.getTxId());
+                    log.error("TxType is not a COMPENSATION_REQUEST. proposal.getTxId()={}", proposal.getTxId());
+                    return false;
+                }
+            } else if (proposal instanceof ReimbursementProposal) {
+                if (optionalTx.get().getTxType() != TxType.REIMBURSEMENT_REQUEST) {
+                    log.error("TxType is not a REIMBURSEMENT_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else {

@@ -34,6 +34,7 @@ public enum TxType {
     PAY_TRADE_FEE(false, true),
     PROPOSAL(true, true),
     COMPENSATION_REQUEST(true, true),
+    REIMBURSEMENT_REQUEST(true, true),
     BLIND_VOTE(true, true),
     VOTE_REVEAL(true, false),
     LOCKUP(true, false),

@@ -27,7 +27,6 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;

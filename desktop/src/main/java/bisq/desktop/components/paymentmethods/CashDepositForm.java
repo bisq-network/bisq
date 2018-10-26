@@ -318,7 +318,6 @@ public class CashDepositForm extends GeneralBankForm {
     }
 
 
-
     private void onCountrySelected(Country country) {
         selectedCountry = country;
         if (selectedCountry != null) {

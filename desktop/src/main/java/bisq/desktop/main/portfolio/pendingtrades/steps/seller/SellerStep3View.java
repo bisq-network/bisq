@@ -60,8 +60,8 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class SellerStep3View extends TradeStepView {
 

@@ -15,30 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.node.json;
+package bisq.core.dao.governance.proposal;
 
-import lombok.Getter;
+import org.bitcoinj.core.Coin;
 
-// Need to be in sync with TxOutputType
-enum JsonTxType {
-    UNDEFINED_TX_TYPE("Undefined"),
-    UNVERIFIED("Unverified"),
-    INVALID("Invalid"),
-    GENESIS("Genesis"),
-    TRANSFER_BSQ("Transfer BSQ"),
-    PAY_TRADE_FEE("Pay trade fee"),
-    PROPOSAL("Proposal"),
-    COMPENSATION_REQUEST("Compensation request"),
-    REIMBURSEMENT_REQUEST("Reimbursement request"),
-    BLIND_VOTE("Blind vote"),
-    VOTE_REVEAL("Vote reveal"),
-    LOCKUP("Lockup"),
-    UNLOCK("Unlock");
+/**
+ * Marker interface for proposals which can lead to new BSQ issuance
+ */
+public interface IssuanceProposal {
+    Coin getRequestedBsq();
 
-    @Getter
-    private String displayString;
+    String getBsqAddress();
 
-    JsonTxType(String displayString) {
-        this.displayString = displayString;
-    }
+    String getTxId();
 }

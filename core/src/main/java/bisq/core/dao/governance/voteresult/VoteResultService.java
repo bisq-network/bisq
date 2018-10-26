@@ -30,9 +30,9 @@ import bisq.core.dao.governance.blindvote.VoteWithProposalTxId;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
@@ -564,8 +564,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private void applyIssuance(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
         acceptedEvaluatedProposals.stream()
                 .map(EvaluatedProposal::getProposal)
-                .filter(proposal -> proposal instanceof CompensationProposal)
-                .forEach(proposal -> issuanceService.issueBsq((CompensationProposal) proposal, chainHeight));
+                .filter(proposal -> proposal instanceof IssuanceProposal)
+                .forEach(proposal -> issuanceService.issueBsq((IssuanceProposal) proposal, chainHeight));
     }
 
     private void applyParamChange(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {

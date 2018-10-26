@@ -40,9 +40,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // We use here ChainHeightListener because we are interested in period changes not in the result of a completed
 // block. The event from the ChainHeightListener is sent before parsing starts.
