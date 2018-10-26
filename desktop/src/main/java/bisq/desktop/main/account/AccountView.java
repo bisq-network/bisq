@@ -106,9 +106,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (arbitratorRegistrationTab != null) {
-                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            } else if (newValue == fiatAccountsTab) {
+            if (newValue == fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             } else if (newValue == altcoinAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
@@ -120,6 +118,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
             } else if (newValue == backupTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
+            } else if (newValue == arbitratorRegistrationTab) {
+                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
             } else {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             }
