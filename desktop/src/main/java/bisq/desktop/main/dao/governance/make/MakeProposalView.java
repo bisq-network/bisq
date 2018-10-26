@@ -46,6 +46,8 @@ import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.asset.Asset;
+
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
@@ -76,10 +78,6 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import bisq.asset.Asset;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> implements DaoStateListener {
@@ -131,8 +129,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
-                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
+                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(ProposalType proposalType) {

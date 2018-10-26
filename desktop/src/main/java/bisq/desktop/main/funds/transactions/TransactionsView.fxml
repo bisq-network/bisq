@@ -17,7 +17,7 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Button?>
+<?import bisq.desktop.components.AutoTooltipButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
@@ -38,5 +38,5 @@
             <TableColumn fx:id="revertTxColumn" sortable="false" minWidth="110" maxWidth="110" visible="false"/>
         </columns>
     </TableView>
-    <Button fx:id="exportButton"/>
+    <AutoTooltipButton fx:id="exportButton"/>
 </VBox>

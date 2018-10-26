@@ -82,7 +82,7 @@ class LockupTxListItem extends TxConfidenceListItem {
 
         button = new AutoTooltipButton();
         button.setMinWidth(70);
-        button.setText(Res.get("dao.bonding.unlock.unlock"));
+        button.updateText(Res.get("dao.bonding.unlock.unlock"));
         button.setVisible(true);
         button.setManaged(true);
     }

@@ -18,6 +18,7 @@
 package bisq.desktop.util;
 
 import bisq.desktop.app.BisqApp;
+import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 
@@ -31,6 +32,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
@@ -76,11 +78,15 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 
@@ -90,6 +96,7 @@ import javafx.beans.property.DoubleProperty;
 
 import javafx.collections.FXCollections;
 
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.net.URI;
@@ -114,6 +121,9 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -266,61 +276,255 @@ public class GUIUtil {
         }
     }
 
-    public static StringConverter<CurrencyListItem> getCurrencyListItemConverter(String postFixSingle, String postFixMulti, Preferences preferences) {
-        return new StringConverter<CurrencyListItem>() {
-            @Override
-            public String toString(CurrencyListItem item) {
-                TradeCurrency tradeCurrency = item.tradeCurrency;
-                String code = tradeCurrency.getCode();
-                switch (code) {
-                    case GUIUtil.SHOW_ALL_FLAG:
-                        return "▶ " + Res.get("list.currency.showAll");
-                    case GUIUtil.EDIT_FLAG:
-                        return "▼ " + Res.get("list.currency.editList");
-                    default:
-                        String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.isSortMarketCurrenciesNumerically()) {
-                            final int numTrades = item.numTrades;
-                            displayString += " - " + numTrades + " " + (numTrades == 1 ? postFixSingle : postFixMulti);
-                        }
-                        return tradeCurrency.getDisplayPrefix() + displayString;
-                }
-            }
+    public static ListCell<CurrencyListItem> getCurrencyListItemButtonCell(String postFixSingle, String postFixMulti,
+                                                                           Preferences preferences) {
+        return new ListCell<>() {
 
             @Override
-            public CurrencyListItem fromString(String s) {
-                return null;
+            protected void updateItem(CurrencyListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String code = item.tradeCurrency.getCode();
+
+                    AnchorPane pane = new AnchorPane();
+                    Label currency = new AutoTooltipLabel(code + " - " + item.tradeCurrency.getName());
+                    currency.getStyleClass().add("currency-label-selected");
+                    AnchorPane.setLeftAnchor(currency, 0.0);
+                    pane.getChildren().add(currency);
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            break;
+                        default:
+                            if (preferences.isSortMarketCurrenciesNumerically()) {
+                                Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
+                                        (item.numTrades == 1 ? postFixSingle : postFixMulti));
+                                numberOfOffers.getStyleClass().add("offer-label-small");
+                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                pane.getChildren().add(numberOfOffers);
+                            }
+                    }
+
+                    setGraphic(pane);
+                    setText("");
+                } else {
+                    setGraphic(null);
+                    setText("");
+                }
             }
         };
     }
 
-    public static StringConverter<TradeCurrency> getTradeCurrencyConverter(
-            String postFixSingle,
-            String postFixMulti,
-            Map<String, Integer> offerCounts) {
-        return new StringConverter<TradeCurrency>() {
+    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle, String postFixMulti,
+                                                                                                                  Preferences preferences) {
+        return p -> new ListCell<>() {
             @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                String code = tradeCurrency.getCode();
-                Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
-                final String displayString;
-                if (offerCountOptional.isPresent()) {
-                    displayString = CurrencyUtil.getNameAndCode(code)
-                            + " - " + offerCountOptional.get() + " " + (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti);
+            protected void updateItem(CurrencyListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    String code = item.tradeCurrency.getCode();
+
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    Label currencyType = new AutoTooltipLabel(
+                            CurrencyUtil.isFiatCurrency(code) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+
+                    currencyType.getStyleClass().add("currency-label-small");
+                    Label currency = new AutoTooltipLabel(code);
+                    currency.getStyleClass().add("currency-label");
+                    Label offers = new AutoTooltipLabel(item.tradeCurrency.getName());
+                    offers.getStyleClass().add("currency-label");
+
+                    box.getChildren().addAll(currencyType, currency, offers);
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currencyType.setText("▶");
+                            currency.setText(Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currencyType.setText("▼");
+                            currency.setText(Res.get("list.currency.editList"));
+                            break;
+                        default:
+                            if (preferences.isSortMarketCurrenciesNumerically()) {
+                                offers.setText(offers.getText() + " (" + item.numTrades + " " +
+                                        (item.numTrades == 1 ? postFixSingle : postFixMulti) + ")");
+                            }
+                    }
+
+                    setGraphic(box);
+
                 } else {
-                    displayString = CurrencyUtil.getNameAndCode(code);
+                    setGraphic(null);
                 }
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ " + Res.get("list.currency.showAll");
-                else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ " + Res.get("list.currency.editList");
-                return tradeCurrency.getDisplayPrefix() + displayString;
             }
+        };
+    }
+
+    public static ListCell<TradeCurrency> getTradeCurrencyButtonCell(String postFixSingle,
+                                                                     String postFixMulti,
+                                                                     Map<String, Integer> offerCounts) {
+        return new ListCell<>() {
 
             @Override
-            public TradeCurrency fromString(String s) {
-                return null;
+            protected void updateItem(TradeCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String code = item.getCode();
+
+                    AnchorPane pane = new AnchorPane();
+                    Label currency = new AutoTooltipLabel(code + " - " + item.getName());
+                    currency.getStyleClass().add("currency-label-selected");
+                    AnchorPane.setLeftAnchor(currency, 0.0);
+                    pane.getChildren().add(currency);
+
+                    Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            break;
+                        default:
+                            if (offerCountOptional.isPresent()) {
+                                Label numberOfOffers = new AutoTooltipLabel(offerCountOptional.get() + " " +
+                                        (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti));
+                                numberOfOffers.getStyleClass().add("offer-label-small");
+                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                pane.getChildren().add(numberOfOffers);
+                            }
+                    }
+
+                    setGraphic(pane);
+                    setText("");
+                } else {
+                    setGraphic(null);
+                    setText("");
+                }
+            }
+        };
+    }
+
+    public static Callback<ListView<TradeCurrency>, ListCell<TradeCurrency>> getTradeCurrencyCellFactory(String postFixSingle,
+                                                                                                         String postFixMulti,
+                                                                                                         Map<String, Integer> offerCounts) {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(TradeCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    String code = item.getCode();
+
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    Label currencyType = new AutoTooltipLabel(
+                            CurrencyUtil.isFiatCurrency(item.getCode()) ? Res.get("shared.fiat") : Res.get("shared.crypto"));
+
+                    currencyType.getStyleClass().add("currency-label-small");
+                    Label currency = new AutoTooltipLabel(item.getCode());
+                    currency.getStyleClass().add("currency-label");
+                    Label offers = new AutoTooltipLabel(item.getName());
+                    offers.getStyleClass().add("currency-label");
+
+                    box.getChildren().addAll(currencyType, currency, offers);
+
+                    Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+
+                    switch (code) {
+                        case GUIUtil.SHOW_ALL_FLAG:
+                            currencyType.setText("▶");
+                            currency.setText(Res.get("list.currency.showAll"));
+                            break;
+                        case GUIUtil.EDIT_FLAG:
+                            currencyType.setText("▼");
+                            currency.setText(Res.get("list.currency.editList"));
+                            break;
+                        default:
+                            if (offerCountOptional.isPresent()) {
+                                offers.setText(offers.getText() + " (" + offerCountOptional.get() + " " +
+                                        (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti) + ")");
+                            }
+                    }
+
+                    setGraphic(box);
+
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
+    }
+
+    public static ListCell<PaymentMethod> getPaymentMethodButtonCell() {
+        return new ListCell<>() {
+
+            @Override
+            protected void updateItem(PaymentMethod item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    String id = item.getId();
+
+                    this.getStyleClass().add("currency-label-selected");
+
+                    if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
+                        setText("▶ " + Res.get("list.currency.showAll"));
+                    } else {
+                        setText(Res.get(id));
+                    }
+                } else {
+                    setText("");
+                }
+            }
+        };
+    }
+
+    public static Callback<ListView<PaymentMethod>, ListCell<PaymentMethod>> getPaymentMethodCellFactory() {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(PaymentMethod item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    String id = item.getId();
+
+                    HBox box = new HBox();
+                    box.setSpacing(20);
+                    final boolean isBlockchainPaymentMethod = item.equals(PaymentMethod.BLOCK_CHAINS);
+                    Label paymentType = new AutoTooltipLabel(
+                            isBlockchainPaymentMethod ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+
+                    paymentType.getStyleClass().add("currency-label-small");
+                    Label paymentMethod = new AutoTooltipLabel(Res.get(id));
+                    paymentMethod.getStyleClass().add("currency-label");
+                    box.getChildren().addAll(paymentType, paymentMethod);
+
+                    if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
+                        paymentType.setText("▶");
+                        paymentMethod.setText(Res.get("list.currency.showAll"));
+                    }
+
+                    setGraphic(box);
+
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }
@@ -602,8 +806,8 @@ public class GUIUtil {
                                                                                                    Consumer<TradeCurrency> onTradeCurrencySelectedHandler) {
         gridRow = addRegionCountry(gridPane, gridRow, onCountrySelectedHandler);
 
-        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(gridPane, ++gridRow,
-                Res.getWithCol("shared.currency")).second;
+        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow,
+                Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 
@@ -630,7 +834,7 @@ public class GUIUtil {
     public static int addRegionCountry(GridPane gridPane,
                                        int gridRow,
                                        Consumer<Country> onCountrySelectedHandler) {
-        Tuple3<Label, ComboBox<bisq.core.locale.Region>, ComboBox<Country>> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
+        Tuple3<Label, ComboBox<bisq.core.locale.Region>, ComboBox<Country>> tuple3 = addTopLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
 
         ComboBox<bisq.core.locale.Region> regionComboBox = tuple3.second;
         regionComboBox.setPromptText(Res.get("payment.select.region"));
@@ -676,5 +880,30 @@ public class GUIUtil {
         });
 
         return gridRow;
+    }
+
+    @NotNull
+    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox) {
+        return getComboBoxButtonCell(title, comboBox, true);
+    }
+
+    @NotNull
+    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox, Boolean hideOriginalPrompt) {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+
+                // See https://github.com/jfoenixadmin/JFoenix/issues/610
+                if (hideOriginalPrompt)
+                    this.setVisible(item != null || !empty);
+
+                if (empty || item == null) {
+                    setText(title);
+                } else {
+                    setText(comboBox.getConverter().toString(item));
+                }
+            }
+        };
     }
 }

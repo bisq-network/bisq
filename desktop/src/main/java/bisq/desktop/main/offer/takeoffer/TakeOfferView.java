@@ -107,7 +107,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.addLabelFundsTextfield;
 import static bisq.desktop.util.FormBuilder.getAmountCurrencyBox;
 import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBox;
 import static bisq.desktop.util.FormBuilder.getNonEditableValueCurrencyBoxWithInfo;
@@ -126,8 +125,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
-    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel,
-            paymentAccountsLabel, paymentMethodLabel,
+    private Label directionLabel, amountDescriptionLabel,
+            paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, offerAvailabilityLabel, amountCurrency, priceAsPercentageDescription;
@@ -137,7 +136,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private FundsTextField totalToPayTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
-    private Button nextButton, cancelButton1, cancelButton2, takeOfferButton;
+    private AutoTooltipButton nextButton, cancelButton1, cancelButton2, takeOfferButton;
     private ImageView imageView, qrCodeImageView;
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
@@ -291,7 +290,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
+            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
             priceAsPercentageDescription.setText(Res.get("shared.aboveInPercent"));
         } else {
@@ -300,13 +299,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
+            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
             priceAsPercentageDescription.setText(Res.get("shared.belowInPercent"));
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
-        paymentAccountsLabel.setVisible(showComboBox);
-        paymentAccountsLabel.setManaged(showComboBox);
         paymentAccountsComboBox.setVisible(showComboBox);
         paymentAccountsComboBox.setManaged(showComboBox);
         paymentMethodTextField.setVisible(!showComboBox);
@@ -456,12 +453,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         waitingForFundsBusyAnimation.play();
 
         payFundsPane.setVisible(true);
-        totalToPayLabel.setVisible(true);
         totalToPayTextField.setVisible(true);
-        addressLabel.setVisible(true);
         addressTextField.setVisible(true);
         qrCodeImageView.setVisible(true);
-        balanceLabel.setVisible(true);
         balanceTextField.setVisible(true);
 
         totalToPayTextField.setFundsStructure(Res.get("takeOffer.fundsBox.fundsStructure",
@@ -688,7 +682,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.setOnScroll(e -> InputTextField.hideErrorMessageDisplay());
         AnchorPane.setLeftAnchor(scrollPane, 0d);
         AnchorPane.setTopAnchor(scrollPane, 0d);
         AnchorPane.setRightAnchor(scrollPane, 0d);
@@ -717,11 +710,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 2, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 3);
 
-        Tuple2<Label, ComboBox<PaymentAccount>> tuple = FormBuilder.addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
-        paymentAccountsLabel = tuple.first;
-        paymentAccountsLabel.setVisible(false);
-        paymentAccountsLabel.setManaged(false);
-        paymentAccountsComboBox = tuple.second;
+        paymentAccountsComboBox = FormBuilder.addComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
         paymentAccountsComboBox.setVisible(false);
@@ -731,10 +720,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
         });
 
-        Tuple2<Label, TextField> tuple2 = FormBuilder.addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
-        paymentMethodLabel = tuple2.first;
-        paymentMethodTextField = tuple2.second;
-        currencyTextField = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
+        Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
+        paymentMethodLabel = tuple3.first;
+        paymentMethodTextField = tuple3.second;
+        currencyTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
     }
 
     private void addAmountPriceGroup() {
@@ -827,11 +816,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
-        Tuple2<Label, FundsTextField> fundsTuple = addLabelFundsTextfield(gridPane, gridRow,
+        totalToPayTextField = FormBuilder.addFundsTextfield(gridPane, gridRow,
                 Res.get("shared.totalsNeeded"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        totalToPayLabel = fundsTuple.first;
-        totalToPayLabel.setVisible(false);
-        totalToPayTextField = fundsTuple.second;
         totalToPayTextField.setVisible(false);
 
         qrCodeImageView = new ImageView();
@@ -843,21 +829,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
-        GridPane.setColumnIndex(qrCodeImageView, 2);
+        GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setRowSpan(qrCodeImageView, 3);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = FormBuilder.addLabelAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
-        addressLabel = addressTuple.first;
-        addressLabel.setVisible(false);
-        addressTextField = addressTuple.second;
+        addressTextField = FormBuilder.addAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
         addressTextField.setVisible(false);
 
-        Tuple2<Label, BalanceTextField> balanceTuple = FormBuilder.addLabelBalanceTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletBalance"));
-        balanceLabel = balanceTuple.first;
-        balanceLabel.setVisible(false);
-        balanceTextField = balanceTuple.second;
+        balanceTextField = FormBuilder.addBalanceTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletBalance"));
         balanceTextField.setVisible(false);
 
         fundingHBox = new HBox();
@@ -887,14 +867,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(fundingHBox, new Insets(15, 10, 0, 0));
         gridPane.getChildren().add(fundingHBox);
 
-        takeOfferButton = FormBuilder.addButtonAfterGroup(gridPane, gridRow, "");
+        takeOfferButton = (AutoTooltipButton) FormBuilder.addButtonAfterGroup(gridPane, gridRow, "");
         takeOfferButton.setVisible(false);
         takeOfferButton.setManaged(false);
         takeOfferButton.setMinHeight(40);
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
         takeOfferButton.setOnAction(e -> onTakeOffer());
 
-        cancelButton2 = FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
+        cancelButton2 = (AutoTooltipButton) FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.getIsBtcWalletFunded().get()) {
                 new Popup<>().warning(Res.get("takeOffer.alreadyFunded.askCancel"))

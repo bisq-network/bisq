@@ -19,6 +19,7 @@ package bisq.desktop.main.funds.withdrawal;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -29,8 +30,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
@@ -64,7 +65,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.fxml.FXML;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -109,7 +109,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     Label inputsLabel, amountLabel, fromLabel, toLabel;
     @FXML
-    Button withdrawButton;
+    AutoTooltipButton withdrawButton;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
@@ -182,7 +182,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         feeIncludedRadioButton.setText(Res.get("funds.withdrawal.feeIncluded"));
         fromLabel.setText(Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
         toLabel.setText(Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
-        withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
+        withdrawButton.updateText(Res.get("funds.withdrawal.withdrawButton"));
 
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));

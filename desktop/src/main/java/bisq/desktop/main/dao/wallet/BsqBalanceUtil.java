@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.wallet;
 
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
@@ -25,7 +26,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 
@@ -34,10 +35,10 @@ import javax.inject.Inject;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
@@ -63,33 +64,33 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
     public int addGroup(GridPane gridPane, int gridRow) {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 5, Res.get("dao.wallet.dashboard.myBalance"));
-        availableBalanceTextField = addLabelTextField(gridPane, gridRow,
+        availableBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow,
                 Res.getWithCol("dao.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
         availableBalanceTextField.setMouseTransparent(false);
 
-        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+        unverifiedBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.unverifiedBsqBalance")).second;
         unverifiedBalanceTextField.setMouseTransparent(false);
 
-        lockedForVoteBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+        lockedForVoteBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.lockedForVoteBalance")).second;
         lockedForVoteBalanceTextField.setMouseTransparent(false);
 
-        lockedInBondsBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol(
+        lockedInBondsBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol(
                 "dao.lockedInBonds")).second;
         lockedInBondsBalanceTextField.setMouseTransparent(false);
 
         // TODO add unlockingBondsBalanceTextField
 
-        totalBalanceTextField = addLabelTextField(gridPane, ++gridRow,
+        totalBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
 
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow,
+        Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.getWithCol("dao.availableNonBsqBalance"));
-        availableNonBsqBalanceLabel = tuple2.first;
-        availableNonBsqBalanceTextField = tuple2.second;
+        availableNonBsqBalanceLabel = tuple3.first;
+        availableNonBsqBalanceTextField = tuple3.second;
         availableNonBsqBalanceTextField.setMouseTransparent(false);
         availableNonBsqBalanceTextField.setVisible(false);
         availableNonBsqBalanceTextField.setManaged(false);
@@ -101,12 +102,12 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         addTitledGroupBg(gridPane, ++gridRow, 2,
                 Res.get("dao.bonding.dashboard.bondsHeadline"), Layout.GROUP_DISTANCE);
 
-        lockupAmountTextField = addLabelTextField(gridPane, gridRow,
+        lockupAmountTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.bonding.dashboard.lockupAmount"),
                 Layout.FIRST_ROW_DISTANCE + Layout.GROUP_DISTANCE).second;
         lockupAmountTextField.setMouseTransparent(false);
 
-        unlockingAmountTextField = addLabelTextField(gridPane, ++gridRow,
+        unlockingAmountTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
                 Res.get("dao.bonding.dashboard.unlockingAmount")).second;
         unlockingAmountTextField.setMouseTransparent(false);
 

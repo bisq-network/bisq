@@ -32,15 +32,9 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class InteracETransferForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(InteracETransferForm.class);
 
     private final InteracETransferAccount interacETransferAccount;
     private final InteracETransferValidator interacETransferValidator;
@@ -48,13 +42,13 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getHolderName());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getEmail());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getQuestion());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getAnswer());
         return gridRow;
     }
@@ -70,29 +64,29 @@ public class InteracETransferForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile")).second;
+        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"));
         mobileNrInputTextField.setValidator(interacETransferValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setEmail(newValue);
             updateFromInputs();
         });
 
-        InputTextField questionInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.secret")).second;
+        InputTextField questionInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.secret"));
         questionInputTextField.setValidator(inputValidator);
         questionInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setQuestion(newValue);
             updateFromInputs();
         });
 
-        InputTextField answerInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.answer")).second;
+        InputTextField answerInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.answer"));
         answerInputTextField.setValidator(inputValidator);
         answerInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setAnswer(newValue);
@@ -100,40 +94,35 @@ public class InteracETransferForm extends PaymentMethodForm {
         });
         TradeCurrency singleTradeCurrency = interacETransferAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
-        }
+        setAccountNameWithString(mobileNrInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(interacETransferAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 interacETransferAccount.getHolderName());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 interacETransferAccount.getEmail()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
                 interacETransferAccount.getQuestion()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
                 interacETransferAccount.getAnswer()).second.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = interacETransferAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
     }

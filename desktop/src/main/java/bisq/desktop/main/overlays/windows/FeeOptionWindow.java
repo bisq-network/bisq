@@ -24,6 +24,7 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
@@ -52,8 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelRadioButtonRadioButton;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelRadioButtonRadioButton;
 
 @Slf4j
 public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
@@ -90,10 +90,9 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         if (headLine == null)
             headLine = Res.get("feeOptionWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         addDontShowAgainCheckBox();
@@ -139,16 +138,16 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         GridPane.setHalignment(label, HPos.LEFT);
 
         toggleGroup = new ToggleGroup();
-        Tuple3<Label, RadioButton, RadioButton> tuple = addLabelRadioButtonRadioButton(gridPane,
+        Tuple3<Label, RadioButton, RadioButton> tuple = addTopLabelRadioButtonRadioButton(gridPane,
                 ++rowIndex,
                 toggleGroup,
                 Res.get("feeOptionWindow.optionsLabel"),
                 "BTC",
-                "BSQ");
+                "BSQ", 0);
         RadioButton radioButtonBTC = tuple.second;
         RadioButton radioButtonBSQ = tuple.third;
 
-        makerFeeTextField = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
+        makerFeeTextField = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             final boolean isBtc = newValue == radioButtonBTC;

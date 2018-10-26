@@ -21,7 +21,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
@@ -37,8 +36,6 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
-
-import bisq.common.UserThread;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -88,7 +85,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 loadView(viewPath.tip());
         };
         tabChangeListener = (observableValue, oldValue, newValue) -> {
-            UserThread.execute(InputTextField::hideErrorMessageDisplay);
             if (newValue != null) {
                 if (newValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(true);
@@ -141,22 +137,23 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private String getCreateOfferTabName() {
-        return Res.get("offerbook.createOffer");
+        return Res.get("offerbook.createOffer").toUpperCase();
     }
 
     private String getTakeOfferTabName() {
-        return Res.get("offerbook.takeOffer");
+        return Res.get("offerbook.takeOffer").toUpperCase();
     }
 
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         View view;
         boolean isBuy = direction == OfferPayload.Direction.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            offerBookTab = new Tab(isBuy ? Res.get("shared.buyBitcoin") : Res.get("shared.sellBitcoin"));
+            offerBookTab = new Tab(isBuy ? Res.get("shared.buyBitcoin").toUpperCase() : Res.get("shared.sellBitcoin").toUpperCase());
             offerBookTab.setClosable(false);
             offerBookTab.setContent(view.getRoot());
             tabPane.getTabs().add(offerBookTab);
@@ -200,6 +197,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             createOfferView.initWithData(direction, tradeCurrency);
             createOfferPane = createOfferView.getRoot();
             createOfferTab = new Tab(getCreateOfferTabName());
+            createOfferTab.setClosable(true);
             // close handler from close on create offer action
             createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
             createOfferTab.setContent(createOfferPane);
@@ -213,6 +211,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             takeOfferView.initWithData(offer);
             takeOfferPane = ((TakeOfferView) view).getRoot();
             takeOfferTab = new Tab(getTakeOfferTabName());
+            takeOfferTab.setClosable(true);
             // close handler from close on take offer action
             takeOfferView.setCloseHandler(() -> tabPane.getTabs().remove(takeOfferTab));
             takeOfferTab.setContent(takeOfferPane);

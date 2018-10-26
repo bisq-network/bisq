@@ -31,9 +31,9 @@
     </padding>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" halignment="LEFT" minWidth="310.0" maxWidth="310.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="30.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT" minWidth="140.0"/>
         <ColumnConstraints hgrow="ALWAYS" minWidth="300.0"/>
     </columnConstraints>
 </GridPane>

@@ -17,9 +17,9 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import bisq.desktop.components.AutoTooltipButton?>
 <?import bisq.desktop.components.AutoTooltipLabel?>
 <?import bisq.desktop.components.AutoTooltipRadioButton?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -72,9 +72,9 @@
         <AutoTooltipLabel fx:id="toLabel" GridPane.rowIndex="3"/>
         <TextField fx:id="withdrawToTextField" GridPane.rowIndex="3" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
 
-        <Button fx:id="withdrawButton" defaultButton="true" onAction="#onWithdraw"
-                GridPane.rowIndex="4"
-                GridPane.columnIndex="1"/>
+        <AutoTooltipButton fx:id="withdrawButton" defaultButton="true" onAction="#onWithdraw"
+                           GridPane.rowIndex="4"
+                           GridPane.columnIndex="1"/>
 
         <columnConstraints>
             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES"/>

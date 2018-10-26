@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
@@ -53,7 +54,6 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -80,7 +80,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
-    Button exportButton;
+    AutoTooltipButton exportButton;
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
     private final BSFormatter formatter;
@@ -177,7 +177,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
-        exportButton.setText(Res.get("shared.exportCSV"));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override

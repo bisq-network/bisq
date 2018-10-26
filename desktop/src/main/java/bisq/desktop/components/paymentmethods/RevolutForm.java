@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
 
@@ -31,22 +32,13 @@ import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-
-import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class RevolutForm extends PaymentMethodForm {
     private final RevolutAccount account;
@@ -55,7 +47,7 @@ public class RevolutForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
                 ((RevolutAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
@@ -72,7 +64,7 @@ public class RevolutForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setAccountId(newValue);
@@ -81,63 +73,35 @@ public class RevolutForm extends PaymentMethodForm {
 
         addCurrenciesGrid(true);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
-        GridPane.setValignment(label, VPos.TOP);
-        FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
+        FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
+                Res.get("payment.supportedCurrencies"), 0).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllRevolutCurrencies().forEach(e -> {
-            CheckBox checkBox = new CheckBox(e.getCode());
-            checkBox.setMouseTransparent(!isEditable);
-            checkBox.setSelected(account.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
-            checkBox.setTooltip(new Tooltip(e.getName()));
-            checkBox.setOnAction(event -> {
-                if (checkBox.isSelected())
-                    account.addCurrency(e);
-                else
-                    account.removeCurrency(e);
-
-                updateAllInputsValid();
-            });
-            flowPane.getChildren().add(checkBox);
-        });
-
-        GridPane.setRowIndex(flowPane, gridRow);
-        GridPane.setColumnIndex(flowPane, 1);
-        gridPane.getChildren().add(flowPane);
+        CurrencyUtil.getAllRevolutCurrencies().forEach(e ->
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, account));
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String AccountId = accountIdInputTextField.getText();
-            AccountId = StringUtils.abbreviate(AccountId, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(AccountId));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
                 account.getAccountId()).second;
         field.setMouseTransparent(false);
         addLimitations();

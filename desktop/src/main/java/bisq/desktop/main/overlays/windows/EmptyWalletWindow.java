@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -60,9 +61,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);
@@ -110,10 +110,9 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         if (headLine == null)
             headLine = Res.get("emptyWalletWindow.headline", getCurrency());
 
-        width = 700;
+        width = 768;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();
@@ -149,13 +148,13 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
 
         Coin totalBalance = getWalletService().getAvailableBalance();
-        balanceTextField = addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
+        balanceTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
                 getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
         if (isBtc) {
-            addressInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address")).second;
+            addressInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         } else {
-            addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
+            addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
                     bsqFormatter.formatBTCWithCode(bsqWalletService.getAvailableNonBsqBalance().value), 10);
         }
         closeButton = new AutoTooltipButton(Res.get("shared.cancel"));
@@ -185,7 +184,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             closeButton.setDefaultButton(!isBalanceSufficient);
         } else {
             closeButton.setDefaultButton(true);
-            closeButton.setText(Res.get("shared.close"));
+            closeButton.updateText(Res.get("shared.close"));
         }
 
         HBox hBox = new HBox();
@@ -225,7 +224,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 getWalletService().emptyWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
-                            closeButton.setText(Res.get("shared.close"));
+                            closeButton.updateText(Res.get("shared.close"));
                             balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");

@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.governance.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.governance.PhasesView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -39,9 +40,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // We use here ChainHeightListener because we are interested in period changes not in the result of a completed
 // block. The event from the ChainHeightListener is sent before parsing starts.
@@ -72,13 +73,13 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
-        currentBlockHeightTextField = addLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
+        currentBlockHeightTextField = addTopLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
                 "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currentPhaseTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
-        proposalTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
-        blindVoteTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
-        voteRevealTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
-        voteResultTextField = addLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
+        currentPhaseTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
+        proposalTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
+        blindVoteTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
+        voteRevealTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
+        voteResultTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.cycle.info.headline"), Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);

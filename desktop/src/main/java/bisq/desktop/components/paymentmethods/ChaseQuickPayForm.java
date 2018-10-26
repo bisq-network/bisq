@@ -32,25 +32,19 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ChaseQuickPayForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(ChaseQuickPayForm.class);
 
     private final ChaseQuickPayAccount chaseQuickPayAccount;
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((ChaseQuickPayAccountPayload) paymentAccountPayload).getHolderName());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 ((ChaseQuickPayAccountPayload) paymentAccountPayload).getEmail());
         return gridRow;
     }
@@ -66,15 +60,15 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             chaseQuickPayAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.email")).second;
+        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         mobileNrInputTextField.setValidator(chaseQuickPayValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             chaseQuickPayAccount.setEmail(newValue);
@@ -83,36 +77,31 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
-        }
+        setAccountNameWithString(mobileNrInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 chaseQuickPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 chaseQuickPayAccount.getHolderName());
-        TextField field = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 chaseQuickPayAccount.getEmail()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

@@ -40,6 +40,8 @@ import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.jfoenix.controls.JFXComboBox;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -61,7 +63,7 @@ import javafx.util.StringConverter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class SepaInstantForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
@@ -70,14 +72,14 @@ public class SepaInstantForm extends PaymentMethodForm {
 
         final String title = Res.get("payment.account.owner");
         final String value = sepaInstantAccountPayload.getHolderName();
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(sepaInstantAccountPayload.getCountryCode()));
         // IBAN, BIC will not be translated
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaInstantAccountPayload.getIban());
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaInstantAccountPayload.getBic());
+        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaInstantAccountPayload.getIban());
+        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaInstantAccountPayload.getBic());
         return gridRow;
     }
 
@@ -103,22 +105,22 @@ public class SepaInstantForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaInstantAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        ibanInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "IBAN:").second;
+        ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, "IBAN:");
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaInstantAccount.setIban(newValue);
             updateFromInputs();
 
         });
-        InputTextField bicInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
+        InputTextField bicInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, "BIC:");
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaInstantAccount.setBic(newValue);
@@ -130,8 +132,8 @@ public class SepaInstantForm extends PaymentMethodForm {
         FormBuilder.addLabel(gridPane, ++gridRow, Res.get("payment.bank.country"));
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        ComboBox<Country> countryComboBox = new ComboBox<>();
-        currencyComboBox = new ComboBox<>();
+        ComboBox<Country> countryComboBox = new JFXComboBox<>();
+        currencyComboBox = new JFXComboBox<>();
         currencyTextField = new TextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
@@ -175,7 +177,7 @@ public class SepaInstantForm extends PaymentMethodForm {
         addEuroCountriesGrid(true);
         addNonEuroCountriesGrid(true);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaInstantCountries()));
         Country country = CountryUtil.getDefaultCountry();
@@ -302,7 +304,7 @@ public class SepaInstantForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             TradeCurrency singleTradeCurrency = this.paymentAccount.getSingleTradeCurrency();
             String currency = singleTradeCurrency != null ? singleTradeCurrency.getCode() : null;
             if (currency != null) {
@@ -334,26 +336,26 @@ public class SepaInstantForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaInstantAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaInstantAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(sepaInstantAccount.getPaymentMethod().getId()));
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), sepaInstantAccount.getHolderName());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaInstantAccount.getIban()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, "BIC:", sepaInstantAccount.getBic()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), sepaInstantAccount.getHolderName());
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, "IBAN:", sepaInstantAccount.getIban()).second.setMouseTransparent(false);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, "BIC:", sepaInstantAccount.getBic()).second.setMouseTransparent(false);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
                 sepaInstantAccount.getCountry() != null ? sepaInstantAccount.getCountry().name : "");
         TradeCurrency singleTradeCurrency = sepaInstantAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaInstantEuroCountries(sepaInstantAccount.getAcceptedCountryCodes())) {
-            countries = Res.getWithCol("shared.allEuroCountries");
+            countries = Res.get("shared.allEuroCountries");
         } else {
             countries = CountryUtil.getCodesString(sepaInstantAccount.getAcceptedCountryCodes());
             tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaInstantAccount.getAcceptedCountryCodes()));
         }
-        TextField acceptedCountries = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
+        TextField acceptedCountries = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
         if (tooltip != null) {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);

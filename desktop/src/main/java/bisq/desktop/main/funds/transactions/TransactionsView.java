@@ -101,7 +101,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
     @FXML
-    Button exportButton;
+    AutoTooltipButton exportButton;
 
     private final DisplayedTransactions displayedTransactions;
     private final SortedList<TransactionsListItem> sortedDisplayedTransactions;
@@ -221,7 +221,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 showStatisticsPopup();
         };
 
-        exportButton.setText(Res.get("shared.exportCSV"));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override

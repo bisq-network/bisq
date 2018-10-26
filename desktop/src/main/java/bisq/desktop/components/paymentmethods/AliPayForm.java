@@ -18,7 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.Layout;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.AliPayValidator;
 
 import bisq.core.locale.Res;
@@ -33,15 +33,12 @@ import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class AliPayForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(AliPayForm.class);
@@ -51,7 +48,7 @@ public class AliPayForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AliPayAccountPayload) paymentAccountPayload).getAccountNr());
+        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AliPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 
@@ -65,7 +62,7 @@ public class AliPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.no")).second;
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
         accountNrInputTextField.setValidator(aliPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             aliPayAccount.setAccountNr(newValue);
@@ -74,14 +71,14 @@ public class AliPayForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
@@ -91,15 +88,9 @@ public class AliPayForm extends PaymentMethodForm {
 
     @Override
     public void addFormForDisplayAccount() {
-        gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), aliPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(aliPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), aliPayAccount.getAccountNr()).second;
-        field.setMouseTransparent(false);
-        final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
-        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
+        addFormForAccountNumberDisplayAccount(aliPayAccount.getAccountName(),
+                aliPayAccount.getPaymentMethod(), aliPayAccount.getAccountNr(),
+                aliPayAccount.getSingleTradeCurrency());
     }
 
     @Override

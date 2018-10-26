@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
@@ -25,7 +26,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -47,7 +47,7 @@ public abstract class TradeSubView extends HBox {
     protected VBox leftVBox;
     protected AnchorPane contentPane;
     protected TradeStepView tradeStepView;
-    private Button openDisputeButton;
+    private AutoTooltipButton openDisputeButton;
     private NotificationGroup notificationGroup;
     protected GridPane leftGridPane;
     protected TitledGroupBg tradeProcessTitledGroupBg;
@@ -100,7 +100,7 @@ public abstract class TradeSubView extends HBox {
 
         TitledGroupBg noticeTitledGroupBg = FormBuilder.addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", Layout.GROUP_DISTANCE);
         Label label = FormBuilder.addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        openDisputeButton = FormBuilder.addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
+        openDisputeButton = (AutoTooltipButton) FormBuilder.addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
         GridPane.setColumnIndex(openDisputeButton, 0);
         openDisputeButton.setId("open-dispute-button");
 
@@ -112,9 +112,9 @@ public abstract class TradeSubView extends HBox {
     public static class NotificationGroup {
         public final TitledGroupBg titledGroupBg;
         public final Label label;
-        public final Button button;
+        public final AutoTooltipButton button;
 
-        public NotificationGroup(TitledGroupBg titledGroupBg, Label label, Button button) {
+        public NotificationGroup(TitledGroupBg titledGroupBg, Label label, AutoTooltipButton button) {
             this.titledGroupBg = titledGroupBg;
             this.label = label;
             this.button = button;

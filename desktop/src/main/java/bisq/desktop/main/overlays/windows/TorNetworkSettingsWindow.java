@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -99,7 +100,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private Label enterBridgeLabel;
     private ComboBox<Transport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
-    private Label transportTypeLabel;
     private BridgeOption selectedBridgeOption = BridgeOption.NONE;
     private Transport selectedTorTransportOrdinal = Transport.OBFS_4;
     private String customBridges = "";
@@ -127,7 +127,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             if (headLine == null)
                 headLine = Res.get("torNetworkSettingWindow.header");
 
-            width = 1000;
+            width = 1068;
             createGridPane();
             addContent();
             addCloseButton();
@@ -239,7 +239,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setHalignment(bridgesLabel, HPos.LEFT);
         GridPane.setValignment(bridgesLabel, VPos.TOP);
 
-        //addLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        //addTopLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
@@ -251,9 +251,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         // providedBridges
         providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
-        final Tuple2<Label, ComboBox<Transport>> labelComboBoxTuple2 = addLabelComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
-        transportTypeLabel = labelComboBoxTuple2.first;
-        transportTypeComboBox = labelComboBoxTuple2.second;
+        transportTypeComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
                 Transport.OBFS_4,
                 Transport.OBFS_3,
@@ -285,7 +283,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
         customBridgesRadioButton.setUserData(BridgeOption.CUSTOM);
 
-        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
+        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
         enterBridgeLabel = labelTextAreaTuple2.first;
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
 
@@ -358,7 +356,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private void applyToggleSelection() {
         switch (selectedBridgeOption) {
             case PROVIDED:
-                transportTypeLabel.setDisable(false);
                 transportTypeComboBox.setDisable(false);
                 enterBridgeLabel.setDisable(true);
                 bridgeEntriesTextArea.setDisable(true);
@@ -368,14 +365,12 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             case CUSTOM:
                 enterBridgeLabel.setDisable(false);
                 bridgeEntriesTextArea.setDisable(false);
-                transportTypeLabel.setDisable(true);
                 transportTypeComboBox.setDisable(true);
 
                 setBridgeAddressesByCustomBridges();
                 break;
             default:
             case NONE:
-                transportTypeLabel.setDisable(true);
                 transportTypeComboBox.setDisable(true);
                 enterBridgeLabel.setDisable(true);
                 bridgeEntriesTextArea.setDisable(true);

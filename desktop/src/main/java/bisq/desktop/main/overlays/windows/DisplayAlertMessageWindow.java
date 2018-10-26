@@ -48,12 +48,11 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     }
 
     public void show() {
-        width = 700;
+        width = 768;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = Res.get("displayAlertMessageWindow.headline");
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();

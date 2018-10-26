@@ -420,7 +420,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            result = Res.get("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String countryCode = offer.getCountryCode();

@@ -110,7 +110,7 @@ class BondedRolesListItem implements DaoStateListener {
 
         label.setText(text);
 
-        button.setText(isLockedUp ? Res.get("dao.bond.table.button.revoke") : Res.get("dao.bond.table.button.lockup"));
+        button.updateText(isLockedUp ? Res.get("dao.bond.table.button.revoke") : Res.get("dao.bond.table.button.lockup"));
         button.setVisible(!isLockedUp || !isUnlocked);
         button.setManaged(button.isVisible());
 
