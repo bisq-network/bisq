@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -58,6 +59,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -249,6 +252,27 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
     }
 
+    void fillUpFlowPaneWithCountries(boolean isEditable, List<CheckBox> checkBoxList, FlowPane flowPane, Country country) {
+        final String countryCode = country.code;
+        CheckBox checkBox = new AutoTooltipCheckBox(countryCode);
+        checkBox.setUserData(countryCode);
+        checkBoxList.add(checkBox);
+        checkBox.setMouseTransparent(!isEditable);
+        checkBox.setMinWidth(45);
+        checkBox.setMaxWidth(45);
+        checkBox.setTooltip(new Tooltip(country.name));
+        checkBox.setOnAction(event -> {
+            if (checkBox.isSelected()) {
+                addAcceptedCountry(countryCode);
+            } else {
+                removeAcceptedCountry(countryCode);
+            }
+
+            updateAllInputsValid();
+        });
+        flowPane.getChildren().add(checkBox);
+    }
+
     void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
                                                TradeCurrency singleTradeCurrency) {
         gridRowFrom = gridRow;
@@ -294,5 +318,11 @@ public abstract class PaymentMethodForm {
 
     public BooleanProperty allInputsValidProperty() {
         return allInputsValid;
+    }
+
+    void removeAcceptedCountry(String countryCode) {
+    }
+
+    void addAcceptedCountry(String countryCode) {
     }
 }

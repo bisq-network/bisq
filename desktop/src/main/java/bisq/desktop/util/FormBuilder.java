@@ -230,7 +230,7 @@ public class FormBuilder {
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
 
         return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
     }
@@ -344,7 +344,7 @@ public class FormBuilder {
         ((JFXTextArea) textArea).setLabelFloat(true);
         textArea.setWrapText(true);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
 
         return new Tuple2<>(topLabelWithVBox.first, textArea);
     }
@@ -357,7 +357,7 @@ public class FormBuilder {
     public static Tuple2<Label, DatePicker> addTopLabelDatePicker(GridPane gridPane, int rowIndex, String title, double top) {
         DatePicker datePicker = new JFXDatePicker();
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, datePicker, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, datePicker, top);
 
         return new Tuple2<>(topLabelWithVBox.first, datePicker);
     }
@@ -419,7 +419,7 @@ public class FormBuilder {
 
         InfoInputTextField inputTextField = new InfoInputTextField();
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, top);
 
         return new Tuple2<>(topLabelWithVBox.first, inputTextField);
     }
@@ -457,7 +457,7 @@ public class FormBuilder {
         toggleButton.setText(toggleButtonTitle);
         VBox.setMargin(toggleButton, new Insets(4, 0, 0, 0));
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
 
         topLabelWithVBox.second.getChildren().add(toggleButton);
 
@@ -652,7 +652,7 @@ public class FormBuilder {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(radioButton1, radioButton2);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, radioButton1, radioButton2);
     }
@@ -757,9 +757,9 @@ public class FormBuilder {
     }
 
     @NotNull
-    public static Tuple2 <Label, VBox> getTopLabelWithVBox(GridPane gridPane, int rowIndex,
-                                                           String title, Node node,
-                                                           double top) {
+    public static Tuple2<Label, VBox> addTopLabelWithVBox(GridPane gridPane, int rowIndex,
+                                                          String title, Node node,
+                                                          double top) {
         Label label = getTopLabel(title);
         VBox vBox = getTopLabelVBox(0);
         vBox.getChildren().addAll(label, node);
@@ -837,7 +837,7 @@ public class FormBuilder {
         ComboBox<R> comboBox2 = new JFXComboBox<>();
         hBox.getChildren().addAll(comboBox1, comboBox2);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, comboBox1, comboBox2);
     }
@@ -951,7 +951,7 @@ public class FormBuilder {
         TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
         textFieldWithCopyIcon.setText(value);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
@@ -1066,7 +1066,7 @@ public class FormBuilder {
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, labelText, button, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, labelText, button, top);
 
         return new Tuple2<>(topLabelWithVBox.first, button);
     }
@@ -1083,7 +1083,7 @@ public class FormBuilder {
         Button button2 = new AutoTooltipButton(title2);
         hBox.getChildren().addAll(button1, button2);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, labelText, hBox, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, labelText, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, button1, button2);
     }
@@ -1340,7 +1340,7 @@ public class FormBuilder {
     public static <T> Tuple3<Label, ListView<T>, VBox> addTopLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
         ListView<T> listView = new ListView<>();
 
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, listView, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, listView, top);
         return new Tuple3<>(topLabelWithVBox.first, listView, topLabelWithVBox.second);
     }
 
@@ -1353,7 +1353,7 @@ public class FormBuilder {
         flowPane.setPadding(new Insets(10, 10, 10, 10));
         flowPane.setVgap(10);
         flowPane.setHgap(10);
-        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(gridPane, rowIndex, title, flowPane, top);
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, flowPane, top);
 
         return new Tuple2<>(topLabelWithVBox.first, flowPane);
     }
