@@ -757,9 +757,9 @@ public class FormBuilder {
     }
 
     @NotNull
-    public static Tuple2 <Label, VBox> getTopLabelWithVBox(GridPane gridPane, int rowIndex,
-                                                           String title, Node node,
-                                                           double top) {
+    public static Tuple2<Label, VBox> getTopLabelWithVBox(GridPane gridPane, int rowIndex,
+                                                          String title, Node node,
+                                                          double top) {
         Label label = getTopLabel(title);
         VBox vBox = getTopLabelVBox(0);
         vBox.getChildren().addAll(label, node);

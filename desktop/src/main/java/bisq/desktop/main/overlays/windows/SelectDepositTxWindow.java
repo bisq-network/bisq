@@ -93,7 +93,8 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        transactionsComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));;
+        transactionsComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
+        ;
         transactionsComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transaction transaction) {

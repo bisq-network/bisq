@@ -61,8 +61,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private static final Logger log = LoggerFactory.getLogger(EmptyWalletWindow.class);

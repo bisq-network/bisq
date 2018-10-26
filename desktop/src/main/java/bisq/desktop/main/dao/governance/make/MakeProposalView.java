@@ -46,6 +46,8 @@ import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.asset.Asset;
+
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
@@ -76,10 +78,6 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import bisq.asset.Asset;
 
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> implements DaoStateListener {

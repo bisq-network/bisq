@@ -49,8 +49,8 @@ import javafx.scene.layout.GridPane;
 import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.addLabelHyperlinkWithIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @FxmlView
 public class BsqDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {

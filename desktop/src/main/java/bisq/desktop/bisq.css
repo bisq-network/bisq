@@ -98,7 +98,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-white: #ffffff; /* 30 usages */
     -bs-rd-white-transparent: rgba(255, 255, 255, 0.31);
     -bs-rd-grey-light: #D8D8D8;
-    -bs-rd-grey-medium-light:#E9E9E9;
+    -bs-rd-grey-medium-light: #E9E9E9;
     -bs-rd-grey-very-light: #f8f8f8; /* 10 usages */
     -bs-rd-grey-background: #F2F2F2;
     -bs-rd-grey-background-bottom: #f6f6f6; /* 1 usages */
@@ -232,7 +232,7 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-progress-bar > .bar,
-.jfx-progress-bar:indeterminate > .bar{
+.jfx-progress-bar:indeterminate > .bar {
     -fx-background-color: -bs-rd-green;
 }
 
@@ -241,7 +241,7 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-spinner:indeterminate .arc,
-.jfx-spinner:determinate .arc{
+.jfx-spinner:determinate .arc {
     -fx-stroke: -bs-rd-green;
 }
 
@@ -254,7 +254,7 @@ bg color of non edit textFields: fafafa
     -fx-pref-height: 32;
     -fx-min-height: -fx-pref-height;
     -fx-padding: 0 40 0 40;
-    -fx-effect: dropshadow( gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
 }
 
 .action-button {
@@ -280,7 +280,7 @@ bg color of non edit textFields: fafafa
     -fx-pref-height: 12;
 }
 
-.jfx-check-box .mark ,
+.jfx-check-box .mark,
 .jfx-check-box .indeterminate-mark {
     -fx-border-radius: 0;
     -fx-border-width: 1;
@@ -289,7 +289,7 @@ bg color of non edit textFields: fafafa
 .jfx-combo-box {
     -jfx-focus-color: -bs-rd-green;
     -jfx-unfocus-color: -bs-rd-grey-line;
-    -fx-background-color:-bs-rd-white;
+    -fx-background-color: -bs-rd-white;
 }
 
 .jfx-combo-box > .list-cell {
@@ -305,7 +305,7 @@ bg color of non edit textFields: fafafa
 
 .jfx-text-field {
     -jfx-focus-color: -bs-rd-green;
-    -fx-background-color:-bs-rd-white;
+    -fx-background-color: -bs-rd-white;
     -fx-background-radius: 3 3 0 0;
 }
 
@@ -394,7 +394,7 @@ bg color of non edit textFields: fafafa
 }
 
 .input-with-border {
-    -fx-background-color:-bs-rd-white;
+    -fx-background-color: -bs-rd-white;
     -fx-border-width: 1;
     -fx-border-color: -bs-rd-grey-background-dark;
     -fx-border-radius: 3;
@@ -417,48 +417,55 @@ bg color of non edit textFields: fafafa
 }
 
 .input-with-border .icon {
-    -fx-padding:10;
+    -fx-padding: 10;
 }
 
-.scroll-bar{
+.scroll-bar {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
 }
+
 .scroll-bar:horizontal .track,
 .scroll-bar:vertical .track {
     -fx-background-color: transparent;
-    -fx-border-color:transparent;
+    -fx-border-color: transparent;
     -fx-background-radius: 0;
 }
+
 .scroll-bar:vertical .track-background,
 .scroll-bar:horizontal .track-background {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
 }
+
 .scroll-bar:horizontal .thumb {
     -fx-background-color: -bs-rd-grey-background-darker;
     -fx-background-insets: 2 0 2 0;
     -fx-background-radius: 3;
 }
+
 .scroll-bar:vertical .thumb {
     -fx-background-color: -bs-rd-grey-background-darker;
     -fx-background-insets: 0 2 0 2;
     -fx-background-radius: 3;
 }
+
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
     -fx-background-color: -bs-rd-grey-background-darker-2;
 }
+
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
     -fx-background-color: -bs-rd-grey-background-darkest;
 }
+
 .scroll-bar:vertical .increment-button,
 .scroll-bar:vertical .decrement-button,
 .scroll-bar:horizontal .increment-button,
 .scroll-bar:horizontal .decrement-button {
-    -fx-background-color:transparent;
+    -fx-background-color: transparent;
     -fx-padding: 1;
 }
 
@@ -472,7 +479,7 @@ bg color of non edit textFields: fafafa
 
 .scroll-bar:vertical:focused,
 .scroll-bar:horizontal:focused {
-    -fx-background-color: transparent, -bs-rd-grey-background-darkest,-bs-rd-grey-background-darkest;
+    -fx-background-color: transparent, -bs-rd-grey-background-darkest, -bs-rd-grey-background-darkest;
 }
 
 /* Behavior */
@@ -758,11 +765,11 @@ textfield */
 }
 
 .table-view .filler {
-    -fx-background-color:-bs-rd-grey-very-light;
+    -fx-background-color: -bs-rd-grey-very-light;
 }
 
 .table-view {
-    -fx-control-inner-background-alt: -fx-control-inner-background ;
+    -fx-control-inner-background-alt: -fx-control-inner-background;
 }
 
 .table-view .column-header .label {
@@ -1589,7 +1596,7 @@ textfield */
 }
 
 #price-feed-combo {
-    -fx-background-color:none;
+    -fx-background-color: none;
 }
 
 #price-feed-combo > .list-cell {

@@ -19,7 +19,7 @@ package bisq.desktop.components;
 
 import com.jfoenix.controls.JFXPasswordField;
 
-public class PasswordTextField extends JFXPasswordField{
+public class PasswordTextField extends JFXPasswordField {
     public PasswordTextField() {
         super();
         setLabelFloat(true);

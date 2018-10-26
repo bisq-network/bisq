@@ -30,8 +30,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
@@ -65,7 +65,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.fxml.FXML;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;

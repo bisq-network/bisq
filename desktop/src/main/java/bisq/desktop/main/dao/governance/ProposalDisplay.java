@@ -88,7 +88,6 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelHyperlinkWithIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static com.google.common.base.Preconditions.checkNotNull;

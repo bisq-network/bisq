@@ -30,7 +30,6 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;

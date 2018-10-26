@@ -23,7 +23,6 @@ import org.bitcoinj.core.Coin;
 
 import com.jfoenix.controls.JFXTextField;
 
-import javafx.scene.control.TextField;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
@@ -86,7 +85,7 @@ public class BalanceTextField extends AnchorPane {
         if (formatter != null)
             textField.setText(formatter.formatCoinWithCode(balance));
 
-            //TODO: replace with new validation logic
+        //TODO: replace with new validation logic
 //        if (targetAmount != null) {
 //            if (balance.compareTo(targetAmount) >= 0)
 //                textField.setEffect(fundedEffect);

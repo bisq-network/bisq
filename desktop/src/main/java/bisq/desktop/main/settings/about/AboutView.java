@@ -38,8 +38,8 @@ import javafx.geometry.HPos;
 
 import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @FxmlView
 public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
