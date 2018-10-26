@@ -170,8 +170,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmountFromCompRequests());
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.COMPENSATION));
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
+        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
+        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
         Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
@@ -186,10 +188,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
-        compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getIssuanceSet().size()));
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.COMPENSATION));
-        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
-        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
         burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
