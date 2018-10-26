@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -121,7 +122,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1050;
+        width = 1118;
         createGridPane();
         addContent();
         display();
@@ -242,8 +243,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addInfoPane() {
         Contract contract = dispute.getContract();
         addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
-        addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
+        FormBuilder.addTopLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
@@ -255,12 +256,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             else
                 role = Res.get("support.sellerTaker");
         }
-        addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
                 formatter.formatPrice(contract.getTradePrice()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"),
                 formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
     }
 
@@ -391,16 +392,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addPayoutAmountTextFields() {
-        buyerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.buyer")).second;
+        buyerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.buyer"));
         buyerPayoutAmountInputTextField.setEditable(false);
 
-        sellerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.seller")).second;
+        sellerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.seller"));
         sellerPayoutAmountInputTextField.setEditable(false);
 
         isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.invert")).second;
+                Res.get("disputeSummaryWindow.payoutAmount.invert"));
     }
 
     private void addReasonControls() {

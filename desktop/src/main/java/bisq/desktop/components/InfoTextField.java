@@ -21,11 +21,12 @@ import bisq.common.UserThread;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXTextField;
+
 import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -44,7 +45,7 @@ public class InfoTextField extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(InfoTextField.class);
 
     @Getter
-    protected final TextField textField;
+    protected final JFXTextField textField;
 
     private final StringProperty text = new SimpleStringProperty();
     protected final Label infoIcon;
@@ -57,10 +58,12 @@ public class InfoTextField extends AnchorPane {
     public InfoTextField() {
 
         arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;;
-        textField = new TextField();
+        textField = new JFXTextField();
+        textField.setLabelFloat(true);
         textField.setEditable(false);
         textField.textProperty().bind(text);
         textField.setFocusTraversable(false);
+        textField.setId("info-field");
 
         infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
         infoIcon.setLayoutY(3);

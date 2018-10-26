@@ -21,6 +21,7 @@ import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.Activatable;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -104,7 +105,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     Label reSyncSPVChainLabel;
     @FXML
-    Button reSyncSPVChainButton, openTorSettingsButton;
+    AutoTooltipButton reSyncSPVChainButton, openTorSettingsButton;
 
     private final Preferences preferences;
     private final BtcNodes btcNodes;
@@ -163,7 +164,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useCustomNodesRadio.setText(Res.get("settings.net.useCustomNodesRadio"));
         usePublicNodesRadio.setText(Res.get("settings.net.usePublicNodesRadio"));
         reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
-        reSyncSPVChainButton.setText(Res.get("settings.net.reSyncSPVChainButton"));
+        reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
         creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
@@ -173,7 +174,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
         receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
         peerTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.peerTypeColumn")));
-        openTorSettingsButton.setText(Res.get("settings.net.openTorSettingsButton"));
+        openTorSettingsButton.updateText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);

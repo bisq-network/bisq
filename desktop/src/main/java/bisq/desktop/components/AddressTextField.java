@@ -29,8 +29,9 @@ import org.bitcoinj.core.Coin;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXTextField;
+
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 
@@ -57,10 +58,13 @@ public class AddressTextField extends AnchorPane {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressTextField() {
-        TextField textField = new TextField();
+    public AddressTextField(String label) {
+        JFXTextField textField = new JFXTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
+        textField.setLabelFloat(true);
+        textField.setPromptText(label);
+
         textField.textProperty().bind(address);
         String tooltipText = Res.get("addressTextField.openWallet");
         textField.setTooltip(new Tooltip(tooltipText));

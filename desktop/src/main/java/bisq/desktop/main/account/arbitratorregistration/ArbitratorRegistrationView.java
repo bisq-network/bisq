@@ -34,7 +34,7 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import com.google.inject.name.Named;
 
@@ -151,12 +151,12 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         root.getChildren().add(gridPane);
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
-        TextField pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
+        TextField pubKeyTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
+        Tuple3<Label, ListView<String>, VBox> tuple = FormBuilder.addTopLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
@@ -192,7 +192,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        languageComboBox = FormBuilder.<String>addLabelComboBox(gridPane, ++gridRow).second;
+        languageComboBox = FormBuilder.<String>addComboBox(gridPane, ++gridRow);
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {

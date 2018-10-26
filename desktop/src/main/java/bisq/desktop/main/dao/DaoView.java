@@ -71,9 +71,9 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        bsqWalletTab = new Tab(Res.get("dao.tab.bsqWallet"));
-        proposalsTab = new Tab(Res.get("dao.tab.proposals"));
-        bondingTab = new Tab(Res.get("dao.tab.bonding"));
+        bsqWalletTab = new Tab(Res.get("dao.tab.bsqWallet").toUpperCase());
+        proposalsTab = new Tab(Res.get("dao.tab.proposals").toUpperCase());
+        bondingTab = new Tab(Res.get("dao.tab.bonding").toUpperCase());
 
         bsqWalletTab.setClosable(false);
         proposalsTab.setClosable(false);

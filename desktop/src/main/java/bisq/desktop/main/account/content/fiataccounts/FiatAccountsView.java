@@ -106,9 +106,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.text.TextAlignment;
-
-import javafx.geometry.VPos;
+import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
 
@@ -124,6 +122,7 @@ import java.util.stream.Collectors;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
@@ -337,11 +336,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
+        addTitledGroupBg(root, gridRow, 2, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView<PaymentAccount>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
-        GridPane.setValignment(tuple.first, VPos.TOP);
-        tuple.first.setTextAlignment(TextAlignment.RIGHT);
+        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
@@ -386,8 +383,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.<PaymentMethod>addLabelComboBox(root, gridRow, Res.getWithCol("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+        paymentMethodComboBox = FormBuilder.<PaymentMethod>addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
@@ -412,7 +409,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setOnAction(e -> {
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
             }
             gridRow = 2;
             paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
@@ -425,7 +422,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
                 Button cancelButton = tuple2.second;
                 cancelButton.setOnAction(event -> onCancelNewAccount());
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
             }
         });
     }
@@ -434,7 +431,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
@@ -444,7 +441,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;
             cancelButton.setOnAction(event -> removeSelectAccountForm());
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             model.onSelectAccount(paymentAccount);
         }
     }

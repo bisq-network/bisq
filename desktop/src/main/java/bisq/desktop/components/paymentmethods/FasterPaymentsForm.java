@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AccountNrValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
@@ -32,26 +33,20 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class FasterPaymentsForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(FasterPaymentsForm.class);
+    private static final String UK_SORT_CODE = "UK sort code";
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         // do not translate as it is used in english only
-        addLabelTextField(gridPane, ++gridRow, "UK sort code:",
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE,
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
@@ -71,7 +66,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
         // do not translate as it is used in english only
-        sortCodeInputTextField = addLabelInputTextField(gridPane, ++gridRow, "UK sort code:").second;
+        sortCodeInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, UK_SORT_CODE);
         sortCodeInputTextField.setValidator(inputValidator);
         sortCodeInputTextField.setValidator(new BranchIdValidator("GB"));
         sortCodeInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -79,7 +74,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr")).second;
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr"));
         accountNrInputTextField.setValidator(new AccountNrValidator("GB"));
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             fasterPaymentsAccount.setAccountNr(newValue);
@@ -88,37 +83,32 @@ public class FasterPaymentsForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String accountNr = accountNrInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+        setAccountNameWithString(accountNrInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
-        addLabelTextField(gridPane, ++gridRow, "UK sort code:", fasterPaymentsAccount.getSortCode());
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

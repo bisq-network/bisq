@@ -78,7 +78,6 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addInputFields();
         addButtons();
         applyStyles();

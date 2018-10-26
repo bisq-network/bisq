@@ -17,18 +17,22 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -37,9 +41,15 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.property.BooleanProperty;
@@ -65,7 +75,7 @@ public abstract class PaymentMethodForm {
 
     protected int gridRowFrom;
     protected InputTextField accountNameTextField;
-    protected CheckBox useCustomAccountNameCheckBox;
+    protected ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -79,7 +89,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
+        currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow, Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getMainFiatCurrencies()));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
@@ -99,8 +109,8 @@ public abstract class PaymentMethodForm {
         });
     }
 
-    protected void addAccountNameTextFieldWithAutoFillCheckBox() {
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow,
+    protected void addAccountNameTextFieldWithAutoFillToggleButton() {
+        Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(gridPane, ++gridRow,
                 Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
@@ -111,10 +121,10 @@ public abstract class PaymentMethodForm {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
         });
-        useCustomAccountNameCheckBox = tuple.third;
-        useCustomAccountNameCheckBox.setSelected(false);
-        useCustomAccountNameCheckBox.setOnAction(e -> {
-            boolean selected = useCustomAccountNameCheckBox.isSelected();
+        useCustomAccountNameToggleButton = tuple.third;
+        useCustomAccountNameToggleButton.setSelected(false);
+        useCustomAccountNameToggleButton.setOnAction(e -> {
+            boolean selected = useCustomAccountNameToggleButton.isSelected();
             accountNameTextField.setEditable(selected);
             accountNameTextField.setFocusTraversable(selected);
             autoFillNameTextField();
@@ -129,7 +139,7 @@ public abstract class PaymentMethodForm {
                 getTimeText(hours)).second;
     }
 
-    protected static String getTimeText(long hours) {
+    private static String getTimeText(long hours) {
         String time = hours + " " + Res.get("time.hours");
         if (hours == 1)
             time = Res.get("time.1hour");
@@ -169,10 +179,10 @@ public abstract class PaymentMethodForm {
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                         formatter.formatAccountAge(accountAge));
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        addTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
-            InputTextField inputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0).second;
+            InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
             inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
             inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
                 if (!newValue.isEmpty()) {
@@ -189,10 +199,68 @@ public abstract class PaymentMethodForm {
                 }
             });
         } else {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
         }
+    }
+
+    void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
+        if (!defaultCurrency.equals(tradeCurrency)) {
+            new Popup<>().warning(Res.get("payment.foreign.currency"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> {
+                        paymentAccount.setSingleTradeCurrency(tradeCurrency);
+                        autoFillNameTextField();
+                    })
+                    .closeButtonText(Res.get("payment.restore.default"))
+                    .onClose(() -> currencyComboBox.getSelectionModel().select(defaultCurrency))
+                    .show();
+        } else {
+            paymentAccount.setSingleTradeCurrency(tradeCurrency);
+            autoFillNameTextField();
+        }
+    }
+
+    void setAccountNameWithString(String name) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            name = StringUtils.abbreviate(name, 9);
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
+            accountNameTextField.setText(method.concat(": ").concat(name));
+        }
+    }
+
+    void fillUpFlowPaneWithCurrencies(boolean isEditable, FlowPane flowPane,
+                                      TradeCurrency e, PaymentAccount paymentAccount) {
+        CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
+        checkBox.setMouseTransparent(!isEditable);
+        checkBox.setSelected(paymentAccount.getTradeCurrencies().contains(e));
+        checkBox.setMinWidth(60);
+        checkBox.setMaxWidth(checkBox.getMinWidth());
+        checkBox.setTooltip(new Tooltip(e.getName()));
+        checkBox.setOnAction(event -> {
+            if (checkBox.isSelected())
+                paymentAccount.addCurrency(e);
+            else
+                paymentAccount.removeCurrency(e);
+
+            updateAllInputsValid();
+        });
+        flowPane.getChildren().add(checkBox);
+    }
+
+    void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
+                                               TradeCurrency singleTradeCurrency) {
+        gridRowFrom = gridRow;
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
+        field.setMouseTransparent(false);
+
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+
+        addLimitations();
     }
 
     abstract protected void autoFillNameTextField();

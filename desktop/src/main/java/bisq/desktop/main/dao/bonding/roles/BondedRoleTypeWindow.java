@@ -40,7 +40,7 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
         this.bondedRoleType = bondedRoleType;
         this.bsqFormatter = bsqFormatter;
 
-        width = 900;
+        width = 968;
         type = Type.Confirmation;
 
     }
@@ -55,7 +55,6 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();
@@ -75,19 +74,19 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
     }
 
     private void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.role"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.role"),
                 bondedRoleType.getDisplayString());
 
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.requiredBond"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.requiredBond"),
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(bondedRoleType.getRequiredBond())));
 
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.unlockTime"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.unlockTime"),
                 Res.get("dao.bond.bondedRoleType.details.blocks", bondedRoleType.getUnlockTime()));
 
         FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.link"),
                 bondedRoleType.getLink(), bondedRoleType.getLink());
 
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.isSingleton"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.isSingleton"),
                 bsqFormatter.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
     }
 }

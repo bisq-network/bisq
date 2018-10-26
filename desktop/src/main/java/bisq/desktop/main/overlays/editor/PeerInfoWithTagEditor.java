@@ -89,7 +89,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         this.offer = offer;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        width = 400;
+        width = 468;
         type = Type.Undefined;
         if (INSTANCE != null)
             INSTANCE.hide();
@@ -119,7 +119,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     public PeerInfoWithTagEditor numTrades(int numTrades) {
         this.numTrades = numTrades;
         if (numTrades == 0)
-            width = 500;
+            width = 568;
         return this;
     }
 
@@ -172,14 +172,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     private void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex,
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("peerInfo.nrOfTrades"),
                 numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
         if (accountAge != null)
-            FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
+            FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
 
-        inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
+        inputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
@@ -293,9 +293,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void applyStyles() {
-        gridPane.setId("peer-info-popup-bg");
+        gridPane.getStyleClass().add("peer-info-popup-bg");
         if (headLineLabel != null)
-            headLineLabel.setId("peer-info-popup-headline");
+            headLineLabel.getStyleClass().add("peer-info-popup-headline");
     }
 
     @Override

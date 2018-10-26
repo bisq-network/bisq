@@ -131,8 +131,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
-                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
+                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(ProposalType proposalType) {

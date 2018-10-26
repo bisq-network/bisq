@@ -86,12 +86,11 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     }
 
     public void show() {
-        width = 900;
+        width = 968;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = Res.get("displayUpdateDownloadWindow.headline");
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();

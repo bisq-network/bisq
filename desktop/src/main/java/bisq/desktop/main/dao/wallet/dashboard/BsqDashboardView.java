@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -48,7 +49,7 @@ import javafx.scene.layout.GridPane;
 import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.addLabelHyperlinkWithIcon;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -92,34 +93,34 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         addTitledGroupBg(root, ++gridRow, 5, Res.get("dao.wallet.dashboard.distribution"), Layout.GROUP_DISTANCE);
 
-        genesisIssueAmountTextField = addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        compRequestIssueAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
-        reimbursementAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
-        burntAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
-        availableAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
+        genesisIssueAmountTextField = FormBuilder.addTopLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        compRequestIssueAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
+        reimbursementAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
+        burntAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
+        availableAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
 
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.dashboard.locked"), Layout.GROUP_DISTANCE);
-        totalLockedUpAmountTextField = addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.totalLockedUpAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        totalUnlockingAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
-        totalUnlockedAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
+        totalLockedUpAmountTextField = FormBuilder.addTopLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.totalLockedUpAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        totalUnlockingAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
+        totalUnlockedAmountTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.dashboard.market"), Layout.GROUP_DISTANCE);
-        priceTextField = addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.price"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        marketCapTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
+        priceTextField = FormBuilder.addTopLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.price"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        marketCapTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
 
 
-        addTitledGroupBg(root, ++gridRow, 7, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
-        addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
+        addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
+        addTopLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
                 String.valueOf(daoFacade.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         hyperlinkWithIcon = addLabelHyperlinkWithIcon(root, ++gridRow, Res.get("dao.wallet.dashboard.genesisTxId"),
                 daoFacade.getGenesisTxId(), preferences.getBsqBlockChainExplorer().txUrl + daoFacade.getGenesisTxId()).second;
         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", daoFacade.getGenesisTxId())));
-        allTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.allTx")).second;
-        utxoTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
-        compensationIssuanceTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compensationIssuanceTx")).second;
-        reimbursementIssuanceTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementIssuanceTx")).second;
-        burntTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntTx")).second;
+        allTxTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.allTx")).second;
+        utxoTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
+        compensationIssuanceTxTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compensationIssuanceTx")).second;
+        reimbursementIssuanceTxTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementIssuanceTx")).second;
+        burntTxTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntTx")).second;
 
         priceChangeListener = (observable, oldValue, newValue) -> updatePrice();
     }
@@ -169,10 +170,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.COMPENSATION));
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmountFromCompRequests());
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
-        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
-        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
         Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
@@ -187,6 +186,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
+        compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getIssuanceSet().size()));
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.COMPENSATION));
+        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
+        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
         burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
