@@ -221,8 +221,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             UserThread.runAfter(() -> {
                 switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
                     case "BTC":
-                        amount.set("0.0001");
-                        price.set("6700");
+                        amount.set("1");
+                        price.set("0.0002");
                         break;
                     case "LTC":
                         amount.set("50");
@@ -481,8 +481,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void applyMakerFee() {
-        makerFee.set(getFormatterForMakerFee().formatCoin(dataModel.getMakerFee()));
-        makerFeeWithCode.set(getFormatterForMakerFee().formatCoinWithCode(dataModel.getMakerFee()));
+        Coin makerFeeAsCoin = dataModel.getMakerFee();
+        if (makerFeeAsCoin != null) {
+            Volume feeInFiat = dataModel.getFeeInUserFiatCurrency(makerFeeAsCoin);
+            String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeAsCoin, feeInFiat, getFormatterForMakerFee());
+            makerFeeWithCode.set(feeWithFiatAmount);
+
+            this.makerFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
+        }
         makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
     }
 

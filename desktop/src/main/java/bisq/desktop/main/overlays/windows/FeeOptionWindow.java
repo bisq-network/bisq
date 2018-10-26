@@ -147,7 +147,8 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         RadioButton radioButtonBTC = tuple.second;
         RadioButton radioButtonBSQ = tuple.third;
 
-        makerFeeTextField = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
+        makerFeeTextField = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex,
+                Res.get("createOffer.currencyForFee"), makerFeeWithCodeProperty.get()).second;
 
         toggleChangeListener = (observable, oldValue, newValue) -> {
             final boolean isBtc = newValue == radioButtonBTC;

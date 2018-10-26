@@ -20,15 +20,23 @@ package bisq.core.offer;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
 
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -246,5 +254,44 @@ public class OfferUtil {
         adjustedAmount = Math.max(minTradeAmount, adjustedAmount);
         adjustedAmount = Math.min(maxTradeLimit, adjustedAmount);
         return Coin.valueOf(adjustedAmount);
+    }
+
+    @Nullable
+    public static Volume getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                  Preferences preferences, PriceFeedService priceFeedService,
+                                                  BsqFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.
+        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+        String countryCode = preferences.getUserCountry().code;
+        String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
+        if (marketPrice != null && makerFee != null) {
+            long marketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
+            Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
+
+            if (isCurrencyForMakerFeeBtc) {
+                return userCurrencyPrice.getVolumeByAmount(makerFee);
+            } else {
+                MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
+                if (bsqMarketPrice != null) {
+                    long bsqPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
+                    Price bsqPrice = Price.valueOf("BSQ", bsqPriceAsLong);
+                    String inputValue = bsqFormatter.formatCoin(makerFee);
+                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                    return userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                } else {
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Volume feeInFiat, BSFormatter btcFormatter) {
+        String fee = makerFeeAsCoin != null ? btcFormatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
+        String feeInFiatAsString = feeInFiat != null ? btcFormatter.formatVolumeWithCode(feeInFiat) : Res.get("shared.na");
+        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
     }
 }

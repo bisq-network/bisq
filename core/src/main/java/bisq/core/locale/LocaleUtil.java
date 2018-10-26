@@ -21,12 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class LocaleUtil {
-    private static final Logger log = LoggerFactory.getLogger(LocaleUtil.class);
-
     public static List<Locale> getAllLocales() {
 
         // Data from https://restcountries.eu/rest/v2/all?fields=name;region;subregion;alpha2Code;languages
