@@ -59,7 +59,7 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    // TODO
+    // TODO: Get the last checks in place.
     public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
         checkMinMaxForProposedValue(param, paramValue, 3, 4);
 
