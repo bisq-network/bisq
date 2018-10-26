@@ -65,30 +65,30 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     public int addGroup(GridPane gridPane, int gridRow) {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, 5, Res.get("dao.wallet.dashboard.myBalance"));
         availableBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow,
-                Res.getWithCol("dao.availableBsqBalance"),
+                Res.get("dao.availableBsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
         availableBalanceTextField.setMouseTransparent(false);
 
         unverifiedBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
-                Res.getWithCol("dao.unverifiedBsqBalance")).second;
+                Res.get("dao.unverifiedBsqBalance")).second;
         unverifiedBalanceTextField.setMouseTransparent(false);
 
         lockedForVoteBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
-                Res.getWithCol("dao.lockedForVoteBalance")).second;
+                Res.get("dao.lockedForVoteBalance")).second;
         lockedForVoteBalanceTextField.setMouseTransparent(false);
 
-        lockedInBondsBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol(
+        lockedInBondsBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get(
                 "dao.lockedInBonds")).second;
         lockedInBondsBalanceTextField.setMouseTransparent(false);
 
         // TODO add unlockingBondsBalanceTextField
 
         totalBalanceTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
-                Res.getWithCol("dao.totalBsqBalance")).second;
+                Res.get("dao.totalBsqBalance")).second;
         totalBalanceTextField.setMouseTransparent(false);
 
         Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
-                Res.getWithCol("dao.availableNonBsqBalance"));
+                Res.get("dao.availableNonBsqBalance"));
         availableNonBsqBalanceLabel = tuple3.first;
         availableNonBsqBalanceTextField = tuple3.second;
         availableNonBsqBalanceTextField.setMouseTransparent(false);
