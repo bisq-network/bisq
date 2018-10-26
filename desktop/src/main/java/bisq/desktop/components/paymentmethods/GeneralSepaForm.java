@@ -124,7 +124,7 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
         flowPane.setId("flow-pane-checkboxes-bg");
 
         dataProvider.forEach(country ->
-                fillUpFlowPaneWithCountries(true, checkBoxList, flowPane, country));
+                fillUpFlowPaneWithCountries(checkBoxList, flowPane, country));
         updateCountriesSelection(checkBoxList);
     }
 
