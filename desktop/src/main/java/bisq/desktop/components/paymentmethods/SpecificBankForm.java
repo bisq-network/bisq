@@ -40,8 +40,8 @@ import javafx.scene.layout.GridPane;
 
 import javafx.beans.binding.Bindings;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextFieldButton;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldButton;
+import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldButton;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldButton;
 
 public class SpecificBankForm extends BankForm {
     private final SpecificBanksAccountPayload specificBanksAccountPayload;
@@ -60,7 +60,7 @@ public class SpecificBankForm extends BankForm {
 
     @Override
     protected void addAcceptedBanksForAddAccount() {
-        Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow,
+        Tuple3<Label, InputTextField, Button> addBankTuple = addTopLabelInputTextFieldButton(gridPane, ++gridRow,
                 Res.get("payment.nameOfAcceptedBank"), Res.get("payment.addAcceptedBank"));
         InputTextField addBankInputTextField = addBankTuple.second;
         Button addButton = addBankTuple.third;
@@ -68,7 +68,7 @@ public class SpecificBankForm extends BankForm {
         addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(),
                 addBankInputTextField.textProperty()));
 
-        Tuple3<Label, TextField, Button> acceptedBanksTuple = addLabelTextFieldButton(gridPane, ++gridRow,
+        Tuple3<Label, TextField, Button> acceptedBanksTuple = addTopLabelTextFieldButton(gridPane, ++gridRow,
                 Res.get("payment.accepted.banks"), Res.get("payment.clearAcceptedBanks"));
         acceptedBanksTextField = acceptedBanksTuple.second;
         acceptedBanksTextField.setMouseTransparent(false);
