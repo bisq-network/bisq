@@ -128,8 +128,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class GUIUtil {
-    public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
-    public final static String EDIT_FLAG = "EDIT_FLAG";
+    public final static String SHOW_ALL_FLAG = "list.currency.showAll"; // Used for accessing the i18n resource
+    public final static String EDIT_FLAG = "list.currency.editList"; // Used for accessing the i18n resource
 
     public final static int FIAT_DECIMALS_WITH_ZEROS = 0;
     public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
@@ -295,10 +295,10 @@ public class GUIUtil {
 
                     switch (code) {
                         case GUIUtil.SHOW_ALL_FLAG:
-                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            currency.setText(Res.get("list.currency.showAll"));
                             break;
                         case GUIUtil.EDIT_FLAG:
-                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            currency.setText(Res.get("list.currency.editList"));
                             break;
                         default:
                             if (preferences.isSortMarketCurrenciesNumerically()) {
@@ -347,11 +347,11 @@ public class GUIUtil {
 
                     switch (code) {
                         case GUIUtil.SHOW_ALL_FLAG:
-                            currencyType.setText("▶");
+                            currencyType.setText(Res.get("shared.all"));
                             currency.setText(Res.get("list.currency.showAll"));
                             break;
                         case GUIUtil.EDIT_FLAG:
-                            currencyType.setText("▼");
+                            currencyType.setText(Res.get("shared.edit"));
                             currency.setText(Res.get("list.currency.editList"));
                             break;
                         default:
@@ -392,10 +392,10 @@ public class GUIUtil {
 
                     switch (code) {
                         case GUIUtil.SHOW_ALL_FLAG:
-                            currency.setText("▶ " + Res.get("list.currency.showAll"));
+                            currency.setText(Res.get("list.currency.showAll"));
                             break;
                         case GUIUtil.EDIT_FLAG:
-                            currency.setText(Res.get("▼ " + "list.currency.editList"));
+                            currency.setText(Res.get("list.currency.editList"));
                             break;
                         default:
                             if (offerCountOptional.isPresent()) {
@@ -447,18 +447,16 @@ public class GUIUtil {
 
                     switch (code) {
                         case GUIUtil.SHOW_ALL_FLAG:
-                            currencyType.setText("▶");
+                            currencyType.setText(Res.get("shared.all"));
                             currency.setText(Res.get("list.currency.showAll"));
                             break;
                         case GUIUtil.EDIT_FLAG:
-                            currencyType.setText("▼");
+                            currencyType.setText(Res.get("shared.edit"));
                             currency.setText(Res.get("list.currency.editList"));
                             break;
                         default:
-                            if (offerCountOptional.isPresent()) {
-                                offers.setText(offers.getText() + " (" + offerCountOptional.get() + " " +
-                                        (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti) + ")");
-                            }
+                            offerCountOptional.ifPresent(numOffer -> offers.setText(offers.getText() + " (" + numOffer + " " +
+                                    (numOffer == 1 ? postFixSingle : postFixMulti) + ")"));
                     }
 
                     setGraphic(box);
@@ -483,7 +481,7 @@ public class GUIUtil {
                     this.getStyleClass().add("currency-label-selected");
 
                     if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
-                        setText("▶ " + Res.get("list.currency.showAll"));
+                        setText(Res.get("list.currency.showAll"));
                     } else {
                         setText(Res.get(id));
                     }
@@ -516,7 +514,7 @@ public class GUIUtil {
                     box.getChildren().addAll(paymentType, paymentMethod);
 
                     if (id.equals(GUIUtil.SHOW_ALL_FLAG)) {
-                        paymentType.setText("▶");
+                        paymentType.setText(Res.get("shared.all"));
                         paymentMethod.setText(Res.get("list.currency.showAll"));
                     }
 
