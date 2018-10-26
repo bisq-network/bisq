@@ -469,9 +469,7 @@ public class FormBuilder {
     // Label  + InputTextField + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, InputTextField, Button> addLabelInputTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
-
+    public static Tuple3<Label, InputTextField, Button> addTopLabelInputTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
         InputTextField inputTextField = new InputTextField();
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
@@ -480,11 +478,10 @@ public class FormBuilder {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(inputTextField, button);
         HBox.setHgrow(inputTextField, Priority.ALWAYS);
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        gridPane.getChildren().add(hBox);
 
-        return new Tuple3<>(label, inputTextField, button);
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, 0);
+
+        return new Tuple3<>(labelVBoxTuple2.first, inputTextField, button);
     }
 
 
@@ -492,12 +489,11 @@ public class FormBuilder {
     // Label  + TextField + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
-        return addLabelTextFieldButton(gridPane, rowIndex, title, buttonTitle, 0);
+    public static Tuple3<Label, TextField, Button> addTopLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
+        return addTopLabelTextFieldButton(gridPane, rowIndex, title, buttonTitle, 0);
     }
 
-    public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
+    public static Tuple3<Label, TextField, Button> addTopLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
 
         TextField textField = new JFXTextField();
         textField.setEditable(false);
@@ -510,12 +506,10 @@ public class FormBuilder {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(textField, button);
         HBox.setHgrow(textField, Priority.ALWAYS);
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(hBox);
 
-        return new Tuple3<>(label, textField, button);
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, 0);
+
+        return new Tuple3<>(labelVBoxTuple2.first, textField, button);
     }
 
 
