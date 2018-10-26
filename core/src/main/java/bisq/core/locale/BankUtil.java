@@ -31,10 +31,13 @@ public class BankUtil {
     // BankName
     @SuppressWarnings("SameReturnValue")
     public static boolean isBankNameRequired(String countryCode) {
+        // Currently we always return true but lets keep that method to be more flexible in case we what to not show
+        // it at some new payment method.
+        return true;
+         /*
         switch (countryCode) {
             // We show always the bank name as it is needed in specific banks.
             // Though that handling should be optimized in futures.
-            /*
             case "GB":
             case "US":
             case "NZ":
@@ -47,10 +50,9 @@ public class BankUtil {
             case "BR":
             case "AR":
                 return true;
-                */
             default:
                 return true;
-        }
+        }*/
     }
 
     public static String getBankNameLabel(String countryCode) {
