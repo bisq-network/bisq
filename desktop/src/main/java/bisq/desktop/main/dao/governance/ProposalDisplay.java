@@ -183,7 +183,7 @@ public class ProposalDisplay {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
         double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
         proposalTypeTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow,
-                Res.get("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
+                Res.getWithCol("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
         nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
         nameTextField.setValidator(new InputValidator());
@@ -222,7 +222,7 @@ public class ProposalDisplay {
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
                 paramComboBox = FormBuilder.<Param>addComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.paramComboBox.label"));
+                        Res.getWithCol("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
                 List<Param> list = Arrays.stream(Param.values())
@@ -260,7 +260,7 @@ public class ProposalDisplay {
                 break;
             case BONDED_ROLE:
                 bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.bondedRoleComboBox.label"));
+                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
                 bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
@@ -277,7 +277,7 @@ public class ProposalDisplay {
                 });
                 comboBoxes.add(bondedRoleTypeComboBox);
                 requiredBondForRoleTextField = addTopLabelTextField(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.requiredBondForRole.label")).second;
+                        Res.getWithCol("dao.proposal.display.requiredBondForRole.label")).second;
 
                 requiredBondForRoleListener = (observable, oldValue, newValue) -> {
                     if (newValue != null) {
@@ -289,7 +289,7 @@ public class ProposalDisplay {
                 break;
             case CONFISCATE_BOND:
                 confiscateBondComboBox = FormBuilder.<BondedRole>addComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.confiscateBondComboBox.label"));
+                        Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
@@ -310,7 +310,7 @@ public class ProposalDisplay {
                 break;
             case REMOVE_ASSET:
                 assetComboBox = FormBuilder.<Asset>addComboBox(gridPane, ++gridRow,
-                        Res.get("dao.proposal.display.assetComboBox.label"));
+                        Res.getWithCol("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
                 List<Asset> assetList = CurrencyUtil.getAssetRegistry().stream()

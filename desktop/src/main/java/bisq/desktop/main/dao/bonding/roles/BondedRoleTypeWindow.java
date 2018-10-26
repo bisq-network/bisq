@@ -74,19 +74,19 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
     }
 
     private void addContent() {
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.bondedRoleType.details.role"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.role"),
                 bondedRoleType.getDisplayString());
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.bondedRoleType.details.requiredBond"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.requiredBond"),
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(bondedRoleType.getRequiredBond())));
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.bondedRoleType.details.unlockTime"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.unlockTime"),
                 Res.get("dao.bond.bondedRoleType.details.blocks", bondedRoleType.getUnlockTime()));
 
-        FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.bond.bondedRoleType.details.link"),
+        FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.link"),
                 bondedRoleType.getLink(), bondedRoleType.getLink());
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.bondedRoleType.details.isSingleton"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.isSingleton"),
                 bsqFormatter.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
     }
 }
