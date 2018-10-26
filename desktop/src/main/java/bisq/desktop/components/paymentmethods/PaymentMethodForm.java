@@ -92,10 +92,10 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow, Res.get("shared.currency"));
+        currencyComboBox = FormBuilder.addComboBox(gridPane, ++gridRow, Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getMainFiatCurrencies()));
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -252,12 +252,12 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
     }
 
-    void fillUpFlowPaneWithCountries(boolean isEditable, List<CheckBox> checkBoxList, FlowPane flowPane, Country country) {
+    void fillUpFlowPaneWithCountries(List<CheckBox> checkBoxList, FlowPane flowPane, Country country) {
         final String countryCode = country.code;
         CheckBox checkBox = new AutoTooltipCheckBox(countryCode);
         checkBox.setUserData(countryCode);
         checkBoxList.add(checkBox);
-        checkBox.setMouseTransparent(!isEditable);
+        checkBox.setMouseTransparent(false);
         checkBox.setMinWidth(45);
         checkBox.setMaxWidth(45);
         checkBox.setTooltip(new Tooltip(country.name));
