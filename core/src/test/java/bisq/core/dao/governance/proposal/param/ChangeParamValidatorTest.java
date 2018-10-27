@@ -1,6 +1,5 @@
 package bisq.core.dao.governance.proposal.param;
 
-//import bisq.core.dao.state.BsqStateService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
@@ -26,8 +25,6 @@ public class ChangeParamValidatorTest {
     // @Tested classes are instantiated automatically when needed in a test case,
     // using injection where possible, see http://jmockit.github.io/tutorial/Mocking.html#tested
     // To force instantiate earlier, use availableDuringSetup
-  //  @Tested(fullyInitialized = true, availableDuringSetup = true)
-    //BsqStateService bsqStateService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     DaoStateService daoStateService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
