@@ -77,6 +77,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -111,9 +112,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
     // If we would change the price representation in the domain we would not be backward compatible
     public final StringProperty price = new SimpleStringProperty();
-    final StringProperty makerFee = new SimpleStringProperty();
-    final StringProperty makerFeeWithCode = new SimpleStringProperty();
-    final StringProperty makerFeeCurrencyCode = new SimpleStringProperty();
+    final StringProperty tradeFee = new SimpleStringProperty();
+    final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
+    final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
+    final StringProperty tradeFeeCurrencyCode = new SimpleStringProperty();
+    final StringProperty tradeFeeDescription = new SimpleStringProperty();
 
     // Positive % value means always a better price form the maker's perspective:
     // Buyer (with fiat): lower price as market
@@ -488,13 +491,27 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private void applyMakerFee() {
         Coin makerFeeAsCoin = dataModel.getMakerFee();
         if (makerFeeAsCoin != null) {
-            Volume feeInFiat = dataModel.getFeeInUserFiatCurrency(makerFeeAsCoin);
-            String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeAsCoin, feeInFiat, getFormatterForMakerFee());
-            makerFeeWithCode.set(feeWithFiatAmount);
+            Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();
+            Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
+                    true, preferences, priceFeedService, bsqFormatter);
+            optionalBtcFeeInFiat.ifPresent(feeInFiat -> {
+                String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBtc, feeInFiat, btcFormatter);
+                tradeFeeInBtcWithFiat.set(feeWithFiatAmount);
+            });
 
-            this.makerFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
+            Coin makerFeeInBsq = dataModel.getMakerFeeInBsq();
+            Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
+                    false, preferences, priceFeedService, bsqFormatter);
+            optionalBsqFeeInFiat.ifPresent(feeInFiat -> {
+                String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBsq, feeInFiat, bsqFormatter);
+                tradeFeeInBsqWithFiat.set(feeWithFiatAmount);
+            });
+
+            tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
         }
-        makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
+        tradeFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
+        tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
+                Res.get("createOffer.tradeFee.descriptionBTCOnly"));
     }
 
     private void updateMarketPriceAvailable() {
@@ -893,7 +910,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
     }
 
-    public String getMakerFee() {
+    public String getTradeFee() {
         //TODO use last bisq market price to estimate BSQ val
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);

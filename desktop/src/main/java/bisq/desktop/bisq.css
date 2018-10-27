@@ -1132,6 +1132,12 @@ textfield */
     -fx-background-color: -bs-very-light-grey;
 }
 
+#trade-fee-textfield {
+    -fx-font-size: 0.9em;
+    -fx-alignment: center-right;
+    -fx-background-color: transparent;
+}
+
 /* Open Offer */
 .offer-disabled .label {
     -fx-text-fill: -bs-light-grey;

@@ -93,8 +93,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -833,8 +831,20 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 
+    public Coin getMakerFeeInBtc() {
+        return OfferUtil.getMakerFee(true, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public Coin getMakerFeeInBsq() {
+        return OfferUtil.getMakerFee(false, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
     public boolean isCurrencyForMakerFeeBtc() {
         return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public boolean isPreferredFeeCurrencyBtc() {
+        return preferences.isPayFeeInBtc();
     }
 
     public boolean isBsqForFeeAvailable() {
@@ -843,10 +853,5 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
-    }
-
-    @Nullable
-    public Volume getFeeInUserFiatCurrency(Coin makerFee) {
-        return OfferUtil.getFeeInUserFiatCurrency(makerFee, isCurrencyForMakerFeeBtc(), preferences, priceFeedService, bsqFormatter);
     }
 }

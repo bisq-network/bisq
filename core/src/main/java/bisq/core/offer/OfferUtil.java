@@ -40,6 +40,8 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -129,8 +131,9 @@ public class OfferUtil {
      * @return
      */
     public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() ||
-                !isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+        boolean payFeeInBtc = preferences.getPayFeeInBtc();
+        boolean bsqForFeeAvailable = isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+        return payFeeInBtc || !bsqForFeeAvailable;
     }
 
     /**
@@ -143,11 +146,15 @@ public class OfferUtil {
      * @return
      */
     public static boolean isBsqForFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        final Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
-        final Coin availableBalance = bsqWalletService.getAvailableBalance();
-        return makerFee != null &&
-                BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                availableBalance != null &&
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
+
+        // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ
+        // fee each time we open the create offer screen as there the amount is not set.
+        if (makerFee == null)
+            return true;
+
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
                 !availableBalance.subtract(makerFee).isNegative();
     }
 
@@ -256,10 +263,9 @@ public class OfferUtil {
         return Coin.valueOf(adjustedAmount);
     }
 
-    @Nullable
-    public static Volume getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
-                                                  Preferences preferences, PriceFeedService priceFeedService,
-                                                  BsqFormatter bsqFormatter) {
+    public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                            Preferences preferences, PriceFeedService priceFeedService,
+                                                            BsqFormatter bsqFormatter) {
         // We use the users currency derived from his selected country.
         // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
         String countryCode = preferences.getUserCountry().code;
@@ -270,7 +276,7 @@ public class OfferUtil {
             Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
 
             if (isCurrencyForMakerFeeBtc) {
-                return userCurrencyPrice.getVolumeByAmount(makerFee);
+                return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
             } else {
                 MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
                 if (bsqMarketPrice != null) {
@@ -279,13 +285,13 @@ public class OfferUtil {
                     String inputValue = bsqFormatter.formatCoin(makerFee);
                     Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
                     Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
-                    return userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                    return Optional.of(userCurrencyPrice.getVolumeByAmount(requiredBtc));
                 } else {
-                    return null;
+                    return Optional.empty();
                 }
             }
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 
