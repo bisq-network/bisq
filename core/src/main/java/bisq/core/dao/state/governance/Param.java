@@ -42,18 +42,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public enum Param {
     UNDEFINED(0),
 
-    // Fee in BSQ satoshi for a 1 BTC trade. 200 Satoshi = 2 BSQ = 0.02%.
-    // About 2 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of the BTC fee.,
+    // Fee in BSQ satoshi for a 1 BTC trade. 100 Satoshi = 1 BSQ => about 0.02%.
+    // About 1 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of the BTC fee.,
     // Might need adjustment if BSQ/BTC rate changes.
-    DEFAULT_MAKER_FEE_BSQ(200),     // 0.02%
-    DEFAULT_TAKER_FEE_BSQ(200),
-    // 0.05 BSQ (5 satoshi) for a 1 BTC trade. 0.05 USD if 1 BSQ = 1 USD, 10 % of the BTC fee
-    MIN_MAKER_FEE_BSQ(5),           // 0.0005%.
-    MIN_TAKER_FEE_BSQ(5),
+    DEFAULT_MAKER_FEE_BSQ(100),     // 0.02%
+    DEFAULT_TAKER_FEE_BSQ(100),
+    // 0.03 BSQ (3 satoshi) for a 1 BTC trade. 0.05 USD if 1 BSQ = 1 USD, 10 % of the BTC fee
+    MIN_MAKER_FEE_BSQ(3),           // 0.0003%.
+    MIN_TAKER_FEE_BSQ(3),
 
 
     // Fee in BTC satoshi for a 1 BTC trade. 200_000 Satoshi =  0.00200000 BTC = 0.2%.
-    // 20 USD at BTC price 10_000 USD for a 1 BTC trade;
+    // 10 USD at BTC price 5_000 USD for a 1 BTC trade;
     DEFAULT_MAKER_FEE_BTC(200_000),
     DEFAULT_TAKER_FEE_BTC(200_000),   // 0.2%
     MIN_MAKER_FEE_BTC(5_000),         // 0.005%.
