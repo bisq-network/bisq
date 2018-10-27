@@ -21,8 +21,8 @@ import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
@@ -46,8 +46,8 @@ import lombok.extern.slf4j.Slf4j;
  * Listens for new BlindVotePayload and adds it to appendOnlyStoreList.
  */
 @Slf4j
-public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqStateListener, DaoSetupService {
-    private final BsqStateService bsqStateService;
+public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoStateListener, DaoSetupService {
+    private final DaoStateService daoStateService;
     private final P2PService p2PService;
     private final BlindVoteValidator blindVoteValidator;
     @Getter
@@ -59,13 +59,13 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BlindVoteListService(BsqStateService bsqStateService,
+    public BlindVoteListService(DaoStateService daoStateService,
                                 P2PService p2PService,
                                 BlindVoteStorageService blindVoteStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 BlindVoteValidator blindVoteValidator,
                                 @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.p2PService = p2PService;
         this.blindVoteValidator = blindVoteValidator;
 
@@ -80,7 +80,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
 
     @Override
     public void addListeners() {
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(this);
     }
 
@@ -91,7 +91,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, BsqSta
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

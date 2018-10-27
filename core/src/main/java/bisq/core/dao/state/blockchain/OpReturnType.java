@@ -30,9 +30,10 @@ public enum OpReturnType {
     //TODO add undefined ?
     PROPOSAL((byte) 0x10),
     COMPENSATION_REQUEST((byte) 0x11),
-    BLIND_VOTE((byte) 0x12),
-    VOTE_REVEAL((byte) 0x13),
-    LOCKUP((byte) 0x14);
+    REIMBURSEMENT_REQUEST((byte) 0x12),
+    BLIND_VOTE((byte) 0x13),
+    VOTE_REVEAL((byte) 0x14),
+    LOCKUP((byte) 0x15);
 
     @Getter
     private byte type;

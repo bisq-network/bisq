@@ -5,6 +5,7 @@ buildscript {
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath files('gradle/witness/gradle-witness.jar')
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
     }
 }
 
@@ -13,6 +14,9 @@ apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'witness'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.google.osdetector'
+
+ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
@@ -55,7 +59,6 @@ dependencies {
     compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
     compile 'com.googlecode.jcsv:jcsv:1.4.0'
     compile 'com.github.sarxos:webcam-capture:0.3.12'
-
 
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'

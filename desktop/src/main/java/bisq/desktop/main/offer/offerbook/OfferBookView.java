@@ -29,7 +29,6 @@ import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
-import bisq.desktop.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.settings.AccountSettingsView;
 import bisq.desktop.main.funds.FundsView;
@@ -409,10 +408,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     })
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
-            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
-                    Res.get("popup.warning.noArbitratorSelected.msg"),
-                    ArbitratorSelectionView.class,
-                    "navigation.arbitratorSelection");
+            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -421,7 +417,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(Offer offer,
                             boolean isPaymentAccountValidForOffer,
-                            boolean hasMatchingArbitrator,
                             boolean hasSameProtocolVersion,
                             boolean isIgnored,
                             boolean isOfferBanned,
@@ -429,12 +424,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isPaymentMethodBanned,
                             boolean isNodeAddressBanned,
                             boolean isInsufficientTradeLimit) {
-        if (!hasMatchingArbitrator) {
-            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
-                    Res.get("popup.warning.noArbitratorSelected.msg"),
-                    ArbitratorSelectionView.class,
-                    "navigation.arbitratorSelection");
-        } else if (!isPaymentAccountValidForOffer) {
+        if (!isPaymentAccountValidForOffer) {
             openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
                     Res.get("offerbook.warning.noMatchingAccount.msg"),
                     FiatAccountsView.class,
@@ -804,7 +794,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             final ImageView iconView = new ImageView();
                             final Button button = new AutoTooltipButton();
-                            boolean isTradable, isPaymentAccountValidForOffer, hasMatchingArbitrator,
+                            boolean isTradable, isPaymentAccountValidForOffer,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
 
@@ -825,7 +815,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
-                                        hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isIgnored = model.isIgnored(offer);
                                         isOfferBanned = model.isOfferBanned(offer);
@@ -834,7 +823,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isNodeAddressBanned = model.isNodeAddressBanned(offer);
                                         isInsufficientTradeLimit = model.isInsufficientTradeLimit(offer);
                                         isTradable = isPaymentAccountValidForOffer &&
-                                                hasMatchingArbitrator &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
                                                 !isOfferBanned &&
@@ -856,7 +844,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(offer,
                                                             isPaymentAccountValidForOffer,
-                                                            hasMatchingArbitrator,
                                                             hasSameProtocolVersion,
                                                             isIgnored,
                                                             isOfferBanned,
@@ -888,7 +875,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (!myOffer && !isTradable)
                                         button.setOnAction(e -> onShowInfo(offer,
                                                 isPaymentAccountValidForOffer,
-                                                hasMatchingArbitrator,
                                                 hasSameProtocolVersion,
                                                 isIgnored,
                                                 isOfferBanned,

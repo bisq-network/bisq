@@ -23,7 +23,7 @@ import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateListener;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.locale.Res;
@@ -34,7 +34,10 @@ import javax.inject.Inject;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import java.text.SimpleDateFormat;
+
 import java.util.Date;
+import java.util.Locale;
 
 import static bisq.desktop.util.FormBuilder.addLabelTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
@@ -44,7 +47,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 // block. The event from the ChainHeightListener is sent before parsing starts.
 // The event from the ChainHeightListener would notify after parsing a new block.
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements BsqStateListener {
+public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final PhasesView phasesView;
     private final BSFormatter formatter;
@@ -103,7 +106,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -134,11 +137,15 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     }
 
     private String getPhaseDuration(int height, DaoPhase.Phase phase) {
-        final long start = daoFacade.getFirstBlockOfPhase(height, phase);
-        final long end = daoFacade.getLastBlockOfPhase(height, phase);
+        long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase);
+        long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase);
+        long duration = daoFacade.getDurationForPhaseForDisplay(phase);
         long now = new Date().getTime();
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L));
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L));
-        return Res.get("dao.cycle.phaseDuration", start, end, startDateTime, endDateTime);
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("hh:mm", Locale.getDefault());
+        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
+        return Res.get("dao.cycle.phaseDuration", duration, durationTime, start, end, startDateTime, endDateTime);
     }
 }

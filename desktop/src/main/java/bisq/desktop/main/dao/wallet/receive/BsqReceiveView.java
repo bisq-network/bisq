@@ -62,7 +62,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 
-        addressTextField = addLabelBsqAddressTextField(root, gridRow, Res.getWithCol("shared.address"),
+        addressTextField = addLabelBsqAddressTextField(root, gridRow, Res.getWithCol("dao.wallet.receive.bsqAddress"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         addressTextField.setPaymentLabel(paymentLabelString);
     }

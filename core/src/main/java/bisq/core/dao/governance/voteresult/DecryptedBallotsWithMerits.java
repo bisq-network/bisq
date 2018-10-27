@@ -22,7 +22,7 @@ import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -43,17 +43,17 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 public class DecryptedBallotsWithMerits implements PersistablePayload {
     private final byte[] hashOfBlindVoteList;
-    private final String voteRevealTxId; // not used yet but keep it for now
-    private final String blindVoteTxId; // not used yet but keep it for now
+    private final String blindVoteTxId;
+    private final String voteRevealTxId;
     private final long stake;
     private final BallotList ballotList;
     private final MeritList meritList;
 
-    DecryptedBallotsWithMerits(byte[] hashOfBlindVoteList, String voteRevealTxId, String blindVoteTxId, long stake,
-                               BallotList ballotList, MeritList meritList) {
+    public DecryptedBallotsWithMerits(byte[] hashOfBlindVoteList, String blindVoteTxId, String voteRevealTxId, long stake,
+                                      BallotList ballotList, MeritList meritList) {
         this.hashOfBlindVoteList = hashOfBlindVoteList;
-        this.voteRevealTxId = voteRevealTxId;
         this.blindVoteTxId = blindVoteTxId;
+        this.voteRevealTxId = voteRevealTxId;
         this.stake = stake;
         this.ballotList = ballotList;
         this.meritList = meritList;
@@ -66,20 +66,23 @@ public class DecryptedBallotsWithMerits implements PersistablePayload {
 
     @Override
     public PB.DecryptedBallotsWithMerits toProtoMessage() {
-        PB.DecryptedBallotsWithMerits.Builder builder = PB.DecryptedBallotsWithMerits.newBuilder()
+        return getBuilder().build();
+    }
+
+    public PB.DecryptedBallotsWithMerits.Builder getBuilder() {
+        return PB.DecryptedBallotsWithMerits.newBuilder()
                 .setHashOfBlindVoteList(ByteString.copyFrom(hashOfBlindVoteList))
-                .setVoteRevealTxId(voteRevealTxId)
                 .setBlindVoteTxId(blindVoteTxId)
+                .setVoteRevealTxId(voteRevealTxId)
                 .setStake(stake)
                 .setBallotList(ballotList.getBuilder())
                 .setMeritList(meritList.getBuilder());
-        return builder.build();
     }
 
     public static DecryptedBallotsWithMerits fromProto(PB.DecryptedBallotsWithMerits proto) {
         return new DecryptedBallotsWithMerits(proto.getHashOfBlindVoteList().toByteArray(),
-                proto.getVoteRevealTxId(),
                 proto.getBlindVoteTxId(),
+                proto.getVoteRevealTxId(),
                 proto.getStake(),
                 BallotList.fromProto(proto.getBallotList()),
                 MeritList.fromProto(proto.getMeritList()));
@@ -97,16 +100,16 @@ public class DecryptedBallotsWithMerits implements PersistablePayload {
                 .findAny();
     }
 
-    public long getMerit(BsqStateService bsqStateService) {
-        return MeritConsensus.getMeritStake(blindVoteTxId, meritList, bsqStateService);
+    public long getMerit(DaoStateService daoStateService) {
+        return MeritConsensus.getMeritStake(blindVoteTxId, meritList, daoStateService);
     }
 
     @Override
     public String toString() {
         return "DecryptedBallotsWithMerits{" +
                 "\n     hashOfBlindVoteList=" + Utilities.bytesAsHexString(hashOfBlindVoteList) +
-                ",\n     voteRevealTxId='" + voteRevealTxId + '\'' +
                 ",\n     blindVoteTxId='" + blindVoteTxId + '\'' +
+                ",\n     voteRevealTxId='" + voteRevealTxId + '\'' +
                 ",\n     stake=" + stake +
                 ",\n     ballotList=" + ballotList +
                 ",\n     meritList=" + meritList +

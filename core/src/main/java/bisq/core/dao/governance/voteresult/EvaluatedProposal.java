@@ -29,6 +29,8 @@ import lombok.Value;
 public class EvaluatedProposal implements PersistablePayload {
     private final boolean isAccepted;
     private final ProposalVoteResult proposalVoteResult;
+
+    //TODO remove - can be derived from params
     private final long requiredQuorum;
     private final long requiredThreshold;
 

@@ -41,6 +41,8 @@ import bisq.core.dao.governance.proposal.generic.GenericProposalService;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
@@ -63,10 +65,11 @@ import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.state.BsqState;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoState;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
-import bisq.core.dao.state.SnapshotManager;
 import bisq.core.dao.state.period.CycleService;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -99,11 +102,13 @@ public class DaoModule extends AppModule {
         bind(FullNodeNetworkService.class).in(Singleton.class);
         bind(LiteNodeNetworkService.class).in(Singleton.class);
 
-        // BsqState
+        // DaoState
         bind(GenesisTxInfo.class).in(Singleton.class);
-        bind(BsqState.class).in(Singleton.class);
-        bind(BsqStateService.class).in(Singleton.class);
-        bind(SnapshotManager.class).in(Singleton.class);
+        bind(DaoState.class).in(Singleton.class);
+        bind(DaoStateService.class).in(Singleton.class);
+        bind(DaoStateSnapshotService.class).in(Singleton.class);
+        bind(DaoStateStorageService.class).in(Singleton.class);
+
         bind(ExportJsonFilesService.class).in(Singleton.class);
 
         // Period
@@ -127,6 +132,9 @@ public class DaoModule extends AppModule {
 
         bind(CompensationValidator.class).in(Singleton.class);
         bind(CompensationProposalService.class).in(Singleton.class);
+
+        bind(ReimbursementValidator.class).in(Singleton.class);
+        bind(ReimbursementProposalService.class).in(Singleton.class);
 
         bind(ChangeParamValidator.class).in(Singleton.class);
         bind(ChangeParamProposalService.class).in(Singleton.class);

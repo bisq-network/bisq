@@ -17,12 +17,15 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.desktop.util.FormBuilder;
+
 import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
@@ -33,7 +36,6 @@ import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
@@ -66,15 +68,15 @@ public class ProposalListItem {
         Label myVoteIcon;
         if (vote != null) {
             if ((vote).isAccepted()) {
-                myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_UP);
-                myVoteIcon.getStyleClass().addAll("icon", "dao-accepted-icon");
+                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
+                myVoteIcon.getStyleClass().add("dao-accepted-icon");
             } else {
-                myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.THUMBS_DOWN);
-                myVoteIcon.getStyleClass().addAll("icon", "dao-rejected-icon");
+                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
+                myVoteIcon.getStyleClass().add("dao-rejected-icon");
             }
         } else {
-            myVoteIcon = AwesomeDude.createIconLabel(AwesomeIcon.MINUS);
-            myVoteIcon.getStyleClass().addAll("icon", "dao-ignored-icon");
+            myVoteIcon = FormBuilder.getIcon(AwesomeIcon.MINUS);
+            myVoteIcon.getStyleClass().add("dao-ignored-icon");
         }
         return myVoteIcon;
     }
@@ -108,6 +110,10 @@ public class ProposalListItem {
             case COMPENSATION_REQUEST:
                 CompensationProposal compensationProposal = (CompensationProposal) proposal;
                 Coin requestedBsq = evaluatedProposal.isAccepted() ? compensationProposal.getRequestedBsq() : Coin.ZERO;
+                return bsqFormatter.formatCoinWithCode(requestedBsq);
+            case REIMBURSEMENT_REQUEST:
+                ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
+                requestedBsq = evaluatedProposal.isAccepted() ? reimbursementProposal.getRequestedBsq() : Coin.ZERO;
                 return bsqFormatter.formatCoinWithCode(requestedBsq);
             case CHANGE_PARAM:
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;

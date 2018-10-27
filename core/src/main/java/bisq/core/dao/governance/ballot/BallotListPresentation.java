@@ -18,8 +18,8 @@
 package bisq.core.dao.governance.ballot;
 
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * Provides the ballots as observableList for presentation classes.
  */
 @Slf4j
-public class BallotListPresentation implements BallotListService.BallotListChangeListener, BsqStateListener {
+public class BallotListPresentation implements BallotListService.BallotListChangeListener, DaoStateListener {
     private final BallotListService ballotListService;
     private final PeriodService periodService;
 
@@ -55,17 +55,17 @@ public class BallotListPresentation implements BallotListService.BallotListChang
     @Inject
     public BallotListPresentation(BallotListService ballotListService,
                                   PeriodService periodService,
-                                  BsqStateService bsqStateService,
+                                  DaoStateService daoStateService,
                                   ProposalValidator proposalValidator) {
         this.ballotListService = ballotListService;
         this.periodService = periodService;
 
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
         ballotListService.addListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

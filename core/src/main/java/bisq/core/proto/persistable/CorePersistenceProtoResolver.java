@@ -30,9 +30,7 @@ import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.governance.role.BondedRoleList;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMeritsList;
-import bisq.core.dao.governance.voteresult.EvaluatedProposalList;
-import bisq.core.dao.state.BsqState;
+import bisq.core.dao.state.DaoStateStore;
 import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -121,8 +119,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return ProposalStore.fromProto(proto.getProposalStore());
                 case TEMP_PROPOSAL_STORE:
                     return TempProposalStore.fromProto(proto.getTempProposalStore(), networkProtoResolver);
-                case BSQ_STATE:
-                    return BsqState.fromProto(proto.getBsqState());
                 case MY_PROPOSAL_LIST:
                     return MyProposalList.fromProto(proto.getMyProposalList());
                 case BALLOT_LIST:
@@ -137,10 +133,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return BondedRoleList.fromProto(proto.getBondedRoleList());
                 case REMOVED_ASSET_LIST:
                     return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
-                case EVALUATED_PROPOSAL_LIST:
-                    return EvaluatedProposalList.fromProto(proto.getEvaluatedProposalList());
-                case DECRYPTED_BALLOTS_WITH_MERITS_LIST:
-                    return DecryptedBallotsWithMeritsList.fromProto(proto.getDecryptedBallotsWithMeritsList());
+                case DAO_STATE_STORE:
+                    return DaoStateStore.fromProto(proto.getDaoStateStore());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

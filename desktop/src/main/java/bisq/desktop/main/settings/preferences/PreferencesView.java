@@ -23,14 +23,17 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -95,23 +98,29 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
     private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
-    private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, avoidStandbyModeCheckBox,
+    private CheckBox useAnimationsCheckBox, avoidStandbyModeCheckBox,
             showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField, rpcUserTextField;
+    private CheckBox isDaoFullNodeCheckBox;
+    private PasswordTextField rpcPwTextField;
+    private TitledGroupBg daoOptionsTitledGroupBg;
+    private Label rpcUserLabel, rpcPwLabel;
+
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
     private final BisqEnvironment bisqEnvironment;
     private final AssetService assetService;
+    private final DaoFacade daoFacade;
     private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
-    private Button resetDontShowAgainButton;
+    private Button resetDontShowAgainButton, resyncDaoButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
     private ObservableList<BlockChainExplorer> blockExplorers;
     private ObservableList<String> languageCodes;
@@ -122,10 +131,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener;
+    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener, rpcUserListener, rpcPwListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialisation
@@ -134,13 +144,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
                            ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
-                           AssetService assetService, BSFormatter formatter) {
+                           AssetService assetService, DaoFacade daoFacade, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
         this.bisqEnvironment = bisqEnvironment;
         this.assetService = assetService;
+        this.daoFacade = daoFacade;
         this.formatter = formatter;
     }
 
@@ -159,6 +170,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         initializeGeneralOptions();
         initializeDisplayCurrencies();
         initializeDisplayOptions();
+        initializeDaoOptions();
     }
 
 
@@ -171,6 +183,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
+        activateDaoPreferences();
     }
 
     @Override
@@ -178,6 +191,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
+        deactivateDaoPreferences();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +199,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 10, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
 
         // selectBaseCurrencyNetwork
@@ -287,10 +301,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        // autoSelectArbitrators
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
-
         // ignoreTraders
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers")).second;
@@ -365,8 +375,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
-                                    if (!allFiatCurrencies.contains(item))
+                                    if (!allFiatCurrencies.contains(item)) {
                                         allFiatCurrencies.add(item);
+                                        allFiatCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
@@ -415,8 +427,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                                     new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
-                                    if (!allCryptoCurrencies.contains(item))
+                                    if (!allCryptoCurrencies.contains(item)) {
                                         allCryptoCurrencies.add(item);
+                                        allCryptoCurrencies.sort(TradeCurrency::compareTo);
+                                    }
                                 }
                             });
                             setGraphic(pane);
@@ -431,6 +445,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
+        fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
+            @Override
+            protected void updateItem(final FiatCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addFiat"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
             @Override
             public String toString(FiatCurrency tradeCurrency) {
@@ -447,6 +472,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
+        cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
+            @Override
+            protected void updateItem(final CryptoCurrency item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(Res.get("setting.preferences.addAltcoin"));
+                } else {
+                    setText(item.getNameAndCode());
+                }
+            }
+        });
         cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
@@ -460,7 +496,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
     }
 
-
     private void initializeDisplayOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
@@ -472,6 +507,37 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         resetDontShowAgainButton = addLabelButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"),
                 Res.get("setting.preferences.reset"), 0).second;
     }
+
+    private void initializeDaoOptions() {
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(daoOptionsTitledGroupBg, 4);
+        resyncDaoButton = addLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
+                Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+
+        isDaoFullNodeCheckBox = addLabelCheckBox(root, ++gridRow, Res.getWithCol("setting.preferences.dao.isDaoFullNode")).second;
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcUser"));
+        rpcUserLabel = tuple.first;
+        rpcUserLabel.setVisible(false);
+        rpcUserLabel.setManaged(false);
+        rpcUserTextField = tuple.second;
+        rpcUserTextField.setVisible(false);
+        rpcUserTextField.setManaged(false);
+        Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcPw"));
+        rpcPwLabel = tuple2.first;
+        rpcPwLabel.setVisible(false);
+        rpcPwLabel.setManaged(false);
+        rpcPwTextField = tuple2.second;
+        rpcPwTextField.setVisible(false);
+        rpcPwTextField.setManaged(false);
+
+        rpcUserListener = (observable, oldValue, newValue) -> {
+            preferences.setRpcUser(rpcUserTextField.getText());
+        };
+        rpcPwListener = (observable, oldValue, newValue) -> {
+            preferences.setRpcPw(rpcPwTextField.getText());
+        };
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
@@ -609,7 +675,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);
         fiatCurrenciesListView.setItems(fiatCurrencies);
-        fiatCurrenciesComboBox.setOnAction(e -> {
+        fiatCurrenciesComboBox.setOnHiding(e -> {
             FiatCurrency selectedItem = fiatCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addFiatCurrency(selectedItem);
@@ -624,7 +690,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
         cryptoCurrenciesComboBox.setItems(allCryptoCurrencies);
         cryptoCurrenciesListView.setItems(cryptoCurrencies);
-        cryptoCurrenciesComboBox.setOnAction(e -> {
+        cryptoCurrenciesComboBox.setOnHiding(e -> {
             CryptoCurrency selectedItem = cryptoCurrenciesComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.addCryptoCurrency(selectedItem);
@@ -654,13 +720,74 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
-        autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
-        autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
-
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
         avoidStandbyModeCheckBox.setSelected(!preferences.isUseStandbyMode());
         avoidStandbyModeCheckBox.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyModeCheckBox.isSelected()));
+    }
+
+    private void activateDaoPreferences() {
+        boolean daoFullNode = preferences.isDaoFullNode();
+        isDaoFullNodeCheckBox.setSelected(daoFullNode);
+        String rpcUser = preferences.getRpcUser();
+        String rpcPw = preferences.getRpcPw();
+        if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() || rpcPw == null || rpcPw.isEmpty())) {
+            log.warn("You have full DAO node selected but have not provided the rpc username and password. We reset daoFullNode to false");
+            isDaoFullNodeCheckBox.setSelected(false);
+        }
+        rpcUserTextField.setText(rpcUser);
+        rpcPwTextField.setText(rpcPw);
+        updateDaoFields();
+
+        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() -> {
+            new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show();
+        }));
+
+        isDaoFullNodeCheckBox.setOnAction(e -> {
+            String key = "daoFullModeInfoShown";
+            if (isDaoFullNodeCheckBox.isSelected() && preferences.showAgain(key)) {
+                String url = "https://bisq.network/docs/dao-full-node";
+                new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
+                        .onAction(() -> {
+                            GUIUtil.openWebPage(url);
+                        })
+                        .actionButtonText(Res.get("setting.preferences.dao.fullNodeInfo.ok"))
+                        .closeButtonText(Res.get("setting.preferences.dao.fullNodeInfo.cancel"))
+                        .onClose(() -> UserThread.execute(() -> {
+                            isDaoFullNodeCheckBox.setSelected(false);
+                            updateDaoFields();
+                        }))
+                        .dontShowAgainId(key)
+                        .width(800)
+                        .show();
+            }
+
+            updateDaoFields();
+        });
+
+        rpcUserTextField.textProperty().addListener(rpcUserListener);
+        rpcPwTextField.textProperty().addListener(rpcPwListener);
+    }
+
+    private void updateDaoFields() {
+        boolean isDaoFullNode = isDaoFullNodeCheckBox.isSelected();
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 4 : 2);
+        rpcUserLabel.setVisible(isDaoFullNode);
+        rpcUserLabel.setManaged(isDaoFullNode);
+        rpcUserTextField.setVisible(isDaoFullNode);
+        rpcUserTextField.setManaged(isDaoFullNode);
+        rpcPwLabel.setVisible(isDaoFullNode);
+        rpcPwLabel.setManaged(isDaoFullNode);
+        rpcPwTextField.setVisible(isDaoFullNode);
+        rpcPwTextField.setManaged(isDaoFullNode);
+        preferences.setDaoFullNode(isDaoFullNode);
+        if (!isDaoFullNode) {
+            rpcPwTextField.clear();
+            rpcUserTextField.clear();
+        }
     }
 
     private void onSelectNetwork() {
@@ -708,8 +835,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // useStickyMarketPriceCheckBox.setOnAction(null);
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
-        autoSelectArbitratorsCheckBox.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         avoidStandbyModeCheckBox.setOnAction(null);
+    }
+
+    private void deactivateDaoPreferences() {
+        resyncDaoButton.setOnAction(null);
+        isDaoFullNodeCheckBox.setOnAction(null);
+        rpcUserTextField.textProperty().removeListener(rpcUserListener);
+        rpcPwTextField.textProperty().removeListener(rpcUserListener);
     }
 }

@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.dao.governance.result;
 
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -32,16 +32,16 @@ import java.util.Map;
 import lombok.Getter;
 
 public class CycleListItem {
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
     @Getter
     private ResultsOfCycle resultsOfCycle;
 
     CycleListItem(ResultsOfCycle resultsOfCycle,
-                  BsqStateService bsqStateService,
+                  DaoStateService daoStateService,
                   BsqFormatter bsqFormatter) {
         this.resultsOfCycle = resultsOfCycle;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -66,7 +66,7 @@ public class CycleListItem {
         resultsOfCycle.getDecryptedVotesForCycle()
                 .forEach(decryptedVote -> {
                     decryptedVote.getBallotList().stream().forEach(ballot -> {
-                        map.putIfAbsent(decryptedVote.getBlindVoteTxId(), decryptedVote.getStake() + decryptedVote.getMerit(bsqStateService));
+                        map.putIfAbsent(decryptedVote.getBlindVoteTxId(), decryptedVote.getStake() + decryptedVote.getMerit(daoStateService));
                     });
                 });
         return bsqFormatter.formatCoinWithCode(Coin.valueOf(map.values().stream().mapToLong(e -> e).sum()));
@@ -75,8 +75,8 @@ public class CycleListItem {
     public String getIssuance() {
         long totalIssuance = resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(EvaluatedProposal::isAccepted)
-                .filter(e -> e.getProposal() instanceof CompensationProposal)
-                .map(e -> (CompensationProposal) e.getProposal())
+                .filter(e -> e.getProposal() instanceof IssuanceProposal)
+                .map(e -> (IssuanceProposal) e.getProposal())
                 .mapToLong(e -> e.getRequestedBsq().value)
                 .sum();
         return bsqFormatter.formatCoinWithCode(Coin.valueOf(totalIssuance));

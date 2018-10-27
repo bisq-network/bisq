@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
 import bisq.core.locale.Res;
@@ -41,8 +41,8 @@ public class ChangeParamValidator extends ProposalValidator {
     private BsqFormatter bsqFormatter;
 
     @Inject
-    public ChangeParamValidator(BsqStateService bsqStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
-        super(bsqStateService, periodService);
+    public ChangeParamValidator(DaoStateService daoStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
+        super(daoStateService, periodService);
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -75,11 +75,19 @@ public class ChangeParamValidator extends ProposalValidator {
             case DEFAULT_TAKER_FEE_BSQ:
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
+            case MIN_MAKER_FEE_BSQ:
+                break;
+            case MIN_TAKER_FEE_BSQ:
+                break;
             case DEFAULT_MAKER_FEE_BTC:
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case DEFAULT_TAKER_FEE_BTC:
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
+                break;
+            case MIN_MAKER_FEE_BTC:
+                break;
+            case MIN_TAKER_FEE_BTC:
                 break;
 
             case PROPOSAL_FEE:
@@ -90,15 +98,24 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
 
             case COMPENSATION_REQUEST_MIN_AMOUNT:
-                if (paramValue < Restrictions.getMinNonDustOutput().value)
-                    throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
+            case REIMBURSEMENT_MIN_AMOUNT:
+                if (paramValue < Restrictions.getMinNonDustOutput().value) {
+                        throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                }
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
+                break;
+            case REIMBURSEMENT_MAX_AMOUNT:
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
+                break;
 
             case QUORUM_COMP_REQUEST:
+                break;
+            case QUORUM_REIMBURSEMENT:
                 break;
             case QUORUM_CHANGE_PARAM:
                 break;
@@ -112,6 +129,8 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
 
             case THRESHOLD_COMP_REQUEST:
+                break;
+            case THRESHOLD_REIMBURSEMENT:
                 break;
             case THRESHOLD_CHANGE_PARAM:
                 break;
@@ -169,6 +188,6 @@ public class ChangeParamValidator extends ProposalValidator {
     }
 
     private long getCurrentValue(Param param) {
-        return bsqStateService.getParamValue(param, periodService.getChainHeight());
+        return daoStateService.getParamValue(param, periodService.getChainHeight());
     }
 }

@@ -31,7 +31,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 /**
- * The Block which gets persisted in the BsqState. During parsing transactions can be
+ * The Block which gets persisted in the DaoState. During parsing transactions can be
  * added to the txs list, therefore it is not an immutable list.
  */
 @EqualsAndHashCode(callSuper = true)

@@ -15,18 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.asset.coins;
 
-import bisq.core.dao.state.blockchain.Block;
+import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
-public interface BsqStateListener {
-    void onNewBlockHeight(int blockHeight);
+public class Dragonglass extends Coin {
 
-    void onParseTxsComplete(Block block);
-
-    void onParseBlockChainComplete();
-
-    // Never used but we still want to provide the event
-    default void onEmptyBlockAdded(Block block) {
+    public Dragonglass() {
+        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
     }
 }
