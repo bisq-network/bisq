@@ -383,8 +383,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 updateButtonDisableState();
                                 applyMakerFee();
                             } else {
-                                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
+                                String id = "showNoPriceFeedAvailablePopup";
+                                if (preferences.showAgain(id)) {
+                                    new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                                            .dontShowAgainId(id)
+                                            .show();
+                                }
                             }
                         }
                     }
