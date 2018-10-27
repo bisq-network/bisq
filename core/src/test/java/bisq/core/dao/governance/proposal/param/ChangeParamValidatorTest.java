@@ -1,6 +1,7 @@
 package bisq.core.dao.governance.proposal.param;
 
-import bisq.core.dao.state.BsqStateService;
+//import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.PeriodService;
 import bisq.core.locale.Res;
@@ -25,8 +26,10 @@ public class ChangeParamValidatorTest {
     // @Tested classes are instantiated automatically when needed in a test case,
     // using injection where possible, see http://jmockit.github.io/tutorial/Mocking.html#tested
     // To force instantiate earlier, use availableDuringSetup
+  //  @Tested(fullyInitialized = true, availableDuringSetup = true)
+    //BsqStateService bsqStateService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    BsqStateService bsqStateService;
+    DaoStateService daoStateService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     PeriodService periodService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
@@ -63,7 +66,7 @@ public class ChangeParamValidatorTest {
 
         thrown.expect(ChangeParamValidationException.class);
         thrown.expectMessage("Input has to be larger than 50.00%");
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.checkMinMaxForProposedValue(param,proposedNewValue,maxFactorChange,minFactorChange);
     }
 
@@ -77,7 +80,7 @@ public class ChangeParamValidatorTest {
 
         thrown.expect(ChangeParamValidationException.class);
         thrown.expectMessage("Input must not be larger than 200.00%");
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.checkMinMaxForProposedValue(param,proposedNewValue,maxFactorChange,minFactorChange);
     }
 
@@ -90,7 +93,7 @@ public class ChangeParamValidatorTest {
         long minFactorChange = 2;
         long currentValue = 200;
 
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.validateMinValue(param,currentValue,proposedNewValueMinPos,minFactorChange);
     }
 
@@ -104,7 +107,7 @@ public class ChangeParamValidatorTest {
 
         thrown.expect(ChangeParamValidationException.class);
         thrown.expectMessage("Input has to be larger than 50.00%");
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.validateMinValue(param,currentValue,proposedNewValueMinNeg,minFactorChange);
     }
 
@@ -116,7 +119,7 @@ public class ChangeParamValidatorTest {
         long maxFactorChange = 2;
         long currentValue = 200;
 
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.validateMaxValue(param,currentValue,proposedNewValueMaxPos,maxFactorChange);
     }
 
@@ -130,7 +133,7 @@ public class ChangeParamValidatorTest {
 
         thrown.expect(ChangeParamValidationException.class);
         thrown.expectMessage("Input must not be larger than 200.00%");
-        ChangeParamValidator changeParamValidator = new ChangeParamValidator(bsqStateService,periodService,bsqFormatter);
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
         changeParamValidator.validateMaxValue(param,currentValue,proposedNewValueMaxNeg,maxFactorChange);
 
     }
