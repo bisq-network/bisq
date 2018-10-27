@@ -77,6 +77,7 @@ import bisq.desktop.util.validation.WeChatPayValidator;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
@@ -291,6 +292,13 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof CashDepositAccount) {
+                            new Popup<>().information(Res.get("payment.cashDeposit.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else {
