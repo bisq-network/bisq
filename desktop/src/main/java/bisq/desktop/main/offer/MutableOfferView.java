@@ -1322,6 +1322,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         secondRowHBox = new HBox();
         secondRowHBox.setSpacing(5);
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setMargin(tradeFeeBox, new Insets(0, 0, 0, 1));
         secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, fakeXLabel, fixedPriceBox, priceTypeToggleButton, tradeFeeBox);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 0);

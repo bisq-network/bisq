@@ -31,12 +31,15 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -62,6 +65,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -72,6 +77,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
+    private final Preferences preferences;
+    private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -92,9 +99,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty errorMessage = new SimpleStringProperty();
     final StringProperty offerWarning = new SimpleStringProperty();
     final StringProperty spinnerInfoText = new SimpleStringProperty("");
-    final StringProperty takerFee = new SimpleStringProperty();
-    final StringProperty takerFeeWithCode = new SimpleStringProperty();
-    final StringProperty takerFeeCurrencyCode = new SimpleStringProperty();
+    final StringProperty tradeFee = new SimpleStringProperty();
+    final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
+    final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
+    final StringProperty tradeFeeDescription = new SimpleStringProperty();
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -128,6 +136,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               BtcValidator btcValidator,
                               P2PService p2PService,
                               WalletsSetup walletsSetup,
+                              Preferences preferences,
+                              PriceFeedService priceFeedService,
                               Navigation navigation,
                               BSFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
@@ -137,6 +147,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
+        this.preferences = preferences;
+        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
@@ -254,16 +266,54 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     }
 
-    void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        dataModel.setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
+    public void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        dataModel.setPreferredCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc);
         applyTakerFee();
     }
 
     private void applyTakerFee() {
-        takerFee.set(getFormatter().formatCoin(dataModel.getTakerFee()));
-        takerFeeWithCode.set(getFormatter().formatCoinWithCode(dataModel.getTakerFee()));
-        takerFeeCurrencyCode.set(dataModel.isCurrencyForTakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
+        Coin takerFeeAsCoin = dataModel.getTakerFee();
+        if (takerFeeAsCoin != null) {
+            tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
+
+            Coin makerFeeInBtc = dataModel.getTakerFeeInBtc();
+            Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
+                    true, preferences, priceFeedService, bsqFormatter);
+            String btcFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
+            if (DevEnv.isDaoActivated()) {
+                tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
+            } else {
+                tradeFeeInBtcWithFiat.set(btcFormatter.formatCoinWithCode(takerFeeAsCoin));
+            }
+
+            Coin makerFeeInBsq = dataModel.getTakerFeeInBsq();
+            Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
+                    false, preferences, priceFeedService, bsqFormatter);
+            String bsqFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
+            if (DevEnv.isDaoActivated()) {
+                tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
+            } else {
+                // Before DAO is enabled we show fee as fiat and % in second line
+                String feeInFiatAsString;
+                if (optionalBtcFeeInFiat != null && optionalBtcFeeInFiat.isPresent()) {
+                    feeInFiatAsString = btcFormatter.formatVolumeWithCode(optionalBtcFeeInFiat.get());
+                } else {
+                    feeInFiatAsString = Res.get("shared.na");
+                }
+
+                double amountAsLong = (double) dataModel.getAmount().get().value;
+                double makerFeeInBtcAsLong = (double) makerFeeInBtc.value;
+                double percent = makerFeeInBtcAsLong / amountAsLong;
+
+                tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
+                        feeInFiatAsString,
+                        btcFormatter.formatToPercentWithSymbol(percent)));
+            }
+        }
+        tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
+                Res.get("createOffer.tradeFee.descriptionBTCOnly"));
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus
@@ -635,20 +685,20 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit());
     }
 
-    public String getTakerFee() {
+    public String getTradeFee() {
         //TODO use last bisq market price to estimate BSQ val
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
-        final String takerFee = getFormatter().formatCoinWithCode(takerFeeAsCoin);
+        final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())
             return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
     }
 
-    public String getMakerFeePercentage() {
-        final Coin makerFeeAsCoin = dataModel.getTakerFee();
+    public String getTakerFeePercentage() {
+        final Coin takerFeeAsCoin = dataModel.getTakerFee();
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return takerFeeAsCoin != null ? GUIUtil.getPercentage(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter) : Res.get("shared.na");
         else
             return Res.get("dao.paidWithBsq");
     }
@@ -713,7 +763,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return btcFormatter.formatCoin(dataModel.getSellerSecurityDeposit());
     }
 
-    private BSFormatter getFormatter() {
+    private BSFormatter getFormatterForTakerFee() {
         return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
