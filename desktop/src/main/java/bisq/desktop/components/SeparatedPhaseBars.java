@@ -69,7 +69,6 @@ public class SeparatedPhaseBars extends VBox {
             ProgressBar progressBar = new ProgressBar();
             progressBar.setMinHeight(9);
             progressBar.setMaxHeight(9);
-            progressBar.setStyle("-fx-accent: -bs-green;");
             progressBar.progressProperty().bind(item.progressProperty);
             progressBar.setOpacity(item.isShowBlocks() ? 1 : 0.25);
             progressBars.getChildren().add(progressBar);
