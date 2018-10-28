@@ -32,15 +32,10 @@ import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-
-import static bisq.desktop.util.FormBuilder.addLabel;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
@@ -81,24 +76,17 @@ public class UpholdForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
-        GridPane.setValignment(label, VPos.TOP);
-        FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
+
+        FlowPane flowPane = FormBuilder.addTopLabelFlowPane(gridPane, ++gridRow,
+                Res.get("payment.supportedCurrencies"), 0).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllUpholdCurrencies().stream().forEach(e ->
+        CurrencyUtil.getAllUpholdCurrencies().forEach(e ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, upholdAccount));
-
-        GridPane.setRowIndex(flowPane, gridRow);
-        GridPane.setColumnIndex(flowPane, 1);
-        gridPane.getChildren().add(flowPane);
     }
 
     @Override

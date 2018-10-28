@@ -17,12 +17,9 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.AliPayValidator;
 
 import bisq.core.locale.Res;
-import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.PaymentAccount;
@@ -31,21 +28,13 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.layout.GridPane;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
-public class AliPayForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(AliPayForm.class);
+public class AliPayForm extends GeneralAccountNumberForm {
 
     private final AliPayAccount aliPayAccount;
-    private final AliPayValidator aliPayValidator;
-    private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AliPayAccountPayload) paymentAccountPayload).getAccountNr());
@@ -55,49 +44,15 @@ public class AliPayForm extends PaymentMethodForm {
     public AliPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AliPayValidator aliPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.aliPayAccount = (AliPayAccount) paymentAccount;
-        this.aliPayValidator = aliPayValidator;
     }
 
     @Override
-    public void addFormForAddAccount() {
-        gridRowFrom = gridRow + 1;
-
-        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
-        accountNrInputTextField.setValidator(aliPayValidator);
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            aliPayAccount.setAccountNr(newValue);
-            updateFromInputs();
-        });
-
-        final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
-        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillToggleButton();
+    void setAccountNumber(String newValue) {
+        aliPayAccount.setAccountNr(newValue);
     }
 
     @Override
-    protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String accountNr = accountNrInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+    String getAccountNr() {
+        return aliPayAccount.getAccountNr();
     }
-
-    @Override
-    public void addFormForDisplayAccount() {
-        addFormForAccountNumberDisplayAccount(aliPayAccount.getAccountName(),
-                aliPayAccount.getPaymentMethod(), aliPayAccount.getAccountNr(),
-                aliPayAccount.getSingleTradeCurrency());
-    }
-
-    @Override
-    public void updateAllInputsValid() {
-        allInputsValid.set(isAccountNameValid()
-                && aliPayValidator.validate(aliPayAccount.getAccountNr()).isValid
-                && aliPayAccount.getTradeCurrencies().size() > 0);
-    }
-
 }
