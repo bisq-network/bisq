@@ -38,6 +38,7 @@ import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
+import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
@@ -67,6 +68,7 @@ import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.OKPayValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
+import bisq.desktop.util.validation.PromptPayValidator;
 import bisq.desktop.util.validation.RevolutValidator;
 import bisq.desktop.util.validation.SwishValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
@@ -148,6 +150,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final WeChatPayValidator weChatPayValidator;
     private final HalCashValidator halCashValidator;
     private final F2FValidator f2FValidator;
+    private final PromptPayValidator promptPayValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private ListView<PaymentAccount> paymentAccountsListView;
@@ -180,6 +183,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             WeChatPayValidator weChatPayValidator,
                             HalCashValidator halCashValidator,
                             F2FValidator f2FValidator,
+                            PromptPayValidator promptPayValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
@@ -204,6 +208,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.weChatPayValidator = weChatPayValidator;
         this.halCashValidator = halCashValidator;
         this.f2FValidator = f2FValidator;
+        this.promptPayValidator = promptPayValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
@@ -518,6 +523,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:
                 return new F2FForm(paymentAccount, accountAgeWitnessService, f2FValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.PROMPT_PAY_ID:
+                return new PromptPayForm(paymentAccount, accountAgeWitnessService, promptPayValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;
