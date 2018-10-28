@@ -52,6 +52,20 @@ public class ChangeParamValidatorTest {
     public void setUp() {
         Res.setup();
     }
+//-1
+    @Test
+    public void testCheckMinMaxForProposedValueZero() throws ChangeParamValidationException {
+
+        Param param = Param.DEFAULT_MAKER_FEE_BSQ;
+        long proposedNewValue = 0;
+        long maxFactorChange = 2;
+        long minFactorChange = 2;
+
+        thrown.expect(ChangeParamValidationException.class);
+        thrown.expectMessage("Input cannot be zero.");
+        ChangeParamValidator changeParamValidator = new ChangeParamValidator(daoStateService,periodService,bsqFormatter);
+        changeParamValidator.checkMinMaxForProposedValue(param,proposedNewValue,maxFactorChange,minFactorChange);
+    }
 
     @Test
     public void testCheckMinMaxForProposedValueMin() throws ChangeParamValidationException {

@@ -59,7 +59,6 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    // TODO: Get the last checks in place.
     public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
 
         // max 4 times the current value. min 25% of current value as general boundaries
@@ -67,7 +66,7 @@ public class ChangeParamValidator extends ProposalValidator {
 
         switch (param) {
             case UNDEFINED:
-                break;
+                throw new ChangeParamValidationException(Res.get("validation.paramImmutable"));
             case DEFAULT_MAKER_FEE_BSQ:
                 // max twice the current value and min half of current value as suggested boundaries
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
@@ -76,8 +75,10 @@ public class ChangeParamValidator extends ProposalValidator {
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case MIN_MAKER_FEE_BSQ:
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case MIN_TAKER_FEE_BSQ:
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case DEFAULT_MAKER_FEE_BTC:
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
@@ -86,8 +87,10 @@ public class ChangeParamValidator extends ProposalValidator {
                 checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case MIN_MAKER_FEE_BTC:
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
             case MIN_TAKER_FEE_BTC:
+                checkMinMaxForProposedValue(param, paramValue, 2, 2);
                 break;
 
             case PROPOSAL_FEE:
@@ -114,50 +117,72 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
 
             case QUORUM_COMP_REQUEST:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_REIMBURSEMENT:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_CHANGE_PARAM:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_ROLE:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_CONFISCATION:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_GENERIC:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case QUORUM_REMOVE_ASSET:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
 
             case THRESHOLD_COMP_REQUEST:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_REIMBURSEMENT:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_CHANGE_PARAM:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_ROLE:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_CONFISCATION:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_GENERIC:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case THRESHOLD_REMOVE_ASSET:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
 
             case PHASE_UNDEFINED:
+                checkMinMaxForProposedValue(param, paramValue, 0, 0);
                 break;
             case PHASE_PROPOSAL:
+                checkMinMaxForProposedValue(param, paramValue, 1, 1);
                 break;
             case PHASE_BREAK1:
+                checkMinMaxForProposedValue(param, paramValue, 3, 1);
                 break;
             case PHASE_BLIND_VOTE:
+                checkMinMaxForProposedValue(param, paramValue, 2, 1);
                 break;
             case PHASE_BREAK2:
+                checkMinMaxForProposedValue(param, paramValue, 3, 1);
                 break;
             case PHASE_VOTE_REVEAL:
+                checkMinMaxForProposedValue(param, paramValue, 2, 1);
                 break;
             case PHASE_BREAK3:
+                checkMinMaxForProposedValue(param, paramValue, 3, 1);
                 break;
             case PHASE_RESULT:
+                checkMinMaxForProposedValue(param, paramValue, 2, 1);
                 break;
         }
     }
@@ -171,6 +196,9 @@ public class ChangeParamValidator extends ProposalValidator {
 
     @VisibleForTesting
     void validateMinValue(Param param, long currentValue, long proposedNewValue, long factor) throws ChangeParamValidationException {
+        if(proposedNewValue==0){
+            throw new ChangeParamValidationException(Res.get("validation.inputCannotBeZero"));
+        }
         if ((proposedNewValue * factor) < currentValue){
             throw new ChangeParamValidationException(Res.get("validation.inputTooSmall",
                     bsqFormatter.formatParamValue(param,10000/factor))
@@ -180,6 +208,9 @@ public class ChangeParamValidator extends ProposalValidator {
 
     @VisibleForTesting
     void validateMaxValue(Param param, long currentValue, long proposedNewValue, long factor) throws ChangeParamValidationException {
+        if(proposedNewValue==0){
+            throw new ChangeParamValidationException(Res.get("validation.inputCannotBeZero"));
+        }
         if (proposedNewValue > (currentValue * factor)){
             throw new ChangeParamValidationException(Res.get("validation.inputTooLarge",
                     bsqFormatter.formatParamValue(param, (10000 * factor)))
