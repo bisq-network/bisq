@@ -58,7 +58,7 @@ public class DevEnv {
     private static boolean daoActivated = false;
 
     public static boolean isDaoActivated() {
-        return daoActivated;
+        return false;
     }
 
     public static void setDaoActivated(boolean daoActivated) {

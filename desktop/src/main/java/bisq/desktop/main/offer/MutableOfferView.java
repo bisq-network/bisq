@@ -259,6 +259,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             boolean currencyForMakerFeeBtc = model.getDataModel().isCurrencyForMakerFeeBtc();
             tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
             tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
+
+            if (!DevEnv.isDaoActivated()) {
+                tradeFeeInBtcToggle.setVisible(false);
+                tradeFeeInBtcToggle.setManaged(false);
+                tradeFeeInBsqToggle.setVisible(false);
+                tradeFeeInBsqToggle.setManaged(false);
+            }
         }
     }
 
@@ -785,8 +792,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         model.setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
-        tradeFeeInBtcTextField.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-        tradeFeeInBsqTextField.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
+        if (DevEnv.isDaoActivated()) {
+            tradeFeeInBtcTextField.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
+            tradeFeeInBsqTextField.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
+        }
     }
 
     private Label createPopoverLabel(String text) {
@@ -1343,7 +1352,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBsqToggle = new AutoTooltipSlideToggleButton();
         tradeFeeInBsqToggle.setText("BSQ");
         tradeFeeInBsqToggle.setPadding(new Insets(-9, 5, -9, 5));
-        //tradeFeeInBsqToggle.setRotate(90);
 
         VBox tradeFeeToggleButtonBox = new VBox();
         tradeFeeToggleButtonBox.getChildren().addAll(tradeFeeInBtcToggle, tradeFeeInBsqToggle);
