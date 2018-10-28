@@ -67,7 +67,9 @@ public class WesternUnionForm extends PaymentMethodForm {
     }
 
     private final WesternUnionAccountPayload westernUnionAccountPayload;
-    private InputTextField holderNameInputTextField, emailInputTextField, cityInputTextField, stateInputTextField;
+    private InputTextField holderNameInputTextField;
+    private InputTextField cityInputTextField;
+    private InputTextField stateInputTextField;
     private final EmailValidator emailValidator;
     private Country selectedCountry;
 
@@ -82,7 +84,6 @@ public class WesternUnionForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        String countryCode = westernUnionAccountPayload.getCountryCode();
 
         FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
@@ -157,7 +158,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         });
         applyIsStateRequired();
 
-        emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
+        InputTextField emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setEmail(newValue);
             updateFromInputs();

@@ -32,8 +32,6 @@ import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
@@ -98,12 +96,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String postalAddress = postalAddressTextArea.getText();
-            postalAddress = StringUtils.abbreviate(postalAddress, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(postalAddress));
-        }
+        setAccountNameWithString(postalAddressTextArea.getText());
     }
 
     @Override

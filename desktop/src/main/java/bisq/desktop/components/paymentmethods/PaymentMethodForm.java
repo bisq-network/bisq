@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -59,6 +60,8 @@ import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.*;
@@ -89,10 +92,10 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow, Res.get("shared.currency"));
+        currencyComboBox = FormBuilder.addComboBox(gridPane, ++gridRow, Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getMainFiatCurrencies()));
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -249,6 +252,27 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
     }
 
+    void fillUpFlowPaneWithCountries(List<CheckBox> checkBoxList, FlowPane flowPane, Country country) {
+        final String countryCode = country.code;
+        CheckBox checkBox = new AutoTooltipCheckBox(countryCode);
+        checkBox.setUserData(countryCode);
+        checkBoxList.add(checkBox);
+        checkBox.setMouseTransparent(false);
+        checkBox.setMinWidth(45);
+        checkBox.setMaxWidth(45);
+        checkBox.setTooltip(new Tooltip(country.name));
+        checkBox.setOnAction(event -> {
+            if (checkBox.isSelected()) {
+                addAcceptedCountry(countryCode);
+            } else {
+                removeAcceptedCountry(countryCode);
+            }
+
+            updateAllInputsValid();
+        });
+        flowPane.getChildren().add(checkBox);
+    }
+
     void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
                                                TradeCurrency singleTradeCurrency) {
         gridRowFrom = gridRow;
@@ -294,5 +318,11 @@ public abstract class PaymentMethodForm {
 
     public BooleanProperty allInputsValidProperty() {
         return allInputsValid;
+    }
+
+    void removeAcceptedCountry(String countryCode) {
+    }
+
+    void addAcceptedCountry(String countryCode) {
     }
 }

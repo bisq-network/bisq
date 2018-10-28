@@ -17,8 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 
 import bisq.core.locale.FiatCurrency;
@@ -37,11 +35,9 @@ import javafx.collections.FXCollections;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
-public class PerfectMoneyForm extends PaymentMethodForm {
+public class PerfectMoneyForm extends GeneralAccountNumberForm {
 
     private final PerfectMoneyAccount perfectMoneyAccount;
-    private final PerfectMoneyValidator perfectMoneyValidator;
-    private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr());
@@ -52,44 +48,22 @@ public class PerfectMoneyForm extends PaymentMethodForm {
             gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.perfectMoneyAccount = (PerfectMoneyAccount) paymentAccount;
-        this.perfectMoneyValidator = perfectMoneyValidator;
     }
 
     @Override
-    public void addFormForAddAccount() {
-        gridRowFrom = gridRow + 1;
-
-        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
-        accountNrInputTextField.setValidator(perfectMoneyValidator);
-        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            perfectMoneyAccount.setAccountNr(newValue);
-            updateFromInputs();
-        });
-
+    public void addTradeCurrency() {
         addTradeCurrencyComboBox();
         currencyComboBox.setItems(FXCollections.observableArrayList(new FiatCurrency("USD"), new FiatCurrency("EUR")));
         currencyComboBox.getSelectionModel().select(0);
-
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
-    protected void autoFillNameTextField() {
-        setAccountNameWithString(accountNrInputTextField.getText());
+    void setAccountNumber(String newValue) {
+        perfectMoneyAccount.setAccountNr(newValue);
     }
 
     @Override
-    public void addFormForDisplayAccount() {
-        addFormForAccountNumberDisplayAccount(perfectMoneyAccount.getAccountName(),
-                perfectMoneyAccount.getPaymentMethod(), perfectMoneyAccount.getAccountNr(),
-                perfectMoneyAccount.getSingleTradeCurrency());
-    }
-
-    @Override
-    public void updateAllInputsValid() {
-        allInputsValid.set(isAccountNameValid()
-                && perfectMoneyValidator.validate(perfectMoneyAccount.getAccountNr()).isValid
-                && perfectMoneyAccount.getTradeCurrencies().size() > 0);
+    String getAccountNr() {
+        return perfectMoneyAccount.getAccountNr();
     }
 }
