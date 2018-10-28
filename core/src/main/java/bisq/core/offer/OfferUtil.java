@@ -295,9 +295,14 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Volume feeInFiat, BSFormatter btcFormatter) {
-        String fee = makerFeeAsCoin != null ? btcFormatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
-        String feeInFiatAsString = feeInFiat != null ? btcFormatter.formatVolumeWithCode(feeInFiat) : Res.get("shared.na");
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
+        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
+        String feeInFiatAsString;
+        if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
+            feeInFiatAsString = formatter.formatVolumeWithCode(optionalFeeInFiat.get());
+        } else {
+            feeInFiatAsString = Res.get("shared.na");
+        }
         return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
     }
 }

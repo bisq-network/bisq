@@ -1300,6 +1300,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // Fixed/Percentage toggle
         priceTypeToggleButton = getIconButton(MaterialDesignIcon.SWAP_VERTICAL);
         editOfferElements.add(priceTypeToggleButton);
+        HBox.setMargin(priceTypeToggleButton, new Insets(16, 0, 0, 0));
 
         priceTypeToggleButton.setOnAction((actionEvent) -> {
             updatePriceToggleButtons(model.getDataModel().getUseMarketBasedPrice().getValue());
@@ -1331,6 +1332,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBsqTextField.setPadding(new Insets(-9, 5, -7, 0));
 
         VBox vBox = new VBox();
+        vBox.setMaxWidth(243);
+        vBox.getStyleClass().add("input-with-border");
         vBox.getChildren().addAll(tradeFeeInBtcTextField, tradeFeeInBsqTextField);
 
         tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();
@@ -1340,6 +1343,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBsqToggle = new AutoTooltipSlideToggleButton();
         tradeFeeInBsqToggle.setText("BSQ");
         tradeFeeInBsqToggle.setPadding(new Insets(-9, 5, -9, 5));
+        //tradeFeeInBsqToggle.setRotate(90);
 
         VBox tradeFeeToggleButtonBox = new VBox();
         tradeFeeToggleButtonBox.getChildren().addAll(tradeFeeInBtcToggle, tradeFeeInBsqToggle);
@@ -1349,9 +1353,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeDescriptionLabel.setPrefWidth(170);
 
         HBox hBox = new HBox();
-        hBox.setMaxWidth(243);
         hBox.getChildren().addAll(vBox, tradeFeeToggleButtonBox);
-        hBox.getStyleClass().add("input-with-border");
         hBox.setMinHeight(47);
         hBox.setMaxHeight(hBox.getMinHeight());
         HBox.setHgrow(vBox, Priority.ALWAYS);

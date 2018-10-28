@@ -491,23 +491,19 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private void applyMakerFee() {
         Coin makerFeeAsCoin = dataModel.getMakerFee();
         if (makerFeeAsCoin != null) {
+            tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
+
             Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();
             Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
                     true, preferences, priceFeedService, bsqFormatter);
-            optionalBtcFeeInFiat.ifPresent(feeInFiat -> {
-                String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBtc, feeInFiat, btcFormatter);
-                tradeFeeInBtcWithFiat.set(feeWithFiatAmount);
-            });
+            String btcFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
+            tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
 
             Coin makerFeeInBsq = dataModel.getMakerFeeInBsq();
             Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
                     false, preferences, priceFeedService, bsqFormatter);
-            optionalBsqFeeInFiat.ifPresent(feeInFiat -> {
-                String feeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBsq, feeInFiat, bsqFormatter);
-                tradeFeeInBsqWithFiat.set(feeWithFiatAmount);
-            });
-
-            tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
+            String bsqFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
+            tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
         }
         tradeFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? Res.getBaseCurrencyCode() : "BSQ");
         tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :
