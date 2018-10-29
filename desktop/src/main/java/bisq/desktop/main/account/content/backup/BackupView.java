@@ -53,8 +53,8 @@ import java.util.Date;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.FormBuilder.add2Buttons;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addButton;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
@@ -100,10 +100,12 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         updateButtons();
 
         FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
-        openDataDirButton = addButton(root, gridRow, Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        openDataDirButton.setDefaultButton(false);
-        openLogsButton = addButton(root, ++gridRow, Res.get("account.backup.openLogFile"));
-        openLogsButton.setDefaultButton(false);
+
+        final Tuple2<Button, Button> applicationDataDirTuple2 = add2Buttons(root, gridRow, Res.get("account.backup.openDirectory"),
+                Res.get("account.backup.openLogFile"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, false);
+
+        openDataDirButton = applicationDataDirTuple2.first;
+        openLogsButton = applicationDataDirTuple2.second;
     }
 
     @Override
@@ -128,24 +130,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             }
 
         });
-        openDataDirButton.setOnAction(event -> {
-            try {
-                Utilities.openFile(dataDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                showWrongPathWarningAndReset(e);
-            }
-        });
-        openLogsButton.setOnAction(event -> {
-            try {
-                Utilities.openFile(logFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                showWrongPathWarningAndReset(e);
-            }
-        });
+        openFileOrShowWarning(openDataDirButton, dataDir);
+        openFileOrShowWarning(openLogsButton, logFile);
 
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
@@ -160,6 +146,18 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     log.error(e.getMessage());
                     showWrongPathWarningAndReset(e);
                 }
+            }
+        });
+    }
+
+    private void openFileOrShowWarning(Button button, File dataDir) {
+        button.setOnAction(event -> {
+            try {
+                Utilities.openFile(dataDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                showWrongPathWarningAndReset(e);
             }
         });
     }

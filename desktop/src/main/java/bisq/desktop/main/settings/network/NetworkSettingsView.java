@@ -83,7 +83,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TitledGroupBg p2pHeader, btcHeader;
     @FXML
-    Label onionAddressLabel, btcNodesLabel, useTorForBtcJLabel, totalTrafficLabel, bitcoinNodesLabel;
+    Label btcNodesLabel, bitcoinNodesLabel;
     @FXML
     InputTextField btcNodesInputTextField;
     @FXML
@@ -91,7 +91,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
-    Label bitcoinPeersLabel, p2PPeersLabel;
+    Label p2PPeersLabel;
     @FXML
     CheckBox useTorForBtcJCheckBox;
     @FXML
@@ -154,29 +154,27 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     public void initialize() {
         btcHeader.setText(Res.get("settings.net.btcHeader"));
         p2pHeader.setText(Res.get("settings.net.p2pHeader"));
-        onionAddressLabel.setText(Res.get("settings.net.onionAddressLabel"));
+        onionAddress.setPromptText(Res.get("settings.net.onionAddressLabel"));
         btcNodesLabel.setText(Res.get("settings.net.btcNodesLabel"));
-        bitcoinPeersLabel.setText(Res.get("settings.net.bitcoinPeersLabel"));
-        useTorForBtcJLabel.setText(Res.get("settings.net.useTorForBtcJLabel"));
+        bitcoinPeersTextArea.setPromptText(Res.get("settings.net.bitcoinPeersLabel"));
+        useTorForBtcJCheckBox.setText(Res.get("settings.net.useTorForBtcJLabel"));
         bitcoinNodesLabel.setText(Res.get("settings.net.bitcoinNodesLabel"));
         useProvidedNodesRadio.setText(Res.get("settings.net.useProvidedNodesRadio"));
         useCustomNodesRadio.setText(Res.get("settings.net.useCustomNodesRadio"));
         usePublicNodesRadio.setText(Res.get("settings.net.usePublicNodesRadio"));
-        reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
+        reSyncSPVChainLabel.setText(Res.get("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
         creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
         connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
-        totalTrafficLabel.setText(Res.get("settings.net.totalTrafficLabel"));
+        totalTrafficTextField.setPromptText(Res.get("settings.net.totalTrafficLabel"));
         roundTripTimeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.roundTripTimeColumn")));
         sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
         receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
         peerTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.peerTypeColumn")));
         openTorSettingsButton.updateText(Res.get("settings.net.openTorSettingsButton"));
 
-        GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
-        GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
@@ -348,7 +346,6 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
     private void onBitcoinPeersToggleSelected(boolean calledFromUser) {
         boolean bitcoinLocalhostNodeRunning = bisqEnvironment.isBitcoinLocalhostNodeRunning();
-        useTorForBtcJLabel.setDisable(bitcoinLocalhostNodeRunning);
         useTorForBtcJCheckBox.setDisable(bitcoinLocalhostNodeRunning);
         bitcoinNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
         btcNodesLabel.setDisable(bitcoinLocalhostNodeRunning);
