@@ -17,10 +17,7 @@
 
 package bisq.desktop.main.account.content.fiataccounts;
 
-import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.CashAppForm;
@@ -50,10 +47,10 @@ import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.VenmoForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
+import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AliPayValidator;
 import bisq.desktop.util.validation.BICValidator;
@@ -91,7 +88,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -104,22 +100,16 @@ import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
-import javafx.beans.value.ChangeListener;
-
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
-import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
@@ -128,7 +118,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 
 @FxmlView
-public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
+public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccountsViewModel> {
 
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
@@ -153,13 +143,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private final PromptPayValidator promptPayValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
-    private ListView<PaymentAccount> paymentAccountsListView;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
-    private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
+    private Button saveNewAccountButton;
     private int gridRow = 0;
-    private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
     @Inject
     public FiatAccountsView(FiatAccountsViewModel model,
@@ -214,34 +202,19 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     @Override
-    public void initialize() {
-        buildForm();
-        paymentAccountChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null)
-                onSelectAccount(newValue);
-        };
-        Label placeholder = new AutoTooltipLabel(Res.get("shared.noAccountsSetupYet"));
-        placeholder.setWrapText(true);
-        paymentAccountsListView.setPlaceholder(placeholder);
+    protected ObservableList<PaymentAccount> getPaymentAccounts() {
+        return model.getPaymentAccounts();
     }
 
     @Override
-    protected void activate() {
-        paymentAccountsListView.setItems(model.getPaymentAccounts());
-        paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
-        addAccountButton.setOnAction(event -> addNewAccount());
-        exportButton.setOnAction(event -> model.dataModel.exportAccounts((Stage) root.getScene().getWindow()));
-        importButton.setOnAction(event -> model.dataModel.importAccounts((Stage) root.getScene().getWindow()));
+    protected void importAccounts() {
+        model.dataModel.importAccounts((Stage) root.getScene().getWindow());
     }
 
     @Override
-    protected void deactivate() {
-        paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
-        addAccountButton.setOnAction(null);
-        exportButton.setOnAction(null);
-        importButton.setOnAction(null);
+    protected void exportAccounts() {
+        model.dataModel.exportAccounts((Stage) root.getScene().getWindow());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -314,7 +287,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
-        if (model.getPaymentAccounts().stream().noneMatch(e -> e.getAccountName() != null &&
+        if (getPaymentAccounts().stream().noneMatch(e -> e.getAccountName() != null &&
                 e.getAccountName().equals(paymentAccount.getAccountName()))) {
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
@@ -327,62 +300,22 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         removeNewAccountForm();
     }
 
-    private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup<>().warning(Res.get("shared.askConfirmDeleteAccount"))
-                .actionButtonText(Res.get("shared.yes"))
-                .onAction(() -> {
-                    boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
-                    if (!isPaymentAccountUsed)
-                        removeSelectAccountForm();
-                    else
-                        UserThread.runAfter(() -> new Popup<>().warning(
-                                Res.get("shared.cannotDeleteAccount"))
-                                .show(), 100, TimeUnit.MILLISECONDS);
-                })
-                .closeButtonText(Res.get("shared.cancel"))
-                .show();
+    protected boolean deleteAccountFromModel(PaymentAccount paymentAccount) {
+        return model.onDeleteAccount(paymentAccount);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Base form
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void buildForm() {
+    @Override
+    protected void buildForm() {
         addTitledGroupBg(root, gridRow, 2, Res.get("shared.manageAccounts"));
 
         Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
-        paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
-            @Override
-            public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
-                return new ListCell<PaymentAccount>() {
-                    final Label label = new AutoTooltipLabel();
-                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new AutoTooltipButton("", icon);
-                    final AnchorPane pane = new AnchorPane(label, removeButton);
-
-                    {
-                        label.setLayoutY(5);
-                        removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
-                    }
-
-                    @Override
-                    public void updateItem(final PaymentAccount item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            label.setText(item.getAccountName());
-                            removeButton.setOnAction(e -> onDeleteAccount(item));
-                            setGraphic(pane);
-                        } else {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
+        setPaymentAccountsCellFactory();
 
         Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
                 Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
@@ -392,12 +325,13 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     // Add new account form
-    private void addNewAccount() {
+    @Override
+    protected void addNewAccount() {
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.<PaymentMethod>addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
@@ -408,7 +342,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.OK_PAY_ID))
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
-        paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
+        paymentMethodComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
                 return paymentMethod != null ? Res.get(paymentMethod.getId()) : "";
@@ -422,7 +356,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setOnAction(e -> {
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             }
             gridRow = 2;
             paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
@@ -435,13 +369,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
                 Button cancelButton = tuple2.second;
                 cancelButton.setOnAction(event -> onCancelNewAccount());
-                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 2);
+                GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             }
         });
     }
 
     // Select account form
-    private void onSelectAccount(PaymentAccount paymentAccount) {
+    @Override
+    protected void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
@@ -454,7 +389,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;
             cancelButton.setOnAction(event -> removeSelectAccountForm());
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
             model.onSelectAccount(paymentAccount);
         }
     }
@@ -542,7 +477,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         addAccountButton.setDisable(false);
     }
 
-    private void removeSelectAccountForm() {
+    @Override
+    protected void removeSelectAccountForm() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
         addAccountButton.setDisable(false);

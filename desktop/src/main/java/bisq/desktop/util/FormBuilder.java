@@ -800,18 +800,13 @@ public class FormBuilder {
     // Label  + SearchComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, SearchComboBox<T>> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = null;
-        if (title != null)
-            label = addLabel(gridPane, rowIndex, title, top);
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
 
         SearchComboBox<T> comboBox = new SearchComboBox<>();
-        GridPane.setRowIndex(comboBox, rowIndex);
-        GridPane.setColumnIndex(comboBox, 1);
-        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(comboBox);
 
-        return new Tuple2<>(label, comboBox);
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, comboBox, top);
+
+        return new Tuple2<>(labelVBoxTuple2.first, comboBox);
     }
 
 
