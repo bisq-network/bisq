@@ -221,7 +221,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     protected void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         paymentMethodForm.addFormForDisplayAccount();
         gridRow = paymentMethodForm.getGridRow();
