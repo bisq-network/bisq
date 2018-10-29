@@ -32,8 +32,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -85,12 +83,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String mobileNr = mobileNrInputTextField.getText();
-            mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(mobileNr));
-        }
+        setAccountNameWithString(mobileNrInputTextField.getText());
     }
 
     @Override
