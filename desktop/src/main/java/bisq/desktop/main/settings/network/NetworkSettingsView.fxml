@@ -23,18 +23,19 @@
 <?import bisq.desktop.components.AutoTooltipRadioButton?>
 <?import bisq.desktop.components.InputTextField?>
 <?import bisq.desktop.components.TitledGroupBg?>
+<?import com.jfoenix.controls.JFXTextArea?>
+<?import com.jfoenix.controls.JFXTextField?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 <GridPane fx:id="root" fx:controller="bisq.desktop.main.settings.network.NetworkSettingsView"
-          hgap="5.0" vgap="5.0"
+          hgap="5.0" vgap="20.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
           xmlns:fx="http://javafx.com/fxml">
@@ -44,26 +45,33 @@
     </padding>
 
     <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
+    <JFXTextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"
+                 GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false" labelFloat="true">
+        <GridPane.margin>
+            <Insets top="25"/>
+        </GridPane.margin>
+    </JFXTextArea>
 
-    <AutoTooltipLabel fx:id="bitcoinPeersLabel" GridPane.rowIndex="0"/>
-    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-              GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
+    <AutoTooltipCheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1"/>
 
-    <AutoTooltipLabel fx:id="useTorForBtcJLabel" GridPane.rowIndex="1"/>
-    <AutoTooltipCheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <VBox GridPane.rowIndex="2">
+        <AutoTooltipLabel fx:id="bitcoinNodesLabel" styleClass="small-text"/>
+        <HBox spacing="10">
+            <AutoTooltipRadioButton fx:id="useProvidedNodesRadio"/>
+            <AutoTooltipRadioButton fx:id="useCustomNodesRadio"/>
+            <AutoTooltipRadioButton fx:id="usePublicNodesRadio"/>
+        </HBox>
+    </VBox>
 
-    <AutoTooltipLabel fx:id="bitcoinNodesLabel" GridPane.rowIndex="2"/>
-    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" spacing="10">
-        <AutoTooltipRadioButton fx:id="useProvidedNodesRadio"/>
-        <AutoTooltipRadioButton fx:id="useCustomNodesRadio"/>
-        <AutoTooltipRadioButton fx:id="usePublicNodesRadio"/>
-    </HBox>
+    <VBox GridPane.rowIndex="3">
+        <AutoTooltipLabel fx:id="btcNodesLabel" styleClass="small-text"/>
+        <InputTextField fx:id="btcNodesInputTextField"/>
+    </VBox>
 
-    <AutoTooltipLabel fx:id="btcNodesLabel" GridPane.rowIndex="3"/>
-    <InputTextField fx:id="btcNodesInputTextField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-
-    <AutoTooltipLabel fx:id="reSyncSPVChainLabel" GridPane.rowIndex="4"/>
-    <AutoTooltipButton fx:id="reSyncSPVChainButton" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+    <VBox GridPane.rowIndex="4">
+        <AutoTooltipLabel fx:id="reSyncSPVChainLabel" styleClass="small-text"/>
+        <AutoTooltipButton fx:id="reSyncSPVChainButton"/>
+    </VBox>
 
     <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="4">
         <padding>
@@ -74,69 +82,63 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <AutoTooltipLabel fx:id="onionAddressLabel" GridPane.rowIndex="5">
+    <JFXTextField fx:id="onionAddress" GridPane.rowIndex="5"
+                  editable="false" focusTraversable="false" labelFloat="true">
         <GridPane.margin>
-            <Insets top="50.0"/>
+            <Insets top="60.0"/>
         </GridPane.margin>
-    </AutoTooltipLabel>
-    <TextField fx:id="onionAddress" GridPane.rowIndex="5" GridPane.columnIndex="1"
-               editable="false" focusTraversable="false">
-        <GridPane.margin>
-            <Insets top="50.0"/>
-        </GridPane.margin>
-    </TextField>
+    </JFXTextField>
 
-    <AutoTooltipLabel fx:id="p2PPeersLabel" GridPane.rowIndex="6"/>
-    <TableView fx:id="tableView" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-               GridPane.vgrow="SOMETIMES">
-        <columns>
-            <TableColumn fx:id="onionAddressColumn" minWidth="220">
-                <cellValueFactory>
-                    <PropertyValueFactory property="onionAddress"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="connectionTypeColumn" minWidth="80" maxWidth="90">
-                <cellValueFactory>
-                    <PropertyValueFactory property="connectionType"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="creationDateColumn" minWidth="180" maxWidth="180">
-                <cellValueFactory>
-                    <PropertyValueFactory property="creationDate"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
-                <cellValueFactory>
-                    <PropertyValueFactory property="roundTripTime"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
-                <cellValueFactory>
-                    <PropertyValueFactory property="sentBytes"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="receivedBytesColumn" minWidth="100" maxWidth="120">
-                <cellValueFactory>
-                    <PropertyValueFactory property="receivedBytes"/>
-                </cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
-                <cellValueFactory>
-                    <PropertyValueFactory property="peerType"/>
-                </cellValueFactory>
-            </TableColumn>
-        </columns>
-    </TableView>
+    <VBox GridPane.rowIndex="6" GridPane.hgrow="ALWAYS" GridPane.vgrow="SOMETIMES">
+        <AutoTooltipLabel fx:id="p2PPeersLabel" styleClass="small-text"/>
+        <TableView fx:id="tableView">
+            <columns>
+                <TableColumn fx:id="onionAddressColumn" minWidth="220">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="onionAddress"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="connectionTypeColumn" minWidth="80" maxWidth="90">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="connectionType"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="creationDateColumn" minWidth="180" maxWidth="180">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="creationDate"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="roundTripTime"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="sentBytes"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="receivedBytesColumn" minWidth="100" maxWidth="120">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="receivedBytes"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="peerType"/>
+                    </cellValueFactory>
+                </TableColumn>
+            </columns>
+        </TableView>
+    </VBox>
 
-    <AutoTooltipLabel fx:id="totalTrafficLabel" GridPane.rowIndex="7"/>
-    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
-               focusTraversable="false"/>
+    <JFXTextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" editable="false"
+                  focusTraversable="false" labelFloat="true"/>
 
-    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+    <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>
-        <ColumnConstraints hgrow="SOMETIMES"/>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="500"/>
     </columnConstraints>
 </GridPane>
 
