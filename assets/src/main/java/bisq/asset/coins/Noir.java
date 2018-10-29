@@ -19,6 +19,6 @@
 import bisq.asset.RegexAddressValidator;
  public class Noir extends Coin {
      public Noir() {
-        super("Noir", "NOR", new RegexAddressValidator("(Z)[A-Za-z0-9]*"));
+        super("Noir", "NOR", new RegexAddressValidator("^[Z][_A-z0-9]*((-|\s)*[_A-z0-9])*$"));
     }
 }

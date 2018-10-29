@@ -24,4 +24,18 @@ public class NoirTest extends AbstractAssetWithDefaultValidatorTest {
     public NoirTest() {
         super(new Noir());
     }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("ZMZ6M64FiFjPjmzXRf7xBuyarorUmT8uyG");
+        assertValidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("");
+        assertInvalidAddress("21HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSHa");
+        assertInvalidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7*");
+        assertInvalidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7#jHt5jtP");
+    }
 }
