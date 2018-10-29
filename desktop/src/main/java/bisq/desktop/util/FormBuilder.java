@@ -1072,9 +1072,18 @@ public class FormBuilder {
     public static Tuple3<Label, Button, Button> addTopLabel2Buttons(GridPane gridPane, int rowIndex, String labelText, String title1, String title2, double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
+
         Button button1 = new AutoTooltipButton(title1);
         button1.setDefaultButton(true);
+        button1.getStyleClass().add("action-button");
+        button1.setDefaultButton(true);
+        button1.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button1, Priority.ALWAYS);
+
         Button button2 = new AutoTooltipButton(title2);
+        button2.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button2, Priority.ALWAYS);
+
         hBox.getChildren().addAll(button1, button2);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, labelText, hBox, top);
@@ -1095,10 +1104,20 @@ public class FormBuilder {
         return addButton(gridPane, rowIndex, title, 15);
     }
 
+    public static Button addPrimaryActionButton(GridPane gridPane, int rowIndex, String title, double top) {
+        return addButton(gridPane, rowIndex, title, top, true);
+    }
+
     public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {
+        return addButton(gridPane, rowIndex, title, top, false);
+    }
+
+    public static Button addButton(GridPane gridPane, int rowIndex, String title, double top, boolean isPrimaryAction) {
         Button button = new AutoTooltipButton(title);
-        button.setDefaultButton(true);
-        button.getStyleClass().add("action-button");
+        if (isPrimaryAction) {
+            button.setDefaultButton(true);
+            button.getStyleClass().add("action-button");
+        }
 
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 0);
@@ -1123,7 +1142,15 @@ public class FormBuilder {
                                                                int rowIndex,
                                                                String title1,
                                                                String title2) {
-        return add2Buttons(gridPane, rowIndex, title1, title2, 15);
+        return add2ButtonsAfterGroup(gridPane, rowIndex, title1, title2, true);
+    }
+
+    public static Tuple2<Button, Button> add2ButtonsAfterGroup(GridPane gridPane,
+                                                               int rowIndex,
+                                                               String title1,
+                                                               String title2,
+                                                               boolean hasPrimaryButton) {
+        return add2Buttons(gridPane, rowIndex, title1, title2, 15, hasPrimaryButton);
     }
 
     public static Tuple2<Button, Button> add2Buttons(GridPane gridPane,
@@ -1131,13 +1158,30 @@ public class FormBuilder {
                                                      String title1,
                                                      String title2,
                                                      double top) {
+        return add2Buttons(gridPane, rowIndex, title1, title2, top, true);
+    }
+
+    public static Tuple2<Button, Button> add2Buttons(GridPane gridPane, int rowIndex, String title1,
+                                                     String title2, double top, boolean hasPrimaryButton) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
+
         Button button1 = new AutoTooltipButton(title1);
-        button1.getStyleClass().add("action-button");
-        button1.setDefaultButton(true);
+
+        if (hasPrimaryButton) {
+            button1.getStyleClass().add("action-button");
+            button1.setDefaultButton(true);
+        }
+
+        button1.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button1, Priority.ALWAYS);
+
         Button button2 = new AutoTooltipButton(title2);
+        button2.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button2, Priority.ALWAYS);
+
         hBox.getChildren().addAll(button1, button2);
+
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 0);
         GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
@@ -1174,9 +1218,20 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         Button button1 = new AutoTooltipButton(title1);
+
+        button1.getStyleClass().add("action-button");
         button1.setDefaultButton(true);
+        button1.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button1, Priority.ALWAYS);
+
         Button button2 = new AutoTooltipButton(title2);
+        button2.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button2, Priority.ALWAYS);
+
         Button button3 = new AutoTooltipButton(title3);
+        button3.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button3, Priority.ALWAYS);
+
         hBox.getChildren().addAll(button1, button2, button3);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 0);
