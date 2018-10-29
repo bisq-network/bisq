@@ -1,11 +1,12 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.common.UserThread;
+
 import bisq.httpapi.facade.UserFacade;
 import bisq.httpapi.model.AuthForm;
 import bisq.httpapi.model.AuthResult;
 import bisq.httpapi.model.ChangePassword;
-
-import bisq.common.UserThread;
+import bisq.httpapi.service.ExperimentalFeature;
 
 import javax.inject.Inject;
 
@@ -27,19 +28,22 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserEndpoint {
 
+    private final ExperimentalFeature experimentalFeature;
     private final UserFacade userFacade;
 
     @Inject
-    public UserEndpoint(UserFacade userFacade) {
+    public UserEndpoint(ExperimentalFeature experimentalFeature, UserFacade userFacade) {
+        this.experimentalFeature = experimentalFeature;
         this.userFacade = userFacade;
     }
 
-    @ApiOperation(value = "Exchange password for access token", response = AuthResult.class)
+    @ApiOperation(value = "Exchange password for access token", response = AuthResult.class, notes = ExperimentalFeature.NOTE)
     @POST
     @Path("/authenticate")
     public void authenticate(@Suspended final AsyncResponse asyncResponse, @Valid AuthForm authForm) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 final AuthResult authResult = userFacade.authenticate(authForm.password);
                 asyncResponse.resume(authResult);
             } catch (Throwable e) {
@@ -48,12 +52,13 @@ public class UserEndpoint {
         });
     }
 
-    @ApiOperation(value = "Change password", response = AuthResult.class)
+    @ApiOperation(value = "Change password", response = AuthResult.class, notes = ExperimentalFeature.NOTE)
     @POST
     @Path("/password")
     public void changePassword(@Suspended final AsyncResponse asyncResponse, @Valid ChangePassword data) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 final AuthResult result = userFacade.changePassword(data.oldPassword, data.newPassword);
                 if (null == result) {
                     asyncResponse.resume(Response.noContent().build());

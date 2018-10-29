@@ -20,6 +20,7 @@ public final class ExceptionMappers {
     }
 
     public static void register(JerseyEnvironment environment) {
+        environment.register(new ExceptionMappers.ExperimentalFeatureExceptionMapper());
         environment.register(new ExceptionMappers.InvalidTypeIdExceptionMapper());
         environment.register(new ExceptionMappers.NotFoundExceptionMapper());
         environment.register(new ExceptionMappers.ValidationExceptionMapper());
@@ -50,6 +51,13 @@ public final class ExceptionMappers {
         }
     }
 
+    public static class ExperimentalFeatureExceptionMapper implements ExceptionMapper<ExperimentalFeatureException> {
+        @Override
+        public Response toResponse(ExperimentalFeatureException exception) {
+            return ExceptionMappers.toResponse(exception, Response.Status.NOT_IMPLEMENTED);
+        }
+    }
+
     public static class NotFoundExceptionMapper implements ExceptionMapper<NotFoundException> {
         @Override
         public Response toResponse(NotFoundException exception) {
@@ -67,7 +75,7 @@ public final class ExceptionMappers {
     public static class WalletNotReadyExceptionMapper implements ExceptionMapper<WalletNotReadyException> {
         @Override
         public Response toResponse(WalletNotReadyException exception) {
-            return Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(new ValidationErrorMessage(ImmutableList.of(exception.getMessage()))).build();
+            return ExceptionMappers.toResponse(exception, Response.Status.SERVICE_UNAVAILABLE);
         }
     }
 
@@ -76,5 +84,9 @@ public final class ExceptionMappers {
         public Response toResponse(UnauthorizedException exception) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
+    }
+
+    private static Response toResponse(Throwable throwable, Response.Status status) {
+        return Response.status(status).entity(new ValidationErrorMessage(ImmutableList.of(throwable.getMessage()))).type(MediaType.APPLICATION_JSON).build();
     }
 }

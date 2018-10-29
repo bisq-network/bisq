@@ -65,8 +65,8 @@ the admin interface can be found at:
 
 ## Overriding http port and host
 
-Set the environment variable `BISQ_API_PORT` to your desired port.
-Set the environment variable `BISQ_API_HOST` to your desired host.
+Set the environment variable `HTTP_API_PORT` to your desired port.
+Set the environment variable `HTTP_API_HOST` to your desired host.
 You might also pass program args: `apiPort` and `apiHost`.
 
 #TODO this is invalid instruction. We want to restore it once those params get to BisqEnvironment in core
