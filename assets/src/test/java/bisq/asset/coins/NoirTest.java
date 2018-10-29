@@ -19,6 +19,8 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetWithDefaultValidatorTest;
 
+import org.junit.Test;
+
 public class NoirTest extends AbstractAssetWithDefaultValidatorTest {
 
     public NoirTest() {
