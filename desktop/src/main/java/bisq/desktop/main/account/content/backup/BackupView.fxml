@@ -32,5 +32,4 @@
     <columnConstraints>
         <ColumnConstraints hgrow="NEVER" minWidth="140.0"/>
     </columnConstraints>
-
 </GridPane>

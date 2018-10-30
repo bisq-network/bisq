@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,6 +73,7 @@ public class ArbitratorSelection {
         List<String> lastAddressesUsedInTrades = list.stream()
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
                 .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(TradeStatistics2.ARBITRATOR_ADDRESS))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Set<String> arbitrators = arbitratorManager.getArbitratorsObservableMap().values().stream()
