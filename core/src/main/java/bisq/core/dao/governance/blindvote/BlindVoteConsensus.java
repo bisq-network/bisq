@@ -116,8 +116,6 @@ public class BlindVoteConsensus {
     }
 
     public static Coin getFee(DaoStateService daoStateService, int chainHeight) {
-        Coin fee = Coin.valueOf(daoStateService.getParamValue(Param.BLIND_VOTE_FEE, chainHeight));
-        log.info("Fee for blind vote: " + fee);
-        return fee;
+        return daoStateService.getParamValueAsCoin(Param.BLIND_VOTE_FEE, chainHeight);
     }
 }

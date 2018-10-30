@@ -18,16 +18,18 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.state.blockchain.Block;
-import org.junit.Test;
+import bisq.core.util.BsqFormatter;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 public class DaoStateServiceTest {
     @Test
     public void testIsBlockHashKnown() {
         DaoStateService stateService = new DaoStateService(
                 new DaoState(),
-                new GenesisTxInfo("fakegenesistxid", 100));
+                new GenesisTxInfo("fakegenesistxid", 100),
+                new BsqFormatter());
         Assert.assertEquals(
                 "Unknown block should not exist.",
                 false,

@@ -43,6 +43,7 @@ import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -105,6 +106,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
     private final DaoStateService daoStateService;
+    private final ChangeParamValidator changeParamValidator;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -145,12 +147,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           BsqWalletService bsqWalletService,
                           PhasesView phasesView,
                           DaoStateService daoStateService,
+                          ChangeParamValidator changeParamValidator,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
+        this.changeParamValidator = changeParamValidator;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -652,7 +656,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade, changeParamValidator);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
@@ -842,10 +846,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             if (iconButton == null) {
                                 item.onPhaseChanged(currentPhase);
                                 iconButton = item.getIconButton();
-                                log.error("1 areVoteButtonsVisible " + areVoteButtonsVisible);
                                 if (iconButton != null) {
                                     iconButton.setOnAction(e -> {
-                                        log.error("2 areVoteButtonsVisible " + areVoteButtonsVisible);
                                         if (areVoteButtonsVisible) {
                                             onSelectProposal(item);
                                             if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)

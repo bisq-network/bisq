@@ -28,7 +28,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class InteracETransferValidatorTest {
+public class InteracETransferAnswerValidatorTest {
 
     @Before
     public void setup() {
@@ -41,26 +41,19 @@ public class InteracETransferValidatorTest {
 
     @Test
     public void validate() throws Exception {
-        InteracETransferValidator validator = new InteracETransferValidator(
-                new EmailValidator(),
-                new InteracETransferQuestionValidator(new LengthValidator(), new RegexValidator()),
-                new InteracETransferAnswerValidator(new LengthValidator(), new RegexValidator())
-        );
+        InteracETransferAnswerValidator validator = new InteracETransferAnswerValidator(new LengthValidator(), new RegexValidator());
 
-        assertTrue(validator.validate("name@domain.tld").isValid);
-        assertTrue(validator.validate("n1.n2@c.dd").isValid);
-        assertTrue(validator.validate("+1 236 123-4567").isValid);
-        assertTrue(validator.validate("15061234567").isValid);
-        assertTrue(validator.validate("1 289 784 2134").isValid);
-        assertTrue(validator.validate("+1-514-654-7412").isValid);
+        assertTrue(validator.validate("abcdefghijklmnopqrstuvwxy").isValid);
+        assertTrue(validator.validate("ABCDEFGHIJKLMNOPQRSTUVWXY").isValid);
+        assertTrue(validator.validate("1234567890").isValid);
+        assertTrue(validator.validate("zZ-").isValid);
 
-        assertFalse(validator.validate("abc@.de").isValid); // Domain name missing
-        assertFalse(validator.validate("abc@d.e").isValid); // TLD too short
-        assertFalse(validator.validate("2361234567").isValid);  // Prefix for North America missing (often required for local calls as well)
-        assertFalse(validator.validate("+150612345678").isValid); // Too long
-        assertFalse(validator.validate("1289784213").isValid);  // Too short
-        assertFalse(validator.validate("+1 555 123-4567").isValid); // Non-Canadian area code
-        assertFalse(validator.validate("+1 236 1234-567").isValid); // Wrong grouping
+        assertFalse(validator.validate(null).isValid); // null
+        assertFalse(validator.validate("").isValid); // empty
+        assertFalse(validator.validate("two words").isValid); // two words
+        assertFalse(validator.validate("ab").isValid); // too short
+        assertFalse(validator.validate("abcdefghijklmnopqrstuvwxyz").isValid); // too long
+        assertFalse(validator.validate("abc !@#").isValid); // invalid characters
     }
 
 }

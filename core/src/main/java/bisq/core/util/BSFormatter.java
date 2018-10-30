@@ -132,6 +132,10 @@ public class BSFormatter {
         return formatCoinWithCode(coin, coinFormat);
     }
 
+    public String formatCoinWithCode(long value) {
+        return formatCoinWithCode(Coin.valueOf(value), coinFormat);
+    }
+
     public String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
     }

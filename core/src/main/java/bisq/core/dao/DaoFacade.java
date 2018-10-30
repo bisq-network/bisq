@@ -61,6 +61,8 @@ import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
 
+import bisq.asset.Asset;
+
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -86,10 +88,6 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-
-
-import bisq.asset.Asset;
 
 /**
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
@@ -240,7 +238,7 @@ public class DaoFacade implements DaoSetupService {
     public ProposalWithTransaction getParamProposalWithTransaction(String name,
                                                                    String link,
                                                                    Param param,
-                                                                   long paramValue)
+                                                                   String paramValue)
             throws ValidationException, InsufficientMoneyException, TxException {
         return changeParamProposalService.createProposalWithTransaction(name,
                 link,
@@ -627,7 +625,7 @@ public class DaoFacade implements DaoSetupService {
         return ReimbursementConsensus.getMaxReimbursementRequestAmount(daoStateService, periodService.getChainHeight());
     }
 
-    public long getPramValue(Param param) {
+    public String getParamValue(Param param) {
         return daoStateService.getParamValue(param, periodService.getChainHeight());
     }
 
