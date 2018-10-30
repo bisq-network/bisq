@@ -63,27 +63,27 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public int addGroup(GridPane gridPane, int gridRow) {
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 6, Res.get("dao.wallet.dashboard.myBalance"));
-
+        int startIndex = gridRow;
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("dao.wallet.dashboard.myBalance"));
         availableBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow,
                 Res.get("dao.availableBsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-
         unverifiedBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                 Res.get("dao.unverifiedBsqBalance")).second;
-
-        lockedForVoteBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
-                Res.get("dao.lockedForVoteBalance")).second;
-
-        lockedInBondsBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
-                Res.get("dao.lockedInBonds")).second;
-
-        // TODO add unlockingBondsBalanceTextField
-
         totalBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                 Res.get("dao.totalBsqBalance")).second;
 
-        Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
+        gridRow = startIndex;
+        int columnIndex = 2;
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, columnIndex, 3, "");
+        lockedForVoteBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow, columnIndex,
+                Res.get("dao.lockedForVoteBalance"), Layout.FIRST_ROW_DISTANCE).second;
+        lockedInBondsBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
+                Res.get("dao.lockedInBonds")).second;
+        Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
                 Res.get("dao.availableNonBsqBalance"));
+
+        // TODO add unlockingBondsBalanceTextField
+
         availableNonBsqBalanceLabel = tuple3.first;
         availableNonBsqBalanceTextField = tuple3.second;
         availableNonBsqBalanceTextField.setVisible(false);

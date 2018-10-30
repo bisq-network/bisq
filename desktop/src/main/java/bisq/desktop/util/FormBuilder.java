@@ -146,7 +146,7 @@ public class FormBuilder {
         titledGroupBg.prefWidthProperty().bind(gridPane.widthProperty());
         GridPane.setRowIndex(titledGroupBg, rowIndex);
         GridPane.setRowSpan(titledGroupBg, rowSpan);
-        GridPane.setMargin(titledGroupBg, new Insets(top, -10, -10, -10));
+        GridPane.setMargin(titledGroupBg, new Insets(top + 8, -10, -12, -10));
         gridPane.getChildren().add(titledGroupBg);
         return titledGroupBg;
     }
@@ -237,6 +237,12 @@ public class FormBuilder {
         return addTopLabelTextField(gridPane, rowIndex, title, "", top - 15);
     }
 
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, int columnIndex, String title, String value, double top) {
+        Tuple3<Label, TextField, VBox> tuple = addTopLabelTextField(gridPane, rowIndex, title, value, top - 15);
+        GridPane.setColumnIndex(tuple.third, columnIndex);
+        return tuple;
+    }
+
     public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, int columnIndex, String title, double top) {
         Tuple3<Label, TextField, VBox> tuple = addTopLabelTextField(gridPane, rowIndex, title, "", top - 15);
         GridPane.setColumnIndex(tuple.third, columnIndex);
@@ -262,13 +268,12 @@ public class FormBuilder {
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
         TextField textField = new JFXTextField(value);
         textField.setEditable(false);
-
-        // MK: basically we want that text is copyable, not sure if it breaks anything if mouseTransparent is not set
-        //textField.setMouseTransparent(true);
-
         textField.setFocusTraversable(false);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
+
+        // TOD not 100% sure if that is a good idea....
+        //topLabelWithVBox.first.getStyleClass().add("jfx-text-field-top-label");
 
         return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
     }
@@ -343,6 +348,22 @@ public class FormBuilder {
         return new Tuple2<>(label, hyperlinkWithIcon);
     }
 
+    public static Tuple3<Label, HyperlinkWithIcon, VBox> addTopLabelHyperlinkWithIcon(GridPane gridPane,
+                                                                                      int rowIndex,
+                                                                                      int columnIndex,
+                                                                                      String title,
+                                                                                      String value,
+                                                                                      String url,
+                                                                                      double top) {
+        Tuple3<Label, HyperlinkWithIcon, VBox> tuple = addTopLabelHyperlinkWithIcon(gridPane,
+                rowIndex,
+                title,
+                value,
+                url,
+                top);
+        GridPane.setColumnIndex(tuple.third, columnIndex);
+        return tuple;
+    }
 
     public static Tuple3<Label, HyperlinkWithIcon, VBox> addTopLabelHyperlinkWithIcon(GridPane gridPane,
                                                                                       int rowIndex,
@@ -456,6 +477,24 @@ public class FormBuilder {
         gridPane.getChildren().add(inputTextField);
 
         return inputTextField;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + InputTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, InputTextField> addTopLabelInputTextField(GridPane gridPane, int rowIndex, String title) {
+        return addTopLabelInputTextField(gridPane, rowIndex, title, 0);
+    }
+
+    public static Tuple2<Label, InputTextField> addTopLabelInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
+
+        InputTextField inputTextField = new InputTextField();
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, inputTextField);
     }
 
 
@@ -1061,19 +1100,17 @@ public class FormBuilder {
     // Label  + BsqAddressTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, BsqAddressTextField> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title) {
+    public static Tuple3<Label, BsqAddressTextField, VBox> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title) {
         return addLabelBsqAddressTextField(gridPane, rowIndex, title, 0);
     }
 
-    public static Tuple2<Label, BsqAddressTextField> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
-
+    public static Tuple3<Label, BsqAddressTextField, VBox> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
         BsqAddressTextField addressTextField = new BsqAddressTextField();
-        GridPane.setRowIndex(addressTextField, rowIndex);
-        GridPane.setMargin(addressTextField, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(addressTextField);
+        addressTextField.setFocusTraversable(false);
 
-        return new Tuple2<>(label, addressTextField);
+        Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, addressTextField, top - 15);
+
+        return new Tuple3<>(topLabelWithVBox.first, addressTextField, topLabelWithVBox.second);
     }
 
 

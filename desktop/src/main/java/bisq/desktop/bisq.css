@@ -342,6 +342,10 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 3 3 0 0;
 }
 
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-dim-grey;
+}
+
 .jfx-text-field:readonly {
     -fx-background-color: -bs-rd-grey-medium-light;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
@@ -379,6 +383,7 @@ bg color of non edit textFields: fafafa
 .jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
     -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 0.692em;
+    -fx-padding: -0.5em 0 0 0;
 }
 
 .jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {

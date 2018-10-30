@@ -27,6 +27,8 @@
           AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="20.0"
           xmlns:fx="http://javafx.com/fxml">
     <columnConstraints>
-        <ColumnConstraints percentWidth="100"/>
+        <ColumnConstraints percentWidth="50"/>
+        <ColumnConstraints minWidth="10" maxWidth="5"/>
+        <ColumnConstraints percentWidth="50"/>
     </columnConstraints>
 </GridPane>

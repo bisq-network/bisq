@@ -151,7 +151,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         vBox.setSpacing(10);
         GridPane.setVgrow(vBox, Priority.ALWAYS);
         GridPane.setRowIndex(vBox, ++gridRow);
-        GridPane.setColumnSpan(vBox, 2);
+        GridPane.setColumnSpan(vBox, 3);
+        GridPane.setRowSpan(vBox, 2);
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
         vBox.getChildren().addAll(tableView, hBox);
         VBox.setVgrow(tableView, Priority.ALWAYS);

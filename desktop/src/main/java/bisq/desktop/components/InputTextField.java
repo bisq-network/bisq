@@ -79,10 +79,9 @@ public class InputTextField extends JFXTextField {
 
         focusedProperty().addListener((o, oldValue, newValue) -> {
             if (oldValue && !newValue && validator != null) {
-                // Need to reset first otherwise jfxValidationWrapper is not reflecting new error message
-                this.validationResult.set(new InputValidator.ValidationResult(true));
-
                 this.validationResult.set(validator.validate(getText()));
+            } else if (!oldValue && newValue && validator != null) {
+                this.validationResult.set(new InputValidator.ValidationResult(true));
             }
         });
     }
