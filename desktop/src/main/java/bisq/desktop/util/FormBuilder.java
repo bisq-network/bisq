@@ -197,29 +197,6 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // TextField
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value) {
-        return addTextField(gridPane, rowIndex, title, value, 0);
-    }
-
-    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        TextField textField = new JFXTextField(value);
-        ((JFXTextField) textField).setLabelFloat(true);
-        textField.setPromptText(title);
-        textField.setEditable(false);
-        textField.setMouseTransparent(true);
-        textField.setFocusTraversable(false);
-
-        GridPane.setRowIndex(textField, rowIndex);
-        GridPane.setMargin(textField, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
-        gridPane.getChildren().add(textField);
-
-        return textField;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 

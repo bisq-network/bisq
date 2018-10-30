@@ -35,7 +35,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class PromptPayForm extends PaymentMethodForm {
@@ -71,7 +70,7 @@ public class PromptPayForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = promptPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -84,16 +83,16 @@ public class PromptPayForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 promptPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(promptPayAccount.getPaymentMethod().getId()));
-        TextField field = addTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
-                promptPayAccount.getPromptPayId());
+        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
+                promptPayAccount.getPromptPayId()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = promptPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 
