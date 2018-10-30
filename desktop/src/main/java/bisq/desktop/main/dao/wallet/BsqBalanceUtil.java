@@ -92,14 +92,14 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         return gridRow;
     }
 
-    public int addBondBalanceGroup(GridPane gridPane, int gridRow, int columnIndex) {
-        addTitledGroupBg(gridPane, gridRow, columnIndex, 6,
-                Res.get("dao.bonding.dashboard.bondsHeadline"));
+    public int addBondBalanceGroup(GridPane gridPane, int gridRow) {
+        addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("dao.bonding.dashboard.bondsHeadline"), Layout.GROUP_DISTANCE);
 
-        lockupAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow, columnIndex,
+        lockupAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow,
                 Res.get("dao.bonding.dashboard.lockupAmount"),
-                Layout.FIRST_ROW_DISTANCE).second;
-        unlockingAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        unlockingAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                 Res.get("dao.bonding.dashboard.unlockingAmount")).second;
 
         return gridRow;

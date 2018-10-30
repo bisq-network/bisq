@@ -134,7 +134,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         GridPane.setRowIndex(vBox, ++gridRow);
-        GridPane.setColumnSpan(vBox, 2);
+        GridPane.setColumnSpan(vBox, 3);
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
         vBox.getChildren().addAll(tableView);
         root.getChildren().add(vBox);
