@@ -185,8 +185,10 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.tradeInformation"));
-        txIdTextField = FormBuilder.addLabelTxIdTextField(gridPane, gridRow, Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
+        tradeInfoTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 4,
+                Res.get("portfolio.pending.tradeInformation"));
+        txIdTextField = FormBuilder.addLabelTxIdTextField(gridPane, gridRow, 1,
+                Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -194,11 +196,13 @@ public abstract class TradeStepView extends AnchorPane {
             txIdTextField.cleanup();
 
         if (model.dataModel.getTrade() != null) {
-            InfoTextField infoTextField = PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+            InfoTextField infoTextField = PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow,
+                    model.dataModel.getTrade().getOffer());
             infoTextField.setContentForInfoPopOver(createInfoPopover());
         }
 
-        timeLeftTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
+        timeLeftTextField = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
+                Res.getWithCol("portfolio.pending.remainingTime")).second;
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);

@@ -122,6 +122,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         String url = preferences.getBsqBlockChainExplorer().txUrl + genesisTxId;
         addTopLabelReadOnlyTextField(root, gridRow, columnIndex, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
                 genTxHeight, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
+        // TODO use addTopLabelTxIdTextField
         Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(root, ++gridRow, columnIndex,
                 Res.get("dao.wallet.dashboard.genesisTxId"), genesisTxId, url, 0);
         hyperlinkWithIcon = tuple.second;

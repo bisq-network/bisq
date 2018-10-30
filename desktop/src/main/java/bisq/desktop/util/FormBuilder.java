@@ -1001,20 +1001,33 @@ public class FormBuilder {
     // Label  + TxIdTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelTxIdTextField(gridPane, rowIndex, title, 0);
+    public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, int columnIndex, String title) {
+        return addLabelTxIdTextField(gridPane, rowIndex, columnIndex, title, 0);
     }
 
-    public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, double top) {
+    public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, int columnIndex, String title, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         TxIdTextField txIdTextField = new TxIdTextField();
         GridPane.setRowIndex(txIdTextField, rowIndex);
-        GridPane.setColumnIndex(txIdTextField, 1);
+        GridPane.setColumnIndex(txIdTextField, columnIndex);
         GridPane.setMargin(txIdTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(txIdTextField);
 
         return new Tuple2<>(label, txIdTextField);
+    }
+
+
+    public static Tuple3<Label, TxIdTextField, VBox> addTopLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        TxIdTextField textField = new TxIdTextField();
+        textField.setFocusTraversable(false);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
+
+        // TOD not 100% sure if that is a good idea....
+        //topLabelWithVBox.first.getStyleClass().add("jfx-text-field-top-label");
+
+        return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
     }
 
 
