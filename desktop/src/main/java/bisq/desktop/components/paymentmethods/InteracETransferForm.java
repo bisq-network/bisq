@@ -79,15 +79,15 @@ public class InteracETransferForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        InputTextField questionInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.secret"));
-        questionInputTextField.setValidator(inputValidator);
+        InputTextField questionInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.secret")).second;
+        questionInputTextField.setValidator(interacETransferValidator.questionValidator);
         questionInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setQuestion(newValue);
             updateFromInputs();
         });
 
-        InputTextField answerInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.answer"));
-        answerInputTextField.setValidator(inputValidator);
+        InputTextField answerInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.answer")).second;
+        answerInputTextField.setValidator(interacETransferValidator.answerValidator);
         answerInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setAnswer(newValue);
             updateFromInputs();
@@ -132,8 +132,8 @@ public class InteracETransferForm extends PaymentMethodForm {
         allInputsValid.set(isAccountNameValid()
                 && interacETransferValidator.validate(interacETransferAccount.getEmail()).isValid
                 && inputValidator.validate(interacETransferAccount.getHolderName()).isValid
-                && inputValidator.validate(interacETransferAccount.getQuestion()).isValid
-                && inputValidator.validate(interacETransferAccount.getAnswer()).isValid
+                && interacETransferValidator.questionValidator.validate(interacETransferAccount.getQuestion()).isValid
+                && interacETransferValidator.answerValidator.validate(interacETransferAccount.getAnswer()).isValid
                 && interacETransferAccount.getTradeCurrencies().size() > 0);
     }
 }
