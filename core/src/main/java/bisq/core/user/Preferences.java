@@ -705,6 +705,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
     }
 
+    //TODO remove and use isPayFeeInBtc instead
     public boolean getPayFeeInBtc() {
         return prefPayload.isPayFeeInBtc();
     }

@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChangeParamProposalService extends BaseProposalService<ChangeParamProposal> {
     private Param param;
-    private long paramValue;
+    private String paramValue;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ public class ChangeParamProposalService extends BaseProposalService<ChangeParamP
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
                                                                  Param param,
-                                                                 long paramValue)
+                                                                 String paramValue)
             throws ValidationException, InsufficientMoneyException, TxException {
         this.param = param;
         this.paramValue = paramValue;

@@ -280,7 +280,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     throw new ValidationException("paramValue is null or empty");
 
                 try {
-                    long paramValue = bsqFormatter.parseParamValue(selectedParam, paramValueAsString);
+                    String paramValue = bsqFormatter.parseParamValueToString(selectedParam, paramValueAsString);
+                    proposalDisplay.paramValueTextField.setText(paramValue);
                     log.info("Change param: paramValue={}, paramValueAsString={}", paramValue, paramValueAsString);
 
                     changeParamValidator.validateParamValue(selectedParam, paramValue);
@@ -325,7 +326,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
@@ -362,7 +363,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 .filter(Objects::nonNull).forEach(e -> {
             if (e instanceof InputTextField) {
                 InputTextField inputTextField = (InputTextField) e;
-                inputsValid.set(inputsValid.get() && inputTextField.getValidator().validate(e.getText()).isValid);
+                inputsValid.set(inputsValid.get() &&
+                        inputTextField.getValidator() != null &&
+                        inputTextField.getValidator().validate(e.getText()).isValid);
             }
         });
         proposalDisplay.getComboBoxes().stream()

@@ -34,7 +34,9 @@ import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.generic.GenericProposal;
+import bisq.core.dao.governance.proposal.param.ChangeParamInputValidator;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
@@ -99,6 +101,10 @@ public class ProposalDisplay {
     private final BsqFormatter bsqFormatter;
     private final DaoFacade daoFacade;
 
+    // Nullable because if we are in result view mode (readonly) we don't need to set the input validator)
+    @Nullable
+    private final ChangeParamValidator changeParamValidator;
+
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
     private TextField proposalTypeTextField, myVoteTextField, voteResultTextField;
@@ -132,10 +138,12 @@ public class ProposalDisplay {
     private TitledGroupBg titledGroupBg;
     private int titledGroupBgRowSpan;
 
-    public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade) {
+    public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
+                           @Nullable ChangeParamValidator changeParamValidator) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
+        this.changeParamValidator = changeParamValidator;
 
         // focusOutListener = observable -> inputChangedListeners.forEach(Runnable::run);
 
@@ -244,16 +252,17 @@ public class ProposalDisplay {
                 paramValueTextField = addInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramValue"));
 
-                //TODO use custom param validator
-                paramValueTextField.setValidator(new InputValidator());
-
                 inputControls.add(paramValueTextField);
 
                 paramChangeListener = (observable, oldValue, newValue) -> {
                     if (newValue != null) {
                         paramValueTextField.clear();
-                        String currentValue = bsqFormatter.formatParamValue(newValue, daoFacade.getPramValue(newValue));
+                        String currentValue = bsqFormatter.formatParamValue(newValue, daoFacade.getParamValue(newValue));
                         paramValueTextField.setPromptText(Res.get("dao.param.currentValue", currentValue));
+                        if (changeParamValidator != null) {
+                            ChangeParamInputValidator validator = new ChangeParamInputValidator(newValue, changeParamValidator);
+                            paramValueTextField.setValidator(validator);
+                        }
                     }
                 };
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);

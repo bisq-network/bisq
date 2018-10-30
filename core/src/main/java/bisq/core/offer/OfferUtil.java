@@ -20,17 +20,27 @@ package bisq.core.offer;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
 
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -108,7 +118,6 @@ public class OfferUtil {
         }
     }
 
-
     /**
      * Checks if the maker fee should be paid in BTC, this can be the case due to user preference or because the user
      * doesn't have enough BSQ.
@@ -120,9 +129,11 @@ public class OfferUtil {
      * @param marketPriceMargin
      * @return
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        return preferences.getPayFeeInBtc() ||
-                !isBsqForFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount,
+                                                   boolean marketPriceAvailable, double marketPriceMargin) {
+        boolean payFeeInBtc = preferences.getPayFeeInBtc();
+        boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+        return payFeeInBtc || !bsqForFeeAvailable;
     }
 
     /**
@@ -134,13 +145,47 @@ public class OfferUtil {
      * @param marketPriceMargin
      * @return
      */
-    public static boolean isBsqForFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        final Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
-        final Coin availableBalance = bsqWalletService.getAvailableBalance();
-        return makerFee != null &&
-                BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                availableBalance != null &&
+    public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
+
+        // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ
+        // fee each time we open the create offer screen as there the amount is not set.
+        if (makerFee == null)
+            return true;
+
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
                 !availableBalance.subtract(makerFee).isNegative();
+    }
+
+
+    @Nullable
+    public static Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, @Nullable Coin amount) {
+        if (amount != null) {
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinMakerFee(isCurrencyForTakerFeeBtc));
+        } else {
+            return null;
+        }
+    }
+
+    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+        boolean payFeeInBtc = preferences.getPayFeeInBtc();
+        boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(bsqWalletService, amount);
+        return payFeeInBtc || !bsqForFeeAvailable;
+    }
+
+    public static boolean isBsqForTakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin takerFee = getTakerFee(false, amount);
+
+        // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ
+        // fee each time we open the create offer screen as there the amount is not set.
+        if (takerFee == null)
+            return true;
+
+        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
+                !availableBalance.subtract(takerFee).isNegative();
     }
 
     public static Volume getRoundedFiatVolume(Volume volumeByAmount) {
@@ -246,5 +291,48 @@ public class OfferUtil {
         adjustedAmount = Math.max(minTradeAmount, adjustedAmount);
         adjustedAmount = Math.min(maxTradeLimit, adjustedAmount);
         return Coin.valueOf(adjustedAmount);
+    }
+
+    public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                            Preferences preferences, PriceFeedService priceFeedService,
+                                                            BsqFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.
+        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+        String countryCode = preferences.getUserCountry().code;
+        String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
+        if (marketPrice != null && makerFee != null) {
+            long marketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
+            Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
+
+            if (isCurrencyForMakerFeeBtc) {
+                return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
+            } else {
+                MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
+                if (bsqMarketPrice != null) {
+                    long bsqPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
+                    Price bsqPrice = Price.valueOf("BSQ", bsqPriceAsLong);
+                    String inputValue = bsqFormatter.formatCoin(makerFee);
+                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                    return Optional.of(userCurrencyPrice.getVolumeByAmount(requiredBtc));
+                } else {
+                    return Optional.empty();
+                }
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
+        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
+        String feeInFiatAsString;
+        if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
+            feeInFiatAsString = formatter.formatVolumeWithCode(optionalFeeInFiat.get());
+        } else {
+            feeInFiatAsString = Res.get("shared.na");
+        }
+        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
     }
 }

@@ -33,10 +33,10 @@ import javax.annotation.concurrent.Immutable;
 public class ParamChange implements PersistablePayload {
     // We use the enum name instead of the enum to be more flexible with changes at updates
     private final String paramName;
-    private final long value;
+    private final String value;
     private final int activationHeight;
 
-    public ParamChange(String paramName, long value, int activationHeight) {
+    public ParamChange(String paramName, String value, int activationHeight) {
         this.paramName = paramName;
         this.value = value;
         this.activationHeight = activationHeight;

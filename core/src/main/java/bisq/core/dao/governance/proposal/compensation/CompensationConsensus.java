@@ -27,11 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CompensationConsensus {
     public static Coin getMinCompensationRequestAmount(DaoStateService daoStateService, int chainHeight) {
-        return Coin.valueOf(daoStateService.getParamValue(Param.COMPENSATION_REQUEST_MIN_AMOUNT, chainHeight));
+        return daoStateService.getParamValueAsCoin(Param.COMPENSATION_REQUEST_MIN_AMOUNT, chainHeight);
     }
 
     public static Coin getMaxCompensationRequestAmount(DaoStateService daoStateService, int chainHeight) {
-        return Coin.valueOf(daoStateService.getParamValue(Param.COMPENSATION_REQUEST_MAX_AMOUNT, chainHeight));
+        return daoStateService.getParamValueAsCoin(Param.COMPENSATION_REQUEST_MAX_AMOUNT, chainHeight);
     }
 
 }

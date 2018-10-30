@@ -53,6 +53,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -109,7 +110,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
-    private final BSFormatter formatter;
+    private final BsqFormatter bsqFormatter;
+    private final BSFormatter btcFormatter;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
@@ -151,7 +153,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
                                  PriceFeedService priceFeedService, FilterManager filterManager,
                                  AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService,
-                                 FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter) {
+                                 FeeService feeService, ReferralIdService referralIdService, BsqFormatter bsqFormatter,
+                                 BSFormatter btcFormatter) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -166,7 +169,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
-        this.formatter = formatter;
+        this.bsqFormatter = bsqFormatter;
+        this.btcFormatter = btcFormatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +
@@ -691,7 +695,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !price.get().isZero() &&
                 allowAmountUpdate) {
             try {
-                Coin value = formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
+                Coin value = btcFormatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
@@ -827,12 +831,24 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 
+    public Coin getMakerFeeInBtc() {
+        return OfferUtil.getMakerFee(true, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
+    public Coin getMakerFeeInBsq() {
+        return OfferUtil.getMakerFee(false, amount.get(), marketPriceAvailable, marketPriceMargin);
+    }
+
     public boolean isCurrencyForMakerFeeBtc() {
         return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 
+    public boolean isPreferredFeeCurrencyBtc() {
+        return preferences.isPayFeeInBtc();
+    }
+
     public boolean isBsqForFeeAvailable() {
-        return OfferUtil.isBsqForFeeAvailable(bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
+        return OfferUtil.isBsqForMakerFeeAvailable(bsqWalletService, amount.get(), marketPriceAvailable, marketPriceMargin);
     }
 
     public boolean isHalCashAccount() {

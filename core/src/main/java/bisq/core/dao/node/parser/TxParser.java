@@ -298,8 +298,7 @@ public class TxParser {
         if (!isPhaseValid(blockHeight, phase)) {
             return false;
         }
-
-        long paramValue = daoStateService.getParamValue(param, blockHeight);
+        long paramValue = daoStateService.getParamValueAsCoin(param, blockHeight).value;
         boolean isFeeCorrect = bsqFee == paramValue;
         if (!isFeeCorrect) {
             log.warn("Invalid fee. used fee={}, required fee={}", bsqFee, paramValue);

@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.takeoffer;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -424,9 +423,6 @@ class TakeOfferDataModel extends OfferDataModel {
         }
     }
 
-    void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -447,22 +443,6 @@ class TakeOfferDataModel extends OfferDataModel {
     boolean hasAcceptedArbitrators() {
         final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
         return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
-    boolean isCurrencyForTakerFeeBtc() {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable();
-    }
-
-    boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
-    }
-
-    boolean isBsqForFeeAvailable() {
-        final Coin takerFee = getTakerFee(false);
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                takerFee != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
 
     long getMaxTradeLimit() {
@@ -648,5 +628,33 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
+    }
+
+    public boolean isCurrencyForTakerFeeBtc() {
+        return OfferUtil.isCurrencyForTakerFeeBtc(preferences, bsqWalletService, amount.get());
+    }
+
+    public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
+    }
+
+    public boolean isPreferredFeeCurrencyBtc() {
+        return preferences.isPayFeeInBtc();
+    }
+
+    public Coin getTakerFeeInBtc() {
+        return OfferUtil.getTakerFee(true, amount.get());
+    }
+
+    public Coin getTakerFeeInBsq() {
+        return OfferUtil.getTakerFee(false, amount.get());
+    }
+
+    boolean isTakerFeeValid() {
+        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+    }
+
+    public boolean isBsqForFeeAvailable() {
+        return OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
     }
 }
