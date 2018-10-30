@@ -47,7 +47,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 // block. The event from the ChainHeightListener is sent before parsing starts.
 // The event from the ChainHeightListener would notify after parsing a new block.
 @FxmlView
-public class ProposalDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
+public class GovernanceDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final PhasesView phasesView;
     private final BSFormatter formatter;
@@ -61,7 +61,7 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalDashboardView(DaoFacade daoFacade, PhasesView phasesView, BSFormatter formatter) {
+    public GovernanceDashboardView(DaoFacade daoFacade, PhasesView phasesView, BSFormatter formatter) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
         this.formatter = formatter;

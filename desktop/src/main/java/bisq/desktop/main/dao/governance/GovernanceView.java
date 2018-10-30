@@ -27,7 +27,7 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.governance.dashboard.ProposalDashboardView;
+import bisq.desktop.main.dao.governance.dashboard.GovernanceDashboardView;
 import bisq.desktop.main.dao.governance.make.MakeProposalView;
 import bisq.desktop.main.dao.governance.proposals.ProposalsView;
 import bisq.desktop.main.dao.governance.result.VoteResultView;
@@ -96,7 +96,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         ToggleGroup toggleGroup = new ToggleGroup();
         final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, GovernanceView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
-                ProposalDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
+                GovernanceDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
                 MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
         open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.browse"),
@@ -147,7 +147,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof ProposalDashboardView) dashboard.setSelected(true);
+        if (view instanceof GovernanceDashboardView) dashboard.setSelected(true);
         else if (view instanceof MakeProposalView) make.setSelected(true);
         else if (view instanceof ProposalsView) open.setSelected(true);
         else if (view instanceof VoteResultView) result.setSelected(true);
