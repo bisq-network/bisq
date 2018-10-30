@@ -30,6 +30,7 @@ public class BondingDashboardView extends ActivatableView<GridPane, Void> {
     private final BsqBalanceUtil bsqBalanceUtil;
 
     private int gridRow = 0;
+    private int startRow;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -41,8 +42,11 @@ public class BondingDashboardView extends ActivatableView<GridPane, Void> {
     }
 
     public void initialize() {
+        startRow = gridRow;
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
-        gridRow = bsqBalanceUtil.addBondBalanceGroup(root, gridRow);
+        gridRow = startRow;
+        int columnIndex = 2;
+        gridRow = bsqBalanceUtil.addBondBalanceGroup(root, gridRow, columnIndex);
     }
 
     @Override

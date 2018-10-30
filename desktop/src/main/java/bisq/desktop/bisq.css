@@ -343,8 +343,25 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-text-field:readonly {
+    -fx-background-color: -bs-rd-grey-medium-light;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field:readonly > .input-line {
     -fx-background-color: transparent;
 }
+
+.jfx-text-field:readonly > .input-focused-line {
+    -fx-background-color: transparent;
+}
+
+/* hyperlink-with-icon has same style as jfx-text-field:readonly */
+
+.hyperlink-with-icon {
+    -fx-background-color: -bs-rd-grey-medium-light;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
 
 #info-field {
     -fx-prompt-text-fill: -bs-rd-black;
@@ -1351,8 +1368,9 @@ textfield */
 }
 
 /* TitledGroupBg */
+
 .titled-group-bg-label {
-    -fx-font-size: 1.077em;
+    -fx-font-size: 1.231em;
     -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
@@ -1360,7 +1378,7 @@ textfield */
 
 .titled-group-bg-label-active {
     -fx-font-weight: normal;
-    -fx-font-size: 1.077em;
+    -fx-font-size: 1.231em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
