@@ -49,7 +49,7 @@ public class BsqFormatter extends BSFormatter {
     private final MonetaryFormat btcCoinFormat;
 
     @Inject
-    private BsqFormatter() {
+    public BsqFormatter() {
         super();
 
         btcCoinFormat = super.coinFormat;
