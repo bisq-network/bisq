@@ -25,10 +25,11 @@ import bisq.core.locale.Res;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class InteracETransferValidatorTest {
+public class RegexValidatorTest {
 
     @Before
     public void setup() {
@@ -41,26 +42,30 @@ public class InteracETransferValidatorTest {
 
     @Test
     public void validate() throws Exception {
-        InteracETransferValidator validator = new InteracETransferValidator(
-                new EmailValidator(),
-                new InteracETransferQuestionValidator(new LengthValidator(), new RegexValidator()),
-                new InteracETransferAnswerValidator(new LengthValidator(), new RegexValidator())
-        );
+        RegexValidator validator = new RegexValidator();
 
-        assertTrue(validator.validate("name@domain.tld").isValid);
-        assertTrue(validator.validate("n1.n2@c.dd").isValid);
-        assertTrue(validator.validate("+1 236 123-4567").isValid);
-        assertTrue(validator.validate("15061234567").isValid);
-        assertTrue(validator.validate("1 289 784 2134").isValid);
-        assertTrue(validator.validate("+1-514-654-7412").isValid);
+        assertTrue(validator.validate("").isValid);
+        assertTrue(validator.validate(null).isValid);
+        assertTrue(validator.validate("123456789").isValid);
 
-        assertFalse(validator.validate("abc@.de").isValid); // Domain name missing
-        assertFalse(validator.validate("abc@d.e").isValid); // TLD too short
-        assertFalse(validator.validate("2361234567").isValid);  // Prefix for North America missing (often required for local calls as well)
-        assertFalse(validator.validate("+150612345678").isValid); // Too long
-        assertFalse(validator.validate("1289784213").isValid);  // Too short
-        assertFalse(validator.validate("+1 555 123-4567").isValid); // Non-Canadian area code
-        assertFalse(validator.validate("+1 236 1234-567").isValid); // Wrong grouping
+        validator.setPattern("[a-z]*");
+
+        assertTrue(validator.validate("abcdefghijklmnopqrstuvwxyz").isValid);
+        assertTrue(validator.validate("").isValid);
+        assertTrue(validator.validate(null).isValid);
+
+        assertFalse(validator.validate("123").isValid); // invalid
+        assertFalse(validator.validate("ABC").isValid); // invalid
+
+        validator.setPattern("[a-z]+");
+
+        assertTrue(validator.validate("abcdefghijklmnopqrstuvwxyz").isValid);
+
+        assertFalse(validator.validate("123").isValid); // invalid
+        assertFalse(validator.validate("ABC").isValid); // invalid
+        assertFalse(validator.validate("").isValid); // invalid
+        assertFalse(validator.validate(null).isValid); // invalid
+
     }
 
 }
