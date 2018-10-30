@@ -20,6 +20,8 @@ package bisq.desktop.util.validation;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 
 /*
@@ -42,9 +44,16 @@ public final class InteracETransferValidator extends InputValidator {
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public InteracETransferValidator() {
-        emailValidator = new EmailValidator();
+    @Inject
+    public InteracETransferValidator(EmailValidator emailValidator, InteracETransferQuestionValidator questionValidator, InteracETransferAnswerValidator answerValidator) {
+        this.emailValidator = emailValidator;
+        this.questionValidator = questionValidator;
+        this.answerValidator = answerValidator;
     }
+
+    public final InputValidator answerValidator;
+
+    public final InputValidator questionValidator;
 
     @Override
     public ValidationResult validate(String input) {
