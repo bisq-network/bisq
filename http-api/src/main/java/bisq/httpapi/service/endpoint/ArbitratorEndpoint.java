@@ -1,11 +1,12 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.common.UserThread;
+
 import bisq.httpapi.facade.ArbitratorFacade;
 import bisq.httpapi.model.Arbitrator;
 import bisq.httpapi.model.ArbitratorList;
 import bisq.httpapi.model.ArbitratorRegistration;
-
-import bisq.common.UserThread;
+import bisq.httpapi.service.ExperimentalFeature;
 
 import javax.inject.Inject;
 
@@ -37,23 +38,26 @@ import org.hibernate.validator.constraints.NotBlank;
 public class ArbitratorEndpoint {
 
     private final ArbitratorFacade arbitratorFacade;
+    private final ExperimentalFeature experimentalFeature;
 
     @Inject
-    public ArbitratorEndpoint(ArbitratorFacade arbitratorFacade) {
+    public ArbitratorEndpoint(ArbitratorFacade arbitratorFacade, ExperimentalFeature experimentalFeature) {
         this.arbitratorFacade = arbitratorFacade;
+        this.experimentalFeature = experimentalFeature;
     }
 
-    @ApiOperation("Unregister yourself as arbitrator")
+    @ApiOperation(value = "Unregister yourself as arbitrator", notes = ExperimentalFeature.NOTE)
     @DELETE
     public void unregister() {
         throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
     }
 
-    @ApiOperation("Register yourself as arbitrator")
+    @ApiOperation(value = "Register yourself as arbitrator", notes = ExperimentalFeature.NOTE)
     @POST
     public void register(@Suspended final AsyncResponse asyncResponse, @Valid ArbitratorRegistration data) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 arbitratorFacade.registerArbitrator(data.languageCodes);
                 asyncResponse.resume(Response.noContent().build());
             } catch (Throwable e) {
@@ -62,11 +66,12 @@ public class ArbitratorEndpoint {
         });
     }
 
-    @ApiOperation(value = "Find available arbitrators", response = ArbitratorList.class)
+    @ApiOperation(value = "Find available arbitrators", response = ArbitratorList.class, notes = ExperimentalFeature.NOTE)
     @GET
     public void find(@Suspended final AsyncResponse asyncResponse, @QueryParam("acceptedOnly") boolean acceptedOnly) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.getArbitrators(acceptedOnly));
                 asyncResponse.resume(arbitratorList);
             } catch (Throwable e) {
@@ -75,12 +80,13 @@ public class ArbitratorEndpoint {
         });
     }
 
-    @ApiOperation(value = "Select arbitrator", response = ArbitratorList.class)
+    @ApiOperation(value = "Select arbitrator", response = ArbitratorList.class, notes = ExperimentalFeature.NOTE)
     @POST
     @Path("/{address}/select")
     public void selectArbitrator(@Suspended final AsyncResponse asyncResponse, @NotBlank @PathParam("address") String address) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.selectArbitrator(address));
                 asyncResponse.resume(arbitratorList);
             } catch (Throwable e) {
@@ -89,12 +95,13 @@ public class ArbitratorEndpoint {
         });
     }
 
-    @ApiOperation(value = "Deselect arbitrator", response = ArbitratorList.class)
+    @ApiOperation(value = "Deselect arbitrator", response = ArbitratorList.class, notes = ExperimentalFeature.NOTE)
     @POST
     @Path("/{address}/deselect")
     public void deselectArbitrator(@Suspended final AsyncResponse asyncResponse, @NotBlank @PathParam("address") String address) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 final ArbitratorList arbitratorList = toRestModel(arbitratorFacade.deselectArbitrator(address));
                 asyncResponse.resume(arbitratorList);
             } catch (Throwable e) {

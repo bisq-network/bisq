@@ -5,6 +5,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.httpapi.model.CurrencyList;
 import bisq.httpapi.model.Market;
 import bisq.httpapi.model.MarketList;
+import bisq.httpapi.service.ExperimentalFeature;
 
 import javax.inject.Inject;
 
@@ -28,13 +29,17 @@ public class MarketEndpoint {
     private static MarketList marketList;
     private static CurrencyList currencyList;
 
+    private final ExperimentalFeature experimentalFeature;
+
     @Inject
-    public MarketEndpoint() {
+    public MarketEndpoint(ExperimentalFeature experimentalFeature) {
+        this.experimentalFeature = experimentalFeature;
     }
 
-    @ApiOperation("List markets")
+    @ApiOperation(value = "List markets", notes = ExperimentalFeature.NOTE)
     @GET
     public MarketList find() {
+        experimentalFeature.assertEnabled();
         return getMarketList();
     }
 

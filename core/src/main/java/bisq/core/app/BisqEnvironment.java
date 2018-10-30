@@ -197,6 +197,8 @@ public class BisqEnvironment extends StandardEnvironment {
             referralId, daoActivated;
     @Getter
     protected final String httpApiHost, httpApiPort;
+    @Getter
+    protected boolean httpApiExperimentalFeaturesEnabled;
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -239,6 +241,7 @@ public class BisqEnvironment extends StandardEnvironment {
         referralId = commandLineProperties.containsProperty(AppOptionKeys.REFERRAL_ID) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.REFERRAL_ID) :
                 "";
+        httpApiExperimentalFeaturesEnabled = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_EXPERIMENTAL_FEATURES_ENABLED);
         httpApiHost = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_HOST) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_HOST) :
                 "127.0.0.1";

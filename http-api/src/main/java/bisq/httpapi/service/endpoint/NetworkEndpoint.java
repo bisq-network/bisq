@@ -1,10 +1,11 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.common.UserThread;
+
 import bisq.httpapi.facade.NetworkFacade;
 import bisq.httpapi.model.BitcoinNetworkStatus;
 import bisq.httpapi.model.P2PNetworkStatus;
-
-import bisq.common.UserThread;
+import bisq.httpapi.service.ExperimentalFeature;
 
 import javax.inject.Inject;
 
@@ -25,19 +26,22 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class NetworkEndpoint {
 
+    private final ExperimentalFeature experimentalFeature;
     private final NetworkFacade networkFacade;
 
     @Inject
-    public NetworkEndpoint(NetworkFacade networkFacade) {
+    public NetworkEndpoint(ExperimentalFeature experimentalFeature, NetworkFacade networkFacade) {
+        this.experimentalFeature = experimentalFeature;
         this.networkFacade = networkFacade;
     }
 
-    @ApiOperation(value = "Get Bitcoin network status", response = BitcoinNetworkStatus.class)
+    @ApiOperation(value = "Get Bitcoin network status", response = BitcoinNetworkStatus.class, notes = ExperimentalFeature.NOTE)
     @GET
     @Path("/bitcoin/status")
     public void getBitcoinNetworkStatus(@Suspended final AsyncResponse asyncResponse) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 asyncResponse.resume(networkFacade.getBitcoinNetworkStatus());
             } catch (Throwable e) {
                 asyncResponse.resume(e);
@@ -45,12 +49,13 @@ public class NetworkEndpoint {
         });
     }
 
-    @ApiOperation(value = "Get P2P network status", response = P2PNetworkStatus.class)
+    @ApiOperation(value = "Get P2P network status", response = P2PNetworkStatus.class, notes = ExperimentalFeature.NOTE)
     @GET
     @Path("/p2p/status")
     public void getP2PNetworkStatus(@Suspended final AsyncResponse asyncResponse) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 asyncResponse.resume(networkFacade.getP2PNetworkStatus());
             } catch (Throwable e) {
                 asyncResponse.resume(e);

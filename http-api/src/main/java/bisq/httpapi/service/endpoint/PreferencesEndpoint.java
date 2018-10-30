@@ -1,10 +1,11 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.common.UserThread;
+
 import bisq.httpapi.facade.PreferencesFacade;
 import bisq.httpapi.model.Preferences;
 import bisq.httpapi.model.PreferencesAvailableValues;
-
-import bisq.common.UserThread;
+import bisq.httpapi.service.ExperimentalFeature;
 
 import javax.inject.Inject;
 
@@ -26,18 +27,21 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class PreferencesEndpoint {
 
+    private final ExperimentalFeature experimentalFeature;
     private final PreferencesFacade preferencesFacade;
 
     @Inject
-    public PreferencesEndpoint(PreferencesFacade preferencesFacade) {
+    public PreferencesEndpoint(ExperimentalFeature experimentalFeature, PreferencesFacade preferencesFacade) {
+        this.experimentalFeature = experimentalFeature;
         this.preferencesFacade = preferencesFacade;
     }
 
-    @ApiOperation(value = "Get preferences", response = Preferences.class)
+    @ApiOperation(value = "Get preferences", response = Preferences.class, notes = ExperimentalFeature.NOTE)
     @GET
     public void getPreferences(@Suspended final AsyncResponse asyncResponse) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 asyncResponse.resume(preferencesFacade.getPreferences());
             } catch (Throwable e) {
                 asyncResponse.resume(e);
@@ -45,11 +49,12 @@ public class PreferencesEndpoint {
         });
     }
 
-    @ApiOperation(value = "Set preferences", notes = "Supports partial update", response = Preferences.class)
+    @ApiOperation(value = "Set preferences", notes = ExperimentalFeature.NOTE + "\nSupports partial update", response = Preferences.class)
     @PUT
     public void setPreferences(@Suspended final AsyncResponse asyncResponse, @Valid Preferences preferences) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 asyncResponse.resume(preferencesFacade.setPreferences(preferences));
             } catch (Throwable e) {
                 asyncResponse.resume(e);
@@ -57,12 +62,13 @@ public class PreferencesEndpoint {
         });
     }
 
-    @ApiOperation(value = "Get available preferences values", response = PreferencesAvailableValues.class)
+    @ApiOperation(value = "Get available preferences values", response = PreferencesAvailableValues.class, notes = ExperimentalFeature.NOTE)
     @GET
     @Path("/available-values")
     public void getPreferencesAvailableValues(@Suspended final AsyncResponse asyncResponse) {
         UserThread.execute(() -> {
             try {
+                experimentalFeature.assertEnabled();
                 asyncResponse.resume(preferencesFacade.getPreferencesAvailableValues());
             } catch (Throwable e) {
                 asyncResponse.resume(e);

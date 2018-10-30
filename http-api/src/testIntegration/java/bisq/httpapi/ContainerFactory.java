@@ -22,8 +22,9 @@ public final class ContainerFactory {
     public static final String M2_VOLUME_NAME = "m2";
     public static final String M2_VOLUME_CONTAINER_PATH = "/root/.m2";
     public static final String ENV_NODE_PORT_KEY = "NODE_PORT";
-    public static final String ENV_BISQ_API_HOST_KEY = "BISQ_API_HOST";
-    public static final String ENV_BISQ_API_HOST_VALUE = "0.0.0.0";
+    public static final String ENV_ENABLE_HTTP_API_EXPERIMENTAL_FEATURES_KEY = "ENABLE_HTTP_API_EXPERIMENTAL_FEATURES";
+    public static final String ENV_HTTP_API_HOST_KEY = "HTTP_API_HOST";
+    public static final String ENV_HTTP_API_HOST_VALUE = "0.0.0.0";
     public static final String ENV_USE_DEV_PRIVILEGE_KEYS_KEY = "USE_DEV_PRIVILEGE_KEYS";
     public static final String ENV_USE_DEV_PRIVILEGE_KEYS_VALUE = "true";
     public static final String ENV_USE_LOCALHOST_FOR_P2P_KEY = "USE_LOCALHOST_FOR_P2P";
@@ -39,14 +40,15 @@ public final class ContainerFactory {
     public static final String ENV_LOG_LEVEL_KEY = "LOG_LEVEL";
     public static final String ENV_LOG_LEVEL_VALUE = "debug";
 
-    public static ContainerBuilder.ContainerOptionsBuilder createApiContainerBuilder(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
+    public static ContainerBuilder.ContainerOptionsBuilder createApiContainerBuilder(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin, boolean enableExperimentalFeatures) {
         final ContainerBuilder.ContainerOptionsBuilder containerOptionsBuilder = Container.withContainerName(CONTAINER_NAME_PREFIX + nameSuffix)
                 .fromImage(API_IMAGE)
                 .withVolume(GRADLE_VOLUME_NAME, GRADLE_VOLUME_CONTAINER_PATH)
                 .withVolume(M2_VOLUME_NAME, M2_VOLUME_CONTAINER_PATH)
                 .withPortBinding(portBinding)
                 .withEnvironment(ENV_NODE_PORT_KEY, nodePort)
-                .withEnvironment(ENV_BISQ_API_HOST_KEY, ENV_BISQ_API_HOST_VALUE)
+                .withEnvironment(ENV_HTTP_API_HOST_KEY, ENV_HTTP_API_HOST_VALUE)
+                .withEnvironment(ENV_ENABLE_HTTP_API_EXPERIMENTAL_FEATURES_KEY, enableExperimentalFeatures)
                 .withEnvironment(ENV_USE_DEV_PRIVILEGE_KEYS_KEY, ENV_USE_DEV_PRIVILEGE_KEYS_VALUE)
                 .withAwaitStrategy(getAwaitStrategy());
         if (linkToSeedNode) {
@@ -56,6 +58,10 @@ public final class ContainerFactory {
             containerOptionsBuilder.withLink(BITCOIN_NODE_CONTAINER_NAME, BITCOIN_NODE_HOST_NAME);
         }
         return withRegtestEnv(containerOptionsBuilder);
+    }
+
+    public static ContainerBuilder.ContainerOptionsBuilder createApiContainerBuilder(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
+        return createApiContainerBuilder(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin, true);
     }
 
     @NotNull
@@ -68,8 +74,14 @@ public final class ContainerFactory {
         return awaitStrategy;
     }
 
+    public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin, boolean enableExperimentalFeatures) {
+        final Container container = createApiContainerBuilder(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin, enableExperimentalFeatures).build();
+        container.getCubeContainer().setKillContainer(true);
+        return container;
+    }
+
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
-        return createApiContainerBuilder(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin).build();
+        return createApiContainer(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin, true);
     }
 
     public static ContainerBuilder.ContainerOptionsBuilder withRegtestEnv(ContainerBuilder.ContainerOptionsBuilder builder) {
