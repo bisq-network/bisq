@@ -128,13 +128,24 @@ public class FormBuilder {
         return addTitledGroupBg(gridPane, rowIndex, rowSpan, title, 0);
     }
 
+    public static TitledGroupBg addTitledGroupBg(GridPane gridPane, int rowIndex, int columnIndex, int rowSpan, String title) {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, rowSpan, title, 0);
+        GridPane.setColumnIndex(titledGroupBg, columnIndex);
+        return titledGroupBg;
+    }
+
+    public static TitledGroupBg addTitledGroupBg(GridPane gridPane, int rowIndex, int columnIndex, int rowSpan, String title, double top) {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, rowSpan, title, top);
+        GridPane.setColumnIndex(titledGroupBg, columnIndex);
+        return titledGroupBg;
+    }
+
     public static TitledGroupBg addTitledGroupBg(GridPane gridPane, int rowIndex, int rowSpan, String title, double top) {
         TitledGroupBg titledGroupBg = new TitledGroupBg();
         titledGroupBg.setText(title);
         titledGroupBg.prefWidthProperty().bind(gridPane.widthProperty());
         GridPane.setRowIndex(titledGroupBg, rowIndex);
         GridPane.setRowSpan(titledGroupBg, rowSpan);
-        GridPane.setColumnSpan(titledGroupBg, 2);
         GridPane.setMargin(titledGroupBg, new Insets(top, -10, -10, -10));
         gridPane.getChildren().add(titledGroupBg);
         return titledGroupBg;
@@ -212,6 +223,30 @@ public class FormBuilder {
     // Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, String title) {
+        return addTopLabelTextField(gridPane, rowIndex, title, "", -15);
+    }
+
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, int columnIndex, String title) {
+        Tuple3<Label, TextField, VBox> tuple = addTopLabelTextField(gridPane, rowIndex, title, "", -15);
+        GridPane.setColumnIndex(tuple.third, columnIndex);
+        return tuple;
+    }
+
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        return addTopLabelTextField(gridPane, rowIndex, title, "", top - 15);
+    }
+
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, int columnIndex, String title, double top) {
+        Tuple3<Label, TextField, VBox> tuple = addTopLabelTextField(gridPane, rowIndex, title, "", top - 15);
+        GridPane.setColumnIndex(tuple.third, columnIndex);
+        return tuple;
+    }
+
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        return addTopLabelTextField(gridPane, rowIndex, title, value, top - 15);
+    }
+
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title) {
         return addTopLabelTextField(gridPane, rowIndex, title, "", 0);
     }
@@ -227,7 +262,10 @@ public class FormBuilder {
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
         TextField textField = new JFXTextField(value);
         textField.setEditable(false);
-        textField.setMouseTransparent(true);
+
+        // MK: basically we want that text is copyable, not sure if it breaks anything if mouseTransparent is not set
+        //textField.setMouseTransparent(true);
+
         textField.setFocusTraversable(false);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
@@ -300,10 +338,24 @@ public class FormBuilder {
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
-        GridPane.setColumnIndex(hyperlinkWithIcon, 1);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
         gridPane.getChildren().add(hyperlinkWithIcon);
         return new Tuple2<>(label, hyperlinkWithIcon);
+    }
+
+
+    public static Tuple3<Label, HyperlinkWithIcon, VBox> addTopLabelHyperlinkWithIcon(GridPane gridPane,
+                                                                                      int rowIndex,
+                                                                                      String title,
+                                                                                      String value,
+                                                                                      String url,
+                                                                                      double top) {
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(value, AwesomeIcon.EXTERNAL_LINK);
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
+        hyperlinkWithIcon.getStyleClass().add("hyperlink-with-icon");
+        GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
+        Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hyperlinkWithIcon, top - 15);
+        return new Tuple3<>(topLabelWithVBox.first, hyperlinkWithIcon, topLabelWithVBox.second);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1018,7 +1070,6 @@ public class FormBuilder {
 
         BsqAddressTextField addressTextField = new BsqAddressTextField();
         GridPane.setRowIndex(addressTextField, rowIndex);
-        GridPane.setColumnIndex(addressTextField, 1);
         GridPane.setMargin(addressTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(addressTextField);
 

@@ -40,9 +40,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
 // We use here ChainHeightListener because we are interested in period changes not in the result of a completed
 // block. The event from the ChainHeightListener is sent before parsing starts.
@@ -73,16 +72,13 @@ public class ProposalDashboardView extends ActivatableView<GridPane, Void> imple
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
-        currentBlockHeightTextField = addTopLabelTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
-                "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currentPhaseTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase"), "").second;
-        proposalTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.proposal"), "").second;
-        blindVoteTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.blindVote"), "").second;
-        voteRevealTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal"), "").second;
-        voteResultTextField = FormBuilder.addTopLabelTextField(root, ++gridRow, Res.get("dao.cycle.voteResult"), "").second;
-
-        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.cycle.info.headline"), Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, Res.get("dao.cycle.info.details"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        currentBlockHeightTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currentPhaseTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase")).second;
+        proposalTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.proposal")).second;
+        blindVoteTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.blindVote")).second;
+        voteRevealTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal")).second;
+        voteResultTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteResult")).second;
     }
 
     @Override

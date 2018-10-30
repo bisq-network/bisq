@@ -342,9 +342,32 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 3 3 0 0;
 }
 
+/* MK: add grey bg, hide line, add padding, use same style for hyperlink-with-icon */
+/*
 .jfx-text-field:readonly {
     -fx-background-color: transparent;
 }
+*/
+
+.jfx-text-field:readonly {
+    -fx-background-color: -bs-rd-grey-medium-light;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field:readonly > .input-line {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-field:readonly > .input-focused-line {
+    -fx-background-color: transparent;
+}
+
+.hyperlink-with-icon {
+    -fx-background-color: -bs-rd-grey-medium-light;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+/* MK end */
 
 #info-field {
     -fx-prompt-text-fill: -bs-rd-black;
@@ -1345,8 +1368,25 @@ textfield */
 }
 
 /* TitledGroupBg */
+
+/* MK: change font size of group header to 1.3em*/
+/*
 .titled-group-bg-label {
     -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-black;
+    -fx-background-color: transparent;
+}
+.titled-group-bg-label {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-black;
+    -fx-background-color: transparent;
+}
+*/
+
+.titled-group-bg-label {
+    -fx-font-size: 1.3em;
     -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
@@ -1354,10 +1394,12 @@ textfield */
 
 .titled-group-bg-label-active {
     -fx-font-weight: normal;
-    -fx-font-size: 1.077em;
+    -fx-font-size: 1.3em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
+
+/* MK end */
 
 .titled-group-bg, .titled-group-bg-active {
     -fx-body-color: -bs-rd-grey-background;
