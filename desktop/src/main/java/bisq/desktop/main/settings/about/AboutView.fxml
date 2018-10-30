@@ -31,7 +31,6 @@
     </padding>
 
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" halignment="RIGHT"/>
         <ColumnConstraints hgrow="ALWAYS"/>
     </columnConstraints>
 </GridPane>

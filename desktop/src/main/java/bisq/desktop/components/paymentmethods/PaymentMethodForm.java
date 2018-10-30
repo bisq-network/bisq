@@ -309,7 +309,7 @@ public abstract class PaymentMethodForm {
     }
 
     public int getRowSpan() {
-        return gridRow - gridRowFrom + 1;
+        return gridRow - gridRowFrom + 2;
     }
 
     public PaymentAccount getPaymentAccount() {

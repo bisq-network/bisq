@@ -722,6 +722,7 @@ message PaymentAccountPayload {
         WeChatPayAccountPayload we_chat_pay_account_payload = 22;
         MoneyGramAccountPayload money_gram_account_payload = 23;
         HalCashAccountPayload hal_cash_account_payload = 24;
+        PromptPayAccountPayload prompt_pay_account_payload = 25;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -894,6 +895,10 @@ message F2FAccountPayload {
     string contact = 1;
     string city = 2;
     string extra_info = 3;
+}
+
+message PromptPayAccountPayload {
+    string prompt_pay_id = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

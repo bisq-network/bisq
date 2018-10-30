@@ -241,6 +241,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setMinHeight(40);
         createOfferButton.setPadding(new Insets(0, 20, 0, 20));
         createOfferButton.setGraphicTextGap(10);
+        GridPane.setColumnIndex(createOfferButton, 1);
         GridPane.setMargin(createOfferButton, new Insets(15, 0, 0, 0));
         GridPane.setHalignment(createOfferButton, HPos.RIGHT);
         GridPane.setVgrow(createOfferButton, Priority.NEVER);

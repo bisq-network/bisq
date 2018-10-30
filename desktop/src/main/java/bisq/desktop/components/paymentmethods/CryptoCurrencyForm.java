@@ -38,7 +38,6 @@ import bisq.common.util.Tuple3;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -52,6 +51,7 @@ import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class CryptoCurrencyForm extends PaymentMethodForm {
     private final CryptoCurrencyAccount cryptoCurrencyAccount;
@@ -59,8 +59,6 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     private final AssetService assetService;
 
     private InputTextField addressInputTextField;
-
-    private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane,
                                       int gridRow,
@@ -158,6 +156,12 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         currencyComboBox = FormBuilder.<TradeCurrency>addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
+        currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
+
+        currencyComboBox.getEditor().focusedProperty().addListener(observable -> {
+            currencyComboBox.setPromptText("");
+        });
+
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService)));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
@@ -175,6 +179,10 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             }
         });
         currencyComboBox.setOnAction(e -> {
+
+            addressInputTextField.resetValidation();
+            addressInputTextField.validate();
+
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
             updateFromInputs();
         });

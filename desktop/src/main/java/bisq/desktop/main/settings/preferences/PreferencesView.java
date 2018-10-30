@@ -68,6 +68,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
@@ -538,13 +539,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
+        resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resetDontShowAgainButton, Priority.ALWAYS);
         GridPane.setColumnIndex(resetDontShowAgainButton, 0);
     }
 
     private void initializeDaoOptions() {
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        resyncDaoButton = addTopLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
-                Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        resyncDaoButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoButton, Priority.ALWAYS);
 
         isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
         rpcUserTextField = addInputTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcUser"));

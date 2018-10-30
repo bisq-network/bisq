@@ -19,22 +19,23 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
-import javafx.scene.control.ComboBox;
+import com.jfoenix.controls.JFXComboBox;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-public class SearchComboBox<T> extends ComboBox<T> {
+public class SearchComboBox<T> extends JFXComboBox<T> {
     @SuppressWarnings("CanBeFinal")
     private FilteredList<T> filteredList;
 
     public SearchComboBox() {
-        this(FXCollections.<T>observableArrayList());
+        this(FXCollections.observableArrayList());
     }
 
-    public SearchComboBox(final ObservableList<T> items) {
+    private SearchComboBox(final ObservableList<T> items) {
         super(new FilteredList<>(items));
+
         filteredList = new FilteredList<>(items);
         setEditable(true);
 
@@ -43,8 +44,7 @@ public class SearchComboBox<T> extends ComboBox<T> {
             setItems(filteredList);
         });
         getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!filteredList.stream().filter(item -> getConverter().toString(item).equals(newValue)).
-                    findAny().isPresent()) {
+            if (filteredList.stream().noneMatch(item -> getConverter().toString(item).equals(newValue))) {
                 UserThread.execute(() -> {
                     filteredList.setPredicate(item -> newValue.isEmpty() ||
                             getConverter().toString(item).toLowerCase().contains(newValue.toLowerCase()));

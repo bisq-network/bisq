@@ -150,6 +150,8 @@ bg color of non edit textFields: fafafa
     -fx-focus-color: -fx-accent;
     -fx-selection-bar: derive(-fx-accent, 50%);
 
+    -fx-selection-bar-non-focused: -fx-selection-bar;
+
     -fx-font-size: 13;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -262,7 +264,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-rd-white;
 }
 
-.compact-button {
+.compact-button, .table-cell .jfx-button {
     -fx-padding: 0 10 0 10;
 }
 
@@ -301,6 +303,37 @@ bg color of non edit textFields: fafafa
     -fx-background-color: null;
     -fx-border-color: -jfx-unfocus-color;
     -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background: -fx-selection-bar;
+    -fx-background-color: derive(-fx-accent, 60%);
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+/* Selected when control is not focused */
+.list-cell:filled:selected,
+.tree-cell:filled:selected,
+.table-row-cell:filled:selected,
+.tree-table-row-cell:filled:selected,
+.table-row-cell:filled > .table-cell:selected,
+.tree-table-row-cell:filled > .tree-table-cell:selected {
+    -fx-background-insets: 0;
 }
 
 .jfx-text-field {
