@@ -75,7 +75,9 @@ public final class ContainerFactory {
     }
 
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin, boolean enableExperimentalFeatures) {
-        return createApiContainerBuilder(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin, enableExperimentalFeatures).build();
+        final Container container = createApiContainerBuilder(nameSuffix, portBinding, nodePort, linkToSeedNode, linkToBitcoin, enableExperimentalFeatures).build();
+        container.getCubeContainer().setKillContainer(true);
+        return container;
     }
 
     public static Container createApiContainer(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin) {
