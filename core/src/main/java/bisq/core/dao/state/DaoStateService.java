@@ -36,6 +36,7 @@ import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.governance.ParamChange;
 import bisq.core.dao.state.period.Cycle;
+import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
@@ -65,6 +66,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class DaoStateService implements DaoSetupService {
     private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
+    private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
 
 
@@ -73,9 +75,10 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo) {
+    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
         this.daoState = daoState;
         this.genesisTxInfo = genesisTxInfo;
+        this.bsqFormatter = bsqFormatter;
     }
 
 
@@ -759,7 +762,7 @@ public class DaoStateService implements DaoSetupService {
     // Param
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setNewParam(int blockHeight, Param param, long paramValue) {
+    public void setNewParam(int blockHeight, Param param, String paramValue) {
         List<ParamChange> paramChangeList = daoState.getParamChangeList();
         getStartHeightOfNextCycle(blockHeight)
                 .ifPresent(heightOfNewCycle -> {
@@ -770,7 +773,22 @@ public class DaoStateService implements DaoSetupService {
                 });
     }
 
-    public long getParamValue(Param param, int blockHeight) {
+    public Coin getParamValueAsCoin(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return bsqFormatter.parseParamValueToCoin(param, paramValue);
+    }
+
+    public double getParamValueAsPercentDouble(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return bsqFormatter.parsePercentStringToDouble(paramValue);
+    }
+
+    public int getParamValueAsBlock(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return Integer.parseInt(paramValue);
+    }
+
+    public String getParamValue(Param param, int blockHeight) {
         List<ParamChange> paramChangeList = new ArrayList<>(daoState.getParamChangeList());
         if (!paramChangeList.isEmpty()) {
             // List is sorted by height, we start from latest entries to find most recent entry.

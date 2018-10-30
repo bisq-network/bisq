@@ -40,12 +40,12 @@ import javax.annotation.concurrent.Immutable;
 @Value
 public final class ChangeParamProposal extends Proposal {
     private final Param param;
-    private final long paramValue;
+    private final String paramValue;
 
     ChangeParamProposal(String name,
                         String link,
                         Param param,
-                        long paramValue) {
+                        String paramValue) {
         this(name,
                 link,
                 param,
@@ -63,7 +63,7 @@ public final class ChangeParamProposal extends Proposal {
     private ChangeParamProposal(String name,
                                 String link,
                                 Param param,
-                                long paramValue,
+                                String paramValue,
                                 byte version,
                                 long creationDate,
                                 String txId) {
@@ -80,7 +80,7 @@ public final class ChangeParamProposal extends Proposal {
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
         final PB.ChangeParamProposal.Builder builder = PB.ChangeParamProposal.newBuilder()
-                .setParam(param.getParamName())
+                .setParam(param.name())
                 .setParamValue(paramValue);
         return super.getProposalBuilder().setChangeParamProposal(builder);
     }

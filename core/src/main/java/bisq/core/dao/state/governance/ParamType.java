@@ -15,10 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.param;
+package bisq.core.dao.state.governance;
 
-public class ChangeParamValidationException extends Exception {
-    public ChangeParamValidationException(String message) {
-        super(message);
-    }
+public enum ParamType {
+    UNDEFINED,
+    BSQ,
+    BTC,
+    PERCENT,
+    BLOCK,
+    ADDRESS
 }

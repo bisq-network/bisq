@@ -55,6 +55,7 @@ import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
+import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -443,9 +444,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // TODO breakup
         Set<EvaluatedProposal> evaluatedProposals = new HashSet<>();
         resultListByProposalMap.forEach((proposal, voteWithStakeList) -> {
-            long requiredQuorum = daoStateService.getParamValue(proposal.getQuorumParam(), chainHeight);
-            long requiredVoteThreshold = daoStateService.getParamValue(proposal.getThresholdParam(), chainHeight);
-
+            long requiredQuorum = daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight).value;
+            long requiredVoteThreshold = getRequiredVoteThreshold(chainHeight, proposal);
             //TODO add checks for param change that input for quorum param of <5000 is not allowed
             checkArgument(requiredVoteThreshold >= 5000,
                     "requiredVoteThreshold must be not be less then 50% otherwise we could have conflicting results.");
@@ -455,7 +455,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // Quorum is min. required BSQ stake to be considered valid
             long reachedQuorum = proposalVoteResult.getQuorum();
             log.info("proposalTxId: {}, required requiredQuorum: {}, requiredVoteThreshold: {}",
-                    proposal.getTxId(), requiredVoteThreshold, requiredQuorum);
+                    proposal.getTxId(), requiredVoteThreshold / 100D, requiredQuorum);
             if (reachedQuorum >= requiredQuorum) {
                 // We multiply by 10000 as we use a long for reachedThreshold and we want precision of 2 with
                 // a % value. E.g. 50% is 5000.
@@ -491,8 +491,9 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         proposalListPresentation.getActiveOrMyUnconfirmedProposals().stream()
                 .filter(proposal -> !evaluatedProposalsByTxIdMap.containsKey(proposal.getTxId()))
                 .forEach(proposal -> {
-                    long requiredQuorum = daoStateService.getParamValue(proposal.getQuorumParam(), chainHeight);
-                    long requiredVoteThreshold = daoStateService.getParamValue(proposal.getThresholdParam(), chainHeight);
+                    long requiredQuorum = daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight).value;
+                    long requiredVoteThreshold = getRequiredVoteThreshold(chainHeight, proposal);
+
                     ProposalVoteResult proposalVoteResult = new ProposalVoteResult(proposal, 0,
                             0, 0, 0, decryptedBallotsWithMeritsSet.size());
                     EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false,
@@ -503,6 +504,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     log.info("Proposal ignored by all voters: " + evaluatedProposal);
                 });
         return evaluatedProposals;
+    }
+
+    // We use long for calculation to avoid issues with rounding. So we multiply the % value as double (e.g. 0.5 = 50%)
+    // by 100 to get the percentage value and again by 100 to get 2 decimal -> 5000 = 50.00%
+    private long getRequiredVoteThreshold(int chainHeight, Proposal proposal) {
+        double paramValueAsPercentDouble = daoStateService.getParamValueAsPercentDouble(proposal.getThresholdParam(), chainHeight);
+        return MathUtils.roundDoubleToLong(paramValueAsPercentDouble * 10000);
     }
 
     private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {

@@ -150,8 +150,8 @@ public class CycleService implements DaoStateListener, DaoSetupService {
                     DaoPhase.Phase phase = daoPhase.getPhase();
                     try {
                         Param param = Param.valueOf("PHASE_" + phase.name());
-                        long value = daoStateService.getParamValue(param, blockHeight);
-                        return new DaoPhase(phase, (int) value);
+                        int value = daoStateService.getParamValueAsBlock(param, blockHeight);
+                        return new DaoPhase(phase, value);
                     } catch (Throwable ignore) {
                         return null;
                     }
@@ -173,7 +173,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
     private Optional<DaoPhase> getPhaseWithDefaultDuration(DaoPhase.Phase phase) {
         return Arrays.stream(Param.values())
                 .filter(param -> isParamMatchingPhase(param, phase))
-                .map(param -> new DaoPhase(phase, (int) param.getDefaultValue()))
+                .map(param -> new DaoPhase(phase, Integer.parseInt(param.getDefaultValue())))
                 .findAny(); // We will always have a default value defined
     }
 
