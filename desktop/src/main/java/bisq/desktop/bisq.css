@@ -113,6 +113,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-font-balance: #4F4F4F;
     -bs-rd-font-balance-label: #8E8E8E;
     -bs-rd-font-dark-grey: #3c3c3c;
+    -bs-rd-font-confirmation-label: -bs-rd-grey-background-darker-2;
     -bs-rd-nav-border: #535353;
     -bs-rd-tab-border: #E2E0E0;
     -bs-rd-nav-background-dark: #0E0E0E;
@@ -223,6 +224,24 @@ bg color of non edit textFields: fafafa
 
 .zero-decimals {
     -fx-text-fill: -bs-light-grey;
+}
+
+.confirmation-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-confirmation-label;
+}
+
+.confirmation-value {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-text-fill: -bs-rd-font-dark-grey;
+}
+
+.confirmation-text-field-as-label:readonly {
+    -fx-background-color: transparent !important;
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-padding: 0 !important;
 }
 
 /* Other UI Elements */

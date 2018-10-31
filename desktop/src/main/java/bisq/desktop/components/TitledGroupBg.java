@@ -41,7 +41,7 @@ public class TitledGroupBg extends Pane {
 
         label = new AutoTooltipLabel();
         label.textProperty().bind(text);
-        label.setLayoutX(8);
+        label.setLayoutX(4);
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));
         setActive();

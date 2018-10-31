@@ -32,13 +32,14 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import com.google.inject.Inject;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 
 import javafx.geometry.Insets;
 
@@ -165,7 +166,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     private void addConfirmEditGroup() {
 
         int tmpGridRow = 4;
-        final Tuple3<Button, BusyAnimation, Label> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
+        final Tuple4<Button, BusyAnimation, Label, HBox> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
 
         confirmButton = editOfferTuple.first;
         confirmButton.setMinHeight(40);

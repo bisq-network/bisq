@@ -36,7 +36,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
 import bisq.core.locale.Res;
 
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 
@@ -47,6 +47,7 @@ import com.jfoenix.validation.RequiredFieldValidator;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 
 import javafx.beans.value.ChangeListener;
 
@@ -98,7 +99,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             if (oldValue != newValue) validatePasswords();
         };
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", 10);
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabel(root, ++gridRow, 0, "", 10);
         pwButton = (AutoTooltipButton) tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;
