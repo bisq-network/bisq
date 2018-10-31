@@ -19,8 +19,8 @@ package bisq.core.dao.bonding.bond;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.state.BsqStateListener;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxType;
@@ -39,13 +39,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondedReputationService implements PersistedDataHost, BsqStateListener {
+public class BondedReputationService implements PersistedDataHost, DaoStateListener {
 
     public interface BondedReputationListChangeListener {
         void onListChanged(List<BondedReputation> list);
     }
 
-    private final BsqStateService bsqStateService;
+    private final DaoStateService daoStateService;
     private final Storage<BondedReputationList> storage;
     private final BondedReputationList BondedReputationList = new BondedReputationList();
 
@@ -58,11 +58,11 @@ public class BondedReputationService implements PersistedDataHost, BsqStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedReputationService(Storage<BondedReputationList> storage, BsqStateService bsqStateService) {
+    public BondedReputationService(Storage<BondedReputationList> storage, DaoStateService daoStateService) {
         this.storage = storage;
-        this.bsqStateService = bsqStateService;
+        this.daoStateService = daoStateService;
 
-        bsqStateService.addBsqStateListener(this);
+        daoStateService.addBsqStateListener(this);
     }
 
 
@@ -83,7 +83,7 @@ public class BondedReputationService implements PersistedDataHost, BsqStateListe
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqStateListener
+    // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -94,11 +94,11 @@ public class BondedReputationService implements PersistedDataHost, BsqStateListe
     public void onParseTxsComplete(Block block) {
         BondedReputationList.getList().forEach(BondedReputation -> {
 
-            bsqStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
+            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
                 String lockupTxId = lockupTxOutput.getTxId();
                 // log.error("lockupTxId " + lockupTxId);
 
-                bsqStateService.getTx(lockupTxId)
+                daoStateService.getTx(lockupTxId)
                         .ifPresent(lockupTx -> {
                             byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
                             byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
@@ -109,10 +109,10 @@ public class BondedReputationService implements PersistedDataHost, BsqStateListe
                                     persist();
                                 }
 
-                                if (!bsqStateService.isUnspent(lockupTxOutput.getKey())) {
-                                    bsqStateService.getSpentInfo(lockupTxOutput)
+                                if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
+                                    daoStateService.getSpentInfo(lockupTxOutput)
                                             .map(SpentInfo::getTxId)
-                                            .map(bsqStateService::getTx)
+                                            .map(daoStateService::getTx)
                                             .map(Optional::get)
                                             // TODO(sq): What if the tx is burnt and not unlocked, need to check on that
                                             .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)

@@ -18,7 +18,7 @@
 package bisq.core.dao.bonding.bond;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
@@ -120,8 +120,8 @@ public final class BondedReputation implements PersistablePayload, NetworkPayloa
         return daoFacade.isUnlocking(this);
     }
 
-    public boolean isUnlocking(BsqStateService bsqStateService) {
-        return bsqStateService.isUnlocking(this);
+    public boolean isUnlocking(DaoStateService daoStateService) {
+        return daoStateService.isUnlocking(this);
     }
 
     // We use only the immutable data
