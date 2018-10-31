@@ -99,7 +99,7 @@ public class BondingViewUtils {
     public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
         BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
         Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-        int lockupTime = bondedRoleType.getUnlockTime();
+        int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
         lockupBond(bondedRole, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
     }
 
