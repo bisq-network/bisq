@@ -813,6 +813,7 @@ textfield */
 
 .table-view .table-cell {
     -fx-alignment: center;
+    -fx-padding: 3 0 2 0;
 }
 
 #addressColumn {
