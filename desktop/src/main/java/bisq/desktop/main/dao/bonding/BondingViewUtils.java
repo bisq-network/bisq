@@ -69,7 +69,7 @@ public class BondingViewUtils {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
             Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-            int lockupTime = bondedRoleType.getUnlockTime();
+            int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
             LockupType lockupType = LockupType.BONDED_ROLE;
             new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
                     .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
