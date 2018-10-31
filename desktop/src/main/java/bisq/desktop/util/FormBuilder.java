@@ -701,7 +701,7 @@ public class FormBuilder {
                                                                                             String title,
                                                                                             String radioButtonTitle1,
                                                                                             String radioButtonTitle2,
-                                                                                            int top) {
+                                                                                            double top) {
         RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
         radioButton1.setToggleGroup(toggleGroup);
         radioButton1.setPadding(new Insets(6, 0, 0, 0));
@@ -717,6 +717,38 @@ public class FormBuilder {
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, radioButton1, radioButton2);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + TextField + RadioButton + RadioButton
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple4<Label, TextField, RadioButton, RadioButton> addTopLabelTextFieldRadioButtonRadioButton(GridPane gridPane,
+                                                                                                                int rowIndex,
+                                                                                                                ToggleGroup toggleGroup,
+                                                                                                                String title,
+                                                                                                                String textFieldTitle,
+                                                                                                                String radioButtonTitle1,
+                                                                                                                String radioButtonTitle2,
+                                                                                                                double top) {
+        TextField textField = new JFXTextField();
+        textField.setPromptText(textFieldTitle);
+
+        RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
+        radioButton1.setToggleGroup(toggleGroup);
+        radioButton1.setPadding(new Insets(6, 0, 0, 0));
+
+        RadioButton radioButton2 = new AutoTooltipRadioButton(radioButtonTitle2);
+        radioButton2.setToggleGroup(toggleGroup);
+        radioButton2.setPadding(new Insets(6, 0, 0, 0));
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(textField, radioButton1, radioButton2);
+
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
+
+        return new Tuple4<>(labelVBoxTuple2.first, textField, radioButton1, radioButton2);
     }
 
 
