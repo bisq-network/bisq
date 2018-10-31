@@ -24,35 +24,53 @@ import lombok.Getter;
 // Data here must not be changed as it would break backward compatibility! In case we need to change we need to add a new
 // entry and maintain the old one. Once all the role holders of an old deprecated role have revoked the role might get removed.
 public enum BondedRoleType {
-    ARBITRATOR(10000000, 5, "https://github.com/bisq-network/roles/issues/13", true), // 100 000 BSQ, 30 days unlock time
-    DOMAIN_NAME_HOLDER(5000000, 20, "https://github.com/bisq-network/roles/issues/15", false), // 50 000 BSQ, 20 days unlock time //TODO no link yet
-    SEED_NODE_OPERATOR(2000000, 50, "https://github.com/bisq-network/roles/issues/15", true); // 20 000 BSQ, 30 days unlock time
-/*
-    ARBITRATOR(10000000, 144 * 30, "https://github.com/bisq-network/roles/issues/13", true), // 100 000 BSQ, 30 days unlock time
-    DOMAIN_NAME_HOLDER(5000000, 144 * 20, "https://github.com/bisq-network/roles/issues/15", false), // 50 000 BSQ, 20 days unlock time //TODO no link yet
-    SEED_NODE_OPERATOR(2000000, 144 * 30, "https://github.com/bisq-network/roles/issues/15", true); // 20 000 BSQ, 30 days unlock time
-*/
+    // admins
+    GITHUB_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/16", true),
+    FORUM_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/19", true),
+    TWITTER_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/21", true),
+    SLACK_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/23", true),
+    YOUTUBE_ADMIN(5_000, 60, "https://github.com/bisq-network/roles/issues/56", true),
+
+    // maintainers
+    BISQ_MAINTAINER(50_000, 60, "https://github.com/bisq-network/roles/issues/63", true),
+
+    // operators
+    WEBSITE_OPERATOR(50_000, 60, "https://github.com/bisq-network/roles/issues/12", true),
+    FORUM_OPERATOR(50_000, 60, "https://github.com/bisq-network/roles/issues/19", true),
+    SEED_NODE_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/15", true),
+    PRICE_NODE_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/14", true),
+    BTC_NODE_OPERATOR(5_000, 60, "https://github.com/bisq-network/roles/issues/67", true),
+    MARKETS_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/9", true),
+    BSQ_EXPLORER_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/11", true),
+
+    // other
+    DOMAIN_NAME_HOLDER(50_000, 60, "https://github.com/bisq-network/roles/issues/77", false),
+    DNS_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/18", false),
+    MEDIATOR(10_000, 60, "N/A", true),
+    ARBITRATOR(200_000, 60, "https://github.com/bisq-network/roles/issues/13", true);
 
 
+    // Satoshi value of BSQ bond
     @Getter
     private final long requiredBond;
+
+    // Unlock time in blocks
     @Getter
-    private final int unlockTime;
+    private final int unlockTimeInBlocks;
     @Getter
     private final String link;
     @Getter
     private final boolean allowMultipleHolders;
 
     /**
-     *
-     * @param requiredBond          // requiredBond in BSQ for lockup tx
-     * @param unlockTime            // unlockTime in blocks
+     * @param requiredBondInBsq     // requiredBond in BSQ for lockup tx
+     * @param unlockTimeInDays      // unlockTime in days
      * @param link                  // Link to Github for role description
-     * @param allowMultipleHolders  // If role can be held by multiple persons (e.g. seed nodes in contrary to domain name)
+     * @param allowMultipleHolders  // If role can be held by multiple persons (e.g. seed nodes vs. domain name)
      */
-    BondedRoleType(long requiredBond, int unlockTime, String link, boolean allowMultipleHolders) {
-        this.requiredBond = requiredBond;
-        this.unlockTime = unlockTime;
+    BondedRoleType(long requiredBondInBsq, int unlockTimeInDays, String link, boolean allowMultipleHolders) {
+        this.requiredBond = requiredBondInBsq * 100;
+        this.unlockTimeInBlocks = unlockTimeInDays * 144;
         this.link = link;
         this.allowMultipleHolders = allowMultipleHolders;
     }
@@ -65,7 +83,7 @@ public enum BondedRoleType {
     public String toString() {
         return "BondedRoleType{" +
                 "\n     requiredBond=" + requiredBond +
-                ",\n     unlockTime=" + unlockTime +
+                ",\n     unlockTime=" + unlockTimeInBlocks +
                 ",\n     link='" + link + '\'' +
                 ",\n     allowMultipleHolders=" + allowMultipleHolders +
                 "\n} " + super.toString();

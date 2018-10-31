@@ -167,7 +167,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         bondedRolesListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(newValue.getBondedRoleType().getRequiredBond())));
-                timeInputTextField.setText(String.valueOf(newValue.getBondedRoleType().getUnlockTime()));
+                timeInputTextField.setText(String.valueOf(newValue.getBondedRoleType().getUnlockTimeInBlocks()));
                 amountInputTextField.resetValidation();
                 timeInputTextField.resetValidation();
                 amountInputTextField.setEditable(false);
