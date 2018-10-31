@@ -27,7 +27,7 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.math.BigInteger;
+import com.google.common.base.Charsets;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
 public final class BondedReputation implements PersistablePayload, NetworkPayload, BondWithHash {
     private final String salt;
 
+    @Nullable
     @Setter
     private String lockupTxId;
 
@@ -89,8 +90,9 @@ public final class BondedReputation implements PersistablePayload, NetworkPayloa
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public String getUnlockTxId() {
         return unlockTxId;
@@ -99,7 +101,7 @@ public final class BondedReputation implements PersistablePayload, NetworkPayloa
     @Override
     public byte[] getHash() {
         // We use the salt as input for the hash
-        byte[] bytes = BigInteger.valueOf(hashCode()).toByteArray();
+        byte[] bytes = salt.getBytes(Charsets.UTF_8);
         byte[] hash = Hash.getSha256Ripemd160hash(bytes);
         return hash;
     }

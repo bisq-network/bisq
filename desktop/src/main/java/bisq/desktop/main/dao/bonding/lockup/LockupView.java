@@ -38,15 +38,12 @@ import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
 
-import bisq.common.util.Tuple2;
-
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
@@ -75,7 +72,6 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private ComboBox<LockupType> lockupTypeComboBox;
-    private Label bondedRolesLabel;
     private ComboBox<BondedRole> bondedRolesComboBox;
     private Button lockupButton;
     private ChangeListener<Boolean> focusOutListener;
@@ -145,11 +141,9 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
             int lockupRows = 3;
             if (newValue == LockupType.BONDED_ROLE) {
                 bondedRolesComboBox.setVisible(true);
-                bondedRolesLabel.setVisible(true);
                 lockupRows++;
             } else {
                 bondedRolesComboBox.setVisible(false);
-                bondedRolesLabel.setVisible(false);
             }
             GridPane.setRowSpan(titledGroupBg, lockupRows);
             GridPane.setRowIndex(lockupButton, GridPane.getRowIndex(amountInputTextField) + lockupRows);
@@ -157,7 +151,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         //TODO handle trade type
         lockupTypeComboBox.getSelectionModel().select(0);
 
-        bondedRolesComboBox =  FormBuilder.addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
+        bondedRolesComboBox = FormBuilder.addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
         bondedRolesComboBox.setPromptText(Res.get("shared.select"));
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override

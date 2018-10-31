@@ -514,9 +514,9 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesService.getValidBondedRoleList();
     }
 
-    public List<BondedReputation> getValidBondedReputationList() {
+    /*public List<BondedReputation> getValidBondedReputationList() {
         return bondedReputationService.getValidBondedReputationList();
-    }
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

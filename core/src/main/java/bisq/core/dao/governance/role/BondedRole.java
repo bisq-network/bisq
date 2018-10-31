@@ -18,8 +18,8 @@
 package bisq.core.dao.governance.role;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.bonding.bond.BondWithHash;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
@@ -134,7 +134,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // BondWithHash implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -151,6 +151,11 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
                 Utilities.bytesAsHexString(bytes), toString());*/
         return hash;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getDisplayString() {
         return name + " / " + Res.get("dao.bond.bondedRoleType." + bondedRoleType.name());

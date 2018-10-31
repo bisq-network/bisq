@@ -20,7 +20,6 @@ package bisq.core.dao.state;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.bond.BondWithHash;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.blockchain.Block;
