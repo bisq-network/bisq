@@ -45,55 +45,55 @@ public enum Param {
 
     // Fee in BTC satoshi for a 1 BTC trade. 200_000 Satoshi =  0.00200000 BTC = 0.2%.
     // 10 USD at BTC price 5_000 USD for a 1 BTC trade;
-    DEFAULT_MAKER_FEE_BTC("0.002", ParamType.BTC),
-    DEFAULT_TAKER_FEE_BTC("0.002", ParamType.BTC),       // 0.2% of trade amount
-    MIN_MAKER_FEE_BTC("0.00005", ParamType.BTC),         // 0.005% of trade amount
-    MIN_TAKER_FEE_BTC("0.00005", ParamType.BTC),
+    DEFAULT_MAKER_FEE_BTC("0.002", ParamType.BTC, 5, 5),
+    DEFAULT_TAKER_FEE_BTC("0.002", ParamType.BTC, 5, 5),       // 0.2% of trade amount
+    MIN_MAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),         // 0.005% of trade amount
+    MIN_TAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),
 
     // Fee in BSQ satoshi for a 1 BTC trade. 100 Satoshi = 1 BSQ => about 0.02%.
     // About 1 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of the BTC fee.,
     // Might need adjustment if BSQ/BTC rate changes.
-    DEFAULT_MAKER_FEE_BSQ("1.00", ParamType.BSQ),     // ~ 0.02% of trade amount
-    DEFAULT_TAKER_FEE_BSQ("1", ParamType.BSQ),
+    DEFAULT_MAKER_FEE_BSQ("1.00", ParamType.BSQ, 5, 5),     // ~ 0.02% of trade amount
+    DEFAULT_TAKER_FEE_BSQ("1", ParamType.BSQ, 5, 5),
     // 0.03 BSQ (3 satoshi) for a 1 BTC trade. 0.05 USD if 1 BSQ = 1 USD, 10 % of the BTC fee
-    MIN_MAKER_FEE_BSQ("0.03", ParamType.BSQ),           // 0.0003%.
-    MIN_TAKER_FEE_BSQ("0.03", ParamType.BSQ),
+    MIN_MAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),           // 0.0003%.
+    MIN_TAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),
 
     // Fees proposal/voting. Atm we don't use diff. fees for diff. proposal types
     // See: https://github.com/bisq-network/proposals/issues/46
-    PROPOSAL_FEE("2", ParamType.BSQ),          // 2 BSQ
-    BLIND_VOTE_FEE("2", ParamType.BSQ),        // 2 BSQ
+    PROPOSAL_FEE("2", ParamType.BSQ, 5, 5),          // 2 BSQ
+    BLIND_VOTE_FEE("2", ParamType.BSQ, 5, 5),        // 2 BSQ
 
     // As BSQ based validation values can change over time if BSQ value rise we need to support that in the Params as well
-    COMPENSATION_REQUEST_MIN_AMOUNT("10", ParamType.BSQ),
-    COMPENSATION_REQUEST_MAX_AMOUNT("100000", ParamType.BSQ),
-    REIMBURSEMENT_MIN_AMOUNT("10", ParamType.BSQ),
-    REIMBURSEMENT_MAX_AMOUNT("10000", ParamType.BSQ),
+    COMPENSATION_REQUEST_MIN_AMOUNT("10", ParamType.BSQ, 4, 2),
+    COMPENSATION_REQUEST_MAX_AMOUNT("100000", ParamType.BSQ, 4, 2),
+    REIMBURSEMENT_MIN_AMOUNT("10", ParamType.BSQ, 4, 2),
+    REIMBURSEMENT_MAX_AMOUNT("10000", ParamType.BSQ, 4, 2),
 
     // Quorum required for voting result to be valid.
     // Quorum is the min. amount of total BSQ (earned+stake) which was used for voting on a request.
     // E.g. If only 2000 BSQ was used on a vote but 10 000 is required the result is invalid even if the voters voted
     // 100% for acceptance. This should prevent that changes can be done with low stakeholder participation.
-    QUORUM_COMP_REQUEST("20000", ParamType.BSQ),
-    QUORUM_REIMBURSEMENT("20000", ParamType.BSQ),
-    QUORUM_CHANGE_PARAM("100000", ParamType.BSQ),
-    QUORUM_ROLE("50000", ParamType.BSQ),
-    QUORUM_CONFISCATION("200000", ParamType.BSQ),
-    QUORUM_GENERIC("5000", ParamType.BSQ),
-    QUORUM_REMOVE_ASSET("10000", ParamType.BSQ),
+    QUORUM_COMP_REQUEST("20000", ParamType.BSQ, 2, 2),
+    QUORUM_REIMBURSEMENT("20000", ParamType.BSQ, 2, 2),
+    QUORUM_CHANGE_PARAM("100000", ParamType.BSQ, 2, 2),
+    QUORUM_ROLE("50000", ParamType.BSQ, 2, 2),
+    QUORUM_CONFISCATION("200000", ParamType.BSQ, 2, 2),
+    QUORUM_GENERIC("5000", ParamType.BSQ, 2, 2),
+    QUORUM_REMOVE_ASSET("10000", ParamType.BSQ, 2, 2),
 
     // Threshold for voting in % with precision of 2 (e.g. 5000 -> 50.00%)
     // This is the required amount of weighted vote result needed for acceptance of the result.
     // E.g. If the result ends up in 65% weighted vote for acceptance and threshold was 50% it is accepted.
     // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
     // it requires min. 50.01%.
-    THRESHOLD_COMP_REQUEST("50.01", ParamType.PERCENT),
-    THRESHOLD_REIMBURSEMENT("50.01", ParamType.PERCENT),
-    THRESHOLD_CHANGE_PARAM("75", ParamType.PERCENT),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
-    THRESHOLD_ROLE("50.01", ParamType.PERCENT),
-    THRESHOLD_CONFISCATION("85", ParamType.PERCENT),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
-    THRESHOLD_GENERIC("50.01", ParamType.PERCENT),
-    THRESHOLD_REMOVE_ASSET("50.01", ParamType.PERCENT),
+    THRESHOLD_COMP_REQUEST("50.01", ParamType.PERCENT, 1.2, 1.2),
+    THRESHOLD_REIMBURSEMENT("50.01", ParamType.PERCENT, 1.2, 1.2),
+    THRESHOLD_CHANGE_PARAM("75", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
+    THRESHOLD_ROLE("50.01", ParamType.PERCENT, 1.2, 1.2),
+    THRESHOLD_CONFISCATION("85", ParamType.PERCENT, 1.2, 1.2),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
+    THRESHOLD_GENERIC("50.01", ParamType.PERCENT, 1.2, 1.2),
+    THRESHOLD_REMOVE_ASSET("50.01", ParamType.PERCENT, 1.2, 1.2),
 
     // BTC address as recipient for BTC trade fee once the arbitration system is replaced as well as destination for
     // the time locked payout tx in case the traders do not cooperate. Will be likely a donation address (Bisq, Tor,...)
@@ -110,13 +110,13 @@ public enum Param {
     // TODO for dev testing we use short periods...
     // Period phase ("11 blocks atm)
     PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL("2", ParamType.BLOCK),
-    PHASE_BREAK1("1", ParamType.BLOCK),
-    PHASE_BLIND_VOTE("2", ParamType.BLOCK),
-    PHASE_BREAK2("1", ParamType.BLOCK),
-    PHASE_VOTE_REVEAL("2", ParamType.BLOCK),
-    PHASE_BREAK3("1", ParamType.BLOCK),
-    PHASE_RESULT("2", ParamType.BLOCK);
+    PHASE_PROPOSAL("2", ParamType.BLOCK, 3, 3),
+    PHASE_BREAK1("1", ParamType.BLOCK, 3, 3),
+    PHASE_BLIND_VOTE("2", ParamType.BLOCK, 3, 3),
+    PHASE_BREAK2("1", ParamType.BLOCK, 3, 23),
+    PHASE_VOTE_REVEAL("2", ParamType.BLOCK, 3, 3),
+    PHASE_BREAK3("1", ParamType.BLOCK, 3, 3),
+    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);
 
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
@@ -135,16 +135,23 @@ public enum Param {
     PHASE_RESULT("10);        // 10 block*/
 
     @Getter
-    private String defaultValue;
+    private final String defaultValue;
     @Getter
-    private ParamType paramType;
+    private final ParamType paramType;
+    @Getter
+    private final double maxDecrease;
+    @Getter
+    private final double maxIncrease;
 
-    /**
-     * @param defaultValue for param. If not set it is 0.
-     */
     Param(String defaultValue, ParamType paramType) {
+        this(defaultValue, paramType, 1, 1);
+    }
+
+    Param(String defaultValue, ParamType paramType, double maxDecrease, double maxIncrease) {
         this.defaultValue = defaultValue;
         this.paramType = paramType;
+        this.maxDecrease = maxDecrease;
+        this.maxIncrease = maxIncrease;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

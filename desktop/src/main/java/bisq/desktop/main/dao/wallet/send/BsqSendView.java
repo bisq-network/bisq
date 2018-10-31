@@ -209,16 +209,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void addSendBsqGroup() {
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 3);
 
         receiversAddressInputTextField = addInputTextField(root, gridRow,
                 Res.get("dao.wallet.send.receiverAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
+        GridPane.setColumnSpan(receiversAddressInputTextField, 3);
 
-        amountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount"));
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
+        amountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
+        GridPane.setColumnSpan(amountInputTextField, 3);
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
@@ -271,16 +272,15 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
     private void addSendBtcGroup() {
         btcTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendBtcFunds"), Layout.GROUP_DISTANCE);
-
+        GridPane.setColumnSpan(btcTitledGroupBg, 3);
         receiversBtcAddressInputTextField = addInputTextField(root, gridRow,
                 Res.get("dao.wallet.send.receiverBtcAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        receiversBtcAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversBtcAddressInputTextField.setValidator(btcAddressValidator);
+        GridPane.setColumnSpan(receiversBtcAddressInputTextField, 3);
 
         btcAmountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
-        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount",
-                bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput().value)));
         btcAmountInputTextField.setValidator(btcValidator);
+        GridPane.setColumnSpan(btcAmountInputTextField, 3);
 
         sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
 

@@ -342,6 +342,10 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 3 3 0 0;
 }
 
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-dim-grey;
+}
+
 .jfx-text-field:readonly {
     -fx-background-color: -bs-rd-grey-medium-light;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
@@ -379,6 +383,7 @@ bg color of non edit textFields: fafafa
 .jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
     -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 0.692em;
+    -fx-padding: -0.5em 0 0 0;
 }
 
 .jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
@@ -1370,7 +1375,7 @@ textfield */
 /* TitledGroupBg */
 
 .titled-group-bg-label {
-    -fx-font-size: 1.231em;
+    -fx-font-size: 1.308em;
     -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
@@ -1378,7 +1383,7 @@ textfield */
 
 .titled-group-bg-label-active {
     -fx-font-weight: normal;
-    -fx-font-size: 1.231em;
+    -fx-font-size: 1.308em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
@@ -1803,7 +1808,7 @@ textfield */
 }
 
 .dao-accepted-icon {
-    -fx-text-fill: -bs-green;
+    -fx-text-fill: -bs-rd-green;
 }
 
 .dao-rejected-icon {

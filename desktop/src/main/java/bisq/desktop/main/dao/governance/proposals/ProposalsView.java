@@ -117,9 +117,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private TableView<ProposalsListItem> tableView;
     private TitledGroupBg voteTitledGroupBg;
-    private Label revealTxIdLabel, blindVoteTxIdLabel, voteButtonInfoLabel;
+    private Label voteButtonInfoLabel;
     private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
     private TextField meritTextField;
+    private VBox blindVoteTxIdContainer, revealTxIdContainer;
     private Button removeProposalButton, acceptButton, rejectButton, ignoreButton, voteButton;
     private InputTextField stakeInputTextField;
     private ScrollPane proposalDisplayView;
@@ -570,14 +571,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         blindVoteTxIdTextField.setup("");
         revealTxIdTextField.setup("");
 
-        blindVoteTxIdLabel.setVisible(false);
-        blindVoteTxIdLabel.setManaged(false);
-        blindVoteTxIdTextField.setVisible(false);
-        blindVoteTxIdTextField.setManaged(false);
-        revealTxIdLabel.setVisible(false);
-        revealTxIdLabel.setManaged(false);
-        revealTxIdTextField.setVisible(false);
-        revealTxIdTextField.setManaged(false);
+        blindVoteTxIdContainer.setVisible(false);
+        blindVoteTxIdContainer.setManaged(false);
+        revealTxIdContainer.setVisible(false);
+        revealTxIdContainer.setManaged(false);
 
         if (hasAlreadyVoted) {
             voteTitledGroupBg.setText(Res.get("dao.proposal.votes.header.voted"));
@@ -592,18 +589,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
                     if (myVote.getTxId() != null) {
                         blindVoteTxIdTextField.setup(myVote.getTxId());
-                        blindVoteTxIdLabel.setVisible(true);
-                        blindVoteTxIdLabel.setManaged(true);
-                        blindVoteTxIdTextField.setVisible(true);
-                        blindVoteTxIdTextField.setManaged(true);
+                        blindVoteTxIdContainer.setVisible(true);
+                        blindVoteTxIdContainer.setManaged(true);
                     }
 
                     if (myVote.getRevealTxId() != null) {
                         revealTxIdTextField.setup(myVote.getRevealTxId());
-                        revealTxIdLabel.setVisible(true);
-                        revealTxIdLabel.setManaged(true);
-                        revealTxIdTextField.setVisible(true);
-                        revealTxIdTextField.setManaged(true);
+                        revealTxIdContainer.setVisible(true);
+                        revealTxIdContainer.setManaged(true);
                     }
                 } else {
                     stakeInputTextField.clear();
@@ -638,7 +631,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         TableGroupHeadline proposalsHeadline = new TableGroupHeadline(Res.get("dao.proposal.active.header"));
         GridPane.setRowIndex(proposalsHeadline, ++gridRow);
         GridPane.setMargin(proposalsHeadline, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
-        GridPane.setColumnSpan(proposalsHeadline, 2);
         root.getChildren().add(proposalsHeadline);
 
         tableView = new TableView<>();
@@ -649,7 +641,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         GridPane.setMargin(tableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 5, -10));
-        GridPane.setColumnSpan(tableView, 2);
         root.getChildren().add(tableView);
 
         tableView.setItems(sortedList);
@@ -660,7 +651,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
-        GridPane.setColumnSpan(proposalDisplayView, 2);
         GridPane.setHgrow(proposalDisplayView, Priority.ALWAYS);
         root.getChildren().add(proposalDisplayView);
     }
@@ -683,21 +673,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
         voteFields.add(stakeInputTextField);
 
-        Tuple2<Label, TxIdTextField> blindVoteTxIdTuple = addLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.blindVoteTxId"));
-        blindVoteTxIdLabel = blindVoteTxIdTuple.first;
-        blindVoteTxIdTextField = blindVoteTxIdTuple.second;
+        Tuple3<Label, TxIdTextField, VBox> tuple = addTopLabelTxIdTextField(root, ++gridRow,
+                Res.getWithCol("dao.proposal.myVote.blindVoteTxId"), 0);
+        blindVoteTxIdTextField = tuple.second;
+        blindVoteTxIdContainer = tuple.third;
         blindVoteTxIdTextField.setBsq(true);
-        voteFields.add(blindVoteTxIdLabel);
-        voteFields.add(blindVoteTxIdTextField);
+        voteFields.add(blindVoteTxIdContainer);
 
-        Tuple2<Label, TxIdTextField> revealTxIdTuple = addLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.revealTxId"));
-        revealTxIdLabel = revealTxIdTuple.first;
-        revealTxIdTextField = revealTxIdTuple.second;
+        tuple = addTopLabelTxIdTextField(root, ++gridRow,
+                Res.getWithCol("dao.proposal.myVote.revealTxId"), 0);
+        revealTxIdTextField = tuple.second;
         revealTxIdTextField.setBsq(true);
-        voteFields.add(revealTxIdLabel);
-        voteFields.add(revealTxIdTextField);
+        revealTxIdContainer = tuple.third;
+        voteFields.add(revealTxIdContainer);
 
         Tuple3<Button, BusyAnimation, Label> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
                 Res.get("dao.proposal.myVote.button"));

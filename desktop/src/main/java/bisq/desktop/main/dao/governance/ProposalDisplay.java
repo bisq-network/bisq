@@ -65,11 +65,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 
 import javafx.beans.value.ChangeListener;
 
@@ -89,7 +85,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelHyperlinkWithIcon;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -137,6 +132,8 @@ public class ProposalDisplay {
     private ChangeListener<BondedRoleType> requiredBondForRoleListener;
     private TitledGroupBg titledGroupBg;
     private int titledGroupBgRowSpan;
+    private VBox linkWithIconContainer;
+    private VBox comboBoxValueContainer;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
                            @Nullable ChangeParamValidator changeParamValidator) {
@@ -191,7 +188,7 @@ public class ProposalDisplay {
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
         double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
         proposalTypeTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow,
-                Res.getWithCol("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
+                Res.get("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
         nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
         nameTextField.setValidator(new InputValidator());
@@ -203,10 +200,15 @@ public class ProposalDisplay {
         linkInputTextField.setValidator(new InputValidator());
         inputControls.add(linkInputTextField);
 
-        linkHyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, gridRow,
-                "", "", "").second;
-        linkHyperlinkWithIcon.setVisible(false);
-        linkHyperlinkWithIcon.setManaged(false);
+        Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
+                Res.get("dao.proposal.display.link"), "", "", 0);
+        linkHyperlinkWithIcon = tuple.second;
+        linkWithIconContainer = tuple.third;
+        // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorpane as base)
+        linkHyperlinkWithIcon.prefWidthProperty().bind(nameTextField.widthProperty());
+
+        linkWithIconContainer.setVisible(false);
+        linkWithIconContainer.setManaged(false);
 
         int comboBoxValueTextFieldIndex = -1;
         switch (proposalType) {
@@ -230,7 +232,7 @@ public class ProposalDisplay {
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
                 paramComboBox = FormBuilder.<Param>addComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.paramComboBox.label"));
+                        Res.get("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
                 List<Param> list = Arrays.stream(Param.values())
@@ -269,7 +271,7 @@ public class ProposalDisplay {
                 break;
             case BONDED_ROLE:
                 bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.bondedRoleComboBox.label"));
+                        Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
                 bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
@@ -286,7 +288,7 @@ public class ProposalDisplay {
                 });
                 comboBoxes.add(bondedRoleTypeComboBox);
                 requiredBondForRoleTextField = addTopLabelTextField(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.requiredBondForRole.label")).second;
+                        Res.get("dao.proposal.display.requiredBondForRole.label")).second;
 
                 requiredBondForRoleListener = (observable, oldValue, newValue) -> {
                     if (newValue != null) {
@@ -298,7 +300,7 @@ public class ProposalDisplay {
                 break;
             case CONFISCATE_BOND:
                 confiscateBondComboBox = FormBuilder.<BondedRole>addComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.confiscateBondComboBox.label"));
+                        Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
@@ -319,7 +321,7 @@ public class ProposalDisplay {
                 break;
             case REMOVE_ASSET:
                 assetComboBox = FormBuilder.<Asset>addComboBox(gridPane, ++gridRow,
-                        Res.getWithCol("dao.proposal.display.assetComboBox.label"));
+                        Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
                 List<Asset> assetList = CurrencyUtil.getAssetRegistry().stream()
@@ -344,16 +346,12 @@ public class ProposalDisplay {
         }
 
         if (comboBoxValueTextFieldIndex > -1) {
-            comboBoxValueTextField = new TextField("");
-            comboBoxValueTextField.setEditable(false);
-            comboBoxValueTextField.setMouseTransparent(true);
-            comboBoxValueTextField.setFocusTraversable(false);
-            comboBoxValueTextField.setVisible(false);
-            comboBoxValueTextField.setManaged(false);
-            GridPane.setRowIndex(comboBoxValueTextField, comboBoxValueTextFieldIndex);
-            GridPane.setColumnIndex(comboBoxValueTextField, 1);
-            GridPane.setMargin(comboBoxValueTextField, new Insets(top, 0, 0, 0));
-            gridPane.getChildren().add(comboBoxValueTextField);
+            Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, comboBoxValueTextFieldIndex,
+                    Res.get("dao.proposal.display.option"));
+            comboBoxValueTextField = tuple3.second;
+            comboBoxValueContainer = tuple3.third;
+            comboBoxValueContainer.setVisible(false);
+            comboBoxValueContainer.setManaged(false);
         }
 
         if (isMakeProposalScreen) {
@@ -450,9 +448,9 @@ public class ProposalDisplay {
         nameTextField.setText(proposal.getName());
         linkInputTextField.setVisible(false);
         linkInputTextField.setManaged(false);
-        if (linkHyperlinkWithIcon != null) {
-            linkHyperlinkWithIcon.setVisible(true);
-            linkHyperlinkWithIcon.setManaged(true);
+        if (linkWithIconContainer != null) {
+            linkWithIconContainer.setVisible(true);
+            linkWithIconContainer.setManaged(true);
             linkHyperlinkWithIcon.setText(proposal.getLink());
             linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         }
@@ -553,18 +551,18 @@ public class ProposalDisplay {
             comboBox.setVisible(isEditable);
             comboBox.setManaged(isEditable);
 
-            if (comboBoxValueTextField != null) {
-                comboBoxValueTextField.setVisible(!isEditable);
-                comboBoxValueTextField.setManaged(!isEditable);
+            if (comboBoxValueContainer != null) {
+                comboBoxValueContainer.setVisible(!isEditable);
+                comboBoxValueContainer.setManaged(!isEditable);
             }
         });
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);
 
-        if (linkHyperlinkWithIcon != null) {
-            linkHyperlinkWithIcon.setVisible(false);
-            linkHyperlinkWithIcon.setManaged(false);
+        if (linkWithIconContainer != null) {
+            linkWithIconContainer.setVisible(false);
+            linkWithIconContainer.setManaged(false);
             linkHyperlinkWithIcon.setOnAction(null);
         }
     }
@@ -575,6 +573,10 @@ public class ProposalDisplay {
             GUIUtil.removeChildrenFromGridPaneRows(gridPane, gridRowStartIndex, gridRow);
             gridRow = gridRowStartIndex;
         }
+
+        if (linkHyperlinkWithIcon != null)
+            linkHyperlinkWithIcon.prefWidthProperty().unbind();
+
         inputControls.clear();
         comboBoxes.clear();
     }
@@ -588,22 +590,18 @@ public class ProposalDisplay {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        //scrollPane.setMinHeight(280); // just enough to display overview at voting without scroller
 
         AnchorPane anchorPane = new AnchorPane();
         scrollPane.setContent(anchorPane);
 
         gridPane.setHgap(5);
         gridPane.setVgap(5);
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-        columnConstraints1.setMinWidth(140);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        columnConstraints2.setMinWidth(300);
 
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setPercentWidth(100);
+
+        gridPane.getColumnConstraints().addAll(columnConstraints1);
+
         AnchorPane.setBottomAnchor(gridPane, 20d);
         AnchorPane.setRightAnchor(gridPane, 10d);
         AnchorPane.setLeftAnchor(gridPane, 10d);
