@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.role;
-
-import bisq.core.dao.governance.ConsensusCritical;
+package bisq.core.dao.bonding.bond;
 
 import bisq.common.proto.persistable.PersistableList;
 
@@ -30,16 +28,16 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 /**
- * PersistableEnvelope wrapper for list of bondedRoles.
+ * PersistableEnvelope wrapper for list of BondedReputations.
  */
 @EqualsAndHashCode(callSuper = true)
-public class BondedRoleList extends PersistableList<BondedRole> implements ConsensusCritical {
+public class BondedReputationList extends PersistableList<BondedReputation> {
 
-    public BondedRoleList(List<BondedRole> list) {
+    public BondedReputationList(List<BondedReputation> list) {
         super(list);
     }
 
-    public BondedRoleList() {
+    public BondedReputationList() {
         super();
     }
 
@@ -50,26 +48,26 @@ public class BondedRoleList extends PersistableList<BondedRole> implements Conse
 
     @Override
     public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBondedRoleList(getBuilder()).build();
+        return PB.PersistableEnvelope.newBuilder().setBondedReputationList(getBuilder()).build();
     }
 
-    public PB.BondedRoleList.Builder getBuilder() {
-        return PB.BondedRoleList.newBuilder()
-                .addAllBondedRole(getList().stream()
-                        .map(BondedRole::toProtoMessage)
+    public PB.BondedReputationList.Builder getBuilder() {
+        return PB.BondedReputationList.newBuilder()
+                .addAllBondedReputation(getList().stream()
+                        .map(BondedReputation::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static BondedRoleList fromProto(PB.BondedRoleList proto) {
-        return new BondedRoleList(new ArrayList<>(proto.getBondedRoleList().stream()
-                .map(BondedRole::fromProto)
+    public static BondedReputationList fromProto(PB.BondedReputationList proto) {
+        return new BondedReputationList(new ArrayList<>(proto.getBondedReputationList().stream()
+                .map(BondedReputation::fromProto)
                 .collect(Collectors.toList())));
     }
 
     @Override
     public String toString() {
-        return "List of UIDs in BondedRoleList: " + getList().stream()
-                .map(BondedRole::getUid)
+        return "List of salts in BondedReputationList: " + getList().stream()
+                .map(BondedReputation::getSalt)
                 .collect(Collectors.toList());
     }
 }

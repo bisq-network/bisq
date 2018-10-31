@@ -17,6 +17,7 @@
 
 package bisq.core.dao;
 
+import bisq.core.dao.bonding.bond.BondedReputationService;
 import bisq.core.dao.bonding.lockup.LockupService;
 import bisq.core.dao.bonding.unlock.UnlockService;
 import bisq.core.dao.governance.asset.AssetService;
@@ -186,6 +187,7 @@ public class DaoModule extends AppModule {
         bind(LockupService.class).in(Singleton.class);
         bind(UnlockService.class).in(Singleton.class);
         bind(BondedRolesService.class).in(Singleton.class);
+        bind(BondedReputationService.class).in(Singleton.class);
 
         // Asset
         bind(AssetService.class).in(Singleton.class);

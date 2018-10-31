@@ -26,6 +26,8 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.bond.BondWithHash;
+import bisq.core.dao.bonding.bond.BondedReputation;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRoleType;
@@ -65,12 +67,9 @@ public class BondingViewUtils {
         this.bsqFormatter = bsqFormatter;
     }
 
-    public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
+    private void lockupBond(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType,
+                           ResultHandler resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
-            Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-            int lockupTime = bondedRoleType.getUnlockTime();
-            LockupType lockupType = LockupType.BONDED_ROLE;
             new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
                     .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
                             bsqFormatter.formatCoinWithCode(lockupAmount),
@@ -81,7 +80,7 @@ public class BondingViewUtils {
                         daoFacade.publishLockupTx(lockupAmount,
                                 lockupTime,
                                 lockupType,
-                                bondedRole,
+                                bondWithHash,
                                 () -> {
                                     new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                                 },
@@ -95,6 +94,18 @@ public class BondingViewUtils {
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
+    }
+
+    public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
+        BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
+        Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
+        int lockupTime = bondedRoleType.getUnlockTime();
+        lockupBond(bondedRole, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
+    }
+
+    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, ResultHandler resultHandler) {
+        BondedReputation bondedReputation = BondedReputation.createBondedReputation();
+        lockupBond(bondedReputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
     }
 
     public void unLock(String lockupTxId) {

@@ -26,7 +26,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.governance.role.BondedRolesService;
 
 import bisq.common.handlers.ExceptionHandler;
@@ -65,13 +65,13 @@ public class LockupService {
         this.btcWalletService = btcWalletService;
     }
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondedRole bondedRole,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
                                 ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         checkArgument(lockTime <= BondingConsensus.getMaxLockTime() &&
                 lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
         try {
 
-            byte[] hash = BondingConsensus.getHash(lockupType, bondedRole);
+            byte[] hash = BondingConsensus.getHash(bondWithHash);
             byte[] opReturnData = BondingConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
             final Transaction lockupTx = getLockupTx(lockupAmount, opReturnData);
 
