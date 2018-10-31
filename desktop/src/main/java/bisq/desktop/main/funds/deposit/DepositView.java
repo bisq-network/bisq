@@ -81,6 +81,7 @@ import javafx.util.Callback;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -105,7 +106,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private InputTextField amountTextField;
 
     private final BtcWalletService walletService;
-    private final FeeService feeService;
     private final Preferences preferences;
     private final BSFormatter formatter;
     private String paymentLabelString;
@@ -126,7 +126,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
                         Preferences preferences,
                         BSFormatter formatter) {
         this.walletService = walletService;
-        this.feeService = feeService;
         this.preferences = preferences;
         this.formatter = formatter;
     }
@@ -158,15 +157,15 @@ public class DepositView extends ActivatableView<VBox, Void> {
         setUsageColumnCellFactory();
         setConfidenceColumnCellFactory();
 
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        balanceColumn.setComparator((o1, o2) -> o1.getBalanceAsCoin().compareTo(o2.getBalanceAsCoin()));
-        confirmationsColumn.setComparator((o1, o2) -> Double.valueOf(o1.getTxConfidenceIndicator().getProgress())
-                .compareTo(o2.getTxConfidenceIndicator().getProgress()));
-        usageColumn.setComparator((a, b) -> (a.getNumTxOutputs() < b.getNumTxOutputs()) ? -1 : ((a.getNumTxOutputs() == b.getNumTxOutputs()) ? 0 : 1));
+        addressColumn.setComparator(Comparator.comparing(DepositListItem::getAddressString));
+        balanceColumn.setComparator(Comparator.comparing(DepositListItem::getBalanceAsCoin));
+        confirmationsColumn.setComparator(Comparator.comparingDouble(o -> o.getTxConfidenceIndicator().getProgress()));
+        usageColumn.setComparator(Comparator.comparingInt(DepositListItem::getNumTxOutputs));
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("funds.deposit.fundWallet"));
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, Res.get("funds.deposit.fundWallet"));
+        titledGroupBg.getStyleClass().add("last");
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.getStyleClass().add("qr-code");
@@ -176,11 +175,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
+        GridPane.setRowSpan(qrCodeImageView, 4);
         GridPane.setColumnIndex(qrCodeImageView, 1);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 10));
         gridPane.getChildren().add(qrCodeImageView);
 
-        addressTextField = addAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
+        addressTextField = addAddressTextField(gridPane, ++gridRow, Res.get("shared.address"), Layout.FIRST_ROW_DISTANCE);
         addressTextField.setPaymentLabel(paymentLabelString);
 
 
@@ -201,7 +201,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
 
         generateNewAddressButton.setOnAction(event -> {
-            boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
+            boolean hasUnUsedAddress = observableList.stream().anyMatch(e -> e.getNumTxOutputs() == 0);
             if (hasUnUsedAddress) {
                 new Popup<>().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
@@ -297,7 +297,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private void updateList() {
         observableList.forEach(DepositListItem::cleanup);
         observableList.clear();
-        walletService.getAvailableAddressEntries().stream()
+        walletService.getAvailableAddressEntries()
                 .forEach(e -> observableList.add(new DepositListItem(e, walletService, formatter)));
     }
 
@@ -318,13 +318,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void setUsageColumnCellFactory() {
         usageColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        usageColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
-                TableCell<DepositListItem, DepositListItem>>() {
+        usageColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                     DepositListItem> column) {
-                return new TableCell<DepositListItem, DepositListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final DepositListItem item, boolean empty) {
@@ -344,13 +343,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
         selectColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         selectColumn.setCellFactory(
-                new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
-                        DepositListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                             DepositListItem> column) {
-                        return new TableCell<DepositListItem, DepositListItem>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override
@@ -378,13 +376,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         addressColumn.setCellFactory(
-                new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
-                        DepositListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                             DepositListItem> column) {
-                        return new TableCell<DepositListItem, DepositListItem>() {
+                        return new TableCell<>() {
 
                             private HyperlinkWithIcon field;
 
@@ -414,13 +411,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void setBalanceColumnCellFactory() {
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        balanceColumn.setCellFactory(new Callback<TableColumn<DepositListItem, DepositListItem>,
-                TableCell<DepositListItem, DepositListItem>>() {
+        balanceColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                     DepositListItem> column) {
-                return new TableCell<DepositListItem, DepositListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final DepositListItem item, boolean empty) {
@@ -445,13 +441,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
         confirmationsColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         confirmationsColumn.setCellFactory(
-                new Callback<TableColumn<DepositListItem, DepositListItem>, TableCell<DepositListItem,
-                        DepositListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                             DepositListItem> column) {
-                        return new TableCell<DepositListItem, DepositListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final DepositListItem item, boolean empty) {

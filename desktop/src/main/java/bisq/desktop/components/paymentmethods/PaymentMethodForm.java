@@ -182,7 +182,7 @@ public abstract class PaymentMethodForm {
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                         formatter.formatAccountAge(accountAge));
-        addTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
@@ -277,12 +277,12 @@ public abstract class PaymentMethodForm {
                                                TradeCurrency singleTradeCurrency) {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
-        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
+        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
         field.setMouseTransparent(false);
 
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
 
         addLimitations();
     }

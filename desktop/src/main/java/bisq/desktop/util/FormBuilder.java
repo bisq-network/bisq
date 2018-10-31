@@ -197,29 +197,6 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // TextField
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value) {
-        return addTextField(gridPane, rowIndex, title, value, 0);
-    }
-
-    public static TextField addTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        TextField textField = new JFXTextField(value);
-        ((JFXTextField) textField).setLabelFloat(true);
-        textField.setPromptText(title);
-        textField.setEditable(false);
-        textField.setMouseTransparent(true);
-        textField.setFocusTraversable(false);
-
-        GridPane.setRowIndex(textField, rowIndex);
-        GridPane.setMargin(textField, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
-        gridPane.getChildren().add(textField);
-
-        return textField;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -724,7 +701,7 @@ public class FormBuilder {
                                                                                             String title,
                                                                                             String radioButtonTitle1,
                                                                                             String radioButtonTitle2,
-                                                                                            int top) {
+                                                                                            double top) {
         RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
         radioButton1.setToggleGroup(toggleGroup);
         radioButton1.setPadding(new Insets(6, 0, 0, 0));
@@ -740,6 +717,38 @@ public class FormBuilder {
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, radioButton1, radioButton2);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + TextField + RadioButton + RadioButton
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple4<Label, TextField, RadioButton, RadioButton> addTopLabelTextFieldRadioButtonRadioButton(GridPane gridPane,
+                                                                                                                int rowIndex,
+                                                                                                                ToggleGroup toggleGroup,
+                                                                                                                String title,
+                                                                                                                String textFieldTitle,
+                                                                                                                String radioButtonTitle1,
+                                                                                                                String radioButtonTitle2,
+                                                                                                                double top) {
+        TextField textField = new JFXTextField();
+        textField.setPromptText(textFieldTitle);
+
+        RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
+        radioButton1.setToggleGroup(toggleGroup);
+        radioButton1.setPadding(new Insets(6, 0, 0, 0));
+
+        RadioButton radioButton2 = new AutoTooltipRadioButton(radioButtonTitle2);
+        radioButton2.setToggleGroup(toggleGroup);
+        radioButton2.setPadding(new Insets(6, 0, 0, 0));
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(textField, radioButton1, radioButton2);
+
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
+
+        return new Tuple4<>(labelVBoxTuple2.first, textField, radioButton1, radioButton2);
     }
 
 

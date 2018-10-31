@@ -45,9 +45,7 @@
         </padding>
 
         <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" hgrow="NEVER"/>
-            <ColumnConstraints hgrow="ALWAYS"/>
-            <ColumnConstraints hgrow="NEVER"/>
+            <ColumnConstraints hgrow="NEVER" minWidth="400"/>
         </columnConstraints>
     </GridPane>
 </VBox>
