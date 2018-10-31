@@ -81,7 +81,7 @@ class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(bondedRoleType.getRequiredBond())));
 
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.unlockTime"),
-                Res.get("dao.bond.bondedRoleType.details.blocks", bondedRoleType.getUnlockTime()));
+                Res.get("dao.bond.bondedRoleType.details.blocks", bondedRoleType.getUnlockTimeInBlocks()));
 
         FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.getWithCol("dao.bond.bondedRoleType.details.link"),
                 bondedRoleType.getLink(), bondedRoleType.getLink());
