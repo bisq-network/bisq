@@ -29,14 +29,11 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -50,6 +47,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
+
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
@@ -219,12 +218,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private void updatePrice() {
         Coin issuedAmount = daoFacade.getGenesisTotalSupply();
-        MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
-        if (bsqMarketPrice != null) {
-            long bsqPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
-            priceTextField.setText(bsqFormatter.formatPrice(Price.valueOf("BSQ", bsqPrice)) + " BSQ/BTC");
+        Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
+        if (optionalBsqPrice.isPresent()) {
+            Price bsqPrice = optionalBsqPrice.get();
+            priceTextField.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
 
-            marketCapTextField.setText(bsqFormatter.formatMarketCap(bsqMarketPrice, priceFeedService.getMarketPrice("USD"), issuedAmount));
+            marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
+                    priceFeedService.getMarketPrice("USD"), issuedAmount));
         } else {
             priceTextField.setText(Res.get("shared.na"));
             marketCapTextField.setText(Res.get("shared.na"));

@@ -22,7 +22,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;
@@ -308,10 +307,9 @@ public class OfferUtil {
             if (isCurrencyForMakerFeeBtc) {
                 return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
             } else {
-                MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
-                if (bsqMarketPrice != null) {
-                    long bsqPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(bsqMarketPrice.getPrice(), Altcoin.SMALLEST_UNIT_EXPONENT));
-                    Price bsqPrice = Price.valueOf("BSQ", bsqPriceAsLong);
+                Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
+                if (optionalBsqPrice.isPresent()) {
+                    Price bsqPrice = optionalBsqPrice.get();
                     String inputValue = bsqFormatter.formatCoin(makerFee);
                     Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
                     Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
