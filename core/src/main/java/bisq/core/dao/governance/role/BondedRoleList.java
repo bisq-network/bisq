@@ -68,8 +68,8 @@ public class BondedRoleList extends PersistableList<BondedRole> implements Conse
 
     @Override
     public String toString() {
-        return "List of UIDs in BondedRoleList: " + getList().stream()
-                .map(BondedRole::getUid)
+        return "List of lockupTxIds in BondedRoleList: " + getList().stream()
+                .map(BondedRole::getLockupTxId)
                 .collect(Collectors.toList());
     }
 }

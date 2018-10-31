@@ -646,6 +646,10 @@ public class DaoStateService implements DaoSetupService {
                 .findFirst());
     }
 
+    public Optional<TxOutput> getLockupOpReturnTxOutput(String txId) {
+        return getTx(txId).map(Tx::getLastTxOutput);
+    }
+
     // Returns amount of all LOCKUP txOutputs (they might have been unlocking or unlocked in the meantime)
     public long getTotalAmountOfLockupTxOutputs() {
         return getLockupTxOutputs().stream()

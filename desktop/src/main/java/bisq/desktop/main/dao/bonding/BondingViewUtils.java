@@ -37,6 +37,7 @@ import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -68,32 +69,39 @@ public class BondingViewUtils {
     }
 
     private void lockupBond(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType,
-                           ResultHandler resultHandler) {
+                            ResultHandler resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
-                    .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
-                            bsqFormatter.formatCoinWithCode(lockupAmount),
-                            lockupTime
-                    ))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        daoFacade.publishLockupTx(lockupAmount,
-                                lockupTime,
-                                lockupType,
-                                bondWithHash,
-                                () -> {
-                                    new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
-                                },
-                                this::handleError
-                        );
-                        if (resultHandler != null)
-                            resultHandler.handleResult();
-                    })
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .show();
+            if (!DevEnv.isDevMode()) {
+                new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
+                        .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
+                                bsqFormatter.formatCoinWithCode(lockupAmount),
+                                lockupTime
+                        ))
+                        .actionButtonText(Res.get("shared.yes"))
+                        .onAction(() -> publishLockupTx(bondWithHash, lockupAmount, lockupTime, lockupType, resultHandler))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+            } else {
+                publishLockupTx(bondWithHash, lockupAmount, lockupTime, lockupType, resultHandler);
+            }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
+    }
+
+    private void publishLockupTx(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType, ResultHandler resultHandler) {
+        daoFacade.publishLockupTx(lockupAmount,
+                lockupTime,
+                lockupType,
+                bondWithHash,
+                () -> {
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                },
+                this::handleError
+        );
+        if (resultHandler != null)
+            resultHandler.handleResult();
     }
 
     public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
@@ -108,7 +116,7 @@ public class BondingViewUtils {
         lockupBond(bondedReputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
     }
 
-    public void unLock(String lockupTxId) {
+    public void unLock(String lockupTxId, ResultHandler resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
             if (!lockupTxOutput.isPresent()) {
@@ -121,22 +129,19 @@ public class BondingViewUtils {
             int lockTime = opLockTime.orElse(-1);
 
             try {
-                new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
-                        .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
-                                bsqFormatter.formatCoinWithCode(unlockAmount),
-                                lockTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            daoFacade.publishUnlockTx(lockupTxId,
-                                    () -> {
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    },
-                                    errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
-                            );
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
+                if (!DevEnv.isDevMode()) {
+                    new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
+                            .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
+                                    bsqFormatter.formatCoinWithCode(unlockAmount),
+                                    lockTime
+                            ))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } else {
+                    publishUnlockTx(lockupTxId, resultHandler);
+                }
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
@@ -146,6 +151,18 @@ public class BondingViewUtils {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
         log.info("unlock tx: {}", lockupTxId);
+    }
+
+    private void publishUnlockTx(String lockupTxId, ResultHandler resultHandler) {
+        daoFacade.publishUnlockTx(lockupTxId,
+                () -> {
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+
+                    resultHandler.handleResult();
+                },
+                errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+        );
     }
 
     private void handleError(Throwable throwable) {

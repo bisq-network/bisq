@@ -563,6 +563,10 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockupTxOutput(txId);
     }
 
+    public Optional<TxOutput> getLockupOpReturnTxOutput(String txId) {
+        return daoStateService.getLockupOpReturnTxOutput(txId);
+    }
+
     public long getTotalBurntFee() {
         return daoStateService.getTotalBurntFee();
     }

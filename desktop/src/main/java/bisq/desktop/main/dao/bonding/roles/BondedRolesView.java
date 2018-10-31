@@ -433,12 +433,11 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
                             BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override
@@ -450,7 +449,11 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                         button = item.getButton();
                                         item.setOnAction(() -> {
                                             if (item.isBonded())
-                                                bondingViewUtils.unLock(item.getBondedRole().getLockupTxId());
+                                                bondingViewUtils.unLock(item.getBondedRole().getLockupTxId(),
+                                                        () -> {
+                                                            // TODO
+                                                            button.setDisable(true);
+                                                        });
                                             else
                                                 bondingViewUtils.lockupBondForBondedRole(item.getBondedRole(), null);
                                         });

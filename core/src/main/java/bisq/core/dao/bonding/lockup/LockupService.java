@@ -27,6 +27,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.bond.BondWithHash;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
 
 import bisq.common.handlers.ExceptionHandler;
@@ -79,6 +80,14 @@ public class LockupService {
             walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
+
+                    // TODO we should not support repeated locks
+                    if (bondWithHash instanceof BondedRole) {
+                        BondedRole bondedRole = (BondedRole) bondWithHash;
+                        bondedRole.setLockupTxId(transaction.getHashAsString());
+                        bondedRole.setUnlockTxId(null);
+                    }
+
                     resultHandler.handleResult();
                 }
 

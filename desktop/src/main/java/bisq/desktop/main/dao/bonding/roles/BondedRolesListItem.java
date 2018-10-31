@@ -96,7 +96,6 @@ class BondedRolesListItem implements DaoStateListener {
         boolean isLockedUp = bondedRole.isLockedUp();
         boolean isUnlocked = bondedRole.isUnlocked();
         boolean isUnlocking = bondedRole.isUnlocking(daoFacade);
-        log.error("name={}, isLockedUp={}, isUnlocked={}, isUnlocking={}", bondedRole.getName(), isLockedUp, isUnlocked, isUnlocking);
 
         String text;
         if (!isLockedUp)

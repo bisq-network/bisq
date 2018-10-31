@@ -21,6 +21,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.blockchain.BaseTxOutput;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxType;
@@ -179,25 +180,46 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
                 .findAny();
     }
 
+    public Optional<BondedRole> getBondedRoleFromLockupTxId(String lockupTxId) {
+        return bondedRoleList.getList().stream()
+                .filter(bondedRole -> lockupTxId.equals(bondedRole.getLockupTxId()))
+                .findAny();
+    }
+
+
+    public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
+        Optional<BondedRoleType> bondedRoleType = getBondedRoleFromLockupTxId(lockUpTxId).map(BondedRole::getBondedRoleType);
+        return bondedRoleType;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Optional<byte[]> getOpReturnData(String lockUpTxId) {
+        return daoStateService.getLockupOpReturnTxOutput(lockUpTxId).map(BaseTxOutput::getOpReturnData);
+    }
 
     private void persist() {
         storage.queueUpForSave(20);
     }
 
+   /* private Optional<LockupType> getOptionalLockupType(String lockUpTxId) {
+        return getOpReturnData(lockUpTxId)
+                .flatMap(BondingConsensus::getLockupType);
+    }*/
 
     /*public static Optional<BondedRole> getBondedRoleByLockupTxId(String lockupTxId) {
         return bondedRoles.stream()
                 .filter(bondedRole -> bondedRole.getLockupTxId().equals(lockupTxId)).
                         findAny();
     }*/
-
+/*
     public static Optional<BondedRole> getBondedRoleByHashOfBondId(byte[] hash) {
         return Optional.empty();
-      /*  bondedRoles.stream()
+      *//*  bondedRoles.stream()
                 .filter(bondedRole -> Arrays.equals(bondedRole.getHash(), hash))
-                .findAny();*/
-    }
+                .findAny();*//*
+    }*/
 }
