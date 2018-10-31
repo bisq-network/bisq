@@ -143,175 +143,65 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatParamValue(Param param, String value) {
-        switch (param) {
+        switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("Unsupported param: " + param);
-
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-            case MIN_MAKER_FEE_BTC:
-            case MIN_TAKER_FEE_BTC:
-                return formatBTCWithCode(parseToBTC(value));
-
-            case DEFAULT_MAKER_FEE_BSQ:
-            case DEFAULT_TAKER_FEE_BSQ:
-            case MIN_MAKER_FEE_BSQ:
-            case MIN_TAKER_FEE_BSQ:
-
-            case PROPOSAL_FEE:
-            case BLIND_VOTE_FEE:
-            case COMPENSATION_REQUEST_MIN_AMOUNT:
-            case COMPENSATION_REQUEST_MAX_AMOUNT:
-            case REIMBURSEMENT_MIN_AMOUNT:
-            case REIMBURSEMENT_MAX_AMOUNT:
-
-            case QUORUM_COMP_REQUEST:
-            case QUORUM_REIMBURSEMENT:
-            case QUORUM_CHANGE_PARAM:
-            case QUORUM_ROLE:
-            case QUORUM_CONFISCATION:
-            case QUORUM_GENERIC:
-            case QUORUM_REMOVE_ASSET:
+                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+            case BSQ:
                 return formatCoinWithCode(parseToCoin(value));
-
-            case THRESHOLD_COMP_REQUEST:
-            case THRESHOLD_REIMBURSEMENT:
-            case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_ROLE:
-            case THRESHOLD_CONFISCATION:
-            case THRESHOLD_GENERIC:
-            case THRESHOLD_REMOVE_ASSET:
+            case BTC:
+                return formatBTCWithCode(parseToBTC(value));
+            case PERCENT:
                 return formatToPercentWithSymbol(parsePercentStringToDouble(value));
-
-            case RECIPIENT_BTC_ADDRESS:
-                return value;
-
-            case PHASE_UNDEFINED:
-                throw new IllegalArgumentException("Unsupported param: " + param);
-            case PHASE_PROPOSAL:
-            case PHASE_BREAK1:
-            case PHASE_BLIND_VOTE:
-            case PHASE_BREAK2:
-            case PHASE_VOTE_REVEAL:
-            case PHASE_BREAK3:
-            case PHASE_RESULT:
+            case BLOCK:
                 return Res.get("dao.param.blocks", Integer.parseInt(value));
+            case ADDRESS:
+                return value;
             default:
-                throw new IllegalArgumentException("Unsupported param: " + param);
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
         }
     }
 
     public Coin parseParamValueToCoin(Param param, String inputValue) {
-        switch (param) {
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-            case MIN_MAKER_FEE_BTC:
-            case MIN_TAKER_FEE_BTC:
-                return parseToBTC(inputValue);
-
-            case DEFAULT_MAKER_FEE_BSQ:
-            case DEFAULT_TAKER_FEE_BSQ:
-            case MIN_MAKER_FEE_BSQ:
-            case MIN_TAKER_FEE_BSQ:
-
-            case PROPOSAL_FEE:
-            case BLIND_VOTE_FEE:
-            case COMPENSATION_REQUEST_MIN_AMOUNT:
-            case COMPENSATION_REQUEST_MAX_AMOUNT:
-            case REIMBURSEMENT_MIN_AMOUNT:
-            case REIMBURSEMENT_MAX_AMOUNT:
-
-            case QUORUM_COMP_REQUEST:
-            case QUORUM_REIMBURSEMENT:
-            case QUORUM_CHANGE_PARAM:
-            case QUORUM_ROLE:
-            case QUORUM_CONFISCATION:
-            case QUORUM_GENERIC:
-            case QUORUM_REMOVE_ASSET:
+        switch (param.getParamType()) {
+            case BSQ:
                 return parseToCoin(inputValue);
-
+            case BTC:
+                return parseToBTC(inputValue);
             default:
-                throw new IllegalArgumentException("Unsupported param: " + param);
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
         }
     }
 
     public int parseParamValueToBlocks(Param param, String inputValue) {
-        switch (param) {
-            case PHASE_UNDEFINED:
-                return 0;
-            case PHASE_PROPOSAL:
-            case PHASE_BREAK1:
-            case PHASE_BLIND_VOTE:
-            case PHASE_BREAK2:
-            case PHASE_VOTE_REVEAL:
-            case PHASE_BREAK3:
-            case PHASE_RESULT:
+        switch (param.getParamType()) {
+            case BLOCK:
                 return Integer.parseInt(inputValue);
             default:
-                throw new IllegalArgumentException("Unsupported param: " + param);
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
         }
     }
 
     public String parseParamValueToString(Param param, String inputValue) throws ValidationException {
-        switch (param) {
+        switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("Unsupported param: " + param);
-
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-            case MIN_MAKER_FEE_BTC:
-            case MIN_TAKER_FEE_BTC:
-                return formatBTC(parseParamValueToCoin(param, inputValue));
-
-            case DEFAULT_MAKER_FEE_BSQ:
-            case DEFAULT_TAKER_FEE_BSQ:
-            case MIN_MAKER_FEE_BSQ:
-            case MIN_TAKER_FEE_BSQ:
-
-            case PROPOSAL_FEE:
-            case BLIND_VOTE_FEE:
-            case COMPENSATION_REQUEST_MIN_AMOUNT:
-            case COMPENSATION_REQUEST_MAX_AMOUNT:
-            case REIMBURSEMENT_MIN_AMOUNT:
-            case REIMBURSEMENT_MAX_AMOUNT:
-
-            case QUORUM_COMP_REQUEST:
-            case QUORUM_REIMBURSEMENT:
-            case QUORUM_CHANGE_PARAM:
-            case QUORUM_ROLE:
-            case QUORUM_CONFISCATION:
-            case QUORUM_GENERIC:
-            case QUORUM_REMOVE_ASSET:
+                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+            case BSQ:
                 return formatCoin(parseParamValueToCoin(param, inputValue));
-
-            case THRESHOLD_COMP_REQUEST:
-            case THRESHOLD_REIMBURSEMENT:
-            case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_ROLE:
-            case THRESHOLD_CONFISCATION:
-            case THRESHOLD_GENERIC:
-            case THRESHOLD_REMOVE_ASSET:
+            case BTC:
+                return formatBTC(parseParamValueToCoin(param, inputValue));
+            case PERCENT:
                 return formatToPercent(parsePercentStringToDouble(inputValue));
 
-            case RECIPIENT_BTC_ADDRESS:
+            case BLOCK:
+                return Integer.toString(parseParamValueToBlocks(param, inputValue));
+            case ADDRESS:
                 InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
                 if (validationResult.isValid)
                     return inputValue;
                 else
                     throw new ValidationException(validationResult.errorMessage);
-
-            case PHASE_UNDEFINED:
-                throw new IllegalArgumentException("Unsupported param: " + param);
-            case PHASE_PROPOSAL:
-            case PHASE_BREAK1:
-            case PHASE_BLIND_VOTE:
-            case PHASE_BREAK2:
-            case PHASE_VOTE_REVEAL:
-            case PHASE_BREAK3:
-            case PHASE_RESULT:
-                return Integer.toString(parseParamValueToBlocks(param, inputValue));
             default:
-                throw new IllegalArgumentException("Unsupported param: " + param);
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
         }
     }
 }
