@@ -1808,7 +1808,7 @@ textfield */
 }
 
 .dao-accepted-icon {
-    -fx-text-fill: -bs-green;
+    -fx-text-fill: -bs-rd-green;
 }
 
 .dao-rejected-icon {

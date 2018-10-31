@@ -132,6 +132,8 @@ public class ProposalDisplay {
     private ChangeListener<BondedRoleType> requiredBondForRoleListener;
     private TitledGroupBg titledGroupBg;
     private int titledGroupBgRowSpan;
+    private VBox linkWithIconContainer;
+    private VBox comboBoxValueContainer;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
                            @Nullable ChangeParamValidator changeParamValidator) {
@@ -198,13 +200,15 @@ public class ProposalDisplay {
         linkInputTextField.setValidator(new InputValidator());
         inputControls.add(linkInputTextField);
 
-        linkHyperlinkWithIcon = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
-                Res.get("dao.proposal.display.link"), "", "", 0).second;
+        Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
+                Res.get("dao.proposal.display.link"), "", "", 0);
+        linkHyperlinkWithIcon = tuple.second;
+        linkWithIconContainer = tuple.third;
         // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorpane as base)
         linkHyperlinkWithIcon.prefWidthProperty().bind(nameTextField.widthProperty());
 
-        linkHyperlinkWithIcon.setVisible(false);
-        linkHyperlinkWithIcon.setManaged(false);
+        linkWithIconContainer.setVisible(false);
+        linkWithIconContainer.setManaged(false);
 
         int comboBoxValueTextFieldIndex = -1;
         switch (proposalType) {
@@ -342,10 +346,12 @@ public class ProposalDisplay {
         }
 
         if (comboBoxValueTextFieldIndex > -1) {
-            comboBoxValueTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, comboBoxValueTextFieldIndex,
-                    Res.get("dao.proposal.display.option")).second;
-            comboBoxValueTextField.setVisible(false);
-            comboBoxValueTextField.setManaged(false);
+            Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, comboBoxValueTextFieldIndex,
+                    Res.get("dao.proposal.display.option"));
+            comboBoxValueTextField = tuple3.second;
+            comboBoxValueContainer = tuple3.third;
+            comboBoxValueContainer.setVisible(false);
+            comboBoxValueContainer.setManaged(false);
         }
 
         if (isMakeProposalScreen) {
@@ -442,9 +448,9 @@ public class ProposalDisplay {
         nameTextField.setText(proposal.getName());
         linkInputTextField.setVisible(false);
         linkInputTextField.setManaged(false);
-        if (linkHyperlinkWithIcon != null) {
-            linkHyperlinkWithIcon.setVisible(true);
-            linkHyperlinkWithIcon.setManaged(true);
+        if (linkWithIconContainer != null) {
+            linkWithIconContainer.setVisible(true);
+            linkWithIconContainer.setManaged(true);
             linkHyperlinkWithIcon.setText(proposal.getLink());
             linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         }
@@ -545,18 +551,18 @@ public class ProposalDisplay {
             comboBox.setVisible(isEditable);
             comboBox.setManaged(isEditable);
 
-            if (comboBoxValueTextField != null) {
-                comboBoxValueTextField.setVisible(!isEditable);
-                comboBoxValueTextField.setManaged(!isEditable);
+            if (comboBoxValueContainer != null) {
+                comboBoxValueContainer.setVisible(!isEditable);
+                comboBoxValueContainer.setManaged(!isEditable);
             }
         });
 
         linkInputTextField.setVisible(true);
         linkInputTextField.setManaged(true);
 
-        if (linkHyperlinkWithIcon != null) {
-            linkHyperlinkWithIcon.setVisible(false);
-            linkHyperlinkWithIcon.setManaged(false);
+        if (linkWithIconContainer != null) {
+            linkWithIconContainer.setVisible(false);
+            linkWithIconContainer.setManaged(false);
             linkHyperlinkWithIcon.setOnAction(null);
         }
     }
