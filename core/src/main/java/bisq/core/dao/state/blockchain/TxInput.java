@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -38,7 +40,7 @@ import javax.annotation.concurrent.Immutable;
 @Value
 @EqualsAndHashCode
 @Slf4j
-public final class TxInput implements PersistablePayload {
+public final class TxInput implements PersistablePayload, ImmutableDaoStateVo {
 
     public static TxInput clone(TxInput txInput) {
         return new TxInput(txInput.getConnectedTxOutputTxId(),

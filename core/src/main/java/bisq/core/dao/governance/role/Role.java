@@ -37,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
+/**
+ * Immutable data for a role. Is stored in the DaoState as part of the evaluated proposals.
+ */
 @Immutable
 @Slf4j
 @Value

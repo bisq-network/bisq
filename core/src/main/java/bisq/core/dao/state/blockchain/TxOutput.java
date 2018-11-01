@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -34,7 +36,7 @@ import javax.annotation.Nullable;
  * Gets persisted.
  */
 @Data
-public class TxOutput extends BaseTxOutput implements PersistablePayload {
+public class TxOutput extends BaseTxOutput implements PersistablePayload, ImmutableDaoStateVo {
     public static TxOutput fromTempOutput(TempTxOutput tempTxOutput) {
         return new TxOutput(tempTxOutput.getIndex(),
                 tempTxOutput.getValue(),

@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -31,13 +33,15 @@ import java.util.stream.Collectors;
 import lombok.Value;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Immutable class for a Bsq transaction.
  * Gets persisted.
  */
+@Immutable
 @Value
-public final class Tx extends BaseTx implements PersistablePayload {
+public final class Tx extends BaseTx implements PersistablePayload, ImmutableDaoStateVo {
     // Created after parsing of a tx is completed. We store only the immutable tx in the block.
     public static Tx fromTempTx(TempTx tempTx) {
         ImmutableList<TxOutput> txOutputs = ImmutableList.copyOf(tempTx.getTempTxOutputs().stream()

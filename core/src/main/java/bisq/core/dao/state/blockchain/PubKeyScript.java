@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -30,10 +32,12 @@ import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
+@Immutable
 @Value
 @AllArgsConstructor
-public class PubKeyScript implements PersistablePayload {
+public class PubKeyScript implements PersistablePayload, ImmutableDaoStateVo {
     private final int reqSigs;
     private final ScriptType scriptType;
     @Nullable

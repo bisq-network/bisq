@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.common.collect.ImmutableList;
@@ -40,7 +42,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public abstract class BaseTx {
+public abstract class BaseTx implements ImmutableDaoStateVo {
     protected final String txVersion;
     protected final String id;
     protected final int blockHeight;
