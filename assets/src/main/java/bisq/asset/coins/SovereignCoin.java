@@ -21,16 +21,16 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-public class Sovereign extends Coin {
+public class sovereign extends Coin {
 
-    public SovereignCoin() {
-        super("SovereignCoin", "SOV", new Base58BitcoinAddressValidator(new SovereignCoinParams()));
+    public sovereigncoin() {
+        super("sovereigncoin", "sov", new Base58BitcoinAddressValidator(new sovereigncoinParams()));
     }
 
 
-    public static class SovereignCoinParams extends NetworkParametersAdapter {
+    public static class sovereigncoinParams extends NetworkParametersAdapter {
 
-        public SovereignCoinParams() {
+        public sovereigncoinParams() {
             addressHeader = 50;
             p2shHeader = 18;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
