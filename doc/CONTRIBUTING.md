@@ -26,3 +26,8 @@ Copyright
 
 By contributing to this repository, you agree to license your work under the AGPL license.
 Please include the bisq license header into your files.
+
+Compensation for your contributions
+---------
+Bisq is not a company but operates as a [DAO](https://docs.bisq.network/dao/phase-zero.html). For any development work merged into the Bisq master branch you can file a [compensation request](https://github.com/bisq-network/compensation) and earn BSQ (the DAO native token). Learn more about the Bisq DAO at our [docs](https://docs.bisq.network/dao/phase-zero.html) pages.
+

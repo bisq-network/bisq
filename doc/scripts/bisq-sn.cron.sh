@@ -1,4 +1,7 @@
 #!/bin/sh
+
+# Script for checking if seed nodes are available
+
 # Restart Bisq seed node daemons whose resident memory (RSS)
 # is over MAX_RSS_MiB.
 #
