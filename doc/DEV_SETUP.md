@@ -139,7 +139,7 @@ _Don't forget to use different rpcBlockNotificationPorts for different full node
 
 #### Use the predefined setup
 
-The creation of the genesis tx is a bit cumbersome. To make it easier to get started you can use the [Bisq_DAO_regtest_setup.zip](https://github.com/bisq-network/bisq/tree/master/doc/Bisq_DAO_regtest_setup.zip) file which you find here in the same directory.
+The creation of the genesis tx is a bit cumbersome. To make it easier to get started you can use the [Bisq_DAO_regtest_setup.zip](https://github.com/bisq-network/bisq/tree/master/doc/Bisq_DAO_regtest_setup.zip) file.
 Extract the file and use those data directories for the Bitcoin Core as well as the Alice and Bob instances which are configured to have the genesis tx as defined in the above program arguments (`30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf` at height `111`).
 
 _You need to adjust the path to the `blocknotify` file inside of `bitcoin.conf` before starting Bitcoin Core._
