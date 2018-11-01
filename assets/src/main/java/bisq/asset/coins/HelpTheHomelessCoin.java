@@ -21,7 +21,7 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-public class Motion extends Coin {
+public class HelpTheHomeless extends Coin {
 
     public HelpTheHomelessCoin() {
         super("HelpTheHomelessCoin", "HTH", new Base58BitcoinAddressValidator(new HelpTheHomelessCoinParams()));
