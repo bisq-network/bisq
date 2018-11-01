@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.ConsensusCritical;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.governance.Issuance;
 
 import bisq.common.proto.network.NetworkPayload;
@@ -31,8 +32,11 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 @EqualsAndHashCode
-public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical {
+public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateVo {
     @Getter
     private final Issuance issuance;
     @Getter

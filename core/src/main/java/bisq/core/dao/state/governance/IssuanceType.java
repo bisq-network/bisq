@@ -17,7 +17,12 @@
 
 package bisq.core.dao.state.governance;
 
-public enum IssuanceType {
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public enum IssuanceType implements ImmutableDaoStateVo {
     UNDEFINED,
     COMPENSATION,
     REIMBURSEMENT

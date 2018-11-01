@@ -21,6 +21,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -44,7 +45,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class CompensationProposal extends Proposal implements IssuanceProposal {
+public final class CompensationProposal extends Proposal implements IssuanceProposal, ImmutableDaoStateVo {
     private final long requestedBsq;
     private final String bsqAddress;
 

@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.period;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -36,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class Cycle implements PersistablePayload {
+public class Cycle implements PersistablePayload, ImmutableDaoStateVo {
     // List is ordered according to the Phase enum.
     private final ImmutableList<DaoPhase> daoPhaseList;
     private final int heightOfFirstBlock;

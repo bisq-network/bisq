@@ -21,6 +21,7 @@ import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -33,6 +34,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Base class for all ballots like compensation request, generic request, remove asset ballots and
@@ -41,10 +43,11 @@ import javax.annotation.Nullable;
  *
  * One proposal has about 278 bytes
  */
+@Immutable
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Ballot implements PersistablePayload, ConsensusCritical {
+public final class Ballot implements PersistablePayload, ConsensusCritical, ImmutableDaoStateVo {
     protected final Proposal proposal;
 
     @Nullable

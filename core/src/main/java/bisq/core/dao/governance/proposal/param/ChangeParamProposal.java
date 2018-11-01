@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -37,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public final class ChangeParamProposal extends Proposal {
+public final class ChangeParamProposal extends Proposal implements ImmutableDaoStateVo {
     private final Param param;
     private final String paramValue;
 

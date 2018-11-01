@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.governance;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -36,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class Issuance implements PersistablePayload, NetworkPayload {
+public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDaoStateVo {
     private final String txId; // comp. request txId
     private final int chainHeight; // of issuance (first block of result phase)
     private final long amount;

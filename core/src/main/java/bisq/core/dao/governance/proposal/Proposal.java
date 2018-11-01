@@ -25,6 +25,7 @@ import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.RoleProposal;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -51,7 +52,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public abstract class Proposal implements PersistablePayload, NetworkPayload, ConsensusCritical {
+public abstract class Proposal implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateVo {
     protected final String name;
     protected final String link;
     protected final byte version;

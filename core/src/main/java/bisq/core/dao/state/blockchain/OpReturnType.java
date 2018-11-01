@@ -17,16 +17,20 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import java.util.Arrays;
 import java.util.Optional;
 
 import lombok.Getter;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Provides byte constants for distinguishing the type of a DAO transaction used in the OP_RETURN data.
  */
-
-public enum OpReturnType {
+@Immutable
+public enum OpReturnType implements ImmutableDaoStateVo {
     //TODO add undefined ?
     PROPOSAL((byte) 0x10),
     COMPENSATION_REQUEST((byte) 0x11),

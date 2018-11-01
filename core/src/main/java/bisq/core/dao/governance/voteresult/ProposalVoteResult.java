@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -26,11 +27,14 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.concurrent.Immutable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Immutable
 @Value
 @Slf4j
-public class ProposalVoteResult implements PersistablePayload {
+public class ProposalVoteResult implements PersistablePayload, ImmutableDaoStateVo {
     private final Proposal proposal;
     private final long stakeOfAcceptedVotes;
     private final long stakeOfRejectedVotes;

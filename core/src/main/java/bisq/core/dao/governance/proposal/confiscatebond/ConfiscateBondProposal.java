@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal.confiscatebond;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -41,7 +42,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class ConfiscateBondProposal extends Proposal {
+public final class ConfiscateBondProposal extends Proposal implements ImmutableDaoStateVo {
     private final byte[] hash;
 
     ConfiscateBondProposal(String name,

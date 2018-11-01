@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.ProtoUtil;
 
 import io.bisq.generated.protobuffer.PB;
@@ -29,11 +31,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 
+import javax.annotation.concurrent.Immutable;
+
 @ToString
+@Immutable
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public enum ScriptType {
+public enum ScriptType implements ImmutableDaoStateVo {
 
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/standard.cpp
     PUB_KEY("pubkey"),

@@ -23,6 +23,7 @@ import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.merit.MeritList;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -36,12 +37,15 @@ import java.util.Optional;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Holds all data from a decrypted vote item.
  */
+@Immutable
 @Slf4j
 @Value
-public class DecryptedBallotsWithMerits implements PersistablePayload {
+public class DecryptedBallotsWithMerits implements PersistablePayload, ImmutableDaoStateVo {
     private final byte[] hashOfBlindVoteList;
     private final String blindVoteTxId;
     private final String voteRevealTxId;

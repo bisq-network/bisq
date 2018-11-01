@@ -17,15 +17,19 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
 import lombok.Value;
 
-// Only used for json export
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
 @Value
-public final class SpentInfo implements PersistablePayload {
+public final class SpentInfo implements PersistablePayload, ImmutableDaoStateVo {
     private final long blockHeight;
     // Spending tx
     private final String txId;

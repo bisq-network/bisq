@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.period;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -33,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class DaoPhase implements PersistablePayload {
+public class DaoPhase implements PersistablePayload, ImmutableDaoStateVo {
 
     /**
      * Enum for phase of a cycle.
@@ -41,7 +43,8 @@ public class DaoPhase implements PersistablePayload {
      * We don't want to use a enum with the duration as field because the duration can change by voting and enums
      * should be considered immutable.
      */
-    public enum Phase {
+    @Immutable
+    public enum Phase implements ImmutableDaoStateVo {
         UNDEFINED,
         PROPOSAL,
         BREAK1,

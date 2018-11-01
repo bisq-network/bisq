@@ -17,11 +17,16 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.ProtoUtil;
 
 import io.bisq.generated.protobuffer.PB;
 
-public enum TxOutputType {
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public enum TxOutputType implements ImmutableDaoStateVo {
     UNDEFINED_OUTPUT,
     GENESIS_OUTPUT,
     BSQ_OUTPUT,

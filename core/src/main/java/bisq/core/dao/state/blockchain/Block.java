@@ -17,8 +17,6 @@
 
 package bisq.core.dao.state.blockchain;
 
-import bisq.core.dao.state.ImmutableDaoStateVo;
-
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -35,11 +33,16 @@ import lombok.Value;
 /**
  * The Block which gets persisted in the DaoState. During parsing transactions can be
  * added to the txs list, therefore it is not an immutable list.
- * // TODO make it fully immutable
+ *
+ * It is difficult to make the block immutable by using the same pattern we use with Tx or TxOutput because we add the
+ * block at the beginning of the parsing to the daoState and add transactions during parsing. We need to have the state
+ * updated during parsing. If we would set then after the parsing the immutable block we might have inconsistent data.
+ * There might be a way to do it but it comes with high complexity and risks so for now we prefer to have that known
+ * issue with not being fully immutable at that level.
  */
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class Block extends BaseBlock implements PersistablePayload, ImmutableDaoStateVo {
+public final class Block extends BaseBlock implements PersistablePayload {
     private final List<Tx> txs;
 
     public Block(int height, long time, String hash, String previousBlockHash) {

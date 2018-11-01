@@ -28,6 +28,7 @@ import java.util.Objects;
 import lombok.Data;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Contains immutable BSQ specific data (TxOutputType) and is used to get
@@ -35,6 +36,7 @@ import javax.annotation.Nullable;
  * TempTxOutput get converted to immutable TxOutput after tx parsing is completed.
  * Gets persisted.
  */
+@Immutable
 @Data
 public class TxOutput extends BaseTxOutput implements PersistablePayload, ImmutableDaoStateVo {
     public static TxOutput fromTempOutput(TempTxOutput tempTxOutput) {

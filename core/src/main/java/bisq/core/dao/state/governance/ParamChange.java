@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.governance;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
@@ -30,7 +32,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class ParamChange implements PersistablePayload {
+public class ParamChange implements PersistablePayload, ImmutableDaoStateVo {
     // We use the enum name instead of the enum to be more flexible with changes at updates
     private final String paramName;
     private final String value;

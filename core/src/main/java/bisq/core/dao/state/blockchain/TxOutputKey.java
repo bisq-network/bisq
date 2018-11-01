@@ -17,10 +17,19 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
+
+/**
+ * Convenience object for identifying a TxOutput.
+ * Used as key in maps in the daoState.
+ */
+@Immutable
 @Value
-public final class TxOutputKey {
+public final class TxOutputKey implements ImmutableDaoStateVo {
     private final String txId;
     private final int index;
 

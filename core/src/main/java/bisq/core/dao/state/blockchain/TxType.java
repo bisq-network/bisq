@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.blockchain;
 
+import bisq.core.dao.state.ImmutableDaoStateVo;
+
 import bisq.common.proto.ProtoUtil;
 
 import io.bisq.generated.protobuffer.PB;
@@ -24,8 +26,10 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
-public enum TxType {
+@Immutable
+public enum TxType implements ImmutableDaoStateVo {
     UNDEFINED_TX_TYPE(false, false),
     UNVERIFIED(false, false),
     INVALID(false, false),

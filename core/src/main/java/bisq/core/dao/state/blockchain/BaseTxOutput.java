@@ -17,8 +17,6 @@
 
 package bisq.core.dao.state.blockchain;
 
-import bisq.core.dao.state.ImmutableDaoStateVo;
-
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
@@ -40,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Immutable
 @Data
-public abstract class BaseTxOutput implements ImmutableDaoStateVo {
+public abstract class BaseTxOutput {
     protected final int index;
     protected final long value;
     protected final String txId;

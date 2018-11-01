@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.ConsensusCritical;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 
 import bisq.common.proto.persistable.PersistableList;
 
@@ -31,10 +32,13 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 
+import javax.annotation.concurrent.Immutable;
+
 // We don't persist that list but use it only for encoding the MeritList list
 // to PB bytes in the blindVote.
+@Immutable
 @EqualsAndHashCode(callSuper = true)
-public class MeritList extends PersistableList<Merit> implements ConsensusCritical {
+public class MeritList extends PersistableList<Merit> implements ConsensusCritical, ImmutableDaoStateVo {
 
     public MeritList(List<Merit> list) {
         super(list);

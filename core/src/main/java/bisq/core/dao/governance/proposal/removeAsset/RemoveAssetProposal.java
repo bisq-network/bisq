@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal.removeAsset;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -38,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class RemoveAssetProposal extends Proposal {
+public final class RemoveAssetProposal extends Proposal implements ImmutableDaoStateVo {
     private final String tickerSymbol;
 
     RemoveAssetProposal(String name,

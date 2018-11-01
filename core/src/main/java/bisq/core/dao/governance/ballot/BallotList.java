@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.ballot;
 
 import bisq.core.dao.governance.ConsensusCritical;
+import bisq.core.dao.state.ImmutableDaoStateVo;
 
 import bisq.common.proto.persistable.PersistableList;
 
@@ -29,11 +30,14 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * PersistableEnvelope wrapper for list of ballots.
  */
+@Immutable
 @EqualsAndHashCode(callSuper = true)
-public class BallotList extends PersistableList<Ballot> implements ConsensusCritical {
+public class BallotList extends PersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateVo {
 
     public BallotList(List<Ballot> list) {
         super(list);

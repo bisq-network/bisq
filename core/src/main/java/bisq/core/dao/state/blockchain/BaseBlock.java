@@ -17,8 +17,6 @@
 
 package bisq.core.dao.state.blockchain;
 
-import bisq.core.dao.state.ImmutableDaoStateVo;
-
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Optional;
@@ -34,7 +32,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Data
-public abstract class BaseBlock implements ImmutableDaoStateVo {
+public abstract class BaseBlock {
     protected final int height;
     protected final long time; // in ms
     protected final String hash;
