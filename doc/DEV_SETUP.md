@@ -120,7 +120,7 @@ and
 
 At this point you can now perform trades between Alice and Bob using your local regtest environment and test from both the buyer's and seller's perspective. You can also open disputes with `cmd+o` and see how the arbitration system works (run the arbitrator in that case as well).
 
-_Note, remember to generate a new block in the Bitcoin Core console after taking an offer using the command `generate 1` to trigger a block confirmation._
+_Remember to generate a new block in the Bitcoin Core console after taking an offer using the command `generate 1` to trigger a block confirmation._
 
 ### DAO mode
 If you want to run any instance in DAO mode use those program arguments:
@@ -133,14 +133,14 @@ Lite node mode:
 
 `--daoActivated=true --genesisBlockHeight=111 --genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf --baseCurrencyNetwork=BTC_REGTEST --useDevPrivilegeKeys=true --useLocalhostForP2P=true --nodePort=8888 --appName=bisq-BTC_REGTEST_Bob_dao`
 
-_Note, don't forget to use different rpcBlockNotificationPorts for different full node instances, otherwise only one node will receive the new block event forwarded to that port._
+_Don't forget to use different rpcBlockNotificationPorts for different full node instances, otherwise only one node will receive the new block event forwarded to that port._
 
 ### DAO genesis transaction
 
 #### Use the predefined setup
 
-The creation of the genesis tx is a bit cumbersome. To make it easier to get started you can use the `Bisq_DAO_regtest_setup.zip` file which you find here in the same directory.
-Extract the `Bisq_DAO_regtest_setup.zip` file and use those data directories for the Bitcoin Core as well as the Alice and Bob instances which are configured to have the genesis tx as defined in the above program arguments (`30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf` at height `111`).
+The creation of the genesis tx is a bit cumbersome. To make it easier to get started you can use the [Bisq_DAO_regtest_setup.zip](https://github.com/bisq-network/bisq/tree/master/doc/Bisq_DAO_regtest_setup.zip) file which you find here in the same directory.
+Extract the file and use those data directories for the Bitcoin Core as well as the Alice and Bob instances which are configured to have the genesis tx as defined in the above program arguments (`30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf` at height `111`).
 
 _You need to adjust the path to the `blocknotify` file inside of `bitcoin.conf` before starting Bitcoin Core._
 
@@ -164,10 +164,12 @@ Bisq is not a company but operates as a [DAO](https://docs.bisq.network/dao/phas
 If there are any open questions or instructions are not clear, please add a PR for improving that file and/or join us on Slack and get in touch.
 
 
-[1] Data directory
+<br/>
 
-You typically find the data directories here:  
-OSX: `/Users/username/Library/Application Support/bisq/`  
-Linux: `/home/username/.bisq/`    
-Windows XP: `C:\Documents and Settings\username\Application Data\bisq\`    
-Windows Vista or 7: `%appdata%/bisq/`  
+_[1] You typically find the data directories here:_
+```
+OSX: /Users/username/Library/Application Support/bisq/  
+Linux: /home/username/.bisq/    
+Windows XP: C:\Documents and Settings\username\Application Data\bisq\    
+Windows Vista or 7: %appdata%/bisq/
+```
