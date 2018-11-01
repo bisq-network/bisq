@@ -28,7 +28,7 @@ public class HelpTheHomeless extends Coin {
     }
 
 
-    public static class HelptheHomelessCoinParams extends NetworkParametersAdapter {
+    public static class HelptheHomelessParams extends NetworkParametersAdapter {
 
         public HelpTheHomelessParams() {
             addressHeader = 50;
