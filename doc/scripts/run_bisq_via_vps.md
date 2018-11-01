@@ -10,7 +10,7 @@ This is how to host Bisq:
 Go to Google compute engine (https://cloud.google.com/compute/) and start an instance using the free trial. One gets $300 credit and 60 days trial period. I used one CPU, 40 GByte of boot disk, and the default value of RAM, 3.75 GB.
 I chose Ubuntu 16.04 LTS as the operating system.
 
-How to make a project and start an instance is explained in: https://goo.gl/1Ljy7O which also explains how to install a vnc-server. In short, ssh to your instance, which can be done from the google compute engine (gce) console, then execute the following script:
+How to make a project and start an instance is explained in: https://goo.gl/1Ljy7O which also explains how to install a vnc-server. In short, connect via ssh to your instance, which can be done from the Google compute engine (gce) console, then execute the following script:
 
 ```
 sudo apt-get -y update;

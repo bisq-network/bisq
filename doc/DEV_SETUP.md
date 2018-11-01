@@ -89,7 +89,7 @@ Here is an overview:
 --daoActivated: If set to true it enables the DAO mode. For testnet and regtest it is enabled by default.   
 --genesisBlockHeight: If set it overrides the hard coded block height of the genesis tx. Set it to your local genesis tx height.  
 --genesisTxId: If set it overrides the hard coded genesis tx ID. Set it to your local genesis tx ID.  
---fullDaoNode: If true it enabled full DAO node mode (in contrast to default lite node mode). At least one seed node must be running as a full DAO node to support other lite nodes.  
+--fullDaoNode: If true it enables full DAO node mode (in contrast to default lite node mode). At least one seed node must be running as a full DAO node to support other lite nodes.  
 --rpcUser: RPC user as defined in bitcoin.conf   
 --rpcPassword: RPC pw as defined in bitcoin.conf  
 --rpcPort: RPC port. For regtest 18443   
@@ -150,7 +150,7 @@ To create your own genesis transaction follow those steps:
 
 - Send 2.50010000 BTC from Bitcoin Core to another address inside Bitcoin Core (label it with `Genesis funding address`).
 - Go to the send screen and open the coin control feature. Select the labeled transaction output of the address labeled with `Genesis funding address`. Use that as the only input source for the genesis tx.
-- Start Alice in full or lite node mode and go to the DAO/Wallet/Receive screen. Copy the BSQ address and use it for one of the receivers of the genesis tx. When pasting into Bitcoiin Core remove the `B` prefix - that prefix is marking a BSQ address but technically it is a BTC address.
+- Start Alice in full or lite node mode and go to the DAO/Wallet/Receive screen. Copy the BSQ address and use it for one of the receivers of the genesis tx. When pasting into Bitcoin Core remove the `B` prefix - that prefix is marking a BSQ address but technically it is a BTC address.
 - Do the same with Bob.
 - You send in sum exactly 2.5 BTC to both Alice and Bob. You can choose how to distribute it (e.g. 1 BTC to Alice 1.5 BTC to Bob).
 - Set the miner fee so that it is exactly the remaining 0.00010000 BTC. That might be the tricky part as miner fee selection is not very convenient in Bitcoin Core. In worst case if you cannot get the right miner fee you can add the difference to one of the receivers (e.g. send 1.0000234 BTC instead of 1 BTC).
