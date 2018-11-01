@@ -29,8 +29,8 @@ public class HelpTheHomelessTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("HN83aKuX7KfqJintLk4QYLYKMn2jiiABhZ");
-        assertValidAddress("HPBaLqW2sgWQWr3zufNMcByueh14649Be9");
+        assertValidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
+        assertValidAddress("HErzbap76Sn6dWWCVhVcCbdhsVyHEjVYNy");
     }
 
     @Test
