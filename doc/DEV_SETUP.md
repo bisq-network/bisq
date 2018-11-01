@@ -157,8 +157,5 @@ To create your own genesis transaction follow those steps:
 
 _Note: It is important that there is exactly 2.5 BTC spent entirely as described, otherwise the genesis tx is invalid._
 
-### Compensation for your contributions
-Bisq is not a company but operates as a [DAO](https://docs.bisq.network/dao/phase-zero.html). For any development work merged into the Bisq master branch you can file a [compensation request](https://github.com/bisq-network/compensation) and earn BSQ (the DAO native token). Learn more about the Bisq DAO at our [docs](https://docs.bisq.network/dao/phase-zero.html) pages.
-
 ### Open questions?
 If there are any open questions or instructions are not clear, please add a PR for improving that file and/or join us on Slack and get in touch.
