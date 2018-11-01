@@ -21,8 +21,9 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Objects;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +33,6 @@ import javax.annotation.Nullable;
  * TempTxOutput get converted to immutable TxOutput after tx parsing is completed.
  * Gets persisted.
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 public class TxOutput extends BaseTxOutput implements PersistablePayload {
     public static TxOutput fromTempOutput(TempTxOutput tempTxOutput) {
@@ -115,5 +115,23 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload {
                 "\n     lockTime=" + lockTime +
                 ",\n     unlockBlockHeight=" + unlockBlockHeight +
                 "\n} " + super.toString();
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TxOutput)) return false;
+        if (!super.equals(o)) return false;
+        TxOutput txOutput = (TxOutput) o;
+        return lockTime == txOutput.lockTime &&
+                unlockBlockHeight == txOutput.unlockBlockHeight &&
+                txOutputType.name().equals(txOutput.txOutputType.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), txOutputType.name(), lockTime, unlockBlockHeight);
     }
 }

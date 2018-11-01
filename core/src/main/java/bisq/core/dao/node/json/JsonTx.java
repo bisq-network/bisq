@@ -20,6 +20,7 @@ package bisq.core.dao.node.json;
 import bisq.common.app.Version;
 
 import java.util.List;
+import java.util.Objects;
 
 import lombok.Value;
 
@@ -37,4 +38,31 @@ class JsonTx {
     private final long burntFee;
     // If not set it is -1. LockTime of 0 is a valid value.
     private final int unlockBlockHeight;
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JsonTx)) return false;
+        if (!super.equals(o)) return false;
+        JsonTx jsonTx = (JsonTx) o;
+        return blockHeight == jsonTx.blockHeight &&
+                time == jsonTx.time &&
+                burntFee == jsonTx.burntFee &&
+                unlockBlockHeight == jsonTx.unlockBlockHeight &&
+                Objects.equals(txVersion, jsonTx.txVersion) &&
+                Objects.equals(id, jsonTx.id) &&
+                Objects.equals(blockHash, jsonTx.blockHash) &&
+                Objects.equals(inputs, jsonTx.inputs) &&
+                Objects.equals(outputs, jsonTx.outputs) &&
+                txType.name().equals(jsonTx.txType.name()) &&
+                Objects.equals(txTypeDisplayString, jsonTx.txTypeDisplayString);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(super.hashCode(), txVersion, id, blockHeight, blockHash, time, inputs, outputs, txType.name(), txTypeDisplayString, burntFee, unlockBlockHeight);
+    }
 }

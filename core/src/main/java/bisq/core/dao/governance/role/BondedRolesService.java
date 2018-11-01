@@ -39,6 +39,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Manages bonded roles if they got accepted by voting.
+ */
 @Slf4j
 public class BondedRolesService implements PersistedDataHost, DaoStateListener {
 

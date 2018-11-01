@@ -67,7 +67,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
 
     /**
      * @param name                      Full name or nickname
-     * @param link             Github account or forum account of user
+     * @param link                      Github account or forum account of user
      * @param bondedRoleType            BondedRoleType
      */
     public BondedRole(String name,
@@ -158,7 +158,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getDisplayString() {
-        return name + " / " + Res.get("dao.bond.bondedRoleType." + bondedRoleType.name());
+        return Res.get("dao.bond.bondedRoleType." + bondedRoleType.name()) + ": " + name;
     }
 
     public boolean isLockedUp() {
@@ -178,7 +178,8 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     }
 
     // We use only the immutable data
-    // bondedRoleType must not be used directly for hashCode or equals as it delivers he Object.hashCode (internal address)!
+    // bondedRoleType must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

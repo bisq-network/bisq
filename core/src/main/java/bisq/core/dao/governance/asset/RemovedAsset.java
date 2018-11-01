@@ -22,6 +22,8 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Objects;
+
 import lombok.Value;
 
 @Value
@@ -29,7 +31,7 @@ public class RemovedAsset implements PersistablePayload {
     private final String tickerSymbol;
     private final RemoveReason removeReason;
 
-    public RemovedAsset(String tickerSymbol, RemoveReason removeReason) {
+    RemovedAsset(String tickerSymbol, RemoveReason removeReason) {
         this.tickerSymbol = tickerSymbol;
         this.removeReason = removeReason;
     }
@@ -49,5 +51,22 @@ public class RemovedAsset implements PersistablePayload {
     public static RemovedAsset fromProto(PB.RemovedAsset proto) {
         return new RemovedAsset(proto.getTickerSymbol(),
                 ProtoUtil.enumFromProto(RemoveReason.class, proto.getRemoveReason()));
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RemovedAsset)) return false;
+        if (!super.equals(o)) return false;
+        RemovedAsset that = (RemovedAsset) o;
+        return Objects.equals(tickerSymbol, that.tickerSymbol) &&
+                removeReason.name().equals(that.removeReason.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), tickerSymbol, removeReason.name());
     }
 }

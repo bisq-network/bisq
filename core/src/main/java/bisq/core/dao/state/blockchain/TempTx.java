@@ -19,10 +19,10 @@ package bisq.core.dao.state.blockchain;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +31,6 @@ import javax.annotation.Nullable;
  * After parsing it will get cloned to the immutable Tx.
  * We don't need to implement the ProtoBuffer methods as it is not persisted or sent over the wire.
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 public class TempTx extends BaseTx {
     public static TempTx fromRawTx(RawTx rawTx) {
@@ -85,5 +84,27 @@ public class TempTx extends BaseTx {
                 ",\n     txType=" + txType +
                 ",\n     burntFee=" + burntFee +
                 "\n} " + super.toString();
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TempTx)) return false;
+        if (!super.equals(o)) return false;
+        TempTx tempTx = (TempTx) o;
+
+        String name = txType != null ? txType.name() : "";
+        String name1 = tempTx.txType != null ? tempTx.txType.name() : "";
+        boolean isTxTypeEquals = name.equals(name1);
+        return burntFee == tempTx.burntFee &&
+                Objects.equals(tempTxOutputs, tempTx.tempTxOutputs) &&
+                isTxTypeEquals;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), tempTxOutputs, txType, burntFee);
     }
 }

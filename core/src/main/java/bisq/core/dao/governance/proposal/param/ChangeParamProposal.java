@@ -27,8 +27,8 @@ import bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Date;
+import java.util.Objects;
 
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +36,6 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Slf4j
-@EqualsAndHashCode(callSuper = true)
 @Value
 public final class ChangeParamProposal extends Proposal {
     private final Param param;
@@ -138,5 +137,24 @@ public final class ChangeParamProposal extends Proposal {
                 "\n     param=" + param +
                 ",\n     paramValue=" + paramValue +
                 "\n} " + super.toString();
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ChangeParamProposal)) return false;
+        if (!super.equals(o)) return false;
+        ChangeParamProposal that = (ChangeParamProposal) o;
+        boolean paramTypeNameIsEquals = param.getParamType().name().equals(that.param.getParamType().name());
+        boolean paramNameIsEquals = param.name().equals(that.param.name());
+        return paramNameIsEquals && paramTypeNameIsEquals &&
+                Objects.equals(paramValue, that.paramValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), param.getParamType().name(), param.name(), paramValue);
     }
 }

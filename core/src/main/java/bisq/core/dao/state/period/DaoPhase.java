@@ -21,6 +21,8 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Objects;
+
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
@@ -82,5 +84,22 @@ public class DaoPhase implements PersistablePayload {
                 "\n     phase=" + phase +
                 ",\n     duration=" + duration +
                 "\n}";
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DaoPhase)) return false;
+        if (!super.equals(o)) return false;
+        DaoPhase daoPhase = (DaoPhase) o;
+        return duration == daoPhase.duration &&
+                phase.name().equals(daoPhase.phase.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), phase.name(), duration);
     }
 }

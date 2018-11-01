@@ -23,6 +23,7 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.Value;
@@ -88,5 +89,25 @@ public class Issuance implements PersistablePayload, NetworkPayload {
                 ",\n     pubKey='" + pubKey + '\'' +
                 ",\n     issuanceType='" + issuanceType + '\'' +
                 "\n}";
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Issuance)) return false;
+        if (!super.equals(o)) return false;
+        Issuance issuance = (Issuance) o;
+        return chainHeight == issuance.chainHeight &&
+                amount == issuance.amount &&
+                Objects.equals(txId, issuance.txId) &&
+                Objects.equals(pubKey, issuance.pubKey) &&
+                issuanceType.name().equals(issuance.issuanceType.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), txId, chainHeight, amount, pubKey, issuanceType.name());
     }
 }

@@ -23,6 +23,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.AllArgsConstructor;
@@ -69,5 +70,26 @@ public class PubKeyScript implements PersistablePayload {
                 proto.getAddressesList().isEmpty() ? null : ImmutableList.copyOf(proto.getAddressesList()),
                 proto.getAsm(),
                 proto.getHex());
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PubKeyScript)) return false;
+        if (!super.equals(o)) return false;
+        PubKeyScript that = (PubKeyScript) o;
+        return reqSigs == that.reqSigs &&
+                scriptType.name().equals(that.scriptType.name()) &&
+                Objects.equals(addresses, that.addresses) &&
+                Objects.equals(asm, that.asm) &&
+                Objects.equals(hex, that.hex);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(super.hashCode(), reqSigs, scriptType.name(), addresses, asm, hex);
     }
 }

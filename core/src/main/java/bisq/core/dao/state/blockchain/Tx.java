@@ -24,10 +24,10 @@ import io.bisq.generated.protobuffer.PB;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import javax.annotation.Nullable;
@@ -36,7 +36,6 @@ import javax.annotation.Nullable;
  * Immutable class for a Bsq transaction.
  * Gets persisted.
  */
-@EqualsAndHashCode(callSuper = true)
 @Value
 public final class Tx extends BaseTx implements PersistablePayload {
     // Created after parsing of a tx is completed. We store only the immutable tx in the block.
@@ -150,4 +149,26 @@ public final class Tx extends BaseTx implements PersistablePayload {
                 "\n} " + super.toString();
     }
 
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tx)) return false;
+        if (!super.equals(o)) return false;
+        Tx tx = (Tx) o;
+
+        String name = txType != null ? txType.name() : "";
+        String name1 = tx.txType != null ? tx.txType.name() : "";
+        boolean isTxTypeEquals = name.equals(name1);
+
+        return burntFee == tx.burntFee &&
+                Objects.equals(txOutputs, tx.txOutputs) &&
+                isTxTypeEquals;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), txOutputs, txType, burntFee);
+    }
 }

@@ -19,6 +19,8 @@ package bisq.core.dao.node.json;
 
 import bisq.common.app.Version;
 
+import java.util.Objects;
+
 import lombok.Value;
 
 import javax.annotation.Nullable;
@@ -50,5 +52,40 @@ class JsonTxOutput {
 
     String getId() {
         return txId + ":" + index;
+    }
+
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JsonTxOutput)) return false;
+        if (!super.equals(o)) return false;
+        JsonTxOutput that = (JsonTxOutput) o;
+        return index == that.index &&
+                bsqAmount == that.bsqAmount &&
+                btcAmount == that.btcAmount &&
+                height == that.height &&
+                isVerified == that.isVerified &&
+                burntFee == that.burntFee &&
+                time == that.time &&
+                lockTime == that.lockTime &&
+                isUnspent == that.isUnspent &&
+                Objects.equals(txVersion, that.txVersion) &&
+                Objects.equals(txId, that.txId) &&
+                Objects.equals(address, that.address) &&
+                Objects.equals(scriptPubKey, that.scriptPubKey) &&
+                Objects.equals(spentInfo, that.spentInfo) &&
+                txType.name().equals(that.txType.name()) &&
+                Objects.equals(txTypeDisplayString, that.txTypeDisplayString) &&
+                txOutputType == that.txOutputType &&
+                Objects.equals(txOutputTypeDisplayString, that.txOutputTypeDisplayString) &&
+                Objects.equals(opReturn, that.opReturn);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified, burntFee, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString, txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
     }
 }
