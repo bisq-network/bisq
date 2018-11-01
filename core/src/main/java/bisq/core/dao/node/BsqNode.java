@@ -18,10 +18,10 @@
 package bisq.core.dao.node;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.RawBlock;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;

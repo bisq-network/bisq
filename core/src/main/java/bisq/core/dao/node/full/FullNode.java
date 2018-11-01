@@ -18,13 +18,13 @@
 package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 

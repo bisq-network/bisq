@@ -18,11 +18,12 @@
 package bisq.core.dao.governance.proposal.role;
 
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.governance.role.Role;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
 
 import javax.inject.Inject;
 

@@ -20,10 +20,10 @@ package bisq.desktop.main.dao.governance.proposals;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.Vote;
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

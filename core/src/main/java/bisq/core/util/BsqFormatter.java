@@ -19,7 +19,7 @@ package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.util.validation.BtcAddressValidator;

@@ -17,8 +17,9 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.common.crypto.Hash;
 

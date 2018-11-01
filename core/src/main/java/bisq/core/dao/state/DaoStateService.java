@@ -18,23 +18,24 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
-import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.SpentInfo;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.ConfiscateBond;
-import bisq.core.dao.state.governance.Issuance;
-import bisq.core.dao.state.governance.IssuanceType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.governance.ParamChange;
-import bisq.core.dao.state.period.Cycle;
+import bisq.core.dao.governance.bond.ConfiscateBond;
+import bisq.core.dao.governance.bonding.BondingConsensus;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -131,11 +132,11 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public DaoState getClone() {
-        return daoState.getClone();
+        return DaoState.getClone(daoState);
     }
 
     DaoState getClone(DaoState snapshotCandidate) {
-        return daoState.getClone(snapshotCandidate);
+        return DaoState.getClone(snapshotCandidate);
     }
 
 

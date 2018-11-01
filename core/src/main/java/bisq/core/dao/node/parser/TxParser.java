@@ -17,20 +17,18 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.node.full.RawTx;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.TempTx;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import org.bitcoinj.core.Coin;
 

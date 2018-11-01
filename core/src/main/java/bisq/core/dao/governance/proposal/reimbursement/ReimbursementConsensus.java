@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.proposal.reimbursement;
 
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
 
 import org.bitcoinj.core.Coin;
 

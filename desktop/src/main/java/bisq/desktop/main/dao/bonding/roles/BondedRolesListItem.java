@@ -20,10 +20,10 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.desktop.components.AutoTooltipButton;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.role.Role;
+import bisq.core.dao.governance.bond.BondedRole;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

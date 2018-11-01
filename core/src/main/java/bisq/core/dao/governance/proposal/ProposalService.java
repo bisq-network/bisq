@@ -19,15 +19,16 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.HashMapChangedListener;

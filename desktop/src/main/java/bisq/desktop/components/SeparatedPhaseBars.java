@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
 import javafx.scene.control.Label;

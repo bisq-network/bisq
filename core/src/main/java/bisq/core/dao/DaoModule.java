@@ -17,9 +17,6 @@
 
 package bisq.core.dao;
 
-import bisq.core.dao.bonding.bond.BondedReputationService;
-import bisq.core.dao.bonding.lockup.LockupService;
-import bisq.core.dao.bonding.unlock.UnlockService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -29,7 +26,13 @@ import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.blindvote.network.RepublishGovernanceDataHandler;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
+import bisq.core.dao.governance.bond.BondedRolesService;
+import bisq.core.dao.governance.bonding.bond.BondedReputationService;
+import bisq.core.dao.governance.bonding.lockup.LockupService;
+import bisq.core.dao.governance.bonding.unlock.UnlockService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -52,27 +55,24 @@ import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageServi
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
-import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.FullNode;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.period.CycleService;
-import bisq.core.dao.period.PeriodService;
-import bisq.core.dao.state.DaoState;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
+import bisq.core.dao.state.model.DaoState;
 
 import bisq.common.app.AppModule;
 

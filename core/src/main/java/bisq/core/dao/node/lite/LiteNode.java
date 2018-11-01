@@ -18,6 +18,7 @@
 package bisq.core.dao.node.lite;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
@@ -25,7 +26,6 @@ import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.RawBlock;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;

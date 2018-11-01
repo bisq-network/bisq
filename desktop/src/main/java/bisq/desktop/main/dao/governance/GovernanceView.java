@@ -33,7 +33,7 @@ import bisq.desktop.main.dao.governance.proposals.ProposalsView;
 import bisq.desktop.main.dao.governance.result.VoteResultView;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;

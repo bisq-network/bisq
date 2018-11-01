@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proposal.param;
 
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.util.validation.InputValidator;
 
 public class ChangeParamInputValidator extends InputValidator {

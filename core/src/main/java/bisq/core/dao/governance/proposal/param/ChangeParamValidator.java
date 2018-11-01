@@ -19,11 +19,12 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.BtcAddressValidator;

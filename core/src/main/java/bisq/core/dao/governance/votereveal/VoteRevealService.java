@@ -33,12 +33,12 @@ import bisq.core.dao.governance.blindvote.BlindVoteValidator;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
-import bisq.core.dao.period.PeriodService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 

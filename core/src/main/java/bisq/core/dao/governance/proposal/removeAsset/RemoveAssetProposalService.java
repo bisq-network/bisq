@@ -24,16 +24,15 @@ import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+
+import bisq.asset.Asset;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.asset.Asset;
 
 /**
  * Creates RemoveAssetProposal and transaction.

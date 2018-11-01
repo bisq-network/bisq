@@ -17,12 +17,11 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.governance.bonding.BondingConsensus;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import com.google.common.annotations.VisibleForTesting;
 

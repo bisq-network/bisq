@@ -18,10 +18,10 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.SpentInfo;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import javax.inject.Inject;
 

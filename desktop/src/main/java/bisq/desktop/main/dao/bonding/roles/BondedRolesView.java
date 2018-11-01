@@ -28,9 +28,9 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;

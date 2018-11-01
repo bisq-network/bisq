@@ -20,7 +20,7 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
-import bisq.core.dao.governance.role.BondedRoleType;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

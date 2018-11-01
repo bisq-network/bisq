@@ -17,15 +17,14 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
+import bisq.core.dao.governance.bonding.BondingConsensus;
+import bisq.core.dao.governance.bonding.lockup.LockupType;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import bisq.common.util.Utilities;
 

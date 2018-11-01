@@ -18,10 +18,11 @@
 package bisq.core.dao.governance.proposal.reimbursement;
 
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import org.bitcoinj.core.Coin;
 

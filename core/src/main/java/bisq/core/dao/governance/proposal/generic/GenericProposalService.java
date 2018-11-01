@@ -24,6 +24,7 @@ import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.GenericProposal;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 

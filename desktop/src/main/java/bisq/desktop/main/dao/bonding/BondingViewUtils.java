@@ -26,12 +26,12 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.bonding.bond.BondWithHash;
-import bisq.core.dao.bonding.bond.BondedReputation;
-import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.governance.role.Role;
-import bisq.core.dao.governance.role.BondedRoleType;
-import bisq.core.dao.state.blockchain.TxOutput;
+import bisq.core.dao.governance.bonding.bond.BondWithHash;
+import bisq.core.dao.governance.bonding.bond.BondedReputation;
+import bisq.core.dao.governance.bonding.lockup.LockupType;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
