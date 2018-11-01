@@ -29,7 +29,7 @@ Later you can create a new blocks with `generate 1`.
 
 #### Optional for DAO mode
 
-If you want to run Bisq with DAO mode enabled you need to configure the `bitcoin.conf` file inside the Bitcoin Core data directory [1] as well to add the `blocknotify` file.
+If you want to run Bisq with DAO mode enabled you need to configure the `bitcoin.conf` file inside the Bitcoin Core data directory [1] as well adding the `blocknotify` file.
 
 **bitcoin.conf:**
 ```
@@ -47,7 +47,7 @@ rpcpassword=YOUR_PW
 blocknotify=bash [PATH TO DATA DIR]/blocknotify %s
 ```
 
-_Please note that `txindex` triggers a resync of the entire blockchain (be aware if you set that on mainnet as that it will take a while)_
+_Please note that `txindex` triggers a resync of the entire blockchain (be aware if you set that on mainnet as that it will take a while). Also take care if you use that setting for mainnet. Extra settings for more security are recommended in mainnet mode._
 
 The `blocknotify` file need to be added to the Bitcoin Core data directory as well:
 ```
@@ -58,12 +58,12 @@ echo $1 | nc -w 1 127.0.0.1 5122
 echo $1 | nc -w 1 127.0.0.1 5123
 ```
 
-It defines the ports where a new block event gets forwarded. Bisq will listen on that port and each Bisq node need to use a different port. You can add or remove port from the list inside the file if needed.
+It defines the ports where a new block event gets forwarded. Bisq will listen on that port and each Bisq node need to use a different port. You can add or remove ports from the list inside the file if needed.
 
 
 ### Local Bisq P2P network
 
-For the local P2P network we prefer to use `localhost` not the Tor network as it is much faster. But if needed you can combine any of the following combinations of Bitcoin network mode and P2P network mode:
+For the local P2P network we prefer to use `localhost`, not the Tor network as it is much faster. But if needed you can combine any of the following combinations of Bitcoin network mode and P2P network mode:
 - localhost + regtest
 - localhost + testnet
 - localhost + mainnet
@@ -86,14 +86,14 @@ Here is an overview:
 
 #### Program arguments for DAO mode
 
---daoActivated: If set to true it enables the DAO mode. For testnet and regtest it is enabled by default.  
---genesisBlockHeight: If set it overrides the hard coded block height of the genesis tx. Set it to your local genesis tx height.
---genesisTxId: If set it overrides the hard coded genesis tx ID. Set it to your local genesis tx ID.
---fullDaoNode: If true it enabled full DAO node mode (in contrast to default lite node mode). At least one seed node must be running as a full DAO node to support other lite nodes.
---rpcUser: RPC user as defined in bitcoin.conf 
---rpcPassword: RPC pw as defined in bitcoin.conf
---rpcPort: RPC port. For regtest 18443 
---rpcBlockNotificationPort: One of the ports defined in the `blocknotify` file inside the Bitcoin data directory (see: DAO setup for Bitcoin Core).
+--daoActivated: If set to true it enables the DAO mode. For testnet and regtest it is enabled by default.   
+--genesisBlockHeight: If set it overrides the hard coded block height of the genesis tx. Set it to your local genesis tx height.  
+--genesisTxId: If set it overrides the hard coded genesis tx ID. Set it to your local genesis tx ID.  
+--fullDaoNode: If true it enabled full DAO node mode (in contrast to default lite node mode). At least one seed node must be running as a full DAO node to support other lite nodes.  
+--rpcUser: RPC user as defined in bitcoin.conf   
+--rpcPassword: RPC pw as defined in bitcoin.conf  
+--rpcPort: RPC port. For regtest 18443   
+--rpcBlockNotificationPort: One of the ports defined in the `blocknotify` file inside the Bitcoin data directory (see: DAO setup for Bitcoin Core).  
 
 ### Bisq seednode
 
