@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.period;
+package bisq.core.dao.period;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.state.DaoStateListener;
@@ -23,6 +23,8 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.period.Cycle;
+import bisq.core.dao.state.period.DaoPhase;
 
 import com.google.inject.Inject;
 

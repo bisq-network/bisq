@@ -66,13 +66,13 @@ import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
+import bisq.core.dao.period.CycleService;
+import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoState;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
-import bisq.core.dao.state.period.CycleService;
-import bisq.core.dao.state.period.PeriodService;
 
 import bisq.common.app.AppModule;
 

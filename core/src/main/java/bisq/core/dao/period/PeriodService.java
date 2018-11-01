@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.period;
+package bisq.core.dao.period;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.period.Cycle;
+import bisq.core.dao.state.period.DaoPhase;
 
 import com.google.inject.Inject;
 

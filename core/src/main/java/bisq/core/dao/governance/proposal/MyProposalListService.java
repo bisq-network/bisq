@@ -23,12 +23,12 @@ import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
+import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
 
 import bisq.network.p2p.P2PService;
 

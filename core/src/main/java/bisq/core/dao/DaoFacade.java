@@ -52,6 +52,7 @@ import bisq.core.dao.governance.proposal.role.RoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.role.Role;
+import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
@@ -63,7 +64,6 @@ import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
 
 import bisq.asset.Asset;
 

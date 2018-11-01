@@ -23,7 +23,7 @@ import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.period.PeriodService;
 
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;

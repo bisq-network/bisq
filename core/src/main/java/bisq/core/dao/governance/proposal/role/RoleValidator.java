@@ -21,8 +21,8 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.role.Role;
+import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.period.PeriodService;
 
 import javax.inject.Inject;
 

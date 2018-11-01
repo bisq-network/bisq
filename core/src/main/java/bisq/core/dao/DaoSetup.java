@@ -27,8 +27,8 @@ import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.json.ExportJsonFilesService;
+import bisq.core.dao.period.CycleService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.period.CycleService;
 
 import bisq.common.handlers.ErrorMessageHandler;
 

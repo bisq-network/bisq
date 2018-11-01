@@ -42,6 +42,7 @@ import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Block;
@@ -50,7 +51,6 @@ import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.governance.ConfiscateBond;
 import bisq.core.dao.state.governance.ParamChange;
 import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;

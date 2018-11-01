@@ -48,7 +48,7 @@ public class Cycle implements PersistablePayload, ImmutableDaoStateVo {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Cycle(int heightOfFirstBlock, ImmutableList<DaoPhase> daoPhaseList) {
+    public Cycle(int heightOfFirstBlock, ImmutableList<DaoPhase> daoPhaseList) {
         this.heightOfFirstBlock = heightOfFirstBlock;
         this.daoPhaseList = daoPhaseList;
     }
