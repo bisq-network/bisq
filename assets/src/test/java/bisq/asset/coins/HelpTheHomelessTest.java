@@ -21,9 +21,9 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class HelpTheHomeless extends AbstractAssetTest {
+public class HelpTheHomelessTest extends AbstractAssetTest {
 
-    public HelpTheHomeless() {
+    public HelpTheHomelessTest() {
         super(new HelpTheHomeless());
     }
 
