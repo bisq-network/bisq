@@ -17,8 +17,8 @@
 
 package bisq.core.dao.bonding;
 
+import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.blockchain.OpReturnType;
 
 import bisq.common.app.Version;
@@ -89,11 +89,7 @@ public class BondingConsensus {
         return Arrays.copyOfRange(opReturnData, 5, 25);
     }
 
-    public static byte[] getHash(LockupType lockupType, BondedRole bondedRole) {
-        if (lockupType == LockupType.BONDED_ROLE) {
-            return bondedRole.getHash();
-        } else {
-            throw new RuntimeException("Trade bonds not implemented yet");
-        }
+    public static byte[] getHash(BondWithHash bondWithHash) {
+        return bondWithHash.getHash();
     }
 }

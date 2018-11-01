@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.role;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
@@ -42,7 +43,7 @@ import javax.annotation.Nullable;
 
 @Slf4j
 @Getter
-public final class BondedRole implements PersistablePayload, NetworkPayload {
+public final class BondedRole implements PersistablePayload, NetworkPayload, BondWithHash {
     private final String uid;
     private final String name;
     private final String link;
@@ -133,9 +134,15 @@ public final class BondedRole implements PersistablePayload, NetworkPayload {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // BondWithHash implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public String getUnlockTxId() {
+        return unlockTxId;
+    }
+
+    @Override
     public byte[] getHash() {
         // We use only the immutable data as input for hash
         byte[] bytes = BigInteger.valueOf(hashCode()).toByteArray();
@@ -144,6 +151,11 @@ public final class BondedRole implements PersistablePayload, NetworkPayload {
                 Utilities.bytesAsHexString(bytes), toString());*/
         return hash;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getDisplayString() {
         return name + " / " + Res.get("dao.bond.bondedRoleType." + bondedRoleType.name());

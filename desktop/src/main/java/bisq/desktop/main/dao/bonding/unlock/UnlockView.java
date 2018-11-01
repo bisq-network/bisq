@@ -30,6 +30,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxType;
@@ -79,6 +80,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
     private final BondingViewUtils bondingViewUtils;
+    private final BondedRolesService bondedRolesService;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
@@ -103,6 +105,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                        BsqBalanceUtil bsqBalanceUtil,
                        BsqValidator bsqValidator,
                        BondingViewUtils bondingViewUtils,
+                       BondedRolesService bondedRolesService,
                        DaoFacade daoFacade,
                        Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
@@ -111,6 +114,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.bondingViewUtils = bondingViewUtils;
+        this.bondedRolesService = bondedRolesService;
         this.daoFacade = daoFacade;
         this.preferences = preferences;
     }
@@ -123,6 +127,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPrefHeight(300);
         addTxIdColumn();
+        addInfoColumn();
         addAmountColumn();
         addLockTimeColumn();
         addUnlockColumn();
@@ -230,6 +235,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
+                            bondedRolesService,
                             transaction.getUpdateTime(),
                             bsqFormatter);
                 })
@@ -277,6 +283,34 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         };
                     }
                 });
+        tableView.getColumns().add(column);
+    }
+
+    private void addInfoColumn() {
+        TableColumn<LockupTxListItem, LockupTxListItem> column =
+                new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.type"));
+        column.setMinWidth(160);
+        column.setMaxWidth(column.getMinWidth());
+
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
+                    LockupTxListItem> column) {
+                return new TableCell<>() {
+
+                    @Override
+                    public void updateItem(final LockupTxListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getInfo());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
         tableView.getColumns().add(column);
     }
 
@@ -348,16 +382,12 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         TableColumn<LockupTxListItem, LockupTxListItem> unlockColumn = new TableColumn<>();
         unlockColumn.setMinWidth(130);
         unlockColumn.setMaxWidth(unlockColumn.getMinWidth());
-
         unlockColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-
-        unlockColumn.setCellFactory(new Callback<TableColumn<LockupTxListItem, LockupTxListItem>,
-                TableCell<LockupTxListItem, LockupTxListItem>>() {
-
+        unlockColumn.setCellFactory(new Callback<>() {
             @Override
             public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
                     LockupTxListItem> column) {
-                return new TableCell<LockupTxListItem, LockupTxListItem>() {
+                return new TableCell<>() {
                     Button button;
 
                     @Override
@@ -367,7 +397,10 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         if (item != null && !empty) {
                             if (button == null) {
                                 button = item.getButton();
-                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId()));
+                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId(), () -> {
+                                    //TODO
+                                    button.setDisable(true);
+                                }));
                                 setGraphic(button);
                             }
                         } else {

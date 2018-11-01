@@ -15,13 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.role;
+package bisq.core.dao.bonding.bond;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.BaseTxOutput;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.SpentInfo;
 import bisq.core.dao.state.blockchain.TxType;
@@ -40,18 +39,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondedRolesService implements PersistedDataHost, DaoStateListener {
+public class BondedReputationService implements PersistedDataHost, DaoStateListener {
 
-    public interface BondedRoleListChangeListener {
-        void onListChanged(List<BondedRole> list);
+    public interface BondedReputationListChangeListener {
+        void onListChanged(List<BondedReputation> list);
     }
 
     private final DaoStateService daoStateService;
-    private final Storage<BondedRoleList> storage;
-    private final BondedRoleList bondedRoleList = new BondedRoleList();
+    private final Storage<BondedReputationList> storage;
+    private final BondedReputationList bondedReputationList = new BondedReputationList();
 
     @Getter
-    private final List<BondedRoleListChangeListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<BondedReputationListChangeListener> listeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +58,7 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedRolesService(Storage<BondedRoleList> storage, DaoStateService daoStateService) {
+    public BondedReputationService(Storage<BondedReputationList> storage, DaoStateService daoStateService) {
         this.storage = storage;
         this.daoStateService = daoStateService;
 
@@ -74,11 +73,11 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
     @Override
     public void readPersisted() {
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            BondedRoleList persisted = storage.initAndGetPersisted(bondedRoleList, 100);
+            BondedReputationList persisted = storage.initAndGetPersisted(bondedReputationList, 100);
             if (persisted != null) {
-                bondedRoleList.clear();
-                bondedRoleList.addAll(persisted.getList());
-                listeners.forEach(l -> l.onListChanged(bondedRoleList.getList()));
+                bondedReputationList.clear();
+                bondedReputationList.addAll(persisted.getList());
+                listeners.forEach(l -> l.onListChanged(bondedReputationList.getList()));
             }
         }
     }
@@ -93,22 +92,17 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
 
     @Override
     public void onParseTxsComplete(Block block) {
-        bondedRoleList.getList().forEach(bondedRole -> {
-
+        bondedReputationList.getList().forEach(bondedReputation -> {
             daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
                 String lockupTxId = lockupTxOutput.getTxId();
-                // log.error("lockupTxId " + lockupTxId);
-
                 daoStateService.getTx(lockupTxId)
                         .ifPresent(lockupTx -> {
                             byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
                             byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
-                            Optional<BondedRole> candidate = getBondedRoleFromHash(hash);
-                            if (candidate.isPresent() && bondedRole.equals(candidate.get())) {
-                                if (bondedRole.getLockupTxId() == null) {
-                                    bondedRole.setLockupTxId(lockupTxId);
-                                    // We use the tx time as we want to have a unique time for all users
-                                    bondedRole.setStartDate(lockupTx.getTime());
+                            Optional<BondedReputation> candidate = getBondedReputationFromHash(hash);
+                            if (candidate.isPresent() && bondedReputation.equals(candidate.get())) {
+                                if (bondedReputation.getLockupTxId() == null) {
+                                    bondedReputation.setLockupTxId(lockupTxId);
                                     persist();
                                 }
 
@@ -117,11 +111,11 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
                                             .map(SpentInfo::getTxId)
                                             .map(daoStateService::getTx)
                                             .map(Optional::get)
+                                            // TODO(sq): What if the tx is burnt and not unlocked, need to check on that
                                             .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
                                             .ifPresent(unlockTx -> {
-                                                if (bondedRole.getUnlockTxId() == null) {
-                                                    bondedRole.setUnlockTxId(unlockTx.getId());
-                                                    bondedRole.setRevokeDate(unlockTx.getTime());
+                                                if (bondedReputation.getUnlockTxId() == null) {
+                                                    bondedReputation.setUnlockTxId(unlockTx.getId());
                                                     persist();
                                                 }
 
@@ -146,80 +140,60 @@ public class BondedRolesService implements PersistedDataHost, DaoStateListener {
     public void start() {
     }
 
-    public void addListener(BondedRoleListChangeListener listener) {
+    public void addListener(BondedReputationListChangeListener listener) {
         listeners.add(listener);
     }
 
-    public void addAcceptedBondedRole(BondedRole bondedRole) {
-        if (bondedRoleList.getList().stream().noneMatch(role -> role.equals(bondedRole))) {
-            bondedRoleList.add(bondedRole);
-            persist();
-            listeners.forEach(l -> l.onListChanged(bondedRoleList.getList()));
-        }
+//    public void addAcceptedBondedReputation(BondedReputation bondedReputation) {
+//        if (bondedReputationList.getList().stream().noneMatch(role -> role.equals(bondedReputation))) {
+//            bondedReputationList.add(bondedReputation);
+//            persist();
+//            listeners.forEach(l -> l.onListChanged(bondedReputationList.getList()));
+//        }
+//    }
+
+    public List<BondedReputation> getBondedReputationList() {
+        return bondedReputationList.getList();
     }
 
-    public List<BondedRole> getBondedRoleList() {
-        return bondedRoleList.getList();
-    }
+   /* public List<BondedReputation> getValidBondedReputationList() {
+        //TODO validation ???
+        return bondedReputationList.getList();
+    }*/
 
-    public List<BondedRole> getValidBondedRoleList() {
-        return bondedRoleList.getList();
-    }
-
-    public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
-        return bondedRoleList.getList().stream()
-                .filter(bondedRole -> {
-                    byte[] candidateHash = bondedRole.getHash();
-                   /* log.error("getBondedRoleFromHash: equals?={}, hash={}, candidateHash={}\nbondedRole={}",
+    public Optional<BondedReputation> getBondedReputationFromHash(byte[] hash) {
+        return bondedReputationList.getList().stream()
+                .filter(bondedReputation -> {
+                    byte[] candidateHash = bondedReputation.getHash();
+                   /* log.error("getBondedReputationFromHash: equals?={}, hash={}, candidateHash={}\bondedReputation={}",
                             Arrays.equals(candidateHash, hash),
                             Utilities.bytesAsHexString(hash),
                             Utilities.bytesAsHexString(candidateHash),
-                            bondedRole.toString());*/
+                            bondedReputation.toString());*/
                     return Arrays.equals(candidateHash, hash);
                 })
                 .findAny();
     }
 
-    public Optional<BondedRole> getBondedRoleFromLockupTxId(String lockupTxId) {
-        return bondedRoleList.getList().stream()
-                .filter(bondedRole -> lockupTxId.equals(bondedRole.getLockupTxId()))
-                .findAny();
-    }
-
-
-    public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
-        Optional<BondedRoleType> bondedRoleType = getBondedRoleFromLockupTxId(lockUpTxId).map(BondedRole::getBondedRoleType);
-        return bondedRoleType;
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private Optional<byte[]> getOpReturnData(String lockUpTxId) {
-        return daoStateService.getLockupOpReturnTxOutput(lockUpTxId).map(BaseTxOutput::getOpReturnData);
-    }
 
     private void persist() {
         storage.queueUpForSave(20);
     }
 
-   /* private Optional<LockupType> getOptionalLockupType(String lockUpTxId) {
-        return getOpReturnData(lockUpTxId)
-                .flatMap(BondingConsensus::getLockupType);
-    }*/
 
-    /*public static Optional<BondedRole> getBondedRoleByLockupTxId(String lockupTxId) {
-        return bondedRoles.stream()
-                .filter(bondedRole -> bondedRole.getLockupTxId().equals(lockupTxId)).
+    /*public static Optional<BondedReputation> getBondedReputationByLockupTxId(String lockupTxId) {
+        return BondedReputations.stream()
+                .filter(BondedReputation -> BondedReputation.getLockupTxId().equals(lockupTxId)).
                         findAny();
     }*/
-/*
-    public static Optional<BondedRole> getBondedRoleByHashOfBondId(byte[] hash) {
+
+   /* public static Optional<BondedReputation> getBondedReputationByHashOfBondId(byte[] hash) {
         return Optional.empty();
-      *//*  bondedRoles.stream()
-                .filter(bondedRole -> Arrays.equals(bondedRole.getHash(), hash))
+      *//*  BondedReputations.stream()
+                .filter(BondedReputation -> Arrays.equals(BondedReputation.getHash(), hash))
                 .findAny();*//*
     }*/
 }

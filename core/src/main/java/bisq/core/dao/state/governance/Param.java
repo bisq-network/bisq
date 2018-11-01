@@ -110,7 +110,7 @@ public enum Param {
     // TODO for dev testing we use short periods...
     // Period phase ("11 blocks atm)
     PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL("2", ParamType.BLOCK, 3, 3),
+    PHASE_PROPOSAL("4", ParamType.BLOCK, 3, 3),
     PHASE_BREAK1("1", ParamType.BLOCK, 3, 3),
     PHASE_BLIND_VOTE("2", ParamType.BLOCK, 3, 3),
     PHASE_BREAK2("1", ParamType.BLOCK, 3, 23),

@@ -25,6 +25,12 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.bonding.lockup.LockupType;
+import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.BondedRoleType;
+import bisq.core.dao.governance.role.BondedRolesService;
+import bisq.core.dao.state.blockchain.BaseTxOutput;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.locale.Res;
@@ -38,16 +44,19 @@ import java.util.Optional;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Slf4j
 class LockupTxListItem extends TxConfidenceListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
 
     private final BsqFormatter bsqFormatter;
+    private final BondedRolesService bondedRolesService;
     private final Date date;
 
     private Coin amount = Coin.ZERO;
@@ -62,12 +71,14 @@ class LockupTxListItem extends TxConfidenceListItem {
                      BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService,
                      DaoFacade daoFacade,
+                     BondedRolesService bondedRolesService,
                      Date date,
                      BsqFormatter bsqFormatter) {
         super(transaction, bsqWalletService);
 
         this.btcWalletService = btcWalletService;
         this.daoFacade = daoFacade;
+        this.bondedRolesService = bondedRolesService;
         this.date = date;
         this.bsqFormatter = bsqFormatter;
 
@@ -88,7 +99,18 @@ class LockupTxListItem extends TxConfidenceListItem {
     }
 
     public boolean isLockupAndUnspent() {
-        return !isSpent() && getTxType() == TxType.LOCKUP;
+        boolean isLocked;
+        Optional<BondedRole> optionalBondedRole = bondedRolesService.getBondedRoleFromLockupTxId(txId);
+        if (optionalBondedRole.isPresent()) {
+            BondedRole bondedRole = optionalBondedRole.get();
+            //TODO
+            //isLocked = bondedRole.getLockupTxId() != null && bondedRole.getUnlockTxId() == null;
+            //log.error("isLocked {}, tx={}",isLocked,bondedRole.getLockupTxId());
+        } else {
+            //TODO get reputation
+            isLocked = true;
+        }
+        return /*isLocked && */!isSpent() && getTxType() == TxType.LOCKUP;
     }
 
     private boolean isSpent() {
@@ -102,5 +124,29 @@ class LockupTxListItem extends TxConfidenceListItem {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
+    }
+
+    private Optional<LockupType> getOptionalLockupType() {
+        return getOpReturnData()
+                .flatMap(BondingConsensus::getLockupType);
+    }
+
+    private Optional<byte[]> getOpReturnData() {
+        return daoFacade.getLockupOpReturnTxOutput(txId).map(BaseTxOutput::getOpReturnData);
+    }
+
+    public String getInfo() {
+        Optional<BondedRoleType> optionalRoleType = bondedRolesService.getBondedRoleType(txId);
+        if (optionalRoleType.isPresent()) {
+            return optionalRoleType.get().getDisplayString();
+        } else {
+            Optional<LockupType> optionalLockupType = getOptionalLockupType();
+            if (optionalLockupType.isPresent()) {
+                LockupType lockupType = optionalLockupType.get();
+                if (lockupType == LockupType.REPUTATION)
+                    return Res.get("dao.bonding.unlock.reputation");
+            }
+        }
+        return Res.get("shared.na");
     }
 }

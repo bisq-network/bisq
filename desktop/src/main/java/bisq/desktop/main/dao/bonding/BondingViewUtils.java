@@ -26,6 +26,8 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.bonding.bond.BondWithHash;
+import bisq.core.dao.bonding.bond.BondedReputation;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRoleType;
@@ -35,6 +37,7 @@ import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
@@ -65,39 +68,55 @@ public class BondingViewUtils {
         this.bsqFormatter = bsqFormatter;
     }
 
-    public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
+    private void lockupBond(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType,
+                            ResultHandler resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-            BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
-            Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-            int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
-            LockupType lockupType = LockupType.BONDED_ROLE;
-            new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
-                    .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
-                            bsqFormatter.formatCoinWithCode(lockupAmount),
-                            lockupTime
-                    ))
-                    .actionButtonText(Res.get("shared.yes"))
-                    .onAction(() -> {
-                        daoFacade.publishLockupTx(lockupAmount,
-                                lockupTime,
-                                lockupType,
-                                bondedRole,
-                                () -> {
-                                    new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
-                                },
-                                this::handleError
-                        );
-                        if (resultHandler != null)
-                            resultHandler.handleResult();
-                    })
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .show();
+            if (!DevEnv.isDevMode()) {
+                new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
+                        .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
+                                bsqFormatter.formatCoinWithCode(lockupAmount),
+                                lockupTime
+                        ))
+                        .actionButtonText(Res.get("shared.yes"))
+                        .onAction(() -> publishLockupTx(bondWithHash, lockupAmount, lockupTime, lockupType, resultHandler))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+            } else {
+                publishLockupTx(bondWithHash, lockupAmount, lockupTime, lockupType, resultHandler);
+            }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
-    public void unLock(String lockupTxId) {
+    private void publishLockupTx(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType, ResultHandler resultHandler) {
+        daoFacade.publishLockupTx(lockupAmount,
+                lockupTime,
+                lockupType,
+                bondWithHash,
+                () -> {
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+                },
+                this::handleError
+        );
+        if (resultHandler != null)
+            resultHandler.handleResult();
+    }
+
+    public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
+        BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
+        Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
+        int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
+        lockupBond(bondedRole, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
+    }
+
+    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, ResultHandler resultHandler) {
+        BondedReputation bondedReputation = BondedReputation.createBondedReputation();
+        lockupBond(bondedReputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
+    }
+
+    public void unLock(String lockupTxId, ResultHandler resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
             if (!lockupTxOutput.isPresent()) {
@@ -110,22 +129,19 @@ public class BondingViewUtils {
             int lockTime = opLockTime.orElse(-1);
 
             try {
-                new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
-                        .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
-                                bsqFormatter.formatCoinWithCode(unlockAmount),
-                                lockTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> {
-                            daoFacade.publishUnlockTx(lockupTxId,
-                                    () -> {
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                                    },
-                                    errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
-                            );
-                        })
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
+                if (!DevEnv.isDevMode()) {
+                    new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
+                            .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
+                                    bsqFormatter.formatCoinWithCode(unlockAmount),
+                                    lockTime
+                            ))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } else {
+                    publishUnlockTx(lockupTxId, resultHandler);
+                }
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
@@ -135,6 +151,18 @@ public class BondingViewUtils {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
         log.info("unlock tx: {}", lockupTxId);
+    }
+
+    private void publishUnlockTx(String lockupTxId, ResultHandler resultHandler) {
+        daoFacade.publishUnlockTx(lockupTxId,
+                () -> {
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+
+                    resultHandler.handleResult();
+                },
+                errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
+        );
     }
 
     private void handleError(Throwable throwable) {
