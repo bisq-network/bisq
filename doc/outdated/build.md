@@ -1,3 +1,5 @@
+TODO: Outdated, can be maybe removed, but cross check if there is still something useful in there.
+
 Building From Source
 ====================
 
