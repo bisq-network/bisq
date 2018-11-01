@@ -24,7 +24,7 @@ import org.junit.Test;
 public class HelpTheHomelessTest extends AbstractAssetTest {
 
     public HelpTheHomelessTest() {
-        super(new helpTheHomeless());
+        super(new HelpTheHomeless());
     }
 
     @Test
