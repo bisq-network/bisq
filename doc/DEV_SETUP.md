@@ -29,7 +29,7 @@ Later you can create a new blocks with `generate 1`.
 
 #### Optional for DAO mode
 
-If you want to run Bisq with DAO mode enabled you need to configure the `bitcoin.conf` file inside the Bitcoin Core data directory [1] as well adding the `blocknotify` file.
+If you want to run Bisq with DAO mode enabled you need to configure the `bitcoin.conf` file inside the Bitcoin Core data directory as well adding the `blocknotify` file.
 
 **bitcoin.conf:**
 ```
@@ -162,14 +162,3 @@ Bisq is not a company but operates as a [DAO](https://docs.bisq.network/dao/phas
 
 ### Open questions?
 If there are any open questions or instructions are not clear, please add a PR for improving that file and/or join us on Slack and get in touch.
-
-
-<br/>
-
-_[1] You typically find the data directories here:_
-```
-OSX: /Users/username/Library/Application Support/bisq/  
-Linux: /home/username/.bisq/    
-Windows XP: C:\Documents and Settings\username\Application Data\bisq\    
-Windows Vista or 7: %appdata%/bisq/
-```
