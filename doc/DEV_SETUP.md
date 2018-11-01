@@ -4,7 +4,7 @@ This guide describes the development setup for developers who want to contribute
 
 ### Getting started
 
-Please follow the instructions in the [README](https://github.com/bisq-network/bisq/README.md) file for running Bisq from source code. Be sure to have the right JDK version installed. Best to use IntelliJ IDEA (there is a free community edition). Please read also the [CONTRIBUTING](https://github.com/bisq-network/bisq/doc/CONTRIBUTING.md) file.
+Please follow the instructions in the [README](https://github.com/bisq-network/bisq/tree/master/README.md) file for running Bisq from source code. Be sure to have the right JDK version installed. Best to use IntelliJ IDEA (there is a free community edition). Please read also the [CONTRIBUTING](https://github.com/bisq-network/bisq/tree/master/doc/CONTRIBUTING.md) file.
 
 ### Basic setup
 
