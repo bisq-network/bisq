@@ -50,6 +50,7 @@ public class LockupService {
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
+    private final BondedRolesService bondedRolesService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +65,22 @@ public class LockupService {
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.bondedRolesService = bondedRolesService;
     }
 
     public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
                                 ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         checkArgument(lockTime <= BondingConsensus.getMaxLockTime() &&
                 lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
+
+        if (bondWithHash instanceof BondedRole) {
+            BondedRole bondedRole = (BondedRole) bondWithHash;
+            if (bondedRolesService.wasRoleAlreadyBonded(bondedRole)) {
+                exceptionHandler.handleException(new RuntimeException("The role has been used already for a lockup tx."));
+                return;
+            }
+        }
+
         try {
 
             byte[] hash = BondingConsensus.getHash(bondWithHash);
@@ -80,14 +91,6 @@ public class LockupService {
             walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
-
-                    // TODO we should not support repeated locks
-                    if (bondWithHash instanceof BondedRole) {
-                        BondedRole bondedRole = (BondedRole) bondWithHash;
-                        bondedRole.setLockupTxId(transaction.getHashAsString());
-                        bondedRole.setUnlockTxId(null);
-                    }
-
                     resultHandler.handleResult();
                 }
 
@@ -112,8 +115,6 @@ public class LockupService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);
-        final Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
-        log.info("Lockup tx: " + transaction);
-        return transaction;
+        return bsqWalletService.signTx(txWithBtcFee);
     }
 }

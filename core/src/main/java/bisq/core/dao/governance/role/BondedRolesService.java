@@ -29,12 +29,17 @@ import bisq.core.dao.state.blockchain.TxType;
 import javax.inject.Inject;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Manages bonded roles if they got accepted by voting.
@@ -43,6 +48,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BondedRolesService implements DaoStateListener {
     private final DaoStateService daoStateService;
 
+    // This map is just for convenience. The data which are used to fill the map are store din the DaoState (role, txs).
+    private final Map<String, BondedRoleState> bondedRoleStateMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,40 +74,63 @@ public class BondedRolesService implements DaoStateListener {
 
     @Override
     public void onParseTxsComplete(Block block) {
+        // TODO optimize to not re-write the whole map at each block
         getBondedRoleStream().forEach(bondedRole -> {
+            bondedRoleStateMap.putIfAbsent(bondedRole.getUid(), new BondedRoleState(bondedRole));
+            BondedRoleState bondedRoleState = bondedRoleStateMap.get(bondedRole.getUid());
+
+            // Lets see if we have a lock up tx.
             daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
                 String lockupTxId = lockupTxOutput.getTxId();
                 // log.error("lockupTxId " + lockupTxId);
 
-                daoStateService.getTx(lockupTxId)
-                        .ifPresent(lockupTx -> {
-                            byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
-                            byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
-                            Optional<BondedRole> candidate = getBondedRoleFromHash(hash);
-                            if (candidate.isPresent() && bondedRole.equals(candidate.get())) {
-                                if (bondedRole.getLockupTxId() == null) {
-                                    bondedRole.setLockupTxId(lockupTxId);
-                                    // We use the tx time as we want to have a unique time for all users
-                                    bondedRole.setStartDate(lockupTx.getTime());
-                                }
+                daoStateService.getTx(lockupTxId).ifPresent(lockupTx -> {
+                    byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
 
-                                if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
-                                    daoStateService.getSpentInfo(lockupTxOutput)
-                                            .map(SpentInfo::getTxId)
-                                            .map(daoStateService::getTx)
-                                            .map(Optional::get)
-                                            .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
-                                            .ifPresent(unlockTx -> {
-                                                if (bondedRole.getUnlockTxId() == null) {
-                                                    bondedRole.setUnlockTxId(unlockTx.getId());
-                                                    bondedRole.setRevokeDate(unlockTx.getTime());
-                                                }
+                    // We used the hash of th bonded role object as our hash in OpReturn of the lock up tx to have a
+                    // unique binding of the tx to the data object.
+                    byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
+                    Optional<BondedRole> candidate = getBondedRoleFromHash(hash);
+                    if (candidate.isPresent() && bondedRole.equals(candidate.get())) {
+                        if (bondedRoleState.getLockupTxId() == null) {
+                            bondedRoleState.setLockupTxId(lockupTxId);
+                            // We use the tx time as we want to have a unique time for all users
+                            bondedRoleState.setStartDate(lockupTx.getTime());
+                        } else {
+                            checkArgument(bondedRoleState.getLockupTxId().equals(lockupTxId),
+                                    "We have already the lockup tx set in bondedRoleState " +
+                                            "but it is different to the one we found in the daoState transactions. " +
+                                            "That should not happen. bondedRole={}, bondedRoleState={}",
+                                    bondedRole, bondedRoleState);
+                        }
 
-                                                // TODO check lock time
-                                            });
-                                }
-                            }
-                        });
+                        if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
+                            // Lockup is already spent (in unlock tx)
+                            daoStateService.getSpentInfo(lockupTxOutput)
+                                    .map(SpentInfo::getTxId)
+                                    .flatMap(daoStateService::getTx)
+                                    .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
+                                    .ifPresent(unlockTx -> {
+                                        // cross check if it is in daoStateService.getUnlockTxOutputs() ?
+                                        String unlockTxId = unlockTx.getId();
+                                        if (bondedRoleState.getUnlockTxId() == null) {
+                                            bondedRoleState.setUnlockTxId(unlockTxId);
+                                            bondedRoleState.setRevokeDate(unlockTx.getTime());
+                                            bondedRoleState.setUnlocking(daoStateService.isUnlocking(unlockTxId));
+                                            //TODO after locktime set to false or maybe better use states for lock state
+                                        } else {
+                                            checkArgument(bondedRoleState.getUnlockTxId().equals(unlockTxId),
+                                                    "We have already the unlock tx set in bondedRoleState " +
+                                                            "but it is different to the one we found in the daoState transactions. " +
+                                                            "That should not happen. bondedRole={}, bondedRoleState={}",
+                                                    bondedRole, bondedRoleState);
+                                        }
+
+                                        // TODO check lock time
+                                    });
+                        }
+                    }
+                });
             });
         });
     }
@@ -123,6 +153,10 @@ public class BondedRolesService implements DaoStateListener {
         return getBondedRoleStream().collect(Collectors.toList());
     }
 
+    public Collection<BondedRoleState> getBondedRoleStates() {
+        return bondedRoleStateMap.values();
+    }
+
     // bonded roles which are active and can be confiscated
     public List<BondedRole> getActiveBondedRoles() {
         //TODO
@@ -143,15 +177,17 @@ public class BondedRolesService implements DaoStateListener {
                 .findAny();
     }
 
-    public Optional<BondedRole> getBondedRoleFromLockupTxId(String lockupTxId) {
-        return getBondedRoleStream()
-                .filter(bondedRole -> lockupTxId.equals(bondedRole.getLockupTxId()))
+    public Optional<BondedRoleState> getBondedRoleStateFromLockupTxId(String lockupTxId) {
+        return bondedRoleStateMap.values().stream()
+                .filter(bondedRoleState -> lockupTxId.equals(bondedRoleState.getLockupTxId()))
                 .findAny();
     }
 
 
     public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
-        return getBondedRoleFromLockupTxId(lockUpTxId).map(BondedRole::getBondedRoleType);
+        return getBondedRoleStateFromLockupTxId(lockUpTxId)
+                .map(BondedRoleState::getBondedRole)
+                .map(BondedRole::getBondedRoleType);
     }
 
 
@@ -169,6 +205,11 @@ public class BondedRolesService implements DaoStateListener {
 
     private Optional<byte[]> getOpReturnData(String lockUpTxId) {
         return daoStateService.getLockupOpReturnTxOutput(lockUpTxId).map(BaseTxOutput::getOpReturnData);
+    }
+
+    public boolean wasRoleAlreadyBonded(BondedRole bondedRole) {
+        BondedRoleState bondedRoleState = bondedRoleStateMap.get(bondedRole.getUid());
+        return bondedRoleState != null && bondedRoleState.getLockupTxId() != null;
     }
 
 

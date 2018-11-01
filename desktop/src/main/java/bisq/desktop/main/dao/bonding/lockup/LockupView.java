@@ -33,6 +33,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
 import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
@@ -71,11 +72,11 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private ComboBox<LockupType> lockupTypeComboBox;
-    private ComboBox<BondedRole> bondedRolesComboBox;
+    private ComboBox<BondedRoleState> bondedRolesComboBox;
     private Button lockupButton;
     private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener;
     private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener;
-    private ChangeListener<BondedRole> bondedRolesListener;
+    private ChangeListener<BondedRoleState> bondedRoleStateListener;
     private ChangeListener<LockupType> lockupTypeListener;
     private TitledGroupBg titledGroupBg;
 
@@ -149,7 +150,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 bondedRolesComboBox.setVisible(true);
                 lockupRows++;
 
-                bondedRolesComboBox.setItems(FXCollections.observableArrayList(daoFacade.getBondedRoleList()));
+                bondedRolesComboBox.setItems(FXCollections.observableArrayList(daoFacade.getBondedRoleStates()));
             } else {
                 bondedRolesComboBox.setVisible(false);
                 bondedRolesComboBox.getItems().clear();
@@ -164,19 +165,20 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         bondedRolesComboBox.setVisible(false);
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(BondedRole bondedRole) {
-                return bondedRole.getDisplayString();
+            public String toString(BondedRoleState bondedRoleState) {
+                return bondedRoleState.getBondedRole().getDisplayString();
             }
 
             @Override
-            public BondedRole fromString(String string) {
+            public BondedRoleState fromString(String string) {
                 return null;
             }
         });
-        bondedRolesListener = (observable, oldValue, newValue) -> {
+        bondedRoleStateListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(newValue.getBondedRoleType().getRequiredBond())));
-                timeInputTextField.setText(String.valueOf(newValue.getBondedRoleType().getUnlockTimeInBlocks()));
+                BondedRole bondedRole = newValue.getBondedRole();
+                amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(bondedRole.getBondedRoleType().getRequiredBond())));
+                timeInputTextField.setText(String.valueOf(bondedRole.getBondedRoleType().getUnlockTimeInBlocks()));
                 amountInputTextField.resetValidation();
                 timeInputTextField.resetValidation();
                 amountInputTextField.setEditable(false);
@@ -196,7 +198,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
             switch (lockupTypeComboBox.getValue()) {
                 case BONDED_ROLE:
                     if (bondedRolesComboBox.getValue() != null) {
-                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue(),
+                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue().getBondedRole(),
                                 () -> bondedRolesComboBox.getSelectionModel().clearSelection());
                     }
                     break;
@@ -238,7 +240,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         amountInputTextField.focusedProperty().addListener(amountFocusOutListener);
         timeInputTextField.focusedProperty().addListener(timeFocusOutListener);
         lockupTypeComboBox.getSelectionModel().selectedItemProperty().addListener(lockupTypeListener);
-        bondedRolesComboBox.getSelectionModel().selectedItemProperty().addListener(bondedRolesListener);
+        bondedRolesComboBox.getSelectionModel().selectedItemProperty().addListener(bondedRoleStateListener);
 
         bsqWalletService.addBsqBalanceListener(this);
 
@@ -257,7 +259,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         amountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
         timeInputTextField.focusedProperty().removeListener(timeFocusOutListener);
         lockupTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(lockupTypeListener);
-        bondedRolesComboBox.getSelectionModel().selectedItemProperty().removeListener(bondedRolesListener);
+        bondedRolesComboBox.getSelectionModel().selectedItemProperty().removeListener(bondedRoleStateListener);
 
         bsqWalletService.removeBsqBalanceListener(this);
     }

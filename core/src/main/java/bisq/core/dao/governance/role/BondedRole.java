@@ -17,9 +17,7 @@
 
 package bisq.core.dao.governance.role;
 
-import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.bond.BondWithHash;
-import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
@@ -32,38 +30,21 @@ import io.bisq.generated.protobuffer.PB;
 import java.math.BigInteger;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
+@Immutable
 @Slf4j
-@Getter
+@Value
 public final class BondedRole implements PersistablePayload, NetworkPayload, BondWithHash {
     private final String uid;
     private final String name;
     private final String link;
     private final BondedRoleType bondedRoleType;
-
-    @Setter
-    private long startDate;
-
-    // LockupTxId is null as long the bond holder has not been accepted by voting and made the lockup tx.
-    // It will get set after the proposal has been accepted and the lockup tx is confirmed.
-    @Nullable
-    @Setter
-    private String lockupTxId;
-
-    // Date when role has been revoked
-    @Setter
-    private long revokeDate;
-    @Nullable
-    @Setter
-    private String unlockTxId;
 
     /**
      * @param name                      Full name or nickname
@@ -76,11 +57,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
         this(UUID.randomUUID().toString(),
                 name,
                 link,
-                bondedRoleType,
-                0,
-                null,
-                0,
-                null
+                bondedRoleType
         );
     }
 
@@ -92,19 +69,11 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     public BondedRole(String uid,
                       String name,
                       String link,
-                      BondedRoleType bondedRoleType,
-                      long startDate,
-                      @Nullable String lockupTxId,
-                      long revokeDate,
-                      @Nullable String unlockTxId) {
+                      BondedRoleType bondedRoleType) {
         this.uid = uid;
         this.name = name;
         this.link = link;
         this.bondedRoleType = bondedRoleType;
-        this.startDate = startDate;
-        this.lockupTxId = lockupTxId;
-        this.revokeDate = revokeDate;
-        this.unlockTxId = unlockTxId;
     }
 
     @Override
@@ -113,11 +82,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
                 .setUid(uid)
                 .setName(name)
                 .setLink(link)
-                .setBondedRoleType(bondedRoleType.name())
-                .setStartDate(startDate)
-                .setRevokeDate(revokeDate);
-        Optional.ofNullable(lockupTxId).ifPresent(builder::setLockupTxId);
-        Optional.ofNullable(unlockTxId).ifPresent(builder::setUnlockTxId);
+                .setBondedRoleType(bondedRoleType.name());
         return builder.build();
     }
 
@@ -125,11 +90,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
         return new BondedRole(proto.getUid(),
                 proto.getName(),
                 proto.getLink(),
-                ProtoUtil.enumFromProto(BondedRoleType.class, proto.getBondedRoleType()),
-                proto.getStartDate(),
-                proto.getLockupTxId().isEmpty() ? null : proto.getLockupTxId(),
-                proto.getRevokeDate(),
-                proto.getUnlockTxId().isEmpty() ? null : proto.getUnlockTxId());
+                ProtoUtil.enumFromProto(BondedRoleType.class, proto.getBondedRoleType()));
     }
 
 
@@ -138,18 +99,10 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public String getUnlockTxId() {
-        return unlockTxId;
-    }
-
-    @Override
     public byte[] getHash() {
         // We use only the immutable data as input for hash
         byte[] bytes = BigInteger.valueOf(hashCode()).toByteArray();
-        byte[] hash = Hash.getSha256Ripemd160hash(bytes);
-       /* log.error("BondedRole.getHash: hash={}, bytes={}\nbondedRole={}", Utilities.bytesAsHexString(hash),
-                Utilities.bytesAsHexString(bytes), toString());*/
-        return hash;
+        return Hash.getSha256Ripemd160hash(bytes);
     }
 
 
@@ -159,22 +112,6 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
 
     public String getDisplayString() {
         return Res.get("dao.bond.bondedRoleType." + bondedRoleType.name()) + ": " + name;
-    }
-
-    public boolean isLockedUp() {
-        return lockupTxId != null;
-    }
-
-    public boolean isUnlocked() {
-        return unlockTxId != null;
-    }
-
-    public boolean isUnlocking(DaoFacade daoFacade) {
-        return daoFacade.isUnlocking(this);
-    }
-
-    public boolean isUnlocking(DaoStateService daoStateService) {
-        return daoStateService.isUnlocking(this);
     }
 
     // We use only the immutable data
@@ -203,10 +140,6 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
                 ",\n     name='" + name + '\'' +
                 ",\n     link='" + link + '\'' +
                 ",\n     bondedRoleType=" + bondedRoleType +
-                ",\n     startDate=" + startDate +
-                ",\n     lockupTxId='" + lockupTxId + '\'' +
-                ",\n     revokeDate=" + revokeDate +
-                ",\n     unlockTxId='" + unlockTxId + '\'' +
                 "\n}";
     }
 }

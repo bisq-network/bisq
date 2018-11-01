@@ -50,6 +50,7 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalServ
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -84,6 +85,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -279,8 +281,8 @@ public class DaoFacade implements DaoSetupService {
         return removeAssetProposalService.createProposalWithTransaction(name, link, asset);
     }
 
-    public List<BondedRole> getBondedRoleList() {
-        return bondedRolesService.getBondedRoleList();
+    public Collection<BondedRoleState> getBondedRoleStates() {
+        return bondedRolesService.getBondedRoleStates();
     }
 
     public List<BondedReputation> getBondedReputationList() {
@@ -627,9 +629,9 @@ public class DaoFacade implements DaoSetupService {
         return bondedReputationService.getBondedReputationFromHash(hash);
     }
 
-    public boolean isUnlocking(BondWithHash bondWithHash) {
-        return daoStateService.isUnlocking(bondWithHash);
-    }
+    /*public boolean isUnlocking(String unlockTxId) {
+        return daoStateService.isUnlocking(unlockTxId);
+    }*/
 
     public Coin getMinCompensationRequestAmount() {
         return CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());

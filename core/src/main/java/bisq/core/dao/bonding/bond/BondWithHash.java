@@ -18,7 +18,5 @@
 package bisq.core.dao.bonding.bond;
 
 public interface BondWithHash {
-
-    String getUnlockTxId();
     byte[] getHash();
 }

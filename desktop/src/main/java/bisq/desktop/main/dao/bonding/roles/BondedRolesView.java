@@ -153,8 +153,8 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
     private void updateList() {
         observableList.forEach(BondedRolesListItem::cleanup);
-        observableList.setAll(daoFacade.getBondedRoleList().stream()
-                .map(bondedRole -> new BondedRolesListItem(bondedRole, daoFacade, bsqFormatter))
+        observableList.setAll(daoFacade.getBondedRoleStates().stream()
+                .map(bondedRoleState -> new BondedRolesListItem(bondedRoleState, daoFacade, bsqFormatter))
                 .collect(Collectors.toList()));
     }
 
@@ -332,7 +332,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String transactionId = item.getBondedRole().getLockupTxId();
+                                    String transactionId = item.getBondedRoleState().getLockupTxId();
                                     if (transactionId != null) {
                                         hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
                                         hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
@@ -374,7 +374,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String transactionId = item.getBondedRole().getUnlockTxId();
+                                    String transactionId = item.getBondedRoleState().getUnlockTxId();
                                     if (transactionId != null) {
                                         hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
                                         hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
@@ -449,7 +449,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                         button = item.getButton();
                                         item.setOnAction(() -> {
                                             if (item.isBonded())
-                                                bondingViewUtils.unLock(item.getBondedRole().getLockupTxId(),
+                                                bondingViewUtils.unLock(item.getBondedRoleState().getLockupTxId(),
                                                         () -> {
                                                             // TODO
                                                             button.setDisable(true);

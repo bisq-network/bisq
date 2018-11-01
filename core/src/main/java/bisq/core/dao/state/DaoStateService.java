@@ -19,7 +19,6 @@ package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.blockchain.Block;
@@ -647,7 +646,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Optional<TxOutput> getLockupOpReturnTxOutput(String txId) {
-        return getTx(txId).map(Tx::getLastTxOutput);
+        return getTx(txId).map(Tx::getLastTxOutput).filter(txOutput -> txOutput.getOpReturnData() != null);
     }
 
     // Returns amount of all LOCKUP txOutputs (they might have been unlocking or unlocked in the meantime)
@@ -756,8 +755,8 @@ public class DaoStateService implements DaoSetupService {
         // txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
     }
 
-    public boolean isUnlocking(BondWithHash bondWithHash) {
-        Optional<Tx> optionalTx = getTx(bondWithHash.getUnlockTxId());
+    public boolean isUnlocking(String unlockTxId) {
+        Optional<Tx> optionalTx = getTx(unlockTxId);
         return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
     }
 

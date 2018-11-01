@@ -1544,10 +1544,6 @@ message BondedRole {
     string name = 2;
     string link = 3;
     string bonded_role_type = 4; // name of BondedRoleType enum
-    uint64 start_date = 5;
-    string lockup_tx_id = 6;
-    uint64 revoke_date = 7;
-    string unlock_tx_id = 8;
 }
 
 message BondedReputation {
