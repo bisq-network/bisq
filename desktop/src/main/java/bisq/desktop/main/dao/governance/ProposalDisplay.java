@@ -39,9 +39,9 @@ import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.Role;
+import bisq.core.dao.governance.proposal.role.RoleProposal;
 import bisq.core.dao.governance.role.BondedRoleType;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.ProposalVoteResult;
 import bisq.core.dao.state.blockchain.Tx;
@@ -470,10 +470,10 @@ public class ProposalDisplay {
             comboBoxValueTextField.setText(paramComboBox.getConverter().toString(changeParamProposal.getParam()));
             checkNotNull(paramValueTextField, "paramValueTextField must not be null");
             paramValueTextField.setText(bsqFormatter.formatParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue()));
-        } else if (proposal instanceof BondedRoleProposal) {
-            BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
+        } else if (proposal instanceof RoleProposal) {
+            RoleProposal roleProposal = (RoleProposal) proposal;
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
-            Role role = bondedRoleProposal.getRole();
+            Role role = roleProposal.getRole();
             bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
             comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
             requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));

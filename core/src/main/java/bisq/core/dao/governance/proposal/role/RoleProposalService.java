@@ -33,10 +33,10 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Creates BondedRoleProposal and transaction.
+ * Creates RoleProposal and transaction.
  */
 @Slf4j
-public class BondedRoleProposalService extends BaseProposalService<BondedRoleProposal> {
+public class RoleProposalService extends BaseProposalService<RoleProposal> {
     private Role role;
 
 
@@ -45,10 +45,10 @@ public class BondedRoleProposalService extends BaseProposalService<BondedRolePro
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedRoleProposalService(BsqWalletService bsqWalletService,
-                                     BtcWalletService btcWalletService,
-                                     DaoStateService daoStateService,
-                                     BondedRoleValidator proposalValidator) {
+    public RoleProposalService(BsqWalletService bsqWalletService,
+                               BtcWalletService btcWalletService,
+                               DaoStateService daoStateService,
+                               RoleValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 daoStateService,
@@ -63,7 +63,7 @@ public class BondedRoleProposalService extends BaseProposalService<BondedRolePro
     }
 
     @Override
-    protected BondedRoleProposal createProposalWithoutTxId() {
-        return new BondedRoleProposal(role);
+    protected RoleProposal createProposalWithoutTxId() {
+        return new RoleProposal(role);
     }
 }

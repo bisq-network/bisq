@@ -48,7 +48,7 @@ import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
+import bisq.core.dao.governance.proposal.role.RoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.role.Role;
@@ -112,7 +112,7 @@ public class DaoFacade implements DaoSetupService {
     private final ReimbursementProposalService reimbursementProposalService;
     private final ChangeParamProposalService changeParamProposalService;
     private final ConfiscateBondProposalService confiscateBondProposalService;
-    private final BondedRoleProposalService bondedRoleProposalService;
+    private final RoleProposalService roleProposalService;
     private final GenericProposalService genericProposalService;
     private final RemoveAssetProposalService removeAssetProposalService;
     private final BondedRolesService bondedRolesService;
@@ -136,7 +136,7 @@ public class DaoFacade implements DaoSetupService {
                      ReimbursementProposalService reimbursementProposalService,
                      ChangeParamProposalService changeParamProposalService,
                      ConfiscateBondProposalService confiscateBondProposalService,
-                     BondedRoleProposalService bondedRoleProposalService,
+                     RoleProposalService roleProposalService,
                      GenericProposalService genericProposalService,
                      RemoveAssetProposalService removeAssetProposalService,
                      BondedRolesService bondedRolesService,
@@ -156,7 +156,7 @@ public class DaoFacade implements DaoSetupService {
         this.reimbursementProposalService = reimbursementProposalService;
         this.changeParamProposalService = changeParamProposalService;
         this.confiscateBondProposalService = confiscateBondProposalService;
-        this.bondedRoleProposalService = bondedRoleProposalService;
+        this.roleProposalService = roleProposalService;
         this.genericProposalService = genericProposalService;
         this.removeAssetProposalService = removeAssetProposalService;
         this.bondedRolesService = bondedRolesService;
@@ -265,7 +265,7 @@ public class DaoFacade implements DaoSetupService {
 
     public ProposalWithTransaction getBondedRoleProposalWithTransaction(Role role)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return bondedRoleProposalService.createProposalWithTransaction(role);
+        return roleProposalService.createProposalWithTransaction(role);
     }
 
     public ProposalWithTransaction getGenericProposalWithTransaction(String name,

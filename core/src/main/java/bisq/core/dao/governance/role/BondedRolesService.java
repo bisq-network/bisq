@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.role;
 
 import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
+import bisq.core.dao.governance.proposal.role.RoleProposal;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.BaseTxOutput;
@@ -198,8 +198,8 @@ public class BondedRolesService implements DaoStateListener {
 
     private Stream<Role> getBondedRoleStream() {
         return daoStateService.getEvaluatedProposalList().stream()
-                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof BondedRoleProposal)
-                .map(e -> ((BondedRoleProposal) e.getProposal()).getRole());
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .map(e -> ((RoleProposal) e.getProposal()).getRole());
     }
 
 

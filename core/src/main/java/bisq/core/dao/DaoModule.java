@@ -46,8 +46,8 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalServ
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
-import bisq.core.dao.governance.proposal.role.BondedRoleValidator;
+import bisq.core.dao.governance.proposal.role.RoleProposalService;
+import bisq.core.dao.governance.proposal.role.RoleValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
@@ -140,8 +140,8 @@ public class DaoModule extends AppModule {
         bind(ChangeParamValidator.class).in(Singleton.class);
         bind(ChangeParamProposalService.class).in(Singleton.class);
 
-        bind(BondedRoleValidator.class).in(Singleton.class);
-        bind(BondedRoleProposalService.class).in(Singleton.class);
+        bind(RoleValidator.class).in(Singleton.class);
+        bind(RoleProposalService.class).in(Singleton.class);
 
         bind(ConfiscateBondValidator.class).in(Singleton.class);
         bind(ConfiscateBondProposalService.class).in(Singleton.class);

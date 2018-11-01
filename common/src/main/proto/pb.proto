@@ -1494,7 +1494,7 @@ message Proposal {
         CompensationProposal compensation_proposal = 6;
         ReimbursementProposal reimbursement_proposal = 7;
         ChangeParamProposal change_param_proposal = 8;
-        BondedRoleProposal bonded_role_proposal = 9;
+        RoleProposal role_proposal = 9;
         ConfiscateBondProposal confiscate_bond_proposal = 10;
         GenericProposal generic_proposal = 11;
         RemoveAssetProposal remove_asset_proposal = 12;
@@ -1516,8 +1516,8 @@ message ChangeParamProposal {
     string param_value = 2;
 }
 
-message BondedRoleProposal {
-    BondedRole bonded_role = 1;
+message RoleProposal {
+    Role role = 1;
 }
 
 message ConfiscateBondProposal {
@@ -1539,7 +1539,7 @@ message RemovedAssetList {
     repeated RemovedAsset removed_asset = 1;
 }
 
-message BondedRole {
+message Role {
     string uid = 1;
     string name = 2;
     string link = 3;

@@ -31,10 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
 @Slf4j
-public class BondedRoleValidator extends ProposalValidator {
+public class RoleValidator extends ProposalValidator {
 
     @Inject
-    public BondedRoleValidator(DaoStateService daoStateService, PeriodService periodService) {
+    public RoleValidator(DaoStateService daoStateService, PeriodService periodService) {
         super(daoStateService, periodService);
     }
 
@@ -43,8 +43,8 @@ public class BondedRoleValidator extends ProposalValidator {
         try {
             super.validateDataFields(proposal);
 
-            BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
-            Role role = bondedRoleProposal.getRole();
+            RoleProposal roleProposal = (RoleProposal) proposal;
+            Role role = roleProposal.getRole();
 
             //TODO
             notEmpty(role.getName(), "role.name must not be empty");

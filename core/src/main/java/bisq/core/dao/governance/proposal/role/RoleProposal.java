@@ -39,10 +39,10 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BondedRoleProposal extends Proposal {
+public final class RoleProposal extends Proposal {
     private final Role role;
 
-    BondedRoleProposal(Role role) {
+    RoleProposal(Role role) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -56,12 +56,12 @@ public final class BondedRoleProposal extends Proposal {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BondedRoleProposal(String name,
-                               String link,
-                               Role role,
-                               byte version,
-                               long creationDate,
-                               String txId) {
+    private RoleProposal(String name,
+                         String link,
+                         Role role,
+                         byte version,
+                         long creationDate,
+                         String txId) {
         super(name,
                 link,
                 version,
@@ -73,16 +73,16 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
-        final PB.BondedRoleProposal.Builder builder = PB.BondedRoleProposal.newBuilder()
-                .setBondedRole(role.toProtoMessage());
-        return super.getProposalBuilder().setBondedRoleProposal(builder);
+        final PB.RoleProposal.Builder builder = PB.RoleProposal.newBuilder()
+                .setRole(role.toProtoMessage());
+        return super.getProposalBuilder().setRoleProposal(builder);
     }
 
-    public static BondedRoleProposal fromProto(PB.Proposal proto) {
-        final PB.BondedRoleProposal proposalProto = proto.getBondedRoleProposal();
-        return new BondedRoleProposal(proto.getName(),
+    public static RoleProposal fromProto(PB.Proposal proto) {
+        final PB.RoleProposal proposalProto = proto.getRoleProposal();
+        return new RoleProposal(proto.getName(),
                 proto.getLink(),
-                Role.fromProto(proposalProto.getBondedRole()),
+                Role.fromProto(proposalProto.getRole()),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
@@ -115,7 +115,7 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
-        return new BondedRoleProposal(getName(),
+        return new RoleProposal(getName(),
                 getLink(),
                 this.getRole(),
                 getVersion(),
@@ -125,7 +125,7 @@ public final class BondedRoleProposal extends Proposal {
 
     @Override
     public String toString() {
-        return "BondedRoleProposal{" +
+        return "RoleProposal{" +
                 "\n     role=" + role +
                 "\n} " + super.toString();
     }

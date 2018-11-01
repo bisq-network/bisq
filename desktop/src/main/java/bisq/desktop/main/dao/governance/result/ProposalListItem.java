@@ -27,7 +27,7 @@ import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
+import bisq.core.dao.governance.proposal.role.RoleProposal;
 import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.locale.CurrencyUtil;
@@ -119,8 +119,8 @@ public class ProposalListItem {
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
                 return changeParamProposal.getParam().getDisplayString();
             case BONDED_ROLE:
-                BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
-                Role role = bondedRoleProposal.getRole();
+                RoleProposal roleProposal = (RoleProposal) proposal;
+                Role role = roleProposal.getRole();
                 return Res.get("dao.bond.bondedRoleType." + role.getBondedRoleType().name());
             case CONFISCATE_BOND:
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;

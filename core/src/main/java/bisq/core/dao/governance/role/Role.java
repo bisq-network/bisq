@@ -77,8 +77,8 @@ public final class Role implements PersistablePayload, NetworkPayload, BondWithH
     }
 
     @Override
-    public PB.BondedRole toProtoMessage() {
-        PB.BondedRole.Builder builder = PB.BondedRole.newBuilder()
+    public PB.Role toProtoMessage() {
+        PB.Role.Builder builder = PB.Role.newBuilder()
                 .setUid(uid)
                 .setName(name)
                 .setLink(link)
@@ -86,7 +86,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondWithH
         return builder.build();
     }
 
-    public static Role fromProto(PB.BondedRole proto) {
+    public static Role fromProto(PB.Role proto) {
         return new Role(proto.getUid(),
                 proto.getName(),
                 proto.getLink(),

@@ -36,9 +36,9 @@ import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.Role;
+import bisq.core.dao.governance.proposal.role.RoleProposal;
 import bisq.core.dao.governance.role.BondedRolesService;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
@@ -641,12 +641,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void applyBondedRole(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
-            if (evaluatedProposal.getProposal() instanceof BondedRoleProposal) {
-                BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) evaluatedProposal.getProposal();
-                Role role = bondedRoleProposal.getRole();
+            if (evaluatedProposal.getProposal() instanceof RoleProposal) {
+                RoleProposal roleProposal = (RoleProposal) evaluatedProposal.getProposal();
+                Role role = roleProposal.getRole();
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
-                sb.append("We added a bonded role. ProposalTxId=").append(bondedRoleProposal.getTxId())
+                sb.append("We added a bonded role. ProposalTxId=").append(roleProposal.getTxId())
                         .append("\nRole: ").append(role.getDisplayString())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
