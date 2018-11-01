@@ -90,7 +90,7 @@ public class BondedRolesService implements DaoStateListener {
                     // We used the hash of th bonded role object as our hash in OpReturn of the lock up tx to have a
                     // unique binding of the tx to the data object.
                     byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
-                    Optional<BondedRole> candidate = getBondedRoleFromHash(hash);
+                    Optional<Role> candidate = getBondedRoleFromHash(hash);
                     if (candidate.isPresent() && bondedRole.equals(candidate.get())) {
                         if (bondedRoleState.getLockupTxId() == null) {
                             bondedRoleState.setLockupTxId(lockupTxId);
@@ -149,7 +149,7 @@ public class BondedRolesService implements DaoStateListener {
     }
 
 
-    public List<BondedRole> getBondedRoleList() {
+    public List<Role> getBondedRoleList() {
         return getBondedRoleStream().collect(Collectors.toList());
     }
 
@@ -158,12 +158,12 @@ public class BondedRolesService implements DaoStateListener {
     }
 
     // bonded roles which are active and can be confiscated
-    public List<BondedRole> getActiveBondedRoles() {
+    public List<Role> getActiveBondedRoles() {
         //TODO
         return getBondedRoleList();
     }
 
-    public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
+    public Optional<Role> getBondedRoleFromHash(byte[] hash) {
         return getBondedRoleStream()
                 .filter(bondedRole -> {
                     byte[] candidateHash = bondedRole.getHash();
@@ -186,8 +186,8 @@ public class BondedRolesService implements DaoStateListener {
 
     public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
         return getBondedRoleStateFromLockupTxId(lockUpTxId)
-                .map(BondedRoleState::getBondedRole)
-                .map(BondedRole::getBondedRoleType);
+                .map(BondedRoleState::getRole)
+                .map(Role::getBondedRoleType);
     }
 
 
@@ -196,10 +196,10 @@ public class BondedRolesService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private Stream<BondedRole> getBondedRoleStream() {
+    private Stream<Role> getBondedRoleStream() {
         return daoStateService.getEvaluatedProposalList().stream()
                 .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof BondedRoleProposal)
-                .map(e -> ((BondedRoleProposal) e.getProposal()).getBondedRole());
+                .map(e -> ((BondedRoleProposal) e.getProposal()).getRole());
     }
 
 
@@ -207,8 +207,8 @@ public class BondedRolesService implements DaoStateListener {
         return daoStateService.getLockupOpReturnTxOutput(lockUpTxId).map(BaseTxOutput::getOpReturnData);
     }
 
-    public boolean wasRoleAlreadyBonded(BondedRole bondedRole) {
-        BondedRoleState bondedRoleState = bondedRoleStateMap.get(bondedRole.getUid());
+    public boolean wasRoleAlreadyBonded(Role role) {
+        BondedRoleState bondedRoleState = bondedRoleStateMap.get(role.getUid());
         return bondedRoleState != null && bondedRoleState.getLockupTxId() != null;
     }
 
@@ -218,13 +218,13 @@ public class BondedRolesService implements DaoStateListener {
                 .flatMap(BondingConsensus::getLockupType);
     }*/
 
-    /*public static Optional<BondedRole> getBondedRoleByLockupTxId(String lockupTxId) {
+    /*public static Optional<Role> getBondedRoleByLockupTxId(String lockupTxId) {
         return bondedRoles.stream()
                 .filter(bondedRole -> bondedRole.getLockupTxId().equals(lockupTxId)).
                         findAny();
     }*/
 /*
-    public static Optional<BondedRole> getBondedRoleByHashOfBondId(byte[] hash) {
+    public static Optional<Role> getBondedRoleByHashOfBondId(byte[] hash) {
         return Optional.empty();
       *//*  bondedRoles.stream()
                 .filter(bondedRole -> Arrays.equals(bondedRole.getHash(), hash))

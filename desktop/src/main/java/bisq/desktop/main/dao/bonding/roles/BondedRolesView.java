@@ -186,7 +186,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                             public void updateItem(final BondedRolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(item.getBondedRole().getName());
+                                    setText(item.getRole().getName());
                                 } else
                                     setText("");
                             }
@@ -212,7 +212,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                             public void updateItem(final BondedRolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    String link = item.getBondedRole().getLink();
+                                    String link = item.getRole().getLink();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(link, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(link));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("shared.openURL", link)));
@@ -246,7 +246,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    BondedRoleType bondedRoleType = item.getBondedRole().getBondedRoleType();
+                                    BondedRoleType bondedRoleType = item.getRole().getBondedRoleType();
                                     String type = bondedRoleType.getDisplayString();
                                     hyperlink = new Hyperlink(type);
                                     hyperlink.setOnAction(event -> {
@@ -455,7 +455,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                                             button.setDisable(true);
                                                         });
                                             else
-                                                bondingViewUtils.lockupBondForBondedRole(item.getBondedRole(), null);
+                                                bondingViewUtils.lockupBondForBondedRole(item.getRole(), null);
                                         });
                                         setGraphic(button);
                                     }

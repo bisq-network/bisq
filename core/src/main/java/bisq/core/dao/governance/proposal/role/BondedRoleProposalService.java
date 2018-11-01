@@ -23,7 +23,7 @@ import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalService;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.state.DaoStateService;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BondedRoleProposalService extends BaseProposalService<BondedRoleProposal> {
-    private BondedRole bondedRole;
+    private Role role;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,15 +55,15 @@ public class BondedRoleProposalService extends BaseProposalService<BondedRolePro
                 proposalValidator);
     }
 
-    public ProposalWithTransaction createProposalWithTransaction(BondedRole bondedRole)
+    public ProposalWithTransaction createProposalWithTransaction(Role role)
             throws ValidationException, InsufficientMoneyException, TxException {
-        this.bondedRole = bondedRole;
+        this.role = role;
 
-        return super.createProposalWithTransaction(bondedRole.getName(), bondedRole.getLink());
+        return super.createProposalWithTransaction(role.getName(), role.getLink());
     }
 
     @Override
     protected BondedRoleProposal createProposalWithoutTxId() {
-        return new BondedRoleProposal(bondedRole);
+        return new BondedRoleProposal(role);
     }
 }

@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.bond.BondWithHash;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRolesService;
 
 import bisq.common.handlers.ExceptionHandler;
@@ -73,9 +73,9 @@ public class LockupService {
         checkArgument(lockTime <= BondingConsensus.getMaxLockTime() &&
                 lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
 
-        if (bondWithHash instanceof BondedRole) {
-            BondedRole bondedRole = (BondedRole) bondWithHash;
-            if (bondedRolesService.wasRoleAlreadyBonded(bondedRole)) {
+        if (bondWithHash instanceof Role) {
+            Role role = (Role) bondWithHash;
+            if (bondedRolesService.wasRoleAlreadyBonded(role)) {
                 exceptionHandler.handleException(new RuntimeException("The role has been used already for a lockup tx."));
                 return;
             }

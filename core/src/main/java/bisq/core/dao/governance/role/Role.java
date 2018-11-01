@@ -40,7 +40,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public final class BondedRole implements PersistablePayload, NetworkPayload, BondWithHash {
+public final class Role implements PersistablePayload, NetworkPayload, BondWithHash {
     private final String uid;
     private final String name;
     private final String link;
@@ -51,9 +51,9 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
      * @param link                      Github account or forum account of user
      * @param bondedRoleType            BondedRoleType
      */
-    public BondedRole(String name,
-                      String link,
-                      BondedRoleType bondedRoleType) {
+    public Role(String name,
+                String link,
+                BondedRoleType bondedRoleType) {
         this(UUID.randomUUID().toString(),
                 name,
                 link,
@@ -66,10 +66,10 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BondedRole(String uid,
-                      String name,
-                      String link,
-                      BondedRoleType bondedRoleType) {
+    public Role(String uid,
+                String name,
+                String link,
+                BondedRoleType bondedRoleType) {
         this.uid = uid;
         this.name = name;
         this.link = link;
@@ -86,8 +86,8 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
         return builder.build();
     }
 
-    public static BondedRole fromProto(PB.BondedRole proto) {
-        return new BondedRole(proto.getUid(),
+    public static Role fromProto(PB.BondedRole proto) {
+        return new Role(proto.getUid(),
                 proto.getName(),
                 proto.getLink(),
                 ProtoUtil.enumFromProto(BondedRoleType.class, proto.getBondedRoleType()));
@@ -121,7 +121,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BondedRole that = (BondedRole) o;
+        Role that = (Role) o;
         return Objects.equals(uid, that.uid) &&
                 Objects.equals(name, that.name) &&
                 Objects.equals(link, that.link) &&
@@ -135,7 +135,7 @@ public final class BondedRole implements PersistablePayload, NetworkPayload, Bon
 
     @Override
     public String toString() {
-        return "BondedRole{" +
+        return "Role{" +
                 "\n     uid='" + uid + '\'' +
                 ",\n     name='" + name + '\'' +
                 ",\n     link='" + link + '\'' +

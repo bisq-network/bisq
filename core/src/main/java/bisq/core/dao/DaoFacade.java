@@ -49,7 +49,7 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
@@ -263,9 +263,9 @@ public class DaoFacade implements DaoSetupService {
                 hash);
     }
 
-    public ProposalWithTransaction getBondedRoleProposalWithTransaction(BondedRole bondedRole)
+    public ProposalWithTransaction getBondedRoleProposalWithTransaction(Role role)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return bondedRoleProposalService.createProposalWithTransaction(bondedRole);
+        return bondedRoleProposalService.createProposalWithTransaction(role);
     }
 
     public ProposalWithTransaction getGenericProposalWithTransaction(String name,
@@ -512,7 +512,7 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockTime(txId);
     }
 
-    public List<BondedRole> getActiveBondedRoles() {
+    public List<Role> getActiveBondedRoles() {
         return bondedRolesService.getActiveBondedRoles();
     }
 
@@ -621,7 +621,7 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.isUnspent(key);
     }
 
-    public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
+    public Optional<Role> getBondedRoleFromHash(byte[] hash) {
         return bondedRolesService.getBondedRoleFromHash(hash);
     }
 

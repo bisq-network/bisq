@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.role;
 
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalType;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.Param;
 
@@ -40,12 +40,12 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class BondedRoleProposal extends Proposal {
-    private final BondedRole bondedRole;
+    private final Role role;
 
-    BondedRoleProposal(BondedRole bondedRole) {
-        this(bondedRole.getName(),
-                bondedRole.getLink(),
-                bondedRole,
+    BondedRoleProposal(Role role) {
+        this(role.getName(),
+                role.getLink(),
+                role,
                 Version.PROPOSAL,
                 new Date().getTime(),
                 "");
@@ -58,7 +58,7 @@ public final class BondedRoleProposal extends Proposal {
 
     private BondedRoleProposal(String name,
                                String link,
-                               BondedRole bondedRole,
+                               Role role,
                                byte version,
                                long creationDate,
                                String txId) {
@@ -68,13 +68,13 @@ public final class BondedRoleProposal extends Proposal {
                 creationDate,
                 txId);
 
-        this.bondedRole = bondedRole;
+        this.role = role;
     }
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
         final PB.BondedRoleProposal.Builder builder = PB.BondedRoleProposal.newBuilder()
-                .setBondedRole(bondedRole.toProtoMessage());
+                .setBondedRole(role.toProtoMessage());
         return super.getProposalBuilder().setBondedRoleProposal(builder);
     }
 
@@ -82,7 +82,7 @@ public final class BondedRoleProposal extends Proposal {
         final PB.BondedRoleProposal proposalProto = proto.getBondedRoleProposal();
         return new BondedRoleProposal(proto.getName(),
                 proto.getLink(),
-                BondedRole.fromProto(proposalProto.getBondedRole()),
+                Role.fromProto(proposalProto.getBondedRole()),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
@@ -117,7 +117,7 @@ public final class BondedRoleProposal extends Proposal {
     public Proposal cloneProposalAndAddTxId(String txId) {
         return new BondedRoleProposal(getName(),
                 getLink(),
-                getBondedRole(),
+                this.getRole(),
                 getVersion(),
                 getCreationDate().getTime(),
                 txId);
@@ -126,7 +126,7 @@ public final class BondedRoleProposal extends Proposal {
     @Override
     public String toString() {
         return "BondedRoleProposal{" +
-                "\n     bondedRole=" + bondedRole +
+                "\n     role=" + role +
                 "\n} " + super.toString();
     }
 }

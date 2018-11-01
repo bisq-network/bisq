@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  */
 @Getter
 public class BondedRoleState {
-    private final BondedRole bondedRole;
+    private final Role role;
 
     @Setter
     private long startDate;
@@ -45,8 +45,8 @@ public class BondedRoleState {
     @Setter
     private boolean isUnlocking;
 
-    BondedRoleState(BondedRole bondedRole) {
-        this.bondedRole = bondedRole;
+    BondedRoleState(Role role) {
+        this.role = role;
     }
 
     public boolean isLockedUp() {

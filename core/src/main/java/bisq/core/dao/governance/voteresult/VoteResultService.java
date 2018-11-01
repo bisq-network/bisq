@@ -37,7 +37,7 @@ import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
@@ -643,11 +643,11 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof BondedRoleProposal) {
                 BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) evaluatedProposal.getProposal();
-                BondedRole bondedRole = bondedRoleProposal.getBondedRole();
+                Role role = bondedRoleProposal.getRole();
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We added a bonded role. ProposalTxId=").append(bondedRoleProposal.getTxId())
-                        .append("\nBondedRole: ").append(bondedRole.getDisplayString())
+                        .append("\nRole: ").append(role.getDisplayString())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
             }

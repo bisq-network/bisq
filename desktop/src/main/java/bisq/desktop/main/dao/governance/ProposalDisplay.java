@@ -40,7 +40,7 @@ import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.ProposalVoteResult;
@@ -111,7 +111,7 @@ public class ProposalDisplay {
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
-    public ComboBox<BondedRole> confiscateBondComboBox;
+    public ComboBox<Role> confiscateBondComboBox;
     @Nullable
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
     @Nullable
@@ -299,19 +299,19 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<BondedRole>addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.<Role>addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getActiveBondedRoles()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
-                    public String toString(BondedRole bondedRole) {
-                        return bondedRole != null ? bondedRole.getDisplayString() : "";
+                    public String toString(Role role) {
+                        return role != null ? role.getDisplayString() : "";
                     }
 
                     @Override
-                    public BondedRole fromString(String string) {
+                    public Role fromString(String string) {
                         return null;
                     }
                 });
@@ -473,10 +473,10 @@ public class ProposalDisplay {
         } else if (proposal instanceof BondedRoleProposal) {
             BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
-            BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-            bondedRoleTypeComboBox.getSelectionModel().select(bondedRole.getBondedRoleType());
-            comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(bondedRole.getBondedRoleType()));
-            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(bondedRole.getBondedRoleType().getRequiredBond())));
+            Role role = bondedRoleProposal.getRole();
+            bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
+            comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
+            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");

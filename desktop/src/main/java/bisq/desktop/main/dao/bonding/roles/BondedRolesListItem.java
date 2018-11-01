@@ -20,7 +20,7 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.desktop.components.AutoTooltipButton;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
@@ -44,7 +44,7 @@ class BondedRolesListItem implements DaoStateListener {
     private final BsqFormatter bsqFormatter;
     private final AutoTooltipButton button;
     private final Label label;
-    private final BondedRole bondedRole;
+    private final Role role;
 
     BondedRolesListItem(BondedRoleState bondedRoleState,
                         DaoFacade daoFacade,
@@ -53,7 +53,7 @@ class BondedRolesListItem implements DaoStateListener {
         this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
 
-        bondedRole = bondedRoleState.getBondedRole();
+        role = bondedRoleState.getRole();
 
         daoFacade.addBsqStateListener(this);
 

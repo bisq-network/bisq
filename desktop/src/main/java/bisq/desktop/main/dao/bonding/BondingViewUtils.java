@@ -29,7 +29,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.bond.BondWithHash;
 import bisq.core.dao.bonding.bond.BondedReputation;
 import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.locale.Res;
@@ -104,11 +104,11 @@ public class BondingViewUtils {
             resultHandler.handleResult();
     }
 
-    public void lockupBondForBondedRole(BondedRole bondedRole, ResultHandler resultHandler) {
-        BondedRoleType bondedRoleType = bondedRole.getBondedRoleType();
+    public void lockupBondForBondedRole(Role role, ResultHandler resultHandler) {
+        BondedRoleType bondedRoleType = role.getBondedRoleType();
         Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
         int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
-        lockupBond(bondedRole, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
+        lockupBond(role, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
     }
 
     public void lockupBondForReputation(Coin lockupAmount, int lockupTime, ResultHandler resultHandler) {

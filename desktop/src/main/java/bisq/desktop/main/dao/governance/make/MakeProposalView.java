@@ -37,7 +37,7 @@ import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.governance.Param;
@@ -254,7 +254,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
 
-        BondedRole bondedRole;
+        Role role;
         switch (type) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
@@ -297,17 +297,17 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case BONDED_ROLE:
                 checkNotNull(proposalDisplay.bondedRoleTypeComboBox,
                         "proposalDisplay.bondedRoleTypeComboBox must not be null");
-                bondedRole = new BondedRole(proposalDisplay.nameTextField.getText(),
+                role = new Role(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem());
-                return daoFacade.getBondedRoleProposalWithTransaction(bondedRole);
+                return daoFacade.getBondedRoleProposalWithTransaction(role);
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
-                bondedRole = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+                role = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
                 return daoFacade.getConfiscateBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bondedRole.getHash());
+                        role.getHash());
             case GENERIC:
                 return daoFacade.getGenericProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText());

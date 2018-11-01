@@ -32,7 +32,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -166,7 +166,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BondedRoleState bondedRoleState) {
-                return bondedRoleState.getBondedRole().getDisplayString();
+                return bondedRoleState.getRole().getDisplayString();
             }
 
             @Override
@@ -176,9 +176,9 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         });
         bondedRoleStateListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                BondedRole bondedRole = newValue.getBondedRole();
-                amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(bondedRole.getBondedRoleType().getRequiredBond())));
-                timeInputTextField.setText(String.valueOf(bondedRole.getBondedRoleType().getUnlockTimeInBlocks()));
+                Role role = newValue.getRole();
+                amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));
+                timeInputTextField.setText(String.valueOf(role.getBondedRoleType().getUnlockTimeInBlocks()));
                 amountInputTextField.resetValidation();
                 timeInputTextField.resetValidation();
                 amountInputTextField.setEditable(false);
@@ -198,7 +198,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
             switch (lockupTypeComboBox.getValue()) {
                 case BONDED_ROLE:
                     if (bondedRolesComboBox.getValue() != null) {
-                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue().getBondedRole(),
+                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue().getRole(),
                                 () -> bondedRolesComboBox.getSelectionModel().clearSelection());
                     }
                     break;

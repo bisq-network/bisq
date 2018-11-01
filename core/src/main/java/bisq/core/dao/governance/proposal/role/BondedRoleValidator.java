@@ -20,7 +20,7 @@ package bisq.core.dao.governance.proposal.role;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.governance.role.BondedRole;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.PeriodService;
 
@@ -44,10 +44,10 @@ public class BondedRoleValidator extends ProposalValidator {
             super.validateDataFields(proposal);
 
             BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
-            BondedRole bondedRole = bondedRoleProposal.getBondedRole();
+            Role role = bondedRoleProposal.getRole();
 
             //TODO
-            notEmpty(bondedRole.getName(), "bondedRole.name must not be empty");
+            notEmpty(role.getName(), "role.name must not be empty");
 
         } catch (Throwable throwable) {
             throw new ValidationException(throwable);
