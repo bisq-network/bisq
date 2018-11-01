@@ -29,7 +29,6 @@ import bisq.core.dao.governance.myvote.MyVoteList;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
-import bisq.core.dao.governance.role.BondedRoleList;
 import bisq.core.dao.state.DaoStateStore;
 import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
@@ -129,8 +128,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyBlindVoteList.fromProto(proto.getMyBlindVoteList());
                 case MERIT_LIST:
                     return MeritList.fromProto(proto.getMeritList());
-                case BONDED_ROLE_LIST:
-                    return BondedRoleList.fromProto(proto.getBondedRoleList());
                 case REMOVED_ASSET_LIST:
                     return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 case DAO_STATE_STORE:

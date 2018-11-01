@@ -303,7 +303,7 @@ public class ProposalDisplay {
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
+                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getActiveBondedRoles()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(BondedRole bondedRole) {

@@ -510,8 +510,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockTime(txId);
     }
 
-    public List<BondedRole> getValidBondedRoleList() {
-        return bondedRolesService.getValidBondedRoleList();
+    public List<BondedRole> getActiveBondedRoles() {
+        return bondedRolesService.getActiveBondedRoles();
     }
 
     /*public List<BondedReputation> getValidBondedReputationList() {

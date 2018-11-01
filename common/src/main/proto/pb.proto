@@ -941,10 +941,9 @@ message PersistableEnvelope {
         MyVoteList my_vote_list = 21;
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
-        BondedRoleList bonded_role_list = 24;
-        RemovedAssetList removed_asset_list = 25;
-        DaoStateStore dao_state_store = 26;
-        BondedReputationList bonded_reputation_list = 27;
+        RemovedAssetList removed_asset_list = 24;
+        DaoStateStore dao_state_store = 25;
+        BondedReputationList bonded_reputation_list = 26;
     }
 }
 
@@ -1549,10 +1548,6 @@ message BondedRole {
     string lockup_tx_id = 6;
     uint64 revoke_date = 7;
     string unlock_tx_id = 8;
-}
-
-message BondedRoleList {
-    repeated BondedRole bonded_role = 1;
 }
 
 message BondedReputation {

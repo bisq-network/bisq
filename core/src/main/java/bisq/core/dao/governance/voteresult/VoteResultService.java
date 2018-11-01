@@ -644,7 +644,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             if (evaluatedProposal.getProposal() instanceof BondedRoleProposal) {
                 BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) evaluatedProposal.getProposal();
                 BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-                bondedRolesService.addAcceptedBondedRole(bondedRole);
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We added a bonded role. ProposalTxId=").append(bondedRoleProposal.getTxId())
