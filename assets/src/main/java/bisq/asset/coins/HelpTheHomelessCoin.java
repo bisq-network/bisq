@@ -23,14 +23,14 @@ import bisq.asset.NetworkParametersAdapter;
 
 public class HelpTheHomeless extends Coin {
 
-    public HelpTheHomelessCoin() {
+    public helpthehomelesscoin() {
         super("HelpTheHomelessCoin", "HTH", new Base58BitcoinAddressValidator(new HelpTheHomelessCoinParams()));
     }
 
 
     public static class HelpTheHomelessCoinParams extends NetworkParametersAdapter {
 
-        public HelpTheHomelessCoinParams() {
+        public helpthehomelesscoinParams() {
             addressHeader = 50;
             p2shHeader = 18;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
