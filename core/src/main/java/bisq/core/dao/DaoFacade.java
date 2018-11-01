@@ -49,9 +49,9 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
-import bisq.core.dao.governance.role.Role;
-import bisq.core.dao.governance.role.BondedRoleState;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRolesService;
+import bisq.core.dao.governance.role.Role;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
@@ -281,7 +281,7 @@ public class DaoFacade implements DaoSetupService {
         return removeAssetProposalService.createProposalWithTransaction(name, link, asset);
     }
 
-    public Collection<BondedRoleState> getBondedRoleStates() {
+    public Collection<BondedRole> getBondedRoleStates() {
         return bondedRolesService.getBondedRoleStates();
     }
 

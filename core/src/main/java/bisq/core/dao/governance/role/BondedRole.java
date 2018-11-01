@@ -23,10 +23,10 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 /**
- * Mutable state of a bonded role. Only kept in memory.
+ * Wrapper for role which contains the mutable state of a bonded role. Only kept in memory.
  */
 @Getter
-public class BondedRoleState {
+public class BondedRole {
     private final Role role;
 
     @Setter
@@ -45,7 +45,7 @@ public class BondedRoleState {
     @Setter
     private boolean isUnlocking;
 
-    BondedRoleState(Role role) {
+    BondedRole(Role role) {
         this.role = role;
     }
 

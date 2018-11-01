@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.governance.role.BondedRoleState;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.BondedRoleType;
 import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.state.blockchain.BaseTxOutput;
@@ -100,9 +100,9 @@ class LockupTxListItem extends TxConfidenceListItem {
 
     public boolean isLockupAndUnspent() {
         boolean isLocked;
-        Optional<BondedRoleState> optionalBondedRoleState = bondedRolesService.getBondedRoleStateFromLockupTxId(txId);
+        Optional<BondedRole> optionalBondedRoleState = bondedRolesService.getBondedRoleStateFromLockupTxId(txId);
         if (optionalBondedRoleState.isPresent()) {
-            BondedRoleState bondedRoleState = optionalBondedRoleState.get();
+            BondedRole bondedRole = optionalBondedRoleState.get();
             //TODO
             //isLocked = bondedRole.getLockupTxId() != null && bondedRole.getUnlockTxId() == null;
             //log.error("isLocked {}, tx={}",isLocked,bondedRole.getLockupTxId());

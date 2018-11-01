@@ -332,7 +332,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String transactionId = item.getBondedRoleState().getLockupTxId();
+                                    String transactionId = item.getBondedRole().getLockupTxId();
                                     if (transactionId != null) {
                                         hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
                                         hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
@@ -374,7 +374,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String transactionId = item.getBondedRoleState().getUnlockTxId();
+                                    String transactionId = item.getBondedRole().getUnlockTxId();
                                     if (transactionId != null) {
                                         hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
                                         hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
@@ -449,7 +449,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                         button = item.getButton();
                                         item.setOnAction(() -> {
                                             if (item.isBonded())
-                                                bondingViewUtils.unLock(item.getBondedRoleState().getLockupTxId(),
+                                                bondingViewUtils.unLock(item.getBondedRole().getLockupTxId(),
                                                         () -> {
                                                             // TODO
                                                             button.setDisable(true);

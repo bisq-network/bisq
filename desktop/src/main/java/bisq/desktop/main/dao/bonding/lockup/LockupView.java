@@ -32,8 +32,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.bonding.BondingConsensus;
 import bisq.core.dao.bonding.lockup.LockupType;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.Role;
-import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.IntegerValidator;
@@ -72,11 +72,11 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     private InputTextField amountInputTextField;
     private InputTextField timeInputTextField;
     private ComboBox<LockupType> lockupTypeComboBox;
-    private ComboBox<BondedRoleState> bondedRolesComboBox;
+    private ComboBox<BondedRole> bondedRolesComboBox;
     private Button lockupButton;
     private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener;
     private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener;
-    private ChangeListener<BondedRoleState> bondedRoleStateListener;
+    private ChangeListener<BondedRole> bondedRoleStateListener;
     private ChangeListener<LockupType> lockupTypeListener;
     private TitledGroupBg titledGroupBg;
 
@@ -165,12 +165,12 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
         bondedRolesComboBox.setVisible(false);
         bondedRolesComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(BondedRoleState bondedRoleState) {
-                return bondedRoleState.getRole().getDisplayString();
+            public String toString(BondedRole bondedRole) {
+                return bondedRole.getRole().getDisplayString();
             }
 
             @Override
-            public BondedRoleState fromString(String string) {
+            public BondedRole fromString(String string) {
                 return null;
             }
         });

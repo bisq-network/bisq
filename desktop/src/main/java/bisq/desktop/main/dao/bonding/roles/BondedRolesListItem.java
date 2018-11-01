@@ -20,8 +20,8 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.desktop.components.AutoTooltipButton;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.governance.role.Role;
-import bisq.core.dao.governance.role.BondedRoleState;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.locale.Res;
@@ -39,21 +39,21 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Data
 class BondedRolesListItem implements DaoStateListener {
-    private final BondedRoleState bondedRoleState;
+    private final BondedRole bondedRole;
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
     private final AutoTooltipButton button;
     private final Label label;
     private final Role role;
 
-    BondedRolesListItem(BondedRoleState bondedRoleState,
+    BondedRolesListItem(BondedRole bondedRole,
                         DaoFacade daoFacade,
                         BsqFormatter bsqFormatter) {
-        this.bondedRoleState = bondedRoleState;
+        this.bondedRole = bondedRole;
         this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
 
-        role = bondedRoleState.getRole();
+        role = bondedRole.getRole();
 
         daoFacade.addBsqStateListener(this);
 
@@ -66,14 +66,14 @@ class BondedRolesListItem implements DaoStateListener {
     }
 
     public String getStartDate() {
-        return bondedRoleState.getStartDate() > 0 ?
-                bsqFormatter.formatDateTime(new Date(bondedRoleState.getStartDate())) :
+        return bondedRole.getStartDate() > 0 ?
+                bsqFormatter.formatDateTime(new Date(bondedRole.getStartDate())) :
                 "-";
     }
 
     public String getRevokeDate() {
-        return bondedRoleState.getRevokeDate() > 0 ?
-                bsqFormatter.formatDateTime(new Date(bondedRoleState.getRevokeDate())) :
+        return bondedRole.getRevokeDate() > 0 ?
+                bsqFormatter.formatDateTime(new Date(bondedRole.getRevokeDate())) :
                 "-";
     }
 
@@ -87,7 +87,7 @@ class BondedRolesListItem implements DaoStateListener {
     }
 
     public boolean isBonded() {
-        return bondedRoleState.isLockedUp();
+        return bondedRole.isLockedUp();
     }
 
     private void update() {
@@ -97,9 +97,9 @@ class BondedRolesListItem implements DaoStateListener {
         // 3. Unlocking:   isLockedUp,  isUnlocked,  isUnlocking: unlocking
         // 4. Unlocked:    isLockedUp,  isUnlocked, !isUnlocking: unlocked
 
-        boolean isLockedUp = bondedRoleState.isLockedUp();
-        boolean isUnlocked = bondedRoleState.isUnlocked();
-        boolean isUnlocking = bondedRoleState.isUnlocking();
+        boolean isLockedUp = bondedRole.isLockedUp();
+        boolean isUnlocked = bondedRole.isUnlocked();
+        boolean isUnlocking = bondedRole.isUnlocking();
 
         String text;
         if (!isLockedUp)
