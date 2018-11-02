@@ -399,6 +399,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void onShowPayFundsScreen() {
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
         nextButton.setVisible(false);
         nextButton.setManaged(false);
         nextButton.setOnAction(null);
@@ -910,7 +912,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private void addScrollPane() {
         scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         AnchorPane.setLeftAnchor(scrollPane, 0d);
@@ -1004,8 +1006,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void addOptionsGroup() {
-        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
-        setDepositTitledGroupBg.getStyleClass().add("last");
+        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
 
         advancedOptionsBox = new HBox();
         advancedOptionsBox.setSpacing(40);
@@ -1096,7 +1097,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         buyerSecurityDepositBtcLabel = tuple.third;
 
         VBox depositBox = getTradeInputBox(tuple.first, Res.get("createOffer.setDeposit")).second;
-        depositBox.setMaxWidth(243);
+        depositBox.setMaxWidth(300);
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
         editOfferElements.add(buyerSecurityDepositBtcLabel);
@@ -1160,13 +1161,14 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
         GridPane.setRowIndex(fundingHBox, ++gridRow);
-        GridPane.setColumnIndex(fundingHBox, 0);
+        GridPane.setColumnSpan(fundingHBox, 2);
         GridPane.setMargin(fundingHBox, new Insets(5, 0, 0, 0));
         gridPane.getChildren().add(fundingHBox);
 
         placeOfferBox = new HBox();
         placeOfferBox.setSpacing(10);
         GridPane.setRowIndex(placeOfferBox, gridRow);
+        GridPane.setColumnSpan(placeOfferBox, 2);
         GridPane.setMargin(placeOfferBox, new Insets(5, 20, 0, 0));
         gridPane.getChildren().add(placeOfferBox);
 
@@ -1178,19 +1180,18 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         placeOfferBox.getChildren().add(placeOfferButton);
         placeOfferBox.visibleProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                gridPane.getChildren().remove(cancelButton2);
+                fundingHBox.getChildren().remove(cancelButton2);
                 placeOfferBox.getChildren().add(cancelButton2);
-            } else if (!gridPane.getChildren().contains(cancelButton2)) {
+            } else if (!fundingHBox.getChildren().contains(cancelButton2)) {
                 placeOfferBox.getChildren().remove(cancelButton2);
-                gridPane.getChildren().add(cancelButton2);
+                fundingHBox.getChildren().add(cancelButton2);
             }
         });
 
-        cancelButton2 = (AutoTooltipButton) addButton(gridPane, gridRow, Res.get("shared.cancel"));
-        GridPane.setColumnIndex(cancelButton2, 1);
-        GridPane.setHalignment(cancelButton2, HPos.LEFT);
-        GridPane.setMargin(cancelButton2, new Insets(5, 0, 0, 10));
-        ;
+        cancelButton2 = new AutoTooltipButton(Res.get("shared.cancel"));
+
+        fundingHBox.getChildren().add(cancelButton2);
+
         cancelButton2.setOnAction(e -> {
             if (model.getDataModel().getIsBtcWalletFunded().get()) {
                 new Popup<>().warning(Res.get("createOffer.warnCancelOffer"))
@@ -1242,7 +1243,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Label xLabel = new Label();
         xIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
-        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setPadding(new Insets(24, 3, 0, 3));
 
         // price as percent
         Tuple3<HBox, InfoInputTextField, Label> priceAsPercentageTuple = getEditableValueBoxWithInfo(Res.get("createOffer.price.prompt"));
@@ -1264,7 +1265,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // =
         resultLabel = new AutoTooltipLabel("=");
         resultLabel.getStyleClass().add("opaque-icon-character");
-        resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
         Tuple3<HBox, InfoInputTextField, Label> volumeValueCurrencyBoxTuple = getEditableValueBoxWithInfo(Res.get("createOffer.volume.prompt"));
@@ -1383,8 +1383,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         VBox vBox = new VBox();
         vBox.setSpacing(6);
-        vBox.setMaxWidth(243);
-        vBox.setAlignment(Pos.CENTER_RIGHT);
+        vBox.setMaxWidth(300);
+        vBox.setAlignment(DevEnv.isDaoActivated() ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         vBox.getChildren().addAll(tradeFeeInBtcLabel, tradeFeeInBsqLabel);
 
         tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();

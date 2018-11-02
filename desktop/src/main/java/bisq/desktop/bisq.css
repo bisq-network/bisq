@@ -416,7 +416,7 @@ bg color of non edit textFields: fafafa
     -fx-border-color: -bs-rd-grey-background-dark;
     -fx-border-radius: 3;
     -fx-pref-height: 43;
-    -fx-pref-width: 243;
+    -fx-pref-width: 300;
     -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
 }
 
@@ -440,7 +440,7 @@ bg color of non edit textFields: fafafa
 .input-with-border-readonly {
     -fx-background-color: -bs-rd-grey-medium-light;
     -fx-border-width: 0;
-    -fx-pref-width: 243;
+    -fx-pref-width: 300;
 }
 
 .input-with-border-readonly .text-field {
@@ -797,7 +797,7 @@ bg color of non edit textFields: fafafa
 .opaque-icon-character {
     -fx-font-size: 3em;
     -fx-text-fill: -bs-rd-grey-light;
-    -fx-padding: 14 2 0 2;
+    -fx-padding: 24 2 0 2;
 }
 
 .opaque-icon-character.small {
