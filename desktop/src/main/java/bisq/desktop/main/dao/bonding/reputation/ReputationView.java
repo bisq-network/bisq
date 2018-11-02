@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.bonding.lockup;
+package bisq.desktop.main.dao.bonding.reputation;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -59,7 +59,7 @@ import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class LockupView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+public class ReputationView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
@@ -86,12 +86,12 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private LockupView(BsqWalletService bsqWalletService,
-                       BsqFormatter bsqFormatter,
-                       BsqBalanceUtil bsqBalanceUtil,
-                       BondingViewUtils bondingViewUtils,
-                       BsqValidator bsqValidator,
-                       DaoFacade daoFacade) {
+    private ReputationView(BsqWalletService bsqWalletService,
+                           BsqFormatter bsqFormatter,
+                           BsqBalanceUtil bsqBalanceUtil,
+                           BondingViewUtils bondingViewUtils,
+                           BsqValidator bsqValidator,
+                           DaoFacade daoFacade) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;

@@ -28,7 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
-import bisq.desktop.main.dao.bonding.lockup.LockupView;
+import bisq.desktop.main.dao.bonding.reputation.ReputationView;
 import bisq.desktop.main.dao.bonding.roles.BondedRolesView;
 import bisq.desktop.main.dao.bonding.unlock.UnlockView;
 
@@ -86,7 +86,7 @@ public class BondingView extends ActivatableViewAndModel {
         bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bondedRoles"),
                 BondedRolesView.class, AwesomeIcon.SHIELD, baseNavPath);
         lockupBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.lockupBSQ"),
-                LockupView.class, AwesomeIcon.LOCK, baseNavPath);
+                ReputationView.class, AwesomeIcon.LOCK, baseNavPath);
         unlockBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.unlockBSQ"),
                 UnlockView.class, AwesomeIcon.UNLOCK, baseNavPath);
 
@@ -131,7 +131,7 @@ public class BondingView extends ActivatableViewAndModel {
 
         if (view instanceof BondingDashboardView) dashboard.setSelected(true);
         else if (view instanceof BondedRolesView) bondedRoles.setSelected(true);
-        else if (view instanceof LockupView) lockupBSQ.setSelected(true);
+        else if (view instanceof ReputationView) lockupBSQ.setSelected(true);
         else if (view instanceof UnlockView) unlockBSQ.setSelected(true);
     }
 }
