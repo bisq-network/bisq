@@ -1243,7 +1243,6 @@ textfield */
 #trade-fee-textfield {
     -fx-font-size: 0.9em;
     -fx-alignment: center-right;
-    -fx-background-color: transparent;
 }
 
 /* Open Offer */

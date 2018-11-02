@@ -1437,7 +1437,6 @@ public class FormBuilder {
         HBox.setHgrow(input, Priority.ALWAYS);
         input.setMaxWidth(Double.MAX_VALUE);
         box.getStyleClass().add("input-with-border");
-        //box.setMaxWidth(243);
         box.getChildren().addAll(input, label);
         return new Tuple3<>(box, input, label);
     }
@@ -1454,7 +1453,6 @@ public class FormBuilder {
         HBox.setHgrow(infoInputTextField, Priority.ALWAYS);
         infoInputTextField.setMaxWidth(Double.MAX_VALUE);
         box.getStyleClass().add("input-with-border");
-        //box.setMaxWidth(243);
         box.getChildren().addAll(infoInputTextField, label);
         return new Tuple3<>(box, infoInputTextField, label);
     }
@@ -1511,16 +1509,13 @@ public class FormBuilder {
     // Trade: Label, VBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox) {
-        return getTradeInputBox(amountValueBox, "");
-    }
-
-    public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String descriptionText) {
+    public static Tuple2<Label, VBox> getTradeInputBox(Pane amountValueBox, String descriptionText) {
         Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
         descriptionLabel.setPrefWidth(170);
 
         VBox box = new VBox();
+        box.setPadding(new Insets(10, 0, 0, 0));
         box.setSpacing(2);
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);
