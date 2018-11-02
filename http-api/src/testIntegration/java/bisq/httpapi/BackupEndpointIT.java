@@ -288,7 +288,7 @@ public class BackupEndpointIT {
     }
 
     private void removeAllBackups() {
-        final CubeOutput cubeOutput = alice.exec("rm", APP_DIR_VOLUME_HOST_PATH + "/backup*", "-rf");
+        final CubeOutput cubeOutput = alice.exec("rm", APP_DIR_VOLUME_HOST_PATH + "/backup", APP_DIR_VOLUME_HOST_PATH + "/backup-to-restore", "-rf");
         assertEquals("Command 'rm backup/*' should succeed", "", cubeOutput.getError());
     }
 
