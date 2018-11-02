@@ -410,6 +410,60 @@ bg color of non edit textFields: fafafa
     -fx-font-size: 1em;
 }
 
+.input-with-border {
+    -fx-background-color: -bs-rd-white;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-rd-grey-background-dark;
+    -fx-border-radius: 3;
+    -fx-pref-height: 43;
+    -fx-pref-width: 243;
+    -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
+}
+
+.input-with-border .text-field {
+    -fx-alignment: center-right;
+    -fx-pref-height: 43;
+    -fx-font-size: 1.385em;
+}
+
+.input-with-border > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 60;
+    -fx-padding: 16;
+    -fx-alignment: center;
+}
+
+.input-with-border .icon {
+    -fx-padding: 10;
+}
+
+.input-with-border-readonly {
+    -fx-background-color: -bs-rd-grey-medium-light;
+    -fx-border-width: 0;
+    -fx-pref-width: 243;
+}
+
+.input-with-border-readonly .text-field {
+    -fx-alignment: center-right;
+    -fx-font-size: 1em;
+    -fx-background-color: -bs-rd-grey-medium-light;
+}
+
+.input-with-border-readonly .text-field > .input-line {
+    -fx-background-color: transparent;
+}
+
+.input-with-border-readonly > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 30;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+
+.input-with-border-readonly .icon {
+    -fx-padding: 2;
+}
+
 .jfx-badge .badge-pane {
     -fx-background-color: -bs-red;
     -fx-background-radius: 15;
@@ -465,33 +519,6 @@ bg color of non edit textFields: fafafa
 
 .jfx-date-picker > .arrow-button > .jfx-svg-glyph {
     -fx-background-color: -jfx-default-color;
-}
-
-.input-with-border {
-    -fx-background-color: -bs-rd-white;
-    -fx-border-width: 1;
-    -fx-border-color: -bs-rd-grey-background-dark;
-    -fx-border-radius: 3;
-    -fx-pref-height: 43;
-    -fx-pref-width: 243;
-    -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
-}
-
-.input-with-border .text-field {
-    -fx-alignment: center-right;
-    -fx-pref-height: 43;
-    -fx-font-size: 1.385em;
-}
-
-.input-label {
-    -fx-font-size: 0.692em;
-    -fx-min-width: 60;
-    -fx-padding: 16;
-    -fx-alignment: center;
-}
-
-.input-with-border .icon {
-    -fx-padding: 10;
 }
 
 .scroll-bar {
@@ -770,6 +797,13 @@ bg color of non edit textFields: fafafa
 .opaque-icon-character {
     -fx-font-size: 3em;
     -fx-text-fill: -bs-rd-grey-light;
+    -fx-padding: 14 2 0 2;
+}
+
+.opaque-icon-character.small {
+    -fx-font-size: 1em;
+    /*-fx-text-fill: -bs-rd-grey-light;
+    -fx-padding: 14 2 0 2;*/
 }
 
 /*******************************************************************************
