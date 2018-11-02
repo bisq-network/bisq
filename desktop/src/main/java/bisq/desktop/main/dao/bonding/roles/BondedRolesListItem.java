@@ -18,9 +18,11 @@
 package bisq.desktop.main.dao.bonding.roles;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.BondedRole;
+import bisq.core.dao.governance.bond.BondedRoleState;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Role;
@@ -31,36 +33,64 @@ import javafx.scene.control.Label;
 
 import java.util.Date;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EqualsAndHashCode
-@Data
 class BondedRolesListItem implements DaoStateListener {
+    @Getter
     private final BondedRole bondedRole;
     private final DaoFacade daoFacade;
+    private final BondingViewUtils bondingViewUtils;
     private final BsqFormatter bsqFormatter;
+    @Getter
     private final AutoTooltipButton button;
+    @Getter
     private final Label label;
+    @Getter
     private final Role role;
+
+    private final boolean isMyRole;
 
     BondedRolesListItem(BondedRole bondedRole,
                         DaoFacade daoFacade,
+                        BondingViewUtils bondingViewUtils,
                         BsqFormatter bsqFormatter) {
         this.bondedRole = bondedRole;
         this.daoFacade = daoFacade;
+        this.bondingViewUtils = bondingViewUtils;
         this.bsqFormatter = bsqFormatter;
 
         role = bondedRole.getRole();
+        isMyRole = daoFacade.isMyRole(bondedRole.getRole());
 
         daoFacade.addBsqStateListener(this);
 
         button = new AutoTooltipButton();
         button.setMinWidth(70);
-
         label = new Label();
+
+        button.setOnAction(e -> {
+            if (bondedRole.getBondedRoleState() == BondedRoleState.READY_FOR_LOCKUP) {
+                bondingViewUtils.lockupBondForBondedRole(role,
+                        txId -> {
+                            bondedRole.setLockupTxId(txId);
+                            bondedRole.setBondedRoleState(BondedRoleState.LOCKUP_TX_PENDING);
+                            update();
+                            button.setDisable(true);
+                        });
+            } else if (bondedRole.getBondedRoleState() == BondedRoleState.LOCKUP_TX_CONFIRMED) {
+                bondingViewUtils.unLock(bondedRole.getLockupTxId(),
+                        txId -> {
+                            bondedRole.setUnlockTxId(txId);
+                            bondedRole.setBondedRoleState(BondedRoleState.UNLOCK_TX_PENDING);
+                            update();
+                            button.setDisable(true);
+                        });
+            }
+        });
 
         update();
     }
@@ -79,47 +109,26 @@ class BondedRolesListItem implements DaoStateListener {
 
     public void cleanup() {
         daoFacade.removeBsqStateListener(this);
-        setOnAction(null);
+        button.setOnAction(null);
     }
 
-    public void setOnAction(Runnable handler) {
-        button.setOnAction(e -> handler.run());
-    }
-
-    public boolean isBonded() {
-        return bondedRole.isLockedUp();
-    }
 
     private void update() {
-        // We have following state:
-        // 1. Not bonded: !isLockedUp, !isUnlocked, !isUnlocking: notBonded
-        // 2. Locked up:   isLockedUp, !isUnlocked, !isUnlocking: lockedUp
-        // 3. Unlocking:   isLockedUp,  isUnlocked,  isUnlocking: unlocking
-        // 4. Unlocked:    isLockedUp,  isUnlocked, !isUnlocking: unlocked
+        label.setText(Res.get("dao.bond.bondedRoleState." + bondedRole.getBondedRoleState().name()));
 
-        boolean isLockedUp = bondedRole.isLockedUp();
-        boolean isUnlocked = bondedRole.isUnlocked();
-        boolean isUnlocking = bondedRole.isUnlocking();
+        log.error("bondedRole.getLockupTxId()={}, bondedRole.getBondedRoleState()={}", bondedRole.getLockupTxId(), bondedRole.getBondedRoleState());
+        boolean showLockup = bondedRole.getBondedRoleState() == BondedRoleState.READY_FOR_LOCKUP;
+        boolean showRevoke = bondedRole.getBondedRoleState() == BondedRoleState.LOCKUP_TX_CONFIRMED;
+        if (showLockup)
+            button.updateText(Res.get("dao.bond.table.button.lockup"));
+        else if (showRevoke)
+            button.updateText(Res.get("dao.bond.table.button.revoke"));
 
-        String text;
-        if (!isLockedUp)
-            text = Res.get("dao.bond.table.notBonded");
-        else if (!isUnlocked)
-            text = Res.get("dao.bond.table.lockedUp");
-        else if (isUnlocking)
-            text = Res.get("dao.bond.table.unlocking");
-        else
-            text = Res.get("dao.bond.table.unlocked");
 
-        label.setText(text);
-
-        button.updateText(isLockedUp ? Res.get("dao.bond.table.button.revoke") : Res.get("dao.bond.table.button.lockup"));
-        button.setVisible(!isLockedUp || !isUnlocked);
-        button.setManaged(button.isVisible());
-
-        //TODO listen to unconfirmed txs and update button and label state
+        boolean showButton = isMyRole && (showLockup || showRevoke);
+        button.setVisible(showButton);
+        button.setManaged(showButton);
     }
-
 
     // DaoStateListener
     @Override

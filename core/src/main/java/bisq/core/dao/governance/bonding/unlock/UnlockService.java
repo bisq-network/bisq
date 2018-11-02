@@ -29,12 +29,13 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import bisq.common.handlers.ExceptionHandler;
-import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +62,7 @@ public class UnlockService {
         this.daoStateService = daoStateService;
     }
 
-    public void publishUnlockTx(String lockupTxId, ResultHandler resultHandler,
+    public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
                                 ExceptionHandler exceptionHandler) {
         try {
             TxOutput lockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId).get();
@@ -71,7 +72,7 @@ public class UnlockService {
             walletsManager.publishAndCommitBsqTx(unlockTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
-                    resultHandler.handleResult();
+                    resultHandler.accept(transaction.getHashAsString());
                 }
 
                 @Override

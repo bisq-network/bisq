@@ -37,19 +37,19 @@ import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
+import bisq.core.dao.governance.proposal.compensation.CompensationProposalFactory;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
+import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalFactory;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondValidator;
-import bisq.core.dao.governance.proposal.generic.GenericProposalService;
+import bisq.core.dao.governance.proposal.generic.GenericProposalFactory;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.param.ChangeParamProposalFactory;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalFactory;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
-import bisq.core.dao.governance.proposal.role.RoleProposalService;
+import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.governance.proposal.role.RoleValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
@@ -132,25 +132,25 @@ public class DaoModule extends AppModule {
         bind(ProposalValidator.class).in(Singleton.class);
 
         bind(CompensationValidator.class).in(Singleton.class);
-        bind(CompensationProposalService.class).in(Singleton.class);
+        bind(CompensationProposalFactory.class).in(Singleton.class);
 
         bind(ReimbursementValidator.class).in(Singleton.class);
-        bind(ReimbursementProposalService.class).in(Singleton.class);
+        bind(ReimbursementProposalFactory.class).in(Singleton.class);
 
         bind(ChangeParamValidator.class).in(Singleton.class);
-        bind(ChangeParamProposalService.class).in(Singleton.class);
+        bind(ChangeParamProposalFactory.class).in(Singleton.class);
 
         bind(RoleValidator.class).in(Singleton.class);
-        bind(RoleProposalService.class).in(Singleton.class);
+        bind(RoleProposalFactory.class).in(Singleton.class);
 
         bind(ConfiscateBondValidator.class).in(Singleton.class);
-        bind(ConfiscateBondProposalService.class).in(Singleton.class);
+        bind(ConfiscateBondProposalFactory.class).in(Singleton.class);
 
         bind(GenericProposalValidator.class).in(Singleton.class);
-        bind(GenericProposalService.class).in(Singleton.class);
+        bind(GenericProposalFactory.class).in(Singleton.class);
 
         bind(RemoveAssetValidator.class).in(Singleton.class);
-        bind(RemoveAssetProposalService.class).in(Singleton.class);
+        bind(RemoveAssetProposalFactory.class).in(Singleton.class);
 
 
         // Ballot

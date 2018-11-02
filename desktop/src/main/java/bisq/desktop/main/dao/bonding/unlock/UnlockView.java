@@ -397,7 +397,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                         if (item != null && !empty) {
                             if (button == null) {
                                 button = item.getButton();
-                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId(), () -> {
+                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId(), txId -> {
                                     //TODO
                                     button.setDisable(true);
                                 }));

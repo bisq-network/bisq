@@ -15,16 +15,17 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.generic;
+package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.BaseProposalService;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.governance.GenericProposal;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -33,10 +34,12 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Creates GenericProposal and transaction.
+ * Creates ChangeParamProposal and transaction.
  */
 @Slf4j
-public class GenericProposalService extends BaseProposalService<GenericProposal> {
+public class ChangeParamProposalFactory extends BaseProposalFactory<ChangeParamProposal> {
+    private Param param;
+    private String paramValue;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -44,24 +47,33 @@ public class GenericProposalService extends BaseProposalService<GenericProposal>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public GenericProposalService(BsqWalletService bsqWalletService,
-                                  BtcWalletService btcWalletService,
-                                  DaoStateService daoStateService,
-                                  GenericProposalValidator proposalValidator) {
+    public ChangeParamProposalFactory(BsqWalletService bsqWalletService,
+                                      BtcWalletService btcWalletService,
+                                      DaoStateService daoStateService,
+                                      ChangeParamValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 daoStateService,
                 proposalValidator);
     }
 
-    public ProposalWithTransaction createProposalWithTransaction(String name, String link)
+    public ProposalWithTransaction createProposalWithTransaction(String name,
+                                                                 String link,
+                                                                 Param param,
+                                                                 String paramValue)
             throws ValidationException, InsufficientMoneyException, TxException {
+        this.param = param;
+        this.paramValue = paramValue;
 
         return super.createProposalWithTransaction(name, link);
     }
 
     @Override
-    protected GenericProposal createProposalWithoutTxId() {
-        return new GenericProposal(name, link);
+    protected ChangeParamProposal createProposalWithoutTxId() {
+        return new ChangeParamProposal(
+                name,
+                link,
+                param,
+                paramValue);
     }
 }

@@ -153,8 +153,8 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
     private void updateList() {
         observableList.forEach(BondedRolesListItem::cleanup);
-        observableList.setAll(daoFacade.getBondedRoleStates().stream()
-                .map(bondedRoleState -> new BondedRolesListItem(bondedRoleState, daoFacade, bsqFormatter))
+        observableList.setAll(daoFacade.getBondedRoles().stream()
+                .map(bondedRole -> new BondedRolesListItem(bondedRole, daoFacade, bondingViewUtils, bsqFormatter))
                 .collect(Collectors.toList()));
     }
 
@@ -195,7 +195,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.linkToAccount"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.link"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
@@ -315,7 +315,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(60);
+        column.setMinWidth(80);
         column.setCellFactory(
                 new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
                         BondedRolesListItem>>() {
@@ -357,7 +357,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.unlockTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(60);
+        column.setMinWidth(80);
         column.setCellFactory(
                 new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
                         BondedRolesListItem>>() {
@@ -447,16 +447,6 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = item.getButton();
-                                        item.setOnAction(() -> {
-                                            if (item.isBonded())
-                                                bondingViewUtils.unLock(item.getBondedRole().getLockupTxId(),
-                                                        () -> {
-                                                            // TODO
-                                                            button.setDisable(true);
-                                                        });
-                                            else
-                                                bondingViewUtils.lockupBondForBondedRole(item.getRole(), null);
-                                        });
                                         setGraphic(button);
                                     }
                                 } else {

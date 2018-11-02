@@ -15,16 +15,18 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.confiscatebond;
+package bisq.core.dao.governance.proposal.removeAsset;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.BaseProposalService;
+import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+
+import bisq.asset.Asset;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
@@ -33,11 +35,11 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Creates ConfiscateBondProposal and transaction.
+ * Creates RemoveAssetProposal and transaction.
  */
 @Slf4j
-public class ConfiscateBondProposalService extends BaseProposalService<ConfiscateBondProposal> {
-    private byte[] hash;
+public class RemoveAssetProposalFactory extends BaseProposalFactory<RemoveAssetProposal> {
+    private Asset asset;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,10 +47,10 @@ public class ConfiscateBondProposalService extends BaseProposalService<Confiscat
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ConfiscateBondProposalService(BsqWalletService bsqWalletService,
-                                         BtcWalletService btcWalletService,
-                                         DaoStateService daoStateService,
-                                         ConfiscateBondValidator proposalValidator) {
+    public RemoveAssetProposalFactory(BsqWalletService bsqWalletService,
+                                      BtcWalletService btcWalletService,
+                                      DaoStateService daoStateService,
+                                      RemoveAssetValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 daoStateService,
@@ -57,18 +59,18 @@ public class ConfiscateBondProposalService extends BaseProposalService<Confiscat
 
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
-                                                                 byte[] hash)
+                                                                 Asset asset)
             throws ValidationException, InsufficientMoneyException, TxException {
-        this.hash = hash;
+        this.asset = asset;
 
         return super.createProposalWithTransaction(name, link);
     }
 
     @Override
-    protected ConfiscateBondProposal createProposalWithoutTxId() {
-        return new ConfiscateBondProposal(
+    protected RemoveAssetProposal createProposalWithoutTxId() {
+        return new RemoveAssetProposal(
                 name,
                 link,
-                hash);
+                asset.getTickerSymbol());
     }
 }

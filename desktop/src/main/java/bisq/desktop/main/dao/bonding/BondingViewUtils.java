@@ -38,7 +38,6 @@ import bisq.core.util.BsqFormatter;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
-import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -46,8 +45,11 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import javax.inject.Inject;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BondingViewUtils {
@@ -69,7 +71,7 @@ public class BondingViewUtils {
     }
 
     private void lockupBond(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType,
-                            ResultHandler resultHandler) {
+                            Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
                 new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
@@ -89,41 +91,38 @@ public class BondingViewUtils {
         }
     }
 
-    private void publishLockupTx(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType, ResultHandler resultHandler) {
+    private void publishLockupTx(BondWithHash bondWithHash, Coin lockupAmount, int lockupTime, LockupType lockupType, Consumer<String> resultHandler) {
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupType,
                 bondWithHash,
-                () -> {
+                txId -> {
                     if (!DevEnv.isDevMode())
                         new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
+
+                    if (resultHandler != null)
+                        resultHandler.accept(txId);
                 },
                 this::handleError
         );
-        if (resultHandler != null)
-            resultHandler.handleResult();
     }
 
-    public void lockupBondForBondedRole(Role role, ResultHandler resultHandler) {
+    public void lockupBondForBondedRole(Role role, Consumer<String> resultHandler) {
         BondedRoleType bondedRoleType = role.getBondedRoleType();
         Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
         int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
         lockupBond(role, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
     }
 
-    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, ResultHandler resultHandler) {
+    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, Consumer<String> resultHandler) {
         BondedReputation bondedReputation = BondedReputation.createBondedReputation();
         lockupBond(bondedReputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
     }
 
-    public void unLock(String lockupTxId, ResultHandler resultHandler) {
+    public void unLock(String lockupTxId, Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
-            if (!lockupTxOutput.isPresent()) {
-                log.warn("Lockup output not found, txId = ", lockupTxId);
-                return;
-            }
-
+            checkArgument(lockupTxOutput.isPresent(), "Lockup output must be present. TxId=" + lockupTxId);
             Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
             Optional<Integer> opLockTime = daoFacade.getLockTime(lockupTxId);
             int lockTime = opLockTime.orElse(-1);
@@ -153,13 +152,14 @@ public class BondingViewUtils {
         log.info("unlock tx: {}", lockupTxId);
     }
 
-    private void publishUnlockTx(String lockupTxId, ResultHandler resultHandler) {
+    private void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler) {
         daoFacade.publishUnlockTx(lockupTxId,
-                () -> {
+                txId -> {
                     if (!DevEnv.isDevMode())
                         new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
 
-                    resultHandler.handleResult();
+                    if (resultHandler != null)
+                        resultHandler.accept(txId);
                 },
                 errorMessage -> new Popup<>().warning(errorMessage.toString()).show()
         );

@@ -20,7 +20,7 @@ package bisq.core.dao.governance.proposal.role;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.BaseProposalService;
+import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * Creates RoleProposal and transaction.
  */
 @Slf4j
-public class RoleProposalService extends BaseProposalService<RoleProposal> {
+public class RoleProposalFactory extends BaseProposalFactory<RoleProposal> {
     private Role role;
 
 
@@ -46,7 +46,7 @@ public class RoleProposalService extends BaseProposalService<RoleProposal> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public RoleProposalService(BsqWalletService bsqWalletService,
+    public RoleProposalFactory(BsqWalletService bsqWalletService,
                                BtcWalletService btcWalletService,
                                DaoStateService daoStateService,
                                RoleValidator proposalValidator) {

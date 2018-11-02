@@ -150,7 +150,7 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 bondedRolesComboBox.setVisible(true);
                 lockupRows++;
 
-                bondedRolesComboBox.setItems(FXCollections.observableArrayList(daoFacade.getBondedRoleStates()));
+                bondedRolesComboBox.setItems(FXCollections.observableArrayList(daoFacade.getBondedRoles()));
             } else {
                 bondedRolesComboBox.setVisible(false);
                 bondedRolesComboBox.getItems().clear();
@@ -199,13 +199,13 @@ public class LockupView extends ActivatableView<GridPane, Void> implements BsqBa
                 case BONDED_ROLE:
                     if (bondedRolesComboBox.getValue() != null) {
                         bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue().getRole(),
-                                () -> bondedRolesComboBox.getSelectionModel().clearSelection());
+                                txId -> bondedRolesComboBox.getSelectionModel().clearSelection());
                     }
                     break;
                 case REPUTATION:
                     bondingViewUtils.lockupBondForReputation(bsqFormatter.parseToCoin(amountInputTextField.getText()),
                             Integer.parseInt(timeInputTextField.getText()),
-                            () -> {
+                            txId -> {
                                 amountInputTextField.setText("");
                                 timeInputTextField.setText("");
                             });

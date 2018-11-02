@@ -687,7 +687,11 @@ public class DaoStateService implements DaoSetupService {
         return opTxOutput.isPresent() && isUnlockingOutput(opTxOutput.get());
     }
 
-    // TODO SQ i changed the code here. i think it was wrong before
+    public boolean isUnlocking(String unlockTxId) {
+        Optional<Tx> optionalTx = getTx(unlockTxId);
+        return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
+    }
+
     public boolean isUnlockingOutput(TxOutput unlockTxOutput) {
         return unlockTxOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT &&
                 !isLockTimeOverForUnlockTxOutput(unlockTxOutput);
@@ -754,11 +758,6 @@ public class DaoStateService implements DaoSetupService {
         // TODO SQ TxOutputType is immutable after parsing
         // We need to add new checks if a txo is not confiscated by using the map similar like utxo map
         // txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-    }
-
-    public boolean isUnlocking(String unlockTxId) {
-        Optional<Tx> optionalTx = getTx(unlockTxId);
-        return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
     }
 
 

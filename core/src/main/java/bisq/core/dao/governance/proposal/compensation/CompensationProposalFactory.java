@@ -15,21 +15,21 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.proposal.reimbursement;
+package bisq.core.dao.governance.proposal.compensation;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.BaseProposalService;
+import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
-import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.common.app.Version;
 
@@ -42,19 +42,19 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Creates the ReimbursementProposal and the transaction.
+ * Creates the CompensationProposal and the transaction.
  */
 @Slf4j
-public class ReimbursementProposalService extends BaseProposalService<ReimbursementProposal> {
+public class CompensationProposalFactory extends BaseProposalFactory<CompensationProposal> {
 
     private Coin requestedBsq;
     private String bsqAddress;
 
     @Inject
-    public ReimbursementProposalService(BsqWalletService bsqWalletService,
-                                        BtcWalletService btcWalletService,
-                                        DaoStateService daoStateService,
-                                        ReimbursementValidator proposalValidator) {
+    public CompensationProposalFactory(BsqWalletService bsqWalletService,
+                                       BtcWalletService btcWalletService,
+                                       DaoStateService daoStateService,
+                                       CompensationValidator proposalValidator) {
         super(bsqWalletService,
                 btcWalletService,
                 daoStateService,
@@ -72,8 +72,8 @@ public class ReimbursementProposalService extends BaseProposalService<Reimbursem
     }
 
     @Override
-    protected ReimbursementProposal createProposalWithoutTxId() {
-        return new ReimbursementProposal(
+    protected CompensationProposal createProposalWithoutTxId() {
+        return new CompensationProposal(
                 name,
                 link,
                 requestedBsq,
@@ -83,17 +83,17 @@ public class ReimbursementProposalService extends BaseProposalService<Reimbursem
     @Override
     protected byte[] getOpReturnData(byte[] hashOfPayload) {
         return ProposalConsensus.getOpReturnData(hashOfPayload,
-                OpReturnType.REIMBURSEMENT_REQUEST.getType(),
-                Version.REIMBURSEMENT_REQUEST);
+                OpReturnType.COMPENSATION_REQUEST.getType(),
+                Version.COMPENSATION_REQUEST);
     }
 
     @Override
     protected Transaction completeTx(Transaction preparedBurnFeeTx, byte[] opReturnData, Proposal proposal)
             throws WalletException, InsufficientMoneyException, TransactionVerificationException {
-        ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
-        return btcWalletService.completePreparedReimbursementRequestTx(
-                reimbursementProposal.getRequestedBsq(),
-                reimbursementProposal.getAddress(),
+        CompensationProposal compensationProposal = (CompensationProposal) proposal;
+        return btcWalletService.completePreparedCompensationRequestTx(
+                compensationProposal.getRequestedBsq(),
+                compensationProposal.getAddress(),
                 preparedBurnFeeTx,
                 opReturnData);
     }

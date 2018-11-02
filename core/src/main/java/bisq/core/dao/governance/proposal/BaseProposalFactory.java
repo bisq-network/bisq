@@ -37,10 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 /**
- * Base class for proposalService classes. Provides creation of a transaction.
+ * Base class for proposalFactory classes. Provides creation of a transaction. Proposal creation is delegated to
+ * concrete classes.
  */
 @Slf4j
-public abstract class BaseProposalService<R extends Proposal> {
+public abstract class BaseProposalFactory<R extends Proposal> {
     protected final BsqWalletService bsqWalletService;
     protected final BtcWalletService btcWalletService;
     protected final DaoStateService daoStateService;
@@ -55,7 +56,7 @@ public abstract class BaseProposalService<R extends Proposal> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BaseProposalService(BsqWalletService bsqWalletService,
+    public BaseProposalFactory(BsqWalletService bsqWalletService,
                                BtcWalletService btcWalletService,
                                DaoStateService daoStateService,
                                ProposalValidator proposalValidator) {

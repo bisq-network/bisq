@@ -31,7 +31,6 @@ import bisq.core.dao.governance.bonding.bond.BondWithHash;
 import bisq.core.dao.state.model.governance.Role;
 
 import bisq.common.handlers.ExceptionHandler;
-import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -40,6 +39,8 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import java.io.IOException;
+
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,10 +70,9 @@ public class LockupService {
     }
 
     public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
-                                ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+                                Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
         checkArgument(lockTime <= BondingConsensus.getMaxLockTime() &&
                 lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
-
         if (bondWithHash instanceof Role) {
             Role role = (Role) bondWithHash;
             if (bondedRolesService.wasRoleAlreadyBonded(role)) {
@@ -81,17 +81,16 @@ public class LockupService {
             }
         }
 
+        byte[] hash = BondingConsensus.getHash(bondWithHash);
         try {
-
-            byte[] hash = BondingConsensus.getHash(bondWithHash);
             byte[] opReturnData = BondingConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
-            final Transaction lockupTx = getLockupTx(lockupAmount, opReturnData);
+            final Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
 
             //noinspection Duplicates
             walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
-                    resultHandler.handleResult();
+                    resultHandler.accept(transaction.getHashAsString());
                 }
 
                 @Override
@@ -111,7 +110,7 @@ public class LockupService {
         }
     }
 
-    private Transaction getLockupTx(Coin lockupAmount, byte[] opReturnData)
+    private Transaction createLockupTx(Coin lockupAmount, byte[] opReturnData)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);

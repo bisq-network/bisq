@@ -17,33 +17,13 @@
 
 package bisq.core.dao.governance.bond;
 
-import bisq.core.dao.state.model.governance.Role;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
-
-/**
- * Wrapper for role which contains the mutable state of a bonded role. Only kept in memory.
- */
-@Getter
-public class BondedRole {
-    private final Role role;
-    @Setter
-    @Nullable
-    private String lockupTxId;
-    @Setter
-    @Nullable
-    private String unlockTxId;
-    @Setter
-    private long startDate;
-    @Setter
-    private long revokeDate;
-    @Setter
-    private BondedRoleState bondedRoleState = BondedRoleState.READY_FOR_LOCKUP;
-
-    BondedRole(Role role) {
-        this.role = role;
-    }
+// Used in string properties ("dao.bond.bondedRoleState.*")
+public enum BondedRoleState {
+    READY_FOR_LOCKUP,       // Accepted by voting but no lockup tx made yet.
+    LOCKUP_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
+    LOCKUP_TX_CONFIRMED,
+    UNLOCK_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
+    UNLOCK_TX_CONFIRMED,
+    UNLOCKING,              // lock time not expired
+    UNLOCKED,
 }
