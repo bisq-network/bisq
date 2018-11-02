@@ -836,11 +836,13 @@ public abstract class Overlay<T extends Overlay> {
     protected void addCloseButton() {
         if (!hideCloseButton) {
             closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+            closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
         }
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
+            actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
             actionButton.setOnAction(event -> {
@@ -852,7 +854,7 @@ public abstract class Overlay<T extends Overlay> {
             HBox hBox = new HBox();
             hBox.setSpacing(10);
             if (!hideCloseButton)
-                hBox.getChildren().addAll(spacer, closeButton, actionButton);
+                hBox.getChildren().addAll(spacer, actionButton, closeButton);
             else
                 hBox.getChildren().addAll(spacer, actionButton);
             HBox.setHgrow(spacer, Priority.ALWAYS);

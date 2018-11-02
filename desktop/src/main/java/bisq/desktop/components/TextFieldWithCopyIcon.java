@@ -46,6 +46,10 @@ public class TextFieldWithCopyIcon extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TextFieldWithCopyIcon() {
+        this(null);
+    }
+
+    public TextFieldWithCopyIcon(String customStyleClass) {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
@@ -69,6 +73,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         });
         textField = new JFXTextField();
         textField.setEditable(false);
+        if (customStyleClass != null) textField.getStyleClass().add(customStyleClass);
         textField.textProperty().bindBidirectional(text);
         AnchorPane.setRightAnchor(copyIcon, 5.0);
         AnchorPane.setRightAnchor(textField, 30.0);
