@@ -35,10 +35,10 @@ public class HelpTheHomelessTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("");
-        assertInvalidAddress("");
-        assertInvalidAddress("");
-        assertInvalidAddress("");
-        assertInvalidAddress("");
+        assertInvalidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
+        assertInvalidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
+        assertInvalidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
+        assertInvalidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
+        assertInvalidAddress("HNbhe1Pfm2eH8d5NthFTzEZNwdzDJFKw6V");
     }
 }
