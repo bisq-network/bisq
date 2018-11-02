@@ -31,8 +31,8 @@ public class HelpTheHomeless extends Coin {
     public static class HelpTheHomelessParams extends NetworkParametersAdapter {
 
         public HelpTheHomelessParams() {
-            addressHeader = 50;
-            p2shHeader = 18;
+            addressHeader = 40;
+            p2shHeader = 16;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
