@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bond;
+package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.governance.bonding.BondingConsensus;
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.BondWithHash;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
@@ -103,10 +104,10 @@ public class BondedRolesService implements DaoStateListener {
 
                     // We used the hash of th bonded role object as our hash in OpReturn of the lock up tx to have a
                     // unique binding of the tx to the data object.
-                    byte[] hash = BondingConsensus.getHashFromOpReturnData(opReturnData);
+                    byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
                     Optional<Role> candidate = getBondedRoleFromHash(hash);
                     if (candidate.isPresent() && bondedRole.equals(candidate.get())) {
-                        bondedRoleState.setBondedRoleState(BondedRoleState.LOCKUP_TX_CONFIRMED);
+                        bondedRoleState.setBondState(BondState.LOCKUP_TX_CONFIRMED);
                         bondedRoleState.setLockupTxId(lockupTxId);
                         // We use the tx time as we want to have a unique time for all users
                         bondedRoleState.setStartDate(lockupTx.getTime());
@@ -121,13 +122,13 @@ public class BondedRolesService implements DaoStateListener {
                                         // cross check if it is in daoStateService.getUnlockTxOutputs() ?
                                         String unlockTxId = unlockTx.getId();
                                         bondedRoleState.setUnlockTxId(unlockTxId);
-                                        bondedRoleState.setBondedRoleState(BondedRoleState.UNLOCK_TX_CONFIRMED);
+                                        bondedRoleState.setBondState(BondState.UNLOCK_TX_CONFIRMED);
                                         bondedRoleState.setRevokeDate(unlockTx.getTime());
                                         boolean unlocking = daoStateService.isUnlocking(unlockTxId);
                                         if (unlocking) {
-                                            bondedRoleState.setBondedRoleState(BondedRoleState.UNLOCKING);
+                                            bondedRoleState.setBondState(BondState.UNLOCKING);
                                         } else {
-                                            bondedRoleState.setBondedRoleState(BondedRoleState.UNLOCKED);
+                                            bondedRoleState.setBondState(BondState.UNLOCKED);
                                         }
                                     });
                         }
@@ -153,11 +154,6 @@ public class BondedRolesService implements DaoStateListener {
     public void start() {
     }
 
-
-    public List<Role> getBondedRoleList() {
-        return getBondedRoleStream().collect(Collectors.toList());
-    }
-
     public Collection<BondedRole> getBondedRoles() {
         return bondedRoleByRoleUidMap.values();
     }
@@ -168,57 +164,10 @@ public class BondedRolesService implements DaoStateListener {
         return getBondedRoleList();
     }
 
-    private void updateBondedRoleStateFromUnconfirmedLockupTxs() {
-        getBondedRoleStream().filter(this::isLockupTxUnconfirmed)
-                .map(role -> bondedRoleByRoleUidMap.get(role.getUid()))
-                .filter(bondedRole -> bondedRole.getBondedRoleState() == BondedRoleState.READY_FOR_LOCKUP)
-                .forEach(bondedRole -> bondedRole.setBondedRoleState(BondedRoleState.LOCKUP_TX_PENDING));
-    }
-
-    private void updateBondedRoleStateFromUnconfirmedUnlockTxs() {
-        getBondedRoleStream().filter(this::isUnlockTxUnconfirmed)
-                .map(role -> bondedRoleByRoleUidMap.get(role.getUid()))
-                .filter(bondedRole -> bondedRole.getBondedRoleState() == BondedRoleState.LOCKUP_TX_CONFIRMED)
-                .forEach(bondedRole -> bondedRole.setBondedRoleState(BondedRoleState.UNLOCK_TX_PENDING));
-    }
-
-    private boolean isLockupTxUnconfirmed(BondWithHash bondWithHash) {
-        return bsqWalletService.getWalletTransactions().stream()
-                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING)
-                .map(transaction -> transaction.getOutputs().get(transaction.getOutputs().size() - 1))
-                .filter(lastOutput -> lastOutput.getScriptPubKey().isOpReturn())
-                .map(lastOutput -> lastOutput.getScriptPubKey().getChunks())
-                .filter(chunks -> chunks.size() > 1)
-                .map(chunks -> chunks.get(1).data)
-                .anyMatch(data -> Arrays.equals(BondingConsensus.getHashFromOpReturnData(data), bondWithHash.getHash()));
-    }
-
-    private boolean isUnlockTxUnconfirmed(BondWithHash bondWithHash) {
-        return bsqWalletService.getWalletTransactions().stream()
-                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING)
-                .filter(transaction -> transaction.getInputs().size() > 1)
-                .map(transaction -> transaction.getInputs().get(0))
-                .map(TransactionInput::getConnectedOutput)
-                .filter(Objects::nonNull)
-                .map(TransactionOutput::getParentTransaction)
-                .filter(Objects::nonNull)
-                .map(Transaction::getHashAsString)
-                .flatMap(lockupTxId -> daoStateService.getLockupOpReturnTxOutput(lockupTxId).stream())
-                .map(BaseTxOutput::getOpReturnData)
-                .anyMatch(data -> Arrays.equals(BondingConsensus.getHashFromOpReturnData(data), bondWithHash.getHash()));
-    }
 
     public Optional<Role> getBondedRoleFromHash(byte[] hash) {
         return getBondedRoleStream()
-                .filter(bondedRole -> {
-                    byte[] candidateHash = bondedRole.getHash();
-                   /* log.error("getBondedRoleFromHash: equals?={}, hash={}, candidateHash={}\nbondedRole={}",
-                            Arrays.equals(candidateHash, hash),
-                            Utilities.bytesAsHexString(hash),
-                            Utilities.bytesAsHexString(candidateHash),
-                            bondedRole.toString());*/
-                    return Arrays.equals(candidateHash, hash);
-                })
+                .filter(bondedRole -> Arrays.equals(bondedRole.getHash(), hash))
                 .findAny();
     }
 
@@ -228,29 +177,10 @@ public class BondedRolesService implements DaoStateListener {
                 .findAny();
     }
 
-
     public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
         return getBondedRoleStateFromLockupTxId(lockUpTxId)
                 .map(BondedRole::getRole)
                 .map(Role::getBondedRoleType);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private Stream<Role> getBondedRoleStream() {
-        return daoStateService.getEvaluatedProposalList().stream()
-                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
-                .map(e -> ((RoleProposal) e.getProposal()).getRole());
-    }
-
-    private Stream<RoleProposal> getBondedRoleProposalStream() {
-        return daoStateService.getEvaluatedProposalList().stream()
-                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
-                .map(e -> ((RoleProposal) e.getProposal()));
     }
 
     public boolean wasRoleAlreadyBonded(Role role) {
@@ -267,5 +197,66 @@ public class BondedRolesService implements DaoStateListener {
                 .filter(roleProposal -> roleProposal.getRole().equals(role))
                 .map(Proposal::getTxId)
                 .anyMatch(myWalletTransactionIds::contains);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private List<Role> getBondedRoleList() {
+        return getBondedRoleStream().collect(Collectors.toList());
+    }
+
+    private void updateBondedRoleStateFromUnconfirmedLockupTxs() {
+        getBondedRoleStream().filter(this::isLockupTxUnconfirmed)
+                .map(role -> bondedRoleByRoleUidMap.get(role.getUid()))
+                .filter(bondedRole -> bondedRole.getBondState() == BondState.READY_FOR_LOCKUP)
+                .forEach(bondedRole -> bondedRole.setBondState(BondState.LOCKUP_TX_PENDING));
+    }
+
+    private void updateBondedRoleStateFromUnconfirmedUnlockTxs() {
+        getBondedRoleStream().filter(this::isUnlockTxUnconfirmed)
+                .map(role -> bondedRoleByRoleUidMap.get(role.getUid()))
+                .filter(bondedRole -> bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
+                .forEach(bondedRole -> bondedRole.setBondState(BondState.UNLOCK_TX_PENDING));
+    }
+
+    private boolean isLockupTxUnconfirmed(BondWithHash bondWithHash) {
+        return bsqWalletService.getWalletTransactions().stream()
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING)
+                .map(transaction -> transaction.getOutputs().get(transaction.getOutputs().size() - 1))
+                .filter(lastOutput -> lastOutput.getScriptPubKey().isOpReturn())
+                .map(lastOutput -> lastOutput.getScriptPubKey().getChunks())
+                .filter(chunks -> chunks.size() > 1)
+                .map(chunks -> chunks.get(1).data)
+                .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondWithHash.getHash()));
+    }
+
+    private boolean isUnlockTxUnconfirmed(BondWithHash bondWithHash) {
+        return bsqWalletService.getWalletTransactions().stream()
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING)
+                .filter(transaction -> transaction.getInputs().size() > 1)
+                .map(transaction -> transaction.getInputs().get(0))
+                .map(TransactionInput::getConnectedOutput)
+                .filter(Objects::nonNull)
+                .map(TransactionOutput::getParentTransaction)
+                .filter(Objects::nonNull)
+                .map(Transaction::getHashAsString)
+                .flatMap(lockupTxId -> daoStateService.getLockupOpReturnTxOutput(lockupTxId).stream())
+                .map(BaseTxOutput::getOpReturnData)
+                .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondWithHash.getHash()));
+    }
+
+    private Stream<Role> getBondedRoleStream() {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .map(e -> ((RoleProposal) e.getProposal()).getRole());
+    }
+
+    private Stream<RoleProposal> getBondedRoleProposalStream() {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .map(e -> ((RoleProposal) e.getProposal()));
     }
 }

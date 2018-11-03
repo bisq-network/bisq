@@ -18,8 +18,8 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
-import bisq.core.dao.governance.bonding.BondingConsensus;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.lockup.LockupType;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
@@ -105,16 +105,16 @@ class OpReturnParser {
                 else
                     break;
             case LOCKUP:
-                if (!BondingConsensus.hasOpReturnDataValidLength(opReturnData))
+                if (!BondConsensus.hasOpReturnDataValidLength(opReturnData))
                     return TxOutputType.INVALID_OUTPUT;
-                Optional<LockupType> lockupType = BondingConsensus.getLockupType(opReturnData);
+                Optional<LockupType> lockupType = BondConsensus.getLockupType(opReturnData);
                 if (!lockupType.isPresent()) {
                     log.warn("No lockupType found for lockup tx, opReturnData=" + Utilities.encodeToHex(opReturnData));
                     return TxOutputType.INVALID_OUTPUT;
                 }
 
-                int lockTime = BondingConsensus.getLockTime(opReturnData);
-                if (BondingConsensus.isLockTimeInValidRange(lockTime)) {
+                int lockTime = BondConsensus.getLockTime(opReturnData);
+                if (BondConsensus.isLockTimeInValidRange(lockTime)) {
                     return TxOutputType.LOCKUP_OP_RETURN_OUTPUT;
                 } else {
                     break;

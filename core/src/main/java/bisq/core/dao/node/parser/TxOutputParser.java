@@ -17,7 +17,7 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.governance.bonding.BondingConsensus;
+import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.TxOutput;
@@ -96,7 +96,7 @@ public class TxOutputParser {
         // If we have a LOCKUP opReturn output we save the lockTime to apply it later to the LOCKUP output.
         // We keep that data in that other output as it makes parsing of the UNLOCK tx easier.
         optionalOpReturnType.filter(opReturnType -> opReturnType == OpReturnType.LOCKUP)
-                .ifPresent(opReturnType -> lockTime = BondingConsensus.getLockTime(opReturnData));
+                .ifPresent(opReturnType -> lockTime = BondConsensus.getLockTime(opReturnData));
     }
 
     void processTxOutput(TempTxOutput tempTxOutput) {

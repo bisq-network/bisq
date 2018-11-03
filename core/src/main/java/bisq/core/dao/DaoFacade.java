@@ -24,14 +24,14 @@ import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.governance.bond.BondedRole;
-import bisq.core.dao.governance.bond.BondedRolesService;
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
-import bisq.core.dao.governance.bonding.bond.BondedReputation;
-import bisq.core.dao.governance.bonding.bond.BondedReputationService;
-import bisq.core.dao.governance.bonding.lockup.LockupService;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
-import bisq.core.dao.governance.bonding.unlock.UnlockService;
+import bisq.core.dao.governance.bond.BondWithHash;
+import bisq.core.dao.governance.bond.lockup.LockupService;
+import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.reputation.BondedReputation;
+import bisq.core.dao.governance.bond.reputation.BondedReputationService;
+import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.unlock.UnlockService;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.param.Param;
@@ -286,8 +286,8 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesService.getBondedRoles();
     }
 
-    public List<BondedReputation> getBondedReputationList() {
-        return bondedReputationService.getBondedReputationList();
+    public List<BondedReputation> getReputationList() {
+        return bondedReputationService.getReputationList();
     }
 
     // Show fee

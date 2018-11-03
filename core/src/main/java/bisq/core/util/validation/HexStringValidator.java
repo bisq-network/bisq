@@ -15,35 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bonding.lockup;
+package bisq.core.util.validation;
 
 import bisq.core.locale.Res;
 
-import java.util.Arrays;
-import java.util.Optional;
+import bisq.common.util.Utilities;
 
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-public enum LockupType {
-    BONDED_ROLE((byte) 0x01),
-    REPUTATION((byte) 0x02);
-
-    @Getter
-    private byte type;
-
-    LockupType(byte type) {
-        this.type = type;
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class HexStringValidator extends InputValidator {
+    public HexStringValidator() {
     }
 
-    public String getDisplayString() {
-        return Res.get("dao.bond.lockupType." + name());
-    }
+    public ValidationResult validate(String input) {
+        ValidationResult validationResult = super.validate(input);
+        if (!validationResult.isValid)
+            return validationResult;
 
-    public static Optional<LockupType> getLockupType(byte type) {
-        return Arrays.stream(LockupType.values())
-                .filter(lockupType -> lockupType.type == type)
-                .map(Optional::of)
-                .findAny()
-                .orElse(Optional.empty());
+        try {
+            Utilities.decodeFromHex(input);
+            return validationResult;
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.noHexString", input));
+        }
+
     }
 }

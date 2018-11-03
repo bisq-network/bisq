@@ -27,10 +27,10 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.bonding.bonds.BondsView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
 import bisq.desktop.main.dao.bonding.reputation.ReputationView;
 import bisq.desktop.main.dao.bonding.roles.BondedRolesView;
-import bisq.desktop.main.dao.bonding.unlock.UnlockView;
 
 import bisq.core.locale.Res;
 
@@ -53,7 +53,7 @@ public class BondingView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, bondedRoles, lockupBSQ, unlockBSQ;
+    private MenuItem dashboard, bondedRoles, reputation, bonds;
     private Navigation.Listener listener;
 
     @FXML
@@ -85,20 +85,20 @@ public class BondingView extends ActivatableViewAndModel {
                 BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bondedRoles"),
                 BondedRolesView.class, AwesomeIcon.SHIELD, baseNavPath);
-        lockupBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.lockupBSQ"),
+        reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.reputation"),
                 ReputationView.class, AwesomeIcon.LOCK, baseNavPath);
-        unlockBSQ = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.unlockBSQ"),
-                UnlockView.class, AwesomeIcon.UNLOCK, baseNavPath);
+        bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bonds"),
+                BondsView.class, AwesomeIcon.UNLOCK, baseNavPath);
 
-        leftVBox.getChildren().addAll(dashboard, bondedRoles, lockupBSQ, unlockBSQ);
+        leftVBox.getChildren().addAll(dashboard, bondedRoles, reputation, bonds);
     }
 
     @Override
     protected void activate() {
         dashboard.activate();
         bondedRoles.activate();
-        lockupBSQ.activate();
-        unlockBSQ.activate();
+        reputation.activate();
+        bonds.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -121,8 +121,8 @@ public class BondingView extends ActivatableViewAndModel {
 
         dashboard.deactivate();
         bondedRoles.deactivate();
-        lockupBSQ.deactivate();
-        unlockBSQ.deactivate();
+        reputation.deactivate();
+        bonds.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -131,7 +131,7 @@ public class BondingView extends ActivatableViewAndModel {
 
         if (view instanceof BondingDashboardView) dashboard.setSelected(true);
         else if (view instanceof BondedRolesView) bondedRoles.setSelected(true);
-        else if (view instanceof ReputationView) lockupBSQ.setSelected(true);
-        else if (view instanceof UnlockView) unlockBSQ.setSelected(true);
+        else if (view instanceof ReputationView) reputation.setSelected(true);
+        else if (view instanceof BondsView) bonds.setSelected(true);
     }
 }

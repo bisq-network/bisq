@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bonding;
+package bisq.core.dao.governance.bond;
 
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
+import bisq.core.dao.governance.bond.lockup.LockupType;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 
 import bisq.common.app.Version;
@@ -34,7 +33,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondingConsensus {
+public class BondConsensus {
     // In the UI we don't allow 0 as that would mean that the tx gets spent
     // in the same block as the unspent tx and we don't support unconfirmed txs in the DAO. Technically though 0
     // works as well.
@@ -74,7 +73,7 @@ public class BondingConsensus {
     }
 
     public static boolean isLockTimeInValidRange(int lockTime) {
-        return lockTime >= BondingConsensus.getMinLockTime() && lockTime <= BondingConsensus.getMaxLockTime();
+        return lockTime >= BondConsensus.getMinLockTime() && lockTime <= BondConsensus.getMaxLockTime();
     }
 
     public static Optional<LockupType> getLockupType(byte[] opReturnData) {

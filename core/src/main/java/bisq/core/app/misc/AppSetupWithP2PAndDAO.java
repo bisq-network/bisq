@@ -22,7 +22,7 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.governance.bonding.bond.BondedReputationService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;

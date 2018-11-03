@@ -17,7 +17,7 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
+import bisq.core.dao.governance.bond.BondWithHash;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.locale.Res;
 

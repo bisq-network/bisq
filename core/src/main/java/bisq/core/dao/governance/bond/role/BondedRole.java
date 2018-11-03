@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bond;
+package bisq.core.dao.governance.bond.role;
 
+import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.state.model.governance.Role;
 
 import lombok.Getter;
@@ -41,7 +42,7 @@ public class BondedRole {
     @Setter
     private long revokeDate;
     @Setter
-    private BondedRoleState bondedRoleState = BondedRoleState.READY_FOR_LOCKUP;
+    private BondState bondState = BondState.READY_FOR_LOCKUP;
 
     BondedRole(Role role) {
         this.role = role;

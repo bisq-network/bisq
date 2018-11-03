@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bonding.bond;
+package bisq.core.dao.governance.bond;
 
 public interface BondWithHash {
     byte[] getHash();

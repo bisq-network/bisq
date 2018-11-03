@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bonding.lockup;
+package bisq.core.dao.governance.bond.unlock;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
@@ -25,33 +25,26 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
-import bisq.core.dao.governance.bond.BondedRolesService;
-import bisq.core.dao.governance.bonding.BondingConsensus;
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
-import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import bisq.common.handlers.ExceptionHandler;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.io.IOException;
-
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
-public class LockupService {
+public class UnlockService {
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final BondedRolesService bondedRolesService;
+    private final DaoStateService daoStateService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -59,35 +52,24 @@ public class LockupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public LockupService(WalletsManager walletsManager,
+    public UnlockService(WalletsManager walletsManager,
                          BsqWalletService bsqWalletService,
                          BtcWalletService btcWalletService,
-                         BondedRolesService bondedRolesService) {
+                         DaoStateService daoStateService) {
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.bondedRolesService = bondedRolesService;
+        this.daoStateService = daoStateService;
     }
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
-                                Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
-        checkArgument(lockTime <= BondingConsensus.getMaxLockTime() &&
-                lockTime >= BondingConsensus.getMinLockTime(), "lockTime not in rage");
-        if (bondWithHash instanceof Role) {
-            Role role = (Role) bondWithHash;
-            if (bondedRolesService.wasRoleAlreadyBonded(role)) {
-                exceptionHandler.handleException(new RuntimeException("The role has been used already for a lockup tx."));
-                return;
-            }
-        }
-
-        byte[] hash = BondingConsensus.getHash(bondWithHash);
+    public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
+                                ExceptionHandler exceptionHandler) {
         try {
-            byte[] opReturnData = BondingConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
-            final Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
+            TxOutput lockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId).get();
+            final Transaction unlockTx = getUnlockTx(lockupTxOutput);
 
             //noinspection Duplicates
-            walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
+            walletsManager.publishAndCommitBsqTx(unlockTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     resultHandler.accept(transaction.getHashAsString());
@@ -103,17 +85,18 @@ public class LockupService {
                     exceptionHandler.handleException(exception);
                 }
             });
-
-        } catch (TransactionVerificationException | InsufficientMoneyException | WalletException |
-                IOException exception) {
+        } catch (TransactionVerificationException | InsufficientMoneyException | WalletException exception) {
             exceptionHandler.handleException(exception);
         }
     }
 
-    private Transaction createLockupTx(Coin lockupAmount, byte[] opReturnData)
+    private Transaction getUnlockTx(TxOutput lockupTxOutput)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
-        Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
-        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);
-        return bsqWalletService.signTx(txWithBtcFee);
+        Transaction preparedTx = bsqWalletService.getPreparedUnlockTx(lockupTxOutput);
+        Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, null);
+        final Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
+
+        log.info("Unlock tx: " + transaction);
+        return transaction;
     }
 }

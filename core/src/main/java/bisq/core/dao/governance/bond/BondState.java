@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.bond;
 
-// Used in string properties ("dao.bond.bondedRoleState.*")
-public enum BondedRoleState {
+// Used in string properties ("dao.bond.bondState.*")
+public enum BondState {
     READY_FOR_LOCKUP,       // Accepted by voting but no lockup tx made yet.
     LOCKUP_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
     LOCKUP_TX_CONFIRMED,

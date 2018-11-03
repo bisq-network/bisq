@@ -21,8 +21,8 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.BondedRole;
-import bisq.core.dao.governance.bond.BondedRoleState;
+import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Role;
@@ -73,19 +73,19 @@ class BondedRolesListItem implements DaoStateListener {
         label = new Label();
 
         button.setOnAction(e -> {
-            if (bondedRole.getBondedRoleState() == BondedRoleState.READY_FOR_LOCKUP) {
+            if (bondedRole.getBondState() == BondState.READY_FOR_LOCKUP) {
                 bondingViewUtils.lockupBondForBondedRole(role,
                         txId -> {
                             bondedRole.setLockupTxId(txId);
-                            bondedRole.setBondedRoleState(BondedRoleState.LOCKUP_TX_PENDING);
+                            bondedRole.setBondState(BondState.LOCKUP_TX_PENDING);
                             update();
                             button.setDisable(true);
                         });
-            } else if (bondedRole.getBondedRoleState() == BondedRoleState.LOCKUP_TX_CONFIRMED) {
+            } else if (bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
                 bondingViewUtils.unLock(bondedRole.getLockupTxId(),
                         txId -> {
                             bondedRole.setUnlockTxId(txId);
-                            bondedRole.setBondedRoleState(BondedRoleState.UNLOCK_TX_PENDING);
+                            bondedRole.setBondState(BondState.UNLOCK_TX_PENDING);
                             update();
                             button.setDisable(true);
                         });
@@ -114,11 +114,10 @@ class BondedRolesListItem implements DaoStateListener {
 
 
     private void update() {
-        label.setText(Res.get("dao.bond.bondedRoleState." + bondedRole.getBondedRoleState().name()));
+        label.setText(Res.get("dao.bond.bondState." + bondedRole.getBondState().name()));
 
-        log.error("bondedRole.getLockupTxId()={}, bondedRole.getBondedRoleState()={}", bondedRole.getLockupTxId(), bondedRole.getBondedRoleState());
-        boolean showLockup = bondedRole.getBondedRoleState() == BondedRoleState.READY_FOR_LOCKUP;
-        boolean showRevoke = bondedRole.getBondedRoleState() == BondedRoleState.LOCKUP_TX_CONFIRMED;
+        boolean showLockup = bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
+        boolean showRevoke = bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
         if (showLockup)
             button.updateText(Res.get("dao.bond.table.button.lockup"));
         else if (showRevoke)

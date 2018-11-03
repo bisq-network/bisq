@@ -29,30 +29,27 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.BondedRole;
-import bisq.core.dao.governance.bonding.BondingConsensus;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
-import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.validation.HexStringValidator;
 import bisq.core.util.validation.IntegerValidator;
+
+import bisq.common.crypto.Hash;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Charsets;
+
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.FXCollections;
-
-import javafx.util.StringConverter;
-
-import java.util.Arrays;
+import java.util.UUID;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
@@ -64,21 +61,15 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BondingViewUtils bondingViewUtils;
+    private final HexStringValidator hexStringValidator;
     private final BsqValidator bsqValidator;
-    private final DaoFacade daoFacade;
     private final IntegerValidator timeInputTextFieldValidator;
 
     private int gridRow = 0;
-    private InputTextField amountInputTextField;
-    private InputTextField timeInputTextField;
-    private ComboBox<LockupType> lockupTypeComboBox;
-    private ComboBox<BondedRole> bondedRolesComboBox;
+    private InputTextField amountInputTextField, timeInputTextField, saltInputTextField;
     private Button lockupButton;
-    private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener;
-    private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener;
-    private ChangeListener<BondedRole> bondedRoleStateListener;
-    private ChangeListener<LockupType> lockupTypeListener;
-    private TitledGroupBg titledGroupBg;
+    private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener, saltFocusOutListener;
+    private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener, saltInputTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,18 +81,18 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
                            BsqFormatter bsqFormatter,
                            BsqBalanceUtil bsqBalanceUtil,
                            BondingViewUtils bondingViewUtils,
-                           BsqValidator bsqValidator,
-                           DaoFacade daoFacade) {
+                           HexStringValidator hexStringValidator,
+                           BsqValidator bsqValidator) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bondingViewUtils = bondingViewUtils;
+        this.hexStringValidator = hexStringValidator;
         this.bsqValidator = bsqValidator;
-        this.daoFacade = daoFacade;
 
         timeInputTextFieldValidator = new IntegerValidator();
-        timeInputTextFieldValidator.setMinValue(BondingConsensus.getMinLockTime());
-        timeInputTextFieldValidator.setMaxValue(BondingConsensus.getMaxLockTime());
+        timeInputTextFieldValidator.setMinValue(BondConsensus.getMinLockTime());
+        timeInputTextFieldValidator.setMaxValue(BondConsensus.getMaxLockTime());
     }
 
     @Override
@@ -109,7 +100,7 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         int columnSpan = 3;
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.bonding.lock.lockBSQ"),
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.bonding.lock.lockBSQ"),
                 Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, columnSpan);
 
@@ -121,98 +112,28 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
 
         timeInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"));
 
+        saltInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.salt"));
+        GridPane.setColumnSpan(saltInputTextField, columnSpan);
+        saltInputTextField.setValidator(hexStringValidator);
+
        /* timeInputTextField.setPromptText(Res.get("dao.bonding.lock.setTime",
-                String.valueOf(BondingConsensus.getMinLockTime()), String.valueOf(BondingConsensus.getMaxLockTime())));*/
+                String.valueOf(BondConsensus.getMinLockTime()), String.valueOf(BondConsensus.getMaxLockTime())));*/
 
         timeInputTextField.setValidator(timeInputTextFieldValidator);
         GridPane.setColumnSpan(timeInputTextField, columnSpan);
 
-        lockupTypeComboBox = FormBuilder.<LockupType>addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.type"));
-        GridPane.setColumnSpan(lockupTypeComboBox, columnSpan);
-        lockupTypeComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(LockupType lockupType) {
-                return lockupType.getDisplayString();
-            }
-
-            @Override
-            public LockupType fromString(String string) {
-                return null;
-            }
-        });
-        lockupTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(LockupType.values())));
-        lockupTypeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                bondedRolesComboBox.getSelectionModel().clearSelection();
-            }
-            int lockupRows = 3;
-            if (newValue == LockupType.BONDED_ROLE) {
-                bondedRolesComboBox.setVisible(true);
-                lockupRows++;
-
-                bondedRolesComboBox.setItems(FXCollections.observableArrayList(daoFacade.getBondedRoles()));
-            } else {
-                bondedRolesComboBox.setVisible(false);
-                bondedRolesComboBox.getItems().clear();
-            }
-            GridPane.setRowSpan(titledGroupBg, lockupRows);
-            GridPane.setRowIndex(lockupButton, GridPane.getRowIndex(amountInputTextField) + lockupRows);
-        };
-
-
-        bondedRolesComboBox = FormBuilder.addComboBox(root, ++gridRow, Res.get("dao.bonding.lock.bondedRoles"));
-        GridPane.setColumnSpan(bondedRolesComboBox, columnSpan);
-        bondedRolesComboBox.setVisible(false);
-        bondedRolesComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BondedRole bondedRole) {
-                return bondedRole.getRole().getDisplayString();
-            }
-
-            @Override
-            public BondedRole fromString(String string) {
-                return null;
-            }
-        });
-        bondedRoleStateListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Role role = newValue.getRole();
-                amountInputTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));
-                timeInputTextField.setText(String.valueOf(role.getBondedRoleType().getUnlockTimeInBlocks()));
-                amountInputTextField.resetValidation();
-                timeInputTextField.resetValidation();
-                amountInputTextField.setEditable(false);
-                timeInputTextField.setEditable(false);
-            } else {
-                amountInputTextField.clear();
-                timeInputTextField.clear();
-                amountInputTextField.resetValidation();
-                timeInputTextField.resetValidation();
-                amountInputTextField.setEditable(true);
-                timeInputTextField.setEditable(true);
-            }
-        };
-
-        lockupButton = addButtonAfterGroup(root, gridRow, Res.get("dao.bonding.lock.lockupButton"));
+        lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
         lockupButton.setOnAction((event) -> {
-            switch (lockupTypeComboBox.getValue()) {
-                case BONDED_ROLE:
-                    if (bondedRolesComboBox.getValue() != null) {
-                        bondingViewUtils.lockupBondForBondedRole(bondedRolesComboBox.getValue().getRole(),
-                                txId -> bondedRolesComboBox.getSelectionModel().clearSelection());
-                    }
-                    break;
-                case REPUTATION:
-                    bondingViewUtils.lockupBondForReputation(bsqFormatter.parseToCoin(amountInputTextField.getText()),
-                            Integer.parseInt(timeInputTextField.getText()),
-                            txId -> {
-                                amountInputTextField.setText("");
-                                timeInputTextField.setText("");
-                            });
-                    break;
-                default:
-                    log.error("Unknown lockup option=" + lockupTypeComboBox.getValue());
-            }
+            Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+            int lockupTime = Integer.parseInt(timeInputTextField.getText());
+            byte[] salt = Utilities.decodeFromHex(saltInputTextField.getText());
+            bondingViewUtils.lockupBondForReputation(lockupAmount,
+                    lockupTime,
+                    salt,
+                    txId -> {
+                        amountInputTextField.setText("");
+                        timeInputTextField.setText("");
+                    });
         });
 
         amountFocusOutListener = (observable, oldValue, newValue) -> {
@@ -227,8 +148,15 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
                 onUpdateBalances();
             }
         };
+        saltFocusOutListener = (observable, oldValue, newValue) -> {
+            if (!newValue) {
+                updateButtonState();
+                onUpdateBalances();
+            }
+        };
         amountInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
         timeInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
+        saltInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
     }
 
     @Override
@@ -236,16 +164,19 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
         bsqBalanceUtil.activate();
 
         amountInputTextField.textProperty().addListener(amountInputTextFieldListener);
-        timeInputTextField.textProperty().addListener(timeInputTextFieldListener);
         amountInputTextField.focusedProperty().addListener(amountFocusOutListener);
+
+        timeInputTextField.textProperty().addListener(timeInputTextFieldListener);
         timeInputTextField.focusedProperty().addListener(timeFocusOutListener);
-        lockupTypeComboBox.getSelectionModel().selectedItemProperty().addListener(lockupTypeListener);
-        bondedRolesComboBox.getSelectionModel().selectedItemProperty().addListener(bondedRoleStateListener);
+
+        saltInputTextField.textProperty().addListener(saltInputTextFieldListener);
+        saltInputTextField.focusedProperty().addListener(saltFocusOutListener);
 
         bsqWalletService.addBsqBalanceListener(this);
 
-        lockupTypeComboBox.getSelectionModel().clearSelection();
-        bondedRolesComboBox.getSelectionModel().clearSelection();
+        byte[] randomBytes = UUID.randomUUID().toString().getBytes(Charsets.UTF_8);
+        byte[] hashOfRandomBytes = Hash.getSha256Ripemd160hash(randomBytes);
+        saltInputTextField.setText(Utilities.bytesAsHexString(hashOfRandomBytes));
 
         onUpdateBalances();
     }
@@ -255,11 +186,13 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
         bsqBalanceUtil.deactivate();
 
         amountInputTextField.textProperty().removeListener(amountInputTextFieldListener);
-        timeInputTextField.textProperty().removeListener(timeInputTextFieldListener);
         amountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
+
+        timeInputTextField.textProperty().removeListener(timeInputTextFieldListener);
         timeInputTextField.focusedProperty().removeListener(timeFocusOutListener);
-        lockupTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(lockupTypeListener);
-        bondedRolesComboBox.getSelectionModel().selectedItemProperty().removeListener(bondedRoleStateListener);
+
+        saltInputTextField.textProperty().removeListener(saltInputTextFieldListener);
+        saltInputTextField.focusedProperty().removeListener(saltFocusOutListener);
 
         bsqWalletService.removeBsqBalanceListener(this);
     }
@@ -286,9 +219,10 @@ public class ReputationView extends ActivatableView<GridPane, Void> implements B
     }
 
     private void updateButtonState() {
-        lockupButton.setDisable(!bsqValidator.validate(amountInputTextField.getText()).isValid ||
-                !timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid ||
-                bondedRolesComboBox.getSelectionModel().getSelectedItem() == null ||
-                lockupTypeComboBox.getSelectionModel().getSelectedItem() == null);
+        boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid &&
+                timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid &&
+                hexStringValidator.validate(saltInputTextField.getText()).isValid;
+
+        lockupButton.setDisable(!isValid);
     }
 }

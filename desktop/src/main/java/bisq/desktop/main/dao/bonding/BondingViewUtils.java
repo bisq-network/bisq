@@ -26,9 +26,9 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bonding.bond.BondWithHash;
-import bisq.core.dao.governance.bonding.bond.BondedReputation;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
+import bisq.core.dao.governance.bond.BondWithHash;
+import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.reputation.Reputation;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
@@ -114,9 +114,9 @@ public class BondingViewUtils {
         lockupBond(role, lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
     }
 
-    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, Consumer<String> resultHandler) {
-        BondedReputation bondedReputation = BondedReputation.createBondedReputation();
-        lockupBond(bondedReputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
+    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, byte[] salt, Consumer<String> resultHandler) {
+        Reputation reputation = new Reputation(salt);
+        lockupBond(reputation, lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
     }
 
     public void unLock(String lockupTxId, Consumer<String> resultHandler) {

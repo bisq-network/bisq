@@ -18,8 +18,8 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.ConfiscateBond;
-import bisq.core.dao.governance.bonding.BondingConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -603,7 +603,7 @@ public class DaoStateService implements DaoSetupService {
         if (lockupTx.isPresent()) {
             byte[] opReturnData = lockupTx.get().getLastTxOutput().getOpReturnData();
             if (opReturnData != null)
-                return Optional.of(BondingConsensus.getHashFromOpReturnData(opReturnData));
+                return Optional.of(BondConsensus.getHashFromOpReturnData(opReturnData));
         }
         return Optional.empty();
     }
@@ -705,7 +705,7 @@ public class DaoStateService implements DaoSetupService {
     public boolean isLockTimeOverForUnlockTxOutput(TxOutput unlockTxOutput) {
         checkArgument(isUnlockOutput(unlockTxOutput), "txOutput must be of type UNLOCK");
         return getUnlockBlockHeight(unlockTxOutput.getTxId())
-                .map(unlockBlockHeight -> BondingConsensus.isLockTimeOver(unlockBlockHeight, getChainHeight()))
+                .map(unlockBlockHeight -> BondConsensus.isLockTimeOver(unlockBlockHeight, getChainHeight()))
                 .orElse(false);
     }
 

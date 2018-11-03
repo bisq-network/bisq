@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.bonding.unlock;
+package bisq.desktop.main.dao.bonding.bonds;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TxConfidenceListItem;
@@ -25,10 +25,10 @@ import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.BondedRole;
-import bisq.core.dao.governance.bond.BondedRolesService;
-import bisq.core.dao.governance.bonding.BondingConsensus;
-import bisq.core.dao.governance.bonding.lockup.LockupType;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
@@ -51,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Slf4j
-class LockupTxListItem extends TxConfidenceListItem {
+class BondListItem extends TxConfidenceListItem {
     private final BtcWalletService btcWalletService;
     private final DaoFacade daoFacade;
 
@@ -67,13 +67,13 @@ class LockupTxListItem extends TxConfidenceListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean issuanceTx;
 
-    LockupTxListItem(Transaction transaction,
-                     BsqWalletService bsqWalletService,
-                     BtcWalletService btcWalletService,
-                     DaoFacade daoFacade,
-                     BondedRolesService bondedRolesService,
-                     Date date,
-                     BsqFormatter bsqFormatter) {
+    BondListItem(Transaction transaction,
+                 BsqWalletService bsqWalletService,
+                 BtcWalletService btcWalletService,
+                 DaoFacade daoFacade,
+                 BondedRolesService bondedRolesService,
+                 Date date,
+                 BsqFormatter bsqFormatter) {
         super(transaction, bsqWalletService);
 
         this.btcWalletService = btcWalletService;
@@ -128,7 +128,7 @@ class LockupTxListItem extends TxConfidenceListItem {
 
     private Optional<LockupType> getOptionalLockupType() {
         return getOpReturnData()
-                .flatMap(BondingConsensus::getLockupType);
+                .flatMap(BondConsensus::getLockupType);
     }
 
     private Optional<byte[]> getOpReturnData() {

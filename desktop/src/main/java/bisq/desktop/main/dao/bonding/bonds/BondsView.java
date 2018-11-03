@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.bonding.unlock;
+package bisq.desktop.main.dao.bonding.bonds;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -30,7 +30,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxType;
@@ -71,8 +71,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
-    private TableView<LockupTxListItem> tableView;
+public class BondsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
+    private TableView<BondListItem> tableView;
 
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -84,11 +84,10 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-
     private int gridRow = 0;
 
-    private final ObservableList<LockupTxListItem> observableList = FXCollections.observableArrayList();
-    private final FilteredList<LockupTxListItem> lockupTxs = new FilteredList<>(observableList);
+    private final ObservableList<BondListItem> observableList = FXCollections.observableArrayList();
+    private final FilteredList<BondListItem> lockupTxs = new FilteredList<>(observableList);
 
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private ChangeListener<Number> walletChainHeightListener;
@@ -99,15 +98,15 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private UnlockView(BsqWalletService bsqWalletService,
-                       BtcWalletService btcWalletService,
-                       BsqFormatter bsqFormatter,
-                       BsqBalanceUtil bsqBalanceUtil,
-                       BsqValidator bsqValidator,
-                       BondingViewUtils bondingViewUtils,
-                       BondedRolesService bondedRolesService,
-                       DaoFacade daoFacade,
-                       Preferences preferences) {
+    private BondsView(BsqWalletService bsqWalletService,
+                      BtcWalletService btcWalletService,
+                      BsqFormatter bsqFormatter,
+                      BsqBalanceUtil bsqBalanceUtil,
+                      BsqValidator bsqValidator,
+                      BondingViewUtils bondingViewUtils,
+                      BondedRolesService bondedRolesService,
+                      DaoFacade daoFacade,
+                      Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -132,7 +131,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         addLockTimeColumn();
         addUnlockColumn();
 
-        lockupTxs.setPredicate(LockupTxListItem::isLockupAndUnspent);
+        lockupTxs.setPredicate(BondListItem::isLockupAndUnspent);
         walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> updateList();
 
@@ -178,7 +177,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
         daoFacade.removeBsqStateListener(this);
 
-        observableList.forEach(LockupTxListItem::cleanup);
+        observableList.forEach(BondListItem::cleanup);
     }
 
 
@@ -219,19 +218,19 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void openTxInBlockExplorer(LockupTxListItem item) {
+    private void openTxInBlockExplorer(BondListItem item) {
         if (item.getTxId() != null)
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
     }
 
     private void updateList() {
-        observableList.forEach(LockupTxListItem::cleanup);
+        observableList.forEach(BondListItem::cleanup);
 
         // copy list to avoid ConcurrentModificationException
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
-        List<LockupTxListItem> items = walletTransactions.stream()
+        List<BondListItem> items = walletTransactions.stream()
                 .map(transaction -> {
-                    return new LockupTxListItem(transaction,
+                    return new BondListItem(transaction,
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
@@ -249,22 +248,21 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addTxIdColumn() {
-        TableColumn<LockupTxListItem, LockupTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
+        TableColumn<BondListItem, BondListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
-                new Callback<TableColumn<LockupTxListItem, LockupTxListItem>, TableCell<LockupTxListItem,
-                        LockupTxListItem>>() {
+                new Callback<>() {
 
                     @Override
-                    public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
-                            LockupTxListItem> column) {
-                        return new TableCell<LockupTxListItem, LockupTxListItem>() {
+                    public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                            BondListItem> column) {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
-                            public void updateItem(final LockupTxListItem item, boolean empty) {
+                            public void updateItem(final BondListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 //noinspection Duplicates
@@ -287,7 +285,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     }
 
     private void addInfoColumn() {
-        TableColumn<LockupTxListItem, LockupTxListItem> column =
+        TableColumn<BondListItem, BondListItem> column =
                 new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.type"));
         column.setMinWidth(160);
         column.setMaxWidth(column.getMinWidth());
@@ -296,12 +294,12 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
         column.setCellFactory(new Callback<>() {
 
             @Override
-            public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
-                    LockupTxListItem> column) {
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
                 return new TableCell<>() {
 
                     @Override
-                    public void updateItem(final LockupTxListItem item, boolean empty) {
+                    public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(item.getInfo());
@@ -315,22 +313,21 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     }
 
     private void addAmountColumn() {
-        TableColumn<LockupTxListItem, LockupTxListItem> column =
+        TableColumn<BondListItem, BondListItem> column =
                 new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(120);
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<LockupTxListItem, LockupTxListItem>,
-                TableCell<LockupTxListItem, LockupTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
-            public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
-                    LockupTxListItem> column) {
-                return new TableCell<LockupTxListItem, LockupTxListItem>() {
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
+                return new TableCell<>() {
 
                     @Override
-                    public void updateItem(final LockupTxListItem item, boolean empty) {
+                    public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             TxType txType = item.getTxType();
@@ -347,22 +344,21 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     }
 
     private void addLockTimeColumn() {
-        TableColumn<LockupTxListItem, LockupTxListItem> column =
+        TableColumn<BondListItem, BondListItem> column =
                 new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.time"));
         column.setMinWidth(120);
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<LockupTxListItem, LockupTxListItem>,
-                TableCell<LockupTxListItem, LockupTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
-            public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
-                    LockupTxListItem> column) {
-                return new TableCell<LockupTxListItem, LockupTxListItem>() {
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
+                return new TableCell<>() {
 
                     @Override
-                    public void updateItem(final LockupTxListItem item, boolean empty) {
+                    public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             TxType txType = item.getTxType();
@@ -379,19 +375,19 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
     }
 
     private void addUnlockColumn() {
-        TableColumn<LockupTxListItem, LockupTxListItem> unlockColumn = new TableColumn<>();
+        TableColumn<BondListItem, BondListItem> unlockColumn = new TableColumn<>();
         unlockColumn.setMinWidth(130);
         unlockColumn.setMaxWidth(unlockColumn.getMinWidth());
         unlockColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         unlockColumn.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<LockupTxListItem, LockupTxListItem> call(TableColumn<LockupTxListItem,
-                    LockupTxListItem> column) {
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
                 return new TableCell<>() {
                     Button button;
 
                     @Override
-                    public void updateItem(final LockupTxListItem item, boolean empty) {
+                    public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
@@ -414,7 +410,7 @@ public class UnlockView extends ActivatableView<GridPane, Void> implements BsqBa
                 };
             }
         });
-        unlockColumn.setComparator(Comparator.comparing(LockupTxListItem::getConfirmations));
+        unlockColumn.setComparator(Comparator.comparing(BondListItem::getConfirmations));
         tableView.getColumns().add(unlockColumn);
     }
 }
