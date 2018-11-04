@@ -5,10 +5,8 @@ plugins {
 version = file("src/main/resources/version.txt").text
 
 jar.manifest.attributes(
-    "Implementation-Title": rootProject.name,
+    "Implementation-Title": project.name,
     "Implementation-Version": version)
-
-jar.archiveName "${rootProject.name}.jar"
 
 dependencies {
     compile project(":core")
