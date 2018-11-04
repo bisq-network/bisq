@@ -12,11 +12,6 @@ buildscript {
 }
 
 
-configure(rootProject) {
-    apply plugin: 'java-base'
-}
-
-
 configure(subprojects) {
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
