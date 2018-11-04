@@ -11,9 +11,11 @@ buildscript {
     }
 }
 
+
 configure(rootProject) {
     apply plugin: 'java-base'
 }
+
 
 configure(subprojects) {
     apply plugin: 'java'
@@ -55,6 +57,7 @@ configure(subprojects) {
     }
 }
 
+
 configure([project(':desktop'),
            project(':monitor'),
            project(':relay'),
@@ -67,6 +70,7 @@ configure([project(':desktop'),
     distZip.enabled = false
 }
 
+
 configure(project(':assets')) {
     dependencies {
         compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
@@ -77,6 +81,7 @@ configure(project(':assets')) {
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
+
 
 configure(project(':common')) {
     apply plugin: 'com.google.protobuf'
@@ -122,6 +127,7 @@ configure(project(':common')) {
     }
 }
 
+
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
@@ -140,6 +146,7 @@ configure(project(':p2p')) {
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
+
 
 configure(project(':core')) {
     dependencies {
@@ -191,6 +198,7 @@ configure(project(':core')) {
         jvmArgs "-javaagent:$jmockit"
     }
 }
+
 
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -247,6 +255,7 @@ configure(project(':desktop')) {
     }
 }
 
+
 configure(project(':monitor')) {
     mainClassName = 'bisq.monitor.MonitorMain'
 
@@ -258,6 +267,7 @@ configure(project(':monitor')) {
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
+
 
 configure(project(':pricenode')) {
     apply plugin: "org.springframework.boot"
@@ -283,6 +293,7 @@ configure(project(':pricenode')) {
     }
 }
 
+
 configure(project(':relay')) {
     mainClassName = 'bisq.relay.RelayMain'
 
@@ -294,6 +305,7 @@ configure(project(':relay')) {
         compile "commons-codec:commons-codec:$codecVersion"
     }
 }
+
 
 configure(project(':seednode')) {
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -309,6 +321,7 @@ configure(project(':seednode')) {
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
+
 
 configure(project(':statsnode')) {
     mainClassName = 'bisq.statistics.StatisticsMain'
