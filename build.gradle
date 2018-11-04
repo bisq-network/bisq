@@ -246,13 +246,6 @@ configure(project(':desktop')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
-
-    test {
-        systemProperty 'jdk.attach.allowAttachSelf', true
-
-        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-        jvmArgs "-javaagent:$jmockit"
-    }
 }
 
 
