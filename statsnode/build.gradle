@@ -1,7 +1,3 @@
-plugins {
-    id 'application'
-}
-
 mainClassName = 'bisq.statistics.StatisticsMain'
 
 dependencies {
@@ -9,7 +5,3 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
-
-build.dependsOn installDist
-installDist.destinationDir = file('build/app')
-distZip.enabled = false

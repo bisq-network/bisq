@@ -2,7 +2,7 @@ plugins {
     id 'java-base'
 }
 
-subprojects {
+configure(subprojects) {
     apply plugin: 'java'
     sourceCompatibility = 1.10
 
@@ -15,4 +15,17 @@ subprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
+}
+
+configure([project(':desktop'),
+           project(':monitor'),
+           project(':relay'),
+           project(':seednode'),
+           project(':statsnode')]) {
+
+    apply plugin: 'application'
+
+    build.dependsOn installDist
+    installDist.destinationDir = file('build/app')
+    distZip.enabled = false
 }

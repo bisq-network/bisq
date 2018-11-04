@@ -7,7 +7,6 @@ buildscript {
     }
 }
 
-apply plugin: 'application'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 mainClassName = 'bisq.seednode.SeedNodeMain'
@@ -20,7 +19,3 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
 }
-
-build.dependsOn installDist
-installDist.destinationDir = file('build/app')
-distZip.enabled = false
