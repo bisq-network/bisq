@@ -20,7 +20,23 @@ configure(subprojects) {
     apply plugin: 'com.google.osdetector'
 
     sourceCompatibility = 1.10
+
     ext {
+        bcVersion = '1.56'
+        codecVersion = '1.9'
+        easyVersion = '4.0.1'
+        jmockitVersion = '1.42'
+        joptVersion = '5.0.3'
+        junitVersion = '4.12'
+        langVersion = '3.4'
+        libdohjVersion = 'd4ace7bc'
+        lombokVersion = '1.18.2'
+        mockitoVersion = '2.21.0'
+        powermockVersion = '2.0.0-beta.5'
+        protobufVersion = '3.5.1'
+        sparkVersion = '2.5.2'
+        springVersion = '4.3.6.RELEASE'
+
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
 
@@ -28,6 +44,10 @@ configure(subprojects) {
         jcenter()
         maven { url 'https://jitpack.io' }
         maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
     }
 
     tasks.withType(JavaCompile) {
@@ -49,22 +69,17 @@ configure([project(':desktop'),
 
 configure(project(':assets')) {
     dependencies {
-        compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
+        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
             exclude(module: 'protobuf-java')
         }
-        compile 'commons-codec:commons-codec:1.9'
-        compile 'org.apache.commons:commons-lang3:3.4'
-        compile 'org.bouncycastle:bcpg-jdk15on:1.56'
-        testCompile 'junit:junit:4.12'
+        compile "commons-codec:commons-codec:$codecVersion"
+        compile "org.apache.commons:commons-lang3:$langVersion"
+        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
 
 configure(project(':common')) {
     apply plugin: 'com.google.protobuf'
-
-    ext {
-        protobufVersion = '3.5.1'
-    }
 
     sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
 
@@ -91,20 +106,19 @@ configure(project(':common')) {
         compile('com.google.inject:guice:4.1.0') {
             exclude(module: 'guava')
         }
-        compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
+        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
         }
         compile 'org.jetbrains:annotations:13.0'
-        runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
-        compile 'org.bouncycastle:bcpg-jdk15on:1.56'
+        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
+        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile 'commons-io:commons-io:2.4'
-        compile 'org.apache.commons:commons-lang3:3.4'
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
-        testCompile 'junit:junit:4.12'
+        compile "org.apache.commons:commons-lang3:$langVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -117,14 +131,13 @@ configure(project(':p2p')) {
         compile('org.apache.httpcomponents:httpclient:4.5.3') {
             exclude(module: 'commons-logging')
         }
-        compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile 'org.fxmisc.easybind:easybind:1.0.3'
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
-        testCompile 'junit:junit:4.12'
-        testCompile 'org.jmockit:jmockit:1.30'
-        testCompileOnly 'org.projectlombok:lombok:1.18.2'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile 'org.jmockit:jmockit:1.30' // must not use current $jmockitVersion
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -132,7 +145,7 @@ configure(project(':core')) {
     dependencies {
         compile project(':assets')
         compile project(':p2p')
-        compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile('network.bisq.btcd-cli4j:btcd-cli4j-core:3864e1c4') {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
@@ -155,23 +168,20 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
         }
 
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile 'org.jmockit:jmockit:1.42'
-        testCompile 'junit:junit:4.12'
-        testCompile('org.mockito:mockito-core:2.21.0') {
+        testCompile "org.jmockit:jmockit:$jmockitVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion") {
             exclude(module: 'objenesis')
         }
-        testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
-        testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
-
-
-        testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
-        testCompile 'com.natpryce:make-it-easy:4.0.1'
+        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
+        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
-        testCompileOnly 'org.projectlombok:lombok:1.18.2'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 
     test {
@@ -214,19 +224,19 @@ configure(project(':desktop')) {
         compile "org.openjfx:javafx-fxml:11:$os"
         compile "org.openjfx:javafx-swing:11:$os"
 
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile 'org.jmockit:jmockit:1.42'
-        testCompile('org.mockito:mockito-core:2.21.0') {
+        testCompile "org.jmockit:jmockit:$jmockitVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion") {
             exclude(module: 'objenesis')
         }
-        testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
-        testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
-        testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
-        testCompile 'com.natpryce:make-it-easy:4.0.1'
-        testCompileOnly 'org.projectlombok:lombok:1.18.2'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
+        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 
     test {
@@ -242,10 +252,10 @@ configure(project(':monitor')) {
 
     dependencies {
         compile project(':core')
-        compile 'com.sparkjava:spark-core:2.5.2'
+        compile "com.sparkjava:spark-core:$sparkVersion"
         compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -278,10 +288,10 @@ configure(project(':relay')) {
 
     dependencies {
         compile project(':common')
-        compile 'com.sparkjava:spark-core:2.5.2'
+        compile "com.sparkjava:spark-core:$sparkVersion"
         compile 'com.turo:pushy:0.13.2'
         compile 'com.google.firebase:firebase-admin:6.2.0'
-        compile 'commons-codec:commons-codec:1.9'
+        compile "commons-codec:commons-codec:$codecVersion"
     }
 }
 
@@ -294,9 +304,9 @@ configure(project(':seednode')) {
 
     dependencies {
         compile project(':core')
-        runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -305,7 +315,7 @@ configure(project(':statsnode')) {
 
     dependencies {
         compile project(':core')
-        compileOnly 'org.projectlombok:lombok:1.18.2'
-        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
