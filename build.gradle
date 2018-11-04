@@ -297,3 +297,13 @@ configure(project(':seednode')) {
         annotationProcessor 'org.projectlombok:lombok:1.18.2'
     }
 }
+
+configure(project(':statsnode')) {
+    mainClassName = 'bisq.statistics.StatisticsMain'
+
+    dependencies {
+        compile project(':core')
+        compileOnly 'org.projectlombok:lombok:1.18.2'
+        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+    }
+}
