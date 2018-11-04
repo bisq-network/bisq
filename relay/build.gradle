@@ -1,9 +1,0 @@
-mainClassName = 'bisq.relay.RelayMain'
-
-dependencies {
-    compile project(':common')
-    compile 'com.sparkjava:spark-core:2.5.2'
-    compile 'com.turo:pushy:0.13.2'
-    compile 'com.google.firebase:firebase-admin:6.2.0'
-    compile 'commons-codec:commons-codec:1.9'
-}
