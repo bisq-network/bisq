@@ -1,0 +1,76 @@
+// To update the `dependencyVerification` block below:
+//
+// 1. Remove the block entirely
+// 2. Replace the block with the following command:
+//
+//    ./gradlew -q calculateChecksums | grep -v network.bisq >> desktop/gradle-witness.gradle
+//
+// 3. Run `git diff` to verify that expected hashes have changed
+// 4. Commit the changes
+//
+// See https://github.com/signalapp/gradle-witness#using-witness for further details.
+
+dependencyVerification {
+    verify = [
+        'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
+        'org.reactfx:reactfx:81ec8fe545d65661222735711114c2ce427e2187a65f1722e8ac4e4805beeca3',
+        'net.glxn:qrgen:c85d9d8512d91e8ad11fe56259a7825bd50ce0245447e236cf168d1b17591882',
+        'de.jensd:fontawesomefx:73bacc991a0a6f5cf0f911767c8db161e0949dbca61e8371eb4342e3da96887b',
+        'de.jensd:fontawesomefx-materialdesignfont:dbad8dfdd1c85e298d5bbae25b2399aec9e85064db57b2427d10f3815aa98752',
+        'de.jensd:fontawesomefx-commons:5539bb3335ecb822dbf928546f57766eeb9f1516cc1417a064b5709629612149',
+        'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
+        'com.github.sarxos:webcam-capture:d960b7ea8ec3ddf2df0725ef214c3fccc9699ea7772df37f544e1f8e4fd665f6',
+        'com.github.JesusMcCloud.netlayer:tor.native:de44e782b21838d3426dbff99abbfd1cbb8e5d3f6d5e997441ff4fd8354934fa',
+        'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
+        'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
+        'org.fxmisc.easybind:easybind:666af296dda6de68751668a62661571b5238ac6f1c07c8a204fc6f902b222aaf',
+        'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
+        'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
+        'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
+        'com.google.protobuf:protobuf-java:b5e2d91812d183c9f053ffeebcbcda034d4de6679521940a19064714966c2cd4',
+        'com.google.code.gson:gson:2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32',
+        'com.googlecode.json-simple:json-simple:4e69696892b88b41c55d49ab2fdcc21eead92bf54acc588c0050596c3b75199c',
+        'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
+        'ch.qos.logback:logback-classic:e66efc674e94837344bc5b748ff510c37a44eeff86cbfdbf9e714ef2eb374013',
+        'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',
+        'ch.qos.logback:logback-core:4cd46fa17d77057b39160058df2f21ebbc2aded51d0edcc25d2c1cecc042a005',
+        'com.google.code.findbugs:jsr305:c885ce34249682bc0236b4a7d56efcc12048e6135a5baf7a9cde8ad8cda13fcd',
+        'com.google.guava:guava:36a666e3b71ae7f0f0dca23654b67e086e6c93d192f60ba5dfd5519db6c288c8',
+        'com.google.inject:guice:9b9df27a5b8c7864112b4137fd92b36c3f1395bfe57be42fedf2f520ead1a93e',
+        'com.github.JesusMcCloud.netlayer:tor:3896950c56a41985f901ff9475524ac162cba18b2d5a0ed39810b20ddaf5128a',
+        'org.jetbrains.kotlin:kotlin-stdlib-jdk8:841b021d62fc007ce2883963ff9440d5393fb1f6a0604ed68cd016afcaf02967',
+        'com.github.MicroUtils:kotlin-logging:7dbd501cc210d721f730d480c53ee2a6e3c154ae89b07dc7dee224b9c5aca9eb',
+        'org.jetbrains.kotlin:kotlin-stdlib-jdk7:bd8cd4e3ef391cd468434747b7939c49e80f8bf4ae10355a65382bfb54fd633c',
+        'org.jetbrains.kotlin:kotlin-stdlib:e1c39d27f23a7fe2d3e4ac65e80a53e98fdcf60e07de9d53b8b841c5944fc810',
+        'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
+        'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
+        'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
+        'org.apache.commons:commons-lang3:734c8356420cc8e30c795d64fd1fcd5d44ea9d90342a2cc3262c5158fbc6d98b',
+        'org.bouncycastle:bcprov-jdk15on:963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349',
+        'com.google.zxing:javase:0ec23e2ec12664ddd6347c8920ad647bb3b9da290f897a88516014b56cc77eb9',
+        'com.nativelibs4java:bridj:101bcd9b6637e6bc16e56deb3daefba62b1f5e8e9e37e1b3e56e3b5860d659cf',
+        'com.cedricwalter:tor-binary-macos:87790e9eade1e44eeadc81f92670f338cd47ef1b39b46a4b022c75d0cf6465fd',
+        'com.cedricwalter:tor-binary-linux32:814f6da3b662c96490bcb09781764dd31dfe497ea9c25c73fe61170d2a78086f',
+        'com.cedricwalter:tor-binary-linux64:9da7f8a166ad0a767a5373ca67c68971c9c0cac17964eed2e0850bfecc228312',
+        'com.cedricwalter:tor-binary-windows:9487a735dadcadc6ede5ffad36a911c2d4a484f996be93d71094f26591b8c29e',
+        'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',
+        'org.apache.httpcomponents:httpcore:d7f853dee87680b07293d30855b39b9eb56c1297bd16ff1cd6f19ddb8fa745fb',
+        'commons-codec:commons-codec:ad19d2601c3abf0b946b5c3a4113e226a8c1e3305e395b90013b78dd94a723ce',
+        'commons-logging:commons-logging:daddea1ea0be0f56978ab3006b8ac92834afeefbd9b7e4e6316fca57df0fa636',
+        'javax.inject:javax.inject:91c77044a50c481636c32d916fd89c9118a72195390452c81065080f957de7ff',
+        'aopalliance:aopalliance:0addec670fedcd3f113c5c8091d783280d23f75e3acb841b61a9cdb079376a08',
+        'com.github.bisq-network.bitcoinj:bitcoinj-core:15e0f4304dd92259c4e9ff0114cbeab7a79abb51a5817b422ce629d3a0a2d551',
+        'com.lambdaworks:scrypt:9a82d218099fb14c10c0e86e7eefeebd8c104de920acdc47b8b4b7a686fb73b4',
+        'com.google.zxing:core:11aae8fd974ab25faa8208be50468eb12349cd239e93e7c797377fa13e381729',
+        'com.cedricwalter:tor-binary-geoip:7fc7b5ebf80d65ec53d97dd8d3878b8d2c85dc04f3943e5e85e7ba641655492b',
+        'com.github.JesusMcCloud:jtorctl:c6ef92e46074d8d26db718ce0fe4b64b8cf7b934b7377d164c5d613b4cd7b847',
+        'org.apache.commons:commons-compress:a778bbd659722889245fc52a0ec2873fbbb89ec661bc1ad3dc043c0757c784c4',
+        'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
+        'com.madgag.spongycastle:core:8d6240b974b0aca4d3da9c7dd44d42339d8a374358aca5fc98e50a995764511f',
+        'net.jcip:jcip-annotations:be5805392060c71474bf6c9a67a099471274d30b83eef84bfc4e0889a4f1dcc0',
+        'org.bitcoinj:orchid:f836325cfa0466a011cb755c9b0fee6368487a2352eb45f4306ad9e4c18de080',
+        'com.squareup.okhttp:okhttp:b4c943138fcef2bcc9d2006b2250c4aabbedeafc5947ed7c0af7fd103ceb2707',
+        'org.objenesis:objenesis:5e168368fbc250af3c79aa5fef0c3467a2d64e5a7bd74005f25d8399aeb0708d',
+        'com.squareup.okio:okio:114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266',
+    ]
+}
