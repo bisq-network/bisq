@@ -7,6 +7,7 @@ buildscript {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
         classpath files('gradle/witness/gradle-witness.jar')
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
     }
 }
 
@@ -243,5 +244,29 @@ configure(project(':monitor')) {
         compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
         compileOnly 'org.projectlombok:lombok:1.18.2'
         annotationProcessor 'org.projectlombok:lombok:1.18.2'
+    }
+}
+
+configure(project(':pricenode')) {
+    apply plugin: "org.springframework.boot"
+
+    version = file("src/main/resources/version.txt").text
+
+    jar.manifest.attributes(
+        "Implementation-Title": project.name,
+        "Implementation-Version": version)
+
+    dependencies {
+        compile project(":core")
+        compile project(":assets")
+        compile("org.knowm.xchange:xchange-bitcoinaverage:4.3.3")
+        compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
+        compile("org.knowm.xchange:xchange-poloniex:4.3.3")
+        compile("org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE")
+        compile("org.springframework.boot:spring-boot-starter-actuator")
+    }
+
+    task stage {
+        dependsOn assemble
     }
 }
