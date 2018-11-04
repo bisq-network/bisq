@@ -1,9 +1,0 @@
-mainClassName = 'bisq.monitor.MonitorMain'
-
-dependencies {
-    compile project(':core')
-    compile 'com.sparkjava:spark-core:2.5.2'
-    compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
-    compileOnly 'org.projectlombok:lombok:1.18.2'
-    annotationProcessor 'org.projectlombok:lombok:1.18.2'
-}
