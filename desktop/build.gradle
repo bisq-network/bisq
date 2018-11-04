@@ -4,7 +4,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath files('gradle-witness.jar')
     }
 }
@@ -13,12 +12,8 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'com.google.osdetector'
 apply plugin: 'witness'
 apply from: 'gradle-witness.gradle'
-
-ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-
 
 group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
