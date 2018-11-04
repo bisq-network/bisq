@@ -32,7 +32,11 @@ repositories {
 }
 
 dependencies {
-    compile project(':common')
+    compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
+        exclude(module: 'protobuf-java')
+    }
     compile 'commons-codec:commons-codec:1.9'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'org.bouncycastle:bcpg-jdk15on:1.56'
     testCompile 'junit:junit:4.12'
 }
