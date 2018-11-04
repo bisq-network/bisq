@@ -8,15 +8,12 @@ buildscript {
     }
 }
 
-apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'witness'
 apply from: 'gradle-witness.gradle'
 
 version = '0.8.0-SNAPSHOT'
-
-sourceCompatibility = 1.10
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 

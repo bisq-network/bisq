@@ -1,9 +1,6 @@
 plugins {
-    id 'java'
     id 'application'
 }
-
-sourceCompatibility = 1.10
 
 mainClassName = 'bisq.relay.RelayMain'
 

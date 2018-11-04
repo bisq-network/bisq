@@ -1,9 +1,3 @@
-plugins {
-    id 'java'
-}
-
-sourceCompatibility = 1.10
-
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
