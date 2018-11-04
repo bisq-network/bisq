@@ -3,7 +3,7 @@
 // 1. Remove the block entirely
 // 2. Replace the block with the following command:
 //
-//    ./gradlew -q calculateChecksums | grep -v network.bisq >> desktop/gradle-witness.gradle
+//    ./gradlew -q calculateChecksums | grep -v network.bisq >> gradle/witness/gradle-witness.gradle
 //
 // 3. Run `git diff` to verify that expected hashes have changed
 // 4. Commit the changes
