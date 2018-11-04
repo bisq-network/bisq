@@ -31,10 +31,7 @@ tasks.withType(JavaCompile) {
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 repositories {
-    jcenter()
-    maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-    maven { url 'https://dl.bintray.com/jerady/maven' }
 }
 
 dependencies {

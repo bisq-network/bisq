@@ -5,4 +5,9 @@ plugins {
 subprojects {
     apply plugin: 'java'
     sourceCompatibility = 1.10
+
+    repositories {
+        jcenter()
+        maven { url 'https://jitpack.io' }
+    }
 }

@@ -4,11 +4,6 @@ plugins {
 
 mainClassName = 'bisq.relay.RelayMain'
 
-repositories {
-    jcenter()
-    maven { url 'https://jitpack.io' }
-}
-
 dependencies {
     compile project(':common')
     compile 'com.sparkjava:spark-core:2.5.2'

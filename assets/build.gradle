@@ -16,11 +16,6 @@ artifacts {
     archives javadocJar
 }
 
-repositories {
-    jcenter()
-    maven { url 'https://jitpack.io' }
-}
-
 dependencies {
     compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
         exclude(module: 'protobuf-java')

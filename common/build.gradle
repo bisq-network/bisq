@@ -25,11 +25,6 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-repositories {
-    jcenter()
-    maven { url 'https://jitpack.io' }
-}
-
 sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
 
 protobuf {
