@@ -80,8 +80,4 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
     testCompile 'junit:junit:4.12'
-
-    compile "org.openjfx:javafx-base:11:$platform"
-    compile "org.openjfx:javafx-graphics:11:$platform"
-    compile "org.openjfx:javafx-controls:11:$platform"
 }
