@@ -5,7 +5,7 @@ plugins {
 
 sourceCompatibility = 1.10
 
-mainClassName = 'bisq.monitor.MonitorMain'
+mainClassName = 'bisq.relay.RelayMain'
 
 repositories {
     jcenter()
