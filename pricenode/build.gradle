@@ -10,10 +10,6 @@ jar.manifest.attributes(
 
 jar.archiveName "${rootProject.name}.jar"
 
-repositories {
-    maven { url "https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/" }
-}
-
 dependencies {
     compile project(":core")
     compile project(":assets")

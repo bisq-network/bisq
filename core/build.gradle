@@ -1,9 +1,5 @@
 def jmockitVersion = '1.42'
 
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     compile project(':assets')
     compile project(':p2p')

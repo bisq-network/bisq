@@ -26,10 +26,6 @@ tasks.withType(AbstractArchiveTask) {
 
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     // fixme(chirhonul): currently 'gradle install' using system gradle 4.9 fails with:
     // A POM cannot have multiple artifacts with the same type and classifier. Already have MavenArtifact bisq:zip:zip:null, trying to add MavenArtifact bisq:zip:zip:null.

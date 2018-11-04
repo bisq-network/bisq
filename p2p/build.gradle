@@ -1,7 +1,3 @@
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     compile project(':common')
     compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.2') {

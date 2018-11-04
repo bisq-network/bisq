@@ -4,10 +4,6 @@ plugins {
 
 mainClassName = 'bisq.statistics.StatisticsMain'
 
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     compile project(':core')
     compileOnly 'org.projectlombok:lombok:1.18.2'

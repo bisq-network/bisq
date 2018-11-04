@@ -14,10 +14,6 @@ mainClassName = 'bisq.seednode.SeedNodeMain'
 
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     compile project(':core')
     runtime 'org.bouncycastle:bcprov-jdk15on:1.56'

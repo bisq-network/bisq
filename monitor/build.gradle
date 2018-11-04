@@ -4,10 +4,6 @@ plugins {
 
 mainClassName = 'bisq.monitor.MonitorMain'
 
-repositories {
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-}
-
 dependencies {
     compile project(':core')
     compile 'com.sparkjava:spark-core:2.5.2'
