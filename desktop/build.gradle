@@ -24,10 +24,6 @@ tasks.withType(AbstractArchiveTask) {
     reproducibleFileOrder = true
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 repositories {

@@ -21,10 +21,6 @@ ext {
     platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
 sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
 
 protobuf {

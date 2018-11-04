@@ -1,7 +1,3 @@
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
 def jmockitVersion = '1.42'
 
 repositories {
