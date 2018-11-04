@@ -1,17 +1,3 @@
-javadoc {
-    options.author = true
-    options.addStringOption('Xdoclint:none', '-quiet')
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-}
-
 dependencies {
     compile('network.bisq.libdohj:libdohj-core:d4ace7bc') {
         exclude(module: 'protobuf-java')
