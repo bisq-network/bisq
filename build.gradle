@@ -305,8 +305,6 @@ configure(project(':seednode')) {
 
     mainClassName = 'bisq.seednode.SeedNodeMain'
 
-    sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
-
     dependencies {
         compile project(':core')
         runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
