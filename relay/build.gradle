@@ -12,15 +12,15 @@ mainClassName = 'bisq.monitor.MonitorMain'
 
 repositories {
     jcenter()
-    maven { url "https://jitpack.io" }
+    maven { url 'https://jitpack.io' }
     maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
 }
 
 dependencies {
-    compile project(":common")
-    compile("com.sparkjava:spark-core:2.5.2")
-    compile("com.turo:pushy:0.13.2")
-    compile("com.google.firebase:firebase-admin:6.2.0")
+    compile project(':common')
+    compile 'com.sparkjava:spark-core:2.5.2'
+    compile 'com.turo:pushy:0.13.2'
+    compile 'com.google.firebase:firebase-admin:6.2.0'
     compile 'commons-codec:commons-codec:1.9'
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
@@ -29,4 +29,3 @@ dependencies {
 build.dependsOn installDist
 installDist.destinationDir = file('build/app')
 distZip.enabled = false
-
