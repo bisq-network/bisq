@@ -16,8 +16,6 @@ version = '0.8.0-SNAPSHOT'
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 
-def jmockitVersion = '1.42'
-
 tasks.withType(AbstractArchiveTask) {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
@@ -43,7 +41,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.2'
     annotationProcessor 'org.projectlombok:lombok:1.18.2'
 
-    testCompile "org.jmockit:jmockit:$jmockitVersion"
+    testCompile 'org.jmockit:jmockit:1.42'
     testCompile('org.mockito:mockito-core:2.21.0') {
         exclude(module: 'objenesis')
     }
