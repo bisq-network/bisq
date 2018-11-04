@@ -12,7 +12,6 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'maven'
     id 'com.google.protobuf' version '0.8.5'
 }
 
@@ -22,9 +21,6 @@ ext {
     protobufVersion = '3.5.1'
     platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 }
-
-group = 'network.bisq'
-version = '-SNAPSHOT'
 
 sourceCompatibility = 1.10
 

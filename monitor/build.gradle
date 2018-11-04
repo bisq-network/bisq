@@ -3,9 +3,6 @@ plugins {
     id 'application'
 }
 
-group = 'network.bisq'
-version = '0.8.0-SNAPSHOT'
-
 sourceCompatibility = 1.10
 
 mainClassName = 'bisq.monitor.MonitorMain'

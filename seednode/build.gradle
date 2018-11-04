@@ -9,10 +9,8 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'maven'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-group = 'network.bisq'
 version = '0.8.0-SNAPSHOT'
 
 sourceCompatibility = 1.10
