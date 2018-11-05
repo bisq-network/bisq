@@ -24,7 +24,6 @@ configure(subprojects) {
         easyVersion = '4.0.1'
         jmockitVersion = '1.42'
         joptVersion = '5.0.3'
-        junitVersion = '4.12'
         langVersion = '3.4'
         libdohjVersion = 'd4ace7bc'
         lombokVersion = '1.18.2'
