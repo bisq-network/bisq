@@ -640,6 +640,12 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT);
     }
 
+    public Set<TxOutput> getUnspentLockUpTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.LOCKUP_OUTPUT).stream()
+                .filter(txOutput -> isUnspent(txOutput.getKey()))
+                .collect(Collectors.toSet());
+    }
+
     public Optional<TxOutput> getLockupTxOutput(String txId) {
         return getTx(txId).flatMap(tx -> tx.getTxOutputs().stream()
                 .filter(this::isLockupOutput)

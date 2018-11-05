@@ -29,7 +29,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.bonds.BondsView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
-import bisq.desktop.main.dao.bonding.reputation.ReputationView;
+import bisq.desktop.main.dao.bonding.reputation.MyBondedReputationView;
 import bisq.desktop.main.dao.bonding.roles.BondedRolesView;
 
 import bisq.core.locale.Res;
@@ -86,7 +86,7 @@ public class BondingView extends ActivatableViewAndModel {
         bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bondedRoles"),
                 BondedRolesView.class, AwesomeIcon.SHIELD, baseNavPath);
         reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.reputation"),
-                ReputationView.class, AwesomeIcon.LOCK, baseNavPath);
+                MyBondedReputationView.class, AwesomeIcon.LOCK, baseNavPath);
         bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bonds"),
                 BondsView.class, AwesomeIcon.UNLOCK, baseNavPath);
 
@@ -131,7 +131,7 @@ public class BondingView extends ActivatableViewAndModel {
 
         if (view instanceof BondingDashboardView) dashboard.setSelected(true);
         else if (view instanceof BondedRolesView) bondedRoles.setSelected(true);
-        else if (view instanceof ReputationView) reputation.setSelected(true);
+        else if (view instanceof MyBondedReputationView) reputation.setSelected(true);
         else if (view instanceof BondsView) bonds.setSelected(true);
     }
 }

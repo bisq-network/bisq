@@ -304,10 +304,12 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
-                role = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+
+                //TODO
+              /*  role = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
                 return daoFacade.getConfiscateBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        role.getHash());
+                        role.getHash());*/
             case GENERIC:
                 return daoFacade.getGenericProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText());

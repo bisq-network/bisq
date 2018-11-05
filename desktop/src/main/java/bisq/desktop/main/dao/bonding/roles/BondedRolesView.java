@@ -154,7 +154,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     private void updateList() {
         observableList.forEach(BondedRolesListItem::cleanup);
         observableList.setAll(daoFacade.getBondedRoles().stream()
-                .map(bondedRole -> new BondedRolesListItem(bondedRole, daoFacade, bondingViewUtils, bsqFormatter))
+                .map(bond -> new BondedRolesListItem(bond, daoFacade, bondingViewUtils, bsqFormatter))
                 .collect(Collectors.toList()));
     }
 
@@ -175,13 +175,12 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
                             BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final BondedRolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -199,13 +198,12 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
                             BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -232,13 +230,12 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
                             BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                        return new TableCell<>() {
                             private Hyperlink hyperlink;
 
                             @Override
@@ -265,7 +262,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.startDate"));
+       /* column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.startDate"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(120);
         column.setCellFactory(
@@ -395,18 +392,17 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                         };
                     }
                 });
-        tableView.getColumns().add(column);
+        tableView.getColumns().add(column);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondState"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(120);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
                             BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                        return new TableCell<>() {
                             Label label;
 
                             @Override

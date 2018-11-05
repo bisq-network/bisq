@@ -24,11 +24,15 @@ import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.governance.bond.BondWithHash;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.BondedAsset;
 import bisq.core.dao.governance.bond.lockup.LockupService;
 import bisq.core.dao.governance.bond.lockup.LockupType;
 import bisq.core.dao.governance.bond.reputation.BondedReputation;
 import bisq.core.dao.governance.bond.reputation.BondedReputationService;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationService;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.governance.bond.unlock.UnlockService;
@@ -85,7 +89,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -118,6 +122,8 @@ public class DaoFacade implements DaoSetupService {
     private final RemoveAssetProposalFactory removeAssetProposalFactory;
     private final BondedRolesService bondedRolesService;
     private final BondedReputationService bondedReputationService;
+    private final MyReputationListService myReputationListService;
+    private final MyBondedReputationService myBondedReputationService;
     private final LockupService lockupService;
     private final UnlockService unlockService;
     private final DaoStateStorageService daoStateStorageService;
@@ -142,6 +148,8 @@ public class DaoFacade implements DaoSetupService {
                      RemoveAssetProposalFactory removeAssetProposalFactory,
                      BondedRolesService bondedRolesService,
                      BondedReputationService bondedReputationService,
+                     MyReputationListService myReputationListService,
+                     MyBondedReputationService myBondedReputationService,
                      LockupService lockupService,
                      UnlockService unlockService,
                      DaoStateStorageService daoStateStorageService) {
@@ -162,6 +170,8 @@ public class DaoFacade implements DaoSetupService {
         this.removeAssetProposalFactory = removeAssetProposalFactory;
         this.bondedRolesService = bondedRolesService;
         this.bondedReputationService = bondedReputationService;
+        this.myReputationListService = myReputationListService;
+        this.myBondedReputationService = myBondedReputationService;
         this.lockupService = lockupService;
         this.unlockService = unlockService;
         this.daoStateStorageService = daoStateStorageService;
@@ -282,12 +292,8 @@ public class DaoFacade implements DaoSetupService {
         return removeAssetProposalFactory.createProposalWithTransaction(name, link, asset);
     }
 
-    public Collection<BondedRole> getBondedRoles() {
-        return bondedRolesService.getBondedRoles();
-    }
-
-    public List<BondedReputation> getReputationList() {
-        return bondedReputationService.getReputationList();
+    public List<BondedRole> getBondedRoles() {
+        return bondedRolesService.getBonds();
     }
 
     // Show fee
@@ -487,9 +493,9 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Bonding
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondedAsset bondedAsset,
                                 Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
-        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondWithHash, resultHandler, exceptionHandler);
+        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondedAsset, resultHandler, exceptionHandler);
     }
 
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
@@ -513,13 +519,21 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockTime(txId);
     }
 
-    public List<Role> getActiveBondedRoles() {
-        return bondedRolesService.getActiveBondedRoles();
+    public List<BondedRole> getActiveBondedRoles() {
+        return bondedRolesService.getActiveBonds();
     }
 
-    /*public List<BondedReputation> getValidBondedReputationList() {
-        return bondedReputationService.getValidBondedReputationList();
-    }*/
+    public List<Bond> getAllActiveBonds() {
+        List<BondedReputation> activeReputations = bondedReputationService.getActiveBonds();
+        List<BondedRole> activeRoles = bondedRolesService.getActiveBonds();
+        List<Bond> bonds = new ArrayList<>(activeReputations);
+        bonds.addAll(activeRoles);
+        return bonds;
+    }
+
+    public List<MyBondedReputation> getMyBondedReputations() {
+        return myBondedReputationService.getMyBondedReputations();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -622,17 +636,6 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.isUnspent(key);
     }
 
-    public Optional<Role> getBondedRoleFromHash(byte[] hash) {
-        return bondedRolesService.getBondedRoleFromHash(hash);
-    }
-
-    public Optional<BondedReputation> getBondedReputationFromHash(byte[] hash) {
-        return bondedReputationService.getBondedReputationFromHash(hash);
-    }
-
-    /*public boolean isUnlocking(String unlockTxId) {
-        return daoStateService.isUnlocking(unlockTxId);
-    }*/
 
     public Coin getMinCompensationRequestAmount() {
         return CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());

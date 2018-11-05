@@ -135,14 +135,23 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
     }
 
 
-    // The lockTime is stored in the first output of the LOCKUP tx.
     public int getLockTime() {
-        return txOutputs.get(0).getLockTime();
+        // TODO MK: Still get confused that we have the lock time stored at a non opReturn output
+        return getLockupOutput().getLockTime();
+    }
+
+    public long getLockedAmount() {
+        return getLockupOutput().getValue();
+    }
+
+    // The lockTime is stored in the first output of the LOCKUP tx.
+    private TxOutput getLockupOutput() {
+        return txOutputs.get(0);
     }
 
     // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
     public int getUnlockBlockHeight() {
-        return txOutputs.get(0).getUnlockBlockHeight();
+        return getLockupOutput().getUnlockBlockHeight();
     }
 
     @Override

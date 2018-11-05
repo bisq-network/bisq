@@ -19,7 +19,14 @@ package bisq.core.dao.governance.bond.reputation;
 
 import bisq.core.dao.governance.bond.BondedAsset;
 
+import bisq.common.crypto.Hash;
+import bisq.common.proto.network.NetworkPayload;
+import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
+
+import io.bisq.generated.protobuffer.PB;
+
+import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
 
@@ -28,17 +35,31 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
-/**
- * Reputation objects we found on the blockchain. We only know the hash of it.
- */
 @Immutable
 @Value
 @Slf4j
-public final class Reputation implements BondedAsset {
-    private final byte[] hash;
+public final class MyReputation implements PersistablePayload, NetworkPayload, BondedAsset {
+    private final byte[] salt;
+    private final transient byte[] hash; // not persisted as it is derived from salt. Stored for caching purpose only.
 
-    public Reputation(byte[] hash) {
-        this.hash = hash;
+
+    public MyReputation(byte[] salt) {
+        this.salt = salt;
+        this.hash = Hash.getSha256Ripemd160hash(salt);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.MyReputation toProtoMessage() {
+        return PB.MyReputation.newBuilder().setSalt(ByteString.copyFrom(salt)).build();
+    }
+
+    public static MyReputation fromProto(PB.MyReputation proto) {
+        return new MyReputation(proto.getSalt().toByteArray());
     }
 
 
@@ -64,9 +85,9 @@ public final class Reputation implements BondedAsset {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Reputation)) return false;
+        if (!(o instanceof MyReputation)) return false;
         if (!super.equals(o)) return false;
-        Reputation that = (Reputation) o;
+        MyReputation that = (MyReputation) o;
         return Arrays.equals(hash, that.hash);
     }
 
@@ -77,9 +98,14 @@ public final class Reputation implements BondedAsset {
         return result;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public String toString() {
-        return "Reputation{" +
+        return "MyReputation{" +
+                "\n     salt=" + Utilities.bytesAsHexString(salt) +
                 "\n     hash=" + Utilities.bytesAsHexString(hash) +
                 "\n}";
     }

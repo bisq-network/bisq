@@ -141,8 +141,8 @@ public class TxParser {
         boolean bsqOutputFound = txOutputParser.isBsqOutputFound();
 
         long burntBsq = remainingInputValue + burntBondValue;
-        boolean hasBurntBSQ = burntBsq > 0;
-        if (hasBurntBSQ)
+        boolean hasBurntBsq = burntBsq > 0;
+        if (hasBurntBsq)
             tempTx.setBurntFee(burntBsq);
 
 
@@ -152,14 +152,14 @@ public class TxParser {
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
 
-        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBSQ, unLockInputValid);
+        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
         tempTx.setTxType(txType);
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
             txOutputParser.invalidateUTXOCandidates();
 
-            if (hasBurntBSQ) {
+            if (hasBurntBsq) {
                 log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
                         burntBsq / 100D, tempTx);
             }

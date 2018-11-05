@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.governance.asset.RemovedAssetsList;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
+import bisq.core.dao.governance.bond.reputation.MyReputationList;
 import bisq.core.dao.governance.myvote.MyVoteList;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
@@ -132,6 +133,9 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 case DAO_STATE_STORE:
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
+                case MY_REPUTATION_LIST:
+                    return MyReputationList.fromProto(proto.getMyReputationList());
+
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

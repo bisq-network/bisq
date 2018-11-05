@@ -28,12 +28,10 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -61,12 +59,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 
 import javafx.util.Callback;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,7 +70,6 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     private TableView<BondListItem> tableView;
 
     private final BsqWalletService bsqWalletService;
-    private final BtcWalletService btcWalletService;
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
@@ -87,7 +81,6 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     private int gridRow = 0;
 
     private final ObservableList<BondListItem> observableList = FXCollections.observableArrayList();
-    private final FilteredList<BondListItem> lockupTxs = new FilteredList<>(observableList);
 
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private ChangeListener<Number> walletChainHeightListener;
@@ -99,7 +92,6 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
 
     @Inject
     private BondsView(BsqWalletService bsqWalletService,
-                      BtcWalletService btcWalletService,
                       BsqFormatter bsqFormatter,
                       BsqBalanceUtil bsqBalanceUtil,
                       BsqValidator bsqValidator,
@@ -108,7 +100,6 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                       DaoFacade daoFacade,
                       Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
-        this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
@@ -124,14 +115,8 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
 
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPrefHeight(300);
-        addTxIdColumn();
-        addInfoColumn();
-        addAmountColumn();
-        addLockTimeColumn();
-        addUnlockColumn();
+        addColumns();
 
-        lockupTxs.setPredicate(BondListItem::isLockupAndUnspent);
         walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> updateList();
 
@@ -157,9 +142,9 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
 
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
         bsqWalletService.addBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
+        bsqWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
 
-        tableView.setItems(lockupTxs);
+        tableView.setItems(observableList);
 
         daoFacade.addBsqStateListener(this);
 
@@ -171,13 +156,12 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
         bsqBalanceUtil.deactivate();
         bsqWalletService.removeBsqBalanceListener(this);
 
-        lockupTxs.predicateProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         bsqWalletService.removeBsqBalanceListener(this);
-        btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
+        bsqWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
         daoFacade.removeBsqStateListener(this);
 
-        observableList.forEach(BondListItem::cleanup);
+        // observableList.forEach(BondListItem::cleanup);
     }
 
 
@@ -224,22 +208,17 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     }
 
     private void updateList() {
-        observableList.forEach(BondListItem::cleanup);
-
-        // copy list to avoid ConcurrentModificationException
-        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
-        List<BondListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                    return new BondListItem(transaction,
-                            bsqWalletService,
-                            btcWalletService,
+        List<BondListItem> items = daoFacade.getAllActiveBonds().stream()
+                .map(bond -> {
+                    return new BondListItem(bond,
                             daoFacade,
                             bondedRolesService,
-                            transaction.getUpdateTime(),
+                            bondingViewUtils,
                             bsqFormatter);
                 })
                 .collect(Collectors.toList());
         observableList.setAll(items);
+        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 10);
     }
 
 
@@ -247,9 +226,85 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     // Table columns
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addTxIdColumn() {
-        TableColumn<BondListItem, BondListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.txId"));
+    private void addColumns() {
+        TableColumn<BondListItem, BondListItem> column;
 
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.hash"));
+        column.setMinWidth(160);
+        column.setMaxWidth(column.getMinWidth());
+
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
+                return new TableCell<>() {
+
+                    @Override
+                    public void updateItem(final BondListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getInfo());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
+        column.setMinWidth(120);
+        column.setMaxWidth(column.getMinWidth());
+
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
+                return new TableCell<>() {
+
+                    @Override
+                    public void updateItem(final BondListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getAmount());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.time"));
+        column.setMinWidth(140);
+        column.setMaxWidth(column.getMinWidth());
+
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                    BondListItem> column) {
+                return new TableCell<>() {
+
+                    @Override
+                    public void updateItem(final BondListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getLockTime());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.bonds.table.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
@@ -282,135 +337,36 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                     }
                 });
         tableView.getColumns().add(column);
-    }
 
-    private void addInfoColumn() {
-        TableColumn<BondListItem, BondListItem> column =
-                new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.type"));
-        column.setMinWidth(160);
-        column.setMaxWidth(column.getMinWidth());
-
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-
-            @Override
-            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
-                    BondListItem> column) {
-                return new TableCell<>() {
-
+        column = new TableColumn<>();
+        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setMinWidth(80);
+        column.setCellFactory(
+                new Callback<>() {
                     @Override
-                    public void updateItem(final BondListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            setText(item.getInfo());
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        tableView.getColumns().add(column);
-    }
+                    public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
+                            BondListItem> column) {
+                        return new TableCell<>() {
+                            Button button;
 
-    private void addAmountColumn() {
-        TableColumn<BondListItem, BondListItem> column =
-                new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
-        column.setMinWidth(120);
-        column.setMaxWidth(column.getMinWidth());
+                            @Override
+                            public void updateItem(final BondListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-
-            @Override
-            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
-                    BondListItem> column) {
-                return new TableCell<>() {
-
-                    @Override
-                    public void updateItem(final BondListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            TxType txType = item.getTxType();
-                            setText(item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal() ?
-                                    bsqFormatter.formatCoin(item.getAmount()) :
-                                    Res.get("shared.na"));
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        tableView.getColumns().add(column);
-    }
-
-    private void addLockTimeColumn() {
-        TableColumn<BondListItem, BondListItem> column =
-                new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.time"));
-        column.setMinWidth(120);
-        column.setMaxWidth(column.getMinWidth());
-
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-
-            @Override
-            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
-                    BondListItem> column) {
-                return new TableCell<>() {
-
-                    @Override
-                    public void updateItem(final BondListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            TxType txType = item.getTxType();
-                            setText(item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal() ?
-                                    Integer.toString(item.getLockTime()) :
-                                    Res.get("shared.na"));
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        tableView.getColumns().add(column);
-    }
-
-    private void addUnlockColumn() {
-        TableColumn<BondListItem, BondListItem> unlockColumn = new TableColumn<>();
-        unlockColumn.setMinWidth(130);
-        unlockColumn.setMaxWidth(unlockColumn.getMinWidth());
-        unlockColumn.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        unlockColumn.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
-                    BondListItem> column) {
-                return new TableCell<>() {
-                    Button button;
-
-                    @Override
-                    public void updateItem(final BondListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (item != null && !empty) {
-                            if (button == null) {
-                                button = item.getButton();
-                                button.setOnAction(e -> bondingViewUtils.unLock(item.getTxId(), txId -> {
-                                    //TODO
-                                    button.setDisable(true);
-                                }));
-                                setGraphic(button);
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = item.getButton();
+                                        setGraphic(button);
+                                    }
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null)
+                                        button = null;
+                                }
                             }
-                        } else {
-                            setGraphic(null);
-                            if (button != null) {
-                                button.setOnAction(null);
-                                button = null;
-                            }
-                        }
+                        };
                     }
-                };
-            }
-        });
-        unlockColumn.setComparator(Comparator.comparing(BondListItem::getConfirmations));
-        tableView.getColumns().add(unlockColumn);
+                });
+        tableView.getColumns().add(column);
     }
 }

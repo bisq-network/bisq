@@ -63,8 +63,8 @@ class BondedRolesListItem implements DaoStateListener {
         this.bondingViewUtils = bondingViewUtils;
         this.bsqFormatter = bsqFormatter;
 
-        role = bondedRole.getRole();
-        isMyRole = daoFacade.isMyRole(bondedRole.getRole());
+        role = bondedRole.getBondedAsset();
+        isMyRole = daoFacade.isMyRole(role);
 
         daoFacade.addBsqStateListener(this);
 
@@ -96,14 +96,14 @@ class BondedRolesListItem implements DaoStateListener {
     }
 
     public String getStartDate() {
-        return bondedRole.getStartDate() > 0 ?
-                bsqFormatter.formatDateTime(new Date(bondedRole.getStartDate())) :
+        return bondedRole.getLockupDate() > 0 ?
+                bsqFormatter.formatDateTime(new Date(bondedRole.getLockupDate())) :
                 "-";
     }
 
     public String getRevokeDate() {
-        return bondedRole.getRevokeDate() > 0 ?
-                bsqFormatter.formatDateTime(new Date(bondedRole.getRevokeDate())) :
+        return bondedRole.getUnlockDate() > 0 ?
+                bsqFormatter.formatDateTime(new Date(bondedRole.getUnlockDate())) :
                 "-";
     }
 

@@ -27,6 +27,7 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.param.ChangeParamInputValidator;
@@ -111,7 +112,7 @@ public class ProposalDisplay {
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
-    public ComboBox<Role> confiscateBondComboBox;
+    public ComboBox<Bond> confiscateBondComboBox;
     @Nullable
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
     @Nullable
@@ -299,19 +300,20 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<Role>addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.<Bond>addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getActiveBondedRoles()));
+
+                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getAllActiveBonds()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
-                    public String toString(Role role) {
-                        return role != null ? role.getDisplayString() : "";
+                    public String toString(Bond bond) {
+                        return bond != null ? bond.getDisplayString() : "";
                     }
 
                     @Override
-                    public Role fromString(String string) {
+                    public Bond fromString(String string) {
                         return null;
                     }
                 });
@@ -481,11 +483,13 @@ public class ProposalDisplay {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
 
-            daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
+            //TODO
+          /*  daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
                     .ifPresent(bondedRole -> {
                         confiscateBondComboBox.getSelectionModel().select(bondedRole);
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bondedRole));
-                    });
+                    });*/
+
         } else if (proposal instanceof GenericProposal) {
             // do nothing
         } else if (proposal instanceof RemoveAssetProposal) {

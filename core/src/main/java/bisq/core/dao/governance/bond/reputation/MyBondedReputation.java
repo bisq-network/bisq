@@ -15,8 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.bond;
+package bisq.core.dao.governance.bond.reputation;
 
-public interface BondWithHash {
-    byte[] getHash();
+import bisq.core.dao.governance.bond.Bond;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+/**
+ * Wrapper for reputation which contains the mutable state of a bonded reputation. Only kept in memory.
+ */
+@Getter
+@EqualsAndHashCode(callSuper = true)
+public final class MyBondedReputation extends Bond<MyReputation> {
+
+    public MyBondedReputation(MyReputation myReputation) {
+        super(myReputation);
+    }
+
+    @Override
+    public String toString() {
+        return "MyBondedReputation{" +
+                "\n} " + super.toString();
+    }
 }

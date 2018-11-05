@@ -18,135 +18,118 @@
 package bisq.desktop.main.dao.bonding.bonds;
 
 import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.TxConfidenceListItem;
-import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 
-import bisq.core.btc.listeners.TxConfidenceListener;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.governance.bond.lockup.LockupType;
-import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.role.BondedRolesService;
-import bisq.core.dao.state.model.blockchain.BaseTxOutput;
-import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.dao.state.model.governance.BondedRoleType;
-import bisq.core.locale.Res;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
+
+import javafx.scene.control.Button;
 
 import java.util.Date;
-import java.util.Optional;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Data
 @Slf4j
-class BondListItem extends TxConfidenceListItem {
-    private final BtcWalletService btcWalletService;
+class BondListItem implements DaoStateListener {
+    private final Bond bond;
     private final DaoFacade daoFacade;
-
-    private final BsqFormatter bsqFormatter;
     private final BondedRolesService bondedRolesService;
-    private final Date date;
+    private final BondingViewUtils bondingViewUtils;
+    private final BsqFormatter bsqFormatter;
+    private final String info;
+    private final String txId;
+    private final String amount;
+    private final String lockTime;
 
-    private Coin amount = Coin.ZERO;
-    private int lockTime;
-    private AutoTooltipButton button;
+    @Getter
+    private Button button;
 
-    private TxConfidenceIndicator txConfidenceIndicator;
-    private TxConfidenceListener txConfidenceListener;
-    private boolean issuanceTx;
-
-    BondListItem(Transaction transaction,
-                 BsqWalletService bsqWalletService,
-                 BtcWalletService btcWalletService,
+    BondListItem(Bond bond,
                  DaoFacade daoFacade,
                  BondedRolesService bondedRolesService,
-                 Date date,
+                 BondingViewUtils bondingViewUtils,
                  BsqFormatter bsqFormatter) {
-        super(transaction, bsqWalletService);
-
-        this.btcWalletService = btcWalletService;
+        this.bond = bond;
         this.daoFacade = daoFacade;
         this.bondedRolesService = bondedRolesService;
-        this.date = date;
+        this.bondingViewUtils = bondingViewUtils;
         this.bsqFormatter = bsqFormatter;
 
-        checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
-                "which are available in the wallet");
 
-        daoFacade.getLockupTxOutput(transaction.getHashAsString())
-                .ifPresent(out -> amount = Coin.valueOf(out.getValue()));
-
-        Optional<Integer> opLockTime = daoFacade.getLockTime(transaction.getHashAsString());
-        lockTime = opLockTime.orElse(-1);
+        info = bond.getBondedAsset().getDisplayString();
+        txId = bond.getLockupTxId();
+        amount = bsqFormatter.formatCoin(Coin.valueOf(bond.getAmount()));
+        lockTime = bsqFormatter.formatDateTime(new Date(bond.getLockupDate()));
 
         button = new AutoTooltipButton();
         button.setMinWidth(70);
-        button.updateText(Res.get("dao.bonding.unlock.unlock"));
-        button.setVisible(true);
-        button.setManaged(true);
-    }
-
-    public boolean isLockupAndUnspent() {
-        boolean isLocked;
-        Optional<BondedRole> optionalBondedRoleState = bondedRolesService.getBondedRoleStateFromLockupTxId(txId);
-        if (optionalBondedRoleState.isPresent()) {
-            BondedRole bondedRole = optionalBondedRoleState.get();
-            //TODO
-            //isLocked = bondedRole.getLockupTxId() != null && bondedRole.getUnlockTxId() == null;
-            //log.error("isLocked {}, tx={}",isLocked,bondedRole.getLockupTxId());
-        } else {
-            //TODO get reputation
-            isLocked = true;
-        }
-        return /*isLocked && */!isSpent() && getTxType() == TxType.LOCKUP;
-    }
-
-    private boolean isSpent() {
-        Optional<TxOutput> optionalTxOutput = daoFacade.getLockupTxOutput(txId);
-        return optionalTxOutput.map(txOutput -> !daoFacade.isUnspent(txOutput.getKey()))
-                .orElse(true);
-
-    }
-
-    public TxType getTxType() {
-        return daoFacade.getTx(txId)
-                .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
-                .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
-    }
-
-    private Optional<LockupType> getOptionalLockupType() {
-        return getOpReturnData()
-                .flatMap(BondConsensus::getLockupType);
-    }
-
-    private Optional<byte[]> getOpReturnData() {
-        return daoFacade.getLockupOpReturnTxOutput(txId).map(BaseTxOutput::getOpReturnData);
-    }
-
-    public String getInfo() {
-        Optional<BondedRoleType> optionalRoleType = bondedRolesService.getBondedRoleType(txId);
-        if (optionalRoleType.isPresent()) {
-            return optionalRoleType.get().getDisplayString();
-        } else {
-            Optional<LockupType> optionalLockupType = getOptionalLockupType();
-            if (optionalLockupType.isPresent()) {
-                LockupType lockupType = optionalLockupType.get();
-                if (lockupType == LockupType.REPUTATION)
-                    return Res.get("dao.bonding.unlock.reputation");
+        // label = new Label();
+/*
+        daoFacade.addBsqStateListener(this);
+        button.setOnAction(e -> {
+            if (bondedRole.getBondState() == BondState.READY_FOR_LOCKUP) {
+                bondingViewUtils.lockupBondForBondedRole(role,
+                        txId -> {
+                            bondedRole.setLockupTxId(txId);
+                            bondedRole.setBondState(BondState.LOCKUP_TX_PENDING);
+                            update();
+                            button.setDisable(true);
+                        });
+            } else if (bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
+                bondingViewUtils.unLock(bondedRole.getLockupTxId(),
+                        txId -> {
+                            bondedRole.setUnlockTxId(txId);
+                            bondedRole.setBondState(BondState.UNLOCK_TX_PENDING);
+                            update();
+                            button.setDisable(true);
+                        });
             }
-        }
-        return Res.get("shared.na");
+        });*/
+    }
+
+    private void update() {
+      /*  label.setText(Res.get("dao.bond.bondState." + bondedRole.getBondState().name()));
+
+        boolean showLockup = bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
+        boolean showRevoke = bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
+        if (showLockup)
+            button.updateText(Res.get("dao.bond.table.button.lockup"));
+        else if (showRevoke)
+            button.updateText(Res.get("dao.bond.table.button.revoke"));
+
+
+        boolean showButton = isMyRole && (showLockup || showRevoke);
+        button.setVisible(showButton);
+        button.setManaged(showButton);*/
+    }
+
+    public void cleanup() {
+        //  daoFacade.removeBsqStateListener(this);
+        // button.setOnAction(null);
+    }
+
+    // DaoStateListener
+    @Override
+    public void onNewBlockHeight(int blockHeight) {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+        update();
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
     }
 }

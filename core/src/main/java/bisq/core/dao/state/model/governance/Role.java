@@ -17,7 +17,7 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.dao.governance.bond.BondWithHash;
+import bisq.core.dao.governance.bond.BondedAsset;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.locale.Res;
 
@@ -44,7 +44,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public final class Role implements PersistablePayload, NetworkPayload, BondWithHash, ImmutableDaoStateModel {
+public final class Role implements PersistablePayload, NetworkPayload, BondedAsset, ImmutableDaoStateModel {
     private final String uid;
     private final String name;
     private final String link;
@@ -99,7 +99,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondWithH
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BondWithHash implementation
+    // BondedAsset implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -109,14 +109,15 @@ public final class Role implements PersistablePayload, NetworkPayload, BondWithH
         return Hash.getSha256Ripemd160hash(bytes);
     }
 
+    @Override
+    public String getDisplayString() {
+        return Res.get("dao.bond.bondedRoleType." + bondedRoleType.name()) + ": " + name;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getDisplayString() {
-        return Res.get("dao.bond.bondedRoleType." + bondedRoleType.name()) + ": " + name;
-    }
 
     // We use only the immutable data
     // bondedRoleType must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!

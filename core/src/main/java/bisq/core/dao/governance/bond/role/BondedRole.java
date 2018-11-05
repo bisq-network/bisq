@@ -17,34 +17,26 @@
 
 package bisq.core.dao.governance.bond.role;
 
-import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.state.model.governance.Role;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
-
-import javax.annotation.Nullable;
 
 /**
  * Wrapper for role which contains the mutable state of a bonded role. Only kept in memory.
  */
 @Getter
-public class BondedRole {
-    private final Role role;
-    @Setter
-    @Nullable
-    private String lockupTxId;
-    @Setter
-    @Nullable
-    private String unlockTxId;
-    @Setter
-    private long startDate;
-    @Setter
-    private long revokeDate;
-    @Setter
-    private BondState bondState = BondState.READY_FOR_LOCKUP;
+@EqualsAndHashCode(callSuper = true)
+public class BondedRole extends Bond<Role> {
 
     BondedRole(Role role) {
-        this.role = role;
+        super(role);
+    }
+
+    @Override
+    public String toString() {
+        return "BondedRole{" +
+                "\n} " + super.toString();
     }
 }

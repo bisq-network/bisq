@@ -28,16 +28,16 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 /**
- * PersistableEnvelope wrapper for list of Reputations.
+ * PersistableEnvelope wrapper for list of MyReputations.
  */
 @EqualsAndHashCode(callSuper = true)
-public class ReputationList extends PersistableList<Reputation> {
+public class MyReputationList extends PersistableList<MyReputation> {
 
-    public ReputationList(List<Reputation> list) {
+    public MyReputationList(List<MyReputation> list) {
         super(list);
     }
 
-    public ReputationList() {
+    public MyReputationList() {
         super();
     }
 
@@ -48,26 +48,26 @@ public class ReputationList extends PersistableList<Reputation> {
 
     @Override
     public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setReputationList(getBuilder()).build();
+        return PB.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
     }
 
-    public PB.ReputationList.Builder getBuilder() {
-        return PB.ReputationList.newBuilder()
-                .addAllReputation(getList().stream()
-                        .map(Reputation::toProtoMessage)
+    public PB.MyReputationList.Builder getBuilder() {
+        return PB.MyReputationList.newBuilder()
+                .addAllMyReputation(getList().stream()
+                        .map(MyReputation::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static ReputationList fromProto(PB.ReputationList proto) {
-        return new ReputationList(new ArrayList<>(proto.getReputationList().stream()
-                .map(Reputation::fromProto)
+    public static MyReputationList fromProto(PB.MyReputationList proto) {
+        return new MyReputationList(new ArrayList<>(proto.getMyReputationList().stream()
+                .map(MyReputation::fromProto)
                 .collect(Collectors.toList())));
     }
 
     @Override
     public String toString() {
-        return "List of salts in ReputationList: " + getList().stream()
-                .map(Reputation::getSalt)
+        return "List of salts in MyReputationList: " + getList().stream()
+                .map(MyReputation::getSalt)
                 .collect(Collectors.toList());
     }
 }

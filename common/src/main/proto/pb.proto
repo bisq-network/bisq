@@ -943,7 +943,7 @@ message PersistableEnvelope {
         MeritList merit_list = 23;
         RemovedAssetList removed_asset_list = 24;
         DaoStateStore dao_state_store = 25;
-        ReputationList reputation_list = 26;
+        MyReputationList my_reputation_list = 26;
     }
 }
 
@@ -1546,12 +1546,12 @@ message Role {
     string bonded_role_type = 4; // name of BondedRoleType enum
 }
 
-message Reputation {
+message MyReputation {
     bytes salt = 1;
 }
 
-message ReputationList {
-    repeated Reputation reputation = 1;
+message MyReputationList {
+    repeated MyReputation my_reputation = 1;
 }
 
 message TempProposalPayload {

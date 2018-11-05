@@ -28,6 +28,8 @@ import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.bond.lockup.LockupService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationService;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationService;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.governance.bond.unlock.UnlockService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
@@ -188,6 +190,8 @@ public class DaoModule extends AppModule {
         bind(UnlockService.class).in(Singleton.class);
         bind(BondedRolesService.class).in(Singleton.class);
         bind(BondedReputationService.class).in(Singleton.class);
+        bind(MyReputationListService.class).in(Singleton.class);
+        bind(MyBondedReputationService.class).in(Singleton.class);
 
         // Asset
         bind(AssetService.class).in(Singleton.class);
