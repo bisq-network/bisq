@@ -133,7 +133,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private ScrollPane scrollPane;
     protected GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
-    private JFXSpinner waitingForFundsBusyAnimation;
+    private JFXSpinner waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
     private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
@@ -235,8 +235,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             addListeners();
             addSubscriptions();
 
-            if (waitingForFundsBusyAnimation != null)
-                waitingForFundsBusyAnimation.setProgress(-1);
+            if (waitingForFundsSpinner != null)
+                waitingForFundsSpinner.setProgress(-1);
 
             //directionLabel.setText(model.getDirectionLabel());
             amountDescriptionLabel.setText(model.getAmountDescription());
@@ -279,8 +279,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             removeListeners();
             removeSubscriptions();
 
-            if (waitingForFundsBusyAnimation != null)
-                waitingForFundsBusyAnimation.setProgress(0);
+            if (waitingForFundsSpinner != null)
+                waitingForFundsSpinner.setProgress(0);
         }
     }
 
@@ -455,7 +455,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                     .show();
         }
 
-        waitingForFundsBusyAnimation.setProgress(-1);
+        waitingForFundsSpinner.setProgress(-1);
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayTextField.setVisible(true);
@@ -659,7 +659,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
     private void addSubscriptions() {
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsBusyAnimation.setProgress(isWaitingForFunds ? -1 : 0);
+            waitingForFundsSpinner.setProgress(isWaitingForFunds ? -1 : 0);
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });
@@ -996,7 +996,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void addAmountPriceGroup() {
-        amountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("createOffer.setAmountPrice"), Layout.COMPACT_GROUP_DISTANCE);
+        amountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("createOffer.setAmountPrice"), Layout.COMPACT_GROUP_DISTANCE);
         GridPane.setColumnSpan(amountTitledGroupBg, 2);
 
         addAmountPriceFields();
@@ -1004,7 +1005,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void addOptionsGroup() {
-        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
+        setDepositTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
+                Res.get("shared.advancedOptions"), Layout.COMPACT_GROUP_DISTANCE);
 
         advancedOptionsBox = new HBox();
         advancedOptionsBox.setSpacing(40);
@@ -1032,9 +1034,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             close();
             model.getDataModel().swapTradeToSavings();
         });
-        cancelButton1.setId("cancel-button");
 
-        GridPane.setMargin(nextButton, new Insets(-35, 0, 0, 0));
         nextButton.setOnAction(e -> {
             if (model.isPriceInRange()) {
                 if (DevEnv.isDaoTradingActivated())
@@ -1151,11 +1151,16 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        waitingForFundsBusyAnimation = new JFXSpinner();
+        waitingForFundsSpinner = new JFXSpinner();
         waitingForFundsLabel = new AutoTooltipLabel();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
 
-        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton, label, fundFromExternalWalletButton, waitingForFundsBusyAnimation, waitingForFundsLabel);
+        fundingHBox.getChildren().addAll(fundFromSavingsWalletButton,
+                label,
+                fundFromExternalWalletButton,
+                waitingForFundsSpinner,
+                waitingForFundsLabel);
+
         GridPane.setRowIndex(fundingHBox, ++gridRow);
         GridPane.setColumnSpan(fundingHBox, 2);
         GridPane.setMargin(fundingHBox, new Insets(5, 0, 0, 0));
@@ -1280,7 +1285,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
         firstRowHBox.getChildren().addAll(amountBox, xLabel, percentagePriceBox, resultLabel, volumeBox);
         GridPane.setRowIndex(firstRowHBox, gridRow);
-        GridPane.setColumnIndex(firstRowHBox, 0);
         GridPane.setMargin(firstRowHBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
         gridPane.getChildren().add(firstRowHBox);
     }
@@ -1347,7 +1351,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         Label fakeXLabel = new Label();
         fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
-        fakeXLabel.setPadding(new Insets(14, 3, 0, 3));
+        fakeXLabel.setPadding(new Insets(24, 3, 0, 3));
         fakeXLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
         // Fixed/Percentage toggle

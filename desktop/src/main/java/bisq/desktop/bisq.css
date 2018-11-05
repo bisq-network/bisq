@@ -1187,24 +1187,6 @@ textfield */
     -fx-padding: 15 5 0 5;
 }
 
-#currency-info-label {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
-    -fx-background-color: -bs-rd-grey-background-bottom;
-    -fx-border-color: -bs-medium-grey;
-    -fx-border-style: solid solid solid none;
-    -fx-border-insets: 0 0 0 -2;
-}
-
-#currency-info-label-disabled {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
-    -fx-background-color: -bs-bg-grey7;
-    -fx-border-color: -bs-bg-grey7;
-    -fx-border-style: solid solid solid none;
-    -fx-border-insets: 0 0 0 -2;
-}
-
 #toggle-price-left {
     -fx-border-radius: 4 0 0 4;
     -fx-padding: 4 4 4 4;
