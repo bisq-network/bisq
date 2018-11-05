@@ -96,7 +96,7 @@ configure(project(':common')) {
         compile('com.googlecode.json-simple:json-simple:1.1.1') {
             exclude(module: 'junit')
         }
-        compile 'org.springframework:spring-core:4.3.6.RELEASE'
+        compile "org.springframework:spring-core:$springVersion"
         compile 'org.slf4j:slf4j-api:1.7.22'
         compile 'ch.qos.logback:logback-core:1.1.10'
         compile 'ch.qos.logback:logback-classic:1.1.10'
