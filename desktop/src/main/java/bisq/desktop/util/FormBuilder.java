@@ -190,7 +190,6 @@ public class FormBuilder {
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setRowIndex(label, rowIndex);
-        GridPane.setColumnSpan(label, 2);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(label);
         return label;
