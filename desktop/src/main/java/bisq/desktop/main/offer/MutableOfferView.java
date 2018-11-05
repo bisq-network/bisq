@@ -42,7 +42,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
@@ -158,7 +157,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             currencyTextFieldBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, placeOfferBox, amountValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, volumeValueCurrencyBox, priceValueCurrencyBox,
-            minAmountValueCurrencyBox, advancedOptionsBox;
+            minAmountValueCurrencyBox, advancedOptionsBox, paymentGroupBox;
 
     private Subscription isWaitingForFundsSubscription, balanceSubscription, cancelButton2StyleSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
@@ -944,23 +943,23 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 2);
 
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setSpacing(62);
-        hBox.setPadding(new Insets(10, 0, 18, 0));
+        paymentGroupBox = new HBox();
+        paymentGroupBox.setAlignment(Pos.CENTER_LEFT);
+        paymentGroupBox.setSpacing(62);
+        paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
 
-        final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = FormBuilder.addTopLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = addTopLabelComboBox(
                 Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
-        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelComboBox(
+        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = addTopLabelComboBox(
                 Res.get("shared.currency"), Res.get("list.currency.select"));
 
         currencySelection = currencyBoxTuple.first;
-        hBox.getChildren().addAll(tradingAccountBoxTuple.first, currencySelection);
+        paymentGroupBox.getChildren().addAll(tradingAccountBoxTuple.first, currencySelection);
 
-        GridPane.setRowIndex(hBox, gridRow);
-        GridPane.setColumnSpan(hBox, 2);
-        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
-        gridPane.getChildren().add(hBox);
+        GridPane.setRowIndex(paymentGroupBox, gridRow);
+        GridPane.setColumnSpan(paymentGroupBox, 2);
+        GridPane.setMargin(paymentGroupBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(paymentGroupBox);
 
         paymentAccountsComboBox = tradingAccountBoxTuple.third;
         paymentAccountsComboBox.setMinWidth(300);
@@ -987,14 +986,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         currencyTextFieldBox.setVisible(false);
         editOfferElements.add(currencyTextFieldBox);
 
-        hBox.getChildren().add(currencyTextFieldBox);
+        paymentGroupBox.getChildren().add(currencyTextFieldBox);
     }
 
     protected void hidePaymentGroup() {
         paymentTitledGroupBg.setVisible(false);
-        paymentAccountsComboBox.setVisible(false);
-        currencyComboBox.setVisible(false);
-        currencyTextFieldBox.setVisible(false);
+        paymentGroupBox.setManaged(false);
+        paymentGroupBox.setVisible(false);
     }
 
     private void addAmountPriceGroup() {
@@ -1054,10 +1052,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         nextButton.setManaged(false);
         cancelButton1.setVisible(false);
         cancelButton1.setManaged(false);
-        buyerSecurityDepositInputTextField.setVisible(false);
-        buyerSecurityDepositInputTextField.setManaged(false);
-        buyerSecurityDepositBtcLabel.setVisible(false);
-        buyerSecurityDepositBtcLabel.setManaged(false);
+        advancedOptionsBox.setVisible(false);
+        advancedOptionsBox.setManaged(false);
     }
 
     private void showFeeOption() {
