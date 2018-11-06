@@ -43,8 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Service for publishing the lockup transaction.
+ */
 @Slf4j
-public class LockupService {
+public class LockupTxService {
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -55,23 +58,22 @@ public class LockupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public LockupService(WalletsManager walletsManager,
-                         BsqWalletService bsqWalletService,
-                         BtcWalletService btcWalletService) {
+    public LockupTxService(WalletsManager walletsManager,
+                           BsqWalletService bsqWalletService,
+                           BtcWalletService btcWalletService) {
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
     }
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, byte[] hash,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash,
                                 Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
         checkArgument(lockTime <= BondConsensus.getMaxLockTime() &&
-                lockTime >= BondConsensus.getMinLockTime(), "lockTime not in rage");
+                lockTime >= BondConsensus.getMinLockTime(), "lockTime not in range");
         try {
-            byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
+            byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupReason, hash);
             Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
 
-            //noinspection Duplicates
             walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -99,6 +101,8 @@ public class LockupService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);
-        return bsqWalletService.signTx(txWithBtcFee);
+        Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
+        log.info("Lockup tx: " + transaction);
+        return transaction;
     }
 }

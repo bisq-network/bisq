@@ -29,10 +29,9 @@ import lombok.Getter;
 @EqualsAndHashCode(callSuper = true)
 public final class BondedReputation extends Bond<Reputation> {
 
-    public BondedReputation(Reputation reputation) {
+    BondedReputation(Reputation reputation) {
         super(reputation);
     }
-
 
     @Override
     public String toString() {

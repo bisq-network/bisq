@@ -25,8 +25,7 @@ import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxId;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
-import bisq.core.dao.governance.bond.ConfiscateBond;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
@@ -103,7 +102,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private final PeriodService periodService;
     private final BallotListService ballotListService;
     private final BlindVoteListService blindVoteListService;
-    private final BondedRolesService bondedRolesService;
+    private final BondedRolesRepository bondedRolesRepository;
     private final IssuanceService issuanceService;
     private final AssetService assetService;
     private final MissingDataRequestService missingDataRequestService;
@@ -122,7 +121,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                              PeriodService periodService,
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
-                             BondedRolesService bondedRolesService,
+                             BondedRolesRepository bondedRolesRepository,
                              IssuanceService issuanceService,
                              AssetService assetService,
                              MissingDataRequestService missingDataRequestService) {
@@ -132,7 +131,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         this.periodService = periodService;
         this.ballotListService = ballotListService;
         this.blindVoteListService = blindVoteListService;
-        this.bondedRolesService = bondedRolesService;
+        this.bondedRolesRepository = bondedRolesRepository;
         this.issuanceService = issuanceService;
         this.assetService = assetService;
         this.missingDataRequestService = missingDataRequestService;
@@ -661,7 +660,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof ConfiscateBondProposal) {
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) evaluatedProposal.getProposal();
-                daoStateService.confiscateBond(new ConfiscateBond(confiscateBondProposal.getLockupTxId()));
+                daoStateService.confiscateBond(confiscateBondProposal.getLockupTxId());
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");

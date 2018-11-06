@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.bond;
 
 /**
- * Interface of the bonded asset like the Role or Reputation.
+ * Represents the bonded asset (e.g. Role or Reputation).
  */
 public interface BondedAsset {
     byte[] getHash();

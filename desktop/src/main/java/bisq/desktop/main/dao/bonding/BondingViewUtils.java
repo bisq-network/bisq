@@ -26,10 +26,10 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.bond.reputation.MyReputation;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
@@ -56,7 +56,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BondingViewUtils {
     private final P2PService p2PService;
     private final MyReputationListService myReputationListService;
-    private final BondedRolesService bondedRolesService;
+    private final BondedRolesRepository bondedRolesRepository;
     private final WalletsSetup walletsSetup;
     private final DaoFacade daoFacade;
     private final Navigation navigation;
@@ -65,14 +65,14 @@ public class BondingViewUtils {
     @Inject
     public BondingViewUtils(P2PService p2PService,
                             MyReputationListService myReputationListService,
-                            BondedRolesService bondedRolesService,
+                            BondedRolesRepository bondedRolesRepository,
                             WalletsSetup walletsSetup,
                             DaoFacade daoFacade,
                             Navigation navigation,
                             BsqFormatter bsqFormatter) {
         this.p2PService = p2PService;
         this.myReputationListService = myReputationListService;
-        this.bondedRolesService = bondedRolesService;
+        this.bondedRolesRepository = bondedRolesRepository;
         this.walletsSetup = walletsSetup;
         this.daoFacade = daoFacade;
         this.navigation = navigation;
@@ -83,8 +83,8 @@ public class BondingViewUtils {
         BondedRoleType bondedRoleType = role.getBondedRoleType();
         Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
         int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
-        if (!bondedRolesService.wasBondedAssetAlreadyBonded(role)) {
-            lockupBond(role.getHash(), lockupAmount, lockupTime, LockupType.BONDED_ROLE, resultHandler);
+        if (!bondedRolesRepository.isBondedAssetAlreadyInBond(role)) {
+            lockupBond(role.getHash(), lockupAmount, lockupTime, LockupReason.BONDED_ROLE, resultHandler);
         } else {
             handleError(new RuntimeException("The role has been used already for a lockup tx."));
         }
@@ -92,11 +92,11 @@ public class BondingViewUtils {
 
     public void lockupBondForReputation(Coin lockupAmount, int lockupTime, byte[] salt, Consumer<String> resultHandler) {
         MyReputation myReputation = new MyReputation(salt);
-        lockupBond(myReputation.getHash(), lockupAmount, lockupTime, LockupType.REPUTATION, resultHandler);
+        lockupBond(myReputation.getHash(), lockupAmount, lockupTime, LockupReason.REPUTATION, resultHandler);
         myReputationListService.addReputation(myReputation);
     }
 
-    private void lockupBond(byte[] hash, Coin lockupAmount, int lockupTime, LockupType lockupType,
+    private void lockupBond(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason,
                             Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
@@ -106,21 +106,21 @@ public class BondingViewUtils {
                                 lockupTime
                         ))
                         .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> publishLockupTx(hash, lockupAmount, lockupTime, lockupType, resultHandler))
+                        .onAction(() -> publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler))
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } else {
-                publishLockupTx(hash, lockupAmount, lockupTime, lockupType, resultHandler);
+                publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler);
             }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
-    private void publishLockupTx(byte[] hash, Coin lockupAmount, int lockupTime, LockupType lockupType, Consumer<String> resultHandler) {
+    private void publishLockupTx(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason, Consumer<String> resultHandler) {
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
-                lockupType,
+                lockupReason,
                 hash,
                 txId -> {
                     if (!DevEnv.isDevMode())

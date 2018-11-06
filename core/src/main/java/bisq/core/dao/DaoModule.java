@@ -26,12 +26,12 @@ import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.blindvote.network.RepublishGovernanceDataHandler;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
-import bisq.core.dao.governance.bond.lockup.LockupService;
-import bisq.core.dao.governance.bond.reputation.BondedReputationService;
-import bisq.core.dao.governance.bond.reputation.MyBondedReputationService;
+import bisq.core.dao.governance.bond.lockup.LockupTxService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
-import bisq.core.dao.governance.bond.unlock.UnlockService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
@@ -186,12 +186,12 @@ public class DaoModule extends AppModule {
         bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
 
         // Bonds
-        bind(LockupService.class).in(Singleton.class);
-        bind(UnlockService.class).in(Singleton.class);
-        bind(BondedRolesService.class).in(Singleton.class);
-        bind(BondedReputationService.class).in(Singleton.class);
+        bind(LockupTxService.class).in(Singleton.class);
+        bind(UnlockTxService.class).in(Singleton.class);
+        bind(BondedRolesRepository.class).in(Singleton.class);
+        bind(BondedReputationRepository.class).in(Singleton.class);
         bind(MyReputationListService.class).in(Singleton.class);
-        bind(MyBondedReputationService.class).in(Singleton.class);
+        bind(MyBondedReputationRepository.class).in(Singleton.class);
 
         // Asset
         bind(AssetService.class).in(Singleton.class);

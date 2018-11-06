@@ -19,7 +19,7 @@ package bisq.core.dao.node.parser;
 
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
@@ -107,9 +107,9 @@ class OpReturnParser {
             case LOCKUP:
                 if (!BondConsensus.hasOpReturnDataValidLength(opReturnData))
                     return TxOutputType.INVALID_OUTPUT;
-                Optional<LockupType> lockupType = BondConsensus.getLockupType(opReturnData);
-                if (!lockupType.isPresent()) {
-                    log.warn("No lockupType found for lockup tx, opReturnData=" + Utilities.encodeToHex(opReturnData));
+                Optional<LockupReason> optionalLockupReason = BondConsensus.getLockupReason(opReturnData);
+                if (!optionalLockupReason.isPresent()) {
+                    log.warn("No lockupReason found for lockup tx, opReturnData=" + Utilities.encodeToHex(opReturnData));
                     return TxOutputType.INVALID_OUTPUT;
                 }
 

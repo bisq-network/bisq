@@ -33,11 +33,11 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class MyReputationList extends PersistableList<MyReputation> {
 
-    public MyReputationList(List<MyReputation> list) {
+    private MyReputationList(List<MyReputation> list) {
         super(list);
     }
 
-    public MyReputationList() {
+    MyReputationList() {
         super();
     }
 
@@ -51,7 +51,7 @@ public class MyReputationList extends PersistableList<MyReputation> {
         return PB.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
     }
 
-    public PB.MyReputationList.Builder getBuilder() {
+    private PB.MyReputationList.Builder getBuilder() {
         return PB.MyReputationList.newBuilder()
                 .addAllMyReputation(getList().stream()
                         .map(MyReputation::toProtoMessage)

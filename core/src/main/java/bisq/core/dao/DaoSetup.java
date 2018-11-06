@@ -20,10 +20,10 @@ package bisq.core.dao;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
-import bisq.core.dao.governance.bond.reputation.BondedReputationService;
-import bisq.core.dao.governance.bond.reputation.MyBondedReputationService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -60,10 +60,10 @@ public class DaoSetup {
                     VoteRevealService voteRevealService,
                     VoteResultService voteResultService,
                     MissingDataRequestService missingDataRequestService,
-                    BondedReputationService bondedReputationService,
-                    BondedRolesService bondedRolesService,
+                    BondedReputationRepository bondedReputationRepository,
+                    BondedRolesRepository bondedRolesRepository,
                     MyReputationListService myReputationListService,
-                    MyBondedReputationService myBondedReputationService,
+                    MyBondedReputationRepository myBondedReputationRepository,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
 
@@ -79,10 +79,10 @@ public class DaoSetup {
         daoSetupServices.add(voteRevealService);
         daoSetupServices.add(voteResultService);
         daoSetupServices.add(missingDataRequestService);
-        daoSetupServices.add(bondedReputationService);
-        daoSetupServices.add(bondedRolesService);
+        daoSetupServices.add(bondedReputationRepository);
+        daoSetupServices.add(bondedRolesRepository);
         daoSetupServices.add(myReputationListService);
-        daoSetupServices.add(myBondedReputationService);
+        daoSetupServices.add(myBondedReputationRepository);
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(bsqNodeProvider.getBsqNode());

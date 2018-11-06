@@ -17,14 +17,17 @@
 
 package bisq.core.dao.governance.bond;
 
-// Used in string properties ("dao.bond.bondState.*")
+/**
+ * Holds the different states of a bond.
+ * Used also in string properties ("dao.bond.bondState.*")
+ */
 public enum BondState {
-    READY_FOR_LOCKUP,       // Accepted by voting but no lockup tx made yet.
+    READY_FOR_LOCKUP,       // Accepted by voting (if role) but no lockup tx made yet.
     LOCKUP_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
     LOCKUP_TX_CONFIRMED,
     UNLOCK_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
     UNLOCK_TX_CONFIRMED,
-    UNLOCKING,              // lock time not expired
-    UNLOCKED,
-    CONFISCATED
+    UNLOCKING,              // Lock time still not expired
+    UNLOCKED,               // Fully unlocked
+    CONFISCATED             // Bond got confiscated by DAO voting
 }

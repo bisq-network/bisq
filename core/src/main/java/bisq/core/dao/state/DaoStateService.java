@@ -19,7 +19,6 @@ package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.governance.bond.ConfiscateBond;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -742,8 +741,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     // Confiscate bond
-    public void confiscateBond(ConfiscateBond confiscateBond) {
-        String lockupTxId = confiscateBond.getLockupTxId();
+    public void confiscateBond(String lockupTxId) {
         Optional<TxOutput> optionalTxOutput = getLockupTxOutput(lockupTxId);
         if (optionalTxOutput.isPresent()) {
             TxOutput lockupTxOutput = optionalTxOutput.get();

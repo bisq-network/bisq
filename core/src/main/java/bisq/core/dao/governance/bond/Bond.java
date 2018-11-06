@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.bond;
 
-import bisq.core.locale.Res;
+import java.util.Objects;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +25,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 /**
- * Base class for BondedRole and BondedAsset. Holds the bond state of the bonded asset.
+ * Base class for BondedRole and BondedReputation. Holds the state of the bonded asset.
  */
 @Getter
 public abstract class Bond<T extends BondedAsset> {
@@ -48,8 +48,7 @@ public abstract class Bond<T extends BondedAsset> {
     @Setter
     private int lockTime;
 
-
-    public Bond(T bondedAsset) {
+    protected Bond(T bondedAsset) {
         this.bondedAsset = bondedAsset;
     }
 
@@ -58,8 +57,26 @@ public abstract class Bond<T extends BondedAsset> {
                 bondState != BondState.UNLOCKED;
     }
 
-    public String getDisplayString() {
-        return Res.get("dao.bonding.info", lockupTxId, getBondedAsset().getDisplayString());
+    // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
+    // The equals and hashCode methods cannot be overwritten in Enums.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Bond)) return false;
+        Bond<?> bond = (Bond<?>) o;
+        return amount == bond.amount &&
+                lockupDate == bond.lockupDate &&
+                unlockDate == bond.unlockDate &&
+                lockTime == bond.lockTime &&
+                Objects.equals(bondedAsset, bond.bondedAsset) &&
+                Objects.equals(lockupTxId, bond.lockupTxId) &&
+                Objects.equals(unlockTxId, bond.unlockTxId) &&
+                bondState.name().equals(bond.bondState.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bondedAsset, lockupTxId, unlockTxId, bondState.name(), amount, lockupDate, unlockDate, lockTime);
     }
 
     @Override
@@ -72,6 +89,7 @@ public abstract class Bond<T extends BondedAsset> {
                 ",\n     amount=" + amount +
                 ",\n     lockupDate=" + lockupDate +
                 ",\n     unlockDate=" + unlockDate +
+                ",\n     lockTime=" + lockTime +
                 "\n}";
     }
 }

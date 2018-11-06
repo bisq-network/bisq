@@ -35,12 +35,18 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * Service for publishing the unlock transaction.
+ */
 @Slf4j
-public class UnlockService {
+public class UnlockTxService {
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -52,23 +58,22 @@ public class UnlockService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public UnlockService(WalletsManager walletsManager,
-                         BsqWalletService bsqWalletService,
-                         BtcWalletService btcWalletService,
-                         DaoStateService daoStateService) {
+    public UnlockTxService(WalletsManager walletsManager,
+                           BsqWalletService bsqWalletService,
+                           BtcWalletService btcWalletService,
+                           DaoStateService daoStateService) {
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.daoStateService = daoStateService;
     }
 
-    public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
-                                ExceptionHandler exceptionHandler) {
+    public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
         try {
-            TxOutput lockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId).get();
-            final Transaction unlockTx = getUnlockTx(lockupTxOutput);
-
-            //noinspection Duplicates
+            Optional<TxOutput> optionalLockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId);
+            checkArgument(optionalLockupTxOutput.isPresent(), "lockupTxOutput must be present");
+            TxOutput lockupTxOutput = optionalLockupTxOutput.get();
+            Transaction unlockTx = getUnlockTx(lockupTxOutput);
             walletsManager.publishAndCommitBsqTx(unlockTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -94,8 +99,7 @@ public class UnlockService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedUnlockTx(lockupTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, null);
-        final Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
-
+        Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
         log.info("Unlock tx: " + transaction);
         return transaction;
     }

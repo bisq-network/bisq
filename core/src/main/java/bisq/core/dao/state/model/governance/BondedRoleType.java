@@ -21,10 +21,14 @@ import bisq.core.locale.Res;
 
 import lombok.Getter;
 
-// Data here must not be changed as it would break backward compatibility! In case we need to change we need to add a new
-// entry and maintain the old one. Once all the role holders of an old deprecated role have revoked the role might get removed.
 
-// Add entry to translation file "dao.bond.bondedRoleType...."
+/**
+ * Data here must not be changed as it would break backward compatibility! In case we need to change we need to add a
+ * new entry and maintain the old one. Once all the role holders of an old deprecated role have revoked the
+ * role might get removed.
+ *
+ * Add entry to translation file "dao.bond.bondedRoleType...."
+ */
 public enum BondedRoleType {
     // admins
     GITHUB_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/16", true),

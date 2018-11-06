@@ -17,33 +17,32 @@
 
 package bisq.core.dao.governance.bond.lockup;
 
-import bisq.core.locale.Res;
-
 import java.util.Arrays;
 import java.util.Optional;
 
 import lombok.Getter;
 
-public enum LockupType {
+/**
+ * Reason for locking up a bond.
+ */
+public enum LockupReason {
     BONDED_ROLE((byte) 0x01),
     REPUTATION((byte) 0x02);
 
     @Getter
-    private byte type;
+    private byte id;
 
-    LockupType(byte type) {
-        this.type = type;
+    LockupReason(byte id) {
+        this.id = id;
     }
 
-    public String getDisplayString() {
+  /*  public String getDisplayString() {
         return Res.get("dao.bond.lockupType." + name());
-    }
+    }*/
 
-    public static Optional<LockupType> getLockupType(byte type) {
-        return Arrays.stream(LockupType.values())
-                .filter(lockupType -> lockupType.type == type)
-                .map(Optional::of)
-                .findAny()
-                .orElse(Optional.empty());
+    public static Optional<LockupReason> getLockupReason(byte id) {
+        return Arrays.stream(LockupReason.values())
+                .filter(lockupType -> lockupType.id == id)
+                .findAny();
     }
 }

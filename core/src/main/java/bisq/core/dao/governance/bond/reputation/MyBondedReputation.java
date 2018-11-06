@@ -23,7 +23,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
- * Wrapper for reputation which contains the mutable state of a bonded reputation. Only kept in memory.
+ * Wrapper for reputation which contains the mutable state of my bonded reputation. Only kept in memory.
+ * As it carries MyReputation it has access to the private salt data.
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)

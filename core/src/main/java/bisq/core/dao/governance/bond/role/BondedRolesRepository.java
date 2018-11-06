@@ -18,10 +18,10 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.governance.bond.Bond;
-import bisq.core.dao.governance.bond.BondService;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.BondRepository;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
@@ -30,6 +30,7 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,17 +39,17 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Manages bonded roles if they got accepted by voting.
+ * Collect bonded roles from the evaluatedProposals from the daoState and provides access to the collection.
  */
 @Slf4j
-public class BondedRolesService extends BondService<BondedRole, Role> {
+public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedRolesService(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
+    public BondedRolesRepository(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
         super(daoStateService, bsqWalletService);
     }
 
@@ -67,12 +68,6 @@ public class BondedRolesService extends BondService<BondedRole, Role> {
                 .anyMatch(myWalletTransactionIds::contains);
     }
 
-    public Optional<BondedRoleType> getBondedRoleType(String lockUpTxId) {
-        return findBondByLockupTxId(lockUpTxId)
-                .map(Bond::getBondedAsset)
-                .map(Role::getBondedRoleType);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -86,6 +81,27 @@ public class BondedRolesService extends BondService<BondedRole, Role> {
     @Override
     protected Stream<Role> getBondedAssetStream() {
         return getBondedRoleProposalStream().map(RoleProposal::getRole);
+    }
+
+    @Override
+    protected void updateBond(BondedRole bond, Role bondedAsset, TxOutput lockupTxOutput) {
+        // Lets see if we have a lock up tx.
+        String lockupTxId = lockupTxOutput.getTxId();
+        daoStateService.getTx(lockupTxId).ifPresent(lockupTx -> {
+            byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
+            // We used the hash of th bonded bondedAsset object as our hash in OpReturn of the lock up tx to have a
+            // unique binding of the tx to the data object.
+            byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
+            Optional<Role> candidate = findBondedAssetByHash(hash);
+            if (candidate.isPresent() && bondedAsset.equals(candidate.get()))
+                applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
+        });
+    }
+
+    private Optional<Role> findBondedAssetByHash(byte[] hash) {
+        return getBondedAssetStream()
+                .filter(bondedAsset -> Arrays.equals(bondedAsset.getHash(), hash))
+                .findAny();
     }
 
     private Stream<RoleProposal> getBondedRoleProposalStream() {

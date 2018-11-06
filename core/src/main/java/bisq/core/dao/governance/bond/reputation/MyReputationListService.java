@@ -31,10 +31,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Manages the persistence of myReputation objects.
+ */
 @Slf4j
 public class MyReputationListService implements PersistedDataHost, DaoSetupService {
 
-    public interface MyReputationListChangeListener {
+    @SuppressWarnings("unused")
+    interface MyReputationListChangeListener {
         void onListChanged(List<MyReputation> list);
     }
 
@@ -88,10 +92,6 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListener(MyReputationListChangeListener listener) {
-        listeners.add(listener);
-    }
-
     public void addReputation(MyReputation reputation) {
         if (!myReputationList.contains(reputation)) {
             myReputationList.add(reputation);
@@ -101,6 +101,11 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
 
     public List<MyReputation> getMyReputationList() {
         return myReputationList.getList();
+    }
+
+    @SuppressWarnings("unused")
+    public void addListener(MyReputationListChangeListener listener) {
+        listeners.add(listener);
     }
 
 

@@ -28,7 +28,7 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
@@ -75,7 +75,7 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BsqFormatter bsqFormatter;
     private final BsqValidator bsqValidator;
     private final BondingViewUtils bondingViewUtils;
-    private final BondedRolesService bondedRolesService;
+    private final BondedRolesRepository bondedRolesRepository;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
@@ -97,14 +97,14 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                       BsqFormatter bsqFormatter,
                       BsqValidator bsqValidator,
                       BondingViewUtils bondingViewUtils,
-                      BondedRolesService bondedRolesService,
+                      BondedRolesRepository bondedRolesRepository,
                       DaoFacade daoFacade,
                       Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqValidator = bsqValidator;
         this.bondingViewUtils = bondingViewUtils;
-        this.bondedRolesService = bondedRolesService;
+        this.bondedRolesRepository = bondedRolesRepository;
         this.daoFacade = daoFacade;
         this.preferences = preferences;
     }
@@ -208,7 +208,7 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                 .map(bond -> {
                     return new BondListItem(bond,
                             daoFacade,
-                            bondedRolesService,
+                            bondedRolesRepository,
                             bondingViewUtils,
                             bsqFormatter);
                 })

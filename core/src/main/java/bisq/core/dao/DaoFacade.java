@@ -25,16 +25,16 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.Bond;
-import bisq.core.dao.governance.bond.lockup.LockupService;
-import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.bond.lockup.LockupTxService;
 import bisq.core.dao.governance.bond.reputation.BondedReputation;
-import bisq.core.dao.governance.bond.reputation.BondedReputationService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
-import bisq.core.dao.governance.bond.reputation.MyBondedReputationService;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRole;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
-import bisq.core.dao.governance.bond.unlock.UnlockService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.param.Param;
@@ -119,12 +119,12 @@ public class DaoFacade implements DaoSetupService {
     private final RoleProposalFactory roleProposalFactory;
     private final GenericProposalFactory genericProposalFactory;
     private final RemoveAssetProposalFactory removeAssetProposalFactory;
-    private final BondedRolesService bondedRolesService;
-    private final BondedReputationService bondedReputationService;
+    private final BondedRolesRepository bondedRolesRepository;
+    private final BondedReputationRepository bondedReputationRepository;
     private final MyReputationListService myReputationListService;
-    private final MyBondedReputationService myBondedReputationService;
-    private final LockupService lockupService;
-    private final UnlockService unlockService;
+    private final MyBondedReputationRepository myBondedReputationRepository;
+    private final LockupTxService lockupTxService;
+    private final UnlockTxService unlockTxService;
     private final DaoStateStorageService daoStateStorageService;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
@@ -145,12 +145,12 @@ public class DaoFacade implements DaoSetupService {
                      RoleProposalFactory roleProposalFactory,
                      GenericProposalFactory genericProposalFactory,
                      RemoveAssetProposalFactory removeAssetProposalFactory,
-                     BondedRolesService bondedRolesService,
-                     BondedReputationService bondedReputationService,
+                     BondedRolesRepository bondedRolesRepository,
+                     BondedReputationRepository bondedReputationRepository,
                      MyReputationListService myReputationListService,
-                     MyBondedReputationService myBondedReputationService,
-                     LockupService lockupService,
-                     UnlockService unlockService,
+                     MyBondedReputationRepository myBondedReputationRepository,
+                     LockupTxService lockupTxService,
+                     UnlockTxService unlockTxService,
                      DaoStateStorageService daoStateStorageService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
@@ -167,12 +167,12 @@ public class DaoFacade implements DaoSetupService {
         this.roleProposalFactory = roleProposalFactory;
         this.genericProposalFactory = genericProposalFactory;
         this.removeAssetProposalFactory = removeAssetProposalFactory;
-        this.bondedRolesService = bondedRolesService;
-        this.bondedReputationService = bondedReputationService;
+        this.bondedRolesRepository = bondedRolesRepository;
+        this.bondedReputationRepository = bondedReputationRepository;
         this.myReputationListService = myReputationListService;
-        this.myBondedReputationService = myBondedReputationService;
-        this.lockupService = lockupService;
-        this.unlockService = unlockService;
+        this.myBondedReputationRepository = myBondedReputationRepository;
+        this.lockupTxService = lockupTxService;
+        this.unlockTxService = unlockTxService;
         this.daoStateStorageService = daoStateStorageService;
     }
 
@@ -292,7 +292,7 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public List<BondedRole> getBondedRoles() {
-        return bondedRolesService.getBonds();
+        return bondedRolesRepository.getBonds();
     }
 
     // Show fee
@@ -492,14 +492,14 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Bonding
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, byte[] hash,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash,
                                 Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
-        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, hash, resultHandler, exceptionHandler);
+        lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
                                 ExceptionHandler exceptionHandler) {
-        unlockService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
+        unlockTxService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
     }
 
     public long getTotalLockupAmount() {
@@ -519,19 +519,19 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public List<BondedRole> getActiveBondedRoles() {
-        return bondedRolesService.getActiveBonds();
+        return bondedRolesRepository.getActiveBonds();
     }
 
     public List<Bond> getAllBonds() {
-        List<BondedReputation> bondedReputations = bondedReputationService.getAllBonds();
-        List<BondedRole> bondedRoles = bondedRolesService.getAllBonds();
+        List<BondedReputation> bondedReputations = bondedReputationRepository.getBonds();
+        List<BondedRole> bondedRoles = bondedRolesRepository.getBonds();
         List<Bond> bonds = new ArrayList<>(bondedReputations);
         bonds.addAll(bondedRoles);
         return bonds;
     }
 
     public List<MyBondedReputation> getMyBondedReputations() {
-        return myBondedReputationService.getMyBondedReputations();
+        return myBondedReputationRepository.getMyBondedReputations();
     }
 
 
@@ -661,7 +661,7 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public boolean isMyRole(Role role) {
-        return bondedRolesService.isMyRole(role);
+        return bondedRolesRepository.isMyRole(role);
     }
 
     public Optional<Bond> getBondByLockupTxId(String lockupTxId) {

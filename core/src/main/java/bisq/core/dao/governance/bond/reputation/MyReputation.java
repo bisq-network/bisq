@@ -37,13 +37,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
+/**
+ * MyReputation is persisted locally and carries the private salt data. In contrast to Reputation which is the public
+ * data everyone can derive from the blockchain data (hash in opReturn).
+ */
 @Immutable
 @Value
 @Slf4j
 public final class MyReputation implements PersistablePayload, NetworkPayload, BondedAsset {
+    // Uid is needed to be sure that 2 objects with the same salt are kept separate.
     private final String uid;
     private final byte[] salt;
-    private final transient byte[] hash; // not persisted as it is derived from salt. Stored for caching purpose only.
+    private final transient byte[] hash; // Not persisted as it is derived from salt. Stored for caching purpose only.
 
     public MyReputation(byte[] salt) {
         this(UUID.randomUUID().toString(), salt);

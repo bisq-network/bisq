@@ -20,7 +20,7 @@ package bisq.core.dao.governance.bond.reputation;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.governance.bond.BondService;
+import bisq.core.dao.governance.bond.BondRepository;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.state.DaoStateService;
 
@@ -36,8 +36,11 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Collect MyBondedReputations from the myReputationListService and provides access to the collection.
+ */
 @Slf4j
-public class MyBondedReputationService implements DaoSetupService {
+public class MyBondedReputationRepository implements DaoSetupService {
     private final DaoStateService daoStateService;
     private final BsqWalletService bsqWalletService;
     private final MyReputationListService myReputationListService;
@@ -48,9 +51,9 @@ public class MyBondedReputationService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MyBondedReputationService(DaoStateService daoStateService,
-                                     BsqWalletService bsqWalletService,
-                                     MyReputationListService myReputationListService) {
+    public MyBondedReputationRepository(DaoStateService daoStateService,
+                                        BsqWalletService bsqWalletService,
+                                        MyReputationListService myReputationListService) {
         this.daoStateService = daoStateService;
         this.bsqWalletService = bsqWalletService;
         this.myReputationListService = myReputationListService;
@@ -75,25 +78,24 @@ public class MyBondedReputationService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<MyBondedReputation> getMyBondedReputations() {
-        // It can be that the same salt/hash is in several lockupTxs, so we use a map to eliminate duplicates by the
-        // collection algorithm.
-        Map<String, MyBondedReputation> map = new HashMap<>();
+        // It can be that the same salt/hash is in several lockupTxs, so we use the bondByLockupTxIdMap to eliminate
+        // duplicates by the collection algorithm.
+        Map<String, MyBondedReputation> bondByLockupTxIdMap = new HashMap<>();
         myReputationListService.getMyReputationList().stream()
                 .flatMap(this::getMyBondedReputation)
-                .forEach(e -> map.putIfAbsent(e.getLockupTxId(), e));
+                .forEach(e -> bondByLockupTxIdMap.putIfAbsent(e.getLockupTxId(), e));
 
-        return map.values().stream()
+        return bondByLockupTxIdMap.values().stream()
                 .peek(myBondedReputation -> {
-                    if ((myBondedReputation.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(myBondedReputation.getLockupTxId())) ||
-                            (myBondedReputation.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(myBondedReputation.getUnlockTxId()))) {
+                    if (BondRepository.isConfiscated(myBondedReputation, daoStateService)) {
                         myBondedReputation.setBondState(BondState.CONFISCATED);
                     } else {
                         // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
                         // its there.
-                        if (BondService.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
+                        if (BondRepository.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
                                 myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
                             myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);
-                        } else if (BondService.isUnlockTxUnconfirmed(bsqWalletService, daoStateService, myBondedReputation.getBondedAsset()) &&
+                        } else if (BondRepository.isUnlockTxUnconfirmed(bsqWalletService, daoStateService, myBondedReputation.getBondedAsset()) &&
                                 myBondedReputation.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
                             myBondedReputation.setBondState(BondState.UNLOCK_TX_PENDING);
                         }
@@ -110,9 +112,10 @@ public class MyBondedReputationService implements DaoSetupService {
                             .map(lockupTx -> {
                                 byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
                                 byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
+                                // There could be multiple txs with the same hash, so we collect a stream and not use an optional.
                                 if (Arrays.equals(hash, myReputation.getHash())) {
                                     MyBondedReputation myBondedReputation = new MyBondedReputation(myReputation);
-                                    BondService.applyBondState(daoStateService, myBondedReputation, lockupTx, lockupTxOutput);
+                                    BondRepository.applyBondState(daoStateService, myBondedReputation, lockupTx, lockupTxOutput);
                                     return myBondedReputation;
                                 } else {
                                     return null;

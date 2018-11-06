@@ -30,6 +30,8 @@ import javax.annotation.concurrent.Immutable;
 
 /**
  * Reputation objects we found on the blockchain. We only know the hash of it.
+ * In contrast to MyReputation which represents the object we created and contains the
+ * private salt data.
  */
 @Immutable
 @Value

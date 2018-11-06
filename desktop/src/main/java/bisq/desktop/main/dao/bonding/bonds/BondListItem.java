@@ -22,7 +22,7 @@ import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.role.BondedRole;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 class BondListItem implements DaoStateListener {
     private final Bond bond;
     private final DaoFacade daoFacade;
-    private final BondedRolesService bondedRolesService;
+    private final BondedRolesRepository bondedRolesRepository;
     private final BondingViewUtils bondingViewUtils;
     private final BsqFormatter bsqFormatter;
     private final String bondType;
@@ -64,12 +64,12 @@ class BondListItem implements DaoStateListener {
 
     BondListItem(Bond bond,
                  DaoFacade daoFacade,
-                 BondedRolesService bondedRolesService,
+                 BondedRolesRepository bondedRolesRepository,
                  BondingViewUtils bondingViewUtils,
                  BsqFormatter bsqFormatter) {
         this.bond = bond;
         this.daoFacade = daoFacade;
-        this.bondedRolesService = bondedRolesService;
+        this.bondedRolesRepository = bondedRolesRepository;
         this.bondingViewUtils = bondingViewUtils;
         this.bsqFormatter = bsqFormatter;
 

@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.bond;
 
-import bisq.core.dao.governance.bond.lockup.LockupType;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 
 import bisq.common.app.Version;
@@ -44,13 +44,13 @@ public class BondConsensus {
     @Getter
     private static int maxLockTime = 65535;
 
-    public static byte[] getLockupOpReturnData(int lockTime, LockupType type, byte[] hash) throws IOException {
+    public static byte[] getLockupOpReturnData(int lockTime, LockupReason type, byte[] hash) throws IOException {
         // PushData of <= 4 bytes is converted to int when returned from bitcoind and not handled the way we
         // require by btcd-cli4j, avoid opReturns with 4 bytes or less
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write(OpReturnType.LOCKUP.getType());
             outputStream.write(Version.LOCKUP);
-            outputStream.write(type.getType());
+            outputStream.write(type.getId());
             byte[] bytes = Utilities.integerToByteArray(lockTime, 2);
             outputStream.write(bytes[0]);
             outputStream.write(bytes[1]);
@@ -72,19 +72,19 @@ public class BondConsensus {
         return Utilities.byteArrayToInteger(Arrays.copyOfRange(opReturnData, 3, 5));
     }
 
+    public static byte[] getHashFromOpReturnData(byte[] opReturnData) {
+        return Arrays.copyOfRange(opReturnData, 5, 25);
+    }
+
     public static boolean isLockTimeInValidRange(int lockTime) {
         return lockTime >= BondConsensus.getMinLockTime() && lockTime <= BondConsensus.getMaxLockTime();
     }
 
-    public static Optional<LockupType> getLockupType(byte[] opReturnData) {
-        return LockupType.getLockupType(opReturnData[2]);
+    public static Optional<LockupReason> getLockupReason(byte[] opReturnData) {
+        return LockupReason.getLockupReason(opReturnData[2]);
     }
 
     public static boolean isLockTimeOver(long unlockBlockHeight, long currentBlockHeight) {
         return currentBlockHeight >= unlockBlockHeight;
-    }
-
-    public static byte[] getHashFromOpReturnData(byte[] opReturnData) {
-        return Arrays.copyOfRange(opReturnData, 5, 25);
     }
 }
