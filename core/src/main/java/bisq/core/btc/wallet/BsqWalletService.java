@@ -64,6 +64,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -297,6 +298,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public ObservableList<Transaction> getWalletTransactions() {
         return walletTransactions;
+    }
+
+    public Stream<Transaction> getPendingWalletTransactionsStream() {
+        return walletTransactions.stream()
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING);
     }
 
     private void updateBsqWalletTransactions() {

@@ -29,6 +29,8 @@ import io.bisq.generated.protobuffer.PB;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +41,12 @@ import javax.annotation.concurrent.Immutable;
 @Value
 @Slf4j
 public final class MyReputation implements PersistablePayload, NetworkPayload, BondedAsset {
+    private final String uid;
     private final byte[] salt;
     private final transient byte[] hash; // not persisted as it is derived from salt. Stored for caching purpose only.
 
-
     public MyReputation(byte[] salt) {
-        this.salt = salt;
-        this.hash = Hash.getSha256Ripemd160hash(salt);
+        this(UUID.randomUUID().toString(), salt);
     }
 
 
@@ -53,13 +54,22 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private MyReputation(String uid, byte[] salt) {
+        this.uid = uid;
+        this.salt = salt;
+        this.hash = Hash.getSha256Ripemd160hash(salt);
+    }
+
     @Override
     public PB.MyReputation toProtoMessage() {
-        return PB.MyReputation.newBuilder().setSalt(ByteString.copyFrom(salt)).build();
+        return PB.MyReputation.newBuilder()
+                .setUid(uid)
+                .setSalt(ByteString.copyFrom(salt))
+                .build();
     }
 
     public static MyReputation fromProto(PB.MyReputation proto) {
-        return new MyReputation(proto.getSalt().toByteArray());
+        return new MyReputation(proto.getUid(), proto.getSalt().toByteArray());
     }
 
 
@@ -88,23 +98,25 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
         if (!(o instanceof MyReputation)) return false;
         if (!super.equals(o)) return false;
         MyReputation that = (MyReputation) o;
-        return Arrays.equals(hash, that.hash);
+        return Objects.equals(uid, that.uid) &&
+                Arrays.equals(salt, that.salt);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Arrays.hashCode(hash);
+
+        int result = Objects.hash(super.hashCode(), uid);
+        result = 31 * result + Arrays.hashCode(salt);
         return result;
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String toString() {
         return "MyReputation{" +
+                "\n     uid=" + uid +
                 "\n     salt=" + Utilities.bytesAsHexString(salt) +
                 "\n     hash=" + Utilities.bytesAsHexString(hash) +
                 "\n}";

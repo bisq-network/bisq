@@ -90,26 +90,28 @@ public class BondedReputationService extends BondService<BondedReputation, Reput
 
     @Override
     protected void updateMap() {
-        bondByUidMap.clear();
+        //TODO
+     /*   bondByUidMap.clear();
         getBondedReputationStream().forEach(bondedReputation -> {
             bondByUidMap.put(bondedReputation.getBondedAsset().getUid(), bondedReputation);
-        });
+        });*/
     }
 
 
     private Stream<BondedReputation> getBondedReputationStream() {
         return daoStateService.getLockupTxOutputs().stream()
                 .map(lockupTxOutput -> {
-                    String txId = lockupTxOutput.getTxId();
-                    // long time = daoStateService.getTx(txId).map(BaseTx::getTime).orElse(0L);
+                    String lockupTxId = lockupTxOutput.getTxId();
+                    // long time = daoStateService.getTx(lockupTxId).map(BaseTx::getTime).orElse(0L);
                     // lockupTxOutput is first output, but we need the data from the opReturn
-                    Optional<TxOutput> optionalOpReturnTxOutput = daoStateService.getLockupOpReturnTxOutput(txId);
+                    Optional<TxOutput> optionalOpReturnTxOutput = daoStateService.getLockupOpReturnTxOutput(lockupTxId);
                     if (optionalOpReturnTxOutput.isPresent()) {
                         TxOutput opReturnTxOutput = optionalOpReturnTxOutput.get();
                         byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnTxOutput.getOpReturnData());
                         Reputation reputation = new Reputation(hash);
                         BondedReputation bondedReputation = new BondedReputation(reputation);
-                        updateBond(bondedReputation, reputation, lockupTxOutput);
+                        //TODO
+                        //updateBond(bondedReputation, reputation, lockupTxOutput);
                         return bondedReputation;
                     } else {
                         return null;
@@ -117,10 +119,5 @@ public class BondedReputationService extends BondService<BondedReputation, Reput
 
                 })
                 .filter(Objects::nonNull);
-    }
-
-    @Override
-    public Optional<Reputation> findBondedAssetByHash(byte[] hash) {
-        return Optional.of(new Reputation(hash));
     }
 }

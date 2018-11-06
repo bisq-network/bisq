@@ -25,7 +25,6 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.Bond;
-import bisq.core.dao.governance.bond.BondedAsset;
 import bisq.core.dao.governance.bond.lockup.LockupService;
 import bisq.core.dao.governance.bond.lockup.LockupType;
 import bisq.core.dao.governance.bond.reputation.BondedReputation;
@@ -493,9 +492,9 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Bonding
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondedAsset bondedAsset,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, byte[] hash,
                                 Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
-        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondedAsset, resultHandler, exceptionHandler);
+        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, hash, resultHandler, exceptionHandler);
     }
 
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,

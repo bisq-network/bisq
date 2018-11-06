@@ -17,26 +17,29 @@
 
 package bisq.core.dao.governance.bond.reputation;
 
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.BondService;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.SpentInfo;
-import bisq.core.dao.state.model.blockchain.TxType;
 
 import javax.inject.Inject;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MyBondedReputationService implements DaoSetupService {
     private final DaoStateService daoStateService;
+    private final BsqWalletService bsqWalletService;
     private final MyReputationListService myReputationListService;
 
 
@@ -46,8 +49,10 @@ public class MyBondedReputationService implements DaoSetupService {
 
     @Inject
     public MyBondedReputationService(DaoStateService daoStateService,
+                                     BsqWalletService bsqWalletService,
                                      MyReputationListService myReputationListService) {
         this.daoStateService = daoStateService;
+        this.bsqWalletService = bsqWalletService;
         this.myReputationListService = myReputationListService;
     }
 
@@ -70,15 +75,31 @@ public class MyBondedReputationService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<MyBondedReputation> getMyBondedReputations() {
-        return myReputationListService.getMyReputationList().stream()
-                .map(myReputation -> getMyBondedReputation(myReputation).orElse(null))
-                .filter(Objects::nonNull)
+        // It can be that the same salt/hash is in several lockupTxs, so we use a map to eliminate duplicates by the
+        // collection algorithm.
+        Map<String, MyBondedReputation> map = new HashMap<>();
+        myReputationListService.getMyReputationList().stream()
+                .flatMap(this::getMyBondedReputation)
+                .forEach(e -> map.putIfAbsent(e.getLockupTxId(), e));
+
+        return map.values().stream()
+                .peek(myBondedReputation -> {
+                    // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
+                    // its there.
+                    if (BondService.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
+                            myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
+                        myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);
+                    } else if (BondService.isUnlockTxUnconfirmed(bsqWalletService, daoStateService, myBondedReputation.getBondedAsset()) &&
+                            myBondedReputation.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
+                        myBondedReputation.setBondState(BondState.UNLOCK_TX_PENDING);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
-    private Optional<MyBondedReputation> getMyBondedReputation(MyReputation myReputation) {
+    private Stream<MyBondedReputation> getMyBondedReputation(MyReputation myReputation) {
         return daoStateService.getLockupTxOutputs().stream()
-                .map(lockupTxOutput -> {
+                .flatMap(lockupTxOutput -> {
                     String lockupTxId = lockupTxOutput.getTxId();
                     return daoStateService.getTx(lockupTxId)
                             .map(lockupTx -> {
@@ -86,40 +107,14 @@ public class MyBondedReputationService implements DaoSetupService {
                                 byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
                                 if (Arrays.equals(hash, myReputation.getHash())) {
                                     MyBondedReputation myBondedReputation = new MyBondedReputation(myReputation);
-                                    myBondedReputation.setLockTime(lockupTx.getLockTime());
-                                    myBondedReputation.setBondState(BondState.LOCKUP_TX_CONFIRMED);
-                                    myBondedReputation.setLockupTxId(lockupTx.getId());
-                                    // We use the tx time as we want to have a unique time for all users
-                                    myBondedReputation.setLockupDate(lockupTx.getTime());
-                                    myBondedReputation.setAmount(lockupTx.getLockedAmount());
-                                    if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
-                                        // Lockup is already spent (in unlock tx)
-                                        daoStateService.getSpentInfo(lockupTxOutput)
-                                                .map(SpentInfo::getTxId)
-                                                .flatMap(daoStateService::getTx)
-                                                .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
-                                                .ifPresent(unlockTx -> {
-                                                    // cross check if it is in daoStateService.getUnlockTxOutputs() ?
-                                                    String unlockTxId = unlockTx.getId();
-                                                    myBondedReputation.setUnlockTxId(unlockTxId);
-                                                    myBondedReputation.setBondState(BondState.UNLOCK_TX_CONFIRMED);
-                                                    myBondedReputation.setUnlockDate(unlockTx.getTime());
-                                                    boolean unlocking = daoStateService.isUnlocking(unlockTxId);
-                                                    if (unlocking) {
-                                                        myBondedReputation.setBondState(BondState.UNLOCKING);
-                                                    } else {
-                                                        myBondedReputation.setBondState(BondState.UNLOCKED);
-                                                    }
-                                                });
-                                    }
+                                    BondService.applyBondState(daoStateService, myBondedReputation, lockupTx, lockupTxOutput);
                                     return myBondedReputation;
                                 } else {
                                     return null;
                                 }
                             })
-                            .orElse(null);
+                            .stream();
                 })
-                .filter(Objects::nonNull)
-                .findAny();
+                .filter(Objects::nonNull);
     }
 }

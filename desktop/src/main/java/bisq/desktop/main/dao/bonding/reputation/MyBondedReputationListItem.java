@@ -85,10 +85,6 @@ class MyBondedReputationListItem implements DaoStateListener {
             if (myBondedReputation.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
                 bondingViewUtils.unLock(myBondedReputation.getLockupTxId(),
                         txId -> {
-                            myBondedReputation.setUnlockTxId(txId);
-                            myBondedReputation.setBondState(BondState.UNLOCK_TX_PENDING);
-                            update();
-                            button.setDisable(true);
                         });
             }
         });

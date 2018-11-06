@@ -87,8 +87,4 @@ public class BondConsensus {
     public static byte[] getHashFromOpReturnData(byte[] opReturnData) {
         return Arrays.copyOfRange(opReturnData, 5, 25);
     }
-
-    public static byte[] getHash(BondedAsset bondedAsset) {
-        return bondedAsset.getHash();
-    }
 }

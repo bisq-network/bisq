@@ -24,11 +24,11 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -124,35 +124,41 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
             // unique binding of the tx to the data object.
             byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
             Optional<R> candidate = findBondedAssetByHash(hash);
-            if (candidate.isPresent() && bondedAsset.equals(candidate.get())) {
-                bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
-                bond.setLockupTxId(lockupTx.getId());
-                // We use the tx time as we want to have a unique time for all users
-                bond.setLockupDate(lockupTx.getTime());
-                bond.setAmount(lockupTx.getLockedAmount());
-                bond.setLockTime(lockupTx.getLockTime());
-                if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
-                    // Lockup is already spent (in unlock tx)
-                    daoStateService.getSpentInfo(lockupTxOutput)
-                            .map(SpentInfo::getTxId)
-                            .flatMap(daoStateService::getTx)
-                            .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
-                            .ifPresent(unlockTx -> {
-                                // cross check if it is in daoStateService.getUnlockTxOutputs() ?
-                                String unlockTxId = unlockTx.getId();
-                                bond.setUnlockTxId(unlockTxId);
-                                bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
-                                bond.setUnlockDate(unlockTx.getTime());
-                                boolean unlocking = daoStateService.isUnlocking(unlockTxId);
-                                if (unlocking) {
-                                    bond.setBondState(BondState.UNLOCKING);
-                                } else {
-                                    bond.setBondState(BondState.UNLOCKED);
-                                }
-                            });
-                }
-            }
+            if (candidate.isPresent() && bondedAsset.equals(candidate.get()))
+                applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
         });
+    }
+
+    public static void applyBondState(DaoStateService daoStateService, Bond bond, Tx lockupTx, TxOutput lockupTxOutput) {
+        if (bond.getBondState() != BondState.LOCKUP_TX_PENDING || bond.getBondState() != BondState.UNLOCK_TX_PENDING)
+            bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
+
+        bond.setLockupTxId(lockupTx.getId());
+        // We use the tx time as we want to have a unique time for all users
+        bond.setLockupDate(lockupTx.getTime());
+        bond.setAmount(lockupTx.getLockedAmount());
+        bond.setLockTime(lockupTx.getLockTime());
+
+        if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
+            // Lockup is already spent (in unlock tx)
+            daoStateService.getSpentInfo(lockupTxOutput)
+                    .map(SpentInfo::getTxId)
+                    .flatMap(daoStateService::getTx)
+                    .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
+                    .ifPresent(unlockTx -> {
+                        // cross check if it is in daoStateService.getUnlockTxOutputs() ?
+                        String unlockTxId = unlockTx.getId();
+                        bond.setUnlockTxId(unlockTxId);
+                        bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
+                        bond.setUnlockDate(unlockTx.getTime());
+                        boolean unlocking = daoStateService.isUnlocking(unlockTxId);
+                        if (unlocking) {
+                            bond.setBondState(BondState.UNLOCKING);
+                        } else {
+                            bond.setBondState(BondState.UNLOCKED);
+                        }
+                    });
+        }
     }
 
     protected abstract T createBond(R bondedAsset);
@@ -196,28 +202,32 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    abstract protected Stream<R> getBondedAssetStream();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateBondStateFromUnconfirmedLockupTxs() {
-        getBondedAssetStream().filter(this::isLockupTxUnconfirmed)
+        getBondedAssetStream().filter(bondedAsset -> isLockupTxUnconfirmed(bsqWalletService, bondedAsset))
                 .map(bondedAsset -> bondByUidMap.get(bondedAsset.getUid()))
                 .filter(bond -> bond.getBondState() == BondState.READY_FOR_LOCKUP)
                 .forEach(bond -> bond.setBondState(BondState.LOCKUP_TX_PENDING));
     }
 
     private void updateBondStateFromUnconfirmedUnlockTxs() {
-        getBondedAssetStream().filter(this::isUnlockTxUnconfirmed)
+        getBondedAssetStream().filter(bondedAsset -> isUnlockTxUnconfirmed(bsqWalletService, daoStateService, bondedAsset))
                 .map(bondedAsset -> bondByUidMap.get(bondedAsset.getUid()))
                 .filter(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
                 .forEach(bond -> bond.setBondState(BondState.UNLOCK_TX_PENDING));
     }
 
-    abstract protected Stream<R> getBondedAssetStream();
-
-
-    public boolean isLockupTxUnconfirmed(R bondedAsset) {
-        return getPendingWalletTransactionsStream()
+    public static boolean isLockupTxUnconfirmed(BsqWalletService bsqWalletService, BondedAsset bondedAsset) {
+        return bsqWalletService.getPendingWalletTransactionsStream()
                 .map(transaction -> transaction.getOutputs().get(transaction.getOutputs().size() - 1))
                 .filter(lastOutput -> lastOutput.getScriptPubKey().isOpReturn())
                 .map(lastOutput -> lastOutput.getScriptPubKey().getChunks())
@@ -226,22 +236,19 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
-    private boolean isUnlockTxUnconfirmed(R bondedAsset) {
-        return getPendingWalletTransactionsStream()
+    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService, DaoStateService daoStateService, BondedAsset bondedAsset) {
+        return bsqWalletService.getPendingWalletTransactionsStream()
                 .filter(transaction -> transaction.getInputs().size() > 1)
-                .map(transaction -> transaction.getInputs().get(0))
+                .flatMap(transaction -> transaction.getInputs().stream()) // We need to iterate all inputs
                 .map(TransactionInput::getConnectedOutput)
                 .filter(Objects::nonNull)
+                .filter(transactionOutput -> transactionOutput.getIndex() == 0) // The output at the lockupTx must be index 0
                 .map(TransactionOutput::getParentTransaction)
                 .filter(Objects::nonNull)
                 .map(Transaction::getHashAsString)
-                .flatMap(lockupTxId -> daoStateService.getLockupOpReturnTxOutput(lockupTxId).stream())
+                .map(lockupTxId -> daoStateService.getLockupOpReturnTxOutput(lockupTxId).orElse(null))
+                .filter(Objects::nonNull)
                 .map(BaseTxOutput::getOpReturnData)
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
-    }
-
-    private Stream<Transaction> getPendingWalletTransactionsStream() {
-        return bsqWalletService.getWalletTransactions().stream()
-                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING);
     }
 }

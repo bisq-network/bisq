@@ -1547,7 +1547,8 @@ message Role {
 }
 
 message MyReputation {
-    bytes salt = 1;
+    string uid = 1;
+    bytes salt = 2;
 }
 
 message MyReputationList {

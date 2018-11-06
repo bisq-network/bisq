@@ -338,7 +338,7 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
                 .sorted(Comparator.comparing(MyBondedReputationListItem::getLockupDate).reversed())
                 .collect(Collectors.toList());
         observableList.setAll(items);
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
     }
 
 

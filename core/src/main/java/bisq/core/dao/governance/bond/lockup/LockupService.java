@@ -26,11 +26,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.governance.bond.BondedAsset;
-import bisq.core.dao.governance.bond.reputation.MyReputation;
-import bisq.core.dao.governance.bond.reputation.MyReputationListService;
-import bisq.core.dao.governance.bond.role.BondedRolesService;
-import bisq.core.dao.state.model.governance.Role;
 
 import bisq.common.handlers.ExceptionHandler;
 
@@ -53,8 +48,6 @@ public class LockupService {
     private final WalletsManager walletsManager;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final MyReputationListService myReputationListService;
-    private final BondedRolesService bondedRolesService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,31 +57,16 @@ public class LockupService {
     @Inject
     public LockupService(WalletsManager walletsManager,
                          BsqWalletService bsqWalletService,
-                         BtcWalletService btcWalletService,
-                         MyReputationListService myReputationListService,
-                         BondedRolesService bondedRolesService) {
+                         BtcWalletService btcWalletService) {
         this.walletsManager = walletsManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
-        this.myReputationListService = myReputationListService;
-        this.bondedRolesService = bondedRolesService;
     }
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondedAsset bondedAsset,
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, byte[] hash,
                                 Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
         checkArgument(lockTime <= BondConsensus.getMaxLockTime() &&
                 lockTime >= BondConsensus.getMinLockTime(), "lockTime not in rage");
-        if (bondedAsset instanceof Role) {
-            Role role = (Role) bondedAsset;
-            if (bondedRolesService.wasBondedAssetAlreadyBonded(role)) {
-                exceptionHandler.handleException(new RuntimeException("The role has been used already for a lockup tx."));
-                return;
-            }
-        } else if (bondedAsset instanceof MyReputation) {
-            myReputationListService.addReputation((MyReputation) bondedAsset);
-        }
-
-        byte[] hash = BondConsensus.getHash(bondedAsset);
         try {
             byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupType, hash);
             Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
