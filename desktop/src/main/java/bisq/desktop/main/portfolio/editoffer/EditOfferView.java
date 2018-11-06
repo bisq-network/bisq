@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.offer.MutableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -32,17 +33,20 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import com.google.inject.Inject;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
-import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
 
 @FxmlView
@@ -165,7 +169,11 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
     private void addConfirmEditGroup() {
 
         int tmpGridRow = 4;
-        final Tuple3<Button, BusyAnimation, Label> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
+        final Tuple4<Button, BusyAnimation, Label, HBox> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
+
+        final HBox editOfferConfirmationBox = editOfferTuple.forth;
+        editOfferConfirmationBox.setAlignment(Pos.CENTER_LEFT);
+        GridPane.setHalignment(editOfferConfirmationBox, HPos.LEFT);
 
         confirmButton = editOfferTuple.first;
         confirmButton.setMinHeight(40);
@@ -175,10 +183,11 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         busyAnimation = editOfferTuple.second;
         Label spinnerInfoLabel = editOfferTuple.third;
 
-        cancelButton = addButton(gridPane, tmpGridRow, Res.get("shared.cancel"));
+        cancelButton = new AutoTooltipButton(Res.get("shared.cancel"));
         cancelButton.setDefaultButton(false);
         cancelButton.setId("cancel-button");
         cancelButton.setOnAction(event -> close());
+        editOfferConfirmationBox.getChildren().add(cancelButton);
 
         confirmButton.setOnAction(e -> {
             if (model.isPriceInRange()) {

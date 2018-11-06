@@ -141,6 +141,10 @@ public class InfoInputTextField extends AnchorPane {
         return text.get();
     }
 
+    public final StringProperty textProperty() {
+        return text;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

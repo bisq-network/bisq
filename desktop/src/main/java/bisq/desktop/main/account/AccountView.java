@@ -53,6 +53,10 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.ListChangeListener;
+
+import java.util.List;
+
 @FxmlView
 public class AccountView extends ActivatableView<TabPane, Void> {
 
@@ -70,6 +74,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private ArbitratorRegistrationView arbitratorRegistrationView;
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
+    private ListChangeListener<Tab> tabListChangeListener;
 
     @Inject
     private AccountView(CachingViewLoader viewLoader, Navigation navigation) {
@@ -79,6 +84,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     @Override
     public void initialize() {
+
+        root.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
 
         fiatAccountsTab.setText(Res.get("account.menu.paymentAccount").toUpperCase());
         altcoinAccountsTab.setText(Res.get("account.menu.altCoinsAccountView").toUpperCase());
@@ -100,13 +107,17 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.R, event) &&
                     arbitratorRegistrationTab == null) {
                 arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration").toUpperCase());
-                arbitratorRegistrationTab.setClosable(false);
+                arbitratorRegistrationTab.setClosable(true);
                 root.getTabs().add(arbitratorRegistrationTab);
+
+                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
             }
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == fiatAccountsTab) {
+            if (arbitratorRegistrationTab != null) {
+                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
+            } else if (newValue == fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             } else if (newValue == altcoinAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
@@ -118,19 +129,33 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
             } else if (newValue == backupTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
-            } else if (newValue == arbitratorRegistrationTab) {
-                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
             } else {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             }
         };
+
+        tabListChangeListener = change -> {
+            change.next();
+            List<? extends Tab> removedTabs = change.getRemoved();
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(arbitratorRegistrationTab))
+                onArbitratorRegistrationTabRemoved();
+        };
+    }
+
+    private void onArbitratorRegistrationTabRemoved() {
+        arbitratorRegistrationTab = null;
+
+        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         navigation.addListener(navigationListener);
+
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
+        root.getTabs().addListener(tabListChangeListener);
+
         scene = root.getScene();
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -168,6 +193,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     protected void deactivate() {
         navigation.removeListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+        root.getTabs().removeListener(tabListChangeListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);

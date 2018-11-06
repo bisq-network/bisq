@@ -56,6 +56,7 @@ import bisq.core.util.BsqFormatter;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -72,6 +73,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -687,7 +689,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         revealTxIdContainer = tuple.third;
         voteFields.add(revealTxIdContainer);
 
-        Tuple3<Button, BusyAnimation, Label> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
+        Tuple4<Button, BusyAnimation, Label, HBox> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
         voteButtons.add(voteButton);

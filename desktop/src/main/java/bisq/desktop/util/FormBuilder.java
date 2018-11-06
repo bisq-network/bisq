@@ -190,7 +190,6 @@ public class FormBuilder {
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setRowIndex(label, rowIndex);
-        GridPane.setColumnSpan(label, 2);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(label);
         return label;
@@ -212,6 +211,10 @@ public class FormBuilder {
 
     public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, String title, double top) {
         return addTopLabelTextField(gridPane, rowIndex, title, "", top - 15);
+    }
+
+    public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTopLabelReadOnlyTextField(gridPane, rowIndex, title, value, 0);
     }
 
     public static Tuple3<Label, TextField, VBox> addTopLabelReadOnlyTextField(GridPane gridPane, int rowIndex, int columnIndex, String title, String value, double top) {
@@ -253,6 +256,42 @@ public class FormBuilder {
         //topLabelWithVBox.first.getStyleClass().add("jfx-text-field-top-label");
 
         return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Confirmation Fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, Label> addConfirmationLabelLabel(GridPane gridPane, int rowIndex, String title1, String title2) {
+        return addConfirmationLabelLabel(gridPane, rowIndex, title1, title2, 0);
+    }
+
+    public static Tuple2<Label, Label> addConfirmationLabelLabel(GridPane gridPane, int rowIndex, String title1, String title2, double top) {
+        Label label1 = addLabel(gridPane, rowIndex, title1);
+        label1.getStyleClass().add("confirmation-label");
+        Label label2 = addLabel(gridPane, rowIndex, title2);
+        label2.getStyleClass().add("confirmation-value");
+        GridPane.setColumnIndex(label2, 1);
+        GridPane.setMargin(label1, new Insets(top, 0, 0, 0));
+        GridPane.setHalignment(label1, HPos.LEFT);
+        GridPane.setMargin(label2, new Insets(top, 0, 0, 0));
+
+        return new Tuple2<>(label1, label2);
+    }
+
+    public static Tuple2<Label, TextArea> addConfirmationLabelTextArea(GridPane gridPane, int rowIndex, String title1, String title2, double top) {
+        Label label = addLabel(gridPane, rowIndex, title1);
+        label.getStyleClass().add("confirmation-label");
+
+        TextArea textArea = addTextArea(gridPane, rowIndex, title1);
+        ((JFXTextArea) textArea).setLabelFloat(false);
+
+        GridPane.setColumnIndex(textArea, 1);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setHalignment(label, HPos.LEFT);
+        GridPane.setMargin(textArea, new Insets(top, 0, 0, 0));
+
+        return new Tuple2<>(label, textArea);
     }
 
 
@@ -424,6 +463,8 @@ public class FormBuilder {
 
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
+        label.getStyleClass().add("confirmation-label");
+        GridPane.setHalignment(label, HPos.LEFT);
 
         TxIdTextField txTextField = new TxIdTextField();
         txTextField.setup(value);
@@ -854,14 +895,22 @@ public class FormBuilder {
     public static Tuple2<Label, VBox> addTopLabelWithVBox(GridPane gridPane, int rowIndex,
                                                           String title, Node node,
                                                           double top) {
-        Label label = getTopLabel(title);
-        VBox vBox = getTopLabelVBox(0);
-        vBox.getChildren().addAll(label, node);
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(title, node);
+        VBox vBox = topLabelWithVBox.second;
 
         GridPane.setRowIndex(vBox, rowIndex);
         GridPane.setColumnIndex(vBox, 0);
         GridPane.setMargin(vBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(vBox);
+
+        return new Tuple2<>(topLabelWithVBox.first, vBox);
+    }
+
+    @NotNull
+    public static Tuple2<Label, VBox> getTopLabelWithVBox(String title, Node node) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(0);
+        vBox.getChildren().addAll(label, node);
 
         return new Tuple2<>(label, vBox);
     }
@@ -929,6 +978,44 @@ public class FormBuilder {
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(topLabelWithVBox.first, comboBox1, comboBox2);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + ComboBox + TextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple4<ComboBox<T>, Label, TextField, HBox> addComboBoxTopLabelTextField(GridPane gridPane,
+                                                                                               int rowIndex,
+                                                                                               String titleCombobox,
+                                                                                               String titleTextfield) {
+        return addComboBoxTopLabelTextField(gridPane, rowIndex, titleCombobox, titleTextfield, 0);
+    }
+
+    public static <T> Tuple4<ComboBox<T>, Label, TextField, HBox> addComboBoxTopLabelTextField(GridPane gridPane,
+                                                                                               int rowIndex,
+                                                                                               String titleCombobox,
+                                                                                               String titleTextfield,
+                                                                                               double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        ComboBox<T> comboBox = new JFXComboBox<>();
+        comboBox.setPromptText(titleCombobox);
+        ((JFXComboBox<T>) comboBox).setLabelFloat(true);
+
+        TextField textField = new JFXTextField();
+
+        final VBox topLabelVBox = getTopLabelVBox(5);
+        final Label topLabel = getTopLabel(titleTextfield);
+        topLabelVBox.getChildren().addAll(topLabel, textField);
+
+        hBox.getChildren().addAll(comboBox, topLabelVBox);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple4<>(comboBox, topLabel, textField, hBox);
     }
 
 
@@ -1049,8 +1136,11 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, top, null);
+    }
 
-        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top, String styleClass) {
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon(styleClass);
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
@@ -1058,6 +1148,24 @@ public class FormBuilder {
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
 
+    public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
+        return addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, 0);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
+        label.getStyleClass().add("confirmation-label");
+        GridPane.setHalignment(label, HPos.LEFT);
+
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon("confirmation-text-field-as-label");
+        textFieldWithCopyIcon.setText(value);
+        GridPane.setRowIndex(textFieldWithCopyIcon, rowIndex);
+        GridPane.setColumnIndex(textFieldWithCopyIcon, 1);
+        GridPane.setMargin(textFieldWithCopyIcon, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(textFieldWithCopyIcon);
+
+        return new Tuple2<>(label, textFieldWithCopyIcon);
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + AddressTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1268,6 +1376,12 @@ public class FormBuilder {
 
     public static Tuple2<Button, Button> add2Buttons(GridPane gridPane, int rowIndex, String title1,
                                                      String title2, double top, boolean hasPrimaryButton) {
+        final Tuple3<Button, Button, HBox> buttonButtonHBoxTuple3 = add2ButtonsWithBox(gridPane, rowIndex, title1, title2, top, hasPrimaryButton);
+        return new Tuple2<>(buttonButtonHBoxTuple3.first, buttonButtonHBoxTuple3.second);
+    }
+
+    public static Tuple3<Button, Button, HBox> add2ButtonsWithBox(GridPane gridPane, int rowIndex, String title1,
+                                                                  String title2, double top, boolean hasPrimaryButton) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
@@ -1291,7 +1405,7 @@ public class FormBuilder {
         GridPane.setColumnIndex(hBox, 0);
         GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
         gridPane.getChildren().add(hBox);
-        return new Tuple2<>(button1, button2);
+        return new Tuple3<>(button1, button2, hBox);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1350,16 +1464,23 @@ public class FormBuilder {
     // Button + ProgressIndicator + Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
-                                                                                             int rowIndex,
-                                                                                             String buttonTitle) {
-        return addButtonBusyAnimationLabel(gridPane, rowIndex, buttonTitle, 15);
+    public static Tuple4<Button, BusyAnimation, Label, HBox> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
+                                                                                                   int rowIndex,
+                                                                                                   int colIndex,
+                                                                                                   String buttonTitle) {
+        return addButtonBusyAnimationLabel(gridPane, rowIndex, colIndex, buttonTitle, 15);
     }
 
-    public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabel(GridPane gridPane,
-                                                                                   int rowIndex,
-                                                                                   String buttonTitle,
-                                                                                   double top) {
+    public static Tuple4<Button, BusyAnimation, Label, HBox> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
+                                                                                                   int rowIndex,
+                                                                                                   String buttonTitle) {
+        return addButtonBusyAnimationLabelAfterGroup(gridPane, rowIndex, 0, buttonTitle);
+    }
+
+    public static Tuple4<Button, BusyAnimation, Label, HBox> addButtonBusyAnimationLabel(GridPane gridPane,
+                                                                                         int rowIndex,
+                                                                                         int colIndex, String buttonTitle,
+                                                                                         double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
@@ -1370,15 +1491,16 @@ public class FormBuilder {
         BusyAnimation busyAnimation = new BusyAnimation(false);
 
         Label label = new AutoTooltipLabel();
-        hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.setAlignment(Pos.CENTER_RIGHT);
         hBox.getChildren().addAll(button, busyAnimation, label);
 
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 0);
+        GridPane.setHalignment(hBox, HPos.RIGHT);
+        GridPane.setColumnIndex(hBox, colIndex);
         GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        return new Tuple3<>(button, busyAnimation, label);
+        return new Tuple4<>(button, busyAnimation, label, hBox);
     }
 
 
@@ -1394,8 +1516,9 @@ public class FormBuilder {
         label.getStyleClass().add("input-label");
 
         HBox box = new HBox();
+        HBox.setHgrow(input, Priority.ALWAYS);
+        input.setMaxWidth(Double.MAX_VALUE);
         box.getStyleClass().add("input-with-border");
-        box.setMaxWidth(243);
         box.getChildren().addAll(input, label);
         return new Tuple3<>(box, input, label);
     }
@@ -1409,74 +1532,43 @@ public class FormBuilder {
         label.getStyleClass().add("input-label");
 
         HBox box = new HBox();
+        HBox.setHgrow(infoInputTextField, Priority.ALWAYS);
+        infoInputTextField.setMaxWidth(Double.MAX_VALUE);
         box.getStyleClass().add("input-with-border");
-        box.setMaxWidth(243);
         box.getChildren().addAll(infoInputTextField, label);
         return new Tuple3<>(box, infoInputTextField, label);
     }
 
-    public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
-        TextField textField = new InputTextField();
-        textField.setPrefWidth(190);
-        textField.setAlignment(Pos.CENTER_RIGHT);
-        textField.setMouseTransparent(true);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
+    public static Tuple3<HBox, TextField, Label> getNonEditableValueBox() {
+        final Tuple3<HBox, InputTextField, Label> editableValueBox = getEditableValueBox("");
+        final TextField textField = editableValueBox.second;
 
-        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
-        currency.setId("currency-info-label-disabled");
+        textField.setDisable(true);
 
-        HBox box = new HBox();
-        box.getChildren().addAll(textField, currency);
-        return new Tuple3<>(box, textField, currency);
+        return new Tuple3<>(editableValueBox.first, editableValueBox.second, editableValueBox.third);
     }
 
-    public static Tuple3<HBox, InfoTextField, Label> getNonEditableValueCurrencyBoxWithInfo() {
-        InfoTextField infoTextField = new InfoTextField();
-        infoTextField.setIconsLeftAligned();
-        TextField textField = infoTextField.getTextField();
-        textField.setPrefWidth(190);
-        textField.setAlignment(Pos.CENTER_RIGHT);
-        textField.setMouseTransparent(true);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
+    public static Tuple3<HBox, InfoInputTextField, Label> getNonEditableValueBoxWithInfo() {
 
-        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
-        currency.setId("currency-info-label-disabled");
+        final Tuple3<HBox, InfoInputTextField, Label> editableValueBoxWithInfo = getEditableValueBoxWithInfo("");
 
-        HBox box = new HBox();
-        box.getChildren().addAll(infoTextField, currency);
-        return new Tuple3<>(box, infoTextField, currency);
-    }
+        TextField textField = editableValueBoxWithInfo.second.getInputTextField();
+        textField.setDisable(true);
 
-    public static Tuple3<HBox, InputTextField, Label> getAmountCurrencyBox(String promptText) {
-        InputTextField input = new InputTextField();
-        input.setPrefWidth(190);
-        input.setAlignment(Pos.CENTER_RIGHT);
-        input.setPromptText(promptText);
-
-        Label currency = new AutoTooltipLabel(Res.getBaseCurrencyCode());
-        currency.setId("currency-info-label");
-
-        HBox box = new HBox();
-        box.getChildren().addAll(input, currency);
-        return new Tuple3<>(box, input, currency);
+        return editableValueBoxWithInfo;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade: Label, VBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox) {
-        return getTradeInputBox(amountValueBox, "");
-    }
-
-    public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String descriptionText) {
+    public static Tuple2<Label, VBox> getTradeInputBox(Pane amountValueBox, String descriptionText) {
         Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
         descriptionLabel.setPrefWidth(170);
 
         VBox box = new VBox();
+        box.setPadding(new Insets(10, 0, 0, 0));
         box.setSpacing(2);
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);

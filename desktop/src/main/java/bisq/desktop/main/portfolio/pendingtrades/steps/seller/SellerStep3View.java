@@ -47,12 +47,13 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -203,7 +204,7 @@ public class SellerStep3View extends TradeStepView {
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step3_seller.confirmReceipt"));
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;

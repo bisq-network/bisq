@@ -35,7 +35,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.common.UserThread;
 import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import com.google.inject.name.Named;
@@ -212,7 +212,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setHalignment(deleteFilesLabel, HPos.LEFT);
         GridPane.setValignment(deleteFilesLabel, VPos.TOP);
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
         Button deleteFilesButton = tuple.first;
         deleteFilesButton.setOnAction(e -> {
             tuple.second.play();

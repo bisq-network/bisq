@@ -419,7 +419,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         if (model.getIsPriceAvailable().get()) {
             if (model.getIsExternallyProvidedPrice().get()) {
                 label.setText(Res.get("mainView.marketPriceWithProvider.label", getPriceProvider()));
-                label.setTooltip(new Tooltip(Res.get("mainView.marketPrice.tooltip.provider", getPriceProvider())));
+                label.setTooltip(new Tooltip(getPriceProviderTooltipString()));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
@@ -430,6 +430,27 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             label.setText("");
             label.setTooltip(null);
         }
+    }
+
+    @NotNull
+    private String getPriceProviderTooltipString() {
+
+        String res;
+        if (model.getIsFiatCurrencyPriceFeedSelected().get()) {
+            res = Res.get("mainView.marketPrice.tooltip",
+                    "https://bitcoinaverage.com",
+                    "",
+                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                    model.getPriceFeedService().getProviderNodeAddress());
+        } else {
+            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
+            res = Res.get("mainView.marketPrice.tooltip",
+                    "https://poloniex.com",
+                    altcoinExtra,
+                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
+                    model.getPriceFeedService().getProviderNodeAddress());
+        }
+        return res;
     }
 
     private VBox createSplashScreen() {

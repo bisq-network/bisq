@@ -25,7 +25,9 @@ import java.io.InputStream;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
-import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
@@ -43,8 +45,8 @@ import com.turo.pushy.apns.util.ApnsPayloadBuilder;
 import com.turo.pushy.apns.util.SimpleApnsPushNotification;
 import com.turo.pushy.apns.util.concurrent.PushNotificationFuture;
 
-@Slf4j
 class RelayService {
+    private static final Logger log = LoggerFactory.getLogger(RelayMain.class);
     private static final String ANDROID_DATABASE_URL = "https://bisqnotifications.firebaseio.com";
     // Used in Bisq app to check for success state. We won't want a code dependency just for that string so we keep it
     // duplicated in core and here. Must not be changed.
