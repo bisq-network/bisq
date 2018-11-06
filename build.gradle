@@ -225,6 +225,7 @@ configure(project(':desktop')) {
         compile "org.openjfx:javafx-controls:11:$os"
         compile "org.openjfx:javafx-fxml:11:$os"
         compile "org.openjfx:javafx-swing:11:$os"
+        compile 'com.jfoenix:jfoenix:9.0.6'
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
