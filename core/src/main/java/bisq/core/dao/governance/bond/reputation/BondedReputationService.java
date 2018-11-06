@@ -21,15 +21,15 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondService;
+import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,40 +37,18 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BondedReputationService extends BondService<BondedReputation, Reputation> {
+    private final BondedRolesService bondedRolesService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedReputationService(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
+    public BondedReputationService(DaoStateService daoStateService, BsqWalletService bsqWalletService,
+                                   BondedRolesService bondedRolesService) {
         super(daoStateService, bsqWalletService);
 
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public List<BondedReputation> getActiveBondedReputations() {
-        return bondByUidMap.values().stream()
-                .filter(e -> e.isActive())
-                .collect(Collectors.toList());
-    }
-
-    public List<BondedReputation> getAllBondedReputations() {
-        return new ArrayList<>(bondByUidMap.values());
-    }
-
-    public List<BondedReputation> getUnconfirmedBondedReputations() {
-        //TODO
-       /* Set<String> myWalletTransactionIds = bsqWalletService.getWalletTransactions().stream()
-                .map(Transaction::getHashAsString)
-                .collect(Collectors.toSet());
-*/
-        return bondByUidMap.values().stream()
-                .filter(e -> e.isActive())
-                .collect(Collectors.toList());
+        this.bondedRolesService = bondedRolesService;
     }
 
 
@@ -90,15 +68,14 @@ public class BondedReputationService extends BondService<BondedReputation, Reput
 
     @Override
     protected void updateMap() {
-        //TODO
-     /*   bondByUidMap.clear();
+        bondByUidMap.clear();
         getBondedReputationStream().forEach(bondedReputation -> {
             bondByUidMap.put(bondedReputation.getBondedAsset().getUid(), bondedReputation);
-        });*/
+        });
     }
 
-
     private Stream<BondedReputation> getBondedReputationStream() {
+        Set<String> bondedRolesLockupTxIdSet = bondedRolesService.getAllBonds().stream().map(e -> e.getLockupTxId()).collect(Collectors.toSet());
         return daoStateService.getLockupTxOutputs().stream()
                 .map(lockupTxOutput -> {
                     String lockupTxId = lockupTxOutput.getTxId();
@@ -110,14 +87,23 @@ public class BondedReputationService extends BondService<BondedReputation, Reput
                         byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnTxOutput.getOpReturnData());
                         Reputation reputation = new Reputation(hash);
                         BondedReputation bondedReputation = new BondedReputation(reputation);
-                        //TODO
-                        //updateBond(bondedReputation, reputation, lockupTxOutput);
+                        updateBond(bondedReputation, reputation, lockupTxOutput);
                         return bondedReputation;
                     } else {
                         return null;
                     }
 
                 })
-                .filter(Objects::nonNull);
+                .filter(Objects::nonNull)
+                .filter(e -> !bondedRolesLockupTxIdSet.contains(e.getLockupTxId()));
+    }
+
+    @Override
+    public void updateBond(BondedReputation bond, Reputation bondedAsset, TxOutput lockupTxOutput) {
+        // Lets see if we have a lock up tx.
+        String lockupTxId = lockupTxOutput.getTxId();
+        daoStateService.getTx(lockupTxId).ifPresent(lockupTx -> {
+            applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
+        });
     }
 }

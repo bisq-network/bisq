@@ -17,19 +17,23 @@
 
 package bisq.desktop.main.dao.bonding.bonds;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.bond.role.BondedRolesService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
+
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 
 import java.util.Date;
 
@@ -47,10 +51,13 @@ class BondListItem implements DaoStateListener {
     private final BondedRolesService bondedRolesService;
     private final BondingViewUtils bondingViewUtils;
     private final BsqFormatter bsqFormatter;
-    private final String info;
+    private final String bondType;
     private final String txId;
     private final String amount;
+    private final String lockupDate;
     private final String lockTime;
+    private final Label stateLabel;
+    private final String bondDetails;
 
     @Getter
     private Button button;
@@ -67,56 +74,30 @@ class BondListItem implements DaoStateListener {
         this.bsqFormatter = bsqFormatter;
 
 
-        info = bond.getBondedAsset().getDisplayString();
-        txId = bond.getLockupTxId();
         amount = bsqFormatter.formatCoin(Coin.valueOf(bond.getAmount()));
-        lockTime = bsqFormatter.formatDateTime(new Date(bond.getLockupDate()));
+        lockTime = Integer.toString(bond.getLockTime());
+        if (bond instanceof BondedRole) {
+            bondType = Res.get("dao.bond.bondedRoles");
+            bondDetails = bond.getBondedAsset().getDisplayString();
+        } else {
+            bondType = Res.get("dao.bond.bondedReputation");
+            bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
+        }
+        lockupDate = bsqFormatter.formatDateTime(new Date(bond.getLockupDate()));
+        txId = bond.getLockupTxId();
 
-        button = new AutoTooltipButton();
-        button.setMinWidth(70);
-        // label = new Label();
-/*
+        stateLabel = new Label();
+
         daoFacade.addBsqStateListener(this);
-        button.setOnAction(e -> {
-            if (bondedRole.getBondState() == BondState.READY_FOR_LOCKUP) {
-                bondingViewUtils.lockupBondForBondedRole(role,
-                        txId -> {
-                            bondedRole.setLockupTxId(txId);
-                            bondedRole.setBondState(BondState.LOCKUP_TX_PENDING);
-                            update();
-                            button.setDisable(true);
-                        });
-            } else if (bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
-                bondingViewUtils.unLock(bondedRole.getLockupTxId(),
-                        txId -> {
-                            bondedRole.setUnlockTxId(txId);
-                            bondedRole.setBondState(BondState.UNLOCK_TX_PENDING);
-                            update();
-                            button.setDisable(true);
-                        });
-            }
-        });*/
+        update();
     }
 
     private void update() {
-      /*  label.setText(Res.get("dao.bond.bondState." + bondedRole.getBondState().name()));
-
-        boolean showLockup = bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
-        boolean showRevoke = bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
-        if (showLockup)
-            button.updateText(Res.get("dao.bond.table.button.lockup"));
-        else if (showRevoke)
-            button.updateText(Res.get("dao.bond.table.button.revoke"));
-
-
-        boolean showButton = isMyRole && (showLockup || showRevoke);
-        button.setVisible(showButton);
-        button.setManaged(showButton);*/
+        stateLabel.setText(Res.get("dao.bond.bondState." + bond.getBondState().name()));
     }
 
     public void cleanup() {
-        //  daoFacade.removeBsqStateListener(this);
-        // button.setOnAction(null);
+        daoFacade.removeBsqStateListener(this);
     }
 
     // DaoStateListener

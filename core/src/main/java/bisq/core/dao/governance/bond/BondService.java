@@ -182,6 +182,10 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
                 .collect(Collectors.toList());
     }
 
+    public List<T> getAllBonds() {
+        return new ArrayList<>(bondByUidMap.values());
+    }
+
     public Optional<T> findBondByLockupTxId(String lockupTxId) {
         return bondByUidMap.values().stream()
                 .filter(bond -> lockupTxId.equals(bond.getLockupTxId()))

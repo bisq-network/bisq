@@ -70,6 +70,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
@@ -100,6 +101,7 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
     private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener, saltFocusOutListener;
     private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener, saltInputTextFieldListener;
     private final ObservableList<MyBondedReputationListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<MyBondedReputationListItem> sortedList = new SortedList<>(observableList);
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private ChangeListener<Number> walletChainHeightListener;
 
@@ -190,7 +192,8 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         timeInputTextField.resetValidation();
         setNewRandomSalt();
 
-        tableView.setItems(observableList);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
 
         onUpdateBalances();
         updateList();
@@ -214,6 +217,8 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         bsqWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
 
         lockupButton.setOnAction(null);
+
+        sortedList.comparatorProperty().unbind();
 
         daoFacade.removeBsqStateListener(this);
     }
@@ -290,6 +295,7 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         GridPane.setColumnSpan(titledGroupBg2, columnSpan);
 
         tableView = new TableView<>();
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         createColumns();
 

@@ -522,11 +522,11 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesService.getActiveBonds();
     }
 
-    public List<Bond> getAllActiveBonds() {
-        List<BondedReputation> activeReputations = bondedReputationService.getActiveBonds();
-        List<BondedRole> activeRoles = bondedRolesService.getActiveBonds();
-        List<Bond> bonds = new ArrayList<>(activeReputations);
-        bonds.addAll(activeRoles);
+    public List<Bond> getAllBonds() {
+        List<BondedReputation> bondedReputations = bondedReputationService.getAllBonds();
+        List<BondedRole> bondedRoles = bondedRolesService.getAllBonds();
+        List<Bond> bonds = new ArrayList<>(bondedReputations);
+        bonds.addAll(bondedRoles);
         return bonds;
     }
 

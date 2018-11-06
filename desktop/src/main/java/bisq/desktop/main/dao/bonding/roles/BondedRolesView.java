@@ -22,9 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
-import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
@@ -60,6 +58,8 @@ import javafx.util.Callback;
 
 import java.util.stream.Collectors;
 
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+
 @FxmlView
 public class BondedRolesView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private TableView<BondedRolesListItem> tableView;
@@ -79,7 +79,6 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
     @Inject
     private BondedRolesView(BsqFormatter bsqFormatter,
-                            BsqBalanceUtil bsqBalanceUtil,
                             BondingViewUtils bondingViewUtils,
                             DaoFacade daoFacade,
                             Preferences preferences) {
@@ -91,31 +90,23 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
 
     @Override
     public void initialize() {
-        TableGroupHeadline headline = new TableGroupHeadline(Res.get("dao.bond.table.header"));
         int gridRow = 0;
-        GridPane.setRowIndex(headline, gridRow);
-        GridPane.setMargin(headline, new Insets(0, -10, -10, -10));
-        GridPane.setColumnSpan(headline, 2);
-        root.getChildren().add(headline);
+        addTitledGroupBg(root, gridRow, 2, Res.get("dao.bond.bondedRoles"));
 
         tableView = new TableView<>();
+        GridPane.setRowIndex(tableView, ++gridRow);
+        GridPane.setMargin(tableView, new Insets(30, -10, 5, -10));
+        root.getChildren().add(tableView);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
         createColumns();
-
-        GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(20, -10, 5, -10));
-        GridPane.setColumnSpan(tableView, 2);
-        root.getChildren().add(tableView);
-
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
     }
 
     @Override
     protected void activate() {
         daoFacade.addBsqStateListener(this);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
         updateList();
     }
@@ -123,6 +114,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     @Override
     protected void deactivate() {
         daoFacade.removeBsqStateListener(this);
+        sortedList.comparatorProperty().unbind();
 
         observableList.forEach(BondedRolesListItem::cleanup);
     }
@@ -226,7 +218,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondedRoleType"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondType"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
