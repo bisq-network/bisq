@@ -294,6 +294,29 @@ public class TradeStatisticsManager {
         // v0.8.0 Aug 22 2018
         // none added
 
+        // v0.9.0 (Date TBD)
+        newlyAdded.add("ACM");
+        newlyAdded.add("BTC2");
+        newlyAdded.add("BLUR");
+        newlyAdded.add("CHA");
+        newlyAdded.add("CROAT");
+        newlyAdded.add("DRGL");
+        newlyAdded.add("ETHS");
+        newlyAdded.add("GBK");
+        newlyAdded.add("KEK");
+        newlyAdded.add("LOKI");
+        newlyAdded.add("MBGL");
+        newlyAdded.add("NEOS");
+        newlyAdded.add("PZDC");
+        newlyAdded.add("QMCoin");
+        newlyAdded.add("QRL");
+        newlyAdded.add("RADS");
+        newlyAdded.add("RYO");
+        newlyAdded.add("SUB1X");
+        newlyAdded.add("MAI");
+        newlyAdded.add("TRTL");
+        newlyAdded.add("ZER");
+
         return newlyAdded.contains(code);
     }
 }
