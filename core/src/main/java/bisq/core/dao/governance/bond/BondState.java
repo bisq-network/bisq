@@ -26,4 +26,5 @@ public enum BondState {
     UNLOCK_TX_CONFIRMED,
     UNLOCKING,              // lock time not expired
     UNLOCKED,
+    CONFISCATED
 }

@@ -65,12 +65,12 @@ public final class RawTx extends BaseTx implements NetworkPayload {
     private final ImmutableList<RawTxOutput> rawTxOutputs;
 
     // The RPC service is creating a RawTx.
-    RawTx(String id,
-          int blockHeight,
-          String blockHash,
-          long time,
-          ImmutableList<TxInput> txInputs,
-          ImmutableList<RawTxOutput> rawTxOutputs) {
+    public RawTx(String id,
+                 int blockHeight,
+                 String blockHash,
+                 long time,
+                 ImmutableList<TxInput> txInputs,
+                 ImmutableList<RawTxOutput> rawTxOutputs) {
         super(Version.BSQ_TX_VERSION,
                 id,
                 blockHeight,

@@ -51,13 +51,13 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
                 txOutput.getBlockHeight());
     }
 
-    RawTxOutput(int index,
-                long value,
-                String txId,
-                @Nullable PubKeyScript pubKeyScript,
-                @Nullable String address,
-                @Nullable byte[] opReturnData,
-                int blockHeight) {
+    public RawTxOutput(int index,
+                       long value,
+                       String txId,
+                       @Nullable PubKeyScript pubKeyScript,
+                       @Nullable String address,
+                       @Nullable byte[] opReturnData,
+                       int blockHeight) {
         super(index,
                 value,
                 txId,

@@ -100,24 +100,31 @@ public class TxOutputParser {
     }
 
     void processTxOutput(TempTxOutput tempTxOutput) {
-        // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
-        // another output index is invalid.
-        if (tempTxOutput.isOpReturnOutput()) {
-            tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
-            return;
-        }
+        if (!daoStateService.isConfiscated(tempTxOutput.getKey())) {
+            // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
+            // another output index is invalid.
+            if (tempTxOutput.isOpReturnOutput()) {
+                tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
+                return;
+            }
 
-        long txOutputValue = tempTxOutput.getValue();
-        int index = tempTxOutput.getIndex();
-        if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
-            // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
-            // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
-            // output to not be BSQ output at all
-            handleUnlockBondTx(tempTxOutput);
-        } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
-            handleBsqOutput(tempTxOutput, index, txOutputValue);
+            long txOutputValue = tempTxOutput.getValue();
+            int index = tempTxOutput.getIndex();
+            if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
+                // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
+                // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
+                // output to not be BSQ output at all
+                handleUnlockBondTx(tempTxOutput);
+            } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
+                handleBsqOutput(tempTxOutput, index, txOutputValue);
+            } else {
+                handleBtcOutput(tempTxOutput, index);
+            }
         } else {
-            handleBtcOutput(tempTxOutput, index);
+            log.warn("TxOutput {} is confiscated ", tempTxOutput.getKey());
+            // We only burn that output
+            availableInputValue -= tempTxOutput.getValue();
+            tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         }
     }
 

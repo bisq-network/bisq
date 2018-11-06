@@ -1521,7 +1521,7 @@ message RoleProposal {
 }
 
 message ConfiscateBondProposal {
-    bytes hash = 1;
+    string lockup_tx_id = 1;
 }
 
 message GenericProposal {
@@ -1594,7 +1594,7 @@ message ParamChange {
 }
 
 message ConfiscateBond {
-    bytes hash = 1;
+    string lockup_tx_id = 1;
 }
 
 message MyVote {

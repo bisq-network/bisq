@@ -661,12 +661,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof ConfiscateBondProposal) {
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) evaluatedProposal.getProposal();
-                daoStateService.confiscateBond(new ConfiscateBond(confiscateBondProposal.getHash()));
+                daoStateService.confiscateBond(new ConfiscateBond(confiscateBondProposal.getLockupTxId()));
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We confiscated a bond. ProposalTxId=").append(confiscateBondProposal.getTxId())
-                        .append("\nHashOfBondId: ").append(Utilities.encodeToHex(confiscateBondProposal.getHash()))
+                        .append("\nLockupTxId: ").append(confiscateBondProposal.getLockupTxId())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
             }

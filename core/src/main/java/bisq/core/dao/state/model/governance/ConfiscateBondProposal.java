@@ -23,11 +23,8 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
-
-import com.google.protobuf.ByteString;
 
 import java.util.Date;
 
@@ -42,14 +39,14 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class ConfiscateBondProposal extends Proposal implements ImmutableDaoStateModel {
-    private final byte[] hash;
+    private final String lockupTxId;
 
     public ConfiscateBondProposal(String name,
                                   String link,
-                                  byte[] hash) {
+                                  String lockupTxId) {
         this(name,
                 link,
-                hash,
+                lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
                 "");
@@ -62,7 +59,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
 
     private ConfiscateBondProposal(String name,
                                    String link,
-                                   byte[] hash,
+                                   String lockupTxId,
                                    byte version,
                                    long creationDate,
                                    String txId) {
@@ -71,14 +68,13 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 version,
                 creationDate,
                 txId);
-
-        this.hash = hash;
+        this.lockupTxId = lockupTxId;
     }
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
         final PB.ConfiscateBondProposal.Builder builder = PB.ConfiscateBondProposal.newBuilder()
-                .setHash(ByteString.copyFrom(hash));
+                .setLockupTxId(lockupTxId);
         return super.getProposalBuilder().setConfiscateBondProposal(builder);
     }
 
@@ -86,7 +82,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
         final PB.ConfiscateBondProposal proposalProto = proto.getConfiscateBondProposal();
         return new ConfiscateBondProposal(proto.getName(),
                 proto.getLink(),
-                proposalProto.getHash().toByteArray(),
+                proposalProto.getLockupTxId(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
@@ -121,7 +117,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     public Proposal cloneProposalAndAddTxId(String txId) {
         return new ConfiscateBondProposal(getName(),
                 getLink(),
-                getHash(),
+                getLockupTxId(),
                 getVersion(),
                 getCreationDate().getTime(),
                 txId);
@@ -130,7 +126,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     @Override
     public String toString() {
         return "ConfiscateBondProposal{" +
-                "\n     hash=" + Utilities.bytesAsHexString(hash) +
+                "\n     lockupTxId=" + lockupTxId +
                 "\n} " + super.toString();
     }
 }

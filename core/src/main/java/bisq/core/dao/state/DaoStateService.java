@@ -43,7 +43,6 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -688,18 +687,19 @@ public class DaoStateService implements DaoSetupService {
                 .sum();
     }
 
-    public boolean isUnlockingOutput(TxOutputKey key) {
+    public boolean isUnlockingAndUnspent(TxOutputKey key) {
         Optional<TxOutput> opTxOutput = getUnspentTxOutput(key);
-        return opTxOutput.isPresent() && isUnlockingOutput(opTxOutput.get());
+        return opTxOutput.isPresent() && isUnlockingAndUnspent(opTxOutput.get());
     }
 
-    public boolean isUnlocking(String unlockTxId) {
+    public boolean isUnlockingAndUnspent(String unlockTxId) {
         Optional<Tx> optionalTx = getTx(unlockTxId);
-        return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
+        return optionalTx.isPresent() && isUnlockingAndUnspent(optionalTx.get().getTxOutputs().get(0));
     }
 
-    public boolean isUnlockingOutput(TxOutput unlockTxOutput) {
+    public boolean isUnlockingAndUnspent(TxOutput unlockTxOutput) {
         return unlockTxOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT &&
+                isUnspent(unlockTxOutput.getKey()) &&
                 !isLockTimeOverForUnlockTxOutput(unlockTxOutput);
     }
 
@@ -743,28 +743,74 @@ public class DaoStateService implements DaoSetupService {
 
     // Confiscate bond
     public void confiscateBond(ConfiscateBond confiscateBond) {
-        if (confiscateBond.getHash().length == 0) {
-            // Disallow confiscation of empty bonds
-            return;
+        String lockupTxId = confiscateBond.getLockupTxId();
+        Optional<TxOutput> optionalTxOutput = getLockupTxOutput(lockupTxId);
+        if (optionalTxOutput.isPresent()) {
+            TxOutput lockupTxOutput = optionalTxOutput.get();
+            if (isUnspent(lockupTxOutput.getKey())) {
+                log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                confiscateBond(lockupTxOutput);
+            } else {
+                // We lookup for the unlock tx which need to be still in unlocking state
+                Optional<SpentInfo> optionalSpentInfo = getSpentInfo(lockupTxOutput);
+                checkArgument(optionalSpentInfo.isPresent(), "optionalSpentInfo must be present");
+                String unlockTxId = optionalSpentInfo.get().getTxId();
+                if (isUnlockingAndUnspent(unlockTxId)) {
+                    // We found the unlock tx is still not spend
+                    log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                    getUnspentUnlockingTxOutputsStream()
+                            .filter(txOutput -> txOutput.getTxId().equals(unlockTxId))
+                            .forEach(this::confiscateBond);
+                } else {
+                    // We could be more radical here and confiscate the output if it is unspent but lock time is over,
+                    // but its probably better to stick to the rules that confiscation can only happen before lock time
+                    // is over.
+                    log.warn("We could not confiscate the bond because the unlock tx was already spent or lock time " +
+                            "has exceeded. unlockTxId={}", unlockTxId);
+                }
+            }
+        } else {
+            log.warn("No lockupTxOutput found for lockupTxId {}", lockupTxId);
         }
-        getTxOutputStream()
-                .filter(txOutput -> isUnspent(txOutput.getKey()))
-                .filter(txOutput -> txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT ||
-                        (isUnlockTxOutputAndLockTimeNotOver(txOutput)))
-                .filter(txOutput -> {
-                    Optional<byte[]> hash = getLockupHash(txOutput);
-                    return hash.isPresent() && Arrays.equals(hash.get(), confiscateBond.getHash());
-                })
-                .forEach(this::applyConfiscateBond);
     }
 
-    public void applyConfiscateBond(TxOutput txOutput) {
+    private void confiscateBond(TxOutput txOutput) {
+        // Can be txOutput from lockup or unlock tx
+        log.warn("txOutput {} added to confiscatedTxOutputMap.", txOutput.getKey());
         daoState.getConfiscatedTxOutputMap().put(txOutput.getKey(), txOutput);
-
-        // TODO SQ TxOutputType is immutable after parsing
-        // We need to add new checks if a txo is not confiscated by using the map similar like utxo map
-        // txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
     }
+
+    public boolean isConfiscated(TxOutputKey txOutputKey) {
+        return daoState.getConfiscatedTxOutputMap().containsKey(txOutputKey);
+    }
+
+    public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
+        return getLockupTxOutput(lockupTxId)
+                .map(lockupTxIdxOutput -> isConfiscated(lockupTxIdxOutput.getKey()))
+                .orElse(false);
+    }
+
+    public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
+        return getUnlockTxOutputs().stream()
+                .filter(unlockTxOutput -> unlockTxOutput.getTxId().equals(unlockTxId))
+                .map(unlockTxOutput -> isConfiscated(unlockTxOutput.getKey()))
+                .findAny()
+                .orElse(false);
+    }
+
+    //TODO do we want to check for both txs?
+ /*   public boolean isConfiscatedUnlockTxOutput(String lockupTxId) {
+        boolean present = getLockupTxOutput(lockupTxId)
+                .flatMap(lockupTxIdxOutput -> getSpentInfo(lockupTxIdxOutput)
+                        .map(SpentInfo::getTxId)
+                        .flatMap(this::getTx)
+                        .map(unlockTx -> unlockTx.getTxOutputs().get(0)))
+                .filter(firstTxOutput -> isConfiscated(firstTxOutput.getKey()))
+                .isPresent();
+        log.error("lockupTxId {}, {}", lockupTxId, present);
+        //log.error("daoState.getConfiscatedTxOutputMap() {}", daoState.getConfiscatedTxOutputMap());
+        return present;
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -145,7 +145,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
     }
 
     // The lockTime is stored in the first output of the LOCKUP tx.
-    private TxOutput getLockupOutput() {
+    public TxOutput getLockupOutput() {
         return txOutputs.get(0);
     }
 

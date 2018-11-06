@@ -21,8 +21,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
-import com.google.protobuf.ByteString;
-
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
@@ -33,12 +31,10 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Value
 public class ConfiscateBond implements PersistablePayload {
-    // Hash can be anything which identifies a bond.
-    // TODO concept not finalized yet...
-    private final byte[] hash;
+    private final String lockupTxId;
 
-    public ConfiscateBond(byte[] hash) {
-        this.hash = hash;
+    public ConfiscateBond(String lockupTxId) {
+        this.lockupTxId = lockupTxId;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -49,11 +45,19 @@ public class ConfiscateBond implements PersistablePayload {
     @Override
     public PB.ConfiscateBond toProtoMessage() {
         return PB.ConfiscateBond.newBuilder()
-                .setHash(ByteString.copyFrom(hash))
+                .setLockupTxId(lockupTxId)
                 .build();
     }
 
     public static ConfiscateBond fromProto(PB.ConfiscateBond proto) {
-        return new ConfiscateBond(proto.getHash().toByteArray());
+        return new ConfiscateBond(proto.getLockupTxId());
+    }
+
+
+    @Override
+    public String toString() {
+        return "ConfiscateBond{" +
+                "\n     lockupTxId='" + lockupTxId + '\'' +
+                "\n}";
     }
 }

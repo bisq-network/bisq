@@ -76,18 +76,18 @@ class BondedRolesListItem implements DaoStateListener {
             if (bondedRole.getBondState() == BondState.READY_FOR_LOCKUP) {
                 bondingViewUtils.lockupBondForBondedRole(role,
                         txId -> {
-                            bondedRole.setLockupTxId(txId);
+                            /*bondedRole.setLockupTxId(txId);
                             bondedRole.setBondState(BondState.LOCKUP_TX_PENDING);
                             update();
-                            button.setDisable(true);
+                            button.setDisable(true);*/
                         });
             } else if (bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
                 bondingViewUtils.unLock(bondedRole.getLockupTxId(),
                         txId -> {
-                            bondedRole.setUnlockTxId(txId);
+                            /*bondedRole.setUnlockTxId(txId);
                             bondedRole.setBondState(BondState.UNLOCK_TX_PENDING);
                             update();
-                            button.setDisable(true);
+                            button.setDisable(true);*/
                         });
             }
         });

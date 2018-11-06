@@ -84,14 +84,19 @@ public class MyBondedReputationService implements DaoSetupService {
 
         return map.values().stream()
                 .peek(myBondedReputation -> {
-                    // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
-                    // its there.
-                    if (BondService.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
-                            myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
-                        myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);
-                    } else if (BondService.isUnlockTxUnconfirmed(bsqWalletService, daoStateService, myBondedReputation.getBondedAsset()) &&
-                            myBondedReputation.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
-                        myBondedReputation.setBondState(BondState.UNLOCK_TX_PENDING);
+                    if ((myBondedReputation.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(myBondedReputation.getLockupTxId())) ||
+                            (myBondedReputation.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(myBondedReputation.getUnlockTxId()))) {
+                        myBondedReputation.setBondState(BondState.CONFISCATED);
+                    } else {
+                        // We don't have a UI use case for showing LOCKUP_TX_PENDING yet, but lets keep the code so if needed
+                        // its there.
+                        if (BondService.isLockupTxUnconfirmed(bsqWalletService, myBondedReputation.getBondedAsset()) &&
+                                myBondedReputation.getBondState() == BondState.READY_FOR_LOCKUP) {
+                            myBondedReputation.setBondState(BondState.LOCKUP_TX_PENDING);
+                        } else if (BondService.isUnlockTxUnconfirmed(bsqWalletService, daoStateService, myBondedReputation.getBondedAsset()) &&
+                                myBondedReputation.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
+                            myBondedReputation.setBondState(BondState.UNLOCK_TX_PENDING);
+                        }
                     }
                 })
                 .collect(Collectors.toList());

@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ConfiscateBondProposalFactory extends BaseProposalFactory<ConfiscateBondProposal> {
-    private byte[] hash;
+    private String lockupTxId;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +57,9 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
 
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
-                                                                 byte[] hash)
+                                                                 String lockupTxId)
             throws ValidationException, InsufficientMoneyException, TxException {
-        this.hash = hash;
+        this.lockupTxId = lockupTxId;
 
         return super.createProposalWithTransaction(name, link);
     }
@@ -69,6 +69,6 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
         return new ConfiscateBondProposal(
                 name,
                 link,
-                hash);
+                lockupTxId);
     }
 }

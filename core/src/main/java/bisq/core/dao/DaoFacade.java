@@ -266,11 +266,11 @@ public class DaoFacade implements DaoSetupService {
 
     public ProposalWithTransaction getConfiscateBondProposalWithTransaction(String name,
                                                                             String link,
-                                                                            byte[] hash)
+                                                                            String lockupTxId)
             throws ValidationException, InsufficientMoneyException, TxException {
         return confiscateBondProposalFactory.createProposalWithTransaction(name,
                 link,
-                hash);
+                lockupTxId);
     }
 
     public ProposalWithTransaction getBondedRoleProposalWithTransaction(Role role)
@@ -662,5 +662,9 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isMyRole(Role role) {
         return bondedRolesService.isMyRole(role);
+    }
+
+    public Optional<Bond> getBondByLockupTxId(String lockupTxId) {
+        return getAllBonds().stream().filter(e -> e.getLockupTxId().equals(lockupTxId)).findAny();
     }
 }

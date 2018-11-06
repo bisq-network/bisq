@@ -151,13 +151,18 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
                         bond.setUnlockTxId(unlockTxId);
                         bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
                         bond.setUnlockDate(unlockTx.getTime());
-                        boolean unlocking = daoStateService.isUnlocking(unlockTxId);
+                        boolean unlocking = daoStateService.isUnlockingAndUnspent(unlockTxId);
                         if (unlocking) {
                             bond.setBondState(BondState.UNLOCKING);
                         } else {
                             bond.setBondState(BondState.UNLOCKED);
                         }
                     });
+        }
+
+        if ((bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
+                (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()))) {
+            bond.setBondState(BondState.CONFISCATED);
         }
     }
 
@@ -220,14 +225,28 @@ public abstract class BondService<T extends Bond, R extends BondedAsset> impleme
         getBondedAssetStream().filter(bondedAsset -> isLockupTxUnconfirmed(bsqWalletService, bondedAsset))
                 .map(bondedAsset -> bondByUidMap.get(bondedAsset.getUid()))
                 .filter(bond -> bond.getBondState() == BondState.READY_FOR_LOCKUP)
-                .forEach(bond -> bond.setBondState(BondState.LOCKUP_TX_PENDING));
+                .forEach(bond -> {
+                    if ((bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
+                            (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()))) {
+                        bond.setBondState(BondState.CONFISCATED);
+                    } else {
+                        bond.setBondState(BondState.LOCKUP_TX_PENDING);
+                    }
+                });
     }
 
     private void updateBondStateFromUnconfirmedUnlockTxs() {
         getBondedAssetStream().filter(bondedAsset -> isUnlockTxUnconfirmed(bsqWalletService, daoStateService, bondedAsset))
                 .map(bondedAsset -> bondByUidMap.get(bondedAsset.getUid()))
                 .filter(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
-                .forEach(bond -> bond.setBondState(BondState.UNLOCK_TX_PENDING));
+                .forEach(bond -> {
+                    if ((bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
+                            (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()))) {
+                        bond.setBondState(BondState.CONFISCATED);
+                    } else {
+                        bond.setBondState(BondState.UNLOCK_TX_PENDING);
+                    }
+                });
     }
 
     public static boolean isLockupTxUnconfirmed(BsqWalletService bsqWalletService, BondedAsset bondedAsset) {

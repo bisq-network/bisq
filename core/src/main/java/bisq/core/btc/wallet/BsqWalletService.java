@@ -238,7 +238,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
                                                 return (connectedOutput.isMine(wallet)
                                                         && (daoStateService.isLockupOutput(key)
-                                                        || daoStateService.isUnlockingOutput(key)));
+                                                        || daoStateService.isUnlockingAndUnspent(key)));
                                             }
                                         }
                                         return false;

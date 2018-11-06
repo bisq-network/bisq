@@ -28,6 +28,7 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.param.ChangeParamInputValidator;
@@ -55,6 +56,7 @@ import bisq.core.util.validation.InputValidator;
 import bisq.asset.Asset;
 
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -309,7 +311,17 @@ public class ProposalDisplay {
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(Bond bond) {
-                        return bond != null ? bond.getDisplayString() : "";
+                        String bondType;
+                        String bondDetails;
+                        if (bond instanceof BondedRole) {
+                            bondType = Res.get("dao.bond.bondedRoles");
+                            bondDetails = bond.getBondedAsset().getDisplayString();
+                        } else {
+                            bondType = Res.get("dao.bond.bondedReputation");
+                            bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
+                        }
+
+                        return bondType + ": " + bondDetails;
                     }
 
                     @Override
@@ -482,13 +494,11 @@ public class ProposalDisplay {
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-
-            //TODO
-          /*  daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
-                    .ifPresent(bondedRole -> {
-                        confiscateBondComboBox.getSelectionModel().select(bondedRole);
-                        comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bondedRole));
-                    });*/
+            daoFacade.getBondByLockupTxId(confiscateBondProposal.getLockupTxId())
+                    .ifPresent(bond -> {
+                        confiscateBondComboBox.getSelectionModel().select(bond);
+                        comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
+                    });
 
         } else if (proposal instanceof GenericProposal) {
             // do nothing
