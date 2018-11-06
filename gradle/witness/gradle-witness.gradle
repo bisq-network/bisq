@@ -1,98 +1,14 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-        classpath files('gradle/witness/gradle-witness.jar')
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
-    }
-}
-
-apply plugin: 'java'
-apply plugin: 'application'
-apply plugin: 'maven'
-apply plugin: 'witness'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'com.google.osdetector'
-
-ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-
-group = 'network.bisq'
-version = '0.8.0-SNAPSHOT'
-
-sourceCompatibility = 1.10
-
-mainClassName = 'bisq.desktop.app.BisqAppMain'
-
-def jmockitVersion = '1.42'
-
-tasks.withType(AbstractArchiveTask) {
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
-
-repositories {
-    jcenter()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
-    maven { url 'https://dl.bintray.com/jerady/maven' }
-}
-
-dependencies {
-    // fixme(chirhonul): currently 'gradle install' using system gradle 4.9 fails with:
-    // A POM cannot have multiple artifacts with the same type and classifier. Already have MavenArtifact bisq:zip:zip:null, trying to add MavenArtifact bisq:zip:zip:null.
-    compile project(':p2p')
-    compile project(':core')
-    compile project(':common')
-    compile 'org.controlsfx:controlsfx:8.0.6_20'
-    compile 'org.reactfx:reactfx:2.0-M3'
-    compile 'net.glxn:qrgen:1.3'
-    compile 'de.jensd:fontawesomefx:8.0.0'
-    compile 'de.jensd:fontawesomefx-commons:9.1.2'
-    compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
-    compile 'com.googlecode.jcsv:jcsv:1.4.0'
-    compile 'com.github.sarxos:webcam-capture:0.3.12'
-
-    compileOnly 'org.projectlombok:lombok:1.18.2'
-    annotationProcessor 'org.projectlombok:lombok:1.18.2'
-
-    testCompile "org.jmockit:jmockit:$jmockitVersion"
-    testCompile('org.mockito:mockito-core:2.21.0') {
-        exclude(module: 'objenesis')
-    }
-    testCompile 'org.powermock:powermock-module-junit4:2.0.0-beta.5'
-    testCompile 'org.powermock:powermock-api-mockito2:2.0.0-beta.5'
-    testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
-    testCompile 'com.natpryce:make-it-easy:4.0.1'
-    testCompileOnly 'org.projectlombok:lombok:1.18.2'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
-}
-
-test {
-    systemProperty 'jdk.attach.allowAttachSelf', true
-
-    def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-    jvmArgs "-javaagent:$jmockit"
-}
-build.dependsOn installDist
-installDist.destinationDir = file('build/app')
-
 // To update the `dependencyVerification` block below:
 //
 // 1. Remove the block entirely
 // 2. Replace the block with the following command:
 //
-//    ./gradlew -q calculateChecksums | grep -v network.bisq >> desktop/build.gradle
+//    ./gradlew -q calculateChecksums | grep -v network.bisq >> gradle/witness/gradle-witness.gradle
 //
 // 3. Run `git diff` to verify that expected hashes have changed
 // 4. Commit the changes
+//
+// See https://github.com/signalapp/gradle-witness#using-witness for further details.
 
 dependencyVerification {
     verify = [

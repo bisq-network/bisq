@@ -1,3 +1,319 @@
-plugins {
-    id 'java-base'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath files('gradle/witness/gradle-witness.jar')
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
+    }
+}
+
+
+configure(subprojects) {
+    apply plugin: 'java'
+    apply plugin: 'com.google.osdetector'
+
+    sourceCompatibility = 1.10
+
+    ext {
+        bcVersion = '1.56'
+        codecVersion = '1.9'
+        easyVersion = '4.0.1'
+        jmockitVersion = '1.42'
+        joptVersion = '5.0.3'
+        langVersion = '3.4'
+        libdohjVersion = 'd4ace7bc'
+        lombokVersion = '1.18.2'
+        mockitoVersion = '2.21.0'
+        powermockVersion = '2.0.0-beta.5'
+        protobufVersion = '3.5.1'
+        sparkVersion = '2.5.2'
+        springVersion = '4.3.6.RELEASE'
+
+        os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
+    }
+
+    repositories {
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+}
+
+
+configure([project(':desktop'),
+           project(':monitor'),
+           project(':relay'),
+           project(':seednode'),
+           project(':statsnode')]) {
+    apply plugin: 'application'
+
+    build.dependsOn installDist
+    installDist.destinationDir = file('build/app')
+    distZip.enabled = false
+}
+
+
+configure(project(':assets')) {
+    dependencies {
+        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
+            exclude(module: 'protobuf-java')
+        }
+        compile "commons-codec:commons-codec:$codecVersion"
+        compile "org.apache.commons:commons-lang3:$langVersion"
+        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+    }
+}
+
+
+configure(project(':common')) {
+    apply plugin: 'com.google.protobuf'
+
+    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:$protobufVersion"
+        }
+    }
+
+    dependencies {
+        compile "org.openjfx:javafx-base:11:$os"
+        compile "org.openjfx:javafx-graphics:11:$os"
+        compile "com.google.protobuf:protobuf-java:$protobufVersion"
+        compile 'com.google.code.gson:gson:2.7'
+        compile('com.googlecode.json-simple:json-simple:1.1.1') {
+            exclude(module: 'junit')
+        }
+        compile "org.springframework:spring-core:$springVersion"
+        compile 'org.slf4j:slf4j-api:1.7.22'
+        compile 'ch.qos.logback:logback-core:1.1.10'
+        compile 'ch.qos.logback:logback-classic:1.1.10'
+        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'com.google.guava:guava:20.0'
+        compile('com.google.inject:guice:4.1.0') {
+            exclude(module: 'guava')
+        }
+        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+        }
+        compile 'org.jetbrains:annotations:13.0'
+        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
+        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+        compile 'commons-io:commons-io:2.4'
+        compile "org.apache.commons:commons-lang3:$langVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+
+configure(project(':p2p')) {
+    dependencies {
+        compile project(':common')
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.2') {
+            exclude(module: 'slf4j-api')
+        }
+        compile('org.apache.httpcomponents:httpclient:4.5.3') {
+            exclude(module: 'commons-logging')
+        }
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        compile 'org.fxmisc.easybind:easybind:1.0.3'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile 'org.jmockit:jmockit:1.30' // must not use current $jmockitVersion
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+
+configure(project(':core')) {
+    dependencies {
+        compile project(':assets')
+        compile project(':p2p')
+        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:3864e1c4') {
+            exclude(module: 'slf4j-api')
+            exclude(module: 'httpclient')
+            exclude(module: 'commons-lang3')
+            exclude(module: 'jackson-core')
+            exclude(module: 'jackson-annotations')
+            exclude(module: 'jackson-databind')
+        }
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:3864e1c4') {
+            exclude(module: 'slf4j-api')
+            exclude(module: 'httpclient')
+            exclude(module: 'commons-lang3')
+            exclude(module: 'jackson-core')
+            exclude(module: 'jackson-annotations')
+            exclude(module: 'jackson-databind')
+        }
+        compile 'com.fasterxml.jackson.core:jackson-core:2.8.10'
+        compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.10'
+        compile('com.fasterxml.jackson.core:jackson-databind:2.8.10') {
+            exclude(module: 'jackson-annotations')
+        }
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "org.jmockit:jmockit:$jmockitVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion") {
+            exclude(module: 'objenesis')
+        }
+        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
+        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+
+    test {
+        systemProperty 'jdk.attach.allowAttachSelf', true
+
+        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
+        jvmArgs "-javaagent:$jmockit"
+    }
+}
+
+
+configure(project(':desktop')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'witness'
+    apply from: '../gradle/witness/gradle-witness.gradle'
+
+    version = '0.8.0-SNAPSHOT'
+
+    mainClassName = 'bisq.desktop.app.BisqAppMain'
+
+    tasks.withType(AbstractArchiveTask) {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
+    sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
+
+    dependencies {
+        compile project(':p2p')
+        compile project(':core')
+        compile project(':common')
+        compile 'org.controlsfx:controlsfx:8.0.6_20'
+        compile 'org.reactfx:reactfx:2.0-M3'
+        compile 'net.glxn:qrgen:1.3'
+        compile 'de.jensd:fontawesomefx:8.0.0'
+        compile 'de.jensd:fontawesomefx-commons:9.1.2'
+        compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+        compile 'com.googlecode.jcsv:jcsv:1.4.0'
+        compile 'com.github.sarxos:webcam-capture:0.3.12'
+        compile "org.openjfx:javafx-controls:11:$os"
+        compile "org.openjfx:javafx-fxml:11:$os"
+        compile "org.openjfx:javafx-swing:11:$os"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "org.jmockit:jmockit:$jmockitVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion") {
+            exclude(module: 'objenesis')
+        }
+        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
+        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+
+configure(project(':monitor')) {
+    mainClassName = 'bisq.monitor.MonitorMain'
+
+    dependencies {
+        compile project(':core')
+        compile "com.sparkjava:spark-core:$sparkVersion"
+        compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+
+configure(project(':pricenode')) {
+    apply plugin: "org.springframework.boot"
+
+    version = file("src/main/resources/version.txt").text
+
+    jar.manifest.attributes(
+        "Implementation-Title": project.name,
+        "Implementation-Version": version)
+
+    dependencies {
+        compile project(":core")
+        compile project(":assets")
+        compile("org.knowm.xchange:xchange-bitcoinaverage:4.3.3")
+        compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
+        compile("org.knowm.xchange:xchange-poloniex:4.3.3")
+        compile("org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE")
+        compile("org.springframework.boot:spring-boot-starter-actuator")
+    }
+
+    task stage {
+        dependsOn assemble
+    }
+}
+
+
+configure(project(':relay')) {
+    mainClassName = 'bisq.relay.RelayMain'
+
+    dependencies {
+        compile project(':common')
+        compile "com.sparkjava:spark-core:$sparkVersion"
+        compile 'com.turo:pushy:0.13.2'
+        compile 'com.google.firebase:firebase-admin:6.2.0'
+        compile "commons-codec:commons-codec:$codecVersion"
+    }
+}
+
+
+configure(project(':seednode')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    mainClassName = 'bisq.seednode.SeedNodeMain'
+
+    dependencies {
+        compile project(':core')
+        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+
+configure(project(':statsnode')) {
+    mainClassName = 'bisq.statistics.StatisticsMain'
+
+    dependencies {
+        compile project(':core')
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
 }
