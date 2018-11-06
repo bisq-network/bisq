@@ -22,7 +22,6 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -286,7 +285,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (isF2F) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("payment.f2f.city"), offer.getF2FCity());
-            TextArea textArea = FormBuilder.addTopLabelTextArea(gridPane, ++rowIndex, Res.get("payment.f2f.extra"), "").second;
+            TextArea textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("payment.f2f.extra"), "", 0).second;
             textArea.setText(offer.getF2FExtraInfo());
             textArea.setMinHeight(33);
             textArea.setMaxHeight(textArea.getMinHeight());
@@ -324,7 +323,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
-            FormBuilder.addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);

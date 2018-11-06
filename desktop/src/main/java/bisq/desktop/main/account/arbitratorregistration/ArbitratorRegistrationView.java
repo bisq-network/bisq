@@ -34,6 +34,7 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import com.google.inject.name.Named;
@@ -53,7 +54,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 
@@ -64,8 +64,7 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
@@ -142,12 +141,10 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
         columnConstraints1.setHgrow(Priority.SOMETIMES);
         columnConstraints1.setMinWidth(200);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        columnConstraints1.setMaxWidth(500);
+        gridPane.getColumnConstraints().addAll(columnConstraints1);
         root.getChildren().add(gridPane);
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
@@ -162,10 +159,10 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
         languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
+        languagesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
-                return new ListCell<String>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -192,10 +189,10 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        languageComboBox = FormBuilder.<String>addComboBox(gridPane, ++gridRow);
+        languageComboBox = FormBuilder.addComboBox(gridPane, ++gridRow);
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
-        languageComboBox.setConverter(new StringConverter<String>() {
+        languageComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(String code) {
                 return LanguageUtil.getDisplayName(code);
@@ -208,11 +205,12 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         });
         languageComboBox.setOnAction(e -> onAddLanguage());
 
-        Button registerButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"));
+        final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"), Res.get("account.arbitratorRegistration.revoke"));
+        Button registerButton = buttonButtonTuple2.first;
         registerButton.disableProperty().bind(model.registrationEditDisabled);
         registerButton.setOnAction(e -> onRegister());
 
-        Button revokeButton = addButton(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.revoke"));
+        Button revokeButton = buttonButtonTuple2.second;
         revokeButton.setDefaultButton(false);
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
