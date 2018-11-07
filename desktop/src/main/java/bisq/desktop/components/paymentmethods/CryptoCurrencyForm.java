@@ -49,8 +49,8 @@ import javafx.util.StringConverter;
 
 import java.util.Optional;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class CryptoCurrencyForm extends PaymentMethodForm {
@@ -64,7 +64,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                                       int gridRow,
                                       PaymentAccountPayload paymentAccountPayload,
                                       String labelTitle) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
                 ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
         return gridRow;
     }

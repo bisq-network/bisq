@@ -23,7 +23,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -54,6 +53,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -61,6 +61,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
@@ -159,12 +160,17 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void addContent() {
+
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
+
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
+                Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.COMPACT_GROUP_DISTANCE);
 
-        TextFieldWithCopyIcon field = FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step3_seller.amountToReceive"),
-                model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
+                Res.get("portfolio.pending.step3_seller.amountToReceive"),
+                model.getFiatVolume(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";
@@ -191,20 +197,28 @@ public class SellerStep3View extends TradeStepView {
             }
         }
 
-        TextFieldWithCopyIcon myPaymentDetailsTextField = addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, myTitle, myPaymentDetails).second;
-        myPaymentDetailsTextField.setMouseTransparent(false);
-        myPaymentDetailsTextField.setTooltip(new Tooltip(myPaymentDetails));
-
-        TextFieldWithCopyIcon peersPaymentDetailsTextField = addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, peersTitle, peersPaymentDetails).second;
-        peersPaymentDetailsTextField.setMouseTransparent(false);
-        peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
-
         if (!isBlockChain && !trade.getOffer().getPaymentMethod().equals(PaymentMethod.F2F)) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
+            addTopLabelTextFieldWithCopyIcon(
+                    gridPane, gridRow, 1, Res.get("shared.reasonForPayment"),
+                    model.dataModel.getReference(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+        TextFieldWithCopyIcon myPaymentDetailsTextField = addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                0, myTitle, myPaymentDetails).second;
+        myPaymentDetailsTextField.setMouseTransparent(false);
+        myPaymentDetailsTextField.setTooltip(new Tooltip(myPaymentDetails));
+
+        TextFieldWithCopyIcon peersPaymentDetailsTextField = addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
+                1, peersTitle, peersPaymentDetails).second;
+        peersPaymentDetailsTextField.setMouseTransparent(false);
+        peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
+
+
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
+                Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+
+        GridPane.setColumnSpan(tuple.forth, 2);
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;

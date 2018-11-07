@@ -21,24 +21,30 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 
 import org.fxmisc.easybind.Subscription;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public abstract class TradeSubView extends HBox {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -94,13 +100,17 @@ public abstract class TradeSubView extends HBox {
         leftVBox.getChildren().add(leftGridPane);
 
         leftGridPaneRowIndex = 0;
-        tradeProcessTitledGroupBg = FormBuilder.addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, Res.get("portfolio.pending.tradeProcess"));
+        tradeProcessTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, Res.get("portfolio.pending.tradeProcess"));
+        tradeProcessTitledGroupBg.getStyleClass().add("last");
 
         addWizards();
 
-        TitledGroupBg noticeTitledGroupBg = FormBuilder.addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", Layout.GROUP_DISTANCE);
-        Label label = FormBuilder.addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        openDisputeButton = (AutoTooltipButton) FormBuilder.addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
+        TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
+                0);
+        noticeTitledGroupBg.getStyleClass().add("last");
+        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
+                Layout.FIRST_ROW_DISTANCE);
+        openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
         GridPane.setColumnIndex(openDisputeButton, 0);
         openDisputeButton.setId("open-dispute-button");
 
@@ -150,12 +160,21 @@ public abstract class TradeSubView extends HBox {
 
     protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)
-            GridPane.setMargin(tradeWizardItem, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+            GridPane.setMargin(tradeWizardItem, new Insets(Layout.FIRST_ROW_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
 
         GridPane.setRowIndex(tradeWizardItem, leftGridPaneRowIndex++);
         leftGridPane.getChildren().add(tradeWizardItem);
         GridPane.setRowSpan(tradeProcessTitledGroupBg, leftGridPaneRowIndex);
         GridPane.setFillWidth(tradeWizardItem, true);
+    }
+
+    protected void addLineSeparatorToGridPane() {
+        final Separator separator = new Separator(Orientation.VERTICAL);
+        separator.setMinHeight(22);
+        GridPane.setMargin(separator, new Insets(0, 0, 0, 13));
+        GridPane.setHalignment(separator, HPos.LEFT);
+        GridPane.setRowIndex(separator, leftGridPaneRowIndex++);
+        leftGridPane.getChildren().add(separator);
     }
 
     private void createAndAddTradeStepView(Class<? extends TradeStepView> viewClass) {

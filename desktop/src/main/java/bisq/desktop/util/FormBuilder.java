@@ -189,8 +189,9 @@ public class FormBuilder {
         Label label = new AutoTooltipLabel(text);
         label.setWrapText(true);
         GridPane.setHalignment(label, HPos.LEFT);
+        GridPane.setHgrow(label, Priority.ALWAYS);
         GridPane.setRowIndex(label, rowIndex);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(label);
         return label;
     }
@@ -235,6 +236,21 @@ public class FormBuilder {
 
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title) {
         return addTopLabelTextField(gridPane, rowIndex, title, "", 0);
+    }
+
+    public static Tuple3<Label, TextField, VBox> addCompactTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTopLabelTextField(gridPane, rowIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
+    public static Tuple3<Label, TextField, VBox> addCompactTopLabelTextField(GridPane gridPane, int rowIndex, int colIndex,
+                                                                             String title, String value) {
+        final Tuple3<Label, TextField, VBox> labelTextFieldVBoxTuple3 = addTopLabelTextField(gridPane, rowIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
+        GridPane.setColumnIndex(labelTextFieldVBoxTuple3.third, colIndex);
+        return labelTextFieldVBoxTuple3;
+    }
+
+    public static Tuple3<Label, TextField, VBox> addCompactTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
+        return addTopLabelTextField(gridPane, rowIndex, title, value, top - Layout.FLOATING_LABEL_DISTANCE);
     }
 
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value) {
@@ -300,18 +316,13 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static Tuple2<Label, TextFieldWithIcon> addLabelTextFieldWithIcon(GridPane gridPane, int rowIndex, String title, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, top);
+    public static Tuple2<Label, TextFieldWithIcon> addTopLabelTextFieldWithIcon(GridPane gridPane, int rowIndex, String title, double top) {
 
         TextFieldWithIcon textFieldWithIcon = new TextFieldWithIcon();
         textFieldWithIcon.setMouseTransparent(true);
         textFieldWithIcon.setFocusTraversable(false);
-        GridPane.setRowIndex(textFieldWithIcon, rowIndex);
-        GridPane.setColumnIndex(textFieldWithIcon, 1);
-        GridPane.setMargin(textFieldWithIcon, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(textFieldWithIcon);
 
-        return new Tuple2<>(label, textFieldWithIcon);
+        return new Tuple2<>(addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithIcon, top).first, textFieldWithIcon);
     }
 
 
@@ -426,6 +437,10 @@ public class FormBuilder {
         return addTopLabelTextArea(gridPane, rowIndex, title, prompt, 0);
     }
 
+    public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, int colIndex, String title, String prompt) {
+        return addTopLabelTextArea(gridPane, rowIndex, colIndex, title, prompt, 0);
+    }
+
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
 
         TextArea textArea = new JFXTextArea();
@@ -433,7 +448,21 @@ public class FormBuilder {
         ((JFXTextArea) textArea).setLabelFloat(true);
         textArea.setWrapText(true);
 
+        addTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
+
+        return addTopLabelTextArea(gridPane, rowIndex, 0, title, prompt, top);
+    }
+
+    public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, int colIndex,
+                                                              String title, String prompt, double top) {
+
+        TextArea textArea = new JFXTextArea();
+        textArea.setPromptText(prompt);
+        ((JFXTextArea) textArea).setLabelFloat(true);
+        textArea.setWrapText(true);
+
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
+        GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textArea);
     }
@@ -1120,7 +1149,7 @@ public class FormBuilder {
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textField, top);
 
-        // TOD not 100% sure if that is a good idea....
+        // TODO not 100% sure if that is a good idea....
         //topLabelWithVBox.first.getStyleClass().add("jfx-text-field-top-label");
 
         return new Tuple3<>(topLabelWithVBox.first, textField, topLabelWithVBox.second);
@@ -1130,6 +1159,22 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TextFieldWithCopyIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, int colIndex, String title, String value, double top) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, top - Layout.FLOATING_LABEL_DISTANCE);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, int colIndex, String title) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, "", -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addCompactTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, int colIndex, String title, String value) {
+        return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, colIndex, title, value, -Layout.FLOATING_LABEL_DISTANCE);
+    }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
         return addTopLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, 0);
@@ -1144,6 +1189,17 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
+    }
+
+    public static Tuple2<Label, TextFieldWithCopyIcon> addTopLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, int colIndex, String title, String value, double top) {
+
+        TextFieldWithCopyIcon textFieldWithCopyIcon = new TextFieldWithCopyIcon();
+        textFieldWithCopyIcon.setText(value);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);
     }
@@ -1207,23 +1263,14 @@ public class FormBuilder {
     // Label  + InfoTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, InfoTextField> addLabelInfoTextfield(GridPane gridPane, int rowIndex, String labelText,
-                                                                     String fieldText) {
-        return addLabelInfoTextfield(gridPane, rowIndex, labelText, fieldText, 0);
-    }
-
-    public static Tuple2<Label, InfoTextField> addLabelInfoTextfield(GridPane gridPane, int rowIndex, String labelText,
-                                                                     String fieldText, double top) {
-        Label label = addLabel(gridPane, rowIndex, labelText, top);
-
+    public static Tuple3<Label, InfoTextField, VBox> addTopLabelInfoTextField(GridPane gridPane, int rowIndex, String labelText,
+                                                                              String fieldText, double top) {
         InfoTextField infoTextField = new InfoTextField();
         infoTextField.setText(fieldText);
-        GridPane.setRowIndex(infoTextField, rowIndex);
-        GridPane.setColumnIndex(infoTextField, 1);
-        GridPane.setMargin(infoTextField, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(infoTextField);
 
-        return new Tuple2<>(label, infoTextField);
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, labelText, infoTextField, top);
+
+        return new Tuple3<>(labelVBoxTuple2.first, infoTextField, labelVBoxTuple2.second);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1491,11 +1538,11 @@ public class FormBuilder {
         BusyAnimation busyAnimation = new BusyAnimation(false);
 
         Label label = new AutoTooltipLabel();
-        hBox.setAlignment(Pos.CENTER_RIGHT);
+        hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(button, busyAnimation, label);
 
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setHalignment(hBox, HPos.RIGHT);
+        GridPane.setHalignment(hBox, HPos.LEFT);
         GridPane.setColumnIndex(hBox, colIndex);
         GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(hBox);
@@ -1640,16 +1687,25 @@ public class FormBuilder {
     }
 
     public static Text getIcon(GlyphIcons icon) {
+        return getIcon(icon, "1.231em");
+    }
+
+    public static Text getBigIcon(GlyphIcons icon) {
+        return getIcon(icon, "2em");
+    }
+
+    public static Text getIcon(GlyphIcons icon, String iconSize) {
         Text textIcon;
 
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
-            textIcon = MaterialDesignIconFactory.get().createIcon(icon, "1.231em");
+            textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
         } else {
             throw new IllegalArgumentException("Not supported icon type");
         }
 
         return textIcon;
     }
+
 
     public static Label getIcon(AwesomeIcon icon) {
         final Label label = new Label();

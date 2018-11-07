@@ -34,6 +34,7 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
@@ -44,7 +45,7 @@ public class PromptPayForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
                 ((PromptPayAccountPayload) paymentAccountPayload).getPromptPayId());
         return gridRow;
     }

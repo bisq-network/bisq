@@ -47,6 +47,8 @@ import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
@@ -131,7 +133,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         addConfidenceColumn();
         addTxTypeColumn();
 
-        chainSyncIndicator = new ProgressBar();
+        chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             chainSyncIndicator.setProgress(-1);

@@ -35,9 +35,9 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private final USPostalMoneyOrderAccount usPostalMoneyOrderAccount;
@@ -46,7 +46,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName());
         TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setPrefHeight(60);

@@ -52,6 +52,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -138,8 +139,10 @@ public abstract class PaymentMethodForm {
                                                      int gridRow,
                                                      Offer offer) {
         long hours = offer.getMaxTradePeriod() / 3600_000;
-        return addLabelInfoTextfield(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                getTimeText(hours)).second;
+        final Tuple3<Label, InfoTextField, VBox> labelInfoTextFieldVBoxTuple3 =
+                addTopLabelInfoTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
+                        getTimeText(hours), -Layout.FLOATING_LABEL_DISTANCE);
+        return labelInfoTextFieldVBoxTuple3.second;
     }
 
     private static String getTimeText(long hours) {

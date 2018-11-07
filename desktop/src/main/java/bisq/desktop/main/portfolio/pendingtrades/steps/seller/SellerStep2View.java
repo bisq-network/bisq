@@ -20,11 +20,12 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.F2FAccountPayload;
+
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class SellerStep2View extends TradeStepView {
 
@@ -41,10 +42,10 @@ public class SellerStep2View extends TradeStepView {
         addTradeInfoBlock();
         addInfoBlock();
         if (model.dataModel.getSellersPaymentAccountPayload() instanceof F2FAccountPayload) {
-            FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 4,
-                    Res.get("portfolio.pending.step2_seller.f2fInfo.headline"), Layout.GROUP_DISTANCE);
+            addTitledGroupBg(gridPane, ++gridRow, 4,
+                    Res.get("portfolio.pending.step2_seller.f2fInfo.headline"), Layout.COMPACT_GROUP_DISTANCE);
             gridRow = F2FForm.addFormForBuyer(gridPane, --gridRow, model.dataModel.getSellersPaymentAccountPayload(),
-                    model.dataModel.getTrade().getOffer(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                    model.dataModel.getTrade().getOffer(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         }
     }
 

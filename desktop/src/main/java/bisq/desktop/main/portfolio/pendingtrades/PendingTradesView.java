@@ -38,8 +38,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
-import org.springframework.util.Assert;
-
 import com.google.inject.name.Named;
 
 import javax.inject.Inject;
@@ -71,6 +69,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -197,6 +197,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (scene != null) {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
+            //TODO: in what cases is it necessary to request focus?
             /*appFocusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(), isFocused -> {
                 if (isFocused && model.dataModel.selectedItemProperty.get() != null) {
                     // Focus selectedItem from model
@@ -486,7 +487,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final Offer offer = trade.getOffer();
-                                    Assert.notNull(offer, "Offer can't be null");
+                                    checkNotNull(offer, "Offer must not be null in PendingTradesView");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,

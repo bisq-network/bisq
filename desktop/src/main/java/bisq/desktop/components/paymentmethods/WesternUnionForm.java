@@ -46,21 +46,21 @@ import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 @Slf4j
 public class WesternUnionForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         final WesternUnionAccountPayload payload = (WesternUnionAccountPayload) paymentAccountPayload;
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.city"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.city"),
                 payload.getCity());
         if (BankUtil.isStateRequired(payload.getCountryCode()))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
                     payload.getState());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 payload.getEmail());
 
         return gridRow;

@@ -55,17 +55,19 @@ abstract class BankForm extends GeneralBankForm {
         BankAccountPayload data = (BankAccountPayload) paymentAccountPayload;
         String countryCode = ((BankAccountPayload) paymentAccountPayload).getCountryCode();
 
+        int colIndex = 0;
+
         if (data.getHolderTaxId() != null) {
             final String title = Res.get("payment.account.owner") + " / " + BankUtil.getHolderIdLabelShort(countryCode);
             final String value = data.getHolderName() + " / " + data.getHolderTaxId();
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), title, value);
         } else {
             final String title = Res.get("payment.account.owner");
             final String value = data.getHolderName();
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), title, value);
         }
 
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.country"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(countryCode));
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
@@ -101,34 +103,34 @@ abstract class BankForm extends GeneralBankForm {
         prepareFormLayoutFlags(countryCode, nrRows);
 
         if (bankNameBankIdCombined) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
                             bankIdLabel.substring(0, bankIdLabel.length() - 1) + ":",
                     data.getBankName() + " / " + data.getBankId());
         }
         if (bankNameBranchIdCombined) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
                             branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
                     data.getBankName() + " / " + data.getBranchId());
         }
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && BankUtil.isBankNameRequired(countryCode))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankNameLabel, data.getBankName());
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), bankNameLabel, data.getBankName());
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined &&
                 !branchIdAccountNrCombined && bankIdBranchIdCombined) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankIdLabel.substring(0, bankIdLabel.length() - 1) + " / " +
                             branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
                     data.getBankId() + " / " + data.getBranchId());
         }
 
         if (!bankNameBankIdCombined && !bankIdBranchIdCombined && BankUtil.isBankIdRequired(countryCode))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, bankIdLabel, data.getBankId());
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), bankIdLabel, data.getBankId());
 
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     branchIdLabel.substring(0, branchIdLabel.length() - 1) + " / " +
                             accountNrLabel.substring(0, accountNrLabel.length() - 1) + ":",
                     data.getBranchId() + " / " + data.getAccountNr());
@@ -136,23 +138,23 @@ abstract class BankForm extends GeneralBankForm {
 
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && !branchIdAccountNrCombined &&
                 BankUtil.isBranchIdRequired(countryCode))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, branchIdLabel, data.getBranchId());
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), branchIdLabel, data.getBranchId());
 
         if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     accountNrLabel.substring(0, accountNrLabel.length() - 1) + " / " + accountTypeLabel,
                     data.getAccountNr() + " / " + data.getAccountType());
         }
 
         if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && !nationalAccountIdAccountNrCombined &&
                 BankUtil.isAccountNrRequired(countryCode))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountNrLabel, data.getAccountNr());
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), accountNrLabel, data.getAccountNr());
 
         if (!accountNrAccountTypeCombined && BankUtil.isAccountTypeRequired(countryCode))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, accountTypeLabel, data.getAccountType());
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), accountTypeLabel, data.getAccountType());
 
         if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && nationalAccountIdAccountNrCombined)
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     nationalAccountIdLabel.substring(0, nationalAccountIdLabel.length() - 1) + " / " +
                             accountNrLabel.substring(0, accountNrLabel.length() - 1), data.getNationalAccountId() +
                             " / " + data.getAccountNr());

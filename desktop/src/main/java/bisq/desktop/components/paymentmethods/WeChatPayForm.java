@@ -30,14 +30,14 @@ import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 public class WeChatPayForm extends GeneralAccountNumberForm {
 
     private final WeChatPayAccount weChatPayAccount;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((WeChatPayAccountPayload) paymentAccountPayload).getAccountNr());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((WeChatPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

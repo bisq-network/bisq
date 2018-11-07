@@ -47,9 +47,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class F2FForm extends PaymentMethodForm {
     private final F2FAccount f2fAccount;
@@ -60,13 +60,13 @@ public class F2FForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload, Offer offer, double top) {
         F2FAccountPayload f2fAccountPayload = (F2FAccountPayload) paymentAccountPayload;
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("shared.country"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, 0, Res.get("shared.country"),
                 CountryUtil.getNameAndCode(f2fAccountPayload.getCountryCode()), top);
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.f2f.city"),
+                offer.getF2FCity(), top);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.contact"),
                 f2fAccountPayload.getContact());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.f2f.city"),
-                offer.getF2FCity());
-        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
+        TextArea textArea = addTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.f2f.extra"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");

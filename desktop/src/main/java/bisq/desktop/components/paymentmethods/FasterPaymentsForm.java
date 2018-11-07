@@ -36,6 +36,7 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class FasterPaymentsForm extends PaymentMethodForm {
@@ -44,9 +45,9 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         // do not translate as it is used in english only
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE,
+        addCompactTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE,
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
@@ -83,7 +84,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
@@ -99,16 +100,16 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
-        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
+        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 
