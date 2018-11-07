@@ -253,12 +253,12 @@ public class TorNetworkNode extends NetworkNode {
                 Torrc override = null;
 
                 // check if the user wants to provide his own torrc file
-                String torrcfile = System.getProperty(CONFIG_TORRCFILE);
-                if(null != torrcfile) {
+                String torrcFile = System.getProperty(CONFIG_TORRCFILE);
+                if(null != torrcFile) {
                     try {
-                        override = new Torrc(new FileInputStream(new File(torrcfile)));
+                        override = new Torrc(new FileInputStream(new File(torrcFile)));
                     } catch(IOException e) {
-                        log.error("custom torrc file not found (" + torrcfile + "). Proceeding with defaults.");
+                        log.error("custom torrc file not found (" + torrcFile + "). Proceeding with defaults.");
                     }
                 }
 
@@ -269,7 +269,7 @@ public class TorNetworkNode extends NetworkNode {
                         tmp.put(((String) k).substring(CONFIG_TORRCPREFIX.length()), (String) v);
                 });
                 if(!tmp.isEmpty())
-                    // check for custom torrcfile
+                    // check for custom torrcFile
                     if(null != override)
                         // and merge the contents
                         override = new Torrc(override.getInputStream$tor(), tmp);
