@@ -1,0 +1,1388 @@
+/*
+Theme colors:
+
+logo colors:
+
+bisq blue: 0f86c3
+bisq grey: 666666
+
+00abff
+orange web page quotes : ff7f00
+
+
+main bg grey: dddddd
+content bg grey: f4f4f4
+tab pane upper bg gradient color mid dark grey to bright grey: cfcfcf -> dddddd
+upper border on tab: cfcfcf
+lower border on tab: b5b5b5
+upper gradient color on tab: d3d3d3
+lower gradient color on tab: dddddd
+bg color of non edit textFields: fafafa
+*/
+
+@font-face {
+    src: url("/fonts/Verdana.ttf");
+}
+
+@font-face {
+    src: url("/fonts/VerdanaBold.ttf");
+}
+
+@font-face {
+    src: url("/fonts/DroidSansMono.ttf");
+}
+
+.root {
+    -bs-very-dark-grey3: #444; /* 3 usages */
+    -bs-grey: #666666; /* 8 usages */
+    -bs-medium-grey: #AAAAAA; /* 8 usages */
+    -bs-bg-grey: #dddddd; /* 25 usages */
+    -bs-bg-grey2: #bbb; /* 1 usages */
+    -bs-bg-grey3: #d3d3d3; /* 1 usages */
+    -bs-dark-grey: #999; /* 8 usages */
+    -bs-light-grey: #cccccc; /* derive(-bs-white, -20%); 13 usages */
+    -bs-content-bg-grey: #f4f4f4; /* 14 usages */
+    -bs-very-light-grey: #f8f8f8; /* 10 usages */
+    -bs-bg-light: #FAFAFA; /* derive(-bs-white, -2%) 4 usages */
+    -bs-very-light-grey: #F0F0F0; /* derive(-bs-white, -6%) 10 usages */
+    -bs-very-dark-grey: #3c3c3c; /* 8 usages */
+    -bs-very-dark-grey2: #111; /* 1 usages */
+    -bs-black-transparent: rgba(0, 0, 0, 0.5); /* 1 usages */
+    -bs-light-grey2: #cfcfcf; /* 2 usages */
+    -bs-light-grey3: #b5b5b5; /* 1 usages */
+    -bs-bg-grey4: #f6f6f6; /* 1 usages */
+    -bs-black: #000000; /* 13 usages */
+    -bs-font-dark: #333; /* 11 usages */
+    -bs-bg-grey7: #e0e0e0; /* 2 usages */
+    -bs-white: #ffffff; /* 30 usages */
+    -bs-bg-grey9: #fcfcfc; /* 1 usages */
+    -bs-bg-grey10: #e5e5e5; /* 1 usages */
+    -bs-bg-grey11: #f1f1f1; /* 1 usages */
+    -bs-dark-grey: #555; /* 8 usages */
+    -bs-dim-grey: dimgrey; /* 1 usages */
+    -bs-very-dark-grey3: #333000; /* 3 usages */
+
+    -bs-red: red; /* 5 usages */
+    -bs-error-red: #dd0000; /* 5 usages */
+    -bs-soft-red: #ee6664; /* 1 usages */
+    -bs-pink: #ff8986; /* 2 usages */
+    -bs-orange: #ff8a2b; /* 2 usages */
+    -bs-orange2: #dd6900; /* 1 usages */
+    -bs-yellow: #ffb60f; /* 2 usages */
+    -bs-yellow-light: derive(-bs-yellow, 81%);
+    -bs-bg-grey8: #E1E9E1; /* 1 usages */
+    -bs-bg-green2: #619865; /* 2 usages */
+    -bs-bg-green: #99ba9c; /* 4 usages */
+    -bs-green: #00aa33; /* 6 usages */
+    -bs-turquoise: #2cacaf; /* 1 usages */
+    -bs-bg-grey5: #f1f6f7; /* 4 usages */
+    -bs-bg-grey6: #e7f5f9; /* 3 usages */
+    -bs-bg-blue2: #6aa4b6; /* 3 usages */
+    -bs-bg-blue1: #b5e1ef; /* 3 usages */
+    -bs-bg-blue4: #57acc9; /* 1 usages */
+    -bs-bg-blue3: #9bbdc9; /* 1 usages */
+    -fx-faint-focus-color: #0f87c322; /* 5 usages */
+    -fx-accent: #0f86c3; /* 18 usages */
+    -bs-blue-transparent: #0f87c344;
+    -bs-blue: blue; /* 1 usages */
+
+    -bs-green-soft: derive(-bs-green, 60%); /* 2 usages */
+    -bs-red-soft: derive(-bs-error-red, 60%); /* 2 usages */
+
+    -bs-warning: -bs-orange; /* 1 usages */
+
+    -bs-buy: -bs-yellow; /* 12 usages */
+    -bs-buy-focus: derive(-bs-buy, -50%); /* 2 usages */
+    -bs-buy-hover: derive(-bs-buy, -10%); /* 2 usages */
+    -bs-buy-transparent: derive(-bs-buy, 75%); /* 1 usages */
+
+    -bs-sell: -bs-turquoise; /* 11 usages */
+    -bs-sell-focus: derive(-bs-sell, -50%); /* 2 usages */
+    -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
+    -bs-sell-transparent: derive(-bs-sell, 95%); /* 1 usages */
+
+    -bs-cancel: -bs-bg-grey; /* 5 usages */
+    -bs-cancel-focus: derive(-bs-cancel, -50%); /* 1 usages */
+    -bs-cancel-hover: derive(-bs-cancel, -10%); /* 1 usages */
+
+    -fx-default-button: derive(-fx-accent, 95%);
+    -fx-focus-color: -fx-accent;
+    -fx-selection-bar: derive(-fx-accent, 50%);
+
+    -fx-font-size: 13;
+    -fx-font-family: "Verdana";
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * General                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+/* Text */
+.error-text {
+    -fx-text-fill: -bs-error-red;
+}
+
+.error {
+    -fx-accent: -bs-error-red;
+}
+
+.success-text {
+    -fx-text-fill: -bs-green;
+}
+
+.highlight, .highlight-static {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+.highlight:hover {
+    -fx-text-fill: -bs-black;
+    -fx-fill: -bs-black;
+}
+
+.info {
+    -fx-text-fill: -bs-green;
+    -fx-fill: -bs-green;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-grey;
+    -fx-fill: -bs-grey;
+}
+
+.headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.692em;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+    -fx-spacing: 6;
+    -fx-alignment: center;
+}
+
+.warning {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warning:hover {
+    -fx-text-fill: -bs-grey;
+    -fx-fill: -bs-grey;
+}
+
+.zero-decimals {
+    -fx-text-fill: -bs-light-grey;
+}
+
+/* Other UI Elements */
+
+.separator {
+    -fx-background: -bs-light-grey;
+}
+
+/* Behavior */
+
+.show-hand {
+    -fx-cursor: hand;
+}
+
+.hide-focus {
+    -fx-focus-color: transparent;
+}
+
+/* Font */
+
+.very-small-text {
+    -fx-font-size: 0.692em;
+}
+
+.small-text {
+    -fx-font-size: 0.769em;
+}
+
+.normal-text {
+    -fx-font-size: 0.923em;
+}
+
+.default-text {
+    -fx-font-size: 13;
+}
+
+/* Splash */
+
+#splash {
+    -fx-background-color: -bs-white;
+}
+
+/* Main UI */
+#base-content-container {
+    -fx-background-color: -bs-bg-grey;
+}
+
+#content-pane {
+    -fx-background-color: -bs-content-bg-grey;
+}
+
+#footer-pane {
+    -fx-background-color: -bs-bg-grey;
+    -fx-font-size: 0.923em;
+    -fx-text-fill: -bs-font-dark;
+}
+
+#footer-pane-line {
+    -fx-background: -bs-bg-grey2;
+}
+
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.385em;
+}
+
+/* Main navigation */
+#nav-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+#nav-button .text {
+    -fx-font-size: 0.769em;
+}
+
+#nav-button:selected .text {
+    -fx-font-size: 0.846em;
+    -fx-font-weight: bold;
+    -fx-fill: -fx-accent;
+}
+
+#nav-balance-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: center;
+}
+
+#nav-alert-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-white;
+}
+
+.text-field {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+.text-field:readonly {
+    -fx-text-fill: -bs-black;
+    -fx-background-color: -bs-bg-light;
+}
+
+.display-text-field {
+    -fx-alignment: center;
+    -fx-background-color: -bs-white;
+}
+
+.text-area:readonly .content {
+    -fx-background-color: -bs-bg-light;
+}
+
+.text-area {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-blue;
+    -fx-underline: true;
+}
+
+.icon, icon:hover {
+    -fx-cursor: hand;
+}
+
+.hidden-icon-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.copy-icon-disputes {
+    -fx-text-fill: -bs-white;
+}
+
+.copy-icon:hover {
+    -fx-text-fill: -bs-black;
+}
+
+.received-funds-icon {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.sent-funds-icon {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.version {
+    -fx-text-fill: black;
+    -fx-underline: false;
+    -fx-cursor: null;
+}
+
+.version-new {
+    -fx-text-fill: -bs-error-red;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tooltip                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.tooltip {
+    -fx-background: -bs-white;
+    -fx-text-fill: -bs-black;
+    -fx-background-color: -bs-white;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, -bs-black-transparent, 10, 0.0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
+/* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally
+textfield */
+#label-with-background {
+    -fx-background-color: -bs-bg-light;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#funds-confidence {
+    -fx-progress-color: -bs-dim-grey;
+}
+
+.hyperlink,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.hyperlink {
+    -fx-text-fill: -fx-accent;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bs-black;
+}
+
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited {
+    -fx-underline: false;
+}
+
+.market-price-tooltip {
+    -fx-font-size: 0.923em;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Table                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
+.table-view .table-cell {
+    -fx-alignment: center;
+}
+
+#addressColumn {
+    -fx-alignment: center-left;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: center;
+    -fx-font-weight: bold;
+}
+
+.table-view .focus {
+    -fx-alignment: center;
+}
+
+.table-view .text {
+    -fx-fill: -bs-black;
+}
+
+.table-view:focused {
+    /*-fx-background-color: transparent;*/
+}
+
+/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
+.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
+.table-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
+    -fx-fill: -bs-white;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: -bs-black;
+}
+
+.table-view .table-row-cell .copy-icon .text,
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: -bs-white;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: -bs-black;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: -bs-white;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: -fx-accent;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover,
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: -bs-black;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:hover,
+.table-view .table-row-cell .hyperlink:visited,
+.table-view .table-row-cell .hyperlink:hover:visited {
+    -fx-underline: false;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.number-column.table-cell {
+
+    -fx-font-family: "Droid Sans Mono";
+    -fx-font-size: 1em;
+    -fx-padding: 0 0 0 0;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
+#non-clickable-icon {
+    -fx-text-fill: -bs-medium-grey;
+}
+
+.delete-icon {
+    -fx-fill: -bs-red;
+}
+
+.delete {
+    -fx-text-fill: -bs-error-red;
+    -fx-fill: -bs-error-red;
+}
+
+.delete:hover {
+    -fx-text-fill: -bs-black;
+    -fx-fill: -bs-black;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Images                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.qr-code {
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Textarea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-border-color: -bs-bg-grey;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tab pane                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.tab-pane .tab-label {
+    -fx-font-size: 1.154em;
+}
+
+.tab-pane:focused {
+    -fx-background-color: transparent;
+}
+
+.tab-header-area:focused {
+    -fx-background-color: transparent;
+}
+
+.tab:focused {
+    -fx-background-color: transparent;
+}
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+/* scroll-pane */
+
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+/* validation */
+#validation-error {
+    -fx-text-fill: -bs-red;
+}
+
+/* Account */
+
+#content-pane-top {
+    -fx-background-color: -bs-light-grey2,
+    linear-gradient(-bs-light-grey2 0%, -bs-light-grey3 100%),
+    linear-gradient(-bs-bg-grey3 0%, -bs-bg-grey 100%);
+    -fx-background-insets: 0 0 0 0, 0, 1;
+}
+
+#info-icon-label {
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-very-dark-grey3;
+}
+
+/* OfferPayload book */
+#num-offers {
+    -fx-font-size: 0.923em;
+}
+
+/* Create offer */
+#direction-icon-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-grey;
+}
+
+#input-description-label {
+    -fx-font-size: 0.846em;
+    -fx-alignment: center;
+}
+
+#create-offer-calc-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.538em;
+    -fx-padding: 15 5 0 5;
+}
+
+#currency-info-label {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-background-color: -bs-bg-grey4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+}
+
+#currency-info-label-disabled {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-background-color: -bs-bg-grey7;
+    -fx-border-color: -bs-bg-grey7;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+}
+
+#toggle-price-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid none solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-price-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+
+#totals-separator {
+    -fx-background: -bs-medium-grey;
+}
+
+#payment-info {
+    -fx-background-color: -bs-content-bg-grey;
+}
+
+.toggle-button-active {
+    -fx-background-color: -bs-blue-transparent;
+}
+
+.toggle-button-inactive {
+    -fx-background-color: -bs-very-light-grey;
+}
+
+/* Open Offer */
+.offer-disabled .label {
+    -fx-text-fill: -bs-light-grey;
+}
+
+/* OfferBook */
+
+.table-title {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.231em;
+    -fx-alignment: center;
+}
+
+/* Offer */
+
+.percentage-label {
+    -fx-alignment: center;
+}
+
+.offer-separator {
+    -fx-background: -bs-grey;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: -bs-black;
+}
+
+/* Account setup */
+#wizard-item-background-deactivated {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Account settings */
+
+#account-settings-item-background-disabled {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-selected {
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Pending trades */
+#trade-wizard-item-background-disabled {
+    -fx-text-fill: -bs-grey;
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    /*  -fx-body-color:  -bs-very-light-grey;
+      -fx-outer-border:  -bs-light-grey;*/
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 1px, 1px, 1px, 1px;
+}
+
+#trade-wizard-item-background-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 1px, 1px, 1px, 1px;
+}
+
+#trade-wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-bg-grey8);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 1px, 1px, 1px, 1px;
+}
+
+#open-support-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-base: -bs-warning;
+}
+
+#open-dispute-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-base: -bs-error-red;
+}
+
+/* TitledGroupBg */
+#titled-group-bg-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-grey;
+    -fx-background-color: -bs-content-bg-grey;
+}
+
+#titled-group-bg-label-active {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -fx-accent;
+    -fx-background-color: -bs-content-bg-grey;
+}
+
+#titled-group-bg {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#titled-group-bg-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue3, -bs-bg-blue4);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* TableGroupHeadline */
+#table-group-headline {
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-insets: 10 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* copied form modena.css text-input */
+#flow-pane-checkboxes-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+#flow-pane-checkboxes-non-editable-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-very-light-grey);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+/* message-list-view*/
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: -bs-white;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-white;
+}
+
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-white;
+}
+
+#message-list-view.list-cell {
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em;
+}
+
+#message-list-view.list-view {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+#message-list-view.list-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+/* bubble */
+#message-bubble-green {
+    -fx-background-color: -bs-green;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-blue {
+    -fx-background-color: -fx-accent;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-grey {
+    -fx-background-color: -bs-light-grey;
+    -fx-background-radius: 10 10 10 10;
+}
+
+.attachment-icon {
+    -fx-text-fill: -bs-white;
+    -fx-cursor: hand;
+}
+
+.attachment-icon-black {
+    -fx-text-fill: -bs-black;
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.grid-pane {
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+    -fx-background-insets: 10;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Text validation                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.text-field.validation_error, .text-area.validation_error .content, .date-picker.validation_error > .text-field {
+    -fx-background-color: -bs-red,
+    linear-gradient(
+            to bottom,
+            derive(-bs-pink, 40%) 5%,
+            derive(-bs-pink, 70%) 40%
+    );
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Market overview                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#charts .chart-legend {
+    -fx-font-size: 1.077em;
+    -fx-alignment: center;
+}
+
+#charts .axis, #price-chart .axis, #volume-chart .axis {
+    -fx-tick-label-fill: -bs-black;
+    -fx-tick-label-font-size: 0.846em;
+}
+
+#charts .chart-plot-background {
+    -fx-background-color: -bs-white;
+}
+
+#charts .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-sell, -bs-white;
+}
+
+#charts .default-color1.chart-area-symbol {
+    -fx-background-color: -bs-buy, -bs-white;
+}
+
+#charts .default-color0.chart-series-area-line {
+    -fx-stroke: -bs-sell;
+}
+
+#charts .default-color1.chart-series-area-line {
+    -fx-stroke: -bs-buy;
+}
+
+#charts .default-color0.chart-series-area-fill {
+    -fx-fill: -bs-sell-transparent;
+}
+
+#charts .default-color1.chart-series-area-fill {
+    -fx-fill: -bs-buy-transparent;
+}
+
+#charts .axis-label {
+    -fx-font-size: 1.231em;
+    -fx-alignment: center;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Rounded buttons                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#buy-button-big {
+    -fx-base: -bs-buy;
+    -fx-text-fill: -bs-white;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.154em;
+    -fx-background-radius: 5;
+}
+
+#buy-button-big:focused {
+    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+#buy-button-big:hover {
+    -fx-base: -bs-buy-hover;
+}
+
+#buy-button {
+    -fx-base: -bs-buy;
+    -fx-text-fill: -bs-white;
+    -fx-font-weight: bold;
+}
+
+#buy-button:focused {
+    -fx-background-color: -bs-buy-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+#buy-button:hover {
+    -fx-base: -bs-buy-hover;
+}
+
+#sell-button-big {
+    -fx-base: -bs-sell;
+    -fx-text-fill: -bs-white;
+    -fx-font-weight: bold;
+    -fx-font-size: 1.154em;
+    -fx-background-radius: 5;
+}
+
+#sell-button-big:focused {
+    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+#sell-button-big:hover {
+    -fx-base: -bs-sell-hover;
+}
+
+#sell-button {
+    -fx-base: -bs-sell;
+    -fx-text-fill: -bs-white;
+    -fx-font-weight: bold;
+}
+
+#sell-button:focused {
+    -fx-background-color: -bs-sell-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+#sell-button:hover {
+    -fx-base: -bs-sell-hover;
+}
+
+#cancel-button {
+    -fx-base: -bs-cancel;
+    -fx-text-fill: -bs-very-dark-grey3;
+    -fx-font-weight: bold;
+}
+
+#cancel-button:hover {
+    -fx-base: -bs-cancel-hover;
+}
+
+#cancel-button:focused {
+    -fx-background-color: -bs-cancel-focus, -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Popups                                                                                                           *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#popup-headline {
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-font-dark;
+}
+
+#popup-bg {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-font-dark;
+    -fx-background-color: -bs-white;
+    -fx-background-radius: 10 10 10 10;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+}
+
+#popup-bg-top {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-font-dark;
+    -fx-background-color: -bs-white;
+    -fx-background-radius: 0 0 10 10;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, -bs-dark-grey, 10, 0, 0, 0);
+}
+
+#popup-grid-pane-bg {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: #333;
+    -fx-background-color: -bs-content-bg-grey;
+    -fx-background-radius: 10 10 10 10;
+    -fx-background-insets: 10;
+    -fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);
+}
+
+#notification-popup-headline {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-font-dark;
+}
+
+#notification-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-very-dark-grey;
+    -fx-background-color: linear-gradient(to bottom, -bs-bg-grey9, -bs-bg-grey10);
+    -fx-background-radius: 5 5 5 5;
+    -fx-background-insets: 5 5 20 20;
+    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
+}
+
+#peer-info-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-very-dark-grey;
+    -fx-background-color: linear-gradient(to bottom, -bs-bg-light, -bs-bg-grey11);
+    -fx-background-radius: 3 3 3 3;
+    -fx-background-insets: 5 5 20 20;
+    -fx-effect: dropshadow(gaussian, -bs-grey, 12, 0, -1, 3);
+}
+
+#peer-info-popup-headline {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-font-dark;
+}
+
+.popup-icon-information {
+    -fx-text-fill: -bs-bg-grey;
+}
+
+.popup-icon-warning {
+    -fx-text-fill: -bs-orange2;
+}
+
+#price-feed-combo {
+    -fx-background-color: -bs-dark-grey;
+    -fx-text-fill: -bs-white;
+    -fx-alignment: center;
+}
+
+#invert-market-price {
+    -fx-text-fill: -bs-very-dark-grey2;
+}
+
+#popup-qr-code-info {
+    -fx-font-size: 0.846em;
+}
+
+#ident-num-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.769em;
+    -fx-text-fill: -bs-white;
+}
+
+#toggle-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-center {
+    -fx-border-radius: 0 0 0 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 0 0 0;
+    -fx-background-insets: 0 0 0 0;
+    -fx-background-radius: 0 0 0 0;
+}
+
+#toggle-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-medium-grey;
+    -fx-border-style: solid solid solid solid;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Arbitration                                                                                                      *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.message {
+    -fx-text-fill: -bs-black;
+}
+
+.my-message {
+    -fx-text-fill: -bs-white;
+}
+
+.message-header {
+    -fx-text-fill: -bs-light-grey;
+    -fx-font-size: 0.846em;
+}
+
+.my-message-header {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+    -fx-font-size: 0.846em;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * DAO                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.dao-tx-type-trade-fee-icon,
+.dao-tx-type-trade-fee-icon:hover {
+    -fx-text-fill: #689f43;
+}
+
+.dao-tx-type-unverified-icon,
+.dao-tx-type-unverified-icon:hover {
+    -fx-text-fill: #ffac00;
+}
+
+.dao-tx-type-invalid-icon,
+.dao-tx-type-invalid-icon:hover {
+    -fx-text-fill: #ff4500;
+}
+
+.dao-tx-type-self-icon,
+.dao-tx-type-self-icon:hover {
+    -fx-text-fill: #818181;
+}
+
+.dao-tx-type-proposal-fee-icon,
+.dao-tx-type-proposal-fee-icon:hover {
+    -fx-text-fill: #6c8b3b;
+}
+
+.dao-tx-type-genesis-icon,
+.dao-tx-type-genesis-icon:hover {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-tx-type-received-funds-icon,
+.dao-tx-type-received-funds-icon:hover {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.dao-tx-type-sent-funds-icon,
+.dao-tx-type-sent-funds-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-vote-icon,
+.dao-tx-type-vote-icon:hover {
+    -fx-text-fill: #0a4576;
+}
+
+.dao-tx-type-vote-reveal-icon,
+.dao-tx-type-vote-reveal-icon:hover {
+    -fx-text-fill: #4AC5FF;
+}
+
+.dao-tx-type-issuance-icon,
+.dao-tx-type-issuance-icon:hover {
+    -fx-text-fill: #04a908;
+}
+
+.dao-tx-type-lockup-icon,
+.dao-tx-type-lockup-icon:hover {
+    -fx-text-fill: #203e7f;
+}
+
+.dao-tx-type-unlock-icon,
+.dao-tx-type-unlock-icon:hover {
+    -fx-text-fill: #438e6c;
+}
+
+.dao-accepted-icon {
+    -fx-text-fill: -bs-green;
+}
+
+.dao-rejected-icon {
+    -fx-text-fill: -bs-error-red;
+}
+
+.dao-ignored-icon {
+    -fx-text-fill: -bs-medium-grey;
+}
+
+.compensation-root {
+    -fx-background-insets: 0, 0 0 0 0
+}
+
+.info-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.info-icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.dao-remove-proposal-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Notifications                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#notification-erase-button {
+    -fx-background-color: -bs-soft-red;
+    -fx-text-fill: #ffffff;
+}

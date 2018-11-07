@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import bisq.desktop.components.AutoTooltipLabel?>
+<?import bisq.desktop.components.AutoTooltipRadioButton?>
+<?import bisq.desktop.components.InputTextField?>
+<?import bisq.desktop.components.TitledGroupBg?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+<GridPane fx:id="root" fx:controller="bisq.desktop.main.settings.network.NetworkSettingsView"
+          hgap="5.0" vgap="5.0"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+          xmlns:fx="http://javafx.com/fxml">
+
+    <padding>
+        <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
+    </padding>
+
+    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
+
+    <AutoTooltipLabel fx:id="bitcoinPeersLabel" GridPane.rowIndex="0"/>
+    <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+              GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false"/>
+
+    <AutoTooltipLabel fx:id="useTorForBtcJLabel" GridPane.rowIndex="1"/>
+    <CheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+    <AutoTooltipLabel fx:id="bitcoinNodesLabel" GridPane.rowIndex="2"/>
+    <HBox GridPane.rowIndex="2" GridPane.columnIndex="1" spacing="10">
+        <AutoTooltipRadioButton fx:id="useProvidedNodesRadio"/>
+        <AutoTooltipRadioButton fx:id="useCustomNodesRadio"/>
+        <AutoTooltipRadioButton fx:id="usePublicNodesRadio"/>
+    </HBox>
+
+    <AutoTooltipLabel fx:id="btcNodesLabel" GridPane.rowIndex="3"/>
+    <InputTextField fx:id="btcNodesInputTextField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+    <AutoTooltipLabel fx:id="reSyncSPVChainLabel" GridPane.rowIndex="4"/>
+    <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="5" GridPane.rowSpan="4">
+        <padding>
+            <Insets top="50.0"/>
+        </padding>
+        <GridPane.margin>
+            <Insets bottom="-10" left="-10" right="-10" top="30"/>
+        </GridPane.margin>
+    </TitledGroupBg>
+
+    <AutoTooltipLabel fx:id="onionAddressLabel" GridPane.rowIndex="5">
+        <GridPane.margin>
+            <Insets top="50.0"/>
+        </GridPane.margin>
+    </AutoTooltipLabel>
+    <TextField fx:id="onionAddress" GridPane.rowIndex="5" GridPane.columnIndex="1"
+               editable="false" focusTraversable="false">
+        <GridPane.margin>
+            <Insets top="50.0"/>
+        </GridPane.margin>
+    </TextField>
+
+    <AutoTooltipLabel fx:id="p2PPeersLabel" GridPane.rowIndex="6"/>
+    <TableView fx:id="tableView" GridPane.rowIndex="6" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+               GridPane.vgrow="SOMETIMES">
+        <columns>
+            <TableColumn fx:id="onionAddressColumn" minWidth="220">
+                <cellValueFactory>
+                    <PropertyValueFactory property="onionAddress"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="connectionTypeColumn" minWidth="80" maxWidth="90">
+                <cellValueFactory>
+                    <PropertyValueFactory property="connectionType"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="creationDateColumn" minWidth="180" maxWidth="180">
+                <cellValueFactory>
+                    <PropertyValueFactory property="creationDate"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="roundTripTimeColumn" minWidth="80" maxWidth="80">
+                <cellValueFactory>
+                    <PropertyValueFactory property="roundTripTime"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="sentBytesColumn" minWidth="100" maxWidth="120">
+                <cellValueFactory>
+                    <PropertyValueFactory property="sentBytes"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="receivedBytesColumn" minWidth="100" maxWidth="120">
+                <cellValueFactory>
+                    <PropertyValueFactory property="receivedBytes"/>
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn fx:id="peerTypeColumn" minWidth="100" maxWidth="100">
+                <cellValueFactory>
+                    <PropertyValueFactory property="peerType"/>
+                </cellValueFactory>
+            </TableColumn>
+        </columns>
+    </TableView>
+
+    <AutoTooltipLabel fx:id="totalTrafficLabel" GridPane.rowIndex="7"/>
+    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" GridPane.columnIndex="1" editable="false"
+               focusTraversable="false"/>
+
+    <Button fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" halignment="RIGHT"/>
+        <ColumnConstraints hgrow="SOMETIMES"/>
+    </columnConstraints>
+</GridPane>
+
+
