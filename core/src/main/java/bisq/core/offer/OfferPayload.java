@@ -101,8 +101,12 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final boolean useMarketBasedPrice;
     private final long amount;
     private final long minAmount;
+
+    // For fiat offer the baseCurrencyCode is BTC and the counterCurrencyCode is the fiat currency
+    // For altcoin offers it is the opposite. baseCurrencyCode is the altcoin and the counterCurrencyCode is BTC.
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
+
     private final List<NodeAddress> arbitratorNodeAddresses;
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;

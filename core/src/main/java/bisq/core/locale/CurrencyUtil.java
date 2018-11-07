@@ -321,15 +321,40 @@ public class CurrencyUtil {
     }
 
     @SuppressWarnings("WeakerAccess")
+    /**
+     * We return true if it is BTC or any of our currencies available in the assetRegistry.
+     * For removed assets it would fail as they are not found but we don't want to conclude that they are fiat then.
+     * As the caller might not deal with the case that a currency can be neither a cryptoCurrency nor Fiat if not found
+     * we return true as well in case we have no fiat currency for the code.
+     *
+     * As we use a boolean result for isCryptoCurrency and isFiatCurrency we do not treat missing currencies correctly.
+     * To throw an exception might be an option but that will require quite a lot of code change, so we don't do that
+     * for the moment, but could be considered for the future. Another maybe better option is to introduce a enum which
+     * contains 3 entries (CryptoCurrency, Fiat, Undefined).
+     */
     public static boolean isCryptoCurrency(String currencyCode) {
-        boolean isCCPresent = getCryptoCurrency(currencyCode).isPresent();
-        // If we found it we can be sue its a cc
-        if (isCCPresent)
+        // Some tests call that method with null values. Should be fixed in the tests but to not break them return false.
+        if (currencyCode == null)
+            return false;
+
+        // BTC is not part of our assetRegistry so treat it extra here. Other old base currencies (LTC, DOGE, DASH)
+        // are not supported anymore so we can ignore that case.
+        if (currencyCode.equals("BTC"))
             return true;
 
-        // If we don't have it might be that it was removed from the assetsRegistry, so we cross check if there is
-        // fiat currency, otherwise we treat it as cc.
-        return !getFiatCurrency(currencyCode).isPresent();
+        // If we find the code in our assetRegistry we return true.
+        // It might be that an asset was removed from the assetsRegistry, we deal with such cases below by checking if
+        // it is a fiat currency
+        if (getCryptoCurrency(currencyCode).isPresent())
+            return true;
+
+        // In case the code is from a removed asset we cross check if there exist a fiat currency with that code,
+        // if we don't find a fiat currency we treat it as a crypto currency.
+        if (!getFiatCurrency(currencyCode).isPresent())
+            return true;
+
+        // If we would have found a fiat currency we return false
+        return false;
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
@@ -358,9 +383,12 @@ public class CurrencyUtil {
 
 
     public static String getNameByCode(String currencyCode) {
-        if (isCryptoCurrency(currencyCode))
-            return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(Res.get("shared.na"));
-
+        if (isCryptoCurrency(currencyCode)) {
+            // We might not find the name in case we have a call for a removed asset.
+            // If BTC is the code (used in tests) we also want return Bitcoin as name.
+            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" : Res.get("shared.na");
+            return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(btcOrRemovedAsset);
+        }
         try {
             return Currency.getInstance(currencyCode).getDisplayName();
         } catch (Throwable t) {
