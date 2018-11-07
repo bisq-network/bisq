@@ -56,6 +56,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -256,6 +257,20 @@ public class TorNetworkNode extends NetworkNode {
                         log.error("custom torrc file not found (" + torrcfile + "). Proceeding with defaults.");
                     }
                 }
+
+                // check if the user wants to temporarily add to the default torrc file
+                LinkedHashMap<String, String> tmp = new LinkedHashMap<>();
+                System.getProperties().forEach((k, v) -> {
+                    if(((String) k).startsWith("torrc:"))
+                        tmp.put(((String) k).substring(6), (String) v);
+                });
+                if(!tmp.isEmpty())
+                    // check for custom torrcfile
+                    if(null != override)
+                        // and merge the contents
+                        override = new Torrc(override.getInputStream$tor(), tmp);
+                    else
+                        override = new Torrc(tmp);
 
                 log.info("Starting tor");
                 Tor.setDefault(new NativeTor(torDir, bridgeEntries, override));
