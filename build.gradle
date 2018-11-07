@@ -37,7 +37,7 @@ configure(subprojects) {
     }
 
     repositories {
-        jcenter()
+        mavenCentral()
         maven { url 'https://jitpack.io' }
         maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
     }
@@ -260,7 +260,7 @@ configure(project(':monitor')) {
 configure(project(':pricenode')) {
     apply plugin: "org.springframework.boot"
 
-    version = file("src/main/resources/version.txt").text
+    version = file("src/main/resources/version.txt").text.trim()
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
