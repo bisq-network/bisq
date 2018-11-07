@@ -25,7 +25,7 @@
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.closedtrades.ClosedTradesView"
       spacing="10" alignment="CENTER_RIGHT" xmlns:fx="http://javafx.com/fxml">
     <padding>
-        <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
