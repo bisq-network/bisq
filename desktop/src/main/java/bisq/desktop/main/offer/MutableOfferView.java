@@ -510,6 +510,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // unwanted selection events (item 0)
         currencyComboBox.setOnAction(null);
 
+        resetValidationOfInputFields();
+
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
@@ -546,6 +548,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
 
         updatePriceToggle();
+    }
+
+    private void resetValidationOfInputFields() {
+        amountTextField.resetValidation();
+        amountTextField.validate();
+        minAmountTextField.resetValidation();
+        minAmountTextField.validate();
+        volumeTextField.resetValidation();
+        volumeTextField.validate();
+        fixedPriceTextField.resetValidation();
+        fixedPriceTextField.validate();
+        marketBasedPriceTextField.resetValidation();
+        marketBasedPriceTextField.validate();
     }
 
     private void onCurrencyComboBoxSelected() {
