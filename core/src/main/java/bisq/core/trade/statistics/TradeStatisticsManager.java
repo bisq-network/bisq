@@ -42,14 +42,19 @@ import org.bitcoinj.core.Coin;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.google.common.base.Joiner;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
 import java.time.Duration;
 
+import java.text.SimpleDateFormat;
+
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -200,7 +205,7 @@ public class TradeStatisticsManager {
 
     private void checkTradeActivity() {
         Date compareDate = new Date(new Date().getTime() - Duration.ofDays(120).toMillis());
-        long minTradeAmount = Coin.parseCoin("0.01").value;
+        long minTradeAmount = Coin.parseCoin("0.001").value;
         long minNumOfTrades = 3;
 
         Map<String, Tuple2<Long, Integer>> tradeStatMap = new HashMap<>();
@@ -214,6 +219,7 @@ public class TradeStatisticsManager {
                     int numTrades = tuple2.second + 1;
                     tradeStatMap.put(e.getBaseCurrency(), new Tuple2<>(accumulatedTradeAmount, numTrades));
                 });
+        StringBuilder newAssets = new StringBuilder("\nNew assets (in warming up phase):");
         StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
         StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
         StringBuilder notTraded = new StringBuilder("\nNot traded assets:");
@@ -221,12 +227,26 @@ public class TradeStatisticsManager {
         Set<CryptoCurrency> assetsToRemove = new HashSet<>(whiteListedSortedCryptoCurrencies);
         whiteListedSortedCryptoCurrencies.forEach(e -> {
             String code = e.getCode();
+            String nameAndCode = CurrencyUtil.getNameAndCode(code);
+            long tradeAmount = 0;
+            int numTrades = 0;
+            boolean isInTradeStatMap = tradeStatMap.containsKey(code);
+            if (isInTradeStatMap) {
+                Tuple2<Long, Integer> tuple = tradeStatMap.get(code);
+                tradeAmount = tuple.first;
+                numTrades = tuple.second;
+            }
+            if (isWarmingUp(code)) {
+                assetsToRemove.remove(e);
+                newAssets.append("\n")
+                        .append(nameAndCode)
+                        .append(": Trade amount: ")
+                        .append(Coin.valueOf(tradeAmount).toFriendlyString())
+                        .append(", number of trades: ")
+                        .append(numTrades);
+            }
             if (!isWarmingUp(code) && !hasPaidBSQFee(code)) {
-                String nameAndCode = CurrencyUtil.getNameAndCode(code);
-                if (tradeStatMap.containsKey(code)) {
-                    Tuple2<Long, Integer> tuple = tradeStatMap.get(code);
-                    Long tradeAmount = tuple.first;
-                    Integer numTrades = tuple.second;
+                if (isInTradeStatMap) {
                     if (tradeAmount >= minTradeAmount || numTrades >= minNumOfTrades) {
                         assetsToRemove.remove(e);
                         sufficientlyTraded.append("\n")
@@ -244,15 +264,22 @@ public class TradeStatisticsManager {
                                 .append(numTrades);
                     }
                 } else {
-                    assetsToRemove.remove(e);
                     notTraded.append("\n").append(nameAndCode);
                 }
             }
         });
+        List<CryptoCurrency> assetsToRemoveList = assetsToRemove.stream()
+                .sorted(Comparator.comparing(CryptoCurrency::getCode))
+                .collect(Collectors.toList());
 
-        log.debug(sufficientlyTraded.toString());
-        log.debug(insufficientlyTraded.toString());
-        log.debug(notTraded.toString());
+        String result = "Date for checking trade activity: " + new SimpleDateFormat("yyyy-MM-dd'T'").format(compareDate) +
+                "\n\nAssets to remove (" + assetsToRemoveList.size() + "):\n" + Joiner.on("\n").join(assetsToRemoveList) +
+                "\n\n" + insufficientlyTraded.toString() +
+                "\n\n" + notTraded.toString() +
+                "\n\n" + newAssets.toString() +
+                "\n\n" + sufficientlyTraded.toString();
+        // Utilities.copyToClipboard(result);
+        log.debug(result);
     }
 
     private boolean hasPaidBSQFee(String code) {
@@ -293,6 +320,29 @@ public class TradeStatisticsManager {
 
         // v0.8.0 Aug 22 2018
         // none added
+
+        // v0.9.0 (Date TBD)
+        newlyAdded.add("ACM");
+        newlyAdded.add("BTC2");
+        newlyAdded.add("BLUR");
+        newlyAdded.add("CHA");
+        newlyAdded.add("CROAT");
+        newlyAdded.add("DRGL");
+        newlyAdded.add("ETHS");
+        newlyAdded.add("GBK");
+        newlyAdded.add("KEK");
+        newlyAdded.add("LOKI");
+        newlyAdded.add("MBGL");
+        newlyAdded.add("NEOS");
+        newlyAdded.add("PZDC");
+        newlyAdded.add("QMCoin");
+        newlyAdded.add("QRL");
+        newlyAdded.add("RADS");
+        newlyAdded.add("RYO");
+        newlyAdded.add("SUB1X");
+        newlyAdded.add("MAI");
+        newlyAdded.add("TRTL");
+        newlyAdded.add("ZER");
 
         return newlyAdded.contains(code);
     }
