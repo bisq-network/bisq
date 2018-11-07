@@ -32,6 +32,7 @@ import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.TorSocket;
+import org.berndpruenster.netlayer.tor.Torrc;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -51,6 +52,7 @@ import java.net.Socket;
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 import java.util.Date;
@@ -242,8 +244,21 @@ public class TorNetworkNode extends NetworkNode {
         ListenableFuture<Void> future = executorService.submit(() -> {
             try {
                 long ts1 = new Date().getTime();
+
+                Torrc override = null;
+
+                // check if the user wants to provide his own torrc file
+                String torrcfile = System.getProperty("torrcfile");
+                if(null != torrcfile) {
+                    try {
+                        override = new Torrc(new FileInputStream(new File(torrcfile)));
+                    } catch(IOException e) {
+                        log.error("custom torrc file not found (" + torrcfile + "). Proceeding with defaults.");
+                    }
+                }
+
                 log.info("Starting tor");
-                Tor.setDefault(new NativeTor(torDir, bridgeEntries));
+                Tor.setDefault(new NativeTor(torDir, bridgeEntries, override));
                 log.info("\n################################################################\n" +
                                 "Tor started after {} ms. Start publishing hidden service.\n" +
                                 "################################################################",
