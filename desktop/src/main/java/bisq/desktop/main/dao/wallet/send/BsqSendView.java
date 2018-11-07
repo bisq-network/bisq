@@ -34,7 +34,6 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -347,12 +346,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
-                        }
-
-                        @Override
-                        public void onTxMalleability(TxMalleabilityException exception) {
-                            //TODO handle
-                            new Popup<>().warning(exception.toString());
                         }
 
                         @Override

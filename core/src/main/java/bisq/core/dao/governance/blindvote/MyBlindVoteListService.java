@@ -20,7 +20,6 @@ package bisq.core.dao.governance.blindvote;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -336,13 +335,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             public void onSuccess(Transaction transaction) {
                 log.info("BlindVote tx published. txId={}", transaction.getHashAsString());
                 resultHandler.handleResult();
-            }
-
-            @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
-                exceptionHandler.handleException(exception);
             }
 
             @Override

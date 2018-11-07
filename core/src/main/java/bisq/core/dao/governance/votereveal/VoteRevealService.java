@@ -19,7 +19,6 @@ package bisq.core.dao.governance.votereveal;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -248,14 +247,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");
-            }
-
-            @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                log.error(exception.toString());
-                // TODO handle
-                voteRevealExceptions.add(new VoteRevealException("Publishing of voteRevealTx failed.",
-                        exception, voteRevealTx));
             }
 
             @Override

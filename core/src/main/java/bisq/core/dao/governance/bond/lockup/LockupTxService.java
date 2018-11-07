@@ -19,7 +19,6 @@ package bisq.core.dao.governance.bond.lockup;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -78,11 +77,6 @@ public class LockupTxService {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     resultHandler.accept(transaction.getHashAsString());
-                }
-
-                @Override
-                public void onTxMalleability(TxMalleabilityException exception) {
-                    exceptionHandler.handleException(exception);
                 }
 
                 @Override

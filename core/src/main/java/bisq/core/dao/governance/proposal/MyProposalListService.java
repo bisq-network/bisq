@@ -19,7 +19,6 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.period.PeriodService;
@@ -151,11 +150,6 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
             public void onSuccess(Transaction transaction) {
                 log.info("Proposal tx has been published. TxId={}", transaction.getHashAsString());
                 resultHandler.handleResult();
-            }
-
-            @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                errorMessageHandler.handleErrorMessage(exception.getMessage());
             }
 
             @Override
