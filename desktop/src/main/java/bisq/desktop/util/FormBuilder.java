@@ -1326,6 +1326,25 @@ public class FormBuilder {
         return new Tuple2<>(topLabelWithVBox.first, button);
     }
 
+    public static Tuple2<Label, Button> addConfirmationLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelText);
+        label.getStyleClass().add("confirmation-label");
+
+        Button button = new AutoTooltipButton(buttonTitle);
+        button.getStyleClass().add("confirmation-value");
+        button.setDefaultButton(true);
+
+        GridPane.setColumnIndex(button, 1);
+        GridPane.setRowIndex(button, rowIndex);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setHalignment(label, HPos.LEFT);
+        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
+
+        gridPane.getChildren().add(button);
+
+        return new Tuple2<>(label, button);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + Button + Button
     ///////////////////////////////////////////////////////////////////////////////////////////
