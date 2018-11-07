@@ -52,7 +52,7 @@ public class HyperlinkWithIcon extends Hyperlink {
         setGraphicTextGap(7.0);
 
         //TODO: replace workaround of setting the style this way
-        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: -bs-black"));
+        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: #000"));
     }
 
     public void clear() {

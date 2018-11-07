@@ -19,50 +19,53 @@ package bisq.core.dao;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
-import bisq.core.dao.bonding.bond.BondWithHash;
-import bisq.core.dao.bonding.bond.BondedReputation;
-import bisq.core.dao.bonding.bond.BondedReputationService;
-import bisq.core.dao.bonding.lockup.LockupService;
-import bisq.core.dao.bonding.lockup.LockupType;
-import bisq.core.dao.bonding.unlock.UnlockService;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.ballot.Ballot;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
-import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.bond.lockup.LockupTxService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
+import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
-import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
-import bisq.core.dao.governance.proposal.generic.GenericProposalService;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.compensation.CompensationProposalFactory;
+import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalFactory;
+import bisq.core.dao.governance.proposal.generic.GenericProposalFactory;
+import bisq.core.dao.governance.proposal.param.ChangeParamProposalFactory;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.role.BondedRolesService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalFactory;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
+import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.IssuanceType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.asset.Asset;
 
@@ -84,9 +87,11 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,17 +111,19 @@ public class DaoFacade implements DaoSetupService {
     private final PeriodService periodService;
     private final MyBlindVoteListService myBlindVoteListService;
     private final MyVoteListService myVoteListService;
-    private final CompensationProposalService compensationProposalService;
-    private final ReimbursementProposalService reimbursementProposalService;
-    private final ChangeParamProposalService changeParamProposalService;
-    private final ConfiscateBondProposalService confiscateBondProposalService;
-    private final BondedRoleProposalService bondedRoleProposalService;
-    private final GenericProposalService genericProposalService;
-    private final RemoveAssetProposalService removeAssetProposalService;
-    private final BondedRolesService bondedRolesService;
-    private final BondedReputationService bondedReputationService;
-    private final LockupService lockupService;
-    private final UnlockService unlockService;
+    private final CompensationProposalFactory compensationProposalFactory;
+    private final ReimbursementProposalFactory reimbursementProposalFactory;
+    private final ChangeParamProposalFactory changeParamProposalFactory;
+    private final ConfiscateBondProposalFactory confiscateBondProposalFactory;
+    private final RoleProposalFactory roleProposalFactory;
+    private final GenericProposalFactory genericProposalFactory;
+    private final RemoveAssetProposalFactory removeAssetProposalFactory;
+    private final BondedRolesRepository bondedRolesRepository;
+    private final BondedReputationRepository bondedReputationRepository;
+    private final MyReputationListService myReputationListService;
+    private final MyBondedReputationRepository myBondedReputationRepository;
+    private final LockupTxService lockupTxService;
+    private final UnlockTxService unlockTxService;
     private final DaoStateStorageService daoStateStorageService;
 
     private final ObjectProperty<DaoPhase.Phase> phaseProperty = new SimpleObjectProperty<>(DaoPhase.Phase.UNDEFINED);
@@ -130,17 +137,19 @@ public class DaoFacade implements DaoSetupService {
                      PeriodService periodService,
                      MyBlindVoteListService myBlindVoteListService,
                      MyVoteListService myVoteListService,
-                     CompensationProposalService compensationProposalService,
-                     ReimbursementProposalService reimbursementProposalService,
-                     ChangeParamProposalService changeParamProposalService,
-                     ConfiscateBondProposalService confiscateBondProposalService,
-                     BondedRoleProposalService bondedRoleProposalService,
-                     GenericProposalService genericProposalService,
-                     RemoveAssetProposalService removeAssetProposalService,
-                     BondedRolesService bondedRolesService,
-                     BondedReputationService bondedReputationService,
-                     LockupService lockupService,
-                     UnlockService unlockService,
+                     CompensationProposalFactory compensationProposalFactory,
+                     ReimbursementProposalFactory reimbursementProposalFactory,
+                     ChangeParamProposalFactory changeParamProposalFactory,
+                     ConfiscateBondProposalFactory confiscateBondProposalFactory,
+                     RoleProposalFactory roleProposalFactory,
+                     GenericProposalFactory genericProposalFactory,
+                     RemoveAssetProposalFactory removeAssetProposalFactory,
+                     BondedRolesRepository bondedRolesRepository,
+                     BondedReputationRepository bondedReputationRepository,
+                     MyReputationListService myReputationListService,
+                     MyBondedReputationRepository myBondedReputationRepository,
+                     LockupTxService lockupTxService,
+                     UnlockTxService unlockTxService,
                      DaoStateStorageService daoStateStorageService) {
         this.proposalListPresentation = proposalListPresentation;
         this.ballotListService = ballotListService;
@@ -150,17 +159,19 @@ public class DaoFacade implements DaoSetupService {
         this.periodService = periodService;
         this.myBlindVoteListService = myBlindVoteListService;
         this.myVoteListService = myVoteListService;
-        this.compensationProposalService = compensationProposalService;
-        this.reimbursementProposalService = reimbursementProposalService;
-        this.changeParamProposalService = changeParamProposalService;
-        this.confiscateBondProposalService = confiscateBondProposalService;
-        this.bondedRoleProposalService = bondedRoleProposalService;
-        this.genericProposalService = genericProposalService;
-        this.removeAssetProposalService = removeAssetProposalService;
-        this.bondedRolesService = bondedRolesService;
-        this.bondedReputationService = bondedReputationService;
-        this.lockupService = lockupService;
-        this.unlockService = unlockService;
+        this.compensationProposalFactory = compensationProposalFactory;
+        this.reimbursementProposalFactory = reimbursementProposalFactory;
+        this.changeParamProposalFactory = changeParamProposalFactory;
+        this.confiscateBondProposalFactory = confiscateBondProposalFactory;
+        this.roleProposalFactory = roleProposalFactory;
+        this.genericProposalFactory = genericProposalFactory;
+        this.removeAssetProposalFactory = removeAssetProposalFactory;
+        this.bondedRolesRepository = bondedRolesRepository;
+        this.bondedReputationRepository = bondedReputationRepository;
+        this.myReputationListService = myReputationListService;
+        this.myBondedReputationRepository = myBondedReputationRepository;
+        this.lockupTxService = lockupTxService;
+        this.unlockTxService = unlockTxService;
         this.daoStateStorageService = daoStateStorageService;
     }
 
@@ -227,7 +238,7 @@ public class DaoFacade implements DaoSetupService {
                                                                           String link,
                                                                           Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return compensationProposalService.createProposalWithTransaction(name,
+        return compensationProposalFactory.createProposalWithTransaction(name,
                 link,
                 requestedBsq);
     }
@@ -236,7 +247,7 @@ public class DaoFacade implements DaoSetupService {
                                                                            String link,
                                                                            Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return reimbursementProposalService.createProposalWithTransaction(name,
+        return reimbursementProposalFactory.createProposalWithTransaction(name,
                 link,
                 requestedBsq);
     }
@@ -246,7 +257,7 @@ public class DaoFacade implements DaoSetupService {
                                                                    Param param,
                                                                    String paramValue)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return changeParamProposalService.createProposalWithTransaction(name,
+        return changeParamProposalFactory.createProposalWithTransaction(name,
                 link,
                 param,
                 paramValue);
@@ -254,37 +265,33 @@ public class DaoFacade implements DaoSetupService {
 
     public ProposalWithTransaction getConfiscateBondProposalWithTransaction(String name,
                                                                             String link,
-                                                                            byte[] hash)
+                                                                            String lockupTxId)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return confiscateBondProposalService.createProposalWithTransaction(name,
+        return confiscateBondProposalFactory.createProposalWithTransaction(name,
                 link,
-                hash);
+                lockupTxId);
     }
 
-    public ProposalWithTransaction getBondedRoleProposalWithTransaction(BondedRole bondedRole)
+    public ProposalWithTransaction getBondedRoleProposalWithTransaction(Role role)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return bondedRoleProposalService.createProposalWithTransaction(bondedRole);
+        return roleProposalFactory.createProposalWithTransaction(role);
     }
 
     public ProposalWithTransaction getGenericProposalWithTransaction(String name,
                                                                      String link)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return genericProposalService.createProposalWithTransaction(name, link);
+        return genericProposalFactory.createProposalWithTransaction(name, link);
     }
 
     public ProposalWithTransaction getRemoveAssetProposalWithTransaction(String name,
                                                                          String link,
                                                                          Asset asset)
             throws ValidationException, InsufficientMoneyException, TxException {
-        return removeAssetProposalService.createProposalWithTransaction(name, link, asset);
+        return removeAssetProposalFactory.createProposalWithTransaction(name, link, asset);
     }
 
-    public List<BondedRole> getBondedRoleList() {
-        return bondedRolesService.getBondedRoleList();
-    }
-
-    public List<BondedReputation> getBondedReputationList() {
-        return bondedReputationService.getBondedReputationList();
+    public ObservableList<BondedRole> getBondedRoles() {
+        return bondedRolesRepository.getBonds();
     }
 
     // Show fee
@@ -484,14 +491,14 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Bonding
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupType lockupType, BondWithHash bondWithHash,
-                                ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
-        lockupService.publishLockupTx(lockupAmount, lockTime, lockupType, bondWithHash, resultHandler, exceptionHandler);
+    public void publishLockupTx(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash,
+                                Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
+        lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
-    public void publishUnlockTx(String lockupTxId, ResultHandler resultHandler,
+    public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
                                 ExceptionHandler exceptionHandler) {
-        unlockService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
+        unlockTxService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
     }
 
     public long getTotalLockupAmount() {
@@ -510,13 +517,16 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockTime(txId);
     }
 
-    public List<BondedRole> getValidBondedRoleList() {
-        return bondedRolesService.getValidBondedRoleList();
+
+    public List<Bond> getAllBonds() {
+        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
+        bonds.addAll(bondedRolesRepository.getBonds());
+        return bonds;
     }
 
-    /*public List<BondedReputation> getValidBondedReputationList() {
-        return bondedReputationService.getValidBondedReputationList();
-    }*/
+    public ObservableList<MyBondedReputation> getMyBondedReputations() {
+        return myBondedReputationRepository.getMyBondedReputations();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -619,17 +629,6 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.isUnspent(key);
     }
 
-    public Optional<BondedRole> getBondedRoleFromHash(byte[] hash) {
-        return bondedRolesService.getBondedRoleFromHash(hash);
-    }
-
-    public Optional<BondedReputation> getBondedReputationFromHash(byte[] hash) {
-        return bondedReputationService.getBondedReputationFromHash(hash);
-    }
-
-    public boolean isUnlocking(BondWithHash bondWithHash) {
-        return daoStateService.isUnlocking(bondWithHash);
-    }
 
     public Coin getMinCompensationRequestAmount() {
         return CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());
@@ -653,5 +652,13 @@ public class DaoFacade implements DaoSetupService {
 
     public void resyncDao(Runnable resultHandler) {
         daoStateStorageService.resetDaoState(resultHandler);
+    }
+
+    public boolean isMyRole(Role role) {
+        return bondedRolesRepository.isMyRole(role);
+    }
+
+    public Optional<Bond> getBondByLockupTxId(String lockupTxId) {
+        return getAllBonds().stream().filter(e -> lockupTxId.equals(e.getLockupTxId())).findAny();
     }
 }

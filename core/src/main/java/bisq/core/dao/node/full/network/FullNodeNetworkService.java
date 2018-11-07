@@ -22,11 +22,11 @@ import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDa
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.RawBlock;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;

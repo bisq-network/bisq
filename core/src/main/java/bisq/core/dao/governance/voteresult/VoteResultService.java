@@ -19,38 +19,40 @@ package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.asset.AssetService;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.BallotListService;
-import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxId;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.merit.MeritConsensus;
-import bisq.core.dao.governance.merit.MeritList;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.governance.ConfiscateBond;
-import bisq.core.dao.state.governance.ParamChange;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.MeritList;
+import bisq.core.dao.state.model.governance.ParamChange;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ProposalVoteResult;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -100,7 +102,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private final PeriodService periodService;
     private final BallotListService ballotListService;
     private final BlindVoteListService blindVoteListService;
-    private final BondedRolesService bondedRolesService;
+    private final BondedRolesRepository bondedRolesRepository;
     private final IssuanceService issuanceService;
     private final AssetService assetService;
     private final MissingDataRequestService missingDataRequestService;
@@ -119,7 +121,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                              PeriodService periodService,
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
-                             BondedRolesService bondedRolesService,
+                             BondedRolesRepository bondedRolesRepository,
                              IssuanceService issuanceService,
                              AssetService assetService,
                              MissingDataRequestService missingDataRequestService) {
@@ -129,7 +131,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         this.periodService = periodService;
         this.ballotListService = ballotListService;
         this.blindVoteListService = blindVoteListService;
-        this.bondedRolesService = bondedRolesService;
+        this.bondedRolesRepository = bondedRolesRepository;
         this.issuanceService = issuanceService;
         this.assetService = assetService;
         this.missingDataRequestService = missingDataRequestService;
@@ -641,14 +643,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void applyBondedRole(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
-            if (evaluatedProposal.getProposal() instanceof BondedRoleProposal) {
-                BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) evaluatedProposal.getProposal();
-                BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-                bondedRolesService.addAcceptedBondedRole(bondedRole);
+            if (evaluatedProposal.getProposal() instanceof RoleProposal) {
+                RoleProposal roleProposal = (RoleProposal) evaluatedProposal.getProposal();
+                Role role = roleProposal.getRole();
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
-                sb.append("We added a bonded role. ProposalTxId=").append(bondedRoleProposal.getTxId())
-                        .append("\nBondedRole: ").append(bondedRole.getDisplayString())
+                sb.append("We added a bonded role. ProposalTxId=").append(roleProposal.getTxId())
+                        .append("\nRole: ").append(role.getDisplayString())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
             }
@@ -659,12 +660,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof ConfiscateBondProposal) {
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) evaluatedProposal.getProposal();
-                daoStateService.confiscateBond(new ConfiscateBond(confiscateBondProposal.getHash()));
+                daoStateService.confiscateBond(confiscateBondProposal.getLockupTxId());
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We confiscated a bond. ProposalTxId=").append(confiscateBondProposal.getTxId())
-                        .append("\nHashOfBondId: ").append(Utilities.encodeToHex(confiscateBondProposal.getHash()))
+                        .append("\nLockupTxId: ").append(confiscateBondProposal.getLockupTxId())
                         .append("\n################################################################################\n");
                 log.info(sb.toString());
             }

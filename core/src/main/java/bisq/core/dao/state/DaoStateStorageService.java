@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.state.model.DaoState;
+
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
@@ -92,6 +94,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected DaoStateStore createStore() {
-        return new DaoStateStore(daoState.getClone());
+        return new DaoStateStore(DaoState.getClone(daoState));
     }
 }

@@ -18,10 +18,10 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.SpentInfo;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import javax.inject.Inject;
 
@@ -68,73 +68,77 @@ public class TxInputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void process(TxOutputKey txOutputKey, int blockHeight, String txId, int inputIndex) {
-        daoStateService.getUnspentTxOutput(txOutputKey)
-                .ifPresent(connectedTxOutput -> {
-                    long inputValue = connectedTxOutput.getValue();
-                    accumulatedInputValue += inputValue;
+        if (!daoStateService.isConfiscated(txOutputKey)) {
+            daoStateService.getUnspentTxOutput(txOutputKey)
+                    .ifPresent(connectedTxOutput -> {
+                        long inputValue = connectedTxOutput.getValue();
+                        accumulatedInputValue += inputValue;
 
-                    // If we are spending an output from a blind vote tx marked as VOTE_STAKE_OUTPUT we save it in our parsingModel
-                    // for later verification at the outputs of a reveal tx.
-                    TxOutputType connectedTxOutputType = connectedTxOutput.getTxOutputType();
-                    switch (connectedTxOutputType) {
-                        case UNDEFINED_OUTPUT:
-                        case GENESIS_OUTPUT:
-                        case BSQ_OUTPUT:
-                        case BTC_OUTPUT:
-                        case PROPOSAL_OP_RETURN_OUTPUT:
-                        case COMP_REQ_OP_RETURN_OUTPUT:
-                        case REIMBURSEMENT_OP_RETURN_OUTPUT:
-                        case CONFISCATE_BOND_OP_RETURN_OUTPUT:
-                        case ISSUANCE_CANDIDATE_OUTPUT:
-                            break;
-                        case BLIND_VOTE_LOCK_STAKE_OUTPUT:
-                            numVoteRevealInputs++;
-                            // The connected tx output of the blind vote tx is our input for the reveal tx.
-                            // We allow only one input from any blind vote tx otherwise the vote reveal tx is invalid.
-                            if (!isVoteRevealInputValid()) {
-                                log.warn("We have a tx which has >1 connected txOutputs marked as BLIND_VOTE_LOCK_STAKE_OUTPUT. " +
-                                        "This is not a valid BSQ tx.");
-                            }
-                            break;
-                        case BLIND_VOTE_OP_RETURN_OUTPUT:
-                        case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
-                        case VOTE_REVEAL_OP_RETURN_OUTPUT:
-                            break;
-                        case LOCKUP_OUTPUT:
-                            // A LOCKUP BSQ txOutput is spent to a corresponding UNLOCK
-                            // txInput. The UNLOCK can only be spent after lockTime blocks has passed.
-                            isUnLockInputValid = !optionalSpentLockupTxOutput.isPresent();
-                            if (isUnLockInputValid) {
-                                optionalSpentLockupTxOutput = Optional.of(connectedTxOutput);
-                                unlockBlockHeight = blockHeight + connectedTxOutput.getLockTime();
-                            } else {
-                                log.warn("We have a tx which has >1 connected txOutputs marked as LOCKUP_OUTPUT. " +
-                                        "This is not a valid BSQ tx.");
-                            }
-                            break;
-                        case LOCKUP_OP_RETURN_OUTPUT:
-                            // Cannot happen
-                            break;
-                        case UNLOCK_OUTPUT:
-                            // This txInput is Spending an UNLOCK txOutput
-                            int unlockBlockHeight = connectedTxOutput.getUnlockBlockHeight();
-                            if (blockHeight < unlockBlockHeight) {
-                                accumulatedInputValue -= inputValue;
-                                burntBondValue += inputValue;
+                        // If we are spending an output from a blind vote tx marked as VOTE_STAKE_OUTPUT we save it in our parsingModel
+                        // for later verification at the outputs of a reveal tx.
+                        TxOutputType connectedTxOutputType = connectedTxOutput.getTxOutputType();
+                        switch (connectedTxOutputType) {
+                            case UNDEFINED_OUTPUT:
+                            case GENESIS_OUTPUT:
+                            case BSQ_OUTPUT:
+                            case BTC_OUTPUT:
+                            case PROPOSAL_OP_RETURN_OUTPUT:
+                            case COMP_REQ_OP_RETURN_OUTPUT:
+                            case REIMBURSEMENT_OP_RETURN_OUTPUT:
+                            case CONFISCATE_BOND_OP_RETURN_OUTPUT:
+                            case ISSUANCE_CANDIDATE_OUTPUT:
+                                break;
+                            case BLIND_VOTE_LOCK_STAKE_OUTPUT:
+                                numVoteRevealInputs++;
+                                // The connected tx output of the blind vote tx is our input for the reveal tx.
+                                // We allow only one input from any blind vote tx otherwise the vote reveal tx is invalid.
+                                if (!isVoteRevealInputValid()) {
+                                    log.warn("We have a tx which has >1 connected txOutputs marked as BLIND_VOTE_LOCK_STAKE_OUTPUT. " +
+                                            "This is not a valid BSQ tx.");
+                                }
+                                break;
+                            case BLIND_VOTE_OP_RETURN_OUTPUT:
+                            case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
+                            case VOTE_REVEAL_OP_RETURN_OUTPUT:
+                                break;
+                            case LOCKUP_OUTPUT:
+                                // A LOCKUP BSQ txOutput is spent to a corresponding UNLOCK
+                                // txInput. The UNLOCK can only be spent after lockTime blocks has passed.
+                                isUnLockInputValid = !optionalSpentLockupTxOutput.isPresent();
+                                if (isUnLockInputValid) {
+                                    optionalSpentLockupTxOutput = Optional.of(connectedTxOutput);
+                                    unlockBlockHeight = blockHeight + connectedTxOutput.getLockTime();
+                                } else {
+                                    log.warn("We have a tx which has >1 connected txOutputs marked as LOCKUP_OUTPUT. " +
+                                            "This is not a valid BSQ tx.");
+                                }
+                                break;
+                            case LOCKUP_OP_RETURN_OUTPUT:
+                                // Cannot happen
+                                break;
+                            case UNLOCK_OUTPUT:
+                                // This txInput is Spending an UNLOCK txOutput
+                                int unlockBlockHeight = connectedTxOutput.getUnlockBlockHeight();
+                                if (blockHeight < unlockBlockHeight) {
+                                    accumulatedInputValue -= inputValue;
+                                    burntBondValue += inputValue;
 
-                                log.warn("We got a tx which spends the output from an unlock tx but before the " +
-                                        "unlockTime has passed. That leads to burned BSQ! " +
-                                        "blockHeight={}, unLockHeight={}", blockHeight, unlockBlockHeight);
-                            }
-                            break;
-                        case INVALID_OUTPUT:
-                        default:
-                            break;
-                    }
+                                    log.warn("We got a tx which spends the output from an unlock tx but before the " +
+                                            "unlockTime has passed. That leads to burned BSQ! " +
+                                            "blockHeight={}, unLockHeight={}", blockHeight, unlockBlockHeight);
+                                }
+                                break;
+                            case INVALID_OUTPUT:
+                            default:
+                                break;
+                        }
 
-                    daoStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
-                    daoStateService.removeUnspentTxOutput(connectedTxOutput);
-                });
+                        daoStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
+                        daoStateService.removeUnspentTxOutput(connectedTxOutput);
+                    });
+        } else {
+            log.warn("Connected txOutput {} at input {} of txId {} is confiscated ", txOutputKey, inputIndex, txId);
+        }
     }
 
     boolean isVoteRevealInputValid() {

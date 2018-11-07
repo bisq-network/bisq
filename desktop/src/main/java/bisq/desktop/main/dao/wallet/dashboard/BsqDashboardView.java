@@ -26,8 +26,8 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.governance.IssuanceType;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;

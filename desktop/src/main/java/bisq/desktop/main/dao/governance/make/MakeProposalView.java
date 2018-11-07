@@ -32,16 +32,17 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
@@ -215,9 +216,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
-            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                        Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
+            } else {
+                doPublishMyProposal(proposal, transaction);
+            }
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
             new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
@@ -254,7 +259,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
 
-        BondedRole bondedRole;
         switch (type) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
@@ -297,17 +301,17 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case BONDED_ROLE:
                 checkNotNull(proposalDisplay.bondedRoleTypeComboBox,
                         "proposalDisplay.bondedRoleTypeComboBox must not be null");
-                bondedRole = new BondedRole(proposalDisplay.nameTextField.getText(),
+                Role role = new Role(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem());
-                return daoFacade.getBondedRoleProposalWithTransaction(bondedRole);
+                return daoFacade.getBondedRoleProposalWithTransaction(role);
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
-                bondedRole = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+                Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
                 return daoFacade.getConfiscateBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bondedRole.getHash());
+                        bond.getLockupTxId());
             case GENERIC:
                 return daoFacade.getGenericProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText());

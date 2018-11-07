@@ -1,6 +1,6 @@
 package bisq.core.dao.exceptions;
 
-import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.Tx;
 
 import org.bitcoinj.core.Coin;
 

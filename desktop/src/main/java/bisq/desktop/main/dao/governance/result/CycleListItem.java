@@ -18,8 +18,8 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 

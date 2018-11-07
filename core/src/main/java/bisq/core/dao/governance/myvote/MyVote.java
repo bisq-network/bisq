@@ -17,12 +17,12 @@
 
 package bisq.core.dao.governance.myvote;
 
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.merit.MeritConsensus;
-import bisq.core.dao.governance.merit.MeritList;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.MeritList;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistablePayload;

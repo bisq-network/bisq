@@ -22,8 +22,8 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;

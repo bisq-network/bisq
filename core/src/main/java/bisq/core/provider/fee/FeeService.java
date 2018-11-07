@@ -18,9 +18,9 @@
 package bisq.core.provider.fee;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.PeriodService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.FaultHandler;

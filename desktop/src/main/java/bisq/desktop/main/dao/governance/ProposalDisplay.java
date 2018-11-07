@@ -27,25 +27,27 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.Vote;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
-import bisq.core.dao.governance.proposal.generic.GenericProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamInputValidator;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.role.BondedRoleType;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.governance.voteresult.ProposalVoteResult;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.GenericProposal;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ProposalVoteResult;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -54,6 +56,7 @@ import bisq.core.util.validation.InputValidator;
 import bisq.asset.Asset;
 
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -111,7 +114,7 @@ public class ProposalDisplay {
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
-    public ComboBox<BondedRole> confiscateBondComboBox;
+    public ComboBox<Bond> confiscateBondComboBox;
     @Nullable
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
     @Nullable
@@ -299,19 +302,30 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<BondedRole>addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.<Bond>addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getValidBondedRoleList()));
+
+                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getAllBonds()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
-                    public String toString(BondedRole bondedRole) {
-                        return bondedRole != null ? bondedRole.getDisplayString() : "";
+                    public String toString(Bond bond) {
+                        String bondType;
+                        String bondDetails;
+                        if (bond instanceof BondedRole) {
+                            bondType = Res.get("dao.bond.bondedRoles");
+                            bondDetails = bond.getBondedAsset().getDisplayString();
+                        } else {
+                            bondType = Res.get("dao.bond.bondedReputation");
+                            bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
+                        }
+
+                        return bondType + ": " + bondDetails;
                     }
 
                     @Override
-                    public BondedRole fromString(String string) {
+                    public Bond fromString(String string) {
                         return null;
                     }
                 });
@@ -470,22 +484,22 @@ public class ProposalDisplay {
             comboBoxValueTextField.setText(paramComboBox.getConverter().toString(changeParamProposal.getParam()));
             checkNotNull(paramValueTextField, "paramValueTextField must not be null");
             paramValueTextField.setText(bsqFormatter.formatParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue()));
-        } else if (proposal instanceof BondedRoleProposal) {
-            BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
+        } else if (proposal instanceof RoleProposal) {
+            RoleProposal roleProposal = (RoleProposal) proposal;
             checkNotNull(bondedRoleTypeComboBox, "bondedRoleComboBox must not be null");
-            BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-            bondedRoleTypeComboBox.getSelectionModel().select(bondedRole.getBondedRoleType());
-            comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(bondedRole.getBondedRoleType()));
-            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(bondedRole.getBondedRoleType().getRequiredBond())));
+            Role role = roleProposal.getRole();
+            bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
+            comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
+            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
-
-            daoFacade.getBondedRoleFromHash(confiscateBondProposal.getHash())
-                    .ifPresent(bondedRole -> {
-                        confiscateBondComboBox.getSelectionModel().select(bondedRole);
-                        comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bondedRole));
+            daoFacade.getBondByLockupTxId(confiscateBondProposal.getLockupTxId())
+                    .ifPresent(bond -> {
+                        confiscateBondComboBox.getSelectionModel().select(bond);
+                        comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
                     });
+
         } else if (proposal instanceof GenericProposal) {
             // do nothing
         } else if (proposal instanceof RemoveAssetProposal) {

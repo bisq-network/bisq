@@ -25,10 +25,10 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -64,6 +64,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -237,7 +238,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
                                                 return (connectedOutput.isMine(wallet)
                                                         && (daoStateService.isLockupOutput(key)
-                                                        || daoStateService.isUnlockingOutput(key)));
+                                                        || daoStateService.isUnlockingAndUnspent(key)));
                                             }
                                         }
                                         return false;
@@ -297,6 +298,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public ObservableList<Transaction> getWalletTransactions() {
         return walletTransactions;
+    }
+
+    public Stream<Transaction> getPendingWalletTransactionsStream() {
+        return walletTransactions.stream()
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING);
     }
 
     private void updateBsqWalletTransactions() {

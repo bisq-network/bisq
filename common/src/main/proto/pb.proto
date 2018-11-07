@@ -941,10 +941,9 @@ message PersistableEnvelope {
         MyVoteList my_vote_list = 21;
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
-        BondedRoleList bonded_role_list = 24;
-        RemovedAssetList removed_asset_list = 25;
-        DaoStateStore dao_state_store = 26;
-        BondedReputationList bonded_reputation_list = 27;
+        RemovedAssetList removed_asset_list = 24;
+        DaoStateStore dao_state_store = 25;
+        MyReputationList my_reputation_list = 26;
     }
 }
 
@@ -1495,7 +1494,7 @@ message Proposal {
         CompensationProposal compensation_proposal = 6;
         ReimbursementProposal reimbursement_proposal = 7;
         ChangeParamProposal change_param_proposal = 8;
-        BondedRoleProposal bonded_role_proposal = 9;
+        RoleProposal role_proposal = 9;
         ConfiscateBondProposal confiscate_bond_proposal = 10;
         GenericProposal generic_proposal = 11;
         RemoveAssetProposal remove_asset_proposal = 12;
@@ -1517,12 +1516,12 @@ message ChangeParamProposal {
     string param_value = 2;
 }
 
-message BondedRoleProposal {
-    BondedRole bonded_role = 1;
+message RoleProposal {
+    Role role = 1;
 }
 
 message ConfiscateBondProposal {
-    bytes hash = 1;
+    string lockup_tx_id = 1;
 }
 
 message GenericProposal {
@@ -1540,29 +1539,20 @@ message RemovedAssetList {
     repeated RemovedAsset removed_asset = 1;
 }
 
-message BondedRole {
+message Role {
     string uid = 1;
     string name = 2;
     string link = 3;
     string bonded_role_type = 4; // name of BondedRoleType enum
-    uint64 start_date = 5;
-    string lockup_tx_id = 6;
-    uint64 revoke_date = 7;
-    string unlock_tx_id = 8;
 }
 
-message BondedRoleList {
-    repeated BondedRole bonded_role = 1;
+message MyReputation {
+    string uid = 1;
+    bytes salt = 2;
 }
 
-message BondedReputation {
-    string salt = 1;
-    string lockup_tx_id = 2;
-    string unlock_tx_id = 3;
-}
-
-message BondedReputationList {
-    repeated BondedReputation bonded_reputation = 1;
+message MyReputationList {
+    repeated MyReputation my_reputation = 1;
 }
 
 message TempProposalPayload {
@@ -1604,7 +1594,7 @@ message ParamChange {
 }
 
 message ConfiscateBond {
-    bytes hash = 1;
+    string lockup_tx_id = 1;
 }
 
 message MyVote {

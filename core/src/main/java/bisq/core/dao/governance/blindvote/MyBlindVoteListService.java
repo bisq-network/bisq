@@ -20,7 +20,6 @@ package bisq.core.dao.governance.blindvote;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -28,22 +27,22 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.exceptions.PublishToP2PNetworkException;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
-import bisq.core.dao.governance.merit.Merit;
 import bisq.core.dao.governance.merit.MeritConsensus;
-import bisq.core.dao.governance.merit.MeritList;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.governance.IssuanceType;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.Merit;
+import bisq.core.dao.state.model.governance.MeritList;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.P2PService;
 
@@ -336,13 +335,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             public void onSuccess(Transaction transaction) {
                 log.info("BlindVote tx published. txId={}", transaction.getHashAsString());
                 resultHandler.handleResult();
-            }
-
-            @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
-                exceptionHandler.handleException(exception);
             }
 
             @Override

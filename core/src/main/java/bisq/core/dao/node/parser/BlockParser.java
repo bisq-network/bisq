@@ -17,11 +17,11 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.RawBlock;
-import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
 
 import bisq.common.app.DevEnv;
 

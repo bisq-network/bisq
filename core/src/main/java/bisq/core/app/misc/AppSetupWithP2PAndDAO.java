@@ -19,13 +19,12 @@ package bisq.core.app.misc;
 
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.bonding.bond.BondedReputationService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
-import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -56,8 +55,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  BallotListService ballotListService,
                                  MyBlindVoteListService myBlindVoteListService,
                                  MyProposalListService myProposalListService,
-                                 BondedRolesService bondedRolesService,
-                                 BondedReputationService bondedReputationService,
+                                 MyReputationListService myReputationListService,
                                  AssetService assetService,
                                  @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         super(encryptionService,
@@ -75,8 +73,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
             persistedDataHosts.add(ballotListService);
             persistedDataHosts.add(myBlindVoteListService);
             persistedDataHosts.add(myProposalListService);
-            persistedDataHosts.add(bondedRolesService);
-            persistedDataHosts.add(bondedReputationService);
+            persistedDataHosts.add(myReputationListService);
             persistedDataHosts.add(assetService);
         }
     }

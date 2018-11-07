@@ -18,11 +18,11 @@
 package bisq.core.dao.governance.myvote;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BallotList;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistedDataHost;

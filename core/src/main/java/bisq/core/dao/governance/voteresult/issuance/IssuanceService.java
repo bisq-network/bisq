@@ -17,17 +17,17 @@
 
 package bisq.core.dao.governance.voteresult.issuance;
 
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.governance.Issuance;
-import bisq.core.dao.state.governance.IssuanceType;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import javax.inject.Inject;
 

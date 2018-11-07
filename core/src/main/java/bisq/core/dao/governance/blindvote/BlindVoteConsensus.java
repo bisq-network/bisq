@@ -17,13 +17,13 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.BallotListService;
-import bisq.core.dao.governance.merit.MeritList;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.MeritList;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;

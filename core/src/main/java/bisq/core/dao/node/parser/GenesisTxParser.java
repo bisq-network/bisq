@@ -17,15 +17,13 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.node.full.RawTx;
 import bisq.core.dao.node.parser.exceptions.InvalidGenesisTxException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.TempTx;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
 
 import org.bitcoinj.core.Coin;
 

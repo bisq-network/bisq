@@ -21,16 +21,16 @@ import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.governance.asset.RemovedAssetsList;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
-import bisq.core.dao.governance.merit.MeritList;
+import bisq.core.dao.governance.bond.reputation.MyReputationList;
 import bisq.core.dao.governance.myvote.MyVoteList;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
-import bisq.core.dao.governance.role.BondedRoleList;
 import bisq.core.dao.state.DaoStateStore;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -129,12 +129,13 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyBlindVoteList.fromProto(proto.getMyBlindVoteList());
                 case MERIT_LIST:
                     return MeritList.fromProto(proto.getMeritList());
-                case BONDED_ROLE_LIST:
-                    return BondedRoleList.fromProto(proto.getBondedRoleList());
                 case REMOVED_ASSET_LIST:
                     return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 case DAO_STATE_STORE:
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
+                case MY_REPUTATION_LIST:
+                    return MyReputationList.fromProto(proto.getMyReputationList());
+
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

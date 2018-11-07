@@ -17,9 +17,6 @@
 
 package bisq.core.dao;
 
-import bisq.core.dao.bonding.bond.BondedReputationService;
-import bisq.core.dao.bonding.lockup.LockupService;
-import bisq.core.dao.bonding.unlock.UnlockService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -29,50 +26,55 @@ import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.blindvote.network.RepublishGovernanceDataHandler;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
+import bisq.core.dao.governance.bond.lockup.LockupTxService;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
+import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposalService;
+import bisq.core.dao.governance.proposal.compensation.CompensationProposalFactory;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
+import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalFactory;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondValidator;
-import bisq.core.dao.governance.proposal.generic.GenericProposalService;
+import bisq.core.dao.governance.proposal.generic.GenericProposalFactory;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.param.ChangeParamProposalFactory;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalFactory;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
+import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
-import bisq.core.dao.governance.proposal.role.BondedRoleValidator;
+import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
+import bisq.core.dao.governance.proposal.role.RoleValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
-import bisq.core.dao.governance.role.BondedRolesService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNodeProvider;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.FullNode;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.state.DaoState;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
-import bisq.core.dao.state.period.CycleService;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.DaoState;
 
 import bisq.common.app.AppModule;
 
@@ -132,25 +134,25 @@ public class DaoModule extends AppModule {
         bind(ProposalValidator.class).in(Singleton.class);
 
         bind(CompensationValidator.class).in(Singleton.class);
-        bind(CompensationProposalService.class).in(Singleton.class);
+        bind(CompensationProposalFactory.class).in(Singleton.class);
 
         bind(ReimbursementValidator.class).in(Singleton.class);
-        bind(ReimbursementProposalService.class).in(Singleton.class);
+        bind(ReimbursementProposalFactory.class).in(Singleton.class);
 
         bind(ChangeParamValidator.class).in(Singleton.class);
-        bind(ChangeParamProposalService.class).in(Singleton.class);
+        bind(ChangeParamProposalFactory.class).in(Singleton.class);
 
-        bind(BondedRoleValidator.class).in(Singleton.class);
-        bind(BondedRoleProposalService.class).in(Singleton.class);
+        bind(RoleValidator.class).in(Singleton.class);
+        bind(RoleProposalFactory.class).in(Singleton.class);
 
         bind(ConfiscateBondValidator.class).in(Singleton.class);
-        bind(ConfiscateBondProposalService.class).in(Singleton.class);
+        bind(ConfiscateBondProposalFactory.class).in(Singleton.class);
 
         bind(GenericProposalValidator.class).in(Singleton.class);
-        bind(GenericProposalService.class).in(Singleton.class);
+        bind(GenericProposalFactory.class).in(Singleton.class);
 
         bind(RemoveAssetValidator.class).in(Singleton.class);
-        bind(RemoveAssetProposalService.class).in(Singleton.class);
+        bind(RemoveAssetProposalFactory.class).in(Singleton.class);
 
 
         // Ballot
@@ -184,10 +186,12 @@ public class DaoModule extends AppModule {
         bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
 
         // Bonds
-        bind(LockupService.class).in(Singleton.class);
-        bind(UnlockService.class).in(Singleton.class);
-        bind(BondedRolesService.class).in(Singleton.class);
-        bind(BondedReputationService.class).in(Singleton.class);
+        bind(LockupTxService.class).in(Singleton.class);
+        bind(UnlockTxService.class).in(Singleton.class);
+        bind(BondedRolesRepository.class).in(Singleton.class);
+        bind(BondedReputationRepository.class).in(Singleton.class);
+        bind(MyReputationListService.class).in(Singleton.class);
+        bind(MyBondedReputationRepository.class).in(Singleton.class);
 
         // Asset
         bind(AssetService.class).in(Singleton.class);

@@ -64,6 +64,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -1680,4 +1681,19 @@ public class FormBuilder {
         }
     }
 
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText) {
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0);
+    }
+
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top) {
+        addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
+
+        TableView<T> tableView = new TableView<>();
+        GridPane.setRowIndex(tableView, rowIndex);
+        GridPane.setMargin(tableView, new Insets(top + 30, -10, 5, -10));
+        gridPane.getChildren().add(tableView);
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        return tableView;
+    }
 }
