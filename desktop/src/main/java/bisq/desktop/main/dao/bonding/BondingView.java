@@ -29,8 +29,8 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.bonds.BondsView;
 import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
-import bisq.desktop.main.dao.bonding.reputation.MyBondedReputationView;
-import bisq.desktop.main.dao.bonding.roles.BondedRolesView;
+import bisq.desktop.main.dao.bonding.reputation.MyReputationView;
+import bisq.desktop.main.dao.bonding.roles.RolesView;
 
 import bisq.core.locale.Res;
 
@@ -84,9 +84,9 @@ public class BondingView extends ActivatableViewAndModel {
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
         bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bondedRoles"),
-                BondedRolesView.class, AwesomeIcon.SHIELD, baseNavPath);
+                RolesView.class, AwesomeIcon.SHIELD, baseNavPath);
         reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.reputation"),
-                MyBondedReputationView.class, AwesomeIcon.LOCK, baseNavPath);
+                MyReputationView.class, AwesomeIcon.LOCK, baseNavPath);
         bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bonds"),
                 BondsView.class, AwesomeIcon.UNLOCK, baseNavPath);
 
@@ -105,7 +105,7 @@ public class BondingView extends ActivatableViewAndModel {
         if (viewPath.size() == 3 && viewPath.indexOf(BondingView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = BondedRolesView.class;
+                selectedViewClass = RolesView.class;
 
             loadView(selectedViewClass);
 
@@ -115,6 +115,7 @@ public class BondingView extends ActivatableViewAndModel {
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void deactivate() {
         navigation.removeListener(listener);
@@ -130,8 +131,8 @@ public class BondingView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof BondingDashboardView) dashboard.setSelected(true);
-        else if (view instanceof BondedRolesView) bondedRoles.setSelected(true);
-        else if (view instanceof MyBondedReputationView) reputation.setSelected(true);
+        else if (view instanceof RolesView) bondedRoles.setSelected(true);
+        else if (view instanceof MyReputationView) reputation.setSelected(true);
         else if (view instanceof BondsView) bonds.setSelected(true);
     }
 }

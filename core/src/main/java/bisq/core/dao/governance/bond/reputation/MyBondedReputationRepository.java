@@ -22,28 +22,41 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
 import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
+
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Collect MyBondedReputations from the myReputationListService and provides access to the collection.
+ * Gets updated after a new block is parsed or at bsqWallet transaction change to detect also state changes by
+ * unconfirmed txs.
  */
 @Slf4j
+//TODO maybe extend BondRepository as well?
 public class MyBondedReputationRepository implements DaoSetupService {
     private final DaoStateService daoStateService;
     private final BsqWalletService bsqWalletService;
     private final MyReputationListService myReputationListService;
+    @Getter
+    private final ObservableList<MyBondedReputation> myBondedReputations = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +79,21 @@ public class MyBondedReputationRepository implements DaoSetupService {
 
     @Override
     public void addListeners() {
+        daoStateService.addBsqStateListener(new DaoStateListener() {
+            @Override
+            public void onNewBlockHeight(int blockHeight) {
+            }
+
+            @Override
+            public void onParseTxsComplete(Block block) {
+                update();
+            }
+
+            @Override
+            public void onParseBlockChainComplete() {
+            }
+        });
+        bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());
     }
 
     @Override
@@ -74,10 +102,10 @@ public class MyBondedReputationRepository implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<MyBondedReputation> getMyBondedReputations() {
+    private void update() {
         // It can be that the same salt/hash is in several lockupTxs, so we use the bondByLockupTxIdMap to eliminate
         // duplicates by the collection algorithm.
         Map<String, MyBondedReputation> bondByLockupTxIdMap = new HashMap<>();
@@ -85,7 +113,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
                 .flatMap(this::getMyBondedReputation)
                 .forEach(e -> bondByLockupTxIdMap.putIfAbsent(e.getLockupTxId(), e));
 
-        return bondByLockupTxIdMap.values().stream()
+        myBondedReputations.setAll(bondByLockupTxIdMap.values().stream()
                 .peek(myBondedReputation -> {
                     if (BondRepository.isConfiscated(myBondedReputation, daoStateService)) {
                         myBondedReputation.setBondState(BondState.CONFISCATED);
@@ -101,7 +129,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
                         }
                     }
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 
     private Stream<MyBondedReputation> getMyBondedReputation(MyReputation myReputation) {

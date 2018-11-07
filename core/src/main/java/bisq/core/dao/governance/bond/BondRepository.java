@@ -34,22 +34,26 @@ import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Collect bonds and bond asset data from other sources and provides access to the collection.
+ * Gets updated after a new block is parsed or at bsqWallet transaction change to detect also state changes by
+ * unconfirmed txs.
  */
 @Slf4j
-public abstract class BondRepository<T extends Bond, R extends BondedAsset> implements DaoStateListener, DaoSetupService {
+public abstract class BondRepository<T extends Bond, R extends BondedAsset> implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -129,6 +133,8 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
 
     // This map is just for convenience. The data which are used to fill the map are stored in the DaoState (role, txs).
     protected final Map<String, T> bondByUidMap = new HashMap<>();
+    @Getter
+    protected final ObservableList<T> bonds = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +145,6 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     public BondRepository(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
         this.daoStateService = daoStateService;
         this.bsqWalletService = bsqWalletService;
-
-        daoStateService.addBsqStateListener(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,30 +153,26 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
 
     @Override
     public void addListeners() {
+        daoStateService.addBsqStateListener(new DaoStateListener() {
+            @Override
+            public void onNewBlockHeight(int blockHeight) {
+            }
+
+            @Override
+            public void onParseTxsComplete(Block block) {
+                update();
+            }
+
+            @Override
+            public void onParseBlockChainComplete() {
+            }
+        });
+        bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());
     }
 
     @Override
     public void start() {
-        updateMap();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        // TODO optimize to not re-write the whole map at each block
-        updateMap();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
+        update();
     }
 
 
@@ -180,20 +180,9 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<T> getBonds() {
-        return new ArrayList<>(bondByUidMap.values());
-    }
-
-    public List<T> getActiveBonds() {
-        return bondByUidMap.values().stream()
-                .filter(T::isActive)
-                .collect(Collectors.toList());
-    }
-
     public boolean isBondedAssetAlreadyInBond(R bondedAsset) {
         boolean contains = bondByUidMap.containsKey(bondedAsset.getUid());
         return contains && bondByUidMap.get(bondedAsset.getUid()).getLockupTxId() != null;
-
     }
 
 
@@ -207,7 +196,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
 
     abstract protected Stream<R> getBondedAssetStream();
 
-    protected void updateMap() {
+    protected void update() {
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
             bondByUidMap.putIfAbsent(uid, createBond(bondedAsset));
@@ -220,6 +209,8 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
 
         updateBondStateFromUnconfirmedLockupTxs();
         updateBondStateFromUnconfirmedUnlockTxs();
+
+        bonds.setAll(bondByUidMap.values());
     }
 
 

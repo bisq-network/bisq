@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * MyReputation is persisted locally and carries the private salt data. In contrast to Reputation which is the public
  * data everyone can derive from the blockchain data (hash in opReturn).
@@ -52,6 +54,7 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
 
     public MyReputation(byte[] salt) {
         this(UUID.randomUUID().toString(), salt);
+        checkArgument(salt.length <= 20, "salt must not be longer then 20 bytes");
     }
 
 

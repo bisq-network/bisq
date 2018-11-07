@@ -495,8 +495,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             Coin miningFee = miningFeeAndTxSize.first;
             int txSize = miningFeeAndTxSize.second;
             Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
-            GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.blindVote"), () -> publishBlindVote(stake));
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
+                        Res.get("dao.blindVote"), () -> publishBlindVote(stake));
+            } else {
+                publishBlindVote(stake);
+            }
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
             new Popup<>().warning(exception.toString()).show();
         }

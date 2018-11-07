@@ -21,38 +21,29 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.dao.bonding.BondingViewUtils;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.BsqValidator;
 
-import bisq.core.btc.listeners.BsqBalanceListener;
-import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.reputation.BondedReputation;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
+import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
-import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
-
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -61,22 +52,18 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-
 @FxmlView
-public class BondsView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
+public class BondsView extends ActivatableView<GridPane, Void> {
     private TableView<BondListItem> tableView;
 
-    private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
-    private final BsqValidator bsqValidator;
-    private final BondingViewUtils bondingViewUtils;
     private final BondedRolesRepository bondedRolesRepository;
-    private final DaoFacade daoFacade;
+    private final BondedReputationRepository bondedReputationRepository;
     private final Preferences preferences;
 
     private int gridRow = 0;
@@ -84,8 +71,8 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     private final ObservableList<BondListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<BondListItem> sortedList = new SortedList<>(observableList);
 
-    private ListChangeListener<Transaction> walletBsqTransactionsListener;
-    private ChangeListener<Number> walletChainHeightListener;
+    private ListChangeListener<BondedRole> bondedRolesListener;
+    private ListChangeListener<BondedReputation> bondedReputationListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,104 +80,39 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BondsView(BsqWalletService bsqWalletService,
-                      BsqFormatter bsqFormatter,
-                      BsqValidator bsqValidator,
-                      BondingViewUtils bondingViewUtils,
+    private BondsView(BsqFormatter bsqFormatter,
                       BondedRolesRepository bondedRolesRepository,
-                      DaoFacade daoFacade,
+                      BondedReputationRepository bondedReputationRepository,
                       Preferences preferences) {
-        this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
-        this.bsqValidator = bsqValidator;
-        this.bondingViewUtils = bondingViewUtils;
         this.bondedRolesRepository = bondedRolesRepository;
-        this.daoFacade = daoFacade;
+        this.bondedReputationRepository = bondedReputationRepository;
         this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 2, Res.get("dao.bonding.bonds.table.header"));
-
-        tableView = new TableView<>();
-        GridPane.setRowIndex(tableView, ++gridRow);
-        GridPane.setMargin(tableView, new Insets(30, -10, 5, -10));
-        root.getChildren().add(tableView);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bonding.bonds.table.header"));
+        tableView.setItems(sortedList);
         addColumns();
 
-        walletBsqTransactionsListener = change -> updateList();
-        walletChainHeightListener = (observable, oldValue, newValue) -> updateList();
+        bondedReputationListener = c -> updateList();
+        bondedRolesListener = c -> updateList();
     }
 
     @Override
     protected void activate() {
-        bsqWalletService.addBsqBalanceListener(this);
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getUnverifiedBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockupBondsBalance(),
-                bsqWalletService.getUnlockingBondsBalance());
-
-        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
-        bsqWalletService.addBsqBalanceListener(this);
-        bsqWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
-
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-
-        daoFacade.addBsqStateListener(this);
-
+        bondedReputationRepository.getBonds().addListener(bondedReputationListener);
+        bondedRolesRepository.getBonds().addListener(bondedRolesListener);
         updateList();
     }
 
     @Override
     protected void deactivate() {
-        bsqWalletService.removeBsqBalanceListener(this);
-
-        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
-        bsqWalletService.removeBsqBalanceListener(this);
-        bsqWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
-        daoFacade.removeBsqStateListener(this);
-
         sortedList.comparatorProperty().unbind();
-
-        observableList.forEach(BondListItem::cleanup);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // BsqBalanceListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onUpdateBalances(Coin confirmedBalance,
-                                 Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
-                                 Coin lockedForVotingBalance,
-                                 Coin lockupBondsBalance,
-                                 Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        updateList();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
+        bondedReputationRepository.getBonds().removeListener(bondedReputationListener);
+        bondedRolesRepository.getBonds().removeListener(bondedRolesListener);
     }
 
 
@@ -198,24 +120,16 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void openTxInBlockExplorer(BondListItem item) {
-        if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
-    }
-
     private void updateList() {
-        List<BondListItem> items = daoFacade.getAllBonds().stream()
+        List<Bond> combined = new ArrayList<>(bondedReputationRepository.getBonds());
+        combined.addAll(bondedRolesRepository.getBonds());
+        observableList.setAll(combined.stream()
                 .map(bond -> {
-                    return new BondListItem(bond,
-                            daoFacade,
-                            bondedRolesRepository,
-                            bondingViewUtils,
-                            bsqFormatter);
+                    return new BondListItem(bond, bsqFormatter);
                 })
-                .sorted(Comparator.comparing(BondListItem::getLockupDate).reversed())
-                .collect(Collectors.toList());
-        observableList.setAll(items);
-        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 10);
+                .sorted(Comparator.comparing(BondListItem::getLockupDateString).reversed())
+                .collect(Collectors.toList()));
+        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 30);
     }
 
 
@@ -275,22 +189,14 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                     public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
                             BondListItem> column) {
                         return new TableCell<>() {
-                            Label label;
-
                             @Override
                             public void updateItem(final BondListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (label == null) {
-                                        label = item.getStateLabel();
-                                        setGraphic(label);
-                                    }
-                                } else {
-                                    setGraphic(null);
-                                    if (label != null)
-                                        label = null;
-                                }
+                                    setText(item.getBondStateString());
+                                } else
+                                    setText("");
                             }
                         };
                     }
@@ -341,10 +247,8 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupDate"));
         column.setMinWidth(140);
-
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
-
             @Override
             public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem, BondListItem> column) {
                 return new TableCell<>() {
@@ -352,7 +256,7 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                     public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getLockupDate());
+                            setText(item.getLockupDateString());
                         } else
                             setText("");
                     }
@@ -366,7 +270,6 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMinWidth(60);
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
                     public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem,
                             BondListItem> column) {
@@ -377,12 +280,11 @@ public class BondsView extends ActivatableView<GridPane, Void> implements BsqBal
                             public void updateItem(final BondListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                //noinspection Duplicates
                                 if (item != null && !empty) {
-                                    String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
-                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
-                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
+                                    String lockupTxId = item.getLockupTxId();
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(lockupTxId, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);

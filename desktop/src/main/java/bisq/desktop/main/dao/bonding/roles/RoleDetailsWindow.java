@@ -30,19 +30,19 @@ import javafx.geometry.Insets;
 
 import lombok.extern.slf4j.Slf4j;
 
+//TODO not used atm but keep it as is should be used
 @Slf4j
-class BondedRoleTypeWindow extends Overlay<BondedRoleTypeWindow> {
+class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
     private final BondedRoleType bondedRoleType;
     private final BsqFormatter bsqFormatter;
 
 
-    public BondedRoleTypeWindow(BondedRoleType bondedRoleType, BsqFormatter bsqFormatter) {
+    public RoleDetailsWindow(BondedRoleType bondedRoleType, BsqFormatter bsqFormatter) {
         this.bondedRoleType = bondedRoleType;
         this.bsqFormatter = bsqFormatter;
 
         width = 968;
         type = Type.Confirmation;
-
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

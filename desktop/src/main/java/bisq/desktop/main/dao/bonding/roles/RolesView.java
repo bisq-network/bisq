@@ -19,15 +19,16 @@ package bisq.desktop.main.dao.bonding.roles;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -37,7 +38,6 @@ import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -46,31 +46,31 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-
 @FxmlView
-public class BondedRolesView extends ActivatableView<GridPane, Void> implements DaoStateListener {
-    private TableView<BondedRolesListItem> tableView;
+public class RolesView extends ActivatableView<GridPane, Void> {
+    private TableView<RolesListItem> tableView;
 
-    private final BsqFormatter bsqFormatter;
     private final BondingViewUtils bondingViewUtils;
+    private final BsqFormatter bsqFormatter;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
 
-    private final ObservableList<BondedRolesListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<BondedRolesListItem> sortedList = new SortedList<>(observableList);
+    private final ObservableList<RolesListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<RolesListItem> sortedList = new SortedList<>(observableList);
+
+    private ListChangeListener<BondedRole> bondedRoleListChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,10 +78,10 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BondedRolesView(BsqFormatter bsqFormatter,
-                            BondingViewUtils bondingViewUtils,
-                            DaoFacade daoFacade,
-                            Preferences preferences) {
+    private RolesView(BsqFormatter bsqFormatter,
+                      BondingViewUtils bondingViewUtils,
+                      DaoFacade daoFacade,
+                      Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
         this.bondingViewUtils = bondingViewUtils;
         this.daoFacade = daoFacade;
@@ -91,50 +91,24 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     @Override
     public void initialize() {
         int gridRow = 0;
-        addTitledGroupBg(root, gridRow, 2, Res.get("dao.bond.bondedRoles"));
-
-        tableView = new TableView<>();
-        GridPane.setRowIndex(tableView, ++gridRow);
-        GridPane.setMargin(tableView, new Insets(30, -10, 5, -10));
-        root.getChildren().add(tableView);
-        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView = FormBuilder.addTableViewWithHeader(root, gridRow, Res.get("dao.bond.bondedRoles"));
         createColumns();
         tableView.setItems(sortedList);
+
+        bondedRoleListChangeListener = c -> updateList();
     }
 
     @Override
     protected void activate() {
-        daoFacade.addBsqStateListener(this);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-
+        daoFacade.getBondedRoles().addListener(bondedRoleListChangeListener);
         updateList();
     }
 
     @Override
     protected void deactivate() {
-        daoFacade.removeBsqStateListener(this);
         sortedList.comparatorProperty().unbind();
-
-        observableList.forEach(BondedRolesListItem::cleanup);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        updateList();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
+        daoFacade.getBondedRoles().removeListener(bondedRoleListChangeListener);
     }
 
 
@@ -142,17 +116,12 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     private void updateList() {
-        observableList.forEach(BondedRolesListItem::cleanup);
         observableList.setAll(daoFacade.getBondedRoles().stream()
-                .map(bond -> new BondedRolesListItem(bond, daoFacade, bondingViewUtils, bsqFormatter))
+                .map(bond -> new RolesListItem(bond, daoFacade))
+                .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
                 .collect(Collectors.toList()));
-    }
-
-    private void openTxInBlockExplorer(String transactionId) {
-        if (transactionId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + transactionId);
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
 
@@ -161,20 +130,19 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createColumns() {
-        TableColumn<BondedRolesListItem, BondedRolesListItem> column;
+        TableColumn<RolesListItem, RolesListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.name"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(item.getRole().getName());
@@ -191,15 +159,14 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setMinWidth(60);
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
                         return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     String link = item.getRole().getLink();
@@ -223,15 +190,14 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setMinWidth(80);
         column.setCellFactory(
                 new Callback<>() {
-
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
                         return new TableCell<>() {
                             private Hyperlink hyperlink;
 
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -239,7 +205,7 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                                     String type = bondedRoleType.getDisplayString();
                                     hyperlink = new Hyperlink(type);
                                     hyperlink.setOnAction(event -> {
-                                        new BondedRoleTypeWindow(bondedRoleType, bsqFormatter).show();
+                                        new RoleDetailsWindow(bondedRoleType, bsqFormatter).show();
                                     });
                                     hyperlink.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails", type)));
                                     setGraphic(hyperlink);
@@ -254,77 +220,27 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                 });
         tableView.getColumns().add(column);
 
-       /* column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.startDate"));
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(120);
-        column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
-
-                    @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
-                            @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    setText(item.getStartDate());
-                                } else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        tableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.revokeDate"));
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(120);
-        column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
-
-                    @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
-                            @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    setText(item.getRevokeDate());
-                                } else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        tableView.getColumns().add(column);
-
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
-
+                new Callback<>() {
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
                             private Label label;
 
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
                                     String transactionId = item.getBondedRole().getLockupTxId();
                                     if (transactionId != null) {
                                         hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
-                                        hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
+                                        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId, preferences));
                                         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                         setGraphic(hyperlinkWithIcon);
                                     } else {
@@ -343,48 +259,6 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
                     }
                 });
         tableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.unlockTxId"));
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(80);
-        column.setCellFactory(
-                new Callback<TableColumn<BondedRolesListItem, BondedRolesListItem>, TableCell<BondedRolesListItem,
-                        BondedRolesListItem>>() {
-
-                    @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
-                        return new TableCell<BondedRolesListItem, BondedRolesListItem>() {
-                            private HyperlinkWithIcon hyperlinkWithIcon;
-                            private Label label;
-
-                            @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
-                                    String transactionId = item.getBondedRole().getUnlockTxId();
-                                    if (transactionId != null) {
-                                        hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
-                                        hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(transactionId));
-                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
-                                        setGraphic(hyperlinkWithIcon);
-                                    } else {
-                                        label = new Label("-");
-                                        setGraphic(label);
-                                    }
-                                } else {
-                                    setGraphic(null);
-                                    if (hyperlinkWithIcon != null)
-                                        hyperlinkWithIcon.setOnAction(null);
-                                    if (label != null)
-                                        label = null;
-                                }
-                            }
-                        };
-                    }
-                });
-        tableView.getColumns().add(column);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondState"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -392,25 +266,16 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
                         return new TableCell<>() {
-                            Label label;
-
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    if (label == null) {
-                                        label = item.getLabel();
-                                        setGraphic(label);
-                                    }
-                                } else {
-                                    setGraphic(null);
-                                    if (label != null)
-                                        label = null;
-                                }
+                                    setText(item.getBondStateString());
+                                } else
+                                    setText("");
                             }
                         };
                     }
@@ -423,24 +288,37 @@ public class BondedRolesView extends ActivatableView<GridPane, Void> implements 
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<BondedRolesListItem, BondedRolesListItem> call(TableColumn<BondedRolesListItem,
-                            BondedRolesListItem> column) {
+                    public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem,
+                            RolesListItem> column) {
                         return new TableCell<>() {
-                            Button button;
+                            AutoTooltipButton button;
 
                             @Override
-                            public void updateItem(final BondedRolesListItem item, boolean empty) {
+                            public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
-                                if (item != null && !empty) {
+                                if (item != null && !empty && item.isButtonVisible()) {
                                     if (button == null) {
-                                        button = item.getButton();
+                                        button = new AutoTooltipButton(item.getButtonText());
+                                        button.setMinWidth(70);
+                                        button.setOnAction(e -> {
+                                            if (item.getBondState() == BondState.READY_FOR_LOCKUP) {
+                                                bondingViewUtils.lockupBondForBondedRole(item.getRole(),
+                                                        txId -> {
+                                                        });
+                                            } else if (item.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
+                                                bondingViewUtils.unLock(item.getLockupTxId(),
+                                                        txId -> {
+                                                        });
+                                            }
+                                        });
                                         setGraphic(button);
                                     }
                                 } else {
                                     setGraphic(null);
-                                    if (button != null)
+                                    if (button != null) {
+                                        button.setOnAction(null);
                                         button = null;
+                                    }
                                 }
                             }
                         };

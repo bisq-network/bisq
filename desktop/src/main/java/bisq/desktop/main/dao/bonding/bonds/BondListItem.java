@@ -17,14 +17,9 @@
 
 package bisq.desktop.main.dao.bonding.bonds;
 
-import bisq.desktop.main.dao.bonding.BondingViewUtils;
-
-import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
-import bisq.core.dao.governance.bond.role.BondedRolesRepository;
-import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -32,47 +27,27 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-
 import java.util.Date;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode
-@Data
+@Value
 @Slf4j
-class BondListItem implements DaoStateListener {
+class BondListItem {
     private final Bond bond;
-    private final DaoFacade daoFacade;
-    private final BondedRolesRepository bondedRolesRepository;
-    private final BondingViewUtils bondingViewUtils;
-    private final BsqFormatter bsqFormatter;
     private final String bondType;
-    private final String txId;
+    private final String lockupTxId;
     private final String amount;
-    private final String lockupDate;
+    private final String lockupDateString;
     private final String lockTime;
-    private final Label stateLabel;
     private final String bondDetails;
+    private final BondState bondState;
+    private final String bondStateString;
+    private final Date lockupDate;
 
-    @Getter
-    private Button button;
-
-    BondListItem(Bond bond,
-                 DaoFacade daoFacade,
-                 BondedRolesRepository bondedRolesRepository,
-                 BondingViewUtils bondingViewUtils,
-                 BsqFormatter bsqFormatter) {
+    BondListItem(Bond bond, BsqFormatter bsqFormatter) {
         this.bond = bond;
-        this.daoFacade = daoFacade;
-        this.bondedRolesRepository = bondedRolesRepository;
-        this.bondingViewUtils = bondingViewUtils;
-        this.bsqFormatter = bsqFormatter;
-
 
         amount = bsqFormatter.formatCoin(Coin.valueOf(bond.getAmount()));
         lockTime = Integer.toString(bond.getLockTime());
@@ -83,34 +58,10 @@ class BondListItem implements DaoStateListener {
             bondType = Res.get("dao.bond.bondedReputation");
             bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
         }
-        lockupDate = bsqFormatter.formatDateTime(new Date(bond.getLockupDate()));
-        txId = bond.getLockupTxId();
-
-        stateLabel = new Label();
-
-        daoFacade.addBsqStateListener(this);
-        update();
-    }
-
-    private void update() {
-        stateLabel.setText(Res.get("dao.bond.bondState." + bond.getBondState().name()));
-    }
-
-    public void cleanup() {
-        daoFacade.removeBsqStateListener(this);
-    }
-
-    // DaoStateListener
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        update();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
+        lockupTxId = bond.getLockupTxId();
+        lockupDate = new Date(bond.getLockupDate());
+        lockupDateString = bsqFormatter.formatDateTime(lockupDate);
+        bondState = bond.getBondState();
+        bondStateString = Res.get("dao.bond.bondState." + bond.getBondState().name());
     }
 }

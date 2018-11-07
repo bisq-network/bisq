@@ -19,10 +19,10 @@ package bisq.desktop.main.dao.bonding.reputation;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -33,8 +33,8 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.BondConsensus;
-import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -45,7 +45,6 @@ import bisq.common.crypto.Hash;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -54,15 +53,11 @@ import com.google.common.base.Charsets;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-
-import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -75,7 +70,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -84,26 +78,29 @@ import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
-public class MyBondedReputationView extends ActivatableView<GridPane, Void> implements DaoStateListener, BsqBalanceListener {
-    private final BsqWalletService bsqWalletService;
+public class MyReputationView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
+    private InputTextField amountInputTextField, timeInputTextField, saltInputTextField;
+    private Button lockupButton;
+    private TableView<MyReputationListItem> tableView;
+
     private final BsqFormatter bsqFormatter;
+    private final BsqWalletService bsqWalletService;
     private final BondingViewUtils bondingViewUtils;
     private final HexStringValidator hexStringValidator;
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
     private final Preferences preferences;
+
     private final IntegerValidator timeInputTextFieldValidator;
 
+    private final ObservableList<MyReputationListItem> observableList = FXCollections.observableArrayList();
+    private final SortedList<MyReputationListItem> sortedList = new SortedList<>(observableList);
+
     private int gridRow = 0;
-    private InputTextField amountInputTextField, timeInputTextField, saltInputTextField;
-    private Button lockupButton;
-    private TableView<MyBondedReputationListItem> tableView;
+
     private ChangeListener<Boolean> amountFocusOutListener, timeFocusOutListener, saltFocusOutListener;
     private ChangeListener<String> amountInputTextFieldListener, timeInputTextFieldListener, saltInputTextFieldListener;
-    private final ObservableList<MyBondedReputationListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<MyBondedReputationListItem> sortedList = new SortedList<>(observableList);
-    private ListChangeListener<Transaction> walletBsqTransactionsListener;
-    private ChangeListener<Number> walletChainHeightListener;
+    private ListChangeListener<MyBondedReputation> myBondedReputationsChangeListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,15 +108,15 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private MyBondedReputationView(BsqWalletService bsqWalletService,
-                                   BsqFormatter bsqFormatter,
-                                   BondingViewUtils bondingViewUtils,
-                                   HexStringValidator hexStringValidator,
-                                   BsqValidator bsqValidator,
-                                   DaoFacade daoFacade,
-                                   Preferences preferences) {
-        this.bsqWalletService = bsqWalletService;
+    private MyReputationView(BsqFormatter bsqFormatter,
+                             BsqWalletService bsqWalletService,
+                             BondingViewUtils bondingViewUtils,
+                             HexStringValidator hexStringValidator,
+                             BsqValidator bsqValidator,
+                             DaoFacade daoFacade,
+                             Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
+        this.bsqWalletService = bsqWalletService;
         this.bondingViewUtils = bondingViewUtils;
         this.hexStringValidator = hexStringValidator;
         this.bsqValidator = bsqValidator;
@@ -133,26 +130,23 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
 
     @Override
     public void initialize() {
-        int columnSpan = 3;
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, Res.get("dao.bonding.reputation.header"));
-        GridPane.setColumnSpan(titledGroupBg, columnSpan);
+        addTitledGroupBg(root, gridRow, 3, Res.get("dao.bonding.reputation.header"));
 
         amountInputTextField = addInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
                 Layout.FIRST_ROW_DISTANCE);
         amountInputTextField.setValidator(bsqValidator);
-        GridPane.setColumnSpan(amountInputTextField, columnSpan);
 
         timeInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"));
-        GridPane.setColumnSpan(timeInputTextField, columnSpan);
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
         saltInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.salt"));
-        GridPane.setColumnSpan(saltInputTextField, columnSpan);
         saltInputTextField.setValidator(hexStringValidator);
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
 
-        createTableView(columnSpan);
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bonding.reputation.list.header"), 20);
+        createColumns();
+        tableView.setItems(sortedList);
 
         createListeners();
     }
@@ -168,9 +162,10 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         saltInputTextField.textProperty().addListener(saltInputTextFieldListener);
         saltInputTextField.focusedProperty().addListener(saltFocusOutListener);
 
-        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+
+        daoFacade.getMyBondedReputations().addListener(myBondedReputationsChangeListener);
         bsqWalletService.addBsqBalanceListener(this);
-        bsqWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
 
         lockupButton.setOnAction((event) -> {
             Coin lockupAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
@@ -186,23 +181,18 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
             setNewRandomSalt();
         });
 
-        daoFacade.addBsqStateListener(this);
 
         amountInputTextField.resetValidation();
         timeInputTextField.resetValidation();
+
+        //TODO maybe show generate salt button instead
         setNewRandomSalt();
 
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedList);
-
-        onUpdateBalances();
         updateList();
     }
 
     @Override
     protected void deactivate() {
-        observableList.forEach(MyBondedReputationListItem::cleanup);
-
         amountInputTextField.textProperty().removeListener(amountInputTextFieldListener);
         amountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
 
@@ -212,35 +202,13 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         saltInputTextField.textProperty().removeListener(saltInputTextFieldListener);
         saltInputTextField.focusedProperty().removeListener(saltFocusOutListener);
 
-        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
-        bsqWalletService.addBsqBalanceListener(this);
-        bsqWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
-
-        lockupButton.setOnAction(null);
+        daoFacade.getMyBondedReputations().removeListener(myBondedReputationsChangeListener);
+        bsqWalletService.removeBsqBalanceListener(this);
 
         sortedList.comparatorProperty().unbind();
 
-        daoFacade.removeBsqStateListener(this);
+        lockupButton.setOnAction(null);
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-        updateList();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BsqBalanceListener
@@ -254,7 +222,6 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
         bsqValidator.setAvailableBalance(confirmedBalance);
-        updateButtonState();
     }
 
 
@@ -266,19 +233,16 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         amountFocusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue) {
                 updateButtonState();
-                onUpdateBalances();
             }
         };
         timeFocusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue) {
                 updateButtonState();
-                onUpdateBalances();
             }
         };
         saltFocusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue) {
                 updateButtonState();
-                onUpdateBalances();
             }
         };
 
@@ -286,26 +250,15 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         timeInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
         saltInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
 
-        walletBsqTransactionsListener = change -> updateList();
-        walletChainHeightListener = (observable, oldValue, newValue) -> updateList();
+        myBondedReputationsChangeListener = c -> updateList();
     }
 
-    private void createTableView(int columnSpan) {
-        TitledGroupBg titledGroupBg2 = addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.bonding.reputation.list.header"), 20);
-        GridPane.setColumnSpan(titledGroupBg2, columnSpan);
-
-        tableView = new TableView<>();
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        createColumns();
-
-        VBox vBox = new VBox();
-        vBox.setSpacing(10);
-        GridPane.setRowIndex(vBox, ++gridRow);
-        GridPane.setColumnSpan(vBox, columnSpan);
-        GridPane.setMargin(vBox, new Insets(50, -10, 5, -10));
-        vBox.getChildren().addAll(tableView);
-        root.getChildren().add(vBox);
+    private void updateList() {
+        observableList.setAll(daoFacade.getMyBondedReputations().stream()
+                .map(myBondedReputation -> new MyReputationListItem(myBondedReputation, bsqFormatter))
+                .sorted(Comparator.comparing(MyReputationListItem::getLockupDateString).reversed())
+                .collect(Collectors.toList()));
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     private void setNewRandomSalt() {
@@ -315,36 +268,11 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         saltInputTextField.resetValidation();
     }
 
-    private void onUpdateBalances() {
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getUnverifiedBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockupBondsBalance(),
-                bsqWalletService.getUnlockingBondsBalance());
-    }
-
     private void updateButtonState() {
         boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid &&
                 timeInputTextFieldValidator.validate(timeInputTextField.getText()).isValid &&
                 hexStringValidator.validate(saltInputTextField.getText()).isValid;
         lockupButton.setDisable(!isValid);
-    }
-
-    private void openTxInBlockExplorer(MyBondedReputationListItem item) {
-        if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
-    }
-
-    private void updateList() {
-        List<MyBondedReputationListItem> items = daoFacade.getMyBondedReputations().stream()
-                .map(myBondedReputation -> {
-                    return new MyBondedReputationListItem(myBondedReputation, daoFacade, bondingViewUtils, bsqFormatter);
-                })
-                .sorted(Comparator.comparing(MyBondedReputationListItem::getLockupDate).reversed())
-                .collect(Collectors.toList());
-        observableList.setAll(items);
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
     }
 
 
@@ -353,7 +281,7 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createColumns() {
-        TableColumn<MyBondedReputationListItem, MyBondedReputationListItem> column;
+        TableColumn<MyReputationListItem, MyReputationListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(120);
@@ -361,11 +289,11 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                    MyBondedReputationListItem> column) {
+            public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                    MyReputationListItem> column) {
                 return new TableCell<>() {
                     @Override
-                    public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                    public void updateItem(final MyReputationListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(item.getAmount());
@@ -383,11 +311,11 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                    MyBondedReputationListItem> column) {
+            public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                    MyReputationListItem> column) {
                 return new TableCell<>() {
                     @Override
-                    public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                    public void updateItem(final MyReputationListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(item.getLockTime());
@@ -405,25 +333,16 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                            MyBondedReputationListItem> column) {
+                    public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                            MyReputationListItem> column) {
                         return new TableCell<>() {
-                            Label label;
-
                             @Override
-                            public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                            public void updateItem(MyReputationListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    if (label == null) {
-                                        label = item.getStateLabel();
-                                        setGraphic(label);
-                                    }
-                                } else {
-                                    setGraphic(null);
-                                    if (label != null)
-                                        label = null;
-                                }
+                                    setText(item.getBondStateString());
+                                } else
+                                    setText("");
                             }
                         };
                     }
@@ -436,15 +355,15 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                    MyBondedReputationListItem> column) {
+            public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                    MyReputationListItem> column) {
                 return new TableCell<>() {
 
                     @Override
-                    public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                    public void updateItem(final MyReputationListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getLockupDate());
+                            setText(item.getLockupDateString());
                         } else
                             setText("");
                     }
@@ -459,19 +378,19 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                            MyBondedReputationListItem> column) {
+                    public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                            MyReputationListItem> column) {
                         return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
-                            public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                            public void updateItem(final MyReputationListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
-                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -490,11 +409,11 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                    MyBondedReputationListItem> column) {
+            public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                    MyReputationListItem> column) {
                 return new TableCell<>() {
                     @Override
-                    public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                    public void updateItem(final MyReputationListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(item.getSalt());
@@ -511,11 +430,11 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
-            public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                    MyBondedReputationListItem> column) {
+            public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                    MyReputationListItem> column) {
                 return new TableCell<>() {
                     @Override
-                    public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                    public void updateItem(final MyReputationListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(item.getHash());
@@ -533,23 +452,30 @@ public class MyBondedReputationView extends ActivatableView<GridPane, Void> impl
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<MyBondedReputationListItem, MyBondedReputationListItem> call(TableColumn<MyBondedReputationListItem,
-                            MyBondedReputationListItem> column) {
+                    public TableCell<MyReputationListItem, MyReputationListItem> call(TableColumn<MyReputationListItem,
+                            MyReputationListItem> column) {
                         return new TableCell<>() {
-                            Button button;
+                            AutoTooltipButton button;
 
                             @Override
-                            public void updateItem(final MyBondedReputationListItem item, boolean empty) {
+                            public void updateItem(final MyReputationListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = item.getButton();
-                                        setGraphic(button);
-                                    }
+                                if (item != null && !empty && item.isShowButton()) {
+                                    button = new AutoTooltipButton(item.getButtonText());
+                                    button.setOnAction(e -> {
+                                        if (item.getBondState() == BondState.LOCKUP_TX_CONFIRMED) {
+                                            bondingViewUtils.unLock(item.getLockupTxId(),
+                                                    txId -> {
+                                                    });
+                                        }
+                                    });
+                                    setGraphic(button);
                                 } else {
                                     setGraphic(null);
-                                    if (button != null)
+                                    if (button != null) {
+                                        button.setOnAction(null);
                                         button = null;
+                                    }
                                 }
                             }
                         };

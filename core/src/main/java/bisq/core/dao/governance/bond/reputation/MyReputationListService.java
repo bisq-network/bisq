@@ -26,9 +26,7 @@ import bisq.common.storage.Storage;
 import javax.inject.Inject;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -37,16 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyReputationListService implements PersistedDataHost, DaoSetupService {
 
-    @SuppressWarnings("unused")
-    interface MyReputationListChangeListener {
-        void onListChanged(List<MyReputation> list);
-    }
-
     private final Storage<MyReputationList> storage;
     private final MyReputationList myReputationList = new MyReputationList();
-
-    @Getter
-    private final List<MyReputationListChangeListener> listeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +60,6 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
             if (persisted != null) {
                 myReputationList.clear();
                 myReputationList.addAll(persisted.getList());
-                listeners.forEach(l -> l.onListChanged(myReputationList.getList()));
             }
         }
     }
@@ -101,11 +90,6 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
 
     public List<MyReputation> getMyReputationList() {
         return myReputationList.getList();
-    }
-
-    @SuppressWarnings("unused")
-    public void addListener(MyReputationListChangeListener listener) {
-        listeners.add(listener);
     }
 
 

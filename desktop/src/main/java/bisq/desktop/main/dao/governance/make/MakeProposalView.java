@@ -216,9 +216,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
-            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                        Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
+            } else {
+                doPublishMyProposal(proposal, transaction);
+            }
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
             new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",

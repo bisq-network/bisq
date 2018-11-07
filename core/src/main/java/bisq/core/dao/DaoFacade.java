@@ -27,7 +27,6 @@ import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.bond.lockup.LockupTxService;
-import bisq.core.dao.governance.bond.reputation.BondedReputation;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
@@ -291,7 +290,7 @@ public class DaoFacade implements DaoSetupService {
         return removeAssetProposalFactory.createProposalWithTransaction(name, link, asset);
     }
 
-    public List<BondedRole> getBondedRoles() {
+    public ObservableList<BondedRole> getBondedRoles() {
         return bondedRolesRepository.getBonds();
     }
 
@@ -518,19 +517,14 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getLockTime(txId);
     }
 
-    public List<BondedRole> getActiveBondedRoles() {
-        return bondedRolesRepository.getActiveBonds();
-    }
 
     public List<Bond> getAllBonds() {
-        List<BondedReputation> bondedReputations = bondedReputationRepository.getBonds();
-        List<BondedRole> bondedRoles = bondedRolesRepository.getBonds();
-        List<Bond> bonds = new ArrayList<>(bondedReputations);
-        bonds.addAll(bondedRoles);
+        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
+        bonds.addAll(bondedRolesRepository.getBonds());
         return bonds;
     }
 
-    public List<MyBondedReputation> getMyBondedReputations() {
+    public ObservableList<MyBondedReputation> getMyBondedReputations() {
         return myBondedReputationRepository.getMyBondedReputations();
     }
 
@@ -665,6 +659,6 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public Optional<Bond> getBondByLockupTxId(String lockupTxId) {
-        return getAllBonds().stream().filter(e -> e.getLockupTxId().equals(lockupTxId)).findAny();
+        return getAllBonds().stream().filter(e -> lockupTxId.equals(e.getLockupTxId())).findAny();
     }
 }
