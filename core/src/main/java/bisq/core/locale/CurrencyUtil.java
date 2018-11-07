@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -73,12 +72,11 @@ public class CurrencyUtil {
     }
 
     private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
-        Set<FiatCurrency> set = CountryUtil.getAllCountries().stream()
+        return CountryUtil.getAllCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.code))
-                .collect(Collectors.toSet());
-        List<FiatCurrency> list = new ArrayList<>(set);
-        list.sort(TradeCurrency::compareTo);
-        return list;
+                .distinct()
+                .sorted(TradeCurrency::compareTo)
+                .collect(Collectors.toList());
     }
 
     public static List<FiatCurrency> getMainFiatCurrencies() {
@@ -324,7 +322,14 @@ public class CurrencyUtil {
 
     @SuppressWarnings("WeakerAccess")
     public static boolean isCryptoCurrency(String currencyCode) {
-        return getCryptoCurrency(currencyCode).isPresent();
+        boolean isCCPresent = getCryptoCurrency(currencyCode).isPresent();
+        // If we found it we can be sue its a cc
+        if (isCCPresent)
+            return true;
+
+        // If we don't have it might be that it was removed from the assetsRegistry, so we cross check if there is
+        // fiat currency, otherwise we treat it as cc.
+        return !getFiatCurrency(currencyCode).isPresent();
     }
 
     public static Optional<CryptoCurrency> getCryptoCurrency(String currencyCode) {
@@ -351,9 +356,10 @@ public class CurrencyUtil {
         return new FiatCurrency(currency.getCurrencyCode());
     }
 
+
     public static String getNameByCode(String currencyCode) {
         if (isCryptoCurrency(currencyCode))
-            return getCryptoCurrency(currencyCode).get().getName();
+            return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(Res.get("shared.na"));
 
         try {
             return Currency.getInstance(currencyCode).getDisplayName();
