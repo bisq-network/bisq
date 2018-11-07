@@ -34,6 +34,9 @@ import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+
 public class InteracETransferForm extends PaymentMethodForm {
 
     private final InteracETransferAccount interacETransferAccount;
@@ -42,13 +45,13 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getHolderName());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"),
+        addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.emailOrMobile"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getEmail());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getQuestion());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
+        addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.answer"),
                 ((InteracETransferAccountPayload) paymentAccountPayload).getAnswer());
         return gridRow;
     }
@@ -94,7 +97,7 @@ public class InteracETransferForm extends PaymentMethodForm {
         });
         TradeCurrency singleTradeCurrency = interacETransferAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
@@ -108,21 +111,21 @@ public class InteracETransferForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(interacETransferAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 interacETransferAccount.getHolderName());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 interacETransferAccount.getEmail()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
                 interacETransferAccount.getQuestion()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
                 interacETransferAccount.getAnswer()).second.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = interacETransferAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
     }

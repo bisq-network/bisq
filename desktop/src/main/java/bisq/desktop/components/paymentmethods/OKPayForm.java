@@ -45,9 +45,9 @@ import javafx.geometry.VPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addLabel;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 @Deprecated
 public class OKPayForm extends PaymentMethodForm {
@@ -59,7 +59,7 @@ public class OKPayForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
                 ((OKPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }

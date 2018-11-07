@@ -81,12 +81,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
@@ -189,17 +192,27 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected void addContent() {
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
+
         addTradeInfoBlock();
 
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
-        TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1,
+        TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 2,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
-                Layout.GROUP_DISTANCE);
-        TextFieldWithCopyIcon field = FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
+                Layout.COMPACT_GROUP_DISTANCE);
+        accountTitledGroupBg.getStyleClass().add("last");
+        TextFieldWithCopyIcon field = addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 0,
+                Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
+
+        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
+                !(paymentAccountPayload instanceof F2FAccountPayload))
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
+                    Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
         switch (paymentMethodId) {
             case PaymentMethod.OK_PAY_ID:
@@ -290,11 +303,6 @@ public class BuyerStep2View extends TradeStepView {
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
 
-        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload))
-            FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
-
         Trade trade = model.getTrade();
         if (trade != null && model.getUser().getPaymentAccounts() != null) {
             Offer offer = trade.getOffer();
@@ -308,16 +316,16 @@ public class BuyerStep2View extends TradeStepView {
                         .findFirst()
                         .ifPresent(paymentAccount -> {
                             String accountName = paymentAccount.getAccountName();
-                            FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                                    Res.getWithCol("portfolio.pending.step2_buyer.buyerAccount"), accountName);
+                            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, 0,
+                                    Res.get("portfolio.pending.step2_buyer.buyerAccount"), accountName);
                         });
             }
         }
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = FormBuilder.addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
-                Res.get("portfolio.pending.step2_buyer.paymentStarted"));
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
+                Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;

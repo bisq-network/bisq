@@ -35,15 +35,17 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+
 public class ClearXchangeForm extends PaymentMethodForm {
     private final ClearXchangeAccount clearXchangeAccount;
     private final ClearXchangeValidator clearXchangeValidator;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((ClearXchangeAccountPayload) paymentAccountPayload).getHolderName());
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
                 ((ClearXchangeAccountPayload) paymentAccountPayload).getEmailOrMobileNr());
         return gridRow;
     }

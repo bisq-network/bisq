@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
+import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
@@ -72,7 +73,6 @@ import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXSpinner;
 import com.jfoenix.controls.JFXTextField;
 
 import javafx.scene.control.Button;
@@ -147,7 +147,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Button nextButton, cancelButton1, cancelButton2;
     private AutoTooltipButton takeOfferButton;
     private ImageView qrCodeImageView;
-    private JFXSpinner waitingForFundsSpinner, offerAvailabilitySpinner;
+    private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
     private OfferView.CloseHandler closeHandler;
     private Subscription cancelButton2StyleSubscription, balanceSubscription,
@@ -249,8 +249,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addSubscriptions();
         addListeners();
 
-        if (offerAvailabilitySpinner != null && !model.showPayFundsScreenDisplayed.get()) {
-            offerAvailabilitySpinner.setProgress(-1);
+        if (offerAvailabilityBusyAnimation != null && !model.showPayFundsScreenDisplayed.get()) {
+            offerAvailabilityBusyAnimation.play();
             offerAvailabilityLabel.setVisible(true);
             offerAvailabilityLabel.setManaged(true);
         } else {
@@ -258,8 +258,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             offerAvailabilityLabel.setManaged(false);
         }
 
-        if (waitingForFundsSpinner != null && model.isWaitingForFunds.get()) {
-            waitingForFundsSpinner.setProgress(-1);
+        if (waitingForFundsBusyAnimation != null && model.isWaitingForFunds.get()) {
+            waitingForFundsBusyAnimation.play();
             waitingForFundsLabel.setVisible(true);
             waitingForFundsLabel.setManaged(true);
         } else {
@@ -324,11 +324,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         removeSubscriptions();
         removeListeners();
 
-        if (offerAvailabilitySpinner != null)
-            offerAvailabilitySpinner.setProgress(0);
+        if (offerAvailabilityBusyAnimation != null)
+            offerAvailabilityBusyAnimation.stop();
 
-        if (waitingForFundsSpinner != null)
-            waitingForFundsSpinner.setProgress(0);
+        if (waitingForFundsBusyAnimation != null)
+            waitingForFundsBusyAnimation.stop();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -455,9 +455,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton1.setVisible(false);
         cancelButton1.setManaged(false);
         cancelButton1.setOnAction(null);
-        offerAvailabilitySpinner.setProgress(0);
-        offerAvailabilitySpinner.setVisible(false);
-        offerAvailabilitySpinner.setManaged(false);
+        offerAvailabilityBusyAnimation.stop();
+        offerAvailabilityBusyAnimation.setVisible(false);
+        offerAvailabilityBusyAnimation.setManaged(false);
         offerAvailabilityLabel.setVisible(false);
         offerAvailabilityLabel.setManaged(false);
 
@@ -525,7 +525,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         cancelButton2.setVisible(true);
 
-        waitingForFundsSpinner.setProgress(-1);
+        waitingForFundsBusyAnimation.play();
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayTextField.setVisible(true);
@@ -675,8 +675,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         isOfferAvailableSubscription = EasyBind.subscribe(model.isOfferAvailable, isOfferAvailable -> {
             if (isOfferAvailable) {
-                offerAvailabilitySpinner.setProgress(0);
-                offerAvailabilitySpinner.setVisible(false);
+                offerAvailabilityBusyAnimation.stop();
+                offerAvailabilityBusyAnimation.setVisible(false);
                 if (!DevEnv.isDaoActivated() && !model.isRange() && !model.showPayFundsScreenDisplayed.get())
                     showNextStepAfterAmountIsSet();
             }
@@ -686,7 +686,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsSpinner.setProgress(-1);
+            waitingForFundsBusyAnimation.play();
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });
@@ -938,10 +938,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addOfferAvailabilityLabel() {
-        offerAvailabilitySpinner = new JFXSpinner();
+        offerAvailabilityBusyAnimation = new BusyAnimation(false);
         offerAvailabilityLabel = new AutoTooltipLabel(Res.get("takeOffer.fundsBox.isOfferAvailable"));
 
-        buttonBox.getChildren().addAll(offerAvailabilitySpinner, offerAvailabilityLabel);
+        buttonBox.getChildren().addAll(offerAvailabilityBusyAnimation, offerAvailabilityLabel);
     }
 
     private void addFundingGroup() {
@@ -992,13 +992,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        waitingForFundsSpinner = new JFXSpinner();
+        waitingForFundsBusyAnimation = new BusyAnimation(false);
         waitingForFundsLabel = new AutoTooltipLabel();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
         fundingHBox.getChildren().addAll(fundFromSavingsWalletButton,
                 label,
                 fundFromExternalWalletButton,
-                waitingForFundsSpinner,
+                waitingForFundsBusyAnimation,
                 waitingForFundsLabel);
 
         GridPane.setRowIndex(fundingHBox, ++gridRow);

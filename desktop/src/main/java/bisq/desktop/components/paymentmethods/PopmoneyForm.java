@@ -35,8 +35,9 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class PopmoneyForm extends PaymentMethodForm {
     private final PopmoneyAccount account;
@@ -44,9 +45,9 @@ public class PopmoneyForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((PopmoneyAccountPayload) paymentAccountPayload).getHolderName());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), ((PopmoneyAccountPayload) paymentAccountPayload).getAccountId());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), ((PopmoneyAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
 
@@ -77,7 +78,7 @@ public class PopmoneyForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -91,14 +92,14 @@ public class PopmoneyForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 account.getHolderName());
-        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), account.getAccountId()).second;
+        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), account.getAccountId()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

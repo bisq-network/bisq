@@ -46,9 +46,9 @@ import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 @Slf4j
 public class MoneyGramForm extends PaymentMethodForm {
@@ -56,15 +56,16 @@ public class MoneyGramForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         final MoneyGramAccountPayload payload = (MoneyGramAccountPayload) paymentAccountPayload;
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(((MoneyGramAccountPayload) paymentAccountPayload).getCountryCode()));
         if (BankUtil.isStateRequired(payload.getCountryCode()))
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+                    Res.get("payment.account.state"),
                     payload.getState());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 payload.getEmail());
 
         return gridRow;

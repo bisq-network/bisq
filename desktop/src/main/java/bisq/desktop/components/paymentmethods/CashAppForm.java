@@ -35,8 +35,8 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 // Removed due too high chargeback risk
 @Deprecated
@@ -46,7 +46,7 @@ public class CashAppForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), ((CashAppAccountPayload) paymentAccountPayload).getCashTag());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), ((CashAppAccountPayload) paymentAccountPayload).getCashTag());
         return gridRow;
     }
 

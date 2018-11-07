@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
+import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
@@ -70,8 +71,6 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-
-import com.jfoenix.controls.JFXSpinner;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -133,7 +132,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private ScrollPane scrollPane;
     protected GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
-    private JFXSpinner waitingForFundsSpinner;
+    private BusyAnimation waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
     private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
@@ -236,7 +235,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             addSubscriptions();
 
             if (waitingForFundsSpinner != null)
-                waitingForFundsSpinner.setProgress(-1);
+                waitingForFundsSpinner.play();
 
             //directionLabel.setText(model.getDirectionLabel());
             amountDescriptionLabel.setText(model.getAmountDescription());
@@ -280,7 +279,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             removeSubscriptions();
 
             if (waitingForFundsSpinner != null)
-                waitingForFundsSpinner.setProgress(0);
+                waitingForFundsSpinner.stop();
         }
     }
 
@@ -455,7 +454,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                     .show();
         }
 
-        waitingForFundsSpinner.setProgress(-1);
+        waitingForFundsSpinner.play();
 
         payFundsTitledGroupBg.setVisible(true);
         totalToPayTextField.setVisible(true);
@@ -511,6 +510,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // unwanted selection events (item 0)
         currencyComboBox.setOnAction(null);
 
+        resetValidationOfInputFields();
+
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
             maybeShowClearXchangeWarning(paymentAccount);
@@ -547,6 +548,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
 
         updatePriceToggle();
+    }
+
+    private void resetValidationOfInputFields() {
+        amountTextField.resetValidation();
+        amountTextField.validate();
+        minAmountTextField.resetValidation();
+        minAmountTextField.validate();
+        volumeTextField.resetValidation();
+        volumeTextField.validate();
+        fixedPriceTextField.resetValidation();
+        fixedPriceTextField.validate();
+        marketBasedPriceTextField.resetValidation();
+        marketBasedPriceTextField.validate();
     }
 
     private void onCurrencyComboBoxSelected() {
@@ -659,7 +673,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
     private void addSubscriptions() {
         isWaitingForFundsSubscription = EasyBind.subscribe(model.isWaitingForFunds, isWaitingForFunds -> {
-            waitingForFundsSpinner.setProgress(isWaitingForFunds ? -1 : 0);
+
+            if (isWaitingForFunds) {
+                waitingForFundsSpinner.play();
+            } else {
+                waitingForFundsSpinner.stop();
+            }
+
             waitingForFundsLabel.setVisible(isWaitingForFunds);
             waitingForFundsLabel.setManaged(isWaitingForFunds);
         });
@@ -1151,7 +1171,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
-        waitingForFundsSpinner = new JFXSpinner();
+        waitingForFundsSpinner = new BusyAnimation(false);
         waitingForFundsLabel = new AutoTooltipLabel();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
 

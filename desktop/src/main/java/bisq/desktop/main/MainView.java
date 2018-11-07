@@ -26,6 +26,7 @@ import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipToggleButton;
+import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.disputes.DisputesView;
@@ -54,7 +55,6 @@ import javax.inject.Inject;
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXProgressBar;
-import com.jfoenix.controls.JFXSpinner;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -146,7 +146,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
     private ChangeListener<String> splashP2PNetworkIconIdListener;
     private ChangeListener<Boolean> splashP2PNetworkVisibleListener;
-    private JFXSpinner splashP2PNetworkBusyAnimation;
+    private BusyAnimation splashP2PNetworkBusyAnimation;
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator;
     private Label btcSplashInfo;
@@ -507,7 +507,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.getStyleClass().add("sub-info");
         splashP2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
-        splashP2PNetworkBusyAnimation = new JFXSpinner();
+        splashP2PNetworkBusyAnimation = new BusyAnimation(false);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
@@ -515,10 +515,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 splashP2PNetworkLabel.getStyleClass().remove("sub-info");
                 splashP2PNetworkLabel.getStyleClass().add("error-text");
                 splashP2PNetworkBusyAnimation.setDisable(true);
-                splashP2PNetworkBusyAnimation.setProgress(0);
+                splashP2PNetworkBusyAnimation.stop();
             } else if (model.getSplashP2PNetworkAnimationVisible().get()) {
                 splashP2PNetworkBusyAnimation.setDisable(false);
-                splashP2PNetworkBusyAnimation.setProgress(-1.0);
+                splashP2PNetworkBusyAnimation.play();
             }
         };
         model.getP2pNetworkWarnMsg().addListener(splashP2PNetworkErrorMsgListener);
@@ -554,7 +554,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkBusyAnimation.setDisable(!newValue);
-            if (newValue) splashP2PNetworkBusyAnimation.setProgress(-1.0);
+            if (newValue) splashP2PNetworkBusyAnimation.play();
         };
 
         model.getSplashP2PNetworkAnimationVisible().addListener(splashP2PNetworkVisibleListener);

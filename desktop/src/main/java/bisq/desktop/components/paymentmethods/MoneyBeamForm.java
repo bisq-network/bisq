@@ -35,8 +35,8 @@ import bisq.core.util.validation.InputValidator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class MoneyBeamForm extends PaymentMethodForm {
     private final MoneyBeamAccount account;
@@ -44,7 +44,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"), ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"), ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
 

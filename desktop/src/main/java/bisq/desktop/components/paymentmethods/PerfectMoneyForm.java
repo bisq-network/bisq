@@ -33,14 +33,14 @@ import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 public class PerfectMoneyForm extends GeneralAccountNumberForm {
 
     private final PerfectMoneyAccount perfectMoneyAccount;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

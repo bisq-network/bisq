@@ -37,8 +37,8 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 // Removed due too high chargeback risk
 @Deprecated
@@ -48,9 +48,9 @@ public class VenmoForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((VenmoAccountPayload) paymentAccountPayload).getHolderName());
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), ((VenmoAccountPayload) paymentAccountPayload).getVenmoUserName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), ((VenmoAccountPayload) paymentAccountPayload).getVenmoUserName());
         return gridRow;
     }
 
@@ -81,7 +81,7 @@ public class VenmoForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
@@ -100,14 +100,14 @@ public class VenmoForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 account.getHolderName());
-        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), account.getVenmoUserName()).second;
+        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.venmo.venmoUserName"), account.getVenmoUserName()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

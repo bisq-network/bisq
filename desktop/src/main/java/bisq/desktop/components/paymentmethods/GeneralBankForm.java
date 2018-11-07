@@ -42,6 +42,10 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
     }
 
+    static int getIndexOfColumn(int colIndex) {
+        return colIndex % 2;
+    }
+
     static void prepareFormLayoutFlags(String countryCode, int currentNumberOfRows) {
         int nrRows = currentNumberOfRows;
 

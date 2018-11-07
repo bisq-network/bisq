@@ -46,7 +46,7 @@ import javafx.collections.FXCollections;
 
 import java.util.List;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 public class SepaForm extends GeneralSepaForm {
 
@@ -56,14 +56,14 @@ public class SepaForm extends GeneralSepaForm {
 
         final String title = Res.get("payment.account.owner");
         final String value = sepaAccountPayload.getHolderName();
-        addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(sepaAccountPayload.getCountryCode()));
         // IBAN, BIC will not be translated
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, IBAN, sepaAccountPayload.getIban());
-        FormBuilder.addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, BIC, sepaAccountPayload.getBic());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, IBAN, sepaAccountPayload.getIban());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, BIC, sepaAccountPayload.getBic());
         return gridRow;
     }
 

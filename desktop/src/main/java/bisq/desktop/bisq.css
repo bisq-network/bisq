@@ -257,6 +257,11 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-rd-green;
 }
 
+.jfx-progress-bar.error > .bar,
+.jfx-progress-bar:indeterminate.error > .bar {
+    -fx-background-color: -bs-rd-error-red;
+}
+
 .jfx-spinner {
     -jfx-radius: 10;
 }
@@ -1356,43 +1361,27 @@ textfield */
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
 
-/* Pending trades */
+/* Pending trayes */
+
 #trade-wizard-item-background-disabled {
-    -fx-text-fill: -bs-grey;
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-very-light-grey);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-grey, -bs-light-grey);
-    /*  -fx-body-color:  -bs-very-light-grey;
-      -fx-outer-border:  -bs-light-grey;*/
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+    -fx-text-fill: -bs-rd-font-light;
 }
 
 #trade-wizard-item-background-active {
-    -fx-font-weight: bold;
-    -fx-font-size: 1.077em;
-    -fx-body-color: linear-gradient(to bottom, -bs-bg-grey5, -bs-bg-grey6);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-blue1, -bs-bg-blue2);
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
-#trade-wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, -bs-content-bg-grey, -bs-bg-grey8);
-    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-bg-green2);
-    -fx-background-color: -fx-shadow-highlight-color,
-    -fx-outer-border,
-    -fx-inner-border,
-    -fx-body-color;
-    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
-    -fx-background-radius: 1px, 1px, 1px, 1px;
+.trade-step-label {
+    -fx-text-fill: -bs-rd-white;
+}
+
+.trade-step-disabled-bg {
+    -fx-fill: -bs-rd-grey-background-darker-2;
+}
+
+.trade-step-active-bg {
+    -fx-fill: -bs-rd-green-dark;
 }
 
 #open-support-button {
@@ -1403,6 +1392,7 @@ textfield */
 
 #open-dispute-button {
     -fx-font-weight: bold;
+    -fx-text-fill: -bs-rd-white;
     -fx-font-size: 1.077em;
     -fx-background-color: -bs-rd-error-red;
 }
