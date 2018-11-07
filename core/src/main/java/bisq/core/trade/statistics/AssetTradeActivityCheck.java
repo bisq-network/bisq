@@ -88,6 +88,7 @@ public class AssetTradeActivityCheck {
                 tradeAmount = tuple.first;
                 numTrades = tuple.second;
             }
+
             if (isWarmingUp(code)) {
                 assetsToRemove.remove(e);
                 newAssets.append("\n")
@@ -97,6 +98,7 @@ public class AssetTradeActivityCheck {
                         .append(", number of trades: ")
                         .append(numTrades);
             }
+
             if (!isWarmingUp(code) && !hasPaidBSQFee(code)) {
                 if (isInTradeStatMap) {
                     if (tradeAmount >= minTradeAmount || numTrades >= minNumOfTrades) {

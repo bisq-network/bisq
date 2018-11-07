@@ -487,6 +487,7 @@ public class CurrencyUtil {
                 .findAny();
     }
 
+    // Excludes all assets which got removed by DAO voting
     public static List<CryptoCurrency> getWhiteListedSortedCryptoCurrencies(AssetService assetService) {
         return getAllSortedCryptoCurrencies().stream()
                 .filter(e -> !assetService.isAssetRemoved(e.getCode()))
