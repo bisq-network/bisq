@@ -130,21 +130,21 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 3, Res.get("dao.bonding.reputation.header"));
+        addTitledGroupBg(root, gridRow, 3, Res.get("dao.bond.reputation.header"));
 
-        amountInputTextField = addInputTextField(root, gridRow, Res.get("dao.bonding.lock.amount"),
+        amountInputTextField = addInputTextField(root, gridRow, Res.get("dao.bond.reputation.amount"),
                 Layout.FIRST_ROW_DISTANCE);
         amountInputTextField.setValidator(bsqValidator);
 
-        timeInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.time"));
+        timeInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bond.reputation.time"));
         timeInputTextField.setValidator(timeInputTextFieldValidator);
 
-        saltInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bonding.lock.salt"));
+        saltInputTextField = FormBuilder.addInputTextField(root, ++gridRow, Res.get("dao.bond.reputation.salt"));
         saltInputTextField.setValidator(hexStringValidator);
 
-        lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bonding.lock.lockupButton"));
+        lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bond.reputation.lockupButton"));
 
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bonding.reputation.list.header"), 20);
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20);
         createColumns();
         tableView.setItems(sortedList);
 
@@ -308,7 +308,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockTime"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
         column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -330,7 +330,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondState"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondState"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(120);
         column.setCellFactory(
@@ -352,7 +352,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupDate"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupDate"));
         column.setMinWidth(140);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -375,7 +375,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.bonds.table.lockupTxId"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
@@ -407,7 +407,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.salt"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.reputation.salt"));
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -428,7 +428,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.unlock.hash"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.reputation.hash"));
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {

@@ -83,11 +83,11 @@ public class BondingView extends ActivatableViewAndModel {
         final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, bisq.desktop.main.dao.bonding.BondingView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
                 BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
-        bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bondedRoles"),
+        bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.bondedRoles"),
                 RolesView.class, AwesomeIcon.SHIELD, baseNavPath);
-        reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.reputation"),
+        reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.reputation"),
                 MyReputationView.class, AwesomeIcon.LOCK, baseNavPath);
-        bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bonding.menuItem.bonds"),
+        bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.bonds"),
                 BondsView.class, AwesomeIcon.UNLOCK, baseNavPath);
 
         leftVBox.getChildren().addAll(dashboard, bondedRoles, reputation, bonds);

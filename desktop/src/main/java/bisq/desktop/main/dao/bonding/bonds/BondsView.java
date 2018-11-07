@@ -92,7 +92,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bonding.bonds.table.header"));
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.allBonds.header"));
         tableView.setItems(sortedList);
         addColumns();
 
@@ -160,7 +160,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         });
 
         tableView.getColumns().add(column);
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockTime"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
         column.setMinWidth(40);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -180,7 +180,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondState"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondState"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
@@ -203,7 +203,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondType"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondType"));
         column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -224,7 +224,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.details"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.details"));
         column.setMinWidth(100);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -245,7 +245,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupDate"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupDate"));
         column.setMinWidth(140);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -265,7 +265,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bonding.bonds.table.lockupTxId"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(

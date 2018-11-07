@@ -100,8 +100,8 @@ public class BondingViewUtils {
                             Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
-                new Popup<>().headLine(Res.get("dao.bonding.lock.sendFunds.headline"))
-                        .confirmation(Res.get("dao.bonding.lock.sendFunds.details",
+                new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
+                        .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                 bsqFormatter.formatCoinWithCode(lockupAmount),
                                 lockupTime
                         ))
@@ -143,8 +143,8 @@ public class BondingViewUtils {
 
             try {
                 if (!DevEnv.isDevMode()) {
-                    new Popup<>().headLine(Res.get("dao.bonding.unlock.sendTx.headline"))
-                            .confirmation(Res.get("dao.bonding.unlock.sendTx.details",
+                    new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
+                            .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
                                     lockTime
                             ))

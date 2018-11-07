@@ -132,7 +132,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     private void createColumns() {
         TableColumn<RolesListItem, RolesListItem> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.name"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.name"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
@@ -154,7 +154,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.link"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.link"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
@@ -185,7 +185,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondType"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondType"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
@@ -220,7 +220,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.lockupTxId"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
         column.setCellFactory(
@@ -260,7 +260,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                 });
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.header.bondState"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.bondState"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(120);
         column.setCellFactory(
