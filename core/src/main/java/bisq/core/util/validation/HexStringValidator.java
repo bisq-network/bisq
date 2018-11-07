@@ -23,10 +23,16 @@ import bisq.common.util.Utilities;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Setter;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class HexStringValidator extends InputValidator {
+    @Setter
+    private int minLength = Integer.MIN_VALUE;
+    @Setter
+    private int maxLength = Integer.MAX_VALUE;
+
     public HexStringValidator() {
     }
 
@@ -34,6 +40,9 @@ public class HexStringValidator extends InputValidator {
         ValidationResult validationResult = super.validate(input);
         if (!validationResult.isValid)
             return validationResult;
+
+        if (input.length() > maxLength || input.length() < minLength)
+            new ValidationResult(false, Res.get("validation.length", minLength, maxLength));
 
         try {
             Utilities.decodeFromHex(input);

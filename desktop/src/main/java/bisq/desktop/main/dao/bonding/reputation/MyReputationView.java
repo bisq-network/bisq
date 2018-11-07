@@ -263,8 +263,11 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
 
     private void setNewRandomSalt() {
         byte[] randomBytes = UUID.randomUUID().toString().getBytes(Charsets.UTF_8);
+        // We want to limit it to 20 bytes
         byte[] hashOfRandomBytes = Hash.getSha256Ripemd160hash(randomBytes);
-        saltInputTextField.setText(Utilities.bytesAsHexString(hashOfRandomBytes));
+        // bytesAsHexString results in 40 chars
+        String bytesAsHexString = Utilities.bytesAsHexString(hashOfRandomBytes);
+        saltInputTextField.setText(bytesAsHexString);
         saltInputTextField.resetValidation();
     }
 

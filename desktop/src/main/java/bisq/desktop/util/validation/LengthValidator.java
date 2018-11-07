@@ -22,7 +22,7 @@ public class LengthValidator extends InputValidator {
         int length = (input == null) ? 0 : input.length();
 
         if (length < this.minLength || length > this.maxLength)
-            result = new ValidationResult(false, String.format(Res.get("validation.length", this.minLength, this.maxLength)));
+            result = new ValidationResult(false, Res.get("validation.length", this.minLength, this.maxLength));
 
         return result;
     }
