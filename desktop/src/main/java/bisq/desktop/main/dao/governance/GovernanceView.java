@@ -38,8 +38,6 @@ import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
 import javafx.fxml.FXML;
 
 import javafx.scene.control.ToggleGroup;
@@ -68,6 +66,7 @@ public class GovernanceView extends ActivatableViewAndModel {
 
     private Class<? extends View> selectedViewClass;
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
+    private ToggleGroup toggleGroup;
 
     @Inject
     private GovernanceView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade) {
@@ -93,16 +92,16 @@ public class GovernanceView extends ActivatableViewAndModel {
                 open.setLabelText(Res.get("dao.proposal.menuItem.browse"));
         };
 
-        ToggleGroup toggleGroup = new ToggleGroup();
-        final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, GovernanceView.class);
+        toggleGroup = new ToggleGroup();
+        List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, GovernanceView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
-                GovernanceDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
+                GovernanceDashboardView.class, baseNavPath);
         make = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.make"),
-                MakeProposalView.class, AwesomeIcon.EDIT, baseNavPath);
+                MakeProposalView.class, baseNavPath);
         open = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.browse"),
-                ProposalsView.class, AwesomeIcon.LIST_UL, baseNavPath);
+                ProposalsView.class, baseNavPath);
         result = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.result"),
-                VoteResultView.class, AwesomeIcon.LIST_ALT, baseNavPath);
+                VoteResultView.class, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, make, open, result);
     }
 
@@ -147,10 +146,10 @@ public class GovernanceView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof GovernanceDashboardView) dashboard.setSelected(true);
-        else if (view instanceof MakeProposalView) make.setSelected(true);
-        else if (view instanceof ProposalsView) open.setSelected(true);
-        else if (view instanceof VoteResultView) result.setSelected(true);
+        if (view instanceof GovernanceDashboardView) toggleGroup.selectToggle(dashboard);
+        else if (view instanceof MakeProposalView) toggleGroup.selectToggle(make);
+        else if (view instanceof ProposalsView) toggleGroup.selectToggle(open);
+        else if (view instanceof VoteResultView) toggleGroup.selectToggle(result);
     }
 }
 

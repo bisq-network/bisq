@@ -36,8 +36,6 @@ import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
 import javafx.fxml.FXML;
 
 import javafx.scene.control.ToggleGroup;
@@ -62,6 +60,7 @@ public class BondingView extends ActivatableViewAndModel {
     private AnchorPane content;
 
     private Class<? extends View> selectedViewClass;
+    private ToggleGroup toggleGroup;
 
     @Inject
     private BondingView(CachingViewLoader viewLoader, Navigation navigation) {
@@ -79,16 +78,16 @@ public class BondingView extends ActivatableViewAndModel {
             loadView(selectedViewClass);
         };
 
-        ToggleGroup toggleGroup = new ToggleGroup();
+        toggleGroup = new ToggleGroup();
         final List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, bisq.desktop.main.dao.bonding.BondingView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
-                BondingDashboardView.class, AwesomeIcon.DASHBOARD, baseNavPath);
+                BondingDashboardView.class, baseNavPath);
         bondedRoles = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.bondedRoles"),
-                RolesView.class, AwesomeIcon.SHIELD, baseNavPath);
+                RolesView.class, baseNavPath);
         reputation = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.reputation"),
-                MyReputationView.class, AwesomeIcon.LOCK, baseNavPath);
+                MyReputationView.class, baseNavPath);
         bonds = new MenuItem(navigation, toggleGroup, Res.get("dao.bond.menuItem.bonds"),
-                BondsView.class, AwesomeIcon.UNLOCK, baseNavPath);
+                BondsView.class, baseNavPath);
 
         leftVBox.getChildren().addAll(dashboard, bondedRoles, reputation, bonds);
     }
@@ -130,9 +129,9 @@ public class BondingView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof BondingDashboardView) dashboard.setSelected(true);
-        else if (view instanceof RolesView) bondedRoles.setSelected(true);
-        else if (view instanceof MyReputationView) reputation.setSelected(true);
-        else if (view instanceof BondsView) bonds.setSelected(true);
+        if (view instanceof BondingDashboardView) toggleGroup.selectToggle(dashboard);
+        else if (view instanceof RolesView) toggleGroup.selectToggle(bondedRoles);
+        else if (view instanceof MyReputationView) toggleGroup.selectToggle(reputation);
+        else if (view instanceof BondsView) toggleGroup.selectToggle(bonds);
     }
 }
