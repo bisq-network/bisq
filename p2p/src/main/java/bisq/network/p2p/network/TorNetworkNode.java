@@ -71,10 +71,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // Run in UserThread
 public class TorNetworkNode extends NetworkNode {
+
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT = 5;
+
+    private static final String CONFIG_TORRCPREFIX = "torrc:";
+    private static final String CONFIG_TORRCFILE = "torrcfile";
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
@@ -249,7 +253,7 @@ public class TorNetworkNode extends NetworkNode {
                 Torrc override = null;
 
                 // check if the user wants to provide his own torrc file
-                String torrcfile = System.getProperty("torrcfile");
+                String torrcfile = System.getProperty(CONFIG_TORRCFILE);
                 if(null != torrcfile) {
                     try {
                         override = new Torrc(new FileInputStream(new File(torrcfile)));
@@ -261,8 +265,8 @@ public class TorNetworkNode extends NetworkNode {
                 // check if the user wants to temporarily add to the default torrc file
                 LinkedHashMap<String, String> tmp = new LinkedHashMap<>();
                 System.getProperties().forEach((k, v) -> {
-                    if(((String) k).startsWith("torrc:"))
-                        tmp.put(((String) k).substring(6), (String) v);
+                    if(((String) k).startsWith(CONFIG_TORRCPREFIX))
+                        tmp.put(((String) k).substring(CONFIG_TORRCPREFIX.length()), (String) v);
                 });
                 if(!tmp.isEmpty())
                     // check for custom torrcfile
