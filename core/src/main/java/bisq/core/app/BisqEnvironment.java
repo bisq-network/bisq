@@ -193,6 +193,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
+            torRcFile, torRcOptions,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
 
 
@@ -266,6 +267,12 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
+                "";
+        torRcFile = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_FILE) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_FILE) :
+                "";
+        torRcOptions = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_OPTIONS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_OPTIONS) :
                 "";
 
         //RpcOptionKeys
@@ -435,6 +442,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
+                setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);
+                setProperty(NetworkOptionKeys.TORRC_OPTIONS, torRcOptions);
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);

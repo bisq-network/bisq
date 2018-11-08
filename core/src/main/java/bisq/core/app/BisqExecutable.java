@@ -53,6 +53,9 @@ import org.springframework.util.StringUtils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.util.PathConverter;
+import joptsimple.util.PathProperties;
+import joptsimple.util.RegexMatcher;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -330,6 +333,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
                 description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.TORRC_FILE,
+                description("An existing torrc-file to be sourced for Tor. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten.", ""))
+                .withRequiredArg();
+//                .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+        parser.accepts(NetworkOptionKeys.TORRC_OPTIONS,
+                description("A list of torrc-entries to amend to Bisqs torrc. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten. [torrc options line, torrc option, ...]", ""))
+                .withRequiredArg();
+//                .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,

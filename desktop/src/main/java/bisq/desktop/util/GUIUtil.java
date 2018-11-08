@@ -418,6 +418,34 @@ public class GUIUtil {
         };
     }
 
+    public static StringConverter<TradeCurrency> getTradeCurrencyConverter(String postFixSingle,
+                                                                           String postFixMulti,
+                                                                           Map<String, Integer> offerCounts) {
+        return new StringConverter<>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                String code = tradeCurrency.getCode();
+                Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
+                final String displayString;
+                displayString = offerCountOptional
+                        .map(offerCount -> CurrencyUtil.getNameAndCode(code)
+                                + " - " + offerCount + " " + (offerCount == 1 ? postFixSingle : postFixMulti))
+                        .orElseGet(() -> CurrencyUtil.getNameAndCode(code));
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
+                    return "▶ " + Res.get("list.currency.showAll");
+                else if (code.equals(GUIUtil.EDIT_FLAG))
+                    return "▼ " + Res.get("list.currency.editList");
+                return tradeCurrency.getDisplayPrefix() + displayString;
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return null;
+            }
+        };
+    }
+
     public static Callback<ListView<TradeCurrency>, ListCell<TradeCurrency>> getTradeCurrencyCellFactory(String postFixSingle,
                                                                                                          String postFixMulti,
                                                                                                          Map<String, Integer> offerCounts) {
