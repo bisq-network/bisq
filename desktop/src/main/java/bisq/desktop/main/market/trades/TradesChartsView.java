@@ -479,7 +479,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleButton.setPadding(new Insets(0, 5, 0, 5));
         toggleButton.setUserData(tickUnit);
         toggleButton.setToggleGroup(toggleGroup);
-        toggleButton.setId(style);
+        toggleButton.getStyleClass().add("interval-selector");
+//        toggleButton.setId(style);
         return toggleButton;
     }
 

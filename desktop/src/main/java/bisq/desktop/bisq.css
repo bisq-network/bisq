@@ -1706,34 +1706,24 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-#toggle-left {
-    -fx-border-radius: 4 0 0 4;
-    -fx-padding: 4 4 4 4;
-    -fx-border-color: -bs-medium-grey;
-    -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 -2 0 0;
-    -fx-background-insets: 0 -2 0 0;
-    -fx-background-radius: 4 0 0 4;
+.interval-selector {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 8 14 8 14;
 }
 
-#toggle-center {
-    -fx-border-radius: 0 0 0 0;
-    -fx-padding: 4 4 4 4;
-    -fx-border-color: -bs-medium-grey;
-    -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 0 0 0;
-    -fx-background-insets: 0 0 0 0;
-    -fx-background-radius: 0 0 0 0;
+.interval-selector .text {
+    -fx-fill: -bs-rd-font-light;
 }
 
-#toggle-right {
-    -fx-border-radius: 0 4 4 0;
-    -fx-padding: 4 4 4 4;
-    -fx-border-color: -bs-medium-grey;
-    -fx-border-style: solid solid solid solid;
-    -fx-border-insets: 0 0 0 -2;
-    -fx-background-insets: 0 0 0 -2;
-    -fx-background-radius: 0 4 4 0;
+.interval-selector:selected {
+    -fx-background-color: -bs-rd-nav-selected;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
+}
+
+.interval-selector:selected .text {
+    -fx-fill: -bs-rd-white;
 }
 
 /********************************************************************************************************************
