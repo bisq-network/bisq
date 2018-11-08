@@ -105,7 +105,8 @@ public enum Param {
                     "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV", // testnet
             ParamType.ADDRESS),
 
-    //TODO add asset listing params (nr. of trades, volume, time, fee which defines listing state)
+    ASSET_LISTING_FEE("1", ParamType.BSQ, 10, 10),
+    ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
     // TODO for dev testing we use short periods...
     // Period phase ("11 blocks atm)
