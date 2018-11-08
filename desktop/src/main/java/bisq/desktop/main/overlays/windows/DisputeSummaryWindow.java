@@ -22,7 +22,6 @@ import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -39,11 +38,14 @@ import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+
+import com.jfoenix.controls.JFXTextArea;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -59,6 +61,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 
@@ -122,7 +125,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 1118;
+        width = 700;
         createGridPane();
         addContent();
         display();
@@ -169,6 +172,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         super.createGridPane();
         gridPane.setPadding(new Insets(35, 40, 30, 40));
         gridPane.getStyleClass().add("grid-pane");
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
     }
 
     private void addContent() {
@@ -242,9 +246,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addInfoPane() {
         Contract contract = dispute.getContract();
-        addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
-        FormBuilder.addTopLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
+        addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
+        addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
+                Layout.TWICE_FIRST_ROW_DISTANCE);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
@@ -256,12 +261,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             else
                 role = Res.get("support.sellerTaker");
         }
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 formatter.formatPrice(contract.getTradePrice()));
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"),
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
                 formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
     }
 
@@ -287,8 +292,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addTradeAmountPayoutControls() {
-        Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), 10);
-        GridPane.setValignment(distributionLabel, VPos.TOP);
 
         buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.buyer")));
@@ -300,15 +303,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 Res.get("shared.seller")));
 
         customRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.custom"));
+
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
         radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsAllRadioButton,
                 sellerGetsTradeAmountRadioButton, sellerGetsAllRadioButton,
                 customRadioButton);
-        GridPane.setRowIndex(radioButtonPane, rowIndex);
-        GridPane.setColumnIndex(radioButtonPane, 1);
-        GridPane.setMargin(radioButtonPane, new Insets(10, 0, 0, 0));
-        gridPane.getChildren().add(radioButtonPane);
+
+        addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"),
+                radioButtonPane, 10).second.getChildren();
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -401,12 +404,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         sellerPayoutAmountInputTextField.setEditable(false);
 
         isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.invert"));
+                Res.get("disputeSummaryWindow.payoutAmount.invert"), 15);
     }
 
     private void addReasonControls() {
-        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.reason"), 10);
-        GridPane.setValignment(label, VPos.TOP);
         reasonWasBugRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.bug"));
         reasonWasUsabilityIssueRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.usability"));
         reasonProtocolViolationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
@@ -420,10 +421,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
                 reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
                 reasonWasBankRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton);
-        GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
-        GridPane.setColumnIndex(feeRadioButtonPane, 1);
-        GridPane.setMargin(feeRadioButtonPane, new Insets(10, 0, 10, 0));
-        gridPane.getChildren().add(feeRadioButtonPane);
+
+        GridPane.setColumnSpan(
+                addTopLabelWithVBox(gridPane, ++rowIndex,
+                        Res.get("disputeSummaryWindow.reason"),
+                        feeRadioButtonPane, 10).second, 2);
 
         reasonToggleGroup = new ToggleGroup();
         reasonWasBugRadioButton.setToggleGroup(reasonToggleGroup);
@@ -482,23 +484,24 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addSummaryNotes() {
-        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.summaryNotes"), 0);
-        GridPane.setValignment(label, VPos.TOP);
 
-        summaryNotesTextArea = new TextArea();
+        summaryNotesTextArea = new JFXTextArea();
         summaryNotesTextArea.setPromptText(Res.get("disputeSummaryWindow.addSummaryNotes"));
         summaryNotesTextArea.setWrapText(true);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex,
+                Res.get("disputeSummaryWindow.summaryNotes"), summaryNotesTextArea, 0);
+        GridPane.setColumnSpan(topLabelWithVBox.second, 2);
+
         summaryNotesTextArea.setPrefHeight(50);
         summaryNotesTextArea.textProperty().bindBidirectional(disputeResult.summaryNotesProperty());
-        GridPane.setRowIndex(summaryNotesTextArea, rowIndex);
-        GridPane.setColumnIndex(summaryNotesTextArea, 1);
-        gridPane.getChildren().add(summaryNotesTextArea);
     }
 
     private void addButtons(Contract contract) {
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex,
+        Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,
                 Res.get("disputeSummaryWindow.close.button"),
-                Res.get("shared.cancel"));
+                Res.get("shared.cancel"), 15, true);
+        //GridPane.setColumnSpan(tuple.third, 2);
         Button closeTicketButton = tuple.first;
         closeTicketButton.disableProperty().bind(Bindings.createBooleanBinding(
                 () -> tradeAmountToggleGroup.getSelectedToggle() == null

@@ -124,6 +124,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-separator: #DBDBDB;
     -bs-rd-separator-dark: #D5E0D6;
     -bs-rd-error-red: #dd0000; /* 5 usages */
+    -bs-rd-message-bubble: #0086C6;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-medium-light;
@@ -1501,7 +1502,7 @@ textfield */
 }
 
 #message-bubble-blue {
-    -fx-background-color: -fx-accent;
+    -fx-background-color: -bs-rd-message-bubble;
     -fx-background-radius: 10 10 10 10;
 }
 
@@ -1746,8 +1747,8 @@ textfield */
 }
 
 .my-message-header {
-    -fx-text-fill: -fx-accent;
-    -fx-fill: -fx-accent;
+    -fx-text-fill: -bs-rd-message-bubble;
+    -fx-fill: -bs-rd-message-bubble;
     -fx-font-size: 0.846em;
 }
 
