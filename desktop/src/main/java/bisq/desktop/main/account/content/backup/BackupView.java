@@ -20,7 +20,6 @@ package bisq.desktop.main.account.content.backup;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.AppOptionKeys;
@@ -55,6 +54,8 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.add2Buttons;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
@@ -82,8 +83,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        FormBuilder.addTitledGroupBg(root, gridRow, 2, Res.get("account.backup.title"));
-        backUpLocationTextField = FormBuilder.addInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(root, gridRow, 2, Res.get("account.backup.title"));
+        backUpLocationTextField = addInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
         String backupDirectory = preferences.getBackupDirectory();
         if (backupDirectory != null)
             backUpLocationTextField.setText(backupDirectory);
@@ -99,10 +100,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow = tuple2.second;
         updateButtons();
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
 
         final Tuple2<Button, Button> applicationDataDirTuple2 = add2Buttons(root, gridRow, Res.get("account.backup.openDirectory"),
-                Res.get("account.backup.openLogFile"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, false);
+                Res.get("account.backup.openLogFile"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, false);
 
         openDataDirButton = applicationDataDirTuple2.first;
         openLogsButton = applicationDataDirTuple2.second;
