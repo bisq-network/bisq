@@ -18,27 +18,10 @@
 package bisq.desktop.util;
 
 import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.Res;
-import bisq.core.locale.TradeCurrency;
 
-import javafx.util.StringConverter;
-
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Test;
-
-import static bisq.desktop.maker.CurrencyListItemMakers.bitcoinItem;
-import static bisq.desktop.maker.CurrencyListItemMakers.euroItem;
-import static bisq.desktop.maker.CurrencyListItemMakers.numberOfTrades;
-import static bisq.desktop.maker.PreferenceMakers.empty;
-import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
-import static bisq.desktop.maker.TradeCurrencyMakers.euro;
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static org.junit.Assert.assertEquals;
 
 public class GUIUtilTest {
 
@@ -46,35 +29,5 @@ public class GUIUtilTest {
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
         GlobalSettings.setLocale(new Locale("en", "US"));
-    }
-
-    @Test
-    public void testTradeCurrencyConverter() {
-        Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
-            put("BTC", 11);
-            put("EUR", 10);
-        }};
-        StringConverter<TradeCurrency> tradeCurrencyConverter = GUIUtil.getTradeCurrencyConverter(
-                Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"),
-                offerCounts
-        );
-
-        assertEquals("✦ Bitcoin (BTC) - 11 offers", tradeCurrencyConverter.toString(bitcoin));
-        assertEquals("★ Euro (EUR) - 10 offers", tradeCurrencyConverter.toString(euro));
-    }
-
-    @Test
-    public void testCurrencyListWithOffersConverter() {
-        Res.setBaseCurrencyCode("BTC");
-        Res.setBaseCurrencyName("Bitcoin");
-        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"),
-                empty);
-
-        assertEquals("✦ Bitcoin (BTC) - 10 offers", currencyListItemConverter.toString(make(bitcoinItem.but(with(numberOfTrades, 10)))));
-        assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(make(euroItem)));
-        assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(make(euroItem.but(with(numberOfTrades, 1)))));
-
     }
 }
