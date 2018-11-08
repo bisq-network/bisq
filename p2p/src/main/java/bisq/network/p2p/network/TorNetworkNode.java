@@ -32,6 +32,7 @@ import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.TorSocket;
+import org.berndpruenster.netlayer.tor.Torrc;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -51,9 +52,11 @@ import java.net.Socket;
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -68,10 +71,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // Run in UserThread
 public class TorNetworkNode extends NetworkNode {
+
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT = 5;
+
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
@@ -82,15 +87,20 @@ public class TorNetworkNode extends NetworkNode {
     private MonadicBinding<Boolean> allShutDown;
     private Tor tor;
 
+    private String torrcFile = "";
+    private String torrcOptions = "";
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, BridgeAddressProvider bridgeAddressProvider) {
+    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, BridgeAddressProvider bridgeAddressProvider, String torrcFile, String torrcOptions) {
         super(servicePort, networkProtoResolver);
         this.torDir = torDir;
         this.bridgeAddressProvider = bridgeAddressProvider;
+        this.torrcFile = torrcFile;
+        this.torrcOptions = torrcOptions;
     }
 
 
@@ -242,8 +252,45 @@ public class TorNetworkNode extends NetworkNode {
         ListenableFuture<Void> future = executorService.submit(() -> {
             try {
                 long ts1 = new Date().getTime();
+
+                Torrc override = null;
+
+                // check if the user wants to provide his own torrc file
+                if(!"".equals(torrcFile)) {
+                    try {
+                        override = new Torrc(new FileInputStream(new File(torrcFile)));
+                    } catch(IOException e) {
+                        log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
+                    }
+                }
+
+                // check if the user wants to temporarily add to the default torrc file
+                LinkedHashMap<String, String> torrcOptionsMap = new LinkedHashMap<>();
+                if(!"".equals(torrcOptions)) {
+                    Arrays.asList(torrcOptions.split(",")).forEach(line -> {
+                        line = line.trim();
+                        if(line.matches("^[^\\s]+\\s.+")) {
+                            String[] tmp = line.split("\\s", 2);
+                            torrcOptionsMap.put(tmp[0].trim(), tmp[1].trim());
+                        }
+                        else {
+                            log.error("custom torrc override parse error ('{}'). Proceeding without custom overrides.", line);
+                            torrcOptionsMap.clear();
+                        }
+                    });
+                }
+
+                // assemble final override options
+                if(!torrcOptionsMap.isEmpty())
+                    // check for custom torrcFile
+                    if(override != null)
+                        // and merge the contents
+                        override = new Torrc(override.getInputStream$tor(), torrcOptionsMap);
+                    else
+                        override = new Torrc(torrcOptionsMap);
+
                 log.info("Starting tor");
-                Tor.setDefault(new NativeTor(torDir, bridgeEntries));
+                Tor.setDefault(new NativeTor(torDir, bridgeEntries, override));
                 log.info("\n################################################################\n" +
                                 "Tor started after {} ms. Start publishing hidden service.\n" +
                                 "################################################################",

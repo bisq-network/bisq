@@ -125,7 +125,7 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.2') {
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.7') {
             exclude(module: 'slf4j-api')
         }
         compile('org.apache.httpcomponents:httpclient:4.5.3') {
