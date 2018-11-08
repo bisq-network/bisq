@@ -444,13 +444,6 @@ public class FormBuilder {
 
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
 
-        TextArea textArea = new JFXTextArea();
-        textArea.setPromptText(prompt);
-        ((JFXTextArea) textArea).setLabelFloat(true);
-        textArea.setWrapText(true);
-
-        addTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
-
         return addTopLabelTextArea(gridPane, rowIndex, 0, title, prompt, top);
     }
 
@@ -459,7 +452,6 @@ public class FormBuilder {
 
         TextArea textArea = new JFXTextArea();
         textArea.setPromptText(prompt);
-        ((JFXTextArea) textArea).setLabelFloat(true);
         textArea.setWrapText(true);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textArea, top);
@@ -743,7 +735,6 @@ public class FormBuilder {
         CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
         GridPane.setRowIndex(checkBox, rowIndex);
-        GridPane.setColumnIndex(checkBox, 1);
         gridPane.getChildren().add(checkBox);
         return checkBox;
     }
@@ -757,7 +748,6 @@ public class FormBuilder {
         RadioButton radioButton = new AutoTooltipRadioButton(title);
         radioButton.setToggleGroup(toggleGroup);
         GridPane.setRowIndex(radioButton, rowIndex);
-        GridPane.setColumnIndex(radioButton, 1);
         gridPane.getChildren().add(radioButton);
         return radioButton;
     }
@@ -1324,6 +1314,25 @@ public class FormBuilder {
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, labelText, button, top);
 
         return new Tuple2<>(topLabelWithVBox.first, button);
+    }
+
+    public static Tuple2<Label, Button> addConfirmationLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
+        Label label = addLabel(gridPane, rowIndex, labelText);
+        label.getStyleClass().add("confirmation-label");
+
+        Button button = new AutoTooltipButton(buttonTitle);
+        button.getStyleClass().add("confirmation-value");
+        button.setDefaultButton(true);
+
+        GridPane.setColumnIndex(button, 1);
+        GridPane.setRowIndex(button, rowIndex);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setHalignment(label, HPos.LEFT);
+        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
+
+        gridPane.getChildren().add(button);
+
+        return new Tuple2<>(label, button);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -104,14 +104,14 @@ abstract class BankForm extends GeneralBankForm {
 
         if (bankNameBankIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
-                            bankIdLabel.substring(0, bankIdLabel.length() - 1) + ":",
+                    bankNameLabel + " / " +
+                            bankIdLabel + ":",
                     data.getBankName() + " / " + data.getBankId());
         }
         if (bankNameBranchIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    bankNameLabel.substring(0, bankNameLabel.length() - 1) + " / " +
-                            branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
+                    bankNameLabel + " / " +
+                            branchIdLabel + ":",
                     data.getBankName() + " / " + data.getBranchId());
         }
 
@@ -121,8 +121,8 @@ abstract class BankForm extends GeneralBankForm {
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined &&
                 !branchIdAccountNrCombined && bankIdBranchIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    bankIdLabel.substring(0, bankIdLabel.length() - 1) + " / " +
-                            branchIdLabel.substring(0, branchIdLabel.length() - 1) + ":",
+                    bankIdLabel + " / " +
+                            branchIdLabel + ":",
                     data.getBankId() + " / " + data.getBranchId());
         }
 
@@ -131,8 +131,8 @@ abstract class BankForm extends GeneralBankForm {
 
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    branchIdLabel.substring(0, branchIdLabel.length() - 1) + " / " +
-                            accountNrLabel.substring(0, accountNrLabel.length() - 1) + ":",
+                    branchIdLabel + " / " +
+                            accountNrLabel + ":",
                     data.getBranchId() + " / " + data.getAccountNr());
         }
 
@@ -142,7 +142,7 @@ abstract class BankForm extends GeneralBankForm {
 
         if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    accountNrLabel.substring(0, accountNrLabel.length() - 1) + " / " + accountTypeLabel,
+                    accountNrLabel + " / " + accountTypeLabel,
                     data.getAccountNr() + " / " + data.getAccountType());
         }
 
@@ -155,8 +155,8 @@ abstract class BankForm extends GeneralBankForm {
 
         if (!branchIdAccountNrCombined && !accountNrAccountTypeCombined && nationalAccountIdAccountNrCombined)
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                    nationalAccountIdLabel.substring(0, nationalAccountIdLabel.length() - 1) + " / " +
-                            accountNrLabel.substring(0, accountNrLabel.length() - 1), data.getNationalAccountId() +
+                    nationalAccountIdLabel + " / " +
+                            accountNrLabel, data.getNationalAccountId() +
                             " / " + data.getAccountNr());
 
         return gridRow;

@@ -373,10 +373,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         Label placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noFiat"));
         placeholder.setWrapText(true);
         fiatCurrenciesListView.setPlaceholder(placeholder);
-        fiatCurrenciesListView.setCellFactory(new Callback<ListView<FiatCurrency>, ListCell<FiatCurrency>>() {
+        fiatCurrenciesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<FiatCurrency> call(ListView<FiatCurrency> list) {
-                return new ListCell<FiatCurrency>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -427,10 +427,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noAltcoins"));
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
-        cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
+        cryptoCurrenciesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
-                return new ListCell<CryptoCurrency>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -472,7 +472,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnIndex(fiatCurrenciesComboBox, 2);
         GridPane.setValignment(fiatCurrenciesComboBox, VPos.TOP);
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
-        fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
+        fiatCurrenciesComboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(final FiatCurrency item, boolean empty) {
                 super.updateItem(item, empty);
@@ -485,7 +485,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         });
-        fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
+        fiatCurrenciesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(FiatCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -501,7 +501,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         GridPane.setValignment(cryptoCurrenciesComboBox, VPos.TOP);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
-        cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
+        cryptoCurrenciesComboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(final CryptoCurrency item, boolean empty) {
                 super.updateItem(item, empty);
@@ -515,7 +515,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         });
-        cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
+        cryptoCurrenciesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -546,7 +546,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void initializeDaoOptions() {
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         resyncDaoButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(resyncDaoButton, Priority.ALWAYS);
 
@@ -558,12 +558,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         rpcPwTextField.setVisible(false);
         rpcPwTextField.setManaged(false);
 
-        rpcUserListener = (observable, oldValue, newValue) -> {
-            preferences.setRpcUser(rpcUserTextField.getText());
-        };
-        rpcPwListener = (observable, oldValue, newValue) -> {
-            preferences.setRpcPw(rpcPwTextField.getText());
-        };
+        rpcUserListener = (observable, oldValue, newValue) -> preferences.setRpcUser(rpcUserTextField.getText());
+        rpcPwListener = (observable, oldValue, newValue) -> preferences.setRpcPw(rpcPwTextField.getText());
     }
 
 
@@ -598,7 +594,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
-        userLanguageComboBox.setConverter(new StringConverter<String>() {
+        userLanguageComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(String code) {
                 return LanguageUtil.getDisplayName(code);
@@ -640,7 +636,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         userCountryComboBox.setItems(countries);
         userCountryComboBox.getSelectionModel().select(preferences.getUserCountry());
-        userCountryComboBox.setConverter(new StringConverter<Country>() {
+        userCountryComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Country country) {
                 return CountryUtil.getNameByCode(country.code);
@@ -660,7 +656,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         blockChainExplorerComboBox.setItems(blockExplorers);
         blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
-        blockChainExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
+        blockChainExplorerComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BlockChainExplorer blockChainExplorer) {
                 return blockChainExplorer.name;
@@ -767,21 +763,18 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         rpcPwTextField.setText(rpcPw);
         updateDaoFields();
 
-        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() -> {
-            new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                    .useShutDownButton()
-                    .hideCloseButton()
-                    .show();
-        }));
+        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() ->
+                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show()));
 
         isDaoFullNodeToggleButton.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
             if (isDaoFullNodeToggleButton.isSelected() && preferences.showAgain(key)) {
                 String url = "https://bisq.network/docs/dao-full-node";
                 new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
-                        .onAction(() -> {
-                            GUIUtil.openWebPage(url);
-                        })
+                        .onAction(() -> GUIUtil.openWebPage(url))
                         .actionButtonText(Res.get("setting.preferences.dao.fullNodeInfo.ok"))
                         .closeButtonText(Res.get("setting.preferences.dao.fullNodeInfo.cancel"))
                         .onClose(() -> UserThread.execute(() -> {

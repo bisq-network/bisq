@@ -96,7 +96,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private final Preferences preferences;
     private NetworkNode networkNode;
     private final File torDir;
-    private RadioButton noBridgesRadioButton, providedBridgesRadioButton, customBridgesRadioButton;
     private Label enterBridgeLabel;
     private ComboBox<Transport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
@@ -128,7 +127,10 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                 headLine = Res.get("torNetworkSettingWindow.header");
 
             width = 1068;
+
             createGridPane();
+            gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+
             addContent();
             addCloseButton();
             applyStyles();
@@ -205,7 +207,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private void addContent() {
         addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("torNetworkSettingWindow.deleteFiles.header"));
 
-        Label deleteFilesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.info"), Layout.FIRST_ROW_DISTANCE);
+        Label deleteFilesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.info"), Layout.TWICE_FIRST_ROW_DISTANCE);
         deleteFilesLabel.setWrapText(true);
         GridPane.setColumnIndex(deleteFilesLabel, 0);
         GridPane.setColumnSpan(deleteFilesLabel, 2);
@@ -232,7 +234,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
         addTitledGroupBg(gridPane, ++rowIndex, 7, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
 
-        Label bridgesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.bridges.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        Label bridgesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.bridges.info"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         bridgesLabel.setWrapText(true);
         GridPane.setColumnIndex(bridgesLabel, 0);
         GridPane.setColumnSpan(bridgesLabel, 2);
@@ -244,12 +246,12 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         ToggleGroup toggleGroup = new ToggleGroup();
 
         // noBridges
-        noBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.noBridges"));
+        RadioButton noBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.noBridges"));
         noBridgesRadioButton.setUserData(BridgeOption.NONE);
         GridPane.setMargin(noBridgesRadioButton, new Insets(20, 0, 0, 0));
 
         // providedBridges
-        providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
+        RadioButton providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
         transportTypeComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
@@ -257,7 +259,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                 Transport.OBFS_3,
                 Transport.MEEK_AMAZON,
                 Transport.MEEK_AZURE)));
-        transportTypeComboBox.setConverter(new StringConverter<Transport>() {
+        transportTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Transport transport) {
                 switch (transport) {
@@ -280,7 +282,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         });
 
         // customBridges
-        customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
+        RadioButton customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
         customBridgesRadioButton.setUserData(BridgeOption.CUSTOM);
 
         final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
@@ -289,7 +291,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
         Label label2 = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.restartInfo"));
         label2.setWrapText(true);
-        GridPane.setColumnIndex(label2, 1);
         GridPane.setColumnSpan(label2, 2);
         GridPane.setHalignment(label2, HPos.LEFT);
         GridPane.setValignment(label2, VPos.TOP);
@@ -403,9 +404,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void saveAndShutDown() {
-        UserThread.runAfter(() -> {
-            actionHandlerOptional.ifPresent(Runnable::run);
-        }, 500, TimeUnit.MILLISECONDS);
+        UserThread.runAfter(() -> actionHandlerOptional.ifPresent(Runnable::run), 500, TimeUnit.MILLISECONDS);
         hide();
     }
 }

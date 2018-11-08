@@ -42,6 +42,7 @@ bisq.asset.coins.Litecoin$Regtest
 bisq.asset.coins.Litecoin$Testnet
 bisq.asset.coins.Lobstex
 bisq.asset.coins.Loki
+bisq.asset.coins.Mask
 bisq.asset.coins.MaxCoin
 bisq.asset.coins.MegaCoin
 bisq.asset.coins.MicroCoin
