@@ -77,6 +77,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -104,7 +105,6 @@ import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.addButton;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -157,7 +157,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.setSpacing(62);
+        hBox.setSpacing(35);
         hBox.setPadding(new Insets(10, 0, 0, 0));
 
         final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelComboBox(
@@ -165,12 +165,25 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         final Tuple3<VBox, Label, ComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelComboBox(
                 Res.get("offerbook.filterByPaymentMethod"), Res.get("shared.selectPaymentMethod"));
 
-        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first);
+        createOfferButton = new AutoTooltipButton();
+        createOfferButton.setMinHeight(40);
+        createOfferButton.setGraphicTextGap(10);
+        AnchorPane.setRightAnchor(createOfferButton, 0d);
+        AnchorPane.setBottomAnchor(createOfferButton, 0d);
 
-        GridPane.setRowIndex(hBox, gridRow);
-        GridPane.setColumnSpan(hBox, 2);
-        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
-        root.getChildren().add(hBox);
+        hBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first, createOfferButton);
+        AnchorPane.setLeftAnchor(hBox, 0d);
+        AnchorPane.setTopAnchor(hBox, 0d);
+        AnchorPane.setBottomAnchor(hBox, 0d);
+
+        AnchorPane anchorPane = new AnchorPane();
+        anchorPane.getChildren().addAll(hBox, createOfferButton);
+
+        GridPane.setHgrow(anchorPane, Priority.ALWAYS);
+        GridPane.setRowIndex(anchorPane, gridRow);
+        GridPane.setColumnSpan(anchorPane, 2);
+        GridPane.setMargin(anchorPane, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+        root.getChildren().add(anchorPane);
 
         currencyComboBox = currencyBoxTuple.third;
 
@@ -237,15 +250,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, -5));
         root.getChildren().add(nrOfOffersLabel);
 
-        createOfferButton = (AutoTooltipButton) addButton(root, gridRow, "");
-        createOfferButton.setMinHeight(40);
-        createOfferButton.setPadding(new Insets(0, 20, 0, 20));
-        createOfferButton.setGraphicTextGap(10);
-        GridPane.setColumnIndex(createOfferButton, 1);
-        GridPane.setMargin(createOfferButton, new Insets(15, 0, 0, 0));
-        GridPane.setHalignment(createOfferButton, HPos.RIGHT);
-        GridPane.setVgrow(createOfferButton, Priority.NEVER);
-        GridPane.setValignment(createOfferButton, VPos.TOP);
         offerListListener = c -> nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
 
         // Fixes incorrect ordering of Available offers:
@@ -527,12 +531,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -548,19 +551,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getMarketColumn() {
-        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.market")) {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
                 setMinWidth(40);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final OfferBookListItem item, boolean empty) {
@@ -578,7 +580,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPriceColumn() {
-        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
                 setMinWidth(100);
             }
@@ -586,12 +588,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             private OfferBookListItem offerBookListItem;
                             private ChangeListener<Number> priceChangedListener;
                             ChangeListener<Scene> sceneChangeListener;
@@ -686,7 +687,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getVolumeColumn() {
-        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
                 setMinWidth(125);
             }
@@ -694,14 +695,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             private OfferBookListItem offerBookListItem;
-                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
@@ -728,8 +728,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 model.getNumberOfDecimalsForVolume(item)));
                                     }
                                 } else {
-                                    if (listener != null)
-                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
+                                    model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offerBookListItem = null;
                                     setText("");
                                     setGraphic(null);
@@ -742,17 +741,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("shared.paymentMethod")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod")) {
             {
                 setMinWidth(80);
             }
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem, OfferBookListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -777,7 +776,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -785,12 +784,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer,
@@ -886,8 +884,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     setGraphic(button);
                                 } else {
                                     setGraphic(null);
-                                    if (button != null)
-                                        button.setOnAction(null);
+                                    button.setOnAction(null);
                                     if (tableRow != null) {
                                         tableRow.setOpacity(1);
                                         tableRow.setOnMousePressed(null);
@@ -901,7 +898,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem>(Res.get("offerbook.trader")) {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
@@ -910,12 +907,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         };
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<OfferBookListItem, OfferBookListItem>, TableCell<OfferBookListItem,
-                        OfferBookListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
-                        return new TableCell<OfferBookListItem, OfferBookListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
