@@ -21,6 +21,12 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
 
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
+import bisq.asset.Token;
+import bisq.asset.coins.BSQ;
+
 import bisq.common.app.DevEnv;
 
 import java.util.ArrayList;
@@ -38,14 +44,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
-
-
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-import bisq.asset.Token;
-import bisq.asset.coins.BSQ;
 
 @Slf4j
 public class CurrencyUtil {
@@ -119,16 +117,6 @@ public class CurrencyUtil {
                 .map(CurrencyUtil::assetToCryptoCurrency)
                 .sorted(TradeCurrency::compareTo)
                 .collect(Collectors.toList());
-
-        // Util for printing all altcoins for adding to FAQ page
-       /* StringBuilder sb = new StringBuilder();
-        result.stream().forEach(e -> sb.append("<li>&#8220;")
-                .append(e.getCode())
-                .append("&#8221;, &#8220;")
-                .append(e.getName())
-                .append("&#8221;</li>")
-                .append("\n"));
-        log.info(sb.toString());*/
         return result;
     }
 
