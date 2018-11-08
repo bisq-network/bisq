@@ -254,7 +254,7 @@ public class TorNetworkNode extends NetworkNode {
 
                 // check if the user wants to provide his own torrc file
                 String torrcFile = System.getProperty(CONFIG_TORRCFILE);
-                if(null != torrcFile) {
+                if(torrcFile != null) {
                     try {
                         override = new Torrc(new FileInputStream(new File(torrcFile)));
                     } catch(IOException e) {
