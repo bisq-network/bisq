@@ -31,6 +31,8 @@
           <emptyLine />
           <package name="bisq.common" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="bisq.asset" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="io.bisq.generated" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="com.google.protobuf" withSubpackages="true" static="false" />

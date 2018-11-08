@@ -21,6 +21,10 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
+/**
+ * @deprecated for insufficent trading
+ */
+@Deprecated(since = "0.9.0")
 public class Obsidian extends Coin {
 
     public Obsidian() {

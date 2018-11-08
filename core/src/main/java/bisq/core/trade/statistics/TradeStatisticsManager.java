@@ -143,11 +143,7 @@ public class TradeStatisticsManager {
         }
     }
 
-    public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
-        return observableTradeStatisticsSet;
-    }
-
-    private void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
+    public void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
             boolean itemAlreadyAdded = observableTradeStatisticsSet.stream()
                     .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId())));
@@ -161,6 +157,10 @@ public class TradeStatisticsManager {
                 log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
             }
         }
+    }
+
+    public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {
+        return observableTradeStatisticsSet;
     }
 
     private void addToMap(TradeStatistics2 tradeStatistics, Map<String, TradeStatistics2> map) {
