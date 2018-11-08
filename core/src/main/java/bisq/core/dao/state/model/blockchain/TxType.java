@@ -42,7 +42,9 @@ public enum TxType implements ImmutableDaoStateModel {
     BLIND_VOTE(true, true),
     VOTE_REVEAL(true, false),
     LOCKUP(true, false),
-    UNLOCK(true, false);
+    UNLOCK(true, false),
+    ASSET_LISTING_FEE(true, true),
+    PROOF_OF_BURN(true, true);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

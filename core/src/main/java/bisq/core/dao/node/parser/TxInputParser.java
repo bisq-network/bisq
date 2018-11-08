@@ -100,6 +100,8 @@ public class TxInputParser {
                             case BLIND_VOTE_OP_RETURN_OUTPUT:
                             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
                             case VOTE_REVEAL_OP_RETURN_OUTPUT:
+                            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+                            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
                                 break;
                             case LOCKUP_OUTPUT:
                                 // A LOCKUP BSQ txOutput is spent to a corresponding UNLOCK

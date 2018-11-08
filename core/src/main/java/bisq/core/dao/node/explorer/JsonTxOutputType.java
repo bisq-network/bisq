@@ -34,6 +34,8 @@ enum JsonTxOutputType {
     BLIND_VOTE_OP_RETURN_OUTPUT("Blind vote opReturn"),
     VOTE_REVEAL_UNLOCK_STAKE_OUTPUT("Vote reveal unlock stake"),
     VOTE_REVEAL_OP_RETURN_OUTPUT("Vote reveal opReturn"),
+    ASSET_LISTING_FEE_OP_RETURN_OUTPUT("Asset listing fee OpReturn"),
+    PROOF_OF_BURN_OP_RETURN_OUTPUT("Proof of burn opReturn"),
     LOCKUP_OUTPUT("Lockup"),
     LOCKUP_OP_RETURN_OUTPUT("Lockup opReturn"),
     UNLOCK_OUTPUT("Unlock"),

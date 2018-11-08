@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -108,14 +109,18 @@ public class CurrencyUtil {
     }
 
     private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
-        List<CryptoCurrency> result = assetRegistry.stream()
-                .filter(CurrencyUtil::assetIsNotBaseCurrency)
-                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
-                .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()))
+        List<CryptoCurrency> result = getAssetStream()
                 .map(CurrencyUtil::assetToCryptoCurrency)
                 .sorted(TradeCurrency::compareTo)
                 .collect(Collectors.toList());
         return result;
+    }
+
+    public static Stream<Asset> getAssetStream() {
+        return assetRegistry.stream()
+                .filter(CurrencyUtil::assetIsNotBaseCurrency)
+                .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
+                .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()));
     }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {

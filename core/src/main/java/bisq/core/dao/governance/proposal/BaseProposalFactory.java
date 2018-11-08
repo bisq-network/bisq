@@ -112,6 +112,6 @@ public abstract class BaseProposalFactory<R extends Proposal> {
 
     protected Transaction completeTx(Transaction preparedBurnFeeTx, byte[] opReturnData, Proposal proposal)
             throws WalletException, InsufficientMoneyException, TransactionVerificationException {
-        return btcWalletService.completePreparedProposalTx(preparedBurnFeeTx, opReturnData);
+        return btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
     }
 }

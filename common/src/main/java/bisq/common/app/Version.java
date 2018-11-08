@@ -125,4 +125,6 @@ public class Version {
     public static final byte BLIND_VOTE = (byte) 0x01;
     public static final byte VOTE_REVEAL = (byte) 0x01;
     public static final byte LOCKUP = (byte) 0x01;
+    public static final byte ASSET_LISTING_FEE = (byte) 0x01;
+    public static final byte PROOF_OF_BURN = (byte) 0x01;
 }

@@ -105,7 +105,9 @@ public enum Param {
                     "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV", // testnet
             ParamType.ADDRESS),
 
-    ASSET_LISTING_FEE("1", ParamType.BSQ, 10, 10),
+    // Fee for activating an asset or re-listing after deactivation due lack of trade activity. Fee per day of trial period without activity checks.
+    ASSET_LISTING_FEE_PER_DAY("1", ParamType.BSQ, 10, 10),
+    // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
     // TODO for dev testing we use short periods...

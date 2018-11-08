@@ -144,16 +144,18 @@ public class BtcWalletService extends WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Burn BSQ txs (some proposal txs, asset listing fee tx, proof of burn tx)
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction completePreparedBurnBsqTx(Transaction preparedBurnFeeTx, byte[] opReturnData)
+            throws WalletException, InsufficientMoneyException, TransactionVerificationException {
+        return completePreparedProposalTx(preparedBurnFeeTx, opReturnData, null, null);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Proposal txs
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public Transaction completePreparedProposalTx(Transaction preparedBurnFeeTx, byte[] opReturnData)
-            throws WalletException, InsufficientMoneyException, TransactionVerificationException {
-        return completePreparedProposalTx(preparedBurnFeeTx, opReturnData, null, null);
-    }
 
     public Transaction completePreparedReimbursementRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData)
             throws TransactionVerificationException, WalletException, InsufficientMoneyException {
