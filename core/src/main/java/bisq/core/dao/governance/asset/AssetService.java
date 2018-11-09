@@ -31,7 +31,6 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
-import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -52,7 +51,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -144,11 +142,6 @@ public class AssetService implements PersistedDataHost, DaoSetupService, DaoStat
     }
 
     private Optional<Tx> findFeeTx(StatefulAsset statefulAsset) {
-        Set<TxOutput> res = daoStateService.getAssetListingFeeOpReturnTxOutputs();
-        Set<TxOutput> res1 = daoStateService.getTxOutputStream().collect(Collectors.toSet());
-
-        if (res1.size() > 0) {
-        }
         return daoStateService.getAssetListingFeeOpReturnTxOutputs().stream()
                 .filter(txOutput -> {
                     byte[] hash = AssetConsensus.getHash(statefulAsset);
