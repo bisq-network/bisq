@@ -941,9 +941,8 @@ message PersistableEnvelope {
         MyVoteList my_vote_list = 21;
         MyBlindVoteList my_blind_vote_list = 22;
         MeritList merit_list = 23;
-        RemovedAssetList removed_asset_list = 24;
-        DaoStateStore dao_state_store = 25;
-        MyReputationList my_reputation_list = 26;
+        DaoStateStore dao_state_store = 24;
+        MyReputationList my_reputation_list = 25;
     }
 }
 
@@ -1533,14 +1532,6 @@ message GenericProposal {
 
 message RemoveAssetProposal {
     string ticker_symbol = 1;
-}
-
-message RemovedAsset {
-    string ticker_symbol = 1;
-    string remove_reason = 2;
-}
-message RemovedAssetList {
-    repeated RemovedAsset removed_asset = 1;
 }
 
 message Role {

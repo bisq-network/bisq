@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.burnbsq.assetfee;
 
 import bisq.core.dao.governance.asset.StatefulAsset;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -29,22 +28,30 @@ class AssetListItem {
     private final StatefulAsset statefulAsset;
     private final String tickerSymbol;
     private final String assetStateString;
-    private final String activeFeeAsString;
     private final int trialPeriodInBlocks;
     private final String nameAndCode;
-    private final long activeFee;
+    private final long totalFeesPaid;
+    private final String totalFeesPaidAsString;
+    private final long feeOfTrialPeriod;
+    private final String feeOfTrialPeriodAsString;
     private final String tradedVolumeAsString;
+    private final String lookBackPeriodInDays;
+    private final long tradedVolume;
 
     AssetListItem(StatefulAsset statefulAsset,
                   BsqFormatter bsqFormatter) {
         this.statefulAsset = statefulAsset;
 
         tickerSymbol = statefulAsset.getTickerSymbol();
-        nameAndCode = CurrencyUtil.getNameAndCode(tickerSymbol);
+        nameAndCode = statefulAsset.getNameAndCode();
         assetStateString = Res.get("dao.assetState." + statefulAsset.getAssetState());
-        activeFee = statefulAsset.getActiveFee();
-        activeFeeAsString = Long.toString(activeFee);
-        trialPeriodInBlocks = (int) activeFee * 144;
-        tradedVolumeAsString = "TODO";
+        feeOfTrialPeriod = statefulAsset.getFeeOfTrialPeriod();
+        feeOfTrialPeriodAsString = bsqFormatter.formatCoinWithCode(feeOfTrialPeriod);
+        totalFeesPaid = statefulAsset.getTotalFeesPaid();
+        totalFeesPaidAsString = bsqFormatter.formatCoinWithCode(totalFeesPaid);
+        trialPeriodInBlocks = (int) totalFeesPaid * 144;
+        tradedVolume = statefulAsset.getTradeVolume();
+        tradedVolumeAsString = bsqFormatter.formatBTCWithCode(tradedVolume);
+        lookBackPeriodInDays = Res.get("dao.burnBsq.assets.days", statefulAsset.getLookBackPeriodInDays());
     }
 }

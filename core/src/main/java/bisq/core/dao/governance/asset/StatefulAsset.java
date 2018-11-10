@@ -23,81 +23,76 @@ import bisq.asset.Asset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.Getter;
-import lombok.Value;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.NotNull;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public class StatefulAsset implements Comparable<StatefulAsset> {
-    @Value
-    public static class FeePayment {
-        private String txId;
-        private long fee;
-
-        @Override
-        public String toString() {
-            return "FeePayment{" +
-                    "\n     txId='" + txId + '\'' +
-                    ",\n     fee=" + fee +
-                    "\n}";
-        }
-    }
-
+public class StatefulAsset {
     private final Asset asset;
-    // keep access private to ensure we cannot change state once remove by voting
-    private AssetState assetState = AssetState.NOT_ACTIVATED;
+    @Setter
+    private AssetState assetState = AssetState.UNDEFINED;
     private List<FeePayment> feePayments = new ArrayList<>();
+    @Setter
+    private long tradeVolume;
+    @Setter
+    private long lookBackPeriodInDays;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public StatefulAsset(Asset asset) {
         this.asset = asset;
     }
 
-    public boolean wasTerminated() {
-        return assetState == AssetState.TERMINATED;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getNameAndCode() {
+        return CurrencyUtil.getNameAndCode(getTickerSymbol());
     }
 
     public String getTickerSymbol() {
         return asset.getTickerSymbol();
     }
 
-    public void terminate() {
-        assetState = AssetState.TERMINATED;
+    public void setFeePayments(List<FeePayment> feePayments) {
+        this.feePayments = feePayments;
     }
 
-    public void enableByFeePayment(FeePayment feePayment) {
-        checkArgument(!wasTerminated(), "Cannot pay a fee for a removed asset");
-        feePayments.add(feePayment);
-        assetState = AssetState.ENABLED_BY_FEE_PAYMENT;
+    public Optional<FeePayment> getLastFeePayment() {
+        return feePayments.isEmpty() ? Optional.empty() : Optional.of(feePayments.get(feePayments.size() - 1));
     }
 
-    public void deListByInactivity() {
-        checkArgument(!wasTerminated(), "Cannot pay a fee for a removed asset");
-        assetState = AssetState.DE_LISTED_BY_INACTIVITY;
-    }
-
-    public long getActiveFee() {
+    public long getTotalFeesPaid() {
         return feePayments.stream().mapToLong(FeePayment::getFee).sum();
     }
 
-    public void addFeePayment(FeePayment feePayment) {
-        log.error(feePayment.toString());
-        feePayments.add(feePayment);
+    public long getFeeOfTrialPeriod() {
+        return getLastFeePayment()
+                .map(FeePayment::getFee)
+                .filter(e -> assetState == AssetState.IN_TRIAL_PERIOD)
+                .orElse(0L);
     }
 
-    @Override
-    public int compareTo(@NotNull StatefulAsset other) {
-        return getNameAndCode().compareTo(other.getNameAndCode());
+    public boolean isActive() {
+        return !wasRemovedByVoting() && !isDeListed();
     }
 
-    public String getNameAndCode() {
-        return CurrencyUtil.getNameAndCode(getTickerSymbol());
+    public boolean wasRemovedByVoting() {
+        return assetState == AssetState.REMOVED_BY_VOTING;
     }
+
+    public boolean isDeListed() {
+        return assetState == AssetState.DE_LISTED;
+    }
+
 
     @Override
     public String toString() {
@@ -105,6 +100,8 @@ public class StatefulAsset implements Comparable<StatefulAsset> {
                 "\n     asset=" + asset +
                 ",\n     assetState=" + assetState +
                 ",\n     feePayments=" + feePayments +
+                ",\n     tradeVolume=" + tradeVolume +
+                ",\n     lookBackPeriodInDays=" + lookBackPeriodInDays +
                 "\n}";
     }
 }

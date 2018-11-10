@@ -21,7 +21,6 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -30,13 +29,11 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
@@ -56,11 +53,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
@@ -78,7 +75,7 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class AssetFeeView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
-    public ComboBox<StatefulAsset> assetComboBox;
+    private ComboBox<StatefulAsset> assetComboBox;
     private InputTextField feeAmountInputTextField;
     private TextField trialPeriodTextField;
     private Button payFeeButton;
@@ -87,10 +84,8 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
-    private final DaoFacade daoFacade;
     private final AssetService assetService;
     private BSFormatter btcFormatter;
-    private final Preferences preferences;
 
     private final ObservableList<AssetListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<AssetListItem> sortedList = new SortedList<>(observableList);
@@ -99,9 +94,9 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
     private ChangeListener<Boolean> amountFocusOutListener;
     private ChangeListener<String> amountInputTextFieldListener;
-    private ListChangeListener<StatefulAsset> statefulAssetsChangeListener;
     @Nullable
     private StatefulAsset selectedAsset;
+    private InvalidationListener updateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,19 +106,14 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     @Inject
     private AssetFeeView(BsqFormatter bsqFormatter,
                          BsqWalletService bsqWalletService,
-                         BondingViewUtils bondingViewUtils,
                          BsqValidator bsqValidator,
-                         DaoFacade daoFacade,
                          AssetService assetService,
-                         BSFormatter btcFormatter,
-                         Preferences preferences) {
+                         BSFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
-        this.daoFacade = daoFacade;
         this.assetService = assetService;
         this.btcFormatter = btcFormatter;
-        this.preferences = preferences;
     }
 
     @Override
@@ -160,7 +150,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
     @Override
     protected void activate() {
-        assetComboBox.setItems(assetService.getStatefulAssets());
         assetComboBox.setOnAction(e -> {
             selectedAsset = assetComboBox.getSelectionModel().getSelectedItem();
         });
@@ -170,11 +159,11 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
-        assetService.getStatefulAssets().addListener(statefulAssetsChangeListener);
+        assetService.getUpdateFlag().addListener(updateListener);
         bsqWalletService.addBsqBalanceListener(this);
 
         payFeeButton.setOnAction((event) -> {
-            Coin listingFee = bsqFormatter.parseToCoin(feeAmountInputTextField.getText());
+            Coin listingFee = getListingFee();
             try {
                 Transaction transaction = assetService.payFee(selectedAsset, listingFee.value);
                 Coin miningFee = transaction.getFee();
@@ -182,31 +171,20 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
                 if (!DevEnv.isDevMode()) {
                     GUIUtil.showBsqFeeInfoPopup(listingFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                            Res.get("dao.burnBsq.assetFee"), () -> doPublishMyProposal(transaction, listingFee));
+                            Res.get("dao.burnBsq.assetFee"), () -> doPublishFeeTx(transaction, listingFee));
                 } else {
-                    doPublishMyProposal(transaction, listingFee);
+                    doPublishFeeTx(transaction, listingFee);
                 }
             } catch (InsufficientMoneyException | TxException e) {
                 e.printStackTrace();
                 new Popup<>().error(e.toString()).show();
             }
-
         });
-
-        feeAmountInputTextField.resetValidation();
 
         updateList();
         updateButtonState();
-    }
 
-    private void doPublishMyProposal(Transaction transaction, Coin listingFee) {
-        assetService.publishTransaction(selectedAsset, transaction, listingFee.value,
-                () -> {
-                    assetComboBox.getSelectionModel().clearSelection();
-                    if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
-                },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+        feeAmountInputTextField.resetValidation();
     }
 
     @Override
@@ -216,7 +194,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         feeAmountInputTextField.textProperty().removeListener(amountInputTextFieldListener);
         feeAmountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
 
-        assetService.getStatefulAssets().removeListener(statefulAssetsChangeListener);
+        assetService.getUpdateFlag().removeListener(updateListener);
         bsqWalletService.removeBsqBalanceListener(this);
 
         sortedList.comparatorProperty().unbind();
@@ -250,15 +228,26 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
             }
         };
 
-        amountInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
+        amountInputTextFieldListener = (observable, oldValue, newValue) -> {
+            long days = getListingFee().value / assetService.getFeePerDay().value;
+            trialPeriodTextField.setText(Res.get("dao.burnBsq.assets.days", days));
+            updateButtonState();
+        };
 
-        statefulAssetsChangeListener = c -> updateList();
+        updateListener = observable -> updateList();
     }
 
     private void updateList() {
+        // Here we exclude the assets which have been removed by voting. Paying a fee would not change the state.
+        ObservableList<StatefulAsset> nonRemovedStatefulAssets = FXCollections.observableArrayList(assetService.getStatefulAssets().stream()
+                .filter(e -> !e.wasRemovedByVoting())
+                .collect(Collectors.toList()));
+        assetComboBox.setItems(nonRemovedStatefulAssets);
+
+        // In the table we want to show all.
         observableList.setAll(assetService.getStatefulAssets().stream()
                 .map(statefulAsset -> new AssetListItem(statefulAsset, bsqFormatter))
-                .sorted(Comparator.comparing(AssetListItem::getNameAndCode))
+                /*.sorted(Comparator.comparing(AssetListItem::getNameAndCode))*/
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
     }
@@ -267,6 +256,22 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         boolean isValid = bsqValidator.validate(feeAmountInputTextField.getText()).isValid &&
                 selectedAsset != null;
         payFeeButton.setDisable(!isValid);
+    }
+
+    private Coin getListingFee() {
+        return bsqFormatter.parseToCoin(feeAmountInputTextField.getText());
+    }
+
+    private void doPublishFeeTx(Transaction transaction, Coin listingFee) {
+        assetService.publishTransaction(selectedAsset, transaction, listingFee.value,
+                () -> {
+                    assetComboBox.getSelectionModel().clearSelection();
+                    if (!DevEnv.isDevMode())
+                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                },
+                errorMessage -> new Popup<>().warning(errorMessage).show());
+
+        feeAmountInputTextField.clear();
     }
 
 
@@ -279,7 +284,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.nameAndCode"));
         column.setMinWidth(120);
-        column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -298,10 +302,10 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
             }
         });
         tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getNameAndCode));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.activeFee"));
-        column.setMinWidth(60);
-        column.setMaxWidth(column.getMinWidth());
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.state"));
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -312,7 +316,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                     public void updateItem(final AssetListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getActiveFeeAsString());
+                            setText(item.getAssetStateString());
                         } else
                             setText("");
                     }
@@ -320,27 +324,94 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
             }
         });
         tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getAssetStateString));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.tradedVolume"));
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.tradeVolume"));
         column.setMinWidth(120);
-        column.setCellFactory(
-                new Callback<>() {
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<AssetListItem, AssetListItem> call(TableColumn<AssetListItem,
+                    AssetListItem> column) {
+                return new TableCell<>() {
                     @Override
-                    public TableCell<AssetListItem, AssetListItem> call(TableColumn<AssetListItem,
-                            AssetListItem> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(AssetListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    setText(item.getTradedVolumeAsString());
-                                } else
-                                    setText("");
-                            }
-                        };
+                    public void updateItem(final AssetListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getTradedVolumeAsString());
+                        } else
+                            setText("");
                     }
-                });
+                };
+            }
+        });
         tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getTradedVolume));
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.lookBackPeriod"));
+        column.setMinWidth(120);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<AssetListItem, AssetListItem> call(TableColumn<AssetListItem,
+                    AssetListItem> column) {
+                return new TableCell<>() {
+                    @Override
+                    public void updateItem(final AssetListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getLookBackPeriodInDays());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getLookBackPeriodInDays));
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.trialFee"));
+        column.setMinWidth(120);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<AssetListItem, AssetListItem> call(TableColumn<AssetListItem,
+                    AssetListItem> column) {
+                return new TableCell<>() {
+                    @Override
+                    public void updateItem(final AssetListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getFeeOfTrialPeriodAsString());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getFeeOfTrialPeriod));
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.totalFee"));
+        column.setMinWidth(120);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<AssetListItem, AssetListItem> call(TableColumn<AssetListItem,
+                    AssetListItem> column) {
+                return new TableCell<>() {
+                    @Override
+                    public void updateItem(final AssetListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getTotalFeesPaidAsString());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        tableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(AssetListItem::getTotalFeesPaid));
     }
 }

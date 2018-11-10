@@ -44,6 +44,10 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This can be removed once the AssetService is activated with the DAO.
+ * At the moment it is only used for printing out trade statistics.
+ */
 @Slf4j
 public class AssetTradeActivityCheck {
     private final AssetService assetService;
@@ -75,7 +79,7 @@ public class AssetTradeActivityCheck {
         StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
         StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
         StringBuilder notTraded = new StringBuilder("\nNot traded assets:");
-        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService);
+        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getActiveSortedCryptoCurrencies(assetService);
         Set<CryptoCurrency> assetsToRemove = new HashSet<>(whiteListedSortedCryptoCurrencies);
         whiteListedSortedCryptoCurrencies.forEach(e -> {
             String code = e.getCode();
@@ -99,7 +103,7 @@ public class AssetTradeActivityCheck {
                         .append(numTrades);
             }
 
-            if (!isWarmingUp(code) && !hasPaidBSQFee(code)) {
+            if (!isWarmingUp(code) /*&& !hasPaidBSQFee(code)*/) {
                 if (isInTradeStatMap) {
                     if (tradeAmount >= minTradeAmount || numTrades >= minNumOfTrades) {
                         assetsToRemove.remove(e);
@@ -134,10 +138,6 @@ public class AssetTradeActivityCheck {
                 "\n\n" + sufficientlyTraded.toString();
         // Utilities.copyToClipboard(result);
         log.debug(result);
-    }
-
-    private boolean hasPaidBSQFee(String code) {
-        return assetService.hasPaidBSQFee(code);
     }
 
     private boolean isWarmingUp(String code) {

@@ -21,8 +21,9 @@ package bisq.core.dao.governance.asset;
  * Maintain translation stings ("dao.assetState.*")
  */
 public enum AssetState {
-    NOT_ACTIVATED,              // Added to code base but no listing fee paid yet
-    ENABLED_BY_FEE_PAYMENT,
-    DE_LISTED_BY_INACTIVITY,
-    TERMINATED                  // Was removed by voting
+    UNDEFINED,
+    IN_TRIAL_PERIOD,
+    ACTIVELY_TRADED,
+    DE_LISTED,
+    REMOVED_BY_VOTING           // Was removed by voting
 }

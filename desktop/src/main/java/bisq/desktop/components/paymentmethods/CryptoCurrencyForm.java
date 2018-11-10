@@ -162,7 +162,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             currencyComboBox.setPromptText("");
         });
 
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService)));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService)));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
