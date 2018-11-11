@@ -19,7 +19,6 @@ package bisq.core.app.misc;
 
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
@@ -56,7 +55,6 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyBlindVoteListService myBlindVoteListService,
                                  MyProposalListService myProposalListService,
                                  MyReputationListService myReputationListService,
-                                 AssetService assetService,
                                  @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         super(encryptionService,
                 keyRing,
@@ -74,7 +72,6 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
             persistedDataHosts.add(myBlindVoteListService);
             persistedDataHosts.add(myProposalListService);
             persistedDataHosts.add(myReputationListService);
-            persistedDataHosts.add(assetService);
         }
     }
 

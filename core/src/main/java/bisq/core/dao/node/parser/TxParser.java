@@ -203,6 +203,8 @@ public class TxParser {
                     processVoteReveal(blockHeight, tempTx);
                     break;
                 case LOCKUP:
+                case ASSET_LISTING_FEE:
+                case PROOF_OF_BURN:
                     // do nothing
                     break;
             }
@@ -422,6 +424,10 @@ public class TxParser {
                 return TxType.VOTE_REVEAL;
             case LOCKUP:
                 return TxType.LOCKUP;
+            case ASSET_LISTING_FEE:
+                return TxType.ASSET_LISTING_FEE;
+            case PROOF_OF_BURN:
+                return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
                 return TxType.INVALID;

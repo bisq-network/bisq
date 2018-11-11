@@ -124,7 +124,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.bsqFormatter = bsqFormatter;
     }
 
-
     @Override
     public void initialize() {
         gridRow = phasesView.addGroup(root, gridRow);

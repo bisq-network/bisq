@@ -17,9 +17,11 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.governance.asset.AssetConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
@@ -119,6 +121,16 @@ class OpReturnParser {
                 } else {
                     break;
                 }
+            case ASSET_LISTING_FEE:
+                if (AssetConsensus.hasOpReturnDataValidLength(opReturnData))
+                    return TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT;
+                else
+                    break;
+            case PROOF_OF_BURN:
+                if (ProofOfBurnConsensus.hasOpReturnDataValidLength(opReturnData))
+                    return TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT;
+                else
+                    break;
             default:
                 throw new InvalidParsingConditionException("We must have a defined opReturnType as it was checked earlier in the caller.");
         }

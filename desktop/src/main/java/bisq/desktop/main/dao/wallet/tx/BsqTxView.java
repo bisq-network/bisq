@@ -589,6 +589,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             awesomeIcon = AwesomeIcon.UNLOCK;
                                             style = "dao-tx-type-unlock-icon";
                                             break;
+                                        case ASSET_LISTING_FEE:
+                                            awesomeIcon = AwesomeIcon.FILE_TEXT;
+                                            style = "dao-tx-type-proposal-fee-icon";
+                                            break;
+                                        case PROOF_OF_BURN:
+                                            awesomeIcon = AwesomeIcon.FILE_TEXT;
+                                            style = "dao-tx-type-proposal-fee-icon";
+                                            break;
                                         default:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;
                                             style = "dao-tx-type-unverified-icon";

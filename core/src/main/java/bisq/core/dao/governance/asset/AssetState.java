@@ -17,7 +17,13 @@
 
 package bisq.core.dao.governance.asset;
 
-public enum RemoveReason {
-    VOTING,
-    INACTIVITY
+/**
+ * Maintain translation stings ("dao.assetState.*")
+ */
+public enum AssetState {
+    UNDEFINED,
+    IN_TRIAL_PERIOD,
+    ACTIVELY_TRADED,
+    DE_LISTED,
+    REMOVED_BY_VOTING           // Was removed by voting
 }

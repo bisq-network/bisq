@@ -418,6 +418,9 @@ public class DaoStateService implements DaoSetupService {
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
                 return true;
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
+                return false;
             case LOCKUP_OUTPUT:
                 return false;
             case LOCKUP_OP_RETURN_OUTPUT:
@@ -462,6 +465,8 @@ public class DaoStateService implements DaoSetupService {
             case BLIND_VOTE_OP_RETURN_OUTPUT:
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
             case LOCKUP_OUTPUT:
             case LOCKUP_OP_RETURN_OUTPUT:
             case UNLOCK_OUTPUT:
@@ -882,6 +887,15 @@ public class DaoStateService implements DaoSetupService {
 
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
         return daoState.getDecryptedBallotsWithMeritsList();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Asset listing fee
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<TxOutput> getAssetListingFeeOpReturnTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT);
     }
 
 

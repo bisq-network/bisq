@@ -20,7 +20,6 @@ package bisq.core.proto.persistable;
 import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.governance.asset.RemovedAssetsList;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.bond.reputation.MyReputationList;
@@ -129,8 +128,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyBlindVoteList.fromProto(proto.getMyBlindVoteList());
                 case MERIT_LIST:
                     return MeritList.fromProto(proto.getMeritList());
-                case REMOVED_ASSET_LIST:
-                    return RemovedAssetsList.fromProto(proto.getRemovedAssetList());
                 case DAO_STATE_STORE:
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
                 case MY_REPUTATION_LIST:

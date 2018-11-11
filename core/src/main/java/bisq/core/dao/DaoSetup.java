@@ -17,6 +17,7 @@
 
 package bisq.core.dao;
 
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
@@ -64,6 +65,7 @@ public class DaoSetup {
                     BondedRolesRepository bondedRolesRepository,
                     MyReputationListService myReputationListService,
                     MyBondedReputationRepository myBondedReputationRepository,
+                    AssetService assetService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
 
@@ -83,6 +85,7 @@ public class DaoSetup {
         daoSetupServices.add(bondedRolesRepository);
         daoSetupServices.add(myReputationListService);
         daoSetupServices.add(myBondedReputationRepository);
+        daoSetupServices.add(assetService);
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(bsqNodeProvider.getBsqNode());

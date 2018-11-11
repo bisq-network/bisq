@@ -240,6 +240,10 @@ public class TxOutputParser {
                 return Optional.of(OpReturnType.VOTE_REVEAL);
             case LOCKUP_OP_RETURN_OUTPUT:
                 return Optional.of(OpReturnType.LOCKUP);
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+                return Optional.of(OpReturnType.ASSET_LISTING_FEE);
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
+                return Optional.of(OpReturnType.PROOF_OF_BURN);
             default:
                 return Optional.empty();
         }
