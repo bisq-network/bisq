@@ -25,6 +25,8 @@ import bisq.common.crypto.Hash;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.Arrays;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,5 +51,9 @@ public class ProofOfBurnConsensus {
 
     public static boolean hasOpReturnDataValidLength(byte[] opReturnData) {
         return opReturnData.length == 22;
+    }
+
+    public static byte[] getHashFromOpReturnData(byte[] opReturnData) {
+        return Arrays.copyOfRange(opReturnData, 2, 22);
     }
 }

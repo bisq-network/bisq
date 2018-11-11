@@ -171,9 +171,9 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
                 if (!DevEnv.isDevMode()) {
                     GUIUtil.showBsqFeeInfoPopup(listingFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                            Res.get("dao.burnBsq.assetFee"), () -> doPublishFeeTx(transaction, listingFee));
+                            Res.get("dao.burnBsq.assetFee"), () -> doPublishFeeTx(transaction));
                 } else {
-                    doPublishFeeTx(transaction, listingFee);
+                    doPublishFeeTx(transaction);
                 }
             } catch (InsufficientMoneyException | TxException e) {
                 e.printStackTrace();
@@ -262,8 +262,8 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         return bsqFormatter.parseToCoin(feeAmountInputTextField.getText());
     }
 
-    private void doPublishFeeTx(Transaction transaction, Coin listingFee) {
-        assetService.publishTransaction(selectedAsset, transaction, listingFee.value,
+    private void doPublishFeeTx(Transaction transaction) {
+        assetService.publishTransaction(transaction,
                 () -> {
                     assetComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())

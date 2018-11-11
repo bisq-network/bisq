@@ -24,6 +24,7 @@ import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.bond.reputation.MyReputationList;
 import bisq.core.dao.governance.myvote.MyVoteList;
+import bisq.core.dao.governance.proofofburn.MyProofOfBurnList;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
@@ -132,6 +133,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return DaoStateStore.fromProto(proto.getDaoStateStore());
                 case MY_REPUTATION_LIST:
                     return MyReputationList.fromProto(proto.getMyReputationList());
+                case MY_PROOF_OF_BURN_LIST:
+                    return MyProofOfBurnList.fromProto(proto.getMyProofOfBurnList());
 
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +

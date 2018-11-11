@@ -28,7 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.burnbsq.assetfee.AssetFeeView;
-import bisq.desktop.main.dao.burnbsq.reputation.ProofOfBurnView;
+import bisq.desktop.main.dao.burnbsq.proofofburn.ProofOfBurnView;
 
 import bisq.core.locale.Res;
 

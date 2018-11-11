@@ -943,6 +943,7 @@ message PersistableEnvelope {
         MeritList merit_list = 23;
         DaoStateStore dao_state_store = 24;
         MyReputationList my_reputation_list = 25;
+        MyProofOfBurnList my_proof_of_burn_list = 26;
     }
 }
 
@@ -1548,6 +1549,15 @@ message MyReputation {
 
 message MyReputationList {
     repeated MyReputation my_reputation = 1;
+}
+
+message MyProofOfBurn {
+    string tx_id = 1;
+    string pre_image = 2;
+}
+
+message MyProofOfBurnList {
+    repeated MyProofOfBurn my_proof_of_burn = 1;
 }
 
 message TempProposalPayload {

@@ -472,7 +472,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } catch (AddressFormatException e) {
             new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup<>().warning(Res.get("validation.btc.amountBelowDust", formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
+            new Popup<>().warning(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
         } catch (AddressEntryException e) {
             new Popup<>().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {

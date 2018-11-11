@@ -333,8 +333,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         return AssetConsensus.getFeePerDay(daoStateService, daoStateService.getChainHeight());
     }
 
-    // Broadcast tx and publish proposal to P2P network
-    public void publishTransaction(StatefulAsset statefulAsset, Transaction transaction, long listingFee, ResultHandler resultHandler,
+    public void publishTransaction(Transaction transaction, ResultHandler resultHandler,
                                    ErrorMessageHandler errorMessageHandler) {
         walletsManager.publishAndCommitBsqTx(transaction, new TxBroadcaster.Callback() {
             @Override

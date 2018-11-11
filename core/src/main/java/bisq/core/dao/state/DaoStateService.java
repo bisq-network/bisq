@@ -361,6 +361,12 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
     }
 
+    public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
+        return getTxOutputStream()
+                .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UnspentTxOutput
@@ -896,6 +902,14 @@ public class DaoStateService implements DaoSetupService {
 
     public Set<TxOutput> getAssetListingFeeOpReturnTxOutputs() {
         return getTxOutputsByTxOutputType(TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Proof of burn
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<TxOutput> getProofOfBurnOpReturnTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT);
     }
 
 
