@@ -40,6 +40,7 @@ bisq.asset.coins.Kekcoin
 bisq.asset.coins.Litecoin$Mainnet
 bisq.asset.coins.Litecoin$Regtest
 bisq.asset.coins.Litecoin$Testnet
+bisq.asset.coins.LitecoinZ
 bisq.asset.coins.Lobstex
 bisq.asset.coins.Loki
 bisq.asset.coins.Mask
