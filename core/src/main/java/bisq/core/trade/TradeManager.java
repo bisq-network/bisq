@@ -413,6 +413,27 @@ public class TradeManager implements PersistedDataHost {
                             boolean useSavingsWallet,
                             TradeResultHandler tradeResultHandler,
                             ErrorMessageHandler errorMessageHandler) {
+        /**
+         * - offer must not be null
+         * - offer currencyCode must not be banned
+         * - offer payment method must not be banned
+         * - offer id must not be banned
+         * - offer maker node address must not be banned
+         * - offer payment method must not be null
+         * - amount must be positive non null
+         * - amount must be less than or equal offer amount
+         * - txFee must be positive non null
+         * - takerFee must be positive non null
+         * - tradePrice must be positive non null
+         * - offer must be in available state
+         * - paymentAccountId should be non null, account for that id should exist and be compatible with offer
+         * - tradeResultHandler must not be null
+         * - ErrorMessageHandler should not be null
+         * - TODO actually instead of tradeResultHandler and errorMessageHandler this method should return completable future
+         * - TODO fundsNeededForTrade should be calculated here I think
+         * - TODO check if user has enough funds here
+         * - TODO instead of coin we might use long
+         */
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {

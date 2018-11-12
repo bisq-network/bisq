@@ -63,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 @AllArgsConstructor
-public final class User implements PersistedDataHost {
+public class User implements PersistedDataHost {
     final private Storage<UserPayload> storage;
     final private KeyRing keyRing;
 
