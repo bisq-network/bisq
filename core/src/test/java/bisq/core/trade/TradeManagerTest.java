@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -115,11 +116,14 @@ public class TradeManagerTest {
         }).when(offer).checkOfferAvailability(any(), any(), any());
 
 //        When
-        doAnswer(invocation -> null).when(tradeResultHandlerMock).handleResult(any());
+        doAnswer(invocation -> {
+            Assert.assertNull("Trade should not have error property set", ((Trade) invocation.getArgument(0)).getErrorMessage());
+            return null;
+        }).when(tradeResultHandlerMock).handleResult(any());
         tradeManager.onTakeOffer(amount, txFee, takerFee, true, 1, fundsNeededForTrade, offer, paymentAccountId, false, tradeResultHandlerMock, errorMessageHandlerMock);
 
 //        Then
-        verify(errorMessageHandlerMock, never()).handleErrorMessage(any());
+        verifyNoMoreInteractions(errorMessageHandlerMock);
 //        TODO what properties should the trade have?
         verify(tradeResultHandlerMock).handleResult(any(Trade.class));
 //        TODO what should happen as the result of onTakeOffer call? What mocks should be called?

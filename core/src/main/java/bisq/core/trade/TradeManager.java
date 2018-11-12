@@ -450,7 +450,7 @@ public class TradeManager implements PersistedDataHost {
                                 model,
                                 tradeResultHandler);
                 },
-                errorMessageHandler::handleErrorMessage);
+                errorMessageHandler);
     }
 
     private void createTrade(Coin amount,
