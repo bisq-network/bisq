@@ -36,6 +36,11 @@ configure(subprojects) {
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
 
+    repositories {
+	jcenter()
+	maven {url 'https://jitpack.io' }
+    }
+
     dependencies {
         testCompile 'junit:junit:4.12'
     }
