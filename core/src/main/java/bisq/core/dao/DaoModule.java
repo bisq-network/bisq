@@ -35,6 +35,8 @@ import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
+import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -195,6 +197,10 @@ public class DaoModule extends AppModule {
 
         // Asset
         bind(AssetService.class).in(Singleton.class);
+
+        // Proof of burn
+        bind(ProofOfBurnService.class).in(Singleton.class);
+        bind(MyProofOfBurnListService.class).in(Singleton.class);
 
         // Options
         bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(environment.getRequiredProperty(DaoOptionKeys.RPC_USER));

@@ -37,7 +37,9 @@ public enum OpReturnType implements ImmutableDaoStateModel {
     REIMBURSEMENT_REQUEST((byte) 0x12),
     BLIND_VOTE((byte) 0x13),
     VOTE_REVEAL((byte) 0x14),
-    LOCKUP((byte) 0x15);
+    LOCKUP((byte) 0x15),
+    ASSET_LISTING_FEE((byte) 0x16),
+    PROOF_OF_BURN((byte) 0x17);
 
     @Getter
     private byte type;

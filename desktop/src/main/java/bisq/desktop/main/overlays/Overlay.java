@@ -455,12 +455,9 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.setPadding(new Insets(64, 64, 64, 64));
         gridPane.setPrefWidth(width);
 
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(100);
+        gridPane.getColumnConstraints().add(columnConstraints);
     }
 
     protected void blurAgain() {
@@ -709,13 +706,13 @@ public abstract class Overlay<T extends Overlay> {
                 case Confirmation:
                 case Feedback:
                 case Notification:
+                case Attention:
                     headLineLabel.getStyleClass().add("popup-headline-information");
                     headlineIcon.getStyleClass().add("popup-icon-information");
                     headlineIcon.setManaged(true);
                     headlineIcon.setVisible(true);
                     FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
                     break;
-                case Attention:
                 case Warning:
                 case Error:
                     headLineLabel.getStyleClass().add("popup-headline-warning");
@@ -786,7 +783,6 @@ public abstract class Overlay<T extends Overlay> {
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
         GridPane.setHalignment(logButton, HPos.RIGHT);
         GridPane.setRowIndex(logButton, ++rowIndex);
-        GridPane.setColumnIndex(logButton, 1);
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> {
             try {
@@ -802,7 +798,6 @@ public abstract class Overlay<T extends Overlay> {
         Button gitHubButton = new AutoTooltipButton(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, ++rowIndex);
-        GridPane.setColumnIndex(gitHubButton, 1);
         gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
             if (message != null)
@@ -870,7 +865,6 @@ public abstract class Overlay<T extends Overlay> {
             if (!showReportErrorButtons)
                 GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
             GridPane.setRowIndex(closeButton, ++rowIndex);
-            GridPane.setColumnIndex(closeButton, 1);
             gridPane.getChildren().add(closeButton);
         }
     }

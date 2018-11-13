@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.governance.asset;
-
-import bisq.core.dao.governance.ConsensusCritical;
+package bisq.core.dao.governance.proofofburn;
 
 import bisq.common.proto.persistable.PersistableList;
 
@@ -30,16 +28,16 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 
 /**
- * PersistableEnvelope wrapper for list of removedAssets.
+ * PersistableEnvelope wrapper for list of MyProofOfBurn objects.
  */
 @EqualsAndHashCode(callSuper = true)
-public class RemovedAssetsList extends PersistableList<RemovedAsset> implements ConsensusCritical {
+public class MyProofOfBurnList extends PersistableList<MyProofOfBurn> {
 
-    public RemovedAssetsList(List<RemovedAsset> list) {
+    private MyProofOfBurnList(List<MyProofOfBurn> list) {
         super(list);
     }
 
-    public RemovedAssetsList() {
+    MyProofOfBurnList() {
         super();
     }
 
@@ -50,26 +48,27 @@ public class RemovedAssetsList extends PersistableList<RemovedAsset> implements 
 
     @Override
     public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setRemovedAssetList(getBuilder()).build();
+        return PB.PersistableEnvelope.newBuilder().setMyProofOfBurnList(getBuilder()).build();
     }
 
-    public PB.RemovedAssetList.Builder getBuilder() {
-        return PB.RemovedAssetList.newBuilder()
-                .addAllRemovedAsset(getList().stream()
-                        .map(RemovedAsset::toProtoMessage)
+    private PB.MyProofOfBurnList.Builder getBuilder() {
+        return PB.MyProofOfBurnList.newBuilder()
+                .addAllMyProofOfBurn(getList().stream()
+                        .map(MyProofOfBurn::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static RemovedAssetsList fromProto(PB.RemovedAssetList proto) {
-        return new RemovedAssetsList(new ArrayList<>(proto.getRemovedAssetList().stream()
-                .map(RemovedAsset::fromProto)
+    public static MyProofOfBurnList fromProto(PB.MyProofOfBurnList proto) {
+        return new MyProofOfBurnList(new ArrayList<>(proto.getMyProofOfBurnList().stream()
+                .map(MyProofOfBurn::fromProto)
                 .collect(Collectors.toList())));
     }
 
     @Override
     public String toString() {
-        return "List of tickerSymbols in RemovedAssetList: " + getList().stream()
-                .map(RemovedAsset::getTickerSymbol)
+        return "List of txIds in MyProofOfBurnList: " + getList().stream()
+                .map(MyProofOfBurn::getTxId)
                 .collect(Collectors.toList());
     }
 }
+

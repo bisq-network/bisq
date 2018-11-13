@@ -21,6 +21,12 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
 
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
+import bisq.asset.Token;
+import bisq.asset.coins.BSQ;
+
 import bisq.common.app.DevEnv;
 
 import java.util.ArrayList;
@@ -32,19 +38,11 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
-
-
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-import bisq.asset.Token;
-import bisq.asset.coins.BSQ;
 
 @Slf4j
 public class CurrencyUtil {
@@ -53,7 +51,6 @@ public class CurrencyUtil {
         setBaseCurrencyCode(BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
     }
 
-    @Getter
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
@@ -110,24 +107,17 @@ public class CurrencyUtil {
     }
 
     private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
-        List<CryptoCurrency> result = assetRegistry.stream()
+        return getSortedAssetStream()
+                .map(CurrencyUtil::assetToCryptoCurrency)
+                .collect(Collectors.toList());
+    }
+
+    public static Stream<Asset> getSortedAssetStream() {
+        return assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
                 .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
                 .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()))
-                .map(CurrencyUtil::assetToCryptoCurrency)
-                .sorted(TradeCurrency::compareTo)
-                .collect(Collectors.toList());
-
-        // Util for printing all altcoins for adding to FAQ page
-       /* StringBuilder sb = new StringBuilder();
-        result.stream().forEach(e -> sb.append("<li>&#8220;")
-                .append(e.getCode())
-                .append("&#8221;, &#8220;")
-                .append(e.getName())
-                .append("&#8221;</li>")
-                .append("\n"));
-        log.info(sb.toString());*/
-        return result;
+                .sorted(Comparator.comparing(Asset::getName));
     }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
@@ -488,9 +478,9 @@ public class CurrencyUtil {
     }
 
     // Excludes all assets which got removed by DAO voting
-    public static List<CryptoCurrency> getWhiteListedSortedCryptoCurrencies(AssetService assetService) {
+    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService) {
         return getAllSortedCryptoCurrencies().stream()
-                .filter(e -> !assetService.isAssetRemoved(e.getCode()))
+                .filter(e -> assetService.isActive(e.getCode()))
                 .collect(Collectors.toList());
     }
 }

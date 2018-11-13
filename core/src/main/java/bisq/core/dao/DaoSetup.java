@@ -17,6 +17,7 @@
 
 package bisq.core.dao;
 
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
@@ -25,6 +26,7 @@ import bisq.core.dao.governance.bond.reputation.MyBondedReputationRepository;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -64,6 +66,8 @@ public class DaoSetup {
                     BondedRolesRepository bondedRolesRepository,
                     MyReputationListService myReputationListService,
                     MyBondedReputationRepository myBondedReputationRepository,
+                    AssetService assetService,
+                    ProofOfBurnService proofOfBurnService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService) {
 
@@ -83,6 +87,8 @@ public class DaoSetup {
         daoSetupServices.add(bondedRolesRepository);
         daoSetupServices.add(myReputationListService);
         daoSetupServices.add(myBondedReputationRepository);
+        daoSetupServices.add(assetService);
+        daoSetupServices.add(proofOfBurnService);
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(bsqNodeProvider.getBsqNode());

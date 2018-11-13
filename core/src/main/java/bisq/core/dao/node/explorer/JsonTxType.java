@@ -33,7 +33,9 @@ enum JsonTxType {
     BLIND_VOTE("Blind vote"),
     VOTE_REVEAL("Vote reveal"),
     LOCKUP("Lockup"),
-    UNLOCK("Unlock");
+    UNLOCK("Unlock"),
+    ASSET_LISTING_FEE("Asset listing fee"),
+    PROOF_OF_BURN("Proof of burn");
 
     @Getter
     private String displayString;

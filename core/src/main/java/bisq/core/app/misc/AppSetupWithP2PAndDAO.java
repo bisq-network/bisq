@@ -19,11 +19,11 @@ package bisq.core.app.misc;
 
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -56,7 +56,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyBlindVoteListService myBlindVoteListService,
                                  MyProposalListService myProposalListService,
                                  MyReputationListService myReputationListService,
-                                 AssetService assetService,
+                                 MyProofOfBurnListService myProofOfBurnListService,
                                  @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         super(encryptionService,
                 keyRing,
@@ -74,7 +74,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
             persistedDataHosts.add(myBlindVoteListService);
             persistedDataHosts.add(myProposalListService);
             persistedDataHosts.add(myReputationListService);
-            persistedDataHosts.add(assetService);
+            persistedDataHosts.add(myProofOfBurnListService);
         }
     }
 

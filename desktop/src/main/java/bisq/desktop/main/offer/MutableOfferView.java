@@ -250,7 +250,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
             updatePriceToggle();
 
-            if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
+            if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) && !DevEnv.isDevMode()) {
                 new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
                         .information(Res.get("popup.roundedFiatValues.msg", model.tradeCurrencyCode.get()))
                         .dontShowAgainId("FiatValuesRoundedWarning")

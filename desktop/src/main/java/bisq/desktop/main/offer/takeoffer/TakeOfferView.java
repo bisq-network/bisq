@@ -296,7 +296,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 showNextStepAfterAmountIsSet();
         }
 
-        if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode())) {
+        if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode()) && !DevEnv.isDevMode()) {
             new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
                     .information(Res.get("popup.roundedFiatValues.msg", model.getOffer().getCurrencyCode()))
                     .dontShowAgainId("FiatValuesRoundedWarning")

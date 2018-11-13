@@ -182,10 +182,6 @@ public class DaoFacade implements DaoSetupService {
 
     @Override
     public void addListeners() {
-    }
-
-    @Override
-    public void start() {
         daoStateService.addBsqStateListener(new DaoStateListener() {
             @Override
             public void onNewBlockHeight(int blockHeight) {
@@ -201,6 +197,10 @@ public class DaoFacade implements DaoSetupService {
             public void onParseBlockChainComplete() {
             }
         });
+    }
+
+    @Override
+    public void start() {
     }
 
 

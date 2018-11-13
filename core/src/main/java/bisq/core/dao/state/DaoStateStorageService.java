@@ -84,7 +84,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     public void resetDaoState(Runnable resultHandler) {
         persist(new DaoState(), 1);
-        UserThread.runAfter(resultHandler::run, 300, TimeUnit.MILLISECONDS);
+        UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
     }
 
 

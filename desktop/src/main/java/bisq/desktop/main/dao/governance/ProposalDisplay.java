@@ -338,10 +338,8 @@ public class ProposalDisplay {
                         Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
-                List<Asset> assetList = CurrencyUtil.getAssetRegistry().stream()
+                List<Asset> assetList = CurrencyUtil.getSortedAssetStream()
                         .filter(e -> !e.getTickerSymbol().equals("BSQ"))
-                        .filter(e -> !e.getTickerSymbol().equals("BTC"))
-                        .filter(e -> CurrencyUtil.assetMatchesNetwork(e, BaseCurrencyNetwork.BTC_MAINNET))
                         .collect(Collectors.toList());
                 assetComboBox.setItems(FXCollections.observableArrayList(assetList));
                 assetComboBox.setConverter(new StringConverter<>() {
