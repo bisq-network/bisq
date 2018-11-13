@@ -39,6 +39,7 @@ configure(subprojects) {
     repositories {
         jcenter()
         maven {url 'https://jitpack.io' }
+        maven {url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/7.5/release/' }
     }
 
     dependencies {
