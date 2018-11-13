@@ -115,7 +115,8 @@ public class TxOutputParser {
                 // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
                 // output to not be BSQ output at all
                 handleUnlockBondTx(tempTxOutput);
-            } else if (isBurnFeeTxOutput(tempTxOutput)) {
+            } else if (isBtcOutputOfBurnFeeTx(tempTxOutput)) {
+                // In case we have the opReturn for a burn fee tx all outputs after 1st output are considered BTC
                 handleBtcOutput(tempTxOutput, index);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
                 handleBsqOutput(tempTxOutput, index, txOutputValue);
@@ -172,7 +173,7 @@ public class TxOutputParser {
         bsqOutputFound = true;
     }
 
-    private boolean isBurnFeeTxOutput(TempTxOutput tempTxOutput) {
+    private boolean isBtcOutputOfBurnFeeTx(TempTxOutput tempTxOutput) {
         // If we get a asset listing or proof of burn tx we have only 1 BSQ output and if the
         // burned amount is larger than the miner fee we might have a BTC output for receiving the burned funds.
         // If the burned funds are less than the miner fee a BTC input is used for miner fee and a BTC change output for
