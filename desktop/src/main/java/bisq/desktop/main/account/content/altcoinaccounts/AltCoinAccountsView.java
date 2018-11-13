@@ -137,6 +137,11 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                             .useIUnderstandButton()
                             .show();
                     break;
+                case "DRGL":
+                    new Popup<>().information(Res.get("account.altcoin.popup.drgl.msg"))
+                            .useIUnderstandButton()
+                            .show();
+                    break;
                 case "ZEC":
                     new Popup<>().information(Res.get("account.altcoin.popup.ZEC.msg", "ZEC"))
                             .useIUnderstandButton()

@@ -17,8 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.locale.CurrencyUtil;
-
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -372,7 +370,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
-        return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();
+        return getBaseCurrencyCode().equals("BTC") ? getCounterCurrencyCode() : getBaseCurrencyCode();
     }
 
     @Override

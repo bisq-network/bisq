@@ -66,6 +66,7 @@ public class AssetTradeActivityCheck {
 
         Map<String, Tuple2<Long, Integer>> tradeStatMap = new HashMap<>();
         tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> !e.getBaseCurrency().equals("BTC"))
                 .filter(e -> CurrencyUtil.isCryptoCurrency(e.getBaseCurrency()))
                 .filter(e -> e.getTradeDate().getTime() > compareDate.getTime())
                 .forEach(e -> {
