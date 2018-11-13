@@ -136,9 +136,7 @@ public class AccountAgeWitnessService {
     }
 
     private void addToMap(AccountAgeWitness accountAgeWitness) {
-        //log.debug("addToMap hash=" + Utilities.bytesAsHexString(accountAgeWitness.getHash()));
-        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
-            accountAgeWitnessMap.put(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
+        accountAgeWitnessMap.putIfAbsent(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
     }
 
 
