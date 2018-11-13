@@ -140,7 +140,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
 
     public Transaction burn(String preImageAsString, long amount) throws InsufficientMoneyException, TxException {
         try {
-            // We create a prepared Bsq Tx for the listing fee.
+            // We create a prepared Bsq Tx for the burn amount
             final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(Coin.valueOf(amount));
             byte[] hash = getHashFromPreImage(preImageAsString);
             byte[] opReturnData = ProofOfBurnConsensus.getOpReturnData(hash);
