@@ -26,7 +26,6 @@ import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
 import bisq.desktop.util.CurrencyListItem;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
@@ -90,6 +89,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
+
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -443,7 +444,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private HBox getToolBox() {
 
-        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 10);
+        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
+                Res.get("list.currency.select"));
         currencyComboBox = currencyComboBoxTuple.third;
         currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
@@ -468,7 +470,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         HBox hBox = new HBox();
         hBox.setSpacing(0);
-        hBox.setPadding(new Insets(5, 9, -10, 10));
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(currencyComboBoxTuple.first, spacer, label, year, month, week, day, hour, minute10);
         return hBox;

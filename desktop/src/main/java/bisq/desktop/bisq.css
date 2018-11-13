@@ -144,6 +144,9 @@ bg color of non edit textFields: fafafa
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
     -bs-sell-transparent: rgba(215, 48, 48, 0.3); /* 1 usages */
 
+    -bs-volume-transparent: rgba(0, 134, 198, 0.3);
+    -bs-candle-stick-average-line: -bs-rd-message-bubble;
+
     -bs-cancel: -bs-bg-grey; /* 5 usages */
     -bs-cancel-focus: derive(-bs-cancel, -50%); /* 1 usages */
     -bs-cancel-hover: derive(-bs-cancel, -10%); /* 1 usages */
@@ -1587,7 +1590,6 @@ textfield */
     -fx-font-size: 0.769em;
     -fx-alignment: center;
 }
-
 /********************************************************************************************************************
  *                                                                                                                  *
  * Highlight buttons                                                                                                  *

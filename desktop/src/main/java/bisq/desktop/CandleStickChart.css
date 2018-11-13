@@ -39,12 +39,8 @@
 }
 
 .candlestick-average-line {
-    -fx-stroke: #00b2ff;
+    -fx-stroke: -bs-candle-stick-average-line;
     -fx-stroke-width: 2px;
-}
-
-.candlestick-candle {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
 }
 
 .candlestick-line {
@@ -54,19 +50,16 @@
 
 .candlestick-bar {
     -fx-padding: 5;
-    -demo-bar-fill: #e81a00;
-    -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
-    linear-gradient(derive(-demo-bar-fill, 100%), derive(-demo-bar-fill, 10%)),
-    linear-gradient(derive(-demo-bar-fill, 30%), derive(-demo-bar-fill, -10%));
-    -fx-background-insets: 0, 1, 2;
+    -demo-bar-fill: -bs-sell;
+    -fx-background-color: -demo-bar-fill;
 }
 
 .candlestick-bar.close-above-open {
-    -demo-bar-fill: #1bff06;
+    -demo-bar-fill: -bs-buy;
 }
 
 .candlestick-bar.open-above-close {
-    -demo-bar-fill: #e81a00;
+    -demo-bar-fill: -bs-sell;
 }
 
 .candlestick-bar.empty {
@@ -75,13 +68,8 @@
 
 .volume-bar {
     -fx-padding: 5;
-    -demo-bar-fill: #91b1cc;
-    -fx-background-color: #91b1cc;
+    -fx-background-color: -bs-volume-transparent;
     -fx-background-insets: 0, 1, 2;
-}
-
-.volume-bar {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
 }
 
 .chart-alternative-row-fill {
