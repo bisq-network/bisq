@@ -239,12 +239,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         Tuple2<Label, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
         availableBalanceBox.first.textProperty().bind(model.getAvailableBalance());
+        availableBalanceBox.first.setPrefWidth(100);
+        availableBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.available")));
 
-        Tuple2<Label, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
+        Tuple2<Label, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved.short"));
         reservedBalanceBox.first.textProperty().bind(model.getReservedBalance());
+        reservedBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.reserved")));
 
-        Tuple2<Label, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
+        Tuple2<Label, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked.short"));
         lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
+        lockedBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.locked")));
 
         HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
                 sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
@@ -262,7 +266,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox priceAndBalance = new HBox(marketPriceBox.second, getNavigationSeparator(), availableBalanceBox.second,
                 getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second);
-        priceAndBalance.setMaxWidth(520);
         priceAndBalance.setMaxHeight(41);
 
         priceAndBalance.setAlignment(Pos.CENTER);
@@ -349,15 +352,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     private Tuple2<Label, VBox> getBalanceBox(String text) {
         Label balanceDisplay = new Label();
-        balanceDisplay.setPrefWidth(93); //140
         balanceDisplay.getStyleClass().add("nav-balance-display");
 
-        Label label = new AutoTooltipLabel(text);
+        Label label = new Label(text);
         label.getStyleClass().add("nav-balance-label");
+        label.maxWidthProperty().bind(balanceDisplay.widthProperty());
         label.setPadding(new Insets(0, 0, 0, 0));
-        label.setPrefWidth(balanceDisplay.getPrefWidth());
         VBox vBox = new VBox();
-        vBox.setAlignment(Pos.CENTER);
+        vBox.setAlignment(Pos.CENTER_LEFT);
         vBox.getChildren().addAll(balanceDisplay, label);
         return new Tuple2<>(balanceDisplay, vBox);
     }
@@ -384,8 +386,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(165);
-        priceComboBox.setMinWidth(165);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setPadding(new Insets(0, 0, -4, 0));

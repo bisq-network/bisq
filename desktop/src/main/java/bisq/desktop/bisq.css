@@ -688,8 +688,8 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-rd-grey-background;
     -fx-background-radius: 3;
     -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
-    -fx-pref-width: 585;
     -fx-pref-height: 41;
+    -fx-padding: 0 10 0 0;
 }
 
 .nav-price-balance .separator:vertical .line {
