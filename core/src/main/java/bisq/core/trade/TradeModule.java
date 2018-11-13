@@ -22,6 +22,7 @@ import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AccountAgeWitnessStorageService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatistics2StorageService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -50,6 +51,7 @@ public class TradeModule extends AppModule {
         bind(AccountAgeWitnessService.class).in(Singleton.class);
         bind(ReferralIdService.class).in(Singleton.class);
         bind(AccountAgeWitnessStorageService.class).in(Singleton.class);
+        bind(AssetTradeActivityCheck.class).in(Singleton.class);
         bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(environment.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));
     }
 }

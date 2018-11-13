@@ -26,6 +26,10 @@ import java.security.NoSuchAlgorithmException;
 
 import java.util.Arrays;
 
+/**
+ * @deprecated for insufficent trading
+ */
+@Deprecated(since = "0.9.0")
 public class Koto extends Coin {
 
     public Koto() {

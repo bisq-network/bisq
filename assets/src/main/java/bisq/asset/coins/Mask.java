@@ -18,11 +18,10 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.CryptonoteAddressValidator;
 
-public class LBRY extends Coin {
-
-    public LBRY() {
-        super("LBRY Credits", "LBC", new DefaultAddressValidator());
+public class Mask extends Coin {
+    public Mask() {
+        super("Mask", "MASK", new CryptonoteAddressValidator("M", "bT"));
     }
 }

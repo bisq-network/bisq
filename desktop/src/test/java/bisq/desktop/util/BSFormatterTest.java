@@ -114,7 +114,7 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatVolume() {
-        assertEquals("    1.00", formatter.formatVolume(make(btcUsdOffer), true, 8));
+        assertEquals("1.00", formatter.formatVolume(make(btcUsdOffer), true, 4));
         assertEquals("100.00", formatter.formatVolume(make(usdVolume)));
         assertEquals("1774.62", formatter.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
     }
