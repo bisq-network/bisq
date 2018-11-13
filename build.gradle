@@ -36,12 +36,6 @@ configure(subprojects) {
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
 
-    repositories {
-        jcenter()
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/7.5/release/' }
-    }
-
     dependencies {
         testCompile 'junit:junit:4.12'
     }
