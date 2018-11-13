@@ -295,7 +295,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-rd-white;
 }
 
-.compact-button, .table-cell .jfx-button {
+.compact-button, .table-cell .jfx-button, .action-button.compact-button {
     -fx-padding: 0 10 0 10;
 }
 
