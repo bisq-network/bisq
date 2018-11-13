@@ -37,8 +37,8 @@ configure(subprojects) {
     }
 
     repositories {
-	jcenter()
-	maven {url 'https://jitpack.io' }
+        jcenter()
+        maven {url 'https://jitpack.io' }
     }
 
     dependencies {
@@ -124,7 +124,7 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.4.7fix') {
+        compile('com.github.JesusMcCloud.netlayer:tor.native:5301395f29e41c5d1094c4d264ab016d354c2983') {
             exclude(module: 'slf4j-api')
         }
         compile('org.apache.httpcomponents:httpclient:4.5.3') {
