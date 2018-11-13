@@ -25,16 +25,19 @@ import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldWithVBox;
 
 public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrationRegistrationWindow> {
     private final boolean useDevPrivilegeKeys;
@@ -109,8 +112,9 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     }
 
     private void addInputFields() {
-        final Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addTopLabelInputTextField(gridPane,
+        final Tuple3<Label, InputTextField, VBox> labelInputTextFieldTuple2 = addTopLabelInputTextFieldWithVBox(gridPane,
                 ++rowIndex, Res.get("shared.enterPrivKey"), 3);
+        GridPane.setColumnSpan(labelInputTextFieldTuple2.third, 2);
         Label label = labelInputTextFieldTuple2.first;
         label.setWrapText(true);
 
