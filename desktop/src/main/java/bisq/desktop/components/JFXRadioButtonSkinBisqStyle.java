@@ -188,6 +188,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
         final double labelHeight = Math.min(radioButton.prefHeight(labelWidth), h);
         final double maxHeight = Math.max(contHeight, labelHeight);
         final double xOffset = computeXOffset(w, labelWidth + contWidth, radioButton.getAlignment().getHpos()) + x;
+
         final double yOffset = computeYOffset(h, maxHeight, radioButton.getAlignment().getVpos()) + x + 5;
 
         layoutLabelInArea(xOffset + contWidth + padding / 3, yOffset, labelWidth, maxHeight, radioButton.getAlignment());
@@ -207,7 +208,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
         final double ripplerWidth = width + 2 * padding;
         final double ripplerHeight = height + 2 * padding;
         rippler.resizeRelocate((width / 2 + xOffset) - ripplerWidth / 2,
-                (height / 2 + xOffset) - ripplerHeight / 2,
+                (height / 2 + yOffset) + 2 - ripplerHeight / 2,
                 ripplerWidth, ripplerHeight);
     }
 

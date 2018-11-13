@@ -67,6 +67,7 @@ import javafx.util.StringConverter;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
@@ -148,7 +149,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         root.getChildren().add(gridPane);
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
-        TextField pubKeyTextField = FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
+        TextField pubKeyTextField = addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);

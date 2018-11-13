@@ -530,11 +530,18 @@ public class FormBuilder {
 
     public static Tuple2<Label, InputTextField> addTopLabelInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
 
+        final Tuple3<Label, InputTextField, VBox> topLabelWithVBox = addTopLabelInputTextFieldWithVBox(gridPane, rowIndex, title, top);
+
+        return new Tuple2<>(topLabelWithVBox.first, topLabelWithVBox.second);
+    }
+
+    public static Tuple3<Label, InputTextField, VBox> addTopLabelInputTextFieldWithVBox(GridPane gridPane, int rowIndex, String title, double top) {
+
         InputTextField inputTextField = new InputTextField();
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, top);
 
-        return new Tuple2<>(topLabelWithVBox.first, inputTextField);
+        return new Tuple3<>(topLabelWithVBox.first, inputTextField, topLabelWithVBox.second);
     }
 
 

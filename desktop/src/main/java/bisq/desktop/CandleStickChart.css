@@ -39,34 +39,38 @@
 }
 
 .candlestick-average-line {
-    -fx-stroke: #00b2ff;
-    -fx-stroke-width: 2px;
-}
-
-.candlestick-candle {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
+    -fx-stroke: -bs-candle-stick-average-line;
+    -fx-stroke-width: 1px;
 }
 
 .candlestick-line {
-    -fx-stroke: #666666;
-    -fx-stroke-width: 3px;
+    -stick-line-fill: -bs-sell;
+    -fx-stroke: -stick-line-fill;
+    -fx-stroke-width: 1x;
+}
+
+.candlestick-line.close-above-open {
+    -stick-line-fill: -bs-candle-stick-won;
+}
+
+.candlestick-line.open-above-close {
+    -stick-line-fill: -bs-candle-stick-loss;
 }
 
 .candlestick-bar {
     -fx-padding: 5;
-    -demo-bar-fill: #e81a00;
+    -demo-bar-fill: -bs-sell;
     -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
-    linear-gradient(derive(-demo-bar-fill, 100%), derive(-demo-bar-fill, 10%)),
-    linear-gradient(derive(-demo-bar-fill, 30%), derive(-demo-bar-fill, -10%));
-    -fx-background-insets: 0, 1, 2;
+    -demo-bar-fill;
+    -fx-background-insets: 0, 1;
 }
 
 .candlestick-bar.close-above-open {
-    -demo-bar-fill: #1bff06;
+    -demo-bar-fill: -bs-candle-stick-won;
 }
 
 .candlestick-bar.open-above-close {
-    -demo-bar-fill: #e81a00;
+    -demo-bar-fill: -bs-candle-stick-loss;
 }
 
 .candlestick-bar.empty {
@@ -75,13 +79,8 @@
 
 .volume-bar {
     -fx-padding: 5;
-    -demo-bar-fill: #91b1cc;
-    -fx-background-color: #91b1cc;
-    -fx-background-insets: 0, 1, 2;
-}
-
-.volume-bar {
-    -fx-effect: dropshadow(two-pass-box, rgba(0, 0, 0, 0.4), 10, 0.0, 2, 4);
+    -fx-background-color: -bs-volume-transparent;
+    -fx-background-insets: 0;
 }
 
 .chart-alternative-row-fill {
@@ -91,5 +90,5 @@
 }
 
 .chart-plot-background {
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-rd-white;
 }

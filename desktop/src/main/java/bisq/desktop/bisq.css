@@ -125,6 +125,7 @@ bg color of non edit textFields: fafafa
     -bs-rd-separator-dark: #D5E0D6;
     -bs-rd-error-red: #dd0000; /* 5 usages */
     -bs-rd-message-bubble: #0086C6;
+    -bs-toggle-selected: #7B7B7B;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-medium-light;
@@ -143,6 +144,11 @@ bg color of non edit textFields: fafafa
     -bs-sell-focus: derive(-bs-sell, -50%); /* 2 usages */
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
     -bs-sell-transparent: rgba(215, 48, 48, 0.3); /* 1 usages */
+
+    -bs-volume-transparent: rgba(0, 134, 198, 0.3);
+    -bs-candle-stick-average-line: -bs-rd-message-bubble;
+    -bs-candle-stick-loss: #FE3001;
+    -bs-candle-stick-won: #20B221;
 
     -bs-cancel: -bs-bg-grey; /* 5 usages */
     -bs-cancel-focus: derive(-bs-cancel, -50%); /* 1 usages */
@@ -289,7 +295,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-rd-white;
 }
 
-.compact-button, .table-cell .jfx-button {
+.compact-button, .table-cell .jfx-button, .action-button.compact-button {
     -fx-padding: 0 10 0 10;
 }
 
@@ -527,6 +533,10 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -jfx-default-color;
 }
 
+.date-picker-popup .month-year-pane {
+    -fx-background-color: -bs-rd-green-dark;
+}
+
 .scroll-bar {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
@@ -678,8 +688,8 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-rd-grey-background;
     -fx-background-radius: 3;
     -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
-    -fx-pref-width: 585;
     -fx-pref-height: 41;
+    -fx-padding: 0 10 0 0;
 }
 
 .nav-price-balance .separator:vertical .line {
@@ -1583,7 +1593,6 @@ textfield */
     -fx-font-size: 0.769em;
     -fx-alignment: center;
 }
-
 /********************************************************************************************************************
  *                                                                                                                  *
  * Highlight buttons                                                                                                  *
@@ -1707,24 +1716,39 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-.interval-selector {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-    -fx-padding: 8 14 8 14;
-}
-
-.interval-selector .text {
-    -fx-fill: -bs-rd-font-light;
-}
-
-.interval-selector:selected {
-    -fx-background-color: -bs-rd-nav-selected;
-    -fx-border-radius: 4;
+#toggle-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-background-radius: 4 0 0 4;
+    -fx-background-color: -bs-rd-white;
     -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
 }
 
-.interval-selector:selected .text {
-    -fx-fill: -bs-rd-white;
+#toggle-center {
+    -fx-border-radius: 0;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-insets: 0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: -bs-rd-white;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-center:selected, #toggle-left:selected, #toggle-right:selected {
+    -fx-text-fill: -bs-rd-white;
+    -fx-background-color: -bs-toggle-selected;
+}
+
+#toggle-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-border-width: 0;
+    -fx-background-radius: 0 4 4 0;
+    -fx-background-color: -bs-rd-white;
+    -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
 }
 
 /********************************************************************************************************************
