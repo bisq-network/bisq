@@ -455,9 +455,12 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.setPadding(new Insets(64, 64, 64, 64));
         gridPane.setPrefWidth(width);
 
-        ColumnConstraints columnConstraints = new ColumnConstraints();
-        columnConstraints.setPercentWidth(100);
-        gridPane.getColumnConstraints().add(columnConstraints);
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHalignment(HPos.RIGHT);
+        columnConstraints1.setHgrow(Priority.SOMETIMES);
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
     }
 
     protected void blurAgain() {
