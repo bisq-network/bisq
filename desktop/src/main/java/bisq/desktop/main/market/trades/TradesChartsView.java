@@ -38,6 +38,7 @@ import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -91,6 +92,7 @@ import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
+import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
@@ -457,31 +459,33 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label label = new AutoTooltipLabel("Interval:");
-        label.setPadding(new Insets(0, 4, 0, 0));
-
         toggleGroup = new ToggleGroup();
         ToggleButton year = getToggleButton(Res.get("time.year"), TradesChartsViewModel.TickUnit.YEAR, toggleGroup, "toggle-left");
-        ToggleButton month = getToggleButton(Res.get("time.month"), TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-left");
+        ToggleButton month = getToggleButton(Res.get("time.month"), TradesChartsViewModel.TickUnit.MONTH, toggleGroup, "toggle-center");
         ToggleButton week = getToggleButton(Res.get("time.week"), TradesChartsViewModel.TickUnit.WEEK, toggleGroup, "toggle-center");
         ToggleButton day = getToggleButton(Res.get("time.day"), TradesChartsViewModel.TickUnit.DAY, toggleGroup, "toggle-center");
         ToggleButton hour = getToggleButton(Res.get("time.hour"), TradesChartsViewModel.TickUnit.HOUR, toggleGroup, "toggle-center");
-        ToggleButton minute10 = getToggleButton(Res.get("time.minute10"), TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-center");
+        ToggleButton minute10 = getToggleButton(Res.get("time.minute10"), TradesChartsViewModel.TickUnit.MINUTE_10, toggleGroup, "toggle-right");
+
+        HBox toggleBox = new HBox();
+        toggleBox.setSpacing(0);
+        toggleBox.setAlignment(Pos.CENTER_LEFT);
+        toggleBox.getChildren().addAll(year, month, week, day, hour, minute10);
+
+        final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(Res.get("shared.interval"), toggleBox);
 
         HBox hBox = new HBox();
         hBox.setSpacing(0);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(currencyComboBoxTuple.first, spacer, label, year, month, week, day, hour, minute10);
+        hBox.getChildren().addAll(currencyComboBoxTuple.first, spacer, topLabelWithVBox.second);
         return hBox;
     }
 
     private ToggleButton getToggleButton(String label, TradesChartsViewModel.TickUnit tickUnit, ToggleGroup toggleGroup, String style) {
         ToggleButton toggleButton = new AutoTooltipToggleButton(label);
-        toggleButton.setPadding(new Insets(0, 5, 0, 5));
         toggleButton.setUserData(tickUnit);
         toggleButton.setToggleGroup(toggleGroup);
-        toggleButton.getStyleClass().add("interval-selector");
-//        toggleButton.setId(style);
+        toggleButton.setId(style);
         return toggleButton;
     }
 

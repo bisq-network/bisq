@@ -40,26 +40,37 @@
 
 .candlestick-average-line {
     -fx-stroke: -bs-candle-stick-average-line;
-    -fx-stroke-width: 2px;
+    -fx-stroke-width: 1px;
 }
 
 .candlestick-line {
-    -fx-stroke: #666666;
-    -fx-stroke-width: 3px;
+    -stick-line-fill: -bs-sell;
+    -fx-stroke: -stick-line-fill;
+    -fx-stroke-width: 1x;
+}
+
+.candlestick-line.close-above-open {
+    -stick-line-fill: -bs-candle-stick-won;
+}
+
+.candlestick-line.open-above-close {
+    -stick-line-fill: -bs-candle-stick-loss;
 }
 
 .candlestick-bar {
     -fx-padding: 5;
     -demo-bar-fill: -bs-sell;
-    -fx-background-color: -demo-bar-fill;
+    -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
+    -demo-bar-fill;
+    -fx-background-insets: 0, 1;
 }
 
 .candlestick-bar.close-above-open {
-    -demo-bar-fill: -bs-buy;
+    -demo-bar-fill: -bs-candle-stick-won;
 }
 
 .candlestick-bar.open-above-close {
-    -demo-bar-fill: -bs-sell;
+    -demo-bar-fill: -bs-candle-stick-loss;
 }
 
 .candlestick-bar.empty {
@@ -69,7 +80,7 @@
 .volume-bar {
     -fx-padding: 5;
     -fx-background-color: -bs-volume-transparent;
-    -fx-background-insets: 0, 1, 2;
+    -fx-background-insets: 0;
 }
 
 .chart-alternative-row-fill {
@@ -79,5 +90,5 @@
 }
 
 .chart-plot-background {
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-rd-white;
 }
