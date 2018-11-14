@@ -17,6 +17,7 @@
 
 package bisq.core.dao;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -212,8 +213,8 @@ public class DaoModule extends AppModule {
                 .to(environment.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
         bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
                 .to(environment.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
-        Boolean daoActivated = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
-        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(daoActivated);
+
+        bind(Boolean.class).annotatedWith(Names.named(DaoOptionKeys.DAO_ACTIVATED)).toInstance(BisqEnvironment.isDaoActivated(environment));
     }
 }
 
