@@ -46,7 +46,9 @@ import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @Slf4j
 public class WesternUnionForm extends PaymentMethodForm {
@@ -85,23 +87,23 @@ public class WesternUnionForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
 
-        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 westernUnionAccountPayload.getHolderName());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.city"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.city"),
                 westernUnionAccountPayload.getCity()).second.setMouseTransparent(false);
         if (BankUtil.isStateRequired(westernUnionAccountPayload.getCountryCode()))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
                     westernUnionAccountPayload.getState()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 westernUnionAccountPayload.getEmail());
         addLimitations();
     }

@@ -434,6 +434,10 @@ public class FormBuilder {
     // Label  + TextArea
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple2<Label, TextArea> addCompactTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
+        return addTopLabelTextArea(gridPane, rowIndex, title, prompt, -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
         return addTopLabelTextArea(gridPane, rowIndex, title, prompt, 0);
     }

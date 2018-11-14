@@ -95,16 +95,16 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 chaseQuickPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 chaseQuickPayAccount.getHolderName());
-        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 chaseQuickPayAccount.getEmail()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

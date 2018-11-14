@@ -49,6 +49,7 @@ import javafx.util.StringConverter;
 
 import java.util.Optional;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
@@ -127,15 +128,15 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
-        Tuple3<Label, TextField, VBox> tuple2 = FormBuilder.addTopLabelTextField(gridPane, ++gridRow,
+        Tuple3<Label, TextField, VBox> tuple2 = addCompactTopLabelTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"), cryptoCurrencyAccount.getAddress());
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 nameAndCode);
         addLimitations();
     }
