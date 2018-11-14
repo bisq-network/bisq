@@ -1385,6 +1385,10 @@ public class FormBuilder {
         return addButton(gridPane, rowIndex, title, top, true);
     }
 
+    public static Button addPrimaryActionButtonAFterGroup(GridPane gridPane, int rowIndex, String title) {
+        return addPrimaryActionButton(gridPane, rowIndex, title, 15);
+    }
+
     public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {
         return addButton(gridPane, rowIndex, title, top, false);
     }

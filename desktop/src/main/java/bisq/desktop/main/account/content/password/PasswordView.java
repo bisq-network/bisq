@@ -85,7 +85,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         headline = FormBuilder.addTitledGroupBg(root, gridRow, 3, "");
-        passwordField = addPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE);
+        passwordField = addPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.TWICE_FIRST_ROW_DISTANCE);
         final RequiredFieldValidator requiredFieldValidator = new RequiredFieldValidator();
         passwordField.getValidators().addAll(requiredFieldValidator, passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> {
@@ -146,9 +146,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     new Popup<>()
                             .feedback(Res.get("password.walletDecrypted"))
                             .show();
-                    passwordField.clear();
-                    repeatedPasswordField.clear();
-                    walletsManager.backupWallets();
+                    backupWalletAndResetFields();
                 } else {
                     pwButton.setDisable(false);
                     new Popup<>()
@@ -161,10 +159,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     new Popup<>()
                             .feedback(Res.get("password.walletEncrypted"))
                             .show();
-                    passwordField.clear();
-                    repeatedPasswordField.clear();
+                    backupWalletAndResetFields();
                     walletsManager.clearBackup();
-                    walletsManager.backupWallets();
                 } catch (Throwable t) {
                     new Popup<>()
                             .warning(Res.get("password.walletEncryptionFailed"))
@@ -173,6 +169,12 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             }
             setText();
         });
+    }
+
+    private void backupWalletAndResetFields() {
+        passwordField.clear();
+        repeatedPasswordField.clear();
+        walletsManager.backupWallets();
     }
 
     private void setText() {

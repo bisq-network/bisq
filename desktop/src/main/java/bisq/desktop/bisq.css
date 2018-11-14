@@ -1162,7 +1162,7 @@ textfield */
 }
 
 /* validation */
-#validation-error {
+.validation-error {
     -fx-text-fill: -bs-red;
 }
 
