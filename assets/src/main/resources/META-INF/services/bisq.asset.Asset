@@ -76,6 +76,7 @@ bisq.asset.coins.ZenCash
 bisq.asset.coins.Zero
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.EtherStone
+bisq.asset.tokens.GoDigit
 bisq.asset.tokens.GreenBlockCoin
 bisq.asset.tokens.LikeCoin
 bisq.asset.tokens.Pix
