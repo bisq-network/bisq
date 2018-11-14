@@ -175,7 +175,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField;
     protected TitledGroupBg amountTitledGroupBg;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
-    private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener;
+    private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener,
+            tradeFeeVisibleListener;
     private Text xIcon, fakeXIcon;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -599,6 +600,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
         tradeFeeInBsqLabel.textProperty().bind(model.tradeFeeInBsqWithFiat);
         tradeFeeDescriptionLabel.textProperty().bind(model.tradeFeeDescription);
+        tradeFeeInBtcLabel.visibleProperty().bind(model.isTradeFeeVisible);
+        tradeFeeInBsqLabel.visibleProperty().bind(model.isTradeFeeVisible);
+        tradeFeeDescriptionLabel.visibleProperty().bind(model.isTradeFeeVisible);
 
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
@@ -646,6 +650,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBtcLabel.textProperty().unbind();
         tradeFeeInBsqLabel.textProperty().unbind();
         tradeFeeDescriptionLabel.textProperty().unbind();
+        tradeFeeInBtcLabel.visibleProperty().unbind();
+        tradeFeeInBsqLabel.visibleProperty().unbind();
+        tradeFeeDescriptionLabel.visibleProperty().unbind();
 
         // Validation
         amountTextField.validationResultProperty().unbind();
@@ -833,6 +840,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
             setIsCurrencyForMakerFeeBtc(!newValue);
         };
+
+        tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
+            if (DevEnv.isDaoActivated()) {
+                tradeFeeInBtcToggle.setVisible(newValue);
+                tradeFeeInBsqToggle.setVisible(newValue);
+            }
+        };
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
@@ -868,6 +882,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.marketPriceAvailableProperty.addListener(marketPriceAvailableListener);
         model.marketPriceMargin.addListener(marketPriceMarginListener);
         model.volume.addListener(volumeListener);
+        model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
+
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
 
@@ -898,6 +914,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.marketPriceAvailableProperty.removeListener(marketPriceAvailableListener);
         model.marketPriceMargin.removeListener(marketPriceMarginListener);
         model.volume.removeListener(volumeListener);
+        model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
 
@@ -1409,10 +1426,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();
         tradeFeeInBtcToggle.setText("BTC");
+        tradeFeeInBtcToggle.setVisible(false);
         tradeFeeInBtcToggle.setPadding(new Insets(-8, 5, -10, 5));
 
         tradeFeeInBsqToggle = new AutoTooltipSlideToggleButton();
         tradeFeeInBsqToggle.setText("BSQ");
+        tradeFeeInBsqToggle.setVisible(false);
         tradeFeeInBsqToggle.setPadding(new Insets(-9, 5, -9, 5));
 
         VBox tradeFeeToggleButtonBox = new VBox();
