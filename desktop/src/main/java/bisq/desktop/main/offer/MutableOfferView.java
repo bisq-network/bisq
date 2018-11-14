@@ -132,6 +132,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private ScrollPane scrollPane;
     protected GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
+    protected TitledGroupBg amountTitledGroupBg;
     private BusyAnimation waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
@@ -141,18 +142,22 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
-    private Label amountDescriptionLabel,
-            priceCurrencyLabel, priceDescriptionLabel,
-            volumeDescriptionLabel,
-            waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription,
-            buyerSecurityDepositBtcLabel, tradeFeeDescriptionLabel, resultLabel,
-            tradeFeeInBtcLabel, tradeFeeInBsqLabel;
+    private Label amountDescriptionLabel;
+    private Label priceCurrencyLabel;
+    private Label priceDescriptionLabel;
+    private Label volumeDescriptionLabel;
+    private Label waitingForFundsLabel;
+    private Label marketBasedPriceLabel;
+    private Label percentagePriceDescription;
+    private Label tradeFeeDescriptionLabel;
+    private Label resultLabel;
+    private Label tradeFeeInBtcLabel;
+    private Label tradeFeeInBsqLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
-    private VBox currencySelection;
     private ImageView qrCodeImageView;
-    private VBox fixedPriceBox, percentagePriceBox,
+    private VBox currencySelection, fixedPriceBox, percentagePriceBox,
             currencyTextFieldBox;
     private HBox fundingHBox, firstRowHBox, secondRowHBox, placeOfferBox, amountValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, volumeValueCurrencyBox, priceValueCurrencyBox,
@@ -161,7 +166,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private Subscription isWaitingForFundsSubscription, balanceSubscription, cancelButton2StyleSubscription;
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
-            priceAsPercentageFocusedListener;
+            priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
+            tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener;
     private ChangeListener<Number> marketPriceAvailableListener;
@@ -171,12 +177,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
-    private ChangeListener<Boolean> getShowWalletFundedNotificationListener;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField;
-    protected TitledGroupBg amountTitledGroupBg;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
-    private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener,
-            tradeFeeVisibleListener;
     private Text xIcon, fakeXIcon;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -479,6 +481,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void updateOfferElementsStyle() {
+        GridPane.setColumnSpan(firstRowHBox, 1);
+
         final String activeInputStyle = "input-with-border";
         final String readOnlyInputStyle = "input-with-border-readonly";
         amountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
@@ -510,8 +514,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // Temporary deactivate handler as the payment account change can populate a new currency list and causes
         // unwanted selection events (item 0)
         currencyComboBox.setOnAction(null);
-
-        resetValidationOfInputFields();
 
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
@@ -549,19 +551,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
 
         updatePriceToggle();
-    }
-
-    private void resetValidationOfInputFields() {
-        amountTextField.resetValidation();
-        amountTextField.validate();
-        minAmountTextField.resetValidation();
-        minAmountTextField.validate();
-        volumeTextField.resetValidation();
-        volumeTextField.validate();
-        fixedPriceTextField.resetValidation();
-        fixedPriceTextField.validate();
-        marketBasedPriceTextField.resetValidation();
-        marketBasedPriceTextField.validate();
     }
 
     private void onCurrencyComboBoxSelected() {
@@ -970,9 +959,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         columnConstraints1.setMinWidth(200);
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
-        ColumnConstraints columnConstraints3 = new ColumnConstraints();
-        columnConstraints3.setHgrow(Priority.NEVER);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2, columnConstraints3);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
         scrollPane.setContent(gridPane);
     }
 
@@ -1127,10 +1114,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Tuple3<HBox, InputTextField, Label> tuple = getEditableValueBox(
                 Res.get("createOffer.securityDeposit.prompt"));
         buyerSecurityDepositInputTextField = tuple.second;
-        buyerSecurityDepositBtcLabel = tuple.third;
+        Label buyerSecurityDepositBtcLabel = tuple.third;
 
         VBox depositBox = getTradeInputBox(tuple.first, Res.get("createOffer.setDeposit")).second;
-        depositBox.setMaxWidth(300);
+        depositBox.setMaxWidth(310);
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
         editOfferElements.add(buyerSecurityDepositBtcLabel);
@@ -1321,6 +1308,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         firstRowHBox.setSpacing(5);
         firstRowHBox.setAlignment(Pos.CENTER_LEFT);
         firstRowHBox.getChildren().addAll(amountBox, xLabel, percentagePriceBox, resultLabel, volumeBox);
+        GridPane.setColumnSpan(firstRowHBox, 2);
         GridPane.setRowIndex(firstRowHBox, gridRow);
         GridPane.setMargin(firstRowHBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
         gridPane.getChildren().add(firstRowHBox);
