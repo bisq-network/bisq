@@ -18,7 +18,6 @@
 package bisq.core.app;
 
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
@@ -163,10 +162,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         /*
          * JOptSimple does support input parsing. However, doing only options = parser.parse(args) isn't enough to trigger the parsing.
          * The parsing is done when the actual value is going to be retrieved, i.e. options.valueOf(attributename).
-         * 
+         *
          * In order to keep usability high, we work around the aforementioned characteristics by catching the exception below
          * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of a ill-formed parameter and stop execution.
-         * 
+         *
          * Might be changed when the project features more user parameters meant for the user.
          */
         try {
@@ -234,11 +233,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
-
-        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
-        boolean isDaoActivatedOptionSet = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)));
-        DevEnv.setDaoActivated(isDaoActivatedOptionSet || isRegTestOrTestNet);
+        DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
     }
 
     private void setCorruptedDataBaseFilesHandler() {
