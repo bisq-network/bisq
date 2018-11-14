@@ -47,9 +47,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.*;
 
 public class F2FForm extends PaymentMethodForm {
     private final F2FAccount f2fAccount;
@@ -154,18 +152,18 @@ public class F2FForm extends PaymentMethodForm {
 
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.contact", f2fAccount.getContact()),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.contact", f2fAccount.getContact()),
                 f2fAccount.getContact());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.city", f2fAccount.getCity()),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.f2f.city", f2fAccount.getCity()),
                 f2fAccount.getCity());
-        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
+        TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.f2f.extra"), "").second;
         textArea.setText(f2fAccount.getExtraInfo());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);

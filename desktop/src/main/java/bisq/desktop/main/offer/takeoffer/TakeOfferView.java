@@ -161,7 +161,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ChangeListener<Boolean> amountFocusedListener, getShowWalletFundedNotificationListener;
     private InfoInputTextField volumeInfoTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
-    private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener;
+    private ChangeListener<Boolean> tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener,
+            tradeFeeVisibleListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -230,6 +231,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 tradeFeeInBtcToggle.setSelected(true);
 
             setIsCurrencyForMakerFeeBtc(!newValue);
+        };
+
+        tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
+            if (DevEnv.isDaoActivated()) {
+                tradeFeeInBtcToggle.setVisible(newValue);
+                tradeFeeInBsqToggle.setVisible(newValue);
+            }
         };
 
         GUIUtil.focusWhenAddedToScene(amountTextField);
@@ -602,6 +610,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
         tradeFeeInBsqLabel.textProperty().bind(model.tradeFeeInBsqWithFiat);
         tradeFeeDescriptionLabel.textProperty().bind(model.tradeFeeDescription);
+        tradeFeeInBtcLabel.visibleProperty().bind(model.isTradeFeeVisible);
+        tradeFeeInBsqLabel.visibleProperty().bind(model.isTradeFeeVisible);
+        tradeFeeDescriptionLabel.visibleProperty().bind(model.isTradeFeeVisible);
 
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.getIsBtcWalletFunded().not().and(model.showPayFundsScreenDisplayed));
@@ -624,6 +635,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         tradeFeeInBtcLabel.textProperty().unbind();
         tradeFeeInBsqLabel.textProperty().unbind();
         tradeFeeDescriptionLabel.textProperty().unbind();
+        tradeFeeInBtcLabel.visibleProperty().unbind();
+        tradeFeeInBsqLabel.visibleProperty().unbind();
+        tradeFeeDescriptionLabel.visibleProperty().unbind();
 
         // funding
         fundingHBox.visibleProperty().unbind();
@@ -766,6 +780,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addListeners() {
         amountTextField.focusedProperty().addListener(amountFocusedListener);
         model.dataModel.getShowWalletFundedNotification().addListener(getShowWalletFundedNotificationListener);
+        model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
     }
@@ -773,6 +788,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void removeListeners() {
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
         model.dataModel.getShowWalletFundedNotification().removeListener(getShowWalletFundedNotificationListener);
+        model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
     }

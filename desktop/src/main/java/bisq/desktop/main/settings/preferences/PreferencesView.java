@@ -354,6 +354,18 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Layout.FIRST_ROW_DISTANCE);
         GridPane.setColumnIndex(preferredTradeCurrencyComboBox, 2);
 
+        preferredTradeCurrencyComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(TradeCurrency object) {
+                return object.getCode() + " - " + object.getName();
+            }
+
+            @Override
+            public TradeCurrency fromString(String string) {
+                return null;
+            }
+        });
+
         preferredTradeCurrencyComboBox.setButtonCell(GUIUtil.getTradeCurrencyButtonCell("", "",
                 Collections.emptyMap()));
         preferredTradeCurrencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory("", "",

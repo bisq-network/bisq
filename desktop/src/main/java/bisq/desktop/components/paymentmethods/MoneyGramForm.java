@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
@@ -46,9 +45,7 @@ import javafx.scene.layout.GridPane;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
+import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class MoneyGramForm extends PaymentMethodForm {
@@ -88,16 +85,16 @@ public class MoneyGramForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         final Country country = getMoneyGramPaymentAccount().getCountry();
-        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 moneyGramAccountPayload.getHolderName());
         if (BankUtil.isStateRequired(moneyGramAccountPayload.getCountryCode()))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.state"),
                     moneyGramAccountPayload.getState()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 moneyGramAccountPayload.getEmail());
         addLimitations();
         addCurrenciesGrid(false);

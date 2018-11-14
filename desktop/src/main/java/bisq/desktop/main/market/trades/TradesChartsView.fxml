@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 <VBox fx:id="root" fx:controller="bisq.desktop.main.market.trades.TradesChartsView"
-      spacing="10.0" fillWidth="true"
+      spacing="7.0" fillWidth="true"
       AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
       AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
       xmlns:fx="http://javafx.com/fxml">

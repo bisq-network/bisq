@@ -295,10 +295,6 @@
     -fx-image: url("../../images/btcaverage.png");
 }
 
-#spinner {
-    -fx-image: url("../../images/spinner.png");
-}
-
 #accepted {
     -fx-image: url("../../images/accepted.png");
 }

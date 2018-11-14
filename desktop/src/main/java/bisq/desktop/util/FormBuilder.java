@@ -434,6 +434,10 @@ public class FormBuilder {
     // Label  + TextArea
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple2<Label, TextArea> addCompactTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
+        return addTopLabelTextArea(gridPane, rowIndex, title, prompt, -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
         return addTopLabelTextArea(gridPane, rowIndex, title, prompt, 0);
     }
@@ -1383,6 +1387,10 @@ public class FormBuilder {
 
     public static Button addPrimaryActionButton(GridPane gridPane, int rowIndex, String title, double top) {
         return addButton(gridPane, rowIndex, title, top, true);
+    }
+
+    public static Button addPrimaryActionButtonAFterGroup(GridPane gridPane, int rowIndex, String title) {
+        return addPrimaryActionButton(gridPane, rowIndex, title, 15);
     }
 
     public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {

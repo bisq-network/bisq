@@ -78,8 +78,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addSlideToggleButton;
+import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
@@ -289,6 +288,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         }
     }
 
+    //TODO: never used --> Do we really want to keep it here if we need it?
     private void onSendTestMsg() {
         MobileMessage message = null;
         List<MobileMessage> messages = null;
@@ -393,23 +393,21 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createSetupFields() {
-        FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
+        addTitledGroupBg(root, gridRow, 4, Res.get("account.notifications.setup.title"));
         downloadButton = addButton(root, gridRow,
                 Res.get("account.notifications.download.label"),
-                Layout.FIRST_ROW_DISTANCE);
+                Layout.TWICE_FIRST_ROW_DISTANCE);
 
-        Tuple3<Label, Button, Button> tuple = FormBuilder.addTopLabel2Buttons(root, ++gridRow,
+        Tuple3<Label, Button, Button> tuple = addTopLabel2Buttons(root, ++gridRow,
                 Res.get("account.notifications.webcam.label"),
                 Res.get("account.notifications.webcam.button"), Res.get("account.notifications.noWebcam.button"), 0);
         webCamButton = tuple.second;
         noWebCamButton = tuple.third;
 
-        tokenInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
+        tokenInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("account.notifications.email.label"));
         tokenInputTextField.setPromptText(Res.get("account.notifications.email.prompt"));
-        tokenInputTextFieldListener = (observable, oldValue, newValue) -> {
-            applyKeyAndToken(newValue);
-        };
+        tokenInputTextFieldListener = (observable, oldValue, newValue) -> applyKeyAndToken(newValue);
         tokenInputTextField.setManaged(false);
         tokenInputTextField.setVisible(false);
 
@@ -417,14 +415,14 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 Res.get("account.notifications.testMsg.title")).second;
         testMsgButton.setDefaultButton(false);*/
 
-        eraseButton = FormBuilder.addTopLabelButton(root, ++gridRow,
+        eraseButton = addTopLabelButton(root, ++gridRow,
                 Res.get("account.notifications.erase.label"),
                 Res.get("account.notifications.erase.title")).second;
         eraseButton.setId("notification-erase-button");
     }
 
     private void createSettingsFields() {
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 4,
+        addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("account.notifications.settings.title"),
                 Layout.GROUP_DISTANCE);
 
@@ -464,9 +462,9 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void createMarketAlertFields() {
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 4, Res.get("account.notifications.marketAlert.title"),
+        addTitledGroupBg(root, ++gridRow, 4, Res.get("account.notifications.marketAlert.title"),
                 Layout.GROUP_DISTANCE);
-        paymentAccountsComboBox = FormBuilder.<PaymentAccount>addComboBox(root, gridRow,
+        paymentAccountsComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("account.notifications.marketAlert.selectPaymentAccount"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentAccountsComboBox.setConverter(new StringConverter<>() {
@@ -503,9 +501,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         infoInputTextField.setContentForInfoPopOver(createMarketAlertPriceInfoPopupLabel(Res.get("account.notifications.marketAlert.trigger.info")));
         infoInputTextField.setIconsRightAligned();
 
-        marketAlertTriggerListener = (observable, oldValue, newValue) -> {
-            updateMarketAlertFields();
-        };
+        marketAlertTriggerListener = (observable, oldValue, newValue) -> updateMarketAlertFields();
         marketAlertTriggerFocusListener = (observable, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 try {
@@ -526,12 +522,12 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void createPriceAlertFields() {
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 4,
+        addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("account.notifications.priceAlert.title"), 20);
-        currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(root, gridRow,
+        currencyComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.getWithCol("list.currency.select"), 40);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency currency) {
                 return currency.getNameAndCode();
@@ -543,7 +539,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             }
         });
 
-        priceAlertHighInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
+        priceAlertHighInputTextField = addInputTextField(root, ++gridRow,
                 Res.getWithCol("account.notifications.priceAlert.high.label"));
         priceAlertHighListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
@@ -569,7 +565,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 }
             }
         };
-        priceAlertLowInputTextField = FormBuilder.addInputTextField(root, ++gridRow,
+        priceAlertLowInputTextField = addInputTextField(root, ++gridRow,
                 Res.getWithCol("account.notifications.priceAlert.low.label"));
         priceAlertLowListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
@@ -605,12 +601,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         // fillPriceAlertFields method. To be sure that we called after the PriceAlertFilter has been removed we delay
         // to the next frame. The priceFeedServiceListener in the  mobileNotificationService might get called before
         // our listener here.
-        priceFeedServiceListener = (observable, oldValue, newValue) -> {
-            UserThread.execute(() -> {
-                fillPriceAlertFields();
-                updatePriceAlertFields();
-            });
-        };
+        priceFeedServiceListener = (observable, oldValue, newValue) -> UserThread.execute(() -> {
+            fillPriceAlertFields();
+            updatePriceAlertFields();
+        });
     }
 
 

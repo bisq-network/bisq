@@ -23,6 +23,6 @@ public class PasswordTextField extends JFXPasswordField {
     public PasswordTextField() {
         super();
         setLabelFloat(true);
-        setMaxWidth(300);
+        setMaxWidth(380);
     }
 }
