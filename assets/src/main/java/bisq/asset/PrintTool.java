@@ -17,8 +17,6 @@
 
 package bisq.asset;
 
-import bisq.common.util.Tuple2;
-
 import java.util.Comparator;
 
 public class PrintTool {
@@ -31,14 +29,24 @@ public class PrintTool {
                 .sorted(Comparator.comparing(o -> o.getName().toLowerCase()))
                 .filter(e -> !e.getTickerSymbol().equals("BSQ")) // BSQ is not out yet...
                 .filter(e -> !e.getTickerSymbol().equals("BTC"))
-                .map(e -> new Tuple2(e.getName(), e.getTickerSymbol())) // We want to get rid of duplicated entries for regtest/testnet...
+                .map(e -> new Pair(e.getName(), e.getTickerSymbol())) // We want to get rid of duplicated entries for regtest/testnet...
                 .distinct()
                 .forEach(e -> sb.append("<li>&#8220;")
-                        .append(e.second)
+                        .append(e.right)
                         .append("&#8221;, &#8220;")
-                        .append(e.first)
+                        .append(e.left)
                         .append("&#8221;</li>")
                         .append("\n"));
         System.out.println(sb.toString());
+    }
+
+    private static class Pair {
+        String left;
+        String right;
+
+        Pair(String left, String right) {
+            this.left = left;
+            this.right = right;
+        }
     }
 }

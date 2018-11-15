@@ -17,27 +17,11 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.NetworkParametersAdapter;
+import bisq.asset.CryptonoteAddressValidator;
 
-/**
- * @deprecated for insufficent trading
- */
-@Deprecated(since = "0.9.0")
-public class Obsidian extends Coin {
-
-    public Obsidian() {
-        super("Obsidian", "ODN", new Base58BitcoinAddressValidator(new ObsidianParams()));
-    }
-
-
-    public static class ObsidianParams extends NetworkParametersAdapter {
-
-        public ObsidianParams() {
-            addressHeader = 75;
-            p2shHeader = 125;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
-        }
+public class Mask extends Coin {
+    public Mask() {
+        super("Mask", "MASK", new CryptonoteAddressValidator("M", "bT"));
     }
 }

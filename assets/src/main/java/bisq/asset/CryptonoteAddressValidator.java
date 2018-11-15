@@ -60,7 +60,7 @@ public class CryptonoteAddressValidator implements AddressValidator {
 				return AddressValidationResult.validAddress();
 			}	
 			else if (subAddressPrefix.length() == 2 && address.length() == 95 + subAddressPrefix.length()) {
-				// Aeon & Blur-type subaddress
+				// Aeon, Mask & Blur-type subaddress
 				return AddressValidationResult.validAddress();
 			}
 			else {
