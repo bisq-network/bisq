@@ -20,7 +20,7 @@ package bisq.core.dao.governance.proposal.confiscatebond;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.Proposal;
 import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.period.PeriodService;
 
 import javax.inject.Inject;
@@ -31,8 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfiscateBondValidator extends ProposalValidator {
 
     @Inject
-    public ConfiscateBondValidator(BsqStateService bsqStateService, PeriodService periodService) {
-        super(bsqStateService, periodService);
+    public ConfiscateBondValidator(DaoStateService daoStateService, PeriodService periodService) {
+        super(daoStateService, periodService);
     }
 
     @Override

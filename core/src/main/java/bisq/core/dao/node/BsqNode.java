@@ -19,8 +19,8 @@ package bisq.core.dao.node;
 
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.node.parser.BlockParser;
-import bisq.core.dao.state.BsqStateService;
-import bisq.core.dao.state.SnapshotManager;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.blockchain.RawBlock;
 
 import bisq.network.p2p.P2PService;
@@ -42,10 +42,10 @@ import javax.annotation.Nullable;
 public abstract class BsqNode implements DaoSetupService {
     protected final BlockParser blockParser;
     private final P2PService p2PService;
-    protected final BsqStateService bsqStateService;
+    protected final DaoStateService daoStateService;
     private final String genesisTxId;
     private final int genesisBlockHeight;
-    private final SnapshotManager snapshotManager;
+    private final DaoStateSnapshotService daoStateSnapshotService;
     private final P2PServiceListener p2PServiceListener;
     protected boolean parseBlockchainComplete;
     protected boolean p2pNetworkReady;
@@ -59,16 +59,16 @@ public abstract class BsqNode implements DaoSetupService {
 
     @Inject
     public BsqNode(BlockParser blockParser,
-                   BsqStateService bsqStateService,
-                   SnapshotManager snapshotManager,
+                   DaoStateService daoStateService,
+                   DaoStateSnapshotService daoStateSnapshotService,
                    P2PService p2PService) {
         this.blockParser = blockParser;
-        this.bsqStateService = bsqStateService;
-        this.snapshotManager = snapshotManager;
+        this.daoStateService = daoStateService;
+        this.daoStateSnapshotService = daoStateSnapshotService;
         this.p2PService = p2PService;
 
-        genesisTxId = bsqStateService.getGenesisTxId();
-        genesisBlockHeight = bsqStateService.getGenesisBlockHeight();
+        genesisTxId = daoStateService.getGenesisTxId();
+        genesisBlockHeight = daoStateService.getGenesisBlockHeight();
 
         p2PServiceListener = new P2PServiceListener() {
             @Override
@@ -155,7 +155,7 @@ public abstract class BsqNode implements DaoSetupService {
 
     @SuppressWarnings("WeakerAccess")
     protected int getStartBlockHeight() {
-        int chainHeight = bsqStateService.getChainHeight();
+        int chainHeight = daoStateService.getChainHeight();
         int startBlockHeight = chainHeight;
         if (chainHeight > genesisBlockHeight)
             startBlockHeight = chainHeight + 1;
@@ -178,7 +178,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected void onParseBlockChainComplete() {
         log.info("onParseBlockChainComplete");
         parseBlockchainComplete = true;
-        bsqStateService.onParseBlockChainComplete();
+        daoStateService.onParseBlockChainComplete();
 
         // log.error("COMPLETED: sb1={}\nsb2={}", BlockParser.sb1.toString(), BlockParser.sb2.toString());
         // log.error("equals? " + BlockParser.sb1.toString().equals(BlockParser.sb2.toString()));
@@ -192,7 +192,7 @@ public abstract class BsqNode implements DaoSetupService {
     }
 
     protected boolean isBlockAlreadyAdded(RawBlock rawBlock) {
-        return bsqStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent();
+        return daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent();
     }
 
 
@@ -201,6 +201,6 @@ public abstract class BsqNode implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applySnapshot() {
-        snapshotManager.applySnapshot();
+        daoStateSnapshotService.applySnapshot();
     }
 }

@@ -67,12 +67,15 @@ public enum Param {
     // As BSQ based validation values can change over time if BSQ value rise we need to support that in the Params as well
     COMPENSATION_REQUEST_MIN_AMOUNT(1_000),         // 10 BSQ
     COMPENSATION_REQUEST_MAX_AMOUNT(10_000_000),    // 100 000 BSQ
+    REIMBURSEMENT_MIN_AMOUNT(1_000),         // 10 BSQ
+    REIMBURSEMENT_MAX_AMOUNT(1_000_000),    // 10 000 BSQ
 
     // Quorum required for voting result to be valid.
     // Quorum is the min. amount of total BSQ (earned+stake) which was used for voting on a request.
     // E.g. If only 2000 BSQ was used on a vote but 10 000 is required the result is invalid even if the voters voted
     // 100% for acceptance. This should prevent that changes can be done with low stakeholder participation.
     QUORUM_COMP_REQUEST(2_000_000),         // 20 000 BSQ
+    QUORUM_REIMBURSEMENT(2_000_000),        // 20 000 BSQ
     QUORUM_CHANGE_PARAM(10_000_000),        // 100 000 BSQ
     QUORUM_ROLE(5_000_000),                 // 50 000 BSQ
     QUORUM_CONFISCATION(20_000_000),        // 200 000 BSQ
@@ -85,6 +88,7 @@ public enum Param {
     // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
     // it requires min. 50.01%.
     THRESHOLD_COMP_REQUEST(5_000),      // 50%
+    THRESHOLD_REIMBURSEMENT(5_000),      // 50%
     THRESHOLD_CHANGE_PARAM(7_500),      // 75% That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
     THRESHOLD_ROLE(5_000),              // 50%
     THRESHOLD_CONFISCATION(8_500),      // 85% Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
@@ -105,16 +109,21 @@ public enum Param {
     PHASE_RESULT(2);
 
     // See: https://github.com/bisq-network/proposals/issues/46
-    /*
-    PHASE_UNDEFINED(0),
-    PHASE_PROPOSAL(3600),      // 24 days
-    PHASE_BREAK1(150),        // 1 day
-    PHASE_BLIND_VOTE(600),    // 4 days
-    PHASE_BREAK2(10),        // 10 blocks
-    PHASE_VOTE_REVEAL(300),   // 2 days
-    PHASE_BREAK3(10),        // 10 blocks
-    PHASE_RESULT(10);        // 10 block
-    */
+    // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
+    // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
+    // blocks where the user can be active. To have still round numbers for the durations we add 1 block to those
+    // phases and subtract 1 block from the following breaks.
+    // So in the UI the user will see 3600 blocks and the last
+    // block of the technical 3601 blocks is displayed as part of the break1 phase.
+  /*  PHASE_UNDEFINED(0),
+    PHASE_PROPOSAL(3601),      // 24 days
+    PHASE_BREAK1(149),        // 1 day
+    PHASE_BLIND_VOTE(601),    // 4 days
+    PHASE_BREAK2(9),        // 10 blocks
+    PHASE_VOTE_REVEAL(301),   // 2 days
+    PHASE_BREAK3(9),        // 10 blocks
+    PHASE_RESULT(10);        // 10 block*/
+
 
     @Getter
     private long defaultValue;

@@ -22,6 +22,7 @@ import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.generic.GenericProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.state.blockchain.TxType;
@@ -93,6 +94,8 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
         switch (proto.getMessageCase()) {
             case COMPENSATION_PROPOSAL:
                 return CompensationProposal.fromProto(proto);
+            case REIMBURSEMENT_PROPOSAL:
+                return ReimbursementProposal.fromProto(proto);
             case CHANGE_PARAM_PROPOSAL:
                 return ChangeParamProposal.fromProto(proto);
             case BONDED_ROLE_PROPOSAL:

@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxInput;
 import bisq.core.dao.state.blockchain.TxOutput;
@@ -97,12 +97,12 @@ public class VoteResultConsensus {
         return Encryption.getSecretKeyFromBytes(secretKeyAsBytes);
     }
 
-    public static TxOutput getConnectedBlindVoteStakeOutput(Tx voteRevealTx, BsqStateService bsqStateService)
+    public static TxOutput getConnectedBlindVoteStakeOutput(Tx voteRevealTx, DaoStateService daoStateService)
             throws VoteResultException.ValidationException {
         try {
             // We use the stake output of the blind vote tx as first input
             TxInput stakeTxInput = voteRevealTx.getTxInputs().get(0);
-            Optional<TxOutput> optionalBlindVoteStakeOutput = bsqStateService.getConnectedTxOutput(stakeTxInput);
+            Optional<TxOutput> optionalBlindVoteStakeOutput = daoStateService.getConnectedTxOutput(stakeTxInput);
             checkArgument(optionalBlindVoteStakeOutput.isPresent(), "blindVoteStakeOutput must be present");
             TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
             checkArgument(blindVoteStakeOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT,
@@ -113,16 +113,16 @@ public class VoteResultConsensus {
         }
     }
 
-    public static Tx getBlindVoteTx(TxOutput blindVoteStakeOutput, BsqStateService bsqStateService,
+    public static Tx getBlindVoteTx(TxOutput blindVoteStakeOutput, DaoStateService daoStateService,
                                     PeriodService periodService, int chainHeight)
             throws VoteResultException.ValidationException {
         try {
             String blindVoteTxId = blindVoteStakeOutput.getTxId();
-            Optional<Tx> optionalBlindVoteTx = bsqStateService.getTx(blindVoteTxId);
+            Optional<Tx> optionalBlindVoteTx = daoStateService.getTx(blindVoteTxId);
             checkArgument(optionalBlindVoteTx.isPresent(), "blindVoteTx with txId " +
                     blindVoteTxId + " not found.");
             Tx blindVoteTx = optionalBlindVoteTx.get();
-            Optional<TxType> optionalTxType = bsqStateService.getOptionalTxType(blindVoteTx.getId());
+            Optional<TxType> optionalTxType = daoStateService.getOptionalTxType(blindVoteTx.getId());
             checkArgument(optionalTxType.isPresent(), "optionalTxType must be present");
             checkArgument(optionalTxType.get() == TxType.BLIND_VOTE,
                     "blindVoteTx must have type BLIND_VOTE");

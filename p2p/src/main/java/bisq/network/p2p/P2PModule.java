@@ -30,6 +30,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadListService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 
 import bisq.common.app.AppModule;
 
@@ -57,6 +58,7 @@ public class P2PModule extends AppModule {
         bind(AppendOnlyDataStoreService.class).in(Singleton.class);
         bind(ProtectedDataStoreService.class).in(Singleton.class);
         bind(PersistableNetworkPayloadListService.class).in(Singleton.class);
+        bind(ResourceDataStoreService.class).in(Singleton.class);
         bind(RequestDataManager.class).in(Singleton.class);
         bind(PeerExchangeManager.class).in(Singleton.class);
         bind(KeepAliveManager.class).in(Singleton.class);
@@ -86,5 +88,7 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(environment.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.TORRC_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.TORRC_FILE));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.TORRC_OPTIONS)).to(environment.getRequiredProperty(NetworkOptionKeys.TORRC_OPTIONS));
     }
 }

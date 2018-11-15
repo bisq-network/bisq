@@ -18,7 +18,6 @@
 package bisq.core.dao.governance.asset;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.state.BsqStateService;
 import bisq.core.locale.CurrencyUtil;
 
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -34,10 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AssetService implements PersistedDataHost {
-
-
     private final Storage<RemovedAssetsList> storage;
-    private final BsqStateService bsqStateService;
     @Getter
     private final RemovedAssetsList removedAssetsList = new RemovedAssetsList();
 
@@ -47,9 +43,8 @@ public class AssetService implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AssetService(Storage<RemovedAssetsList> storage, BsqStateService bsqStateService) {
+    public AssetService(Storage<RemovedAssetsList> storage) {
         this.storage = storage;
-        this.bsqStateService = bsqStateService;
     }
 
 

@@ -19,8 +19,11 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
+@Deprecated
 public class ObsidianTest extends AbstractAssetTest {
 
     public ObsidianTest() {

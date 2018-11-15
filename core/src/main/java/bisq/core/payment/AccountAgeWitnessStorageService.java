@@ -19,7 +19,7 @@ package bisq.core.payment;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.persistence.StoreService;
+import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.storage.Storage;
 
@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AccountAgeWitnessStorageService extends StoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
-    public static final String FILE_NAME = "AccountAgeWitnessStore";
+public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
+    private static final String FILE_NAME = "AccountAgeWitnessStore";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

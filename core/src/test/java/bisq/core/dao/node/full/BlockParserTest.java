@@ -20,7 +20,7 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
-import bisq.core.dao.state.BsqStateService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.blockchain.RawTx;
 import bisq.core.dao.state.blockchain.RawTxOutput;
 import bisq.core.dao.state.blockchain.TxInput;
@@ -52,7 +52,6 @@ import mockit.Tested;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
@@ -69,12 +68,12 @@ public class BlockParserTest {
     BlockParser blockParser;
 
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    BsqStateService bsqStateService;
+    DaoStateService daoStateService;
 
     // @Injectable are mocked resources used to for injecting into @Tested classes
     // The naming of these resources doesn't matter, any resource that fits will be used for injection
 
-    // Used by bsqStateService
+    // Used by daoStateService
     @Injectable
     PersistenceProtoResolver persistenceProtoResolver;
     @Injectable
@@ -88,7 +87,7 @@ public class BlockParserTest {
     @Injectable
     RpcService rpcService;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
-    BsqStateService writeModel;
+    DaoStateService writeModel;
     @Tested(fullyInitialized = true, availableDuringSetup = true)
     TxParser txParser;
 
@@ -110,18 +109,18 @@ public class BlockParserTest {
         // 1) - null, 0     -> not BSQ transaction
         // 2) - 100, null   -> BSQ transaction
         // 3) - 0, 100      -> BSQ transaction
-        new Expectations(bsqStateService) {{
+        new Expectations(daoStateService) {{
             // Expectations can be recorded on mocked instances, either with specific matching arguments or catch all
             // http://jmockit.github.io/tutorial/Mocking.html#results
             // Results are returned in the order they're recorded, so in this case for the first call to
             // getSpendableTxOutput("tx1", 0) the return value will be Optional.empty()
             // for the second call the return is Optional.of(new TxOutput(0,... and so on
-            bsqStateService.getUnspentTxOutput(new TxOutputKey("tx1", 0));
+            daoStateService.getUnspentTxOutput(new TxOutputKey("tx1", 0));
             result = Optional.empty();
             result = Optional.of(new RawTxOutput(0, 100, "txout1", null, null, null, height));
             result = Optional.of(new RawTxOutput(0, 0, "txout1", null, null, null, height));
 
-            bsqStateService.getUnspentTxOutput(new TxOutputKey("tx1", 1));
+            daoStateService.getUnspentTxOutput(new TxOutputKey("tx1", 1));
             result = Optional.of(new RawTxOutput(0, 0, "txout2", null, null, null, height));
             result = Optional.empty();
             result = Optional.of(new RawTxOutput(0, 100, "txout2", null, null, null, height));
@@ -220,25 +219,25 @@ public class BlockParserTest {
 */
 
         // Verify that the genesis tx has been added to the bsq blockchain with the correct issuance amount
-    /*    assertTrue(bsqStateService.getGenesisTx().get() == genesisTx);
-        assertTrue(bsqStateService.getGenesisTotalSupply().getValue() == issuance.getValue());
+    /*    assertTrue(daoStateService.getGenesisTx().get() == genesisTx);
+        assertTrue(daoStateService.getGenesisTotalSupply().getValue() == issuance.getValue());
 
         // And that other txs are not added
-        assertFalse(bsqStateService.containsTx(cbId199));
-        assertFalse(bsqStateService.containsTx(cbId200));
-        assertFalse(bsqStateService.containsTx(cbId201));
+        assertFalse(daoStateService.containsTx(cbId199));
+        assertFalse(daoStateService.containsTx(cbId200));
+        assertFalse(daoStateService.containsTx(cbId201));
 
         // But bsq txs are added
-        assertTrue(bsqStateService.containsTx(bsqTx1Id));
-        TxOutput bsqOut1 = bsqStateService.getUnspentAndMatureTxOutput(bsqTx1Id, 0).get();
-        assertTrue(bsqStateService.isUnspent(bsqOut1));
+        assertTrue(daoStateService.containsTx(bsqTx1Id));
+        TxOutput bsqOut1 = daoStateService.getUnspentAndMatureTxOutput(bsqTx1Id, 0).get();
+        assertTrue(daoStateService.isUnspent(bsqOut1));
         assertTrue(bsqOut1.getValue() == bsqTx1Value1);
-        TxOutput bsqOut2 = bsqStateService.getUnspentAndMatureTxOutput(bsqTx1Id, 1).get();
-        assertTrue(bsqStateService.isUnspent(bsqOut2));
+        TxOutput bsqOut2 = daoStateService.getUnspentAndMatureTxOutput(bsqTx1Id, 1).get();
+        assertTrue(daoStateService.isUnspent(bsqOut2));
         assertTrue(bsqOut2.getValue() == bsqTx1Value2);
-        assertFalse(bsqStateService.isTxOutputSpendable(genesisTxId, 0));
-        assertTrue(bsqStateService.isTxOutputSpendable(bsqTx1Id, 0));
-        assertTrue(bsqStateService.isTxOutputSpendable(bsqTx1Id, 1));*/
+        assertFalse(daoStateService.isTxOutputSpendable(genesisTxId, 0));
+        assertTrue(daoStateService.isTxOutputSpendable(bsqTx1Id, 0));
+        assertTrue(daoStateService.isTxOutputSpendable(bsqTx1Id, 1));*/
 
     }
 }

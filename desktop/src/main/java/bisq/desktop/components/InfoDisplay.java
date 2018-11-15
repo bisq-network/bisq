@@ -17,11 +17,12 @@
 
 package bisq.desktop.components;
 
+import bisq.desktop.util.FormBuilder;
+
 import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Parent;
@@ -61,7 +62,7 @@ public class InfoDisplay extends Parent {
 
     private boolean useReadMore;
 
-    private final Label icon = AwesomeDude.createIconLabel(AwesomeIcon.INFO_SIGN);
+    private final Label icon = FormBuilder.getIcon(AwesomeIcon.INFO_SIGN);
     private final TextFlow textFlow;
     private final Label label;
     private final Hyperlink link;
