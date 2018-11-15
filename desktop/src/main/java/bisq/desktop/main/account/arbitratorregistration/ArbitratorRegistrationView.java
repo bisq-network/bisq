@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import bisq.desktop.util.FormBuilder;
@@ -148,7 +149,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         gridPane.getColumnConstraints().addAll(columnConstraints1);
         root.getChildren().add(gridPane);
 
-        addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
+        addTitledGroupBg(gridPane, gridRow, 4, Res.get("account.tab.arbitratorRegistration"));
         TextField pubKeyTextField = addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
@@ -216,9 +217,13 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("shared.information"), Layout.GROUP_DISTANCE);
+
+        titledGroupBg.getStyleClass().add("last");
+
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
-        GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(infoLabel, new Insets(Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
     }
 
