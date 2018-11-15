@@ -21,8 +21,8 @@ package bisq.asset;
  * Abstract base class for {@link Asset}s with their own dedicated blockchain, such as
  * {@link bisq.asset.coins.Bitcoin} itself or one of its many derivatives, competitors and
  * alternatives, often called "altcoins", such as {@link bisq.asset.coins.Litecoin},
- * {@link bisq.asset.coins.Ether}, {@link bisq.asset.coins.Monero}, {@link bisq.asset.coins.Zcash}
- * and {@link bisq.asset.coins.LitecoinZ}.
+ * {@link bisq.asset.coins.Ether}, {@link bisq.asset.coins.Monero} and
+ * {@link bisq.asset.coins.Zcash}.
  * <p>
  * In addition to the usual {@code Asset} properties, a {@code Coin} maintains information
  * about which {@link Network} it may be used on. By default, coins are constructed with
