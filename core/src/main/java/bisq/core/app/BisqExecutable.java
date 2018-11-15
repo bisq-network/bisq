@@ -53,6 +53,9 @@ import org.springframework.util.StringUtils;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import joptsimple.util.PathConverter;
+import joptsimple.util.PathProperties;
+import joptsimple.util.RegexMatcher;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -157,7 +160,29 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
     protected abstract void configUserThread();
 
     protected void setupEnvironment(OptionSet options) {
-        bisqEnvironment = getBisqEnvironment(options);
+        /*
+         * JOptSimple does support input parsing. However, doing only options = parser.parse(args) isn't enough to trigger the parsing.
+         * The parsing is done when the actual value is going to be retrieved, i.e. options.valueOf(attributename).
+         * 
+         * In order to keep usability high, we work around the aforementioned characteristics by catching the exception below
+         * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of a ill-formed parameter and stop execution.
+         * 
+         * Might be changed when the project features more user parameters meant for the user.
+         */
+        try {
+            bisqEnvironment = getBisqEnvironment(options);
+        } catch (OptionException e) {
+            // unfortunately, the OptionArgumentConversionException is not visible so we cannot catch only those.
+            // hence, workaround
+            if(e.getCause() != null)
+                // get something like "Error while parsing application parameter '--torrcFile': File [/path/to/file] does not exist"
+                System.err.println("Error while parsing application parameter '--" + e.options().get(0) + "': " + e.getCause().getMessage());
+            else
+                System.err.println("Error while parsing application parameter '--" + e.options().get(0));
+
+            // we only tried to load some config until now, so no graceful shutdown is required
+            System.exit(1);
+        }
     }
 
     protected void configCoreSetup(OptionSet options) {
@@ -330,6 +355,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
                 description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.TORRC_FILE,
+                description("An existing torrc-file to be sourced for Tor. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten.", ""))
+                .withRequiredArg()
+                .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+        parser.accepts(NetworkOptionKeys.TORRC_OPTIONS,
+                description("A list of torrc-entries to amend to Bisqs torrc. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten. [torrc options line, torrc option, ...]", ""))
+                .withRequiredArg()
+                .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
@@ -430,9 +463,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
                 description("If set to true the node requests the blockchain data via RPC requests from Bitcoin Core and " +
                         "provide the validated BSQ txs to the network. It requires that the other RPC properties are " +
-                        "set as well.", false))
-                .withRequiredArg()
-                .ofType(boolean.class);
+                        "set as well.", ""))
+                .withRequiredArg();
         parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
                 description("Genesis transaction ID when not using the hard coded one", ""))
                 .withRequiredArg();

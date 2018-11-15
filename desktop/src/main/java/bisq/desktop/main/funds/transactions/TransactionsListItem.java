@@ -132,10 +132,15 @@ class TransactionsListItem {
                             outgoing = false;
                             txFeeForBsqPayment = true;
 
-                            //
-                            final Optional<TxType> txTypeOptional = daoFacade.getOptionalTxType(txId);
-                            if (txTypeOptional.isPresent() && txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
-                                details = Res.get("funds.tx.proposal");
+                            Optional<TxType> txTypeOptional = daoFacade.getOptionalTxType(txId);
+                            if (txTypeOptional.isPresent()) {
+                                if (txTypeOptional.get().equals(TxType.COMPENSATION_REQUEST))
+                                    details = Res.get("funds.tx.compensationRequestTxFee");
+                                else if (txTypeOptional.get().equals(TxType.REIMBURSEMENT_REQUEST))
+                                    details = Res.get("funds.tx.reimbursementRequestTxFee");
+                                else
+                                    details = Res.get("funds.tx.proposalTxFee");
+                            }
                         } else {
                             outgoing = true;
                         }

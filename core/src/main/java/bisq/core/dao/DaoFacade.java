@@ -42,6 +42,8 @@ import bisq.core.dao.governance.proposal.compensation.CompensationProposalServic
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalService;
 import bisq.core.dao.governance.proposal.generic.GenericProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
 import bisq.core.dao.governance.role.BondedRole;
@@ -54,6 +56,7 @@ import bisq.core.dao.state.blockchain.Tx;
 import bisq.core.dao.state.blockchain.TxOutput;
 import bisq.core.dao.state.blockchain.TxOutputKey;
 import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.period.DaoPhase;
 import bisq.core.dao.state.period.PeriodService;
@@ -80,6 +83,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
 
@@ -90,6 +95,7 @@ import bisq.asset.Asset;
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
  * by providing a reduced API and/or aggregating subroutines.
  */
+@Slf4j
 public class DaoFacade implements DaoSetupService {
     private final ProposalListPresentation proposalListPresentation;
     private final BallotListService ballotListService;
@@ -100,6 +106,7 @@ public class DaoFacade implements DaoSetupService {
     private final MyBlindVoteListService myBlindVoteListService;
     private final MyVoteListService myVoteListService;
     private final CompensationProposalService compensationProposalService;
+    private final ReimbursementProposalService reimbursementProposalService;
     private final ChangeParamProposalService changeParamProposalService;
     private final ConfiscateBondProposalService confiscateBondProposalService;
     private final BondedRoleProposalService bondedRoleProposalService;
@@ -122,6 +129,7 @@ public class DaoFacade implements DaoSetupService {
                      MyBlindVoteListService myBlindVoteListService,
                      MyVoteListService myVoteListService,
                      CompensationProposalService compensationProposalService,
+                     ReimbursementProposalService reimbursementProposalService,
                      ChangeParamProposalService changeParamProposalService,
                      ConfiscateBondProposalService confiscateBondProposalService,
                      BondedRoleProposalService bondedRoleProposalService,
@@ -140,6 +148,7 @@ public class DaoFacade implements DaoSetupService {
         this.myBlindVoteListService = myBlindVoteListService;
         this.myVoteListService = myVoteListService;
         this.compensationProposalService = compensationProposalService;
+        this.reimbursementProposalService = reimbursementProposalService;
         this.changeParamProposalService = changeParamProposalService;
         this.confiscateBondProposalService = confiscateBondProposalService;
         this.bondedRoleProposalService = bondedRoleProposalService;
@@ -212,13 +221,20 @@ public class DaoFacade implements DaoSetupService {
     // Creation of Proposal and proposalTransaction
     public ProposalWithTransaction getCompensationProposalWithTransaction(String name,
                                                                           String link,
-                                                                          Coin requestedBsq,
-                                                                          String bsqAddress)
+                                                                          Coin requestedBsq)
             throws ValidationException, InsufficientMoneyException, TxException {
         return compensationProposalService.createProposalWithTransaction(name,
                 link,
-                requestedBsq,
-                bsqAddress);
+                requestedBsq);
+    }
+
+    public ProposalWithTransaction getReimbursementProposalWithTransaction(String name,
+                                                                           String link,
+                                                                           Coin requestedBsq)
+            throws ValidationException, InsufficientMoneyException, TxException {
+        return reimbursementProposalService.createProposalWithTransaction(name,
+                link,
+                requestedBsq);
     }
 
     public ProposalWithTransaction getParamProposalWithTransaction(String name,
@@ -358,16 +374,92 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Presentation of phases
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public int getFirstBlockOfPhase(int height, DaoPhase.Phase phase) {
-        return periodService.getFirstBlockOfPhase(height, phase);
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getFirstBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
+        int firstBlock = periodService.getFirstBlockOfPhase(height, phase);
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                break;
+            case BREAK1:
+                firstBlock++;
+                break;
+            case BLIND_VOTE:
+                break;
+            case BREAK2:
+                firstBlock++;
+                break;
+            case VOTE_REVEAL:
+                break;
+            case BREAK3:
+                firstBlock++;
+                break;
+            case RESULT:
+                break;
+        }
+
+        return firstBlock;
     }
 
-    public int getLastBlockOfPhase(int height, DaoPhase.Phase phase) {
-        return periodService.getLastBlockOfPhase(height, phase);
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getLastBlockOfPhaseForDisplay(int height, DaoPhase.Phase phase) {
+        int lastBlock = periodService.getLastBlockOfPhase(height, phase);
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                lastBlock--;
+                break;
+            case BREAK1:
+                break;
+            case BLIND_VOTE:
+                lastBlock--;
+                break;
+            case BREAK2:
+                break;
+            case VOTE_REVEAL:
+                lastBlock--;
+                break;
+            case BREAK3:
+                break;
+            case RESULT:
+                break;
+        }
+        return lastBlock;
     }
 
-    public int getDurationForPhase(DaoPhase.Phase phase) {
-        return periodService.getDurationForPhase(phase, daoStateService.getChainHeight());
+    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // next block which would be already the next phase we hide that last block to the user and add it to the break.
+    public int getDurationForPhaseForDisplay(DaoPhase.Phase phase) {
+        int duration = periodService.getDurationForPhase(phase, daoStateService.getChainHeight());
+        switch (phase) {
+            case UNDEFINED:
+                break;
+            case PROPOSAL:
+                duration--;
+                break;
+            case BREAK1:
+                duration++;
+                break;
+            case BLIND_VOTE:
+                duration--;
+                break;
+            case BREAK2:
+                duration++;
+                break;
+            case VOTE_REVEAL:
+                duration--;
+                break;
+            case BREAK3:
+                duration++;
+                break;
+            case RESULT:
+                break;
+        }
+        return duration;
     }
 
     // listeners for phase change
@@ -439,6 +531,10 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getGenesisTotalSupply();
     }
 
+    public int getNumIssuanceTransactions(IssuanceType issuanceType) {
+        return daoStateService.getIssuanceSet(issuanceType).size();
+    }
+
     public Set<Tx> getFeeTxs() {
         return daoStateService.getBurntFeeTxs();
     }
@@ -459,8 +555,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTotalBurntFee();
     }
 
-    public long getTotalIssuedAmountFromCompRequests() {
-        return daoStateService.getTotalIssuedAmount();
+    public long getTotalIssuedAmount(IssuanceType issuanceType) {
+        return daoStateService.getTotalIssuedAmount(issuanceType);
     }
 
     public long getBlockTime(int issuanceBlockHeight) {
@@ -471,8 +567,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getIssuanceBlockHeight(txId);
     }
 
-    public boolean isIssuanceTx(String txId) {
-        return daoStateService.isIssuanceTx(txId);
+    public boolean isIssuanceTx(String txId, IssuanceType issuanceType) {
+        return daoStateService.isIssuanceTx(txId, issuanceType);
     }
 
     public boolean hasTxBurntFee(String hashAsString) {
@@ -521,6 +617,14 @@ public class DaoFacade implements DaoSetupService {
 
     public Coin getMaxCompensationRequestAmount() {
         return CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, periodService.getChainHeight());
+    }
+
+    public Coin getMinReimbursementRequestAmount() {
+        return ReimbursementConsensus.getMinReimbursementRequestAmount(daoStateService, periodService.getChainHeight());
+    }
+
+    public Coin getMaxReimbursementRequestAmount() {
+        return ReimbursementConsensus.getMaxReimbursementRequestAmount(daoStateService, periodService.getChainHeight());
     }
 
     public long getPramValue(Param param) {

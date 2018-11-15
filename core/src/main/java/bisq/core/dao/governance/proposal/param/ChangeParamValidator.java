@@ -72,9 +72,17 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case DEFAULT_TAKER_FEE_BSQ:
                 break;
+            case MIN_MAKER_FEE_BSQ:
+                break;
+            case MIN_TAKER_FEE_BSQ:
+                break;
             case DEFAULT_MAKER_FEE_BTC:
                 break;
             case DEFAULT_TAKER_FEE_BTC:
+                break;
+            case MIN_MAKER_FEE_BTC:
+                break;
+            case MIN_TAKER_FEE_BTC:
                 break;
 
             case PROPOSAL_FEE:
@@ -83,15 +91,19 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
 
             case COMPENSATION_REQUEST_MIN_AMOUNT:
+            case REIMBURSEMENT_MIN_AMOUNT:
                 if (paramValue < Restrictions.getMinNonDustOutput().value)
                     throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
                 checkMinMax(param, paramValue, 100, -50);
                 break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
+            case REIMBURSEMENT_MAX_AMOUNT:
                 checkMinMax(param, paramValue, 100, -50);
                 break;
 
             case QUORUM_COMP_REQUEST:
+                break;
+            case QUORUM_REIMBURSEMENT:
                 break;
             case QUORUM_CHANGE_PARAM:
                 break;
@@ -105,6 +117,8 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
 
             case THRESHOLD_COMP_REQUEST:
+                break;
+            case THRESHOLD_REIMBURSEMENT:
                 break;
             case THRESHOLD_CHANGE_PARAM:
                 break;

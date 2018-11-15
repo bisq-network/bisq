@@ -42,10 +42,12 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                                @Named(NetworkOptionKeys.MY_ADDRESS) String address,
                                @Named(NetworkOptionKeys.PORT_KEY) int port,
-                               @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
+                               @Named(NetworkOptionKeys.TOR_DIR) File torDir,
+                               @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
+                               @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(address, port, networkProtoResolver) :
-                new TorNetworkNode(port, torDir, networkProtoResolver, bridgeAddressProvider);
+                new TorNetworkNode(port, torDir, networkProtoResolver, bridgeAddressProvider, torrcFile, torrcOptions);
     }
 
     @Override

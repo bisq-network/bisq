@@ -83,6 +83,7 @@ public class TxInputParser {
                         case BTC_OUTPUT:
                         case PROPOSAL_OP_RETURN_OUTPUT:
                         case COMP_REQ_OP_RETURN_OUTPUT:
+                        case REIMBURSEMENT_OP_RETURN_OUTPUT:
                         case CONFISCATE_BOND_OP_RETURN_OUTPUT:
                         case ISSUANCE_CANDIDATE_OUTPUT:
                             break;

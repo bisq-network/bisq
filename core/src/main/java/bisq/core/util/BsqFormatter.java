@@ -43,10 +43,13 @@ public class BsqFormatter extends BSFormatter {
     private final String prefix = "B";
     private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.##");
     private final DecimalFormat marketCapFormat = new DecimalFormat("###,###,###");
+    private final MonetaryFormat btcCoinFormat;
 
     @Inject
     private BsqFormatter() {
         super();
+
+        btcCoinFormat = super.coinFormat;
 
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
@@ -104,19 +107,13 @@ public class BsqFormatter extends BSFormatter {
         }
     }
 
-
-    public String formatBtcSatoshi(long satoshi) {
-        return satoshi + " BTC Satoshi";
+    public String formatBTCWithCode(long satoshi) {
+        return super.formatCoinWithCode(satoshi, btcCoinFormat);
     }
 
-    public Coin parseSatoshiToBtc(String satoshi) {
-        try {
-            return Coin.valueOf(Long.valueOf(satoshi));
-        } catch (Throwable e) {
-            return Coin.ZERO;
-        }
+    public Coin parseToBTC(String input) {
+        return super.parseToCoin(input, btcCoinFormat);
     }
-
 
     public String formatParamValue(Param param, long value) {
         switch (param) {
@@ -125,17 +122,24 @@ public class BsqFormatter extends BSFormatter {
 
             case DEFAULT_MAKER_FEE_BSQ:
             case DEFAULT_TAKER_FEE_BSQ:
+            case MIN_MAKER_FEE_BSQ:
+            case MIN_TAKER_FEE_BSQ:
             case DEFAULT_MAKER_FEE_BTC:
             case DEFAULT_TAKER_FEE_BTC:
+            case MIN_MAKER_FEE_BTC:
+            case MIN_TAKER_FEE_BTC:
                 return formatToPercentWithSymbol(value / 10000d);
 
             case PROPOSAL_FEE:
             case BLIND_VOTE_FEE:
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case COMPENSATION_REQUEST_MAX_AMOUNT:
+            case REIMBURSEMENT_MIN_AMOUNT:
+            case REIMBURSEMENT_MAX_AMOUNT:
                 return formatCoinWithCode(Coin.valueOf(value));
 
             case QUORUM_COMP_REQUEST:
+            case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
             case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
@@ -144,6 +148,7 @@ public class BsqFormatter extends BSFormatter {
                 return formatCoinWithCode(Coin.valueOf(value));
 
             case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_REIMBURSEMENT:
             case THRESHOLD_CHANGE_PARAM:
             case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:
@@ -182,10 +187,13 @@ public class BsqFormatter extends BSFormatter {
             case BLIND_VOTE_FEE:
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case COMPENSATION_REQUEST_MAX_AMOUNT:
+            case REIMBURSEMENT_MIN_AMOUNT:
+            case REIMBURSEMENT_MAX_AMOUNT:
                 return parseToCoin(inputValue).value;
 
 
             case QUORUM_COMP_REQUEST:
+            case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
             case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
@@ -195,6 +203,7 @@ public class BsqFormatter extends BSFormatter {
 
 
             case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_REIMBURSEMENT:
             case THRESHOLD_CHANGE_PARAM:
             case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:

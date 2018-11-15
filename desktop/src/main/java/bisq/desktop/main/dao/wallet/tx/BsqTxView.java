@@ -35,6 +35,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
 import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -44,7 +45,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
@@ -370,11 +370,19 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     Label label;
                                     if (item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal()) {
                                         if (txType == TxType.COMPENSATION_REQUEST &&
-                                                daoFacade.isIssuanceTx(item.getTxId())) {
+                                                daoFacade.isIssuanceTx(item.getTxId(), IssuanceType.COMPENSATION)) {
                                             if (field != null)
                                                 field.setOnAction(null);
 
-                                            labelString = Res.get("dao.tx.issuance");
+                                            labelString = Res.get("dao.tx.issuanceFromCompReq");
+                                            label = new AutoTooltipLabel(labelString);
+                                            setGraphic(label);
+                                        } else if (txType == TxType.REIMBURSEMENT_REQUEST &&
+                                                daoFacade.isIssuanceTx(item.getTxId(), IssuanceType.REIMBURSEMENT)) {
+                                            if (field != null)
+                                                field.setOnAction(null);
+
+                                            labelString = Res.get("dao.tx.issuanceFromReimbursement");
                                             label = new AutoTooltipLabel(labelString);
                                             setGraphic(label);
                                         } else if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
@@ -536,13 +544,27 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:
                                             String txId = item.getTxId();
-                                            if (daoFacade.isIssuanceTx(txId)) {
+                                            if (daoFacade.isIssuanceTx(txId, IssuanceType.COMPENSATION)) {
                                                 awesomeIcon = AwesomeIcon.MONEY;
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
                                                 String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
-                                                toolTipText = Res.get("dao.tx.issuance.tooltip", formattedDate);
+                                                toolTipText = Res.get("dao.tx.issuanceFromCompReq.tooltip", formattedDate);
+                                            } else {
+                                                awesomeIcon = AwesomeIcon.FILE_TEXT;
+                                                style = "dao-tx-type-proposal-fee-icon";
+                                            }
+                                            break;
+                                        case REIMBURSEMENT_REQUEST:
+                                            txId = item.getTxId();
+                                            if (daoFacade.isIssuanceTx(txId, IssuanceType.REIMBURSEMENT)) {
+                                                awesomeIcon = AwesomeIcon.MONEY;
+                                                style = "dao-tx-type-issuance-icon";
+                                                int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
+                                                long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
+                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
+                                                toolTipText = Res.get("dao.tx.issuanceFromReimbursement.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;
                                                 style = "dao-tx-type-proposal-fee-icon";
@@ -569,7 +591,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             style = "dao-tx-type-unverified-icon";
                                             break;
                                     }
-                                    Label label = AwesomeDude.createIconLabel(awesomeIcon);
+                                    Label label = FormBuilder.getIcon(awesomeIcon);
                                     label.getStyleClass().addAll("icon", style);
                                     label.setTooltip(new Tooltip(toolTipText));
                                     if (doRotate)
