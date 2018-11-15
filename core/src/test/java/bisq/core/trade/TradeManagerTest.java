@@ -28,6 +28,9 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.taskrunner.Model;
+import bisq.common.taskrunner.Task;
+import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -59,9 +62,11 @@ import org.mockito.Mockito;
 
 public class TradeManagerTest {
 
+//    TODO do Tasks in BuyerAsTakerProtocol execute synchronously
     @Test
     public void onTakeOffer_firstAttemptToWriteATest() throws Exception {
 //        Given
+//        TODO why do we need to call this?
         PaymentMethod.onAllServicesInitialized();
         final String paymentAccountId = "paymentAccountId";
         final P2PService p2pServiceMock = mock(P2PService.class);
@@ -72,6 +77,7 @@ public class TradeManagerTest {
         when(keyRingMock.getPubKeyRing()).thenReturn(pubKeyRing);
         final Arbitrator arbitrator = new Arbitrator(new NodeAddress("a", 0), null, null, null, null, 0, null, null, null, null, null);
         final Mediator mediator = new Mediator(new NodeAddress("m", 1), null, null, 0, null, null, null, null, null);
+//        TODO why User is final? We cannot mock it if it's final.
         final User userMock = mock(User.class);
         when(userMock.getAcceptedArbitratorAddresses()).thenReturn(Collections.singletonList(arbitrator.getNodeAddress()));
         when(userMock.getAcceptedArbitratorByAddress(arbitrator.getNodeAddress())).thenReturn(arbitrator);
@@ -88,12 +94,14 @@ public class TradeManagerTest {
         final String offerId = "offerId";
         final BtcWalletService btcWalletServiceMock = mock(BtcWalletService.class);
         final AddressEntry addressEntry = new AddressEntry(mock(DeterministicKey.class), AddressEntry.Context.OFFER_FUNDING);
+//        TODO stub more precisely, ideally with exact values or at least matchers
         when(btcWalletServiceMock.getOrCreateAddressEntry(matches(offerId), any())).thenReturn(addressEntry);
         when(btcWalletServiceMock.getFreshAddressEntry()).thenReturn(addressEntry);
         final TradeWalletService tradeWalletServiceMock = mock(TradeWalletService.class);
 
-        final Path tradeManagerTest = Files.createTempDirectory("tradeManagerTest");
-        final TradeManager tradeManager = new TradeManager(userMock, keyRingMock, btcWalletServiceMock, null, tradeWalletServiceMock, null, mock(ClosedTradableManager.class), mock(FailedTradesManager.class), p2pServiceMock, null, null, tradeStatisticsManagerMock, null, null, null, arbitratorManagerMock, null, tradeManagerTest.toFile());
+        //    TODO it would be good if this test did not create any files
+        final Path tempDirectory = Files.createTempDirectory("tradeManagerTest");
+        final TradeManager tradeManager = new TradeManager(userMock, keyRingMock, btcWalletServiceMock, null, tradeWalletServiceMock, null, mock(ClosedTradableManager.class), mock(FailedTradesManager.class), p2pServiceMock, null, null, tradeStatisticsManagerMock, null, null, null, arbitratorManagerMock, null, tempDirectory.toFile());
         final ErrorMessageHandler errorMessageHandlerMock = mock(ErrorMessageHandler.class);
         when(tradeWalletServiceMock.createBtcTradingFeeTx(any(), any(), any(), any(), anyBoolean(), any(), any(), any(), any())).thenAnswer(invocation -> {
             final Transaction transactionMock = mock(Transaction.class);
@@ -126,7 +134,7 @@ public class TradeManagerTest {
         verifyNoMoreInteractions(errorMessageHandlerMock);
 //        TODO what properties should the trade have?
         verify(tradeResultHandlerMock).handleResult(any(Trade.class));
-//        TODO what should happen as the result of onTakeOffer call? What mocks should be called?
+//        TODO what should happen as th e result of onTakeOffer call? What mocks should be called?
 //        Following instructions can be used what calls are actually made
 //        verifyNoMoreInteractions(p2pServiceMock);
 //        verifyNoMoreInteractions(userMock);
@@ -206,5 +214,47 @@ public class TradeManagerTest {
         offer.setState(Offer.State.AVAILABLE);
         offer.setOfferFeePaymentTxId("abc");
         return offer;
+    }
+
+    @Test
+    public void task() {
+        //        Given
+
+        //        When
+
+        //        Then
+        final ResultHandler resultHandler = mock(ResultHandler.class);
+        final ErrorMessageHandler errorMessageHandler = mock(ErrorMessageHandler.class);
+        final TaskRunner<SimpleModel> taskRunner = new TaskRunner<>(new SimpleModel(), resultHandler, errorMessageHandler);
+        taskRunner.addTasks(SimpleTask.class);
+        taskRunner.run();
+        verify(resultHandler, times(1)).handleResult();
+        verifyZeroInteractions(errorMessageHandler);
+    }
+
+    public static class SimpleTask extends Task<SimpleModel> {
+
+        public SimpleTask(TaskRunner taskHandler, SimpleModel model) {
+            super(taskHandler, model);
+        }
+
+        @Override
+        protected void run() {
+            System.out.println("Runt simple task");
+            this.complete();
+        }
+    }
+
+    public static class SimpleModel implements Model {
+
+        @Override
+        public void persist() {
+            System.out.println("SimpleModel persist");
+        }
+
+        @Override
+        public void onComplete() {
+            System.out.println("SimpleModel onComplete");
+        }
     }
 }

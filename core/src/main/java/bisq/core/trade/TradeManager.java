@@ -420,7 +420,7 @@ public class TradeManager implements PersistedDataHost {
          * - offer id must not be banned
          * - offer maker node address must not be banned
          * - offer payment method must not be null
-         * - amount must be positive non null
+         * - amount must be positive non null (although it seems that if it is zero then no exception is thrown)
          * - amount must be less than or equal offer amount
          * - txFee must be positive non null
          * - takerFee must be positive non null
@@ -431,12 +431,15 @@ public class TradeManager implements PersistedDataHost {
          * - ErrorMessageHandler should not be null
          * - TODO actually instead of tradeResultHandler and errorMessageHandler this method should return completable future
          * - TODO fundsNeededForTrade should be calculated here I think
+         * - TODO fundsNeededForTrade should be long as it is used in this form only
          * - TODO check if user has enough funds here
          * - TODO instead of coin we might use long
          */
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
+//            TODO what if offer is in invalid state?
+//            TODO what if exception is thrown inside createTrade?
                     if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount,
                                 txFee,
