@@ -403,6 +403,8 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-password-field {
+    -fx-background-color: -bs-rd-white;
+    -fx-background-radius: 3 3 0 0;
     -jfx-focus-color: -bs-rd-green;
 }
 
