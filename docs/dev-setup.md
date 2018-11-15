@@ -30,7 +30,7 @@ Navigate to the [bitcoin.conf](https://en.bitcoin.it/wiki/Running_Bitcoin#Bitcoi
 
 At first startup you need to create 101 blocks using the command `generate 101` from the terminal inside Bitcoin Core. 101 blocks are required because of the coin maturity (100 blocks) so you need one more to have at least 50 BTC available for spending.
 
-Later you can create a new blocks with `generate 1`.
+Later you can create new blocks with `generate 1`.
 
 
 ## Understand Bisq P2P network options

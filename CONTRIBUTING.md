@@ -26,7 +26,7 @@ Pull requests should be focused on a single change. Do not mix, for example, ref
 
 ## Reviewing Pull Requests
 
-Bisq follows the review workflow established by the Bitcoin Core project. The following is adapted from the Bitcoin Core contributor documentation](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md#peer-review):
+Bisq follows the review workflow established by the Bitcoin Core project. The following is adapted from the [Bitcoin Core contributor documentation](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md#peer-review):
 
 Anyone may participate in peer review which is expressed by comments in the pull request. Typically reviewers will review the code for obvious errors, as well as test out the patch set and opine on the technical merits of the patch. Project maintainers take into account the peer review when determining if there is consensus to merge a pull request (remember that discussions may have been spread out over GitHub, mailing list and IRC discussions). The following language is used within pull-request comments:
 
@@ -60,7 +60,7 @@ From https://chris.beams.io/posts/git-commit/#seven-rules:
  6. Wrap the body at 72 characters
  7. Use the body to explain what and why vs. how
 
-([bisq-network/style#9](https://github.com/bisq-network/style/issues/9))
+See also [bisq-network/style#9](https://github.com/bisq-network/style/issues/9).
 
 ### Sign your commits with GPG
 
@@ -71,7 +71,7 @@ https://help.github.com/articles/signing-commits-with-gpg/ for instructions.
 
 ### Use an editor that supports Editorconfig
 
-The [.editorconfig](.editorconfig) settings in this repository ensure consistent management of whitespace, line endings and more. Most modern editors support it natively or with plugin. See http://editorconfig.org for details. ([bisq-network/style#9](https://github.com/bisq-network/style/issues/9))
+The [.editorconfig](.editorconfig) settings in this repository ensure consistent management of whitespace, line endings and more. Most modern editors support it natively or with plugin. See http://editorconfig.org for details. See also [bisq-network/style#10](https://github.com/bisq-network/style/issues/10).
 
 ### Additional style guidelines
 
