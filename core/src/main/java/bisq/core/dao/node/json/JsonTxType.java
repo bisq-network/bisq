@@ -29,6 +29,7 @@ enum JsonTxType {
     PAY_TRADE_FEE("Pay trade fee"),
     PROPOSAL("Proposal"),
     COMPENSATION_REQUEST("Compensation request"),
+    REIMBURSEMENT_REQUEST("Reimbursement request"),
     BLIND_VOTE("Blind vote"),
     VOTE_REVEAL("Vote reveal"),
     LOCKUP("Lockup"),

@@ -41,6 +41,8 @@ import bisq.core.dao.governance.proposal.generic.GenericProposalService;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposalService;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalService;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalService;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposalService;
@@ -130,6 +132,9 @@ public class DaoModule extends AppModule {
 
         bind(CompensationValidator.class).in(Singleton.class);
         bind(CompensationProposalService.class).in(Singleton.class);
+
+        bind(ReimbursementValidator.class).in(Singleton.class);
+        bind(ReimbursementProposalService.class).in(Singleton.class);
 
         bind(ChangeParamValidator.class).in(Singleton.class);
         bind(ChangeParamProposalService.class).in(Singleton.class);

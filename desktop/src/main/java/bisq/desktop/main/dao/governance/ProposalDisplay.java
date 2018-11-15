@@ -35,6 +35,7 @@ import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
 import bisq.core.dao.governance.proposal.generic.GenericProposal;
 import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
 import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
 import bisq.core.dao.governance.role.BondedRole;
@@ -163,6 +164,7 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+            case REIMBURSEMENT_REQUEST:
                 break;
             case CHANGE_PARAM:
                 titledGroupBgRowSpan = 6;
@@ -203,14 +205,21 @@ public class ProposalDisplay {
         int comboBoxValueTextFieldIndex = -1;
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+            case REIMBURSEMENT_REQUEST:
                 requestedBsqTextField = addLabelInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requestedBsq")).second;
-                BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-                bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
-                bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
                 checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
-                requestedBsqTextField.setValidator(bsqValidator);
                 inputControls.add(requestedBsqTextField);
+
+                BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
+                if (proposalType == ProposalType.COMPENSATION_REQUEST) {
+                    bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
+                    bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
+                } else if (proposalType == ProposalType.REIMBURSEMENT_REQUEST) {
+                    bsqValidator.setMinValue(daoFacade.getMinReimbursementRequestAmount());
+                    bsqValidator.setMaxValue(daoFacade.getMaxReimbursementRequestAmount());
+                }
+                requestedBsqTextField.setValidator(bsqValidator);
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
@@ -445,6 +454,10 @@ public class ProposalDisplay {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
             checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
             requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
+        } else if (proposal instanceof ReimbursementProposal) {
+            ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
+            checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
+            requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(reimbursementProposal.getRequestedBsq()));
         } else if (proposal instanceof ChangeParamProposal) {
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
             checkNotNull(paramComboBox, "paramComboBox must not be null");

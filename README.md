@@ -30,7 +30,7 @@ You will need OpenJDK [JDK 10](https://jdk.java.net/10/) installed to complete t
 
 With the above build complete, the Bisq executable jar is now available in the `desktop/build/libs/` directory. Run it as follows, replacing `{version}` with the actual version found in the filename:
 
-    java -jar desktop/build/libs/desktop-{version}-all.jar`
+    java -jar desktop/build/libs/desktop-{version}-all.jar
 
 
 ## Importing Bisq into Intellij IDEA

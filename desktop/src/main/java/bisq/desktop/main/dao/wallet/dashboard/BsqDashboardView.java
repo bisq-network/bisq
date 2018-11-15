@@ -26,6 +26,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -60,10 +61,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final BsqFormatter bsqFormatter;
 
     private int gridRow = 0;
-    private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, availableAmountTextField,
+    private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField, availableAmountTextField,
             burntAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
-            totalUnlockedAmountTextField, allTxTextField, burntTxTextField, utxoTextField, issuanceTxTextField,
-            priceTextField, marketCapTextField;
+            totalUnlockedAmountTextField, allTxTextField, burntTxTextField, utxoTextField, compensationIssuanceTxTextField,
+            reimbursementIssuanceTxTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
     private HyperlinkWithIcon hyperlinkWithIcon;
 
@@ -89,10 +90,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 4, Res.get("dao.wallet.dashboard.distribution"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 5, Res.get("dao.wallet.dashboard.distribution"), Layout.GROUP_DISTANCE);
 
         genesisIssueAmountTextField = addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         compRequestIssueAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
+        reimbursementAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
         burntAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
         availableAmountTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
 
@@ -107,7 +109,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketCapTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
 
 
-        addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 7, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
         addLabelTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisBlockHeight"),
                 String.valueOf(daoFacade.getGenesisBlockHeight()), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         hyperlinkWithIcon = addLabelHyperlinkWithIcon(root, ++gridRow, Res.get("dao.wallet.dashboard.genesisTxId"),
@@ -115,7 +117,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", daoFacade.getGenesisTxId())));
         allTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.allTx")).second;
         utxoTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
-        issuanceTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.issuanceTx")).second;
+        compensationIssuanceTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compensationIssuanceTx")).second;
+        reimbursementIssuanceTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementIssuanceTx")).second;
         burntTxTextField = addLabelTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntTx")).second;
 
         priceChangeListener = (observable, oldValue, newValue) -> updatePrice();
@@ -166,8 +169,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin issuedAmountFromGenesis = daoFacade.getGenesisTotalSupply();
         genesisIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromGenesis));
 
-        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmountFromCompRequests());
+        Coin issuedAmountFromCompRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.COMPENSATION));
         compRequestIssueAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromCompRequests));
+        Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
+        reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
         Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
@@ -182,7 +187,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
-        issuanceTxTextField.setText(String.valueOf(daoFacade.getIssuanceSet().size()));
+        compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
+        reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
         burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
     }
 

@@ -294,22 +294,19 @@ public class GUIUtil {
         };
     }
 
-    public static StringConverter<TradeCurrency> getTradeCurrencyConverter(
-            String postFixSingle,
-            String postFixMulti,
-            Map<String, Integer> offerCounts) {
-        return new StringConverter<TradeCurrency>() {
+    public static StringConverter<TradeCurrency> getTradeCurrencyConverter(String postFixSingle,
+                                                                           String postFixMulti,
+                                                                           Map<String, Integer> offerCounts) {
+        return new StringConverter<>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
                 String code = tradeCurrency.getCode();
                 Optional<Integer> offerCountOptional = Optional.ofNullable(offerCounts.get(code));
                 final String displayString;
-                if (offerCountOptional.isPresent()) {
-                    displayString = CurrencyUtil.getNameAndCode(code)
-                            + " - " + offerCountOptional.get() + " " + (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti);
-                } else {
-                    displayString = CurrencyUtil.getNameAndCode(code);
-                }
+                displayString = offerCountOptional
+                        .map(offerCount -> CurrencyUtil.getNameAndCode(code)
+                                + " - " + offerCount + " " + (offerCount == 1 ? postFixSingle : postFixMulti))
+                        .orElseGet(() -> CurrencyUtil.getNameAndCode(code));
                 // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
                 if (code.equals(GUIUtil.SHOW_ALL_FLAG))
                     return "▶ " + Res.get("list.currency.showAll");

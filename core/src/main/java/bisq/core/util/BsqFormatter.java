@@ -134,9 +134,12 @@ public class BsqFormatter extends BSFormatter {
             case BLIND_VOTE_FEE:
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case COMPENSATION_REQUEST_MAX_AMOUNT:
+            case REIMBURSEMENT_MIN_AMOUNT:
+            case REIMBURSEMENT_MAX_AMOUNT:
                 return formatCoinWithCode(Coin.valueOf(value));
 
             case QUORUM_COMP_REQUEST:
+            case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
             case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
@@ -145,6 +148,7 @@ public class BsqFormatter extends BSFormatter {
                 return formatCoinWithCode(Coin.valueOf(value));
 
             case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_REIMBURSEMENT:
             case THRESHOLD_CHANGE_PARAM:
             case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:
@@ -183,10 +187,13 @@ public class BsqFormatter extends BSFormatter {
             case BLIND_VOTE_FEE:
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case COMPENSATION_REQUEST_MAX_AMOUNT:
+            case REIMBURSEMENT_MIN_AMOUNT:
+            case REIMBURSEMENT_MAX_AMOUNT:
                 return parseToCoin(inputValue).value;
 
 
             case QUORUM_COMP_REQUEST:
+            case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
             case QUORUM_ROLE:
             case QUORUM_CONFISCATION:
@@ -196,6 +203,7 @@ public class BsqFormatter extends BSFormatter {
 
 
             case THRESHOLD_COMP_REQUEST:
+            case THRESHOLD_REIMBURSEMENT:
             case THRESHOLD_CHANGE_PARAM:
             case THRESHOLD_ROLE:
             case THRESHOLD_CONFISCATION:

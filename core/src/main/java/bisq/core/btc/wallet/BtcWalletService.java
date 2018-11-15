@@ -146,11 +146,28 @@ public class BtcWalletService extends WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // CompensationRequest tx
+    // Proposal txs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction completePreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData) throws
-            TransactionVerificationException, WalletException, InsufficientMoneyException {
+
+    public Transaction completePreparedProposalTx(Transaction preparedBurnFeeTx, byte[] opReturnData)
+            throws WalletException, InsufficientMoneyException, TransactionVerificationException {
+        return completePreparedProposalTx(preparedBurnFeeTx, opReturnData, null, null);
+    }
+
+    public Transaction completePreparedReimbursementRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData)
+            throws TransactionVerificationException, WalletException, InsufficientMoneyException {
+        return completePreparedProposalTx(feeTx, opReturnData, issuanceAmount, issuanceAddress);
+    }
+
+    public Transaction completePreparedCompensationRequestTx(Coin issuanceAmount, Address issuanceAddress, Transaction feeTx, byte[] opReturnData)
+            throws TransactionVerificationException, WalletException, InsufficientMoneyException {
+        return completePreparedProposalTx(feeTx, opReturnData, issuanceAmount, issuanceAddress);
+    }
+
+    private Transaction completePreparedProposalTx(Transaction feeTx, byte[] opReturnData,
+                                                   @Nullable Coin issuanceAmount, @Nullable Address issuanceAddress)
+            throws TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // (BsqFee)tx has following structure:
         // inputs [1-n] BSQ inputs (fee)
@@ -160,7 +177,7 @@ public class BtcWalletService extends WalletService {
         // inputs [1-n] BSQ inputs for request fee
         // inputs [1-n] BTC inputs for BSQ issuance and miner fee
         // outputs [1] Mandatory BSQ request fee change output (>= 546 Satoshi)
-        // outputs [1] Potentially BSQ issuance output (>= 546 Satoshi)
+        // outputs [1] Potentially BSQ issuance output (>= 546 Satoshi) - in case of a issuance tx, otherwise that output does not exist
         // outputs [0-1] BTC change output from issuance and miner fee inputs (>= 546 Satoshi)
         // outputs [1] OP_RETURN with opReturnData and amount 0
         // mining fee: BTC mining fee + burned BSQ fee
@@ -174,9 +191,11 @@ public class BtcWalletService extends WalletService {
         // BSQ change outputs from BSQ fee inputs.
         feeTx.getOutputs().forEach(preparedTx::addOutput);
 
-        // BSQ issuance output
-        preparedTx.addOutput(issuanceAmount, issuanceAddress);
-
+        // For generic proposals there is no issuance output, for compensation and reimburse requests there is
+        if (issuanceAmount != null && issuanceAddress != null) {
+            // BSQ issuance output
+            preparedTx.addOutput(issuanceAmount, issuanceAddress);
+        }
 
         // safety check counter to avoid endless loops
         int counter = 0;
@@ -204,8 +223,8 @@ public class BtcWalletService extends WalletService {
             }
 
             Transaction tx = new Transaction(params);
-            preparedBsqTxInputs.stream().forEach(tx::addInput);
-            preparedBsqTxOutputs.stream().forEach(tx::addOutput);
+            preparedBsqTxInputs.forEach(tx::addInput);
+            preparedBsqTxOutputs.forEach(tx::addOutput);
 
             SendRequest sendRequest = SendRequest.forTx(tx);
             sendRequest.shuffleOutputs = false;
@@ -228,7 +247,7 @@ public class BtcWalletService extends WalletService {
 
             numInputs = resultTx.getInputs().size();
             txSizeWithUnsignedInputs = resultTx.bitcoinSerialize().length;
-            final long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
+            long estimatedFeeAsLong = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs).value;
             // calculated fee must be inside of a tolerance range with tx fee
             isFeeOutsideTolerance = Math.abs(resultTx.getFee().value - estimatedFeeAsLong) > 1000;
         }
@@ -244,17 +263,6 @@ public class BtcWalletService extends WalletService {
         return resultTx;
     }
 
-    //TODO Similar like completePreparedCompensationRequestTx but without second output for BSQ issuance
-    public Transaction completePreparedProposalTx(Transaction preparedBurnFeeTx, byte[] opReturnData) {
-        try {
-            //TODO dummy
-            return completePreparedCompensationRequestTx(Coin.valueOf(10000), getFreshAddressEntry().getAddress(),
-                    preparedBurnFeeTx, opReturnData);
-        } catch (TransactionVerificationException | InsufficientMoneyException | WalletException e) {
-            e.printStackTrace();
-        }
-        throw new RuntimeException("completePreparedGenericProposalTx not implemented yet.");
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Blind vote tx

@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 
 public enum ProposalType {
     COMPENSATION_REQUEST,
+    REIMBURSEMENT_REQUEST,
     CHANGE_PARAM,
     BONDED_ROLE,
     CONFISCATE_BOND,

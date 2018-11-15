@@ -67,12 +67,15 @@ public enum Param {
     // As BSQ based validation values can change over time if BSQ value rise we need to support that in the Params as well
     COMPENSATION_REQUEST_MIN_AMOUNT(1_000),         // 10 BSQ
     COMPENSATION_REQUEST_MAX_AMOUNT(10_000_000),    // 100 000 BSQ
+    REIMBURSEMENT_MIN_AMOUNT(1_000),         // 10 BSQ
+    REIMBURSEMENT_MAX_AMOUNT(1_000_000),    // 10 000 BSQ
 
     // Quorum required for voting result to be valid.
     // Quorum is the min. amount of total BSQ (earned+stake) which was used for voting on a request.
     // E.g. If only 2000 BSQ was used on a vote but 10 000 is required the result is invalid even if the voters voted
     // 100% for acceptance. This should prevent that changes can be done with low stakeholder participation.
     QUORUM_COMP_REQUEST(2_000_000),         // 20 000 BSQ
+    QUORUM_REIMBURSEMENT(2_000_000),        // 20 000 BSQ
     QUORUM_CHANGE_PARAM(10_000_000),        // 100 000 BSQ
     QUORUM_ROLE(5_000_000),                 // 50 000 BSQ
     QUORUM_CONFISCATION(20_000_000),        // 200 000 BSQ
@@ -85,6 +88,7 @@ public enum Param {
     // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
     // it requires min. 50.01%.
     THRESHOLD_COMP_REQUEST(5_000),      // 50%
+    THRESHOLD_REIMBURSEMENT(5_000),      // 50%
     THRESHOLD_CHANGE_PARAM(7_500),      // 75% That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
     THRESHOLD_ROLE(5_000),              // 50%
     THRESHOLD_CONFISCATION(8_500),      // 85% Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
