@@ -50,11 +50,8 @@ import java.net.Socket;
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -115,7 +112,7 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorAndHiddenService(torDir, Utils.findFreeSystemPort(), servicePort, bridgeAddressProvider.getBridgeAddresses());
+        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort, bridgeAddressProvider.getBridgeAddresses());
     }
 
     @Override
@@ -240,7 +237,7 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(File torDir, int localPort, int servicePort, @Nullable List<String> bridgeEntries) {
+    private void createTorAndHiddenService(int localPort, int servicePort, @Nullable List<String> bridgeEntries) {
         Log.traceCall();
         if (bridgeEntries != null)
             log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
