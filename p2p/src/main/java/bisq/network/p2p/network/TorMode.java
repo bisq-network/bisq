@@ -43,4 +43,18 @@ public abstract class TorMode {
      */
     public abstract Tor getTor() throws IOException, TorCtlException;
 
+    /**
+     * {@link NativeTor}'s inner workings prepend its Tor installation path and some
+     * other stuff to the hiddenServiceDir, thus, selecting nothing (i.e.
+     * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
+     * however, does not have a Tor installation path and thus, takes the hidden
+     * service path literally. Hence, we set
+     * <code>"torDir/ephemeralHiddenService"</code> as the hidden service directory.
+     * 
+     * @return <code>""</code> in {@link NewTor} Mode,
+     *         <code>"torDir/ephemeralHiddenService"</code> in {@link RunningTor}
+     *         mode
+     */
+    public abstract String getHiddenServiceDirectory();
+
 }

@@ -250,7 +250,7 @@ public class TorNetworkNode extends NetworkNode {
 
                 // start hidden service
                 long ts2 = new Date().getTime();
-                hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
+                hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +
@@ -281,6 +281,14 @@ public class TorNetworkNode extends NetworkNode {
             } catch (TorCtlException e) {
                 log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
                 restartTor(e.getMessage());
+            } catch (IOException e) {
+                log.error("Could not connect to running Tor: "
+                        + e.getMessage());
+
+                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing
+                // furthermore, we have no hidden services started yet, so there is no graceful
+                // shutdown needed either
+                System.exit(1);
             } catch (Throwable ignore) {
             }
 

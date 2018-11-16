@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NewTor extends TorMode {
 
-    private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
+    private static final Logger log = LoggerFactory.getLogger(NewTor.class);
 
     private final String torrcFile;
     private final String torrcOptions;
@@ -107,6 +107,11 @@ public class NewTor extends TorMode {
                 (new Date().getTime() - ts1)); // takes usually a few seconds
 
         return result;
+    }
+
+    @Override
+    public String getHiddenServiceDirectory() {
+        return "";
     }
 
 }

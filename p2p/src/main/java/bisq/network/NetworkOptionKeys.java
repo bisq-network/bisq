@@ -31,4 +31,5 @@ public class NetworkOptionKeys {
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
     public static final String TORRC_OPTIONS = "torrcOptions";
     public static final String TORRC_FILE = "torrcFile";
+    public static final String EXTERNAL_TOR_CONTROL_PORT = "torControlPort";
 }

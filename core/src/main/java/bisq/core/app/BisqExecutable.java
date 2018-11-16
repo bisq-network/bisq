@@ -363,6 +363,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 description("A list of torrc-entries to amend to Bisqs torrc. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten. [torrc options line, torrc option, ...]", ""))
                 .withRequiredArg()
                 .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
+                description("The control port of an already running Tor service to be used by Bisq [port].", ""))
+                .availableUnless(NetworkOptionKeys.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
+                .withRequiredArg()
+                .ofType(int.class);
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
