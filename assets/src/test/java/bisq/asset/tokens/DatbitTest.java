@@ -40,3 +40,4 @@
          assertInvalidAddress("A6849FA24ccbD7A5E87a68095257e5f26361a44g");
      }
  }
+
