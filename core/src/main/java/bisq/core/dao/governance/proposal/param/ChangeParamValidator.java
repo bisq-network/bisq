@@ -185,6 +185,6 @@ public class ChangeParamValidator extends ProposalValidator {
             throw new ValidationException("Input is larger than " + max + " times the current value.");
 
         if (change < (1 / min))
-            throw new ValidationException("Input is smaller than " + 1 / min + " % of the current value.");
+            throw new ValidationException("Input is smaller than " + 1 / min + " times the current value.");
     }
 }
