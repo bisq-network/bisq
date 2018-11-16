@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -99,6 +100,10 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+
+
+
+import javax.validation.ValidationException;
 
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -435,6 +440,15 @@ public class TradeManager implements PersistedDataHost {
          * - TODO check if user has enough funds here
          * - TODO instead of coin we might use long
          */
+        if (null == user.getPaymentAccount(paymentAccountId)) {
+            throw new ValidationException("Payment account for given id does not exist: " + paymentAccountId);
+        }
+        if (null == offer) {
+            throw new ValidationException("Offer must not be null");
+        }
+        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
+            throw new ValidationException(Res.get("offerbook.warning.currencyBanned"));
+        }
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
