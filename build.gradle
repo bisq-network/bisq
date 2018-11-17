@@ -5,7 +5,7 @@ buildscript {
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
     }
