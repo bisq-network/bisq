@@ -751,6 +751,14 @@ public class DaoStateService implements DaoSetupService {
                 .sum();
     }
 
+    public long getTotalAmountOfConfiscatedTxOutputs() {
+        return daoState.getConfiscatedTxOutputMap()
+                .values()
+                .stream()
+                .mapToLong(TxOutput::getValue)
+                .sum();
+    }
+
     // Confiscate bond
     public void confiscateBond(String lockupTxId) {
         Optional<TxOutput> optionalTxOutput = getLockupTxOutput(lockupTxId);
