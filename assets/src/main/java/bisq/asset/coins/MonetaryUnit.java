@@ -17,22 +17,39 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-public class Actinium extends Coin {
+public class MonetaryUnit extends Coin {
 
-    public Actinium() {
-        super("Actinium", "ACM", new Base58BitcoinAddressValidator(new ActiniumParams()));
+    public MonetaryUnit() {
+        super("MonetaryUnit", "MUE", new MonetaryUnitAddressValidator());
     }
 
 
-    public static class ActiniumParams extends NetworkParametersAdapter {
+    public static class MonetaryUnitAddressValidator extends Base58BitcoinAddressValidator {
 
-        public ActiniumParams() {
-            addressHeader = 53;
-            p2shHeader = 55;
+        public MonetaryUnitAddressValidator() {
+            super(new MonetaryUnitParams());
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (!address.matches("^[7][a-km-zA-HJ-NP-Z1-9]{25,34}$"))
+                return AddressValidationResult.invalidStructure();
+
+            return super.validate(address);
+        }
+    }
+
+
+    public static class MonetaryUnitParams extends NetworkParametersAdapter {
+
+        public MonetaryUnitParams() {
+            addressHeader = 16;
+            p2shHeader = 76;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }

@@ -17,23 +17,12 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.NetworkParametersAdapter;
+import bisq.asset.RegexAddressValidator;
 
-public class Actinium extends Coin {
+public class MoX extends Coin {
 
-    public Actinium() {
-        super("Actinium", "ACM", new Base58BitcoinAddressValidator(new ActiniumParams()));
-    }
-
-
-    public static class ActiniumParams extends NetworkParametersAdapter {
-
-        public ActiniumParams() {
-            addressHeader = 53;
-            p2shHeader = 55;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
-        }
+    public MoX() {
+        super("MoX", "MOX", new RegexAddressValidator("^X[1-9A-Za-z^OIl]{96}"));
     }
 }
