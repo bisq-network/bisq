@@ -641,4 +641,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .findAny()
                 .orElse(wallet.freshReceiveAddress());
     }
+
+    public String getUnusedBsqAddressAsString() {
+        return "B" + getUnusedAddress().toBase58();
+    }
 }

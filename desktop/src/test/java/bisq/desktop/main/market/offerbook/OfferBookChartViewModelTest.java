@@ -91,7 +91,7 @@ public class OfferBookChartViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForBuyPrice() {
+    public void testMaxCharactersForFiatBuyPrice() {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
@@ -103,9 +103,9 @@ public class OfferBookChartViewModelTest {
         model.activate();
         assertEquals(7, model.maxPlacesForBuyPrice.intValue());
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.price, 94016475L))));
-        assertEquals(9, model.maxPlacesForBuyPrice.intValue());
+        assertEquals(9, model.maxPlacesForBuyPrice.intValue()); // 9401.6475
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.price, 101016475L))));
-        assertEquals(10, model.maxPlacesForBuyPrice.intValue());
+        assertEquals(10, model.maxPlacesForBuyPrice.intValue()); //10101.6475
     }
 
     @Test
@@ -120,7 +120,7 @@ public class OfferBookChartViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForBuyVolume() {
+    public void testMaxCharactersForFiatBuyVolume() {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
@@ -169,7 +169,7 @@ public class OfferBookChartViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForSellPrice() {
+    public void testMaxCharactersForFiatSellPrice() {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
@@ -179,11 +179,11 @@ public class OfferBookChartViewModelTest {
 
         final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, null, new BSFormatter());
         model.activate();
-        assertEquals(7, model.maxPlacesForSellPrice.intValue());
+        assertEquals(7, model.maxPlacesForSellPrice.intValue()); // 10.0000 default price
         offerBookListItems.addAll(make(btcSellItem.but(with(OfferBookListItemMaker.price, 94016475L))));
-        assertEquals(9, model.maxPlacesForSellPrice.intValue());
+        assertEquals(9, model.maxPlacesForSellPrice.intValue()); // 9401.6475
         offerBookListItems.addAll(make(btcSellItem.but(with(OfferBookListItemMaker.price, 101016475L))));
-        assertEquals(10, model.maxPlacesForSellPrice.intValue());
+        assertEquals(10, model.maxPlacesForSellPrice.intValue()); // 10101.6475
     }
 
     @Test
@@ -198,7 +198,7 @@ public class OfferBookChartViewModelTest {
     }
 
     @Test
-    public void testMaxCharactersForSellVolume() {
+    public void testMaxCharactersForFiatSellVolume() {
         OfferBook offerBook = mock(OfferBook.class);
         PriceFeedService service = mock(PriceFeedService.class);
         final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();

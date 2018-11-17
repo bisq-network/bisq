@@ -21,6 +21,8 @@ import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.LocalhostNetworkNode;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.NewTor;
+import bisq.network.p2p.network.RunningTor;
 import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -42,10 +44,19 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                                @Named(NetworkOptionKeys.MY_ADDRESS) String address,
                                @Named(NetworkOptionKeys.PORT_KEY) int port,
-                               @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
+                               @Named(NetworkOptionKeys.TOR_DIR) File torDir,
+                               @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
+                               @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) String password,
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) String cookieFile,
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(address, port, networkProtoResolver) :
-                new TorNetworkNode(port, torDir, networkProtoResolver, bridgeAddressProvider);
+                new TorNetworkNode(port, torDir, networkProtoResolver,
+                        !controlPort.isEmpty() ?
+                                new RunningTor(torDir, Integer.parseInt(controlPort), password, cookieFile, useSafeCookieAuthentication) :
+                                new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));
     }
 
     @Override

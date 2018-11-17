@@ -59,6 +59,7 @@ import javafx.collections.ObservableList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -102,10 +103,15 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         this.formatter = formatter;
         this.accountAgeWitnessService = accountAgeWitnessService;
 
-        Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(preferences.getOfferBookChartScreenCurrencyCode());
-        if (tradeCurrencyOptional.isPresent())
-            selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
-        else {
+        String code = preferences.getOfferBookChartScreenCurrencyCode();
+        if (code != null) {
+            Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(code);
+            if (tradeCurrencyOptional.isPresent())
+                selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
+            else {
+                selectedTradeCurrencyProperty.set(GlobalSettings.getDefaultTradeCurrency());
+            }
+        } else {
             selectedTradeCurrencyProperty.set(GlobalSettings.getDefaultTradeCurrency());
         }
 
@@ -117,9 +123,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 list.addAll(c.getAddedSubList());
                 if (list.stream()
                         .map(OfferBookListItem::getOffer)
-                        .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode()))
-                        .findAny()
-                        .isPresent())
+                        .anyMatch(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())))
                     updateChartData();
             }
 
@@ -144,15 +148,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         // Don't use a set as we need all entries
         List<TradeCurrency> tradeCurrencyList = offerBookListItems.stream()
                 .map(e -> {
-                    Optional<TradeCurrency> tradeCurrencyOptional =
-                            CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode());
-                    if (tradeCurrencyOptional.isPresent())
-                        return tradeCurrencyOptional.get();
-                    else
-                        return null;
-
+                    String currencyCode = e.getOffer().getCurrencyCode();
+                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(currencyCode);
+                    return tradeCurrencyOptional.orElse(null);
                 })
-                .filter(e -> e != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         currencyListItems.updateWithCurrencies(tradeCurrencyList, null);
@@ -275,7 +275,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private boolean isAnyPricePresent() {
-        return offerBookListItems.stream().filter(item -> item.getOffer().getPrice() == null).findAny().isPresent();
+        return offerBookListItems.stream().anyMatch(item -> item.getOffer().getPrice() == null);
     }
 
     private void updateChartData() {
@@ -306,6 +306,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         if (highestBuyPriceOffer.isPresent()) {
             final Offer offer = highestBuyPriceOffer.get();
             maxPlacesForBuyPrice.set(formatPrice(offer, false).length());
+        } else {
+            log.debug("highestBuyPriceOffer not present");
         }
 
         final Optional<Offer> highestBuyVolumeOffer = allBuyOffers.stream()

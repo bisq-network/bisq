@@ -17,12 +17,11 @@
 
 package bisq.core.dao.state.governance;
 
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
-
-import javax.inject.Inject;
 
 import java.util.Optional;
 
@@ -45,12 +44,14 @@ public class Issuance implements PersistablePayload, NetworkPayload {
     @Nullable
     private final String pubKey; // sig key as hex of first input in issuance tx
 
-    @Inject
-    public Issuance(String txId, int chainHeight, long amount, @Nullable String pubKey) {
+    private final IssuanceType issuanceType;
+
+    public Issuance(String txId, int chainHeight, long amount, @Nullable String pubKey, IssuanceType issuanceType) {
         this.txId = txId;
         this.chainHeight = chainHeight;
         this.amount = amount;
         this.pubKey = pubKey;
+        this.issuanceType = issuanceType;
     }
 
 
@@ -62,7 +63,8 @@ public class Issuance implements PersistablePayload, NetworkPayload {
         final PB.Issuance.Builder builder = PB.Issuance.newBuilder()
                 .setTxId(txId)
                 .setChainHeight(chainHeight)
-                .setAmount(amount);
+                .setAmount(amount)
+                .setIssuanceType(issuanceType.name());
 
         Optional.ofNullable(pubKey).ifPresent(e -> builder.setPubKey(pubKey));
 
@@ -73,7 +75,8 @@ public class Issuance implements PersistablePayload, NetworkPayload {
         return new Issuance(proto.getTxId(),
                 proto.getChainHeight(),
                 proto.getAmount(),
-                proto.getPubKey().isEmpty() ? null : proto.getPubKey());
+                proto.getPubKey().isEmpty() ? null : proto.getPubKey(),
+                proto.getIssuanceType().isEmpty() ? IssuanceType.UNDEFINED : ProtoUtil.enumFromProto(IssuanceType.class, proto.getIssuanceType()));
     }
 
     @Override
@@ -83,6 +86,7 @@ public class Issuance implements PersistablePayload, NetworkPayload {
                 ",\n     chainHeight=" + chainHeight +
                 ",\n     amount=" + amount +
                 ",\n     pubKey='" + pubKey + '\'' +
+                ",\n     issuanceType='" + issuanceType + '\'' +
                 "\n}";
     }
 }

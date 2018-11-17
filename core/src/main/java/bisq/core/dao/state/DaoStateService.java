@@ -32,6 +32,7 @@ import bisq.core.dao.state.blockchain.TxOutputType;
 import bisq.core.dao.state.blockchain.TxType;
 import bisq.core.dao.state.governance.ConfiscateBond;
 import bisq.core.dao.state.governance.Issuance;
+import bisq.core.dao.state.governance.IssuanceType;
 import bisq.core.dao.state.governance.Param;
 import bisq.core.dao.state.governance.ParamChange;
 import bisq.core.dao.state.period.Cycle;
@@ -407,6 +408,7 @@ public class DaoStateService implements DaoSetupService {
                 return false;
             case PROPOSAL_OP_RETURN_OUTPUT:
             case COMP_REQ_OP_RETURN_OUTPUT:
+            case REIMBURSEMENT_OP_RETURN_OUTPUT:
             case ISSUANCE_CANDIDATE_OUTPUT:
                 return true;
             case BLIND_VOTE_LOCK_STAKE_OUTPUT:
@@ -451,6 +453,7 @@ public class DaoStateService implements DaoSetupService {
                 return false;
             case PROPOSAL_OP_RETURN_OUTPUT:
             case COMP_REQ_OP_RETURN_OUTPUT:
+            case REIMBURSEMENT_OP_RETURN_OUTPUT:
                 return true;
             case ISSUANCE_CANDIDATE_OUTPUT:
                 return isIssuanceTx(txOutput.getTxId());
@@ -502,20 +505,31 @@ public class DaoStateService implements DaoSetupService {
         daoState.getIssuanceMap().put(issuance.getTxId(), issuance);
     }
 
-    public Set<Issuance> getIssuanceSet() {
-        return new HashSet<>(daoState.getIssuanceMap().values());
+    public Set<Issuance> getIssuanceSet(IssuanceType issuanceType) {
+        return daoState.getIssuanceMap().values().stream()
+                .filter(issuance -> issuance.getIssuanceType() == issuanceType)
+                .collect(Collectors.toSet());
+    }
+
+    public Optional<Issuance> getIssuance(String txId, IssuanceType issuanceType) {
+        return daoState.getIssuanceMap().values().stream()
+                .filter(issuance -> issuance.getTxId().equals(txId))
+                .filter(issuance -> issuance.getIssuanceType() == issuanceType)
+                .findAny();
     }
 
     public Optional<Issuance> getIssuance(String txId) {
-        if (daoState.getIssuanceMap().containsKey(txId))
-            return Optional.of(daoState.getIssuanceMap().get(txId));
-        else
-            return Optional.empty();
+        return daoState.getIssuanceMap().values().stream()
+                .filter(issuance -> issuance.getTxId().equals(txId))
+                .findAny();
     }
 
-    //TODO rename acceptedIssuanceTx
     public boolean isIssuanceTx(String txId) {
         return getIssuance(txId).isPresent();
+    }
+
+    public boolean isIssuanceTx(String txId, IssuanceType issuanceType) {
+        return getIssuance(txId, issuanceType).isPresent();
     }
 
     public int getIssuanceBlockHeight(String txId) {
@@ -524,9 +538,9 @@ public class DaoStateService implements DaoSetupService {
                 .orElse(0);
     }
 
-    public long getTotalIssuedAmount() {
+    public long getTotalIssuedAmount(IssuanceType issuanceType) {
         return getIssuanceCandidateTxOutputs().stream()
-                .filter(txOutput -> isIssuanceTx(txOutput.getTxId()))
+                .filter(txOutput -> isIssuanceTx(txOutput.getTxId(), issuanceType))
                 .mapToLong(TxOutput::getValue)
                 .sum();
     }

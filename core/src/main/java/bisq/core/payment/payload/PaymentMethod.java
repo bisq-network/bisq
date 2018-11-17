@@ -81,6 +81,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String HAL_CASH_ID = "HAL_CASH";
     public static final String F2F_ID = "F2F";
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
+    public static final String PROMPT_PAY_ID = "PROMPT_PAY";
 
     @Deprecated
     public static PaymentMethod OK_PAY;
@@ -112,6 +113,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod F2F;
     public static PaymentMethod HAL_CASH;
     public static PaymentMethod BLOCK_CHAINS;
+    public static PaymentMethod PROMPT_PAY;
 
     private static List<PaymentMethod> ALL_VALUES;
 
@@ -226,6 +228,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // China
                     ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
                     WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, maxTradeLimitLowRisk),
+
+                    // Thailand
+                    PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, maxTradeLimitLowRisk),
 
                     // Altcoins
                     BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)

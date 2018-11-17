@@ -29,4 +29,10 @@ public class NetworkOptionKeys {
     //SOCKS_5_PROXY_BTC_ADDRESS used in network module so dont move it to BtcOptionKeys
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
+    public static final String TORRC_OPTIONS = "torrcOptions";
+    public static final String TORRC_FILE = "torrcFile";
+    public static final String EXTERNAL_TOR_CONTROL_PORT = "torControlPort";
+    public static final String EXTERNAL_TOR_PASSWORD = "torControlPassword";
+    public static final String EXTERNAL_TOR_COOKIE_FILE = "torControlCookieFile";
+    public static final String EXTERNAL_TOR_USE_SAFECOOKIE = "torControlUseSafeCookieAuth";
 }

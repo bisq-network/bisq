@@ -28,7 +28,6 @@ import bisq.common.storage.FileUtil;
 import bisq.common.util.Utilities;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
-import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.TorSocket;
@@ -52,7 +51,6 @@ import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -68,29 +66,31 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // Run in UserThread
 public class TorNetworkNode extends NetworkNode {
+
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT = 5;
 
+
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
-    private final BridgeAddressProvider bridgeAddressProvider;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allShutDown;
     private Tor tor;
 
+    private TorMode torMode;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, BridgeAddressProvider bridgeAddressProvider) {
+    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, TorMode torMode) {
         super(servicePort, networkProtoResolver);
         this.torDir = torDir;
-        this.bridgeAddressProvider = bridgeAddressProvider;
+        this.torMode = torMode;
     }
 
 
@@ -109,7 +109,7 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorAndHiddenService(torDir, Utils.findFreeSystemPort(), servicePort, bridgeAddressProvider.getBridgeAddresses());
+        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);
     }
 
     @Override
@@ -234,25 +234,18 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(File torDir, int localPort, int servicePort, @Nullable List<String> bridgeEntries) {
+    private void createTorAndHiddenService(int localPort, int servicePort) {
         Log.traceCall();
-        if (bridgeEntries != null)
-            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
         ListenableFuture<Void> future = executorService.submit(() -> {
             try {
-                long ts1 = new Date().getTime();
-                log.info("Starting tor");
-                Tor.setDefault(new NativeTor(torDir, bridgeEntries));
-                log.info("\n################################################################\n" +
-                                "Tor started after {} ms. Start publishing hidden service.\n" +
-                                "################################################################",
-                        (new Date().getTime() - ts1)); // takes usually a few seconds
-
+                // get tor
+                Tor.setDefault(torMode.getTor());
                 UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
 
+                // start hidden service
                 long ts2 = new Date().getTime();
-                hiddenServiceSocket = new HiddenServiceSocket(localPort, "", servicePort);
+                hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +
@@ -283,6 +276,14 @@ public class TorNetworkNode extends NetworkNode {
             } catch (TorCtlException e) {
                 log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
                 restartTor(e.getMessage());
+            } catch (IOException e) {
+                log.error("Could not connect to running Tor: "
+                        + e.getMessage());
+
+                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing
+                // furthermore, we have no hidden services started yet, so there is no graceful
+                // shutdown needed either
+                System.exit(1);
             } catch (Throwable ignore) {
             }
 

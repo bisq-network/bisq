@@ -18,6 +18,7 @@
 package bisq.core.monetary;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
@@ -34,8 +35,8 @@ public class Volume extends MonetaryWrapper implements Comparable<Volume> {
         super(monetary);
     }
 
-    public static Volume parse(String inputValue, String currencyCode) {
-        final String cleaned = inputValue.replace(",", ".");
+    public static Volume parse(String input, String currencyCode) {
+        String cleaned = BSFormatter.convertCharsForNumber(input);
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return new Volume(Fiat.parseFiat(currencyCode, cleaned));
         else

@@ -205,7 +205,8 @@ public class TxOutputParser {
         if (availableInputValue > 0 &&
                 index == 1 &&
                 optionalOpReturnType.isPresent() &&
-                optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST) {
+                (optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST ||
+                        optionalOpReturnType.get() == OpReturnType.REIMBURSEMENT_REQUEST)) {
             optionalIssuanceCandidate = Optional.of(txOutput);
         } else {
             txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
@@ -225,6 +226,8 @@ public class TxOutputParser {
                 return Optional.of(OpReturnType.PROPOSAL);
             case COMP_REQ_OP_RETURN_OUTPUT:
                 return Optional.of(OpReturnType.COMPENSATION_REQUEST);
+            case REIMBURSEMENT_OP_RETURN_OUTPUT:
+                return Optional.of(OpReturnType.REIMBURSEMENT_REQUEST);
             case BLIND_VOTE_OP_RETURN_OUTPUT:
                 return Optional.of(OpReturnType.BLIND_VOTE);
             case VOTE_REVEAL_OP_RETURN_OUTPUT:

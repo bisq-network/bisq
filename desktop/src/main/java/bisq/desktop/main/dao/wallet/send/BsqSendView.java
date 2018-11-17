@@ -221,7 +221,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
 
         amountInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount")).second;
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoin(Restrictions.getMinNonDustOutput())));
+        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
 
         focusOutListener = (observable, oldValue, newValue) -> {
@@ -290,16 +290,16 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
         btcAmountLabel = tuple2.first;
         btcAmountInputTextField = tuple2.second;
-        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount", Restrictions.getMinNonDustOutput().value));
+        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount",
+                bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput().value)));
         btcAmountInputTextField.setValidator(btcValidator);
 
         sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
 
         sendBtcButton.setOnAction((event) -> {
-            // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
                 String receiversAddressString = receiversBtcAddressInputTextField.getText();
-                Coin receiverAmount = bsqFormatter.parseSatoshiToBtc(btcAmountInputTextField.getText());
+                Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
                 try {
                     Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount);
                     Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);

@@ -17,8 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.locale.CurrencyUtil;
-
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -101,8 +99,12 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final boolean useMarketBasedPrice;
     private final long amount;
     private final long minAmount;
+
+    // For fiat offer the baseCurrencyCode is BTC and the counterCurrencyCode is the fiat currency
+    // For altcoin offers it is the opposite. baseCurrencyCode is the altcoin and the counterCurrencyCode is BTC.
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
+
     private final List<NodeAddress> arbitratorNodeAddresses;
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;
@@ -368,7 +370,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
-        return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();
+        return getBaseCurrencyCode().equals("BTC") ? getCounterCurrencyCode() : getBaseCurrencyCode();
     }
 
     @Override

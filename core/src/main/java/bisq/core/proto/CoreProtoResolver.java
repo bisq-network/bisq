@@ -37,6 +37,7 @@ import bisq.core.payment.payload.OKPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
+import bisq.core.payment.payload.PromptPayAccountPayload;
 import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
@@ -135,6 +136,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return HalCashAccountPayload.fromProto(proto);
                 case U_S_POSTAL_MONEY_ORDER_ACCOUNT_PAYLOAD:
                     return USPostalMoneyOrderAccountPayload.fromProto(proto);
+                case PROMPT_PAY_ACCOUNT_PAYLOAD:
+                    return PromptPayAccountPayload.fromProto(proto);
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PaymentAccountPayload). messageCase=" + messageCase);
             }

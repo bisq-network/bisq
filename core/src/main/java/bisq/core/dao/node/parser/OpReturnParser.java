@@ -90,6 +90,11 @@ class OpReturnParser {
                     return TxOutputType.COMP_REQ_OP_RETURN_OUTPUT;
                 else
                     break;
+            case REIMBURSEMENT_REQUEST:
+                if (ProposalConsensus.hasOpReturnDataValidLength(opReturnData))
+                    return TxOutputType.REIMBURSEMENT_OP_RETURN_OUTPUT;
+                else
+                    break;
             case BLIND_VOTE:
                 if (BlindVoteConsensus.hasOpReturnDataValidLength(opReturnData))
                     return TxOutputType.BLIND_VOTE_OP_RETURN_OUTPUT;

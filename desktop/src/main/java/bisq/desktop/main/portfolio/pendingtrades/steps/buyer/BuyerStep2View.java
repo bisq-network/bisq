@@ -36,6 +36,7 @@ import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
+import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
@@ -280,6 +281,9 @@ public class BuyerStep2View extends TradeStepView {
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
+                break;
+            case PaymentMethod.PROMPT_PAY_ID:
+                gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
