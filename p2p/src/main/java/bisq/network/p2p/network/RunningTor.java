@@ -43,12 +43,17 @@ public class RunningTor extends TorMode {
     private final int controlPort;
     private final String password;
     private final String torDir;
+    private final File cookieFile;
+    private final boolean useSafeCookieAuthentication;
 
 
-    public RunningTor(final File torDir, final int controlPort, final String password) {
+    public RunningTor(final File torDir, final int controlPort, final String password, final String cookieFile,
+            final boolean useSafeCookieAuthentication) {
         this.torDir = torDir.getAbsolutePath();
         this.controlPort = controlPort;
         this.password = password;
+        this.cookieFile = new File(cookieFile);
+        this.useSafeCookieAuthentication = useSafeCookieAuthentication;
     }
 
     @Override
@@ -60,6 +65,8 @@ public class RunningTor extends TorMode {
         Tor result;
         if (!password.isEmpty())
             result = new ExternalTor(controlPort, password);
+        else if (cookieFile.exists())
+            result = new ExternalTor(controlPort, cookieFile, useSafeCookieAuthentication);
         else
             result = new ExternalTor(controlPort);
 
