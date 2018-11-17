@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
@@ -62,6 +63,9 @@ public class NewTor extends TorMode {
     @Override
     public Tor getTor() throws IOException, TorCtlException {
         long ts1 = new Date().getTime();
+
+        if (bridgeEntries != null)
+            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
         Torrc override = null;
 

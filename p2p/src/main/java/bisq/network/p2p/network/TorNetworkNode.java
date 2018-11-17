@@ -75,7 +75,6 @@ public class TorNetworkNode extends NetworkNode {
 
     private HiddenServiceSocket hiddenServiceSocket;
     private final File torDir;
-    private final BridgeAddressProvider bridgeAddressProvider;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
@@ -88,11 +87,9 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver,
-            BridgeAddressProvider bridgeAddressProvider, TorMode torMode) {
+    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, TorMode torMode) {
         super(servicePort, networkProtoResolver);
         this.torDir = torDir;
-        this.bridgeAddressProvider = bridgeAddressProvider;
         this.torMode = torMode;
     }
 
@@ -112,7 +109,7 @@ public class TorNetworkNode extends NetworkNode {
         createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
-        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort, bridgeAddressProvider.getBridgeAddresses());
+        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);
     }
 
     @Override
@@ -237,10 +234,8 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(int localPort, int servicePort, @Nullable List<String> bridgeEntries) {
+    private void createTorAndHiddenService(int localPort, int servicePort) {
         Log.traceCall();
-        if (bridgeEntries != null)
-            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
         ListenableFuture<Void> future = executorService.submit(() -> {
             try {
