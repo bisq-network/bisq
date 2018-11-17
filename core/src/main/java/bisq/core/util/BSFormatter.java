@@ -562,9 +562,15 @@ public class BSFormatter {
         return value;
     }
 
-    protected String cleanDoubleInput(String input) {
-        input = input.replace(",", ".");
+    public static String convertCharsForNumber(String input) {
+        // Some languages like finnish use the long dash for the minus
+        input = input.replace("−", "-");
         input = StringUtils.deleteWhitespace(input);
+        return input.replace(",", ".");
+    }
+
+    protected String cleanDoubleInput(String input) {
+        input = convertCharsForNumber(input);
         if (input.equals("."))
             input = input.replace(".", "0.");
         if (input.equals("-."))
