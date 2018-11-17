@@ -358,6 +358,24 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 description("A list of torrc-entries to amend to Bisqs torrc. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten. [torrc options line, torrc option, ...]", ""))
                 .withRequiredArg()
                 .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
+                description("The control port of an already running Tor service to be used by Bisq [port].", ""))
+                .availableUnless(NetworkOptionKeys.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD,
+                description("The password for controlling the already running Tor service.", ""))
+                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
+                .withRequiredArg();
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE,
+                description("The cookie file for authenticating against the already running Tor service. Use in conjunction with --" + NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, ""))
+                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
+                .availableUnless(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)
+                .withRequiredArg()
+                .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE,
+                description("Use the SafeCookie method when authenticating to the already running Tor service.", ""))
+                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE);
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
