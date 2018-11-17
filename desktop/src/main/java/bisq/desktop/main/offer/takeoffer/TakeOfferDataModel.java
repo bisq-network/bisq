@@ -328,7 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
     // leading to a smaller tx and too high fees. Simply updating the fee estimation would lead to changed required funds
     // and if funds get higher (if tx get larger) the user would get confused (adding small inputs would increase total required funds).
     // So that would require more thoughts how to deal with all those cases.
-    public void estimateTxSize() {
+    private void estimateTxSize() {
         Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
