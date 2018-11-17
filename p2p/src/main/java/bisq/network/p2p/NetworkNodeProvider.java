@@ -47,12 +47,13 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(NetworkOptionKeys.TOR_DIR) File torDir,
                                @Named(NetworkOptionKeys.TORRC_FILE) String torrcFile,
                                @Named(NetworkOptionKeys.TORRC_OPTIONS) String torrcOptions,
-                               @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort) {
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) String controlPort,
+                               @Named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) String password) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(address, port, networkProtoResolver) :
                 new TorNetworkNode(port, torDir, networkProtoResolver, bridgeAddressProvider,
                         !controlPort.isEmpty() ?
-                                new RunningTor(torDir, Integer.parseInt(controlPort)) :
+                                new RunningTor(torDir, Integer.parseInt(controlPort), password) :
                                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));
     }
 

@@ -41,12 +41,14 @@ public class RunningTor extends TorMode {
 
     private static final Logger log = LoggerFactory.getLogger(RunningTor.class);
     private final int controlPort;
+    private final String password;
     private final String torDir;
 
 
-    public RunningTor(final File torDir, final int controlPort) {
+    public RunningTor(final File torDir, final int controlPort, final String password) {
         this.torDir = torDir.getAbsolutePath();
         this.controlPort = controlPort;
+        this.password = password;
     }
 
     @Override
@@ -54,7 +56,13 @@ public class RunningTor extends TorMode {
         long ts1 = new Date().getTime();
 
         log.info("Connecting to running tor");
-        Tor result = new ExternalTor(controlPort);
+
+        Tor result;
+        if (!password.isEmpty())
+            result = new ExternalTor(controlPort, password);
+        else
+            result = new ExternalTor(controlPort);
+
         log.info(
                 "\n################################################################\n"
                         + "Tor started after {} ms. Start publishing hidden service.\n"

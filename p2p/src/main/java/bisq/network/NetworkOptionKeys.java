@@ -32,4 +32,5 @@ public class NetworkOptionKeys {
     public static final String TORRC_OPTIONS = "torrcOptions";
     public static final String TORRC_FILE = "torrcFile";
     public static final String EXTERNAL_TOR_CONTROL_PORT = "torControlPort";
+    public static final String EXTERNAL_TOR_PASSWORD = "torControlPassword";
 }

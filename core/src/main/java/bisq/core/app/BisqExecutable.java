@@ -368,6 +368,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .availableUnless(NetworkOptionKeys.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
                 .withRequiredArg()
                 .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD,
+                description("The password for controlling the already running Tor service.", ""))
+                .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
+                .withRequiredArg();
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,

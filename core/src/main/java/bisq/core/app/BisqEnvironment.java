@@ -193,9 +193,8 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            torRcFile, torRcOptions, externalTorControlPort,
+            torRcFile, torRcOptions, externalTorControlPort, externalTorPassword,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
-
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -276,6 +275,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         externalTorControlPort = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) :
+                "";
+        externalTorPassword = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) :
                 "";
 
         //RpcOptionKeys
@@ -448,6 +450,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);
                 setProperty(NetworkOptionKeys.TORRC_OPTIONS, torRcOptions);
                 setProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, externalTorControlPort);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, externalTorPassword);
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);
