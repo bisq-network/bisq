@@ -117,6 +117,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
     final StringProperty tradeFeeCurrencyCode = new SimpleStringProperty();
     final StringProperty tradeFeeDescription = new SimpleStringProperty();
+    final BooleanProperty isTradeFeeVisible = new SimpleBooleanProperty(false);
 
     // Positive % value means always a better price form the maker's perspective:
     // Buyer (with fiat): lower price as market
@@ -491,6 +492,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private void applyMakerFee() {
         Coin makerFeeAsCoin = dataModel.getMakerFee();
         if (makerFeeAsCoin != null) {
+            isTradeFeeVisible.setValue(true);
+
             tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
 
             Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();

@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -178,40 +177,40 @@ abstract class BankForm extends GeneralBankForm {
         gridRowFrom = gridRow;
         String countryCode = bankAccountPayload.getCountryCode();
 
-        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
 
         if (BankUtil.isBankNameRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
                     bankAccountPayload.getBankName()).second.setMouseTransparent(false);
 
         if (BankUtil.isBankIdRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
+            addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
                     bankAccountPayload.getBankId()).second.setMouseTransparent(false);
 
         if (BankUtil.isBranchIdRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
+            addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
                     bankAccountPayload.getBranchId()).second.setMouseTransparent(false);
 
         if (BankUtil.isNationalAccountIdRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(countryCode),
+            addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getNationalAccountIdLabel(countryCode),
                     bankAccountPayload.getNationalAccountId()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountNrRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
+            addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
                     bankAccountPayload.getAccountNr()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountTypeRequired(countryCode))
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
+            addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
                     bankAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
         addLimitations();
@@ -427,7 +426,7 @@ abstract class BankForm extends GeneralBankForm {
             holderNameTextField.setMinWidth(250);
             tuple.forth.setText(bankAccountPayload.getHolderTaxId());
         } else {
-            FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
         }
     }
 

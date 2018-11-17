@@ -34,7 +34,8 @@ public class CoreNetworkCapabilities {
                 Capabilities.Capability.ACK_MSG.ordinal()
         ));
 
-        if (bisqEnvironment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false)) {
+
+        if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
             supportedCapabilities.add(Capabilities.Capability.PROPOSAL.ordinal());
             supportedCapabilities.add(Capabilities.Capability.BLIND_VOTE.ordinal());
             supportedCapabilities.add(Capabilities.Capability.BSQ_BLOCK.ordinal());

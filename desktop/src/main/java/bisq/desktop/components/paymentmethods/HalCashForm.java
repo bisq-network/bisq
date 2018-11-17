@@ -86,14 +86,14 @@ public class HalCashForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 halCashAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(halCashAccount.getPaymentMethod().getId()));
-        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
                 halCashAccount.getMobileNr()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = halCashAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 

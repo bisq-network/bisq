@@ -35,6 +35,7 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.NetworkParameters;
 
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -168,6 +169,15 @@ public class BisqEnvironment extends StandardEnvironment {
         }
 
         return Paths.get(userDataDir, appName).toString();
+    }
+
+    // Util to set isDaoActivated to true if either set as program argument or we run testnet or regtest.
+    // Can be removed once DAO is live.
+    public static boolean isDaoActivated(Environment environment) {
+        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
+        return daoActivatedFromOptions || isRegTestOrTestNet;
     }
 
 

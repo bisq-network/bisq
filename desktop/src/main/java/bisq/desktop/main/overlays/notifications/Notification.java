@@ -198,8 +198,9 @@ public class Notification extends Overlay<Notification> {
         headlineIcon.setManaged(true);
         headlineIcon.setVisible(true);
         headlineIcon.setPadding(new Insets(1));
-        actionButton.getStyleClass().add("compact-button");
         FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1em");
+        if (actionButton != null)
+            actionButton.getStyleClass().add("compact-button");
     }
 
     @Override

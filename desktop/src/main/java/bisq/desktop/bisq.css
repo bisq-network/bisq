@@ -428,7 +428,7 @@ bg color of non edit textFields: fafafa
     -fx-border-color: -bs-rd-grey-background-dark;
     -fx-border-radius: 3;
     -fx-pref-height: 43;
-    -fx-pref-width: 300;
+    -fx-pref-width: 310;
     -fx-effect: innershadow(gaussian, -bs-rd-black-transparent, 3, 0, 0, 1);
 }
 
@@ -1162,7 +1162,7 @@ textfield */
 }
 
 /* validation */
-#validation-error {
+.validation-error {
     -fx-text-fill: -bs-red;
 }
 

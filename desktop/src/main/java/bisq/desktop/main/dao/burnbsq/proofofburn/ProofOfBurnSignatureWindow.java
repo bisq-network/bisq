@@ -30,7 +30,11 @@ import bisq.common.util.Utilities;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import java.util.Optional;
 
@@ -62,6 +66,19 @@ public class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWind
         addCloseButton();
         applyStyles();
         display();
+    }
+
+    @Override
+    protected void createGridPane() {
+        gridPane = new GridPane();
+        gridPane.setHgap(5);
+        gridPane.setVgap(5);
+        gridPane.setPadding(new Insets(64, 64, 64, 64));
+        gridPane.setPrefWidth(width);
+
+        ColumnConstraints columnConstraints = new ColumnConstraints();
+        columnConstraints.setPercentWidth(100);
+        gridPane.getColumnConstraints().add(columnConstraints);
     }
 
     private void addContent() {

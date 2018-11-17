@@ -39,8 +39,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-import javafx.geometry.Insets;
-
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.collections.ListChangeListener;
@@ -73,7 +71,6 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     public void initialize() {
         tableView = new TableView<>();
         GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(-10, -15, -10, -15));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);

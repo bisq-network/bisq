@@ -50,8 +50,8 @@ public class ArbitratorSelection {
 
     static {
         try {
-            //TODO set activation data to 1 month after release
-            Date activationDate = new SimpleDateFormat("dd/MM/yyyy").parse("20/11/2018");
+            //TODO set activation data to 3 weeks after release
+            Date activationDate = new SimpleDateFormat("dd/MM/yyyy").parse("15/12/2018");
             isNewRuleActivated = new Date().after(activationDate);
         } catch (ParseException e) {
             e.printStackTrace();

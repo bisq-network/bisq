@@ -46,7 +46,9 @@ import javafx.collections.FXCollections;
 
 import java.util.List;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class SepaForm extends GeneralSepaForm {
 
@@ -181,17 +183,17 @@ public class SepaForm extends GeneralSepaForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        FormBuilder.addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(sepaAccount.getPaymentMethod().getId()));
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), sepaAccount.getHolderName());
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, IBAN, sepaAccount.getIban()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, BIC, sepaAccount.getBic()).second.setMouseTransparent(false);
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), sepaAccount.getHolderName());
+        addCompactTopLabelTextField(gridPane, ++gridRow, IBAN, sepaAccount.getIban()).second.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, BIC, sepaAccount.getBic()).second.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.country"),
                 sepaAccount.getCountry() != null ? sepaAccount.getCountry().name : "");
         TradeCurrency singleTradeCurrency = sepaAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {
@@ -200,7 +202,7 @@ public class SepaForm extends GeneralSepaForm {
             countries = CountryUtil.getCodesString(sepaAccount.getAcceptedCountryCodes());
             tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaAccount.getAcceptedCountryCodes()));
         }
-        TextField acceptedCountries = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
+        TextField acceptedCountries = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
         if (tooltip != null) {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);

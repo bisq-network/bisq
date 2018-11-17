@@ -280,12 +280,12 @@ public abstract class PaymentMethodForm {
                                                TradeCurrency singleTradeCurrency) {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
-        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
         field.setMouseTransparent(false);
 
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
 
         addLimitations();
     }

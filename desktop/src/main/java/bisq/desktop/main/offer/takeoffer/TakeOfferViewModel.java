@@ -103,6 +103,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final StringProperty tradeFeeInBtcWithFiat = new SimpleStringProperty();
     final StringProperty tradeFeeInBsqWithFiat = new SimpleStringProperty();
     final StringProperty tradeFeeDescription = new SimpleStringProperty();
+    final BooleanProperty isTradeFeeVisible = new SimpleBooleanProperty(false);
 
     final BooleanProperty isOfferAvailable = new SimpleBooleanProperty();
     final BooleanProperty isTakeOfferButtonDisabled = new SimpleBooleanProperty(true);
@@ -274,6 +275,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTakerFee() {
         Coin takerFeeAsCoin = dataModel.getTakerFee();
         if (takerFeeAsCoin != null) {
+            isTradeFeeVisible.setValue(true);
+
             tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
 
             Coin makerFeeInBtc = dataModel.getTakerFeeInBtc();

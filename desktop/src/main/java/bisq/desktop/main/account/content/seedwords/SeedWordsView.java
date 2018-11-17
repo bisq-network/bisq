@@ -117,7 +117,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         seedWordsTextArea.setMaxHeight(40);
 
         restoreDatePicker = addTopLabelDatePicker(root, ++gridRow, Res.get("seed.date"), 10).second;
-        restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("seed.restore"));
+        restoreButton = addPrimaryActionButtonAFterGroup(root, ++gridRow, Res.get("seed.restore"));
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, Res.get("account.seed.info"),

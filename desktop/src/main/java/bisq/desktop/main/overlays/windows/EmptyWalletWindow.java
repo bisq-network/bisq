@@ -21,7 +21,6 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -61,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
@@ -152,7 +152,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
         if (isBtc) {
-            addressInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
+            addressInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         } else {
             addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
                     bsqFormatter.formatBTCWithCode(bsqWalletService.getAvailableNonBsqBalance().value), 10);
@@ -190,7 +190,6 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
 
         if (isBtc)
             hBox.getChildren().addAll(emptyWalletButton, closeButton);

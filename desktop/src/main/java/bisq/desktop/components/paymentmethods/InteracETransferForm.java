@@ -113,19 +113,19 @@ public class InteracETransferForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(interacETransferAccount.getPaymentMethod().getId()));
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 interacETransferAccount.getHolderName());
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 interacETransferAccount.getEmail()).second.setMouseTransparent(false);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
                 interacETransferAccount.getQuestion()).second.setMouseTransparent(false);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
                 interacETransferAccount.getAnswer()).second.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = interacETransferAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
         addLimitations();
     }

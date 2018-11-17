@@ -856,6 +856,7 @@ public abstract class Overlay<T extends Overlay> {
             else
                 hBox.getChildren().addAll(spacer, actionButton);
             HBox.setHgrow(spacer, Priority.ALWAYS);
+            spacer.setMaxWidth(Double.MAX_VALUE);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);
             GridPane.setRowIndex(hBox, ++rowIndex);
@@ -865,6 +866,7 @@ public abstract class Overlay<T extends Overlay> {
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
             GridPane.setHalignment(closeButton, HPos.RIGHT);
+            GridPane.setColumnSpan(closeButton, 2);
             if (!showReportErrorButtons)
                 GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
             GridPane.setRowIndex(closeButton, ++rowIndex);

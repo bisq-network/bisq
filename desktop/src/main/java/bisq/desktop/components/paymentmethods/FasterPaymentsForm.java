@@ -100,16 +100,16 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         // do not translate as it is used in english only
-        addTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
-        TextField field = addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
         addLimitations();
     }
 
