@@ -205,7 +205,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
-        Coin availableAmount = issuedAmountFromGenesis.add(issuedAmountFromCompRequests).subtract(burntFee);
+        Coin availableAmount = issuedAmountFromGenesis
+                .add(issuedAmountFromCompRequests)
+                .add(issuedAmountFromReimbursementRequests)
+                .subtract(burntFee)
+                .subtract(totalConfiscatedAmount);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText("-" + bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
