@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -75,7 +76,7 @@ public class DaoState implements PersistablePayload {
     @Getter
     private final LinkedList<Cycle> cycles;
 
-    // Those maps represent mutual data which can get changed at parsing a transaction
+    // These maps represent mutual data which can get changed at parsing a transaction
     @Getter
     private final Map<TxOutputKey, TxOutput> unspentTxOutputMap;
     @Getter
@@ -83,9 +84,9 @@ public class DaoState implements PersistablePayload {
     @Getter
     private final Map<TxOutputKey, SpentInfo> spentInfoMap;
 
-    // Those maps are related to state change triggered by voting
+    // These maps are related to state change triggered by voting
     @Getter
-    private final Map<TxOutputKey, TxOutput> confiscatedTxOutputMap;
+    private final List<String> confiscatedLockupTxList;
     @Getter
     private final Map<String, Issuance> issuanceMap; // key is txId
     @Getter
@@ -112,7 +113,7 @@ public class DaoState implements PersistablePayload {
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
-                new HashMap<>(),
+                new ArrayList<>(),
                 new HashMap<>(),
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -131,7 +132,7 @@ public class DaoState implements PersistablePayload {
                      Map<TxOutputKey, TxOutput> unspentTxOutputMap,
                      Map<TxOutputKey, TxOutput> nonBsqTxOutputMap,
                      Map<TxOutputKey, SpentInfo> spentInfoMap,
-                     Map<TxOutputKey, TxOutput> confiscatedTxOutputMap,
+                     List<String> confiscatedLockupTxList,
                      Map<String, Issuance> issuanceMap,
                      List<ParamChange> paramChangeList,
                      List<EvaluatedProposal> evaluatedProposalList,
@@ -144,7 +145,7 @@ public class DaoState implements PersistablePayload {
         this.nonBsqTxOutputMap = nonBsqTxOutputMap;
         this.spentInfoMap = spentInfoMap;
 
-        this.confiscatedTxOutputMap = confiscatedTxOutputMap;
+        this.confiscatedLockupTxList = confiscatedLockupTxList;
         this.issuanceMap = issuanceMap;
         this.paramChangeList = paramChangeList;
         this.evaluatedProposalList = evaluatedProposalList;
@@ -167,8 +168,7 @@ public class DaoState implements PersistablePayload {
                         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
                 .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage())))
-                .putAllUnspentTxOutputMap(confiscatedTxOutputMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
+                .addAllConfiscatedLockupTxList(confiscatedLockupTxList)
                 .putAllIssuanceMap(issuanceMap.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProtoMessage())))
                 .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
@@ -189,8 +189,7 @@ public class DaoState implements PersistablePayload {
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue())));
         Map<TxOutputKey, SpentInfo> spentInfoMap = proto.getSpentInfoMapMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> SpentInfo.fromProto(e.getValue())));
-        Map<TxOutputKey, TxOutput> confiscatedTxOutputMap = proto.getConfiscatedTxOutputMapMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue())));
+        List<String> confiscatedLockupTxList = proto.getConfiscatedLockupTxListList();
         Map<String, Issuance> issuanceMap = proto.getIssuanceMapMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Issuance.fromProto(e.getValue())));
         List<ParamChange> paramChangeList = proto.getParamChangeListList().stream()
@@ -205,7 +204,7 @@ public class DaoState implements PersistablePayload {
                 unspentTxOutputMap,
                 nonBsqTxOutputMap,
                 spentInfoMap,
-                confiscatedTxOutputMap,
+                confiscatedLockupTxList,
                 issuanceMap,
                 paramChangeList,
                 evaluatedProposalList,

@@ -110,8 +110,8 @@ public class DaoStateService implements DaoSetupService {
         daoState.getUnspentTxOutputMap().clear();
         daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
-        daoState.getConfiscatedTxOutputMap().clear();
-        daoState.getConfiscatedTxOutputMap().putAll(snapshot.getConfiscatedTxOutputMap());
+        daoState.getConfiscatedLockupTxList().clear();
+        daoState.getConfiscatedLockupTxList().addAll(snapshot.getConfiscatedLockupTxList());
 
         daoState.getIssuanceMap().clear();
         daoState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
@@ -668,6 +668,7 @@ public class DaoStateService implements DaoSetupService {
     // Returns amount of all LOCKUP txOutputs (they might have been unlocking or unlocked in the meantime)
     public long getTotalAmountOfLockupTxOutputs() {
         return getLockupTxOutputs().stream()
+                .filter(txOutput -> !isConfiscatedLockupTxOutput(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum();
     }
@@ -679,6 +680,11 @@ public class DaoStateService implements DaoSetupService {
 
 
     // Unlock
+    public boolean isUnlockOutput(TxOutputKey key) {
+        Optional<TxOutput> opTxOutput = getUnspentTxOutput(key);
+        return opTxOutput.isPresent() && isUnlockOutput(opTxOutput.get());
+    }
+
     public boolean isUnlockOutput(TxOutput txOutput) {
         return txOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT;
     }
@@ -693,6 +699,7 @@ public class DaoStateService implements DaoSetupService {
 
     public long getTotalAmountOfUnLockingTxOutputs() {
         return getUnspentUnlockingTxOutputsStream()
+                .filter(txOutput -> !isConfiscatedUnlockTxOutput(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum();
     }
@@ -713,6 +720,10 @@ public class DaoStateService implements DaoSetupService {
                 !isLockTimeOverForUnlockTxOutput(unlockTxOutput);
     }
 
+    public Optional<Tx> getLockupTxFromUnlockTxId(String unlockTxId) {
+        return getTx(unlockTxId).flatMap(tx -> getTx(tx.getTxInputs().get(0).getConnectedTxOutputTxId()));
+    }
+
     // Unlocked
     public Optional<Integer> getUnlockBlockHeight(String txId) {
         return getTx(txId).map(Tx::getUnlockBlockHeight);
@@ -728,22 +739,9 @@ public class DaoStateService implements DaoSetupService {
     // We don't care here about the unspent state
     public Stream<TxOutput> getUnlockedTxOutputsStream() {
         return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT).stream()
+                .filter(txOutput -> !isConfiscatedUnlockTxOutput(txOutput.getTxId()))
                 .filter(this::isLockTimeOverForUnlockTxOutput);
     }
-
-    // TODO SQ
-    /*public boolean isSpentByUnlockTx(TxOutput txOutput) {
-        log.error("txOutput " + txOutput.getTxId());
-        boolean present = getSpentInfo(txOutput)
-                .map(spentInfo -> {
-                    log.error("spentInfo " + spentInfo);
-                    return getTx(spentInfo.getTxId());
-                })
-                .filter(Optional::isPresent)
-                .isPresent();
-        log.error("isSpentByUnlockTx present={}", present);
-        return present;
-    }*/
 
     public long getTotalAmountOfUnLockedTxOutputs() {
         return getUnlockedTxOutputsStream()
@@ -752,10 +750,11 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalAmountOfConfiscatedTxOutputs() {
-        return daoState.getConfiscatedTxOutputMap()
-                .values()
+        return daoState.getConfiscatedLockupTxList()
                 .stream()
-                .mapToLong(TxOutput::getValue)
+                .map(txId -> getTx(txId))
+                .filter(tx -> tx.isPresent())
+                .mapToLong(tx ->  tx.get().getLockupOutput().getValue())
                 .sum();
     }
 
@@ -766,7 +765,7 @@ public class DaoStateService implements DaoSetupService {
             TxOutput lockupTxOutput = optionalTxOutput.get();
             if (isUnspent(lockupTxOutput.getKey())) {
                 log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
-                confiscateBond(lockupTxOutput);
+                doConfiscateBond(lockupTxId);
             } else {
                 // We lookup for the unlock tx which need to be still in unlocking state
                 Optional<SpentInfo> optionalSpentInfo = getSpentInfo(lockupTxOutput);
@@ -775,9 +774,7 @@ public class DaoStateService implements DaoSetupService {
                 if (isUnlockingAndUnspent(unlockTxId)) {
                     // We found the unlock tx is still not spend
                     log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
-                    getUnspentUnlockingTxOutputsStream()
-                            .filter(txOutput -> txOutput.getTxId().equals(unlockTxId))
-                            .forEach(this::confiscateBond);
+                    doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,
                     // but its probably better to stick to the rules that confiscation can only happen before lock time
@@ -791,43 +788,32 @@ public class DaoStateService implements DaoSetupService {
         }
     }
 
-    private void confiscateBond(TxOutput txOutput) {
-        // Can be txOutput from lockup or unlock tx
-        log.warn("txOutput {} added to confiscatedTxOutputMap.", txOutput.getKey());
-        daoState.getConfiscatedTxOutputMap().put(txOutput.getKey(), txOutput);
+    private void doConfiscateBond(String lockupTxId) {
+        log.warn("TxId {} added to confiscatedLockupTxIdList.", lockupTxId);
+        daoState.getConfiscatedLockupTxList().add(lockupTxId);
     }
 
     public boolean isConfiscated(TxOutputKey txOutputKey) {
-        return daoState.getConfiscatedTxOutputMap().containsKey(txOutputKey);
+        if (isLockupOutput(txOutputKey))
+            return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
+        else if (isUnlockOutput(txOutputKey))
+            return isConfiscatedUnlockTxOutput(txOutputKey.getTxId());
+        return false;
+    }
+
+    public boolean isConfiscated(String lockupTxId) {
+        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
     }
 
     public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
-        return getLockupTxOutput(lockupTxId)
-                .map(lockupTxIdxOutput -> isConfiscated(lockupTxIdxOutput.getKey()))
-                .orElse(false);
+        return isConfiscated(lockupTxId);
     }
 
     public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
-        return getUnlockTxOutputs().stream()
-                .filter(unlockTxOutput -> unlockTxOutput.getTxId().equals(unlockTxId))
-                .map(unlockTxOutput -> isConfiscated(unlockTxOutput.getKey()))
-                .findAny()
-                .orElse(false);
+        return getLockupTxFromUnlockTxId(unlockTxId).
+                map(lockupTx -> isConfiscated(lockupTx.getId())).
+                orElse(false);
     }
-
-    //TODO do we want to check for both txs?
- /*   public boolean isConfiscatedUnlockTxOutput(String lockupTxId) {
-        boolean present = getLockupTxOutput(lockupTxId)
-                .flatMap(lockupTxIdxOutput -> getSpentInfo(lockupTxIdxOutput)
-                        .map(SpentInfo::getTxId)
-                        .flatMap(this::getTx)
-                        .map(unlockTx -> unlockTx.getTxOutputs().get(0)))
-                .filter(firstTxOutput -> isConfiscated(firstTxOutput.getKey()))
-                .isPresent();
-        log.error("lockupTxId {}, {}", lockupTxId, present);
-        //log.error("daoState.getConfiscatedTxOutputMap() {}", daoState.getConfiscatedTxOutputMap());
-        return present;
-    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
