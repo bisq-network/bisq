@@ -1281,6 +1281,7 @@ message PreferencesPayload {
     bool is_dao_full_node = 46;
     string rpc_user = 47;
     string rpc_pw = 48;
+    string take_offer_selected_payment_account_id = 49;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -282,7 +282,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
-            paymentAccountsComboBox.getSelectionModel().select(0);
+            paymentAccountsComboBox.getSelectionModel().select(model.getLastSelectedPaymentAccount());
 
             paymentAccountTitledGroupBg.setText(Res.get("shared.selectTradingAccount"));
 

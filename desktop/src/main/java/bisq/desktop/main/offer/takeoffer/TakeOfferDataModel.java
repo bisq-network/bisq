@@ -63,6 +63,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -411,6 +412,8 @@ class TakeOfferDataModel extends OfferDataModel {
 
             long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
             this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+
+            preferences.setTakeOfferSelectedPaymentAccountId(paymentAccount.getId());
         }
     }
 
@@ -437,7 +440,24 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
-        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, user.getPaymentAccounts());
+        Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
+        checkNotNull(paymentAccounts, "paymentAccounts must not be null");
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts);
+    }
+
+    public PaymentAccount getLastSelectedPaymentAccount() {
+        ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
+        checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts must not be empty");
+        PaymentAccount firstItem = possiblePaymentAccounts.get(0);
+
+        String id = preferences.getTakeOfferSelectedPaymentAccountId();
+        if (id == null)
+            return firstItem;
+
+        return possiblePaymentAccounts.stream()
+                .filter(e -> e.getId().equals(id))
+                .findAny()
+                .orElse(firstItem);
     }
 
     boolean hasAcceptedArbitrators() {

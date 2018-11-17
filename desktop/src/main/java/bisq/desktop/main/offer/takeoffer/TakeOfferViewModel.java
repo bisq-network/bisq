@@ -734,6 +734,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getPossiblePaymentAccounts();
     }
 
+    public PaymentAccount getLastSelectedPaymentAccount() {
+        return dataModel.getLastSelectedPaymentAccount();
+    }
+
     boolean hasAcceptedArbitrators() {
         return dataModel.hasAcceptedArbitrators();
     }
@@ -769,5 +773,4 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private BSFormatter getFormatterForTakerFee() {
         return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
-
 }
