@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -189,7 +188,7 @@ public class DaoState implements PersistablePayload {
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue())));
         Map<TxOutputKey, SpentInfo> spentInfoMap = proto.getSpentInfoMapMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> SpentInfo.fromProto(e.getValue())));
-        List<String> confiscatedLockupTxList = proto.getConfiscatedLockupTxListList();
+        List<String> confiscatedLockupTxList = new ArrayList<>(proto.getConfiscatedLockupTxListList());
         Map<String, Issuance> issuanceMap = proto.getIssuanceMapMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Issuance.fromProto(e.getValue())));
         List<ParamChange> paramChangeList = proto.getParamChangeListList().stream()

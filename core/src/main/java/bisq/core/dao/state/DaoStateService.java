@@ -680,7 +680,7 @@ public class DaoStateService implements DaoSetupService {
 
 
     // Unlock
-    public boolean isUnlockOutput(TxOutputKey key) {
+    public boolean isUnspentUnlockOutput(TxOutputKey key) {
         Optional<TxOutput> opTxOutput = getUnspentTxOutput(key);
         return opTxOutput.isPresent() && isUnlockOutput(opTxOutput.get());
     }
@@ -753,8 +753,8 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getConfiscatedLockupTxList()
                 .stream()
                 .map(txId -> getTx(txId))
-                .filter(tx -> tx.isPresent())
-                .mapToLong(tx ->  tx.get().getLockupOutput().getValue())
+                .filter(optionalTx -> optionalTx.isPresent())
+                .mapToLong(optionalTx -> optionalTx.get().getLockupOutput().getValue())
                 .sum();
     }
 
@@ -796,7 +796,7 @@ public class DaoStateService implements DaoSetupService {
     public boolean isConfiscated(TxOutputKey txOutputKey) {
         if (isLockupOutput(txOutputKey))
             return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
-        else if (isUnlockOutput(txOutputKey))
+        else if (isUnspentUnlockOutput(txOutputKey))
             return isConfiscatedUnlockTxOutput(txOutputKey.getTxId());
         return false;
     }
