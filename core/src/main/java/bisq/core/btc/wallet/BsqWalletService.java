@@ -615,14 +615,14 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Unlock bond tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedUnlockTx(TxOutput lockedTxOutput) throws AddressFormatException {
+    public Transaction getPreparedUnlockTx(TxOutput lockupTxOutput) throws AddressFormatException {
         Transaction tx = new Transaction(params);
         // Unlocking means spending the full value of the locked txOutput to another txOutput with the same value
-        Coin amountToUnlock = Coin.valueOf(lockedTxOutput.getValue());
+        Coin amountToUnlock = Coin.valueOf(lockupTxOutput.getValue());
         checkArgument(Restrictions.isAboveDust(amountToUnlock), "The amount is too low (dust limit).");
-        Transaction lockupTx = getTransaction(lockedTxOutput.getTxId());
+        Transaction lockupTx = getTransaction(lockupTxOutput.getTxId());
         checkNotNull(lockupTx, "lockupTx must not be null");
-        TransactionOutPoint outPoint = new TransactionOutPoint(params, lockedTxOutput.getIndex(), lockupTx);
+        TransactionOutPoint outPoint = new TransactionOutPoint(params, lockupTxOutput.getIndex(), lockupTx);
         // Input is not signed yet so we use new byte[]{}
         tx.addInput(new TransactionInput(params, tx, new byte[]{}, outPoint, amountToUnlock));
         tx.addOutput(new TransactionOutput(params, tx, amountToUnlock, getUnusedAddress()));

@@ -1473,7 +1473,7 @@ message BsqState {
     map<string, BaseTxOutput> unspent_tx_output_map = 4;
     map<string, BaseTxOutput> non_bsq_tx_output_map = 5;
     map<string, Issuance> issuance_map = 6;
-    map<string, BaseTxOutput> confiscated_tx_output_map = 7;
+    repeated string confiscated_lockup_tx_list = 7;
     map<string, SpentInfo> spent_info_map = 8;
     repeated ParamChange param_change_list = 9;
     repeated EvaluatedProposal evaluated_proposal_list = 10;
