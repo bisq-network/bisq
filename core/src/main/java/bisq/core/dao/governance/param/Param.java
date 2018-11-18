@@ -151,8 +151,6 @@ public enum Param {
     }
 
     /**
-     * Whether the BSQ fee and phase is valid for a transaction.
-     *
      * @param defaultValue  Value at the start of the DAO
      * @param paramType     Type of parameter
      * @param maxDecrease   Decrease of param value limited to current value / maxDecrease
