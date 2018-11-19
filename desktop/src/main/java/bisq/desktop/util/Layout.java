@@ -18,8 +18,10 @@
 package bisq.desktop.util;
 
 public class Layout {
-    public static final double INITIAL_SCENE_WIDTH = 1200;
-    public static final double INITIAL_SCENE_HEIGHT = 710; //740
+    public static final double INITIAL_WINDOW_WIDTH = 1200;
+    public static final double INITIAL_WINDOW_HEIGHT = 710; //740
+    public static final double MIN_WINDOW_WIDTH = 1020;
+    public static final double MIN_WINDOW_HEIGHT = 620;
     public static final double FIRST_ROW_DISTANCE = 20d;
     public static final double GROUP_DISTANCE = 40d;
     public static final double FIRST_ROW_AND_GROUP_DISTANCE = GROUP_DISTANCE + FIRST_ROW_DISTANCE;
