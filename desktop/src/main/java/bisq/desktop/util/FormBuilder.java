@@ -1581,7 +1581,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<HBox, InputTextField, Label> getEditableValueBox(String promptText) {
-        InputTextField input = new InputTextField();
+        InputTextField input = new InputTextField(60);
         input.setPromptText(promptText);
 
         Label label = new AutoTooltipLabel(Res.getBaseCurrencyCode());
@@ -1596,7 +1596,7 @@ public class FormBuilder {
     }
 
     public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueBoxWithInfo(String promptText) {
-        InfoInputTextField infoInputTextField = new InfoInputTextField();
+        InfoInputTextField infoInputTextField = new InfoInputTextField(60);
         InputTextField input = infoInputTextField.getInputTextField();
         input.setPromptText(promptText);
 

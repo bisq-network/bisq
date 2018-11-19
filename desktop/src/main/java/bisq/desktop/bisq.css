@@ -371,6 +371,15 @@ bg color of non edit textFields: fafafa
     -jfx-focus-color: -bs-rd-green;
     -fx-background-color: -bs-rd-white;
     -fx-background-radius: 3 3 0 0;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
 }
 
 .jfx-text-field-top-label {
@@ -406,6 +415,15 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-rd-white;
     -fx-background-radius: 3 3 0 0;
     -jfx-focus-color: -bs-rd-green;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-password-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-password-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
 }
 
 .jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
@@ -522,6 +540,18 @@ bg color of non edit textFields: fafafa
 
 .jfx-date-picker {
     -jfx-default-color: -bs-rd-green;
+}
+
+.jfx-date-picker .jfx-text-field {
+    -fx-padding: 0.333333em 0em 0.333333em 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-line {
+    -fx-translate-x: 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-focused-line {
+    -fx-translate-x: 0em;
 }
 
 .jfx-date-picker > .arrow-button > .arrow {
