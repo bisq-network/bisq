@@ -63,6 +63,7 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import static org.bitcoinj.core.Utils.HEX;
@@ -323,27 +324,27 @@ public class FilterManager {
         return user.getDevelopersFilter();
     }
 
-    public boolean isCurrencyBanned(String currencyCode) {
+    public boolean isCurrencyBanned(@Nullable String currencyCode) {
         return getFilter() != null &&
                 getFilter().getBannedCurrencies() != null &&
                 getFilter().getBannedCurrencies().stream()
                         .anyMatch(e -> e.equals(currencyCode));
     }
 
-    public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
+    public boolean isPaymentMethodBanned(@Nonnull PaymentMethod paymentMethod) {
         return getFilter() != null &&
                 getFilter().getBannedPaymentMethods() != null &&
                 getFilter().getBannedPaymentMethods().stream()
                         .anyMatch(e -> e.equals(paymentMethod.getId()));
     }
 
-    public boolean isOfferIdBanned(String offerId) {
+    public boolean isOfferIdBanned(@Nullable String offerId) {
         return getFilter() != null &&
                 getFilter().getBannedOfferIds().stream()
                         .anyMatch(e -> e.equals(offerId));
     }
 
-    public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
+    public boolean isNodeAddressBanned(@Nonnull NodeAddress nodeAddress) {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));

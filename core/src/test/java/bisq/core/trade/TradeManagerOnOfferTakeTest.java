@@ -208,6 +208,30 @@ public class TradeManagerOnOfferTakeTest {
     }
 
     @Test
+    public void onTakeOffer_currencyCodeIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("No such currency: null");
+        final OnTakeOfferParams params = getValidParams();
+        when(params.offer.getCurrencyCode()).thenReturn(null);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_currencyCodeReferencesNonExistingCurrency_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("No such currency: nonExistent");
+        final OnTakeOfferParams params = getValidParams();
+        when(params.offer.getCurrencyCode()).thenReturn("nonExistent");
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
     public void onTakeOffer_currencyIsBanned_throwsException() {
 //        Given
         expectedException.expect(ValidationException.class);
@@ -219,6 +243,235 @@ public class TradeManagerOnOfferTakeTest {
 
 //        When
         onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_paymentMethodIsBanned_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        final String expectedMessage = Res.get("offerbook.warning.paymentMethodBanned");
+        Assert.assertNotNull(expectedMessage);
+        expectedException.expectMessage(expectedMessage);
+        final OnTakeOfferParams params = getValidParams();
+        when(filterManager.isPaymentMethodBanned(params.offer.getPaymentMethod())).thenReturn(true);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_offerIdIsBanned_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        final String expectedMessage = Res.get("offerbook.warning.offerBlocked");
+        Assert.assertNotNull(expectedMessage);
+        expectedException.expectMessage(expectedMessage);
+        final OnTakeOfferParams params = getValidParams();
+        when(filterManager.isOfferIdBanned(params.offer.getId())).thenReturn(true);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_makerNodeAddressIsBanned_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        final String expectedMessage = Res.get("offerbook.warning.nodeBlocked");
+        Assert.assertNotNull(expectedMessage);
+        expectedException.expectMessage(expectedMessage);
+        final OnTakeOfferParams params = getValidParams();
+        when(filterManager.isNodeAddressBanned(params.offer.getMakerNodeAddress())).thenReturn(true);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_amountIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Amount must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.amount = null;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_amountIsNegative_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Amount must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.amount = Coin.valueOf(-1);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_amountIsZero_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Amount must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.amount = Coin.ZERO;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_amountHigherThanOfferAmount_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Taken amount must not be higher than offer amount");
+        final OnTakeOfferParams params = getValidParams();
+        params.amount = params.offer.getAmount().add(Coin.SATOSHI);
+        Assert.assertTrue(params.amount.isGreaterThan(params.offer.getAmount()));
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_txFeeIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Transaction fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.txFee = null;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_txFeeIsZero_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Transaction fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.txFee = Coin.ZERO;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_txFeeIsNegative_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Transaction fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.txFee = Coin.valueOf(-1);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_takerFeeIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Taker fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.takerFee = null;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_takerFeeIsZero_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Taker fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.takerFee = Coin.ZERO;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_takerFeeIsNegative_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Taker fee must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.takerFee = Coin.valueOf(-1);
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_tradePriceIsNegative_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Trade price must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.tradePrice = -1;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_tradePriceIsZero_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("Trade price must be a positive number");
+        final OnTakeOfferParams params = getValidParams();
+        params.tradePrice = 0;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_tradeResultHandlerIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("TradeResultHandler must not be null");
+        final OnTakeOfferParams params = getValidParams();
+        tradeResultHandlerMock = null;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_errorMessageHandlerIsNull_throwsException() {
+//        Given
+        expectedException.expect(ValidationException.class);
+        expectedException.expectMessage("ErrorMessageHandler must not be null");
+        final OnTakeOfferParams params = getValidParams();
+        errorMessageHandlerMock = null;
+
+//        When
+        onTakeOffer(params);
+    }
+
+    @Test
+    public void onTakeOffer_offerIsNotAvailable_callErrorHandler() {
+//        Given
+        final String errorMessage = "errorMessage" + new Date().toString();
+        final OnTakeOfferParams params = getValidParams();
+        doAnswer(invocation -> {
+            final ErrorMessageHandler handler = invocation.getArgument(2);
+            handler.handleErrorMessage(errorMessage);
+            return null;
+        }).when(params.offer).checkOfferAvailability(any(), any(), any());
+
+//        When
+        onTakeOffer(params);
+
+//        Then
+        verify(errorMessageHandlerMock).handleErrorMessage(errorMessage);
     }
 
     //    TODO do Tasks in BuyerAsTakerProtocol execute synchronously
@@ -276,9 +529,9 @@ public class TradeManagerOnOfferTakeTest {
 
     private OnTakeOfferParams getValidParams() {
         final OnTakeOfferParams params = new OnTakeOfferParams();
-        params.amount = Coin.ZERO;
-        params.txFee = Coin.ZERO;
-        params.takerFee = Coin.ZERO;
+        params.amount = Coin.SATOSHI;
+        params.txFee = Coin.SATOSHI;
+        params.takerFee = Coin.SATOSHI;
         params.isCurrencyForTakerFeeBtc = true;
         params.tradePrice = 1;
 

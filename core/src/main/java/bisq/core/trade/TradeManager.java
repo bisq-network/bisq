@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -99,6 +100,7 @@ import lombok.Setter;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 
@@ -427,8 +429,8 @@ public class TradeManager implements PersistedDataHost {
          * - offer payment method must not be null
          * - amount must be positive non null (although it seems that if it is zero then no exception is thrown)
          * - amount must be less than or equal offer amount
-         * - txFee must be positive non null
-         * - takerFee must be positive non null
+         * - txFee must be positive non null (although it seems that if it is zero then no exception is thrown)
+         * - takerFee must be positive non null (although it seems that if it is zero then no exception is thrown)
          * - tradePrice must be positive non null
          * - offer must be in available state
          * - paymentAccountId should be non null, account for that id should exist and be compatible with offer
@@ -440,14 +442,48 @@ public class TradeManager implements PersistedDataHost {
          * - TODO check if user has enough funds here
          * - TODO instead of coin we might use long
          */
+        if (null == amount || !Coin.ZERO.isLessThan(amount)) {
+            throw new ValidationException("Amount must be a positive number");
+        }
+        if (null == txFee || !Coin.ZERO.isLessThan(txFee)) {
+            throw new ValidationException("Transaction fee must be a positive number");
+        }
+        if (null == takerFee || !Coin.ZERO.isLessThan(takerFee)) {
+            throw new ValidationException("Taker fee must be a positive number");
+        }
+        if (tradePrice <= 0) {
+            throw new ValidationException("Trade price must be a positive number");
+        }
         if (null == user.getPaymentAccount(paymentAccountId)) {
             throw new ValidationException("Payment account for given id does not exist: " + paymentAccountId);
         }
         if (null == offer) {
             throw new ValidationException("Offer must not be null");
         }
-        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
+        if (amount.isGreaterThan(offer.getAmount())) {
+            throw new ValidationException("Taken amount must not be higher than offer amount");
+        }
+        final String currencyCode = offer.getCurrencyCode();
+        if (!CurrencyUtil.getTradeCurrency(currencyCode).isPresent()) {
+            throw new ValidationException("No such currency: " + currencyCode);
+        }
+        if (filterManager.isCurrencyBanned(currencyCode)) {
             throw new ValidationException(Res.get("offerbook.warning.currencyBanned"));
+        }
+        if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
+            throw new ValidationException(Res.get("offerbook.warning.paymentMethodBanned"));
+        }
+        if (filterManager.isOfferIdBanned(offer.getId())) {
+            throw new ValidationException(Res.get("offerbook.warning.offerBlocked"));
+        }
+        if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
+            throw new ValidationException(Res.get("offerbook.warning.nodeBlocked"));
+        }
+        if (null == tradeResultHandler) {
+            throw new ValidationException("TradeResultHandler must not be null");
+        }
+        if (null == errorMessageHandler) {
+            throw new ValidationException("ErrorMessageHandler must not be null");
         }
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
@@ -470,17 +506,17 @@ public class TradeManager implements PersistedDataHost {
                 errorMessageHandler);
     }
 
-    private void createTrade(Coin amount,
-                             Coin txFee,
-                             Coin takerFee,
+    private void createTrade(@Nonnull Coin amount,
+                             @Nonnull Coin txFee,
+                             @Nonnull Coin takerFee,
                              boolean isCurrencyForTakerFeeBtc,
                              long tradePrice,
-                             Coin fundsNeededForTrade,
-                             Offer offer,
-                             String paymentAccountId,
+                             @Nonnull Coin fundsNeededForTrade,
+                             @Nonnull Offer offer,
+                             @Nonnull String paymentAccountId,
                              boolean useSavingsWallet,
-                             OfferAvailabilityModel model,
-                             TradeResultHandler tradeResultHandler) {
+                             @Nonnull OfferAvailabilityModel model,
+                             @Nonnull TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.isBuyOffer())
             trade = new SellerAsTakerTrade(offer,
