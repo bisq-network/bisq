@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
@@ -247,7 +248,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     Res.get("shared.viewContractAsJson"), 0).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
-                TextArea textArea = new TextArea();
+                TextArea textArea = new BisqTextArea();
                 textArea.setText(trade.getContractAsJson());
                 String contractAsJson = trade.getContractAsJson();
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());

@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
@@ -417,7 +418,7 @@ public class FormBuilder {
 
     public static TextArea addTextArea(GridPane gridPane, int rowIndex, String prompt, double top) {
 
-        TextArea textArea = new JFXTextArea();
+        TextArea textArea = new BisqTextArea();
         textArea.setPromptText(prompt);
         ((JFXTextArea) textArea).setLabelFloat(true);
         textArea.setWrapText(true);
@@ -454,7 +455,7 @@ public class FormBuilder {
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, int colIndex,
                                                               String title, String prompt, double top) {
 
-        TextArea textArea = new JFXTextArea();
+        TextArea textArea = new BisqTextArea();
         textArea.setPromptText(prompt);
         textArea.setWrapText(true);
 
@@ -1581,7 +1582,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<HBox, InputTextField, Label> getEditableValueBox(String promptText) {
-        InputTextField input = new InputTextField();
+        InputTextField input = new InputTextField(60);
         input.setPromptText(promptText);
 
         Label label = new AutoTooltipLabel(Res.getBaseCurrencyCode());
@@ -1596,7 +1597,7 @@ public class FormBuilder {
     }
 
     public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueBoxWithInfo(String promptText) {
-        InfoInputTextField infoInputTextField = new InfoInputTextField();
+        InfoInputTextField infoInputTextField = new InfoInputTextField(60);
         InputTextField input = infoInputTextField.getInputTextField();
         input.setPromptText(promptText);
 

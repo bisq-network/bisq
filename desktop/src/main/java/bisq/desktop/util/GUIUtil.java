@@ -19,6 +19,7 @@ package bisq.desktop.util;
 
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.overlays.popups.Popup;
 
@@ -740,7 +741,7 @@ public class GUIUtil {
     }
 
     public static void showSelectableTextModal(String title, String text) {
-        TextArea textArea = new TextArea();
+        TextArea textArea = new BisqTextArea();
         textArea.setText(text);
         textArea.setEditable(false);
         textArea.setWrapText(true);

@@ -74,19 +74,19 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
     }
 
     private void addContent() {
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.details.role"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.role"),
                 bondedRoleType.getDisplayString());
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.details.requiredBond"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.requiredBond"),
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(bondedRoleType.getRequiredBond())));
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.details.unlockTime"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.unlockTime"),
                 Res.get("dao.bond.details.blocks", bondedRoleType.getUnlockTimeInBlocks()));
 
-        FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.getWithCol("dao.bond.details.link"),
+        FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.bond.details.link"),
                 bondedRoleType.getLink(), bondedRoleType.getLink());
 
-        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.getWithCol("dao.bond.details.isSingleton"),
+        FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.isSingleton"),
                 bsqFormatter.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
     }
 }

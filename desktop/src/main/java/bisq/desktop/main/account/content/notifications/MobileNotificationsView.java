@@ -525,7 +525,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("account.notifications.priceAlert.title"), 20);
         currencyComboBox = FormBuilder.addComboBox(root, gridRow,
-                Res.getWithCol("list.currency.select"), 40);
+                Res.get("list.currency.select"), 40);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -540,7 +540,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         });
 
         priceAlertHighInputTextField = addInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.high.label"));
+                Res.get("account.notifications.priceAlert.high.label"));
         priceAlertHighListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
@@ -566,7 +566,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             }
         };
         priceAlertLowInputTextField = addInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.low.label"));
+                Res.get("account.notifications.priceAlert.low.label"));
         priceAlertLowListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);

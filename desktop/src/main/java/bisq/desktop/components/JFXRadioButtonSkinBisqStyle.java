@@ -41,6 +41,10 @@ import javafx.geometry.VPos;
 
 import javafx.util.Duration;
 
+/**
+ * Code copied and adapted from com.jfoenix.skins.JFXRadioButtonSkin
+ */
+
 public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
     private final JFXRippler rippler;
     private double padding = 12;
