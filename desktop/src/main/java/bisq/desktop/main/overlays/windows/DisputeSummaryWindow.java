@@ -19,6 +19,7 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipRadioButton;
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -44,8 +45,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-
-import com.jfoenix.controls.JFXTextArea;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -485,7 +484,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addSummaryNotes() {
 
-        summaryNotesTextArea = new JFXTextArea();
+        summaryNotesTextArea = new BisqTextArea();
         summaryNotesTextArea.setPromptText(Res.get("disputeSummaryWindow.addSummaryNotes"));
         summaryNotesTextArea.setWrapText(true);
 

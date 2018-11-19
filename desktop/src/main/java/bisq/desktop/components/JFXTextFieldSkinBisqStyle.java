@@ -16,6 +16,10 @@ import javafx.beans.value.ObservableDoubleValue;
 
 import java.lang.reflect.Field;
 
+/**
+ * Code copied and adapted from com.jfoenix.skins.JFXTextFieldSkin
+ */
+
 public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatControl> extends TextFieldSkin {
 
     private double inputLineExtension;

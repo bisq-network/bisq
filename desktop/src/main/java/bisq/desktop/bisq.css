@@ -523,10 +523,19 @@ bg color of non edit textFields: fafafa
     -jfx-focus-color: -bs-rd-green;
     -jfx-unfocus-color: -bs-rd-grey-line;
     -fx-background-color: -bs-rd-white;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
 }
 
 .jfx-text-area:readonly {
     -fx-background-color: transparent;
+}
+
+.jfx-text-area > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-area > .input-focused-line {
+    -fx-translate-x: -0.333333em;
 }
 
 .wallet-seed-words {
