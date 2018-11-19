@@ -145,6 +145,7 @@ public class CurrencyUtil {
         if (!baseCurrencyCode.equals("LTC"))
             result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
+        result.add(new CryptoCurrency("XRC", "Bitcoin Rhodium"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
         result.add(new CryptoCurrency("SC", "Siacoin"));
