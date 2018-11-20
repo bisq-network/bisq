@@ -288,6 +288,7 @@ bg color of non edit textFields: fafafa
     -fx-min-height: -fx-pref-height;
     -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
+    -fx-cursor: hand;
 }
 
 .action-button {
