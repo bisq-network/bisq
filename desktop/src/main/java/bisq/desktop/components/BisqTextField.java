@@ -4,13 +4,13 @@ import com.jfoenix.controls.JFXTextField;
 
 import javafx.scene.control.Skin;
 
-public class TextFieldWithNoPaddingLabelFloat extends JFXTextField {
+public class BisqTextField extends JFXTextField {
 
-    public TextFieldWithNoPaddingLabelFloat(String value) {
+    public BisqTextField(String value) {
         super(value);
     }
 
-    public TextFieldWithNoPaddingLabelFloat() {
+    public BisqTextField() {
         super();
     }
 

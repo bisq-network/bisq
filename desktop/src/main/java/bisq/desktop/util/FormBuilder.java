@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BisqTextArea;
+import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
@@ -36,7 +37,6 @@ import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.SearchComboBox;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TextFieldWithIcon;
-import bisq.desktop.components.TextFieldWithNoPaddingLabelFloat;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
 
@@ -234,7 +234,7 @@ public class FormBuilder {
     }
 
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        TextField textField = new TextFieldWithNoPaddingLabelFloat(value);
+        TextField textField = new BisqTextField(value);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
 
@@ -608,7 +608,7 @@ public class FormBuilder {
 
     public static Tuple3<Label, TextField, Button> addTopLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
 
-        TextField textField = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField = new BisqTextField();
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
@@ -658,13 +658,13 @@ public class FormBuilder {
     public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
         Label label1 = addLabel(gridPane, rowIndex, title1, 0);
 
-        TextField textField1 = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField1 = new BisqTextField();
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
         Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
-        TextField textField2 = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField2 = new BisqTextField();
         textField2.setEditable(false);
         textField2.setMouseTransparent(true);
         textField2.setFocusTraversable(false);
@@ -774,7 +774,7 @@ public class FormBuilder {
                                                                                                                 String radioButtonTitle1,
                                                                                                                 String radioButtonTitle2,
                                                                                                                 double top) {
-        TextField textField = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField = new BisqTextField();
         textField.setPromptText(textFieldTitle);
 
         RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
@@ -1005,7 +1005,7 @@ public class FormBuilder {
         comboBox.setPromptText(titleCombobox);
         ((JFXComboBox<T>) comboBox).setLabelFloat(true);
 
-        TextField textField = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField = new BisqTextField();
 
         final VBox topLabelVBox = getTopLabelVBox(5);
         final Label topLabel = getTopLabel(titleTextfield);

@@ -51,7 +51,7 @@ public class BsqAddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BsqAddressTextField() {
-        TextField textField = new TextFieldWithNoPaddingLabelFloat();
+        TextField textField = new BisqTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.textProperty().bind(address);

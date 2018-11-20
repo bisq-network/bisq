@@ -66,7 +66,7 @@ public class JFXTextAreaSkinBisqStyle extends TextAreaSkin {
 
         final double height = getSkinnable().getHeight();
         final double width = getSkinnable().getWidth();
-        linesWrapper.layoutLines(x, y, width, h, height, promptText == null ? 0 : promptText.getLayoutBounds().getHeight() + 3);
+        linesWrapper.layoutLines(x - 2, y - 2, width, h, height, promptText == null ? 0 : promptText.getLayoutBounds().getHeight() + 3);
         errorContainer.layoutPane(x, height + linesWrapper.focusedLine.getHeight(), width, h);
         linesWrapper.updateLabelFloatLayout();
 
@@ -92,12 +92,11 @@ public class JFXTextAreaSkinBisqStyle extends TextAreaSkin {
         promptText = new Text();
         promptText.setManaged(false);
         promptText.getStyleClass().add("text");
-        promptText.setTranslateX(-getSkinnable().getPadding().getLeft() + 1);
+        promptText.setTranslateX(-getSkinnable().getPadding().getLeft());
         promptText.visibleProperty().bind(linesWrapper.usePromptText);
         promptText.fontProperty().bind(getSkinnable().fontProperty());
         promptText.textProperty().bind(getSkinnable().promptTextProperty());
         promptText.fillProperty().bind(linesWrapper.animatedPromptTextFill);
-        promptText.setLayoutX(1);
         promptText.getTransforms().add(linesWrapper.promptTextScale);
         linesWrapper.promptContainer.getChildren().add(promptText);
         if (getSkinnable().isFocused() && ((JFXTextArea) getSkinnable()).isLabelFloat()) {
