@@ -797,6 +797,15 @@ bg color of non edit textFields: fafafa
     -fx-underline: true;
 }
 
+/** Confirmation Indicator */
+
+.progress-indicator > .determinate-indicator > .indicator {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: -fx-box-border;
+    -fx-border-width: 1;
+    -fx-padding: 0.166667em; /* 2px */
+}
+
 /*******************************************************************************
  *                                                                             *
  * Icons                                                                       *
