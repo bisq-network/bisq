@@ -400,6 +400,16 @@ bg color of non edit textFields: fafafa
     -fx-background-color: transparent;
 }
 
+.jfx-text-field:disabled > .input-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.jfx-text-field:disabled > .input-focused-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
 /* hyperlink-with-icon has same style as jfx-text-field:readonly */
 
 .hyperlink-with-icon {
