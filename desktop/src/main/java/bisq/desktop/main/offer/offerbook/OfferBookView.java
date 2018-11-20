@@ -556,6 +556,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(40);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -746,6 +747,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(80);
             }
         };
+
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
