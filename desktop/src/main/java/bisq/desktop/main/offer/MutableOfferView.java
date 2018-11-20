@@ -142,17 +142,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
     private FundsTextField totalToPayTextField;
-    private Label amountDescriptionLabel;
-    private Label priceCurrencyLabel;
-    private Label priceDescriptionLabel;
-    private Label volumeDescriptionLabel;
-    private Label waitingForFundsLabel;
-    private Label marketBasedPriceLabel;
-    private Label percentagePriceDescription;
-    private Label tradeFeeDescriptionLabel;
-    private Label resultLabel;
-    private Label tradeFeeInBtcLabel;
-    private Label tradeFeeInBsqLabel;
+    private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
+            waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
+            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -497,6 +489,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         minAmountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
 
         resultLabel.getStyleClass().add("small");
+        xLabel.getStyleClass().add("small");
         xIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
         fakeXIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
     }
@@ -1265,10 +1258,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
-        Label xLabel = new Label();
+        xLabel = new Label();
         xIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
-        xLabel.setPadding(new Insets(24, 3, 0, 3));
+        xLabel.getStyleClass().add("opaque-icon-character");
 
         // price as percent
         Tuple3<HBox, InfoInputTextField, Label> priceAsPercentageTuple = getEditableValueBoxWithInfo(Res.get("createOffer.price.prompt"));

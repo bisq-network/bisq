@@ -869,8 +869,7 @@ bg color of non edit textFields: fafafa
 
 .opaque-icon-character.small {
     -fx-font-size: 1em;
-    /*-fx-text-fill: -bs-rd-grey-light;
-    -fx-padding: 14 2 0 2;*/
+    -fx-padding: 27 2 0 2;
 }
 
 /*******************************************************************************
