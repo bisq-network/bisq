@@ -979,10 +979,6 @@ textfield */
     -fx-fill: -bs-rd-black;
 }
 
-.table-view:focused {
-    /*-fx-background-color: transparent;*/
-}
-
 /* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
 .table-view > .scroll-bar:horizontal {
     -fx-opacity: 0;
@@ -992,6 +988,11 @@ textfield */
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
     -fx-padding: 1;
+}
+
+.table-view:focused .table-row-cell:focused {
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 0 1 0;
 }
 
 .offer-table .table-row-cell {
