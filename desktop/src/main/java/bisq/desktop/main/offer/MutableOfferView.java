@@ -144,7 +144,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private FundsTextField totalToPayTextField;
     private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
-            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel;
+            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -492,6 +492,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         xLabel.getStyleClass().add("small");
         xIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
         fakeXIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
+        fakeXLabel.getStyleClass().add("small");
     }
 
     private void maybeShowClearXchangeWarning(PaymentAccount paymentAccount) {
@@ -1367,9 +1368,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(minAmountValueCurrencyBox, Res.get("createOffer.amountPriceBox.minAmountDescription"));
 
 
-        Label fakeXLabel = new Label();
+        fakeXLabel = new Label();
         fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
-        fakeXLabel.setPadding(new Insets(24, 3, 0, 3));
+        fakeXLabel.getStyleClass().add("opaque-icon-character");
         fakeXLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
         // Fixed/Percentage toggle
@@ -1381,12 +1382,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 updatePriceToggleButtons(model.getDataModel().getUseMarketBasedPrice().getValue()));
 
         secondRowHBox = new HBox();
+
         secondRowHBox.setSpacing(5);
         secondRowHBox.setAlignment(Pos.CENTER_LEFT);
         secondRowHBox.getChildren().addAll(amountInputBoxTuple.second, fakeXLabel, fixedPriceBox, priceTypeToggleButton);
         GridPane.setRowIndex(secondRowHBox, ++gridRow);
         GridPane.setColumnIndex(secondRowHBox, 0);
-        GridPane.setMargin(secondRowHBox, new Insets(0, 10, 18, 0));
+        GridPane.setMargin(secondRowHBox, new Insets(0, 10, 10, 0));
         gridPane.getChildren().add(secondRowHBox);
     }
 

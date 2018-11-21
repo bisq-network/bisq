@@ -129,7 +129,7 @@ public class BuyerStep4View extends TradeStepView {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);
 
         addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
-        addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.TWICE_FIRST_ROW_DISTANCE);
 
         addCompactTopLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
@@ -139,7 +139,8 @@ public class BuyerStep4View extends TradeStepView {
                 Res.get("portfolio.pending.step5_buyer.takersMiningFee");
         addCompactTopLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
         withdrawTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.COMPACT_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        withdrawTitledGroupBg.getStyleClass().add("last");
+        addCompactTopLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         withdrawAddressTextField = addInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
@@ -155,7 +156,7 @@ public class BuyerStep4View extends TradeStepView {
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
-        GridPane.setMargin(hBox, new Insets(15, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(5, 10, 0, 0));
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
