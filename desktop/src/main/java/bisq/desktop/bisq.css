@@ -278,6 +278,10 @@ bg color of non edit textFields: fafafa
     -fx-stroke: -bs-rd-green;
 }
 
+.busyanimation .text.percentage {
+    -fx-fill: null;
+}
+
 .jfx-button, .action-button {
     -fx-background-color: -bs-rd-grey-light;
     -fx-text-fill: -bs-rd-font-dark-grey;

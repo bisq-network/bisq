@@ -31,6 +31,7 @@ public class BusyAnimation extends JFXSpinner {
     }
 
     public BusyAnimation(boolean isRunning) {
+        getStyleClass().add("busyanimation");
         isRunningProperty.set(isRunning);
 
         updateVisibility();
@@ -38,6 +39,7 @@ public class BusyAnimation extends JFXSpinner {
 
     public void play() {
         isRunningProperty.set(true);
+
         setProgress(-1);
         updateVisibility();
     }
