@@ -268,7 +268,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
 
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 12));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         if (model.showAllTradeCurrenciesProperty.get())
