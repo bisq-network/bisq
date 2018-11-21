@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BisqTextArea;
+import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
@@ -53,7 +54,6 @@ import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextArea;
-import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXToggleButton;
 
 import javafx.scene.Node;
@@ -70,8 +70,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -92,35 +90,7 @@ import org.jetbrains.annotations.NotNull;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class FormBuilder {
-    public static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
-    public static final String FONTAWESOME_ICONS = "FontAwesome";
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // GridPane
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static GridPane addGridPane(Pane parent) {
-        GridPane gridPane = new GridPane();
-        AnchorPane.setLeftAnchor(gridPane, 10d);
-        AnchorPane.setRightAnchor(gridPane, 10d);
-        AnchorPane.setTopAnchor(gridPane, 10d);
-        AnchorPane.setBottomAnchor(gridPane, 10d);
-        gridPane.setHgap(Layout.GRID_GAP);
-        gridPane.setVgap(Layout.GRID_GAP);
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
-
-        parent.getChildren().add(gridPane);
-        return gridPane;
-    }
-
+    private static final String MATERIAL_DESIGN_ICONS = "'Material Design Icons'";
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TitledGroupBg
@@ -264,7 +234,7 @@ public class FormBuilder {
     }
 
     public static Tuple3<Label, TextField, VBox> addTopLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
-        TextField textField = new JFXTextField(value);
+        TextField textField = new BisqTextField(value);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
 
@@ -301,7 +271,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title1);
         label.getStyleClass().add("confirmation-label");
 
-        TextArea textArea = addTextArea(gridPane, rowIndex, title1);
+        TextArea textArea = addTextArea(gridPane, rowIndex, title2);
         ((JFXTextArea) textArea).setLabelFloat(false);
 
         GridPane.setColumnIndex(textArea, 1);
@@ -638,7 +608,7 @@ public class FormBuilder {
 
     public static Tuple3<Label, TextField, Button> addTopLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
 
-        TextField textField = new JFXTextField();
+        TextField textField = new BisqTextField();
         textField.setEditable(false);
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
@@ -650,7 +620,7 @@ public class FormBuilder {
         hBox.getChildren().addAll(textField, button);
         HBox.setHgrow(textField, Priority.ALWAYS);
 
-        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, 0);
+        final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
 
         return new Tuple3<>(labelVBoxTuple2.first, textField, button);
     }
@@ -688,13 +658,13 @@ public class FormBuilder {
     public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
         Label label1 = addLabel(gridPane, rowIndex, title1, 0);
 
-        TextField textField1 = new JFXTextField();
+        TextField textField1 = new BisqTextField();
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
         Label label2 = new AutoTooltipLabel(title2);
         HBox.setMargin(label2, new Insets(5, 0, 0, 0));
-        TextField textField2 = new JFXTextField();
+        TextField textField2 = new BisqTextField();
         textField2.setEditable(false);
         textField2.setMouseTransparent(true);
         textField2.setFocusTraversable(false);
@@ -804,7 +774,7 @@ public class FormBuilder {
                                                                                                                 String radioButtonTitle1,
                                                                                                                 String radioButtonTitle2,
                                                                                                                 double top) {
-        TextField textField = new JFXTextField();
+        TextField textField = new BisqTextField();
         textField.setPromptText(textFieldTitle);
 
         RadioButton radioButton1 = new AutoTooltipRadioButton(radioButtonTitle1);
@@ -1035,7 +1005,7 @@ public class FormBuilder {
         comboBox.setPromptText(titleCombobox);
         ((JFXComboBox<T>) comboBox).setLabelFloat(true);
 
-        TextField textField = new JFXTextField();
+        TextField textField = new BisqTextField();
 
         final VBox topLabelVBox = getTopLabelVBox(5);
         final Label topLabel = getTopLabel(titleTextfield);
@@ -1667,7 +1637,7 @@ public class FormBuilder {
     // Label  + FlowPane
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, FlowPane> addTopLabelFlowPane(GridPane gridPane, int rowIndex, String title, double top) {
+    public static Tuple2<Label, FlowPane> addTopLabelFlowPane(GridPane gridPane, int rowIndex, String title, double top) {
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));
         flowPane.setVgap(10);

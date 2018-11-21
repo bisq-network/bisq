@@ -702,7 +702,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
         preferredTradeCurrencyComboBox.getSelectionModel().select(preferences.getPreferredTradeCurrency());
-        preferredTradeCurrencyComboBox.setVisibleRowCount(25);
+        preferredTradeCurrencyComboBox.setVisibleRowCount(12);
         preferredTradeCurrencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)

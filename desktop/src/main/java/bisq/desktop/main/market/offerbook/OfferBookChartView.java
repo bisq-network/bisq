@@ -189,7 +189,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
         currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(25);
+        currencyComboBox.setVisibleRowCount(12);
 
         if (model.getSelectedCurrencyListItem().isPresent())
             currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());

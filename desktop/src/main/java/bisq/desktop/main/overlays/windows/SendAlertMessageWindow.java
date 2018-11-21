@@ -38,6 +38,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
@@ -111,6 +112,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     }
 
     private void addContent() {
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+        gridPane.getColumnConstraints().remove(1);
+
         InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
@@ -131,6 +135,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
         Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));
+        sendButton.getStyleClass().add("action-button");
+        sendButton.setDefaultButton(true);
         sendButton.setOnAction(e -> {
             final String version = versionInputTextField.getText();
             boolean versionOK = false;
@@ -176,7 +182,6 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeAlertMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));

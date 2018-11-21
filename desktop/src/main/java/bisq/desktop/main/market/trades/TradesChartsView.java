@@ -186,7 +186,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
         currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(25);
+        currencyComboBox.setVisibleRowCount(12);
 
         if (model.showAllTradeCurrenciesProperty.get())
             currencyComboBox.getSelectionModel().select(0);

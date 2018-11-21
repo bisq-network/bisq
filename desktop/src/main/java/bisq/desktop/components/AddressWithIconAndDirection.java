@@ -52,7 +52,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         hBox.setSpacing(-1);
         Label label = new AutoTooltipLabel(text);
         label.setMouseTransparent(true);
-        HBox.setMargin(label, new Insets(5, 0, 0, 0));
+        HBox.setMargin(label, new Insets(3, 0, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);
 
         hyperlink = new HyperlinkWithIcon(address, awesomeIcon);

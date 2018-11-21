@@ -20,7 +20,6 @@ package bisq.desktop.main.debug;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.InitializableView;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.util.FormBuilder;
 
 import bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
@@ -61,12 +60,14 @@ import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
 import bisq.common.taskrunner.Task;
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
@@ -75,6 +76,8 @@ import javafx.collections.ObservableList;
 import javafx.util.StringConverter;
 
 import java.util.Arrays;
+
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 
 @FxmlView
 public class DebugView extends InitializableView<GridPane, Void> {
@@ -90,20 +93,20 @@ public class DebugView extends InitializableView<GridPane, Void> {
     @Override
     public void initialize() {
 
-        addGroup("OfferAvailabilityProtocol: ",
+        addGroup("OfferAvailabilityProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         SendOfferAvailabilityRequest.class,
                         ProcessOfferAvailabilityResponse.class)
                 ));
 
-        addGroup("PlaceOfferProtocol: ",
+        addGroup("PlaceOfferProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         ValidateOffer.class,
                         CreateMakerFeeTx.class,
                         AddToOfferBook.class)
                 ));
 
-        addGroup("BuyerAsMakerProtocol: ",
+        addGroup("BuyerAsMakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
@@ -127,7 +130,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         BuyerSendCounterCurrencyTransferStartedMessage.class,
                         BuyerSetupPayoutTxListener.class)
                 ));
-        addGroup("SellerAsTakerProtocol: ",
+        addGroup("SellerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
@@ -156,7 +159,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         SellerBroadcastPayoutTx.class,
                         SellerSendPayoutTxPublishedMessage.class)
                 ));
-        addGroup("BuyerAsTakerProtocol: ",
+        addGroup("BuyerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         TakerSelectArbitrator.class,
                         TakerSelectMediator.class,
@@ -181,7 +184,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         BuyerSendCounterCurrencyTransferStartedMessage.class,
                         BuyerSetupPayoutTxListener.class)
                 ));
-        addGroup("SellerAsMakerProtocol: ",
+        addGroup("SellerAsMakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
@@ -212,11 +215,12 @@ public class DebugView extends InitializableView<GridPane, Void> {
     }
 
     private void addGroup(String title, ObservableList<Class<? extends Task>> list) {
-        ComboBox<Class<? extends Task>> comboBox = FormBuilder.<Class<? extends Task>>addComboBox(root, ++rowIndex, title);
+        final Tuple2<Label, ComboBox<Class<? extends Task>>> selectTaskToIntercept =
+                addTopLabelComboBox(root, ++rowIndex, title, "Select task to intercept", 15);
+        ComboBox<Class<? extends Task>> comboBox = selectTaskToIntercept.second;
         comboBox.setVisibleRowCount(list.size());
         comboBox.setItems(list);
-        comboBox.setPromptText("Select task to intercept");
-        comboBox.setConverter(new StringConverter<Class<? extends Task>>() {
+        comboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Class<? extends Task> item) {
                 return item.getSimpleName();

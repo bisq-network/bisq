@@ -268,7 +268,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
 
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 25));
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 12));
         currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         if (model.showAllTradeCurrenciesProperty.get())
@@ -556,6 +556,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(40);
             }
         };
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -746,6 +747,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(80);
             }
         };
+
+        column.getStyleClass().add("number-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {

@@ -145,8 +145,8 @@ bg color of non edit textFields: fafafa
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
     -bs-sell-transparent: rgba(215, 48, 48, 0.3); /* 1 usages */
 
-    -bs-volume-transparent: rgba(0, 134, 198, 0.3);
-    -bs-candle-stick-average-line: -bs-rd-message-bubble;
+    -bs-volume-transparent: rgba(37, 177, 53, 0.3);
+    -bs-candle-stick-average-line: -bs-rd-green;
     -bs-candle-stick-loss: #FE3001;
     -bs-candle-stick-won: #20B221;
 
@@ -255,8 +255,8 @@ bg color of non edit textFields: fafafa
 
 .separator *.line {
     -fx-border-style: solid;
-    -fx-border-width: 0 1 0 0;
-    -fx-border-color: -bs-rd-separator;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-separator-dark;
 }
 
 .jfx-progress-bar > .bar,
@@ -278,6 +278,10 @@ bg color of non edit textFields: fafafa
     -fx-stroke: -bs-rd-green;
 }
 
+.busyanimation .text.percentage {
+    -fx-fill: null;
+}
+
 .jfx-button, .action-button {
     -fx-background-color: -bs-rd-grey-light;
     -fx-text-fill: -bs-rd-font-dark-grey;
@@ -288,6 +292,7 @@ bg color of non edit textFields: fafafa
     -fx-min-height: -fx-pref-height;
     -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
+    -fx-cursor: hand;
 }
 
 .action-button {
@@ -397,6 +402,16 @@ bg color of non edit textFields: fafafa
 
 .jfx-text-field:readonly > .input-focused-line {
     -fx-background-color: transparent;
+}
+
+.jfx-text-field:disabled > .input-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.jfx-text-field:disabled > .input-focused-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
 }
 
 /* hyperlink-with-icon has same style as jfx-text-field:readonly */
@@ -797,6 +812,15 @@ bg color of non edit textFields: fafafa
     -fx-underline: true;
 }
 
+/** Confirmation Indicator */
+
+.progress-indicator > .determinate-indicator > .indicator {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: -fx-box-border;
+    -fx-border-width: 1;
+    -fx-padding: 0.166667em; /* 2px */
+}
+
 /*******************************************************************************
  *                                                                             *
  * Icons                                                                       *
@@ -859,8 +883,7 @@ bg color of non edit textFields: fafafa
 
 .opaque-icon-character.small {
     -fx-font-size: 1em;
-    /*-fx-text-fill: -bs-rd-grey-light;
-    -fx-padding: 14 2 0 2;*/
+    -fx-padding: 27 2 0 2;
 }
 
 /*******************************************************************************
@@ -956,10 +979,6 @@ textfield */
     -fx-fill: -bs-rd-black;
 }
 
-.table-view:focused {
-    /*-fx-background-color: transparent;*/
-}
-
 /* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
 .table-view > .scroll-bar:horizontal {
     -fx-opacity: 0;
@@ -969,6 +988,11 @@ textfield */
     -fx-background-color: -fx-box-border, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
     -fx-padding: 1;
+}
+
+.table-view:focused .table-row-cell:focused {
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 0 1 0;
 }
 
 .offer-table .table-row-cell {
