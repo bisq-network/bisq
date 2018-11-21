@@ -255,8 +255,8 @@ bg color of non edit textFields: fafafa
 
 .separator *.line {
     -fx-border-style: solid;
-    -fx-border-width: 0 1 0 0;
-    -fx-border-color: -bs-rd-separator;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-separator-dark;
 }
 
 .jfx-progress-bar > .bar,

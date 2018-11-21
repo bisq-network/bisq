@@ -144,6 +144,10 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void addContent() {
+
+        if (!isBtc)
+            gridPane.getColumnConstraints().remove(1);
+
         if (isBtc)
             addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
 
