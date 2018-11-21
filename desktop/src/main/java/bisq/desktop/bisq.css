@@ -145,8 +145,8 @@ bg color of non edit textFields: fafafa
     -bs-sell-hover: derive(-bs-sell, -10%); /* 2 usages */
     -bs-sell-transparent: rgba(215, 48, 48, 0.3); /* 1 usages */
 
-    -bs-volume-transparent: rgba(0, 134, 198, 0.3);
-    -bs-candle-stick-average-line: -bs-rd-message-bubble;
+    -bs-volume-transparent: rgba(37, 177, 53, 0.3);
+    -bs-candle-stick-average-line: -bs-rd-green;
     -bs-candle-stick-loss: #FE3001;
     -bs-candle-stick-won: #20B221;
 
