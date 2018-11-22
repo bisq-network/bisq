@@ -76,8 +76,8 @@ public abstract class PaymentMethodForm {
     protected final BooleanProperty allInputsValid = new SimpleBooleanProperty();
 
     protected int gridRowFrom;
-    protected InputTextField accountNameTextField;
-    protected ToggleButton useCustomAccountNameToggleButton;
+    InputTextField accountNameTextField;
+    ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -155,7 +155,7 @@ public abstract class PaymentMethodForm {
         return time;
     }
 
-    protected void addLimitations() {
+    protected void addLimitations(boolean isDisplayForm) {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
@@ -183,7 +183,11 @@ public abstract class PaymentMethodForm {
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                         formatter.formatAccountAge(accountAge));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+
+        if (isDisplayForm)
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        else
+            addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);

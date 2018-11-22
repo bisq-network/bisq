@@ -83,7 +83,7 @@ public class OKPayForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -128,7 +128,7 @@ public class OKPayForm extends PaymentMethodForm {
         TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
                 okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 

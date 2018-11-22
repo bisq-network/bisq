@@ -105,7 +105,7 @@ public class WesternUnionForm extends PaymentMethodForm {
                     westernUnionAccountPayload.getState()).second.setMouseTransparent(false);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 westernUnionAccountPayload.getEmail());
-        addLimitations();
+        addLimitations(true);
     }
 
     private void onTradeCurrencySelected(TradeCurrency tradeCurrency) {
@@ -167,7 +167,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         });
         emailInputTextField.setValidator(emailValidator);
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();

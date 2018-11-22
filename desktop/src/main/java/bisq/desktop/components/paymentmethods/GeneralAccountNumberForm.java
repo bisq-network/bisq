@@ -39,7 +39,7 @@ abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
 
         addTradeCurrency();
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -83,6 +83,6 @@ abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
 
-        addLimitations();
+        addLimitations(true);
     }
 }

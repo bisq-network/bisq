@@ -213,7 +213,7 @@ abstract class BankForm extends GeneralBankForm {
             addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
                     bankAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override
@@ -275,7 +275,7 @@ abstract class BankForm extends GeneralBankForm {
             }
         });
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();

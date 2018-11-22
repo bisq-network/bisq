@@ -118,7 +118,7 @@ public class F2FForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -168,7 +168,7 @@ public class F2FForm extends PaymentMethodForm {
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
 
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

@@ -243,7 +243,7 @@ public class CashDepositForm extends GeneralBankForm {
             textArea.setText(requirements);
         }
 
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override
@@ -310,7 +310,7 @@ public class CashDepositForm extends GeneralBankForm {
             updateFromInputs();
         });
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();

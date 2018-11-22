@@ -81,7 +81,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -106,7 +106,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override
