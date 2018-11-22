@@ -368,8 +368,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodTextField.setManaged(!showComboBox);
         paymentMethodLabel.setVisible(!showComboBox);
         paymentMethodLabel.setManaged(!showComboBox);
-        if (!showComboBox)
-            paymentMethodTextField.setText(Res.get(model.getPaymentMethod().getId()));
+
+        if (!showComboBox) {
+            paymentMethodTextField.setText(model.getPossiblePaymentAccounts().get(0).getAccountName());
+        }
+
         currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
         amountDescriptionLabel.setText(model.getAmountDescription());
 
