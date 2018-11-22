@@ -99,7 +99,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -138,7 +138,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

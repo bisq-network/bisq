@@ -115,7 +115,7 @@ public class SepaInstantForm extends GeneralSepaForm {
 
         addEuroCountriesGrid();
         addNonEuroCountriesGrid();
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
         countryComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllSepaInstantCountries()));
@@ -206,7 +206,7 @@ public class SepaInstantForm extends GeneralSepaForm {
             acceptedCountries.setMouseTransparent(false);
             acceptedCountries.setTooltip(tooltip);
         }
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

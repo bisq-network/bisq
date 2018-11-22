@@ -96,7 +96,7 @@ public class MoneyGramForm extends PaymentMethodForm {
                     moneyGramAccountPayload.getState()).second.setMouseTransparent(false);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 moneyGramAccountPayload.getEmail());
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 
@@ -130,7 +130,7 @@ public class MoneyGramForm extends PaymentMethodForm {
         emailInputTextField.setValidator(emailValidator);
 
         addCurrenciesGrid(true);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
         updateFromInputs();

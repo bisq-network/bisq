@@ -73,7 +73,7 @@ public class RevolutForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -105,7 +105,7 @@ public class RevolutForm extends PaymentMethodForm {
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
                 account.getAccountId()).second;
         field.setMouseTransparent(false);
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 
