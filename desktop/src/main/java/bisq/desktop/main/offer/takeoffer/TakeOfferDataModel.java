@@ -43,6 +43,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
@@ -65,6 +66,7 @@ import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -303,7 +305,7 @@ class TakeOfferDataModel extends OfferDataModel {
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else {
-            tradeManager.onTakeOffer(amount.get(),
+            final CompletableFuture<Trade> futureTrade = tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
                     getTakerFee(),
                     isCurrencyForTakerFeeBtc(),
@@ -311,13 +313,14 @@ class TakeOfferDataModel extends OfferDataModel {
                     fundsNeededForTrade,
                     offer,
                     paymentAccount.getId(),
-                    useSavingsWallet,
-                    tradeResultHandler,
-                    errorMessage -> {
-                        log.warn(errorMessage);
-                        new Popup<>().warning(errorMessage).show();
-                    }
+                    useSavingsWallet
             );
+            futureTrade.thenAccept(tradeResultHandler::handleResult);
+            futureTrade.exceptionally(throwable -> {
+                log.warn(throwable.getMessage(), throwable);
+                new Popup<>().warning(throwable.getMessage()).show();
+                return null;
+            });
         }
     }
 

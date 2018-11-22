@@ -35,7 +35,6 @@ import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
-import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -88,6 +87,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -409,17 +409,15 @@ public class TradeManager implements PersistedDataHost {
     }
 
     // First we check if offer is still available then we create the trade with the protocol
-    public void onTakeOffer(Coin amount,
-                            Coin txFee,
-                            Coin takerFee,
-                            boolean isCurrencyForTakerFeeBtc,
-                            long tradePrice,
-                            Coin fundsNeededForTrade,
-                            Offer offer,
-                            String paymentAccountId,
-                            boolean useSavingsWallet,
-                            TradeResultHandler tradeResultHandler,
-                            ErrorMessageHandler errorMessageHandler) {
+    public CompletableFuture<Trade> onTakeOffer(Coin amount,
+                                               Coin txFee,
+                                               Coin takerFee,
+                                               boolean isCurrencyForTakerFeeBtc,
+                                               long tradePrice,
+                                               Coin fundsNeededForTrade,
+                                               Offer offer,
+                                               String paymentAccountId,
+                                               boolean useSavingsWallet) {
         /**
          * - offer must not be null
          * - offer currencyCode must not be banned
@@ -442,6 +440,47 @@ public class TradeManager implements PersistedDataHost {
          * - TODO check if user has enough funds here
          * - TODO instead of coin we might use long
          */
+        final CompletableFuture<Trade> completableFuture = new CompletableFuture<>();
+         try {
+             validateOnTakeOffer(amount, txFee, takerFee, tradePrice, offer, paymentAccountId);
+         } catch(Exception e) {
+             completableFuture.completeExceptionally(e);
+             return completableFuture;
+         }
+        final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
+        offer.checkOfferAvailability(model, () -> {
+//            TODO what if offer is in invalid state?
+//            TODO what if exception is thrown inside createTrade?
+                    try {
+                        if (offer.getState() == Offer.State.AVAILABLE) {
+                            final Trade trade = createTrade(amount,
+                                    txFee,
+                                    takerFee,
+                                    isCurrencyForTakerFeeBtc,
+                                    tradePrice,
+                                    fundsNeededForTrade,
+                                    offer,
+                                    paymentAccountId,
+                                    useSavingsWallet,
+                                    model);
+                            completableFuture.complete(trade);
+                        } else {
+                            throw new ValidationException("Offer not available");
+                        }
+                    } catch (Exception e) {
+                        completableFuture.completeExceptionally(e);
+                    }
+                },
+                errorMessage -> completableFuture.completeExceptionally(new TradeFailedException(errorMessage)));
+        return completableFuture;
+    }
+
+    private void validateOnTakeOffer(Coin amount,
+                                     Coin txFee,
+                                     Coin takerFee,
+                                     long tradePrice,
+                                     Offer offer,
+                                     String paymentAccountId) {
         if (null == amount || !Coin.ZERO.isLessThan(amount)) {
             throw new ValidationException("Amount must be a positive number");
         }
@@ -479,44 +518,18 @@ public class TradeManager implements PersistedDataHost {
         if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             throw new ValidationException(Res.get("offerbook.warning.nodeBlocked"));
         }
-        if (null == tradeResultHandler) {
-            throw new ValidationException("TradeResultHandler must not be null");
-        }
-        if (null == errorMessageHandler) {
-            throw new ValidationException("ErrorMessageHandler must not be null");
-        }
-        final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
-        offer.checkOfferAvailability(model,
-                () -> {
-//            TODO what if offer is in invalid state?
-//            TODO what if exception is thrown inside createTrade?
-                    if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount,
-                                txFee,
-                                takerFee,
-                                isCurrencyForTakerFeeBtc,
-                                tradePrice,
-                                fundsNeededForTrade,
-                                offer,
-                                paymentAccountId,
-                                useSavingsWallet,
-                                model,
-                                tradeResultHandler);
-                },
-                errorMessageHandler);
     }
 
-    private void createTrade(@Nonnull Coin amount,
-                             @Nonnull Coin txFee,
-                             @Nonnull Coin takerFee,
-                             boolean isCurrencyForTakerFeeBtc,
-                             long tradePrice,
-                             @Nonnull Coin fundsNeededForTrade,
-                             @Nonnull Offer offer,
-                             @Nonnull String paymentAccountId,
-                             boolean useSavingsWallet,
-                             @Nonnull OfferAvailabilityModel model,
-                             @Nonnull TradeResultHandler tradeResultHandler) {
+    private Trade createTrade(@Nonnull Coin amount,
+                              @Nonnull Coin txFee,
+                              @Nonnull Coin takerFee,
+                              boolean isCurrencyForTakerFeeBtc,
+                              long tradePrice,
+                              @Nonnull Coin fundsNeededForTrade,
+                              @Nonnull Offer offer,
+                              @Nonnull String paymentAccountId,
+                              boolean useSavingsWallet,
+                              @Nonnull OfferAvailabilityModel model) {
         Trade trade;
         if (offer.isBuyOffer())
             trade = new SellerAsTakerTrade(offer,
@@ -547,7 +560,7 @@ public class TradeManager implements PersistedDataHost {
 
         tradableList.add(trade);
         ((TakerTrade) trade).takeAvailableOffer();
-        tradeResultHandler.handleResult(trade);
+        return trade;
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {

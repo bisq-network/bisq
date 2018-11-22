@@ -23,6 +23,19 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
+import bisq.httpapi.exceptions.AmountTooHighException;
+import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NotBootstrappedException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
+import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.service.endpoint.OfferBuilder;
+import bisq.httpapi.util.ResourceHelper;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -37,18 +50,6 @@ import static java.util.stream.Collectors.toList;
 
 
 
-import bisq.httpapi.exceptions.AmountTooHighException;
-import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
-import bisq.httpapi.exceptions.InsufficientMoneyException;
-import bisq.httpapi.exceptions.NotBootstrappedException;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
-import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.service.endpoint.OfferBuilder;
-import bisq.httpapi.util.ResourceHelper;
 import javax.validation.ValidationException;
 
 public class OfferFacade {
@@ -229,7 +230,7 @@ public class OfferFacade {
         checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
 
         boolean currencyForTakerFeeBtc = TakerUtil.isCurrencyForTakerFeeBtc(amountAsCoin, preferences, bsqWalletService);
-        tradeManager.onTakeOffer(amountAsCoin,
+        return tradeManager.onTakeOffer(amountAsCoin,
                 txFeeFromFeeService,
                 takerFee,
                 currencyForTakerFeeBtc,
@@ -237,10 +238,6 @@ public class OfferFacade {
                 fundsNeededForTaker,
                 offer,
                 paymentAccount.getId(),
-                useSavingsWallet,
-                futureResult::complete,
-                error -> futureResult.completeExceptionally(new RuntimeException(error))
-        );
-        return futureResult;
+                useSavingsWallet);
     }
 }
