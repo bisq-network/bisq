@@ -80,6 +80,9 @@ public class TradeManagerOnOfferTakeTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+
+    private Arbitrator arbitratorA;
+    private Mediator mediatorA;
     private KeyRing keyRing;
     private BtcWalletService btcWalletService;
     private BsqWalletService bsqWalletService;
@@ -110,8 +113,8 @@ public class TradeManagerOnOfferTakeTest {
         usersPaymentAccount.addCurrency(new FiatCurrency("USD"));
         Assert.assertNotNull(usersPaymentAccount.getId());
 
-        final Arbitrator arbitratorA = new Arbitrator(new NodeAddress("arbitratorA", 0), null, null, null, null, 0, null, null, null, null, null);
-        final Mediator mediatorA = new Mediator(new NodeAddress("mediatorA", 1), null, null, 0, null, null, null, null, null);
+        arbitratorA = new Arbitrator(new NodeAddress("arbitratorA", 0), null, null, null, null, 0, null, null, null, null, null);
+        mediatorA = new Mediator(new NodeAddress("mediatorA", 1), null, null, 0, null, null, null, null, null);
 
         keyRing = mock(KeyRing.class);
         when(keyRing.getSignatureKeyPair()).thenReturn(Sig.generateKeyPair());
@@ -167,7 +170,7 @@ public class TradeManagerOnOfferTakeTest {
         when(user.getAcceptedMediatorAddresses()).thenReturn(Collections.singletonList(mediatorA.getNodeAddress()));
         when(user.getAccountId()).thenReturn("userAccountId");
 
-        offerToCreate = createOffer(UUID.randomUUID().toString(), arbitratorA, mediatorA);
+        offerToCreate = createOffer(OfferPayload.Direction.SELL, UUID.randomUUID().toString(), arbitratorA, mediatorA);
     }
 
     @Test
@@ -564,20 +567,53 @@ public class TradeManagerOnOfferTakeTest {
 
     //    TODO do Tasks in BuyerAsTakerProtocol execute synchronously
     @Test
-    public void onTakeOffer_firstAttemptToWriteATest() throws Exception {
+    public void onTakeOffer_firstAttemptToWriteATest_takeBuyOffer() throws Exception {
 //        TODO why User is final? We cannot mock it if it's final.
 //        Given
+        offerToCreate = createOffer(OfferPayload.Direction.BUY, UUID.randomUUID().toString(), arbitratorA, mediatorA);
         doAnswer(invocation -> {
             ((ResultHandler) invocation.getArgument(1)).handleResult();
             return null;
         }).when(offerToCreate).checkOfferAvailability(any(), any(), any());
 
+        final OnTakeOfferParams params = getValidParams();
+
 //        When
-        final Trade trade = onTakeOffer(getValidParams()).get();
+        final Trade trade = onTakeOffer(params).get();
 
 //        Then
 //        TODO what properties should the trade have?
         Assert.assertNotNull(trade);
+        Assert.assertTrue(trade instanceof SellerAsTakerTrade);
+        Assert.assertNull("Trade should not have error property set", trade.getErrorMessage());
+//        TODO what should happen as th e result of onTakeOffer call? What mocks should be called?
+//        Following instructions can be used what calls are actually made
+//        verifyNoMoreInteractions(p2pService);
+//        verifyNoMoreInteractions(user);
+//        verifyNoMoreInteractions(tradeStatisticsManager);
+//        verifyNoMoreInteractions(arbitratorManager);
+//        verifyNoMoreInteractions(btcWalletServiceMock);
+//        verifyNoMoreInteractions(tradeWalletServiceMock);
+    }
+    @Test
+    public void onTakeOffer_firstAttemptToWriteATest_takeSellOffer() throws Exception {
+//        TODO why User is final? We cannot mock it if it's final.
+//        Given
+        offerToCreate = createOffer(OfferPayload.Direction.SELL, UUID.randomUUID().toString(), arbitratorA, mediatorA);
+        doAnswer(invocation -> {
+            ((ResultHandler) invocation.getArgument(1)).handleResult();
+            return null;
+        }).when(offerToCreate).checkOfferAvailability(any(), any(), any());
+
+        final OnTakeOfferParams params = getValidParams();
+
+//        When
+        final Trade trade = onTakeOffer(params).get();
+
+//        Then
+//        TODO what properties should the trade have?
+        Assert.assertNotNull(trade);
+        Assert.assertTrue(trade instanceof BuyerAsTakerTrade);
         Assert.assertNull("Trade should not have error property set", trade.getErrorMessage());
 //        TODO what should happen as th e result of onTakeOffer call? What mocks should be called?
 //        Following instructions can be used what calls are actually made
@@ -635,7 +671,7 @@ public class TradeManagerOnOfferTakeTest {
         return params;
     }
 
-    private Offer createOffer(String offerId, Arbitrator arbitrator, Mediator mediator) {
+    private Offer createOffer(OfferPayload.Direction direction, String offerId, Arbitrator arbitrator, Mediator mediator) {
         final long now = new Date().getTime();
         final int price = 1;
         final double marketPriceMargin = 0.1;
@@ -667,7 +703,7 @@ public class TradeManagerOnOfferTakeTest {
                 now,
                 new NodeAddress("0", 0),
                 pubKeyRing,
-                OfferPayload.Direction.SELL,
+                direction,
                 price,
                 marketPriceMargin,
                 useMarketBasedPrice,
