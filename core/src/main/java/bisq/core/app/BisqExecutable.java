@@ -114,6 +114,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     public void execute(String[] args) throws Exception {
         OptionParser parser = new OptionParser();
+        parser.formatHelpWith(new BisqHelpFormatter());
         parser.accepts(HELP_KEY, "This help text").forHelp();
 
         this.customizeOptionParsing(parser);
