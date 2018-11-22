@@ -71,6 +71,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -83,8 +86,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
-import static bisq.desktop.util.Layout.INITIAL_SCENE_WIDTH;
+import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
+import static bisq.desktop.util.Layout.INITIAL_WINDOW_WIDTH;
+import static bisq.desktop.util.Layout.MIN_WINDOW_HEIGHT;
+import static bisq.desktop.util.Layout.MIN_WINDOW_WIDTH;
 
 @Slf4j
 public class BisqApp extends Application implements UncaughtExceptionHandler {
@@ -205,7 +210,14 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Scene createAndConfigScene(MainView mainView, Injector injector) {
-        Scene scene = new Scene(mainView.getRoot(), INITIAL_SCENE_WIDTH, INITIAL_SCENE_HEIGHT);
+        Rectangle maxWindowBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        Scene scene = new Scene(mainView.getRoot(),
+                maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
+                        (maxWindowBounds.width < MIN_WINDOW_WIDTH ? MIN_WINDOW_WIDTH : maxWindowBounds.width) :
+                        INITIAL_WINDOW_WIDTH,
+                maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
+                        (maxWindowBounds.height < MIN_WINDOW_HEIGHT ? MIN_WINDOW_HEIGHT : maxWindowBounds.height) :
+                        INITIAL_WINDOW_HEIGHT);
         scene.getStylesheets().setAll(
                 "/bisq/desktop/bisq.css",
                 "/bisq/desktop/images.css",
@@ -231,8 +243,8 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             appName += " [REGTEST]";
         stage.setTitle(appName);
         stage.setScene(scene);
-        stage.setMinWidth(1020);
-        stage.setMinHeight(620);
+        stage.setMinWidth(MIN_WINDOW_WIDTH);
+        stage.setMinHeight(MIN_WINDOW_HEIGHT);
 
         // on Windows the title icon is also used as task bar icon in a larger size
         // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
