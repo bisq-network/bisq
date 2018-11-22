@@ -11,6 +11,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -53,6 +54,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.jetbrains.annotations.NotNull;
@@ -105,6 +107,7 @@ public class TradeManagerOnOfferTakeTest {
         PaymentMethod.onAllServicesInitialized();
         usersPaymentAccount = new AliPayAccount();
         usersPaymentAccount.init();
+        usersPaymentAccount.addCurrency(new FiatCurrency("USD"));
         Assert.assertNotNull(usersPaymentAccount.getId());
 
         final Arbitrator arbitratorA = new Arbitrator(new NodeAddress("arbitratorA", 0), null, null, null, null, 0, null, null, null, null, null);
@@ -164,7 +167,7 @@ public class TradeManagerOnOfferTakeTest {
         when(user.getAcceptedMediatorAddresses()).thenReturn(Collections.singletonList(mediatorA.getNodeAddress()));
         when(user.getAccountId()).thenReturn("userAccountId");
 
-        offerToCreate = createOffer("offerId", arbitratorA, mediatorA);
+        offerToCreate = createOffer(UUID.randomUUID().toString(), arbitratorA, mediatorA);
     }
 
     @Test
@@ -183,12 +186,27 @@ public class TradeManagerOnOfferTakeTest {
     }
 
     @Test
-    public void onTakeOffer_noPaymentAccountForGivenIdp_completesExceptionally() {
+    public void onTakeOffer_noPaymentAccountForGivenId_completesExceptionally() {
 //        Given
         final Class<? extends Throwable> expectedExceptionClass = ValidationException.class;
         final String expectedExceptionMessage = "Payment account for given id does not exist: xyz";
         final OnTakeOfferParams params = getValidParams();
         params.paymentAccountId = "xyz";
+
+//        When
+        final CompletableFuture<Trade> completableFuture = onTakeOffer(params);
+
+//        Then
+        assertCompletedExceptionally(completableFuture, expectedExceptionClass, expectedExceptionMessage);
+    }
+
+    @Test
+    public void onTakeOffer_paymentAccountNotValidForOffer_completesExceptionally() {
+//        Given
+        final Class<? extends Throwable> expectedExceptionClass = ValidationException.class;
+        final String expectedExceptionMessage = "PaymentAccount is not valid for offer, needs PLN";
+        final OnTakeOfferParams params = getValidParams();
+        when(offerToCreate.getCurrencyCode()).thenReturn("PLN");
 
 //        When
         final CompletableFuture<Trade> completableFuture = onTakeOffer(params);
@@ -298,6 +316,23 @@ public class TradeManagerOnOfferTakeTest {
         Assert.assertNotNull(expectedExceptionMessage);
         final OnTakeOfferParams params = getValidParams();
         when(filterManager.isNodeAddressBanned(params.offer.getMakerNodeAddress())).thenReturn(true);
+
+//        When
+        final CompletableFuture<Trade> completableFuture = onTakeOffer(params);
+
+//        Then
+        assertCompletedExceptionally(completableFuture, expectedExceptionClass, expectedExceptionMessage);
+    }
+
+    @Test
+    public void onTakeOffer_makerNodeAddressSameAsTaker_completesExceptionally() {
+//        Given
+        final Class<? extends Throwable> expectedExceptionClass = ValidationException.class;
+        final String expectedExceptionMessage = "Taker's address same as maker's";
+        final OnTakeOfferParams params = getValidParams();
+        final NodeAddress myNodeAddress = new NodeAddress("me", 0);
+        when(p2PService.getAddress()).thenReturn(myNodeAddress);
+        when(offerToCreate.getMakerNodeAddress()).thenReturn(myNodeAddress);
 
 //        When
         final CompletableFuture<Trade> completableFuture = onTakeOffer(params);
@@ -530,7 +565,6 @@ public class TradeManagerOnOfferTakeTest {
     //    TODO do Tasks in BuyerAsTakerProtocol execute synchronously
     @Test
     public void onTakeOffer_firstAttemptToWriteATest() throws Exception {
-//        TODO why do we need to call this?
 //        TODO why User is final? We cannot mock it if it's final.
 //        Given
         doAnswer(invocation -> {
@@ -675,14 +709,14 @@ public class TradeManagerOnOfferTakeTest {
     }
 
     private class OnTakeOfferParams {
-        public Coin amount;
-        public Coin txFee;
-        public Coin takerFee;
-        public boolean isCurrencyForTakerFeeBtc;
-        public long tradePrice;
-        public Coin fundsNeededForTrade;
-        public Offer offer;
-        public String paymentAccountId;
-        public boolean useSavingsWallet;
+        Coin amount;
+        Coin txFee;
+        Coin takerFee;
+        boolean isCurrencyForTakerFeeBtc;
+        long tradePrice;
+        Coin fundsNeededForTrade;
+        Offer offer;
+        String paymentAccountId;
+        boolean useSavingsWallet;
     }
 }

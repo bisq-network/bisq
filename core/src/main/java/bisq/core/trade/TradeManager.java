@@ -32,6 +32,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -102,6 +103,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 
 
 
@@ -493,7 +496,8 @@ public class TradeManager implements PersistedDataHost {
         if (tradePrice <= 0) {
             throw new ValidationException("Trade price must be a positive number");
         }
-        if (null == user.getPaymentAccount(paymentAccountId)) {
+        final PaymentAccount paymentAccount = user.getPaymentAccount(paymentAccountId);
+        if (null == paymentAccount) {
             throw new ValidationException("Payment account for given id does not exist: " + paymentAccountId);
         }
         if (null == offer) {
@@ -517,6 +521,12 @@ public class TradeManager implements PersistedDataHost {
         }
         if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             throw new ValidationException(Res.get("offerbook.warning.nodeBlocked"));
+        }
+        if (offer.getMakerNodeAddress().equals(p2PService.getAddress())) {
+            throw new ValidationException("Taker's address same as maker's");
+        }
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
+            throw new ValidationException("PaymentAccount is not valid for offer, needs " + offer.getCurrencyCode());
         }
     }
 
