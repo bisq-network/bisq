@@ -90,7 +90,7 @@ import javafx.util.StringConverter;
 import java.util.Collections;
 import java.util.function.Function;
 
-import static bisq.desktop.util.Layout.INITIAL_SCENE_HEIGHT;
+import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
@@ -120,7 +120,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private final double initialOfferTableViewHeight = 109;
     private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight / 4.0) + 10.0; // initial visible row count=4
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
-        int extraRows = screenSize <= INITIAL_SCENE_HEIGHT ? 0 : (int) ((screenSize - INITIAL_SCENE_HEIGHT) / pixelsPerOfferTableRow);
+        int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerOfferTableRow);
         return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + (extraRows * pixelsPerOfferTableRow));
     };
 

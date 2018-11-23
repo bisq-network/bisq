@@ -21,23 +21,23 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class ZeroTest extends AbstractAssetTest {
+public class BitcoinRhodiumTest extends AbstractAssetTest {
 
-    public ZeroTest() {
-        super(new Zero());
+    public BitcoinRhodiumTest() {
+        super(new BitcoinRhodium());
     }
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("t1cZTNaKS6juH6tGEhCUZmZhtbYGeYeuTrK");
-        assertValidAddress("t1ZBPYJwK2UPbshwcYWRiCq7vw8VPDYumWu");
+        assertValidAddress("RiMBe4uDXPzTxgKUEwqQobp2o7dqBDYM6S");
+        assertValidAddress("RqvpFWRTSKo2QEMH89rNhs3C7CCmRRYKmg");
+        assertValidAddress("Rhxz2uF9HaE2ync4eDetjkdhkS5qMXMQzz");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem");
-        assertInvalidAddress("38NwrYsD1HxQW5zfLT0QcUUXGMPvQgzTSn");
-        assertInvalidAddress("8tP9rh3SH6n9cSLmV22vnSNNw56LKGpLrB");
-        assertInvalidAddress("8Zbvjr");
+        assertInvalidAddress("Rhxz2uF9HaE2ync4eDetjkdhkS5qMXMQvdvdfbFzz");
+        assertInvalidAddress("fqvpFWRTSKo2QEMH89rNhs3C7CCmRRYKmg");
+        assertInvalidAddress("1HQQgsvLTgN9xD9hNmAgAreakzDsxUSLSH#");
     }
 }

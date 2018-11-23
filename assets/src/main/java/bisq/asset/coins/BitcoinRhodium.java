@@ -17,27 +17,25 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetTest;
+import bisq.asset.Coin;
+import bisq.asset.Base58BitcoinAddressValidator;
 
-import org.junit.Test;
+import bisq.asset.NetworkParametersAdapter;
+import org.bitcoinj.core.NetworkParameters;
 
-public class ZeroTest extends AbstractAssetTest {
+public class BitcoinRhodium extends Coin {
 
-    public ZeroTest() {
-        super(new Zero());
+    public BitcoinRhodium() {
+        super("Bitcoin Rhodium", "XRC", new Base58BitcoinAddressValidator(new BitcoinRhodiumParams()));
     }
 
-    @Test
-    public void testValidAddresses() {
-        assertValidAddress("t1cZTNaKS6juH6tGEhCUZmZhtbYGeYeuTrK");
-        assertValidAddress("t1ZBPYJwK2UPbshwcYWRiCq7vw8VPDYumWu");
-    }
+    public static class BitcoinRhodiumParams extends NetworkParametersAdapter {
 
-    @Test
-    public void testInvalidAddresses() {
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem");
-        assertInvalidAddress("38NwrYsD1HxQW5zfLT0QcUUXGMPvQgzTSn");
-        assertInvalidAddress("8tP9rh3SH6n9cSLmV22vnSNNw56LKGpLrB");
-        assertInvalidAddress("8Zbvjr");
+        public BitcoinRhodiumParams() {
+            addressHeader = 61;
+            p2shHeader = 123;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
     }
 }
+
