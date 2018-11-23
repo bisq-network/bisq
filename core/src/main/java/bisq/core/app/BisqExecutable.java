@@ -100,9 +100,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         try {
             options = parser.parse(args);
         } catch (OptionException ex) {
-            System.out.println("error: " + ex.getMessage());
-            System.out.println();
-            parser.printHelpOn(System.out);
+            System.err.println("error: " + ex.getMessage());
             System.exit(EXIT_FAILURE);
             return false;
         }
@@ -133,9 +131,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 return;
             }
         } catch (OptionException ex) {
-            System.out.println("error: " + ex.getMessage());
-            System.out.println();
-            parser.printHelpOn(System.out);
+            System.err.println("error: " + ex.getMessage());
             System.exit(EXIT_FAILURE);
             return;
         }
