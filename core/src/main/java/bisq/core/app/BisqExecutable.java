@@ -78,9 +78,6 @@ import static java.lang.String.join;
 
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler {
-    static {
-        Utilities.removeCryptographyRestrictions();
-    }
 
     protected Injector injector;
     protected AppModule module;
