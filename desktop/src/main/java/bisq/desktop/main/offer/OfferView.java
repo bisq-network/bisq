@@ -182,21 +182,16 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     if (!takeOfferViewOpen) {
                         List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
                         List<String> arbitratorLanguages = arbitratorManager.getArbitratorLanguages(arbitratorNodeAddresses);
-                        if (!arbitratorLanguages.isEmpty()) {
+                        if (arbitratorLanguages.isEmpty()) {
+                            // In case we get an offer which has been created with arbitrators which are not available
+                            // anymore we don't want to call the showNoArbitratorForUserLocaleWarning
+                            openTakeOffer(offer);
+                        } else {
                             if (arbitratorLanguages.stream()
                                     .noneMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
                                 showNoArbitratorForUserLocaleWarning();
                             }
                             openTakeOffer(offer);
-                        } else {
-                            // No need to translate that as this should only be a very temporary issue after 0.9 release.
-                            String message = "There is no arbitrator available matching the offer's " +
-                                    "supported arbitrators list. That might happen if the arbitrators of the offer have " +
-                                    "revoked and the maker has not updated to version 0.9.";
-                            log.warn(message + " offer.getArbitratorNodeAddresses()={}", arbitratorNodeAddresses);
-                            new Popup<>().warning(message)
-                                    .closeButtonText(Res.get("shared.ok"))
-                                    .show();
                         }
                     } else {
                         log.error("You have already a \"Take offer\" tab open.");
