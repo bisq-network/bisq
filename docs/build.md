@@ -18,9 +18,9 @@ You do _not_ need to install Gradle to complete the following command. The `grad
 
 ## Run
 
-The Bisq executable jar is now available in the `desktop/build/libs/` directory. Run it as follows, replacing `{version}` with the actual version found in the filename:
+Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
 
-    java -jar desktop/build/libs/desktop-{version}-all.jar
+    ./bisq-desktop
 
 
 ## See also
