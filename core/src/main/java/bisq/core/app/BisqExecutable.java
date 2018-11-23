@@ -45,7 +45,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
-import bisq.common.util.Utilities;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.util.StringUtils;
