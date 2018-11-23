@@ -35,7 +35,10 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.user.Preferences;
+
+import bisq.network.p2p.NodeAddress;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -164,7 +167,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
                     if (!createOfferViewOpen) {
-                        if (!arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage())) {
+                        boolean arbitratorAvailableForLanguage = arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
+                        if (!arbitratorAvailableForLanguage) {
                             showNoArbitratorForUserLocaleWarning();
                         }
                         openCreateOffer(tradeCurrency);
@@ -177,11 +181,28 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onTakeOffer(Offer offer) {
                     if (!takeOfferViewOpen) {
-                        if (!arbitratorManager.getArbitratorLanguages(offer.getArbitratorNodeAddresses()).stream()
-                                .anyMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
-                            showNoArbitratorForUserLocaleWarning();
+                        if (ArbitratorSelection.isNewRuleActivated()) {
+                            openTakeOffer(offer);
+                        } else {
+                            List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
+                            List<String> arbitratorLanguages = arbitratorManager.getArbitratorLanguages(arbitratorNodeAddresses);
+                            if (!arbitratorLanguages.isEmpty()) {
+                                if (arbitratorLanguages.stream()
+                                        .noneMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
+                                    showNoArbitratorForUserLocaleWarning();
+                                }
+                                openTakeOffer(offer);
+                            } else {
+                                // No need to translate that as this should only be a very temporary issue after 0.9 release.
+                                String message = "There is no arbitrator available matching the offer's " +
+                                        "supported arbitrators list. That might happen if the arbitrators of the offer have " +
+                                        "revoked and the maker has not updated to version 0.9.";
+                                log.warn(message + " offer.getArbitratorNodeAddresses()={}", arbitratorNodeAddresses);
+                                new Popup<>().warning(message)
+                                        .closeButtonText(Res.get("shared.ok"))
+                                        .show();
+                            }
                         }
-                        openTakeOffer(offer);
                     } else {
                         log.error("You have already a \"Take offer\" tab open.");
                     }

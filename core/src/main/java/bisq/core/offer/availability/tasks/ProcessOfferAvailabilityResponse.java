@@ -22,12 +22,20 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
+import bisq.core.trade.protocol.ArbitratorSelectionRule;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityModel> {
     public ProcessOfferAvailabilityResponse(TaskRunner taskHandler, OfferAvailabilityModel model) {
         super(taskHandler, model);
@@ -35,29 +43,44 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
     @Override
     protected void run() {
+        Offer offer = model.getOffer();
         try {
             runInterceptHook();
             OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
-            if (model.getOffer().getState() != Offer.State.REMOVED) {
+            if (offer.getState() != Offer.State.REMOVED) {
                 if (offerAvailabilityResponse.getAvailabilityResult() == AvailabilityResult.AVAILABLE) {
-                    model.getOffer().setState(Offer.State.AVAILABLE);
+                    offer.setState(Offer.State.AVAILABLE);
                     if (ArbitratorSelection.isNewRuleActivated()) {
                         NodeAddress selectedArbitrator = offerAvailabilityResponse.getArbitrator();
-                        if (selectedArbitrator == null)
-                            failed("You cannot take that offer because the offer maker is running an incompatible version.");
-                        else
+                        if (selectedArbitrator == null) {
+                            log.debug("Maker is on old version and does not send the selected arbitrator in the offerAvailabilityResponse. " +
+                                    "We use the old selection model instead with the supported arbitrators of the  offers");
+                            List<NodeAddress> acceptedArbitratorAddresses = model.getUser().getAcceptedArbitratorAddresses();
+                            log.error("acceptedArbitratorAddresses " + acceptedArbitratorAddresses);
+                            if (acceptedArbitratorAddresses != null) {
+                                try {
+                                    model.setSelectedArbitrator(ArbitratorSelectionRule.select(Lists.newArrayList(acceptedArbitratorAddresses), offer));
+                                } catch (Throwable t) {
+                                    failed("There is no arbitrator matching that offer. The maker has " +
+                                            "not updated to the latest version and the arbitrators selected for that offer are not available anymore.");
+                                }
+                            } else {
+                                failed("There is no arbitrator available.");
+                            }
+                        } else {
                             model.setSelectedArbitrator(selectedArbitrator);
+                        }
                     }
                 } else {
-                    model.getOffer().setState(Offer.State.NOT_AVAILABLE);
+                    offer.setState(Offer.State.NOT_AVAILABLE);
                     failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.getAvailabilityResult());
                 }
             }
 
             complete();
         } catch (Throwable t) {
-            model.getOffer().setErrorMessage("An error occurred.\n" +
+            offer.setErrorMessage("An error occurred.\n" +
                     "Error message:\n"
                     + t.getMessage());
 
