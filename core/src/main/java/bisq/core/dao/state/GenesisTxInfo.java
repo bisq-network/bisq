@@ -52,6 +52,10 @@ public class GenesisTxInfo {
     private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1443359; // 2018-11-13
 
 
+    private static final String REGTEST_GENESIS_TX_ID = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
+    private static final int REGTEST_GENESIS_BLOCK_HEIGHT = 111;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,12 +94,15 @@ public class GenesisTxInfo {
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
+        boolean isRegtest = baseCurrencyNetwork.isRegtest();
         if (!genesisTxId.isEmpty()) {
             this.genesisTxId = genesisTxId;
         } else if (isMainnet) {
             this.genesisTxId = MAINNET_GENESIS_TX_ID;
         } else if (isTestnet) {
             this.genesisTxId = TESTNET_GENESIS_TX_ID;
+        } else if (isRegtest) {
+            this.genesisTxId = REGTEST_GENESIS_TX_ID;
         } else {
             this.genesisTxId = "genesisTxId is undefined";
         }
@@ -106,6 +113,8 @@ public class GenesisTxInfo {
             this.genesisBlockHeight = MAINNET_GENESIS_BLOCK_HEIGHT;
         } else if (isTestnet) {
             this.genesisBlockHeight = TESTNET_GENESIS_BLOCK_HEIGHT;
+        } else if (isRegtest) {
+            this.genesisBlockHeight = REGTEST_GENESIS_BLOCK_HEIGHT;
         } else {
             this.genesisBlockHeight = 0;
         }
