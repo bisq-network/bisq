@@ -39,7 +39,6 @@ import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessag
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyMediatorSelection;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
@@ -51,7 +50,6 @@ import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDeposi
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
-import bisq.core.trade.protocol.tasks.taker.TakerSelectArbitrator;
 import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
 import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
@@ -110,7 +108,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
-                        MakerVerifyMediatorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
@@ -134,7 +131,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
-                        TakerSelectArbitrator.class,
                         TakerSelectMediator.class,
                         CreateTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
@@ -161,8 +157,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 ));
         addGroup("BuyerAsTakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
-                        TakerSelectArbitrator.class,
-                        TakerSelectMediator.class,
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         CreateTakerFeeTx.class,
@@ -188,7 +182,6 @@ public class DebugView extends InitializableView<GridPane, Void> {
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
                         CheckIfPeerIsBanned.class,
-                        MakerVerifyMediatorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,

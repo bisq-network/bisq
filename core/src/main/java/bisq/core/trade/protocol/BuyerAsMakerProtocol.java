@@ -36,7 +36,6 @@ import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessag
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
-import bisq.core.trade.protocol.tasks.maker.MakerVerifyMediatorSelection;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.util.Validator;
@@ -131,7 +130,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
                 CheckIfPeerIsBanned.class,
-                MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
