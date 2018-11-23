@@ -21,9 +21,16 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
 
     private InputTextField accountNrInputTextField;
+    private InputValidator accountNumberValidator;
 
     GeneralAccountNumberForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        this(paymentAccount, accountAgeWitnessService, inputValidator, null, gridPane, gridRow, formatter);
+    }
+
+    GeneralAccountNumberForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, InputValidator accountNumberValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+
+        this.accountNumberValidator = (accountNumberValidator != null) ? accountNumberValidator : inputValidator;
     }
 
     @Override
@@ -31,7 +38,7 @@ abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         accountNrInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
-        accountNrInputTextField.setValidator(inputValidator);
+        accountNrInputTextField.setValidator(accountNumberValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             setAccountNumber(newValue);
             updateFromInputs();
@@ -64,7 +71,7 @@ abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && inputValidator.validate(getAccountNr()).isValid
+                && accountNumberValidator.validate(getAccountNr()).isValid
                 && paymentAccount.getTradeCurrencies().size() > 0);
     }
 
