@@ -41,7 +41,7 @@ public class BisqHelpFormatterTest {
 
         OptionParser parser = new OptionParser();
 
-        parser.formatHelpWith(new BisqHelpFormatter());
+        parser.formatHelpWith(new BisqHelpFormatter("Bisq Test", "bisq-test", "0.1.0"));
 
         parser.accepts("name",
                 "The name of the Bisq node")

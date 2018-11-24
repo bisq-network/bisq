@@ -42,6 +42,10 @@ public class MonitorMain extends ExecutableForAppWithP2p {
     private static final String VERSION = "1.0.1";
     private Monitor monitor;
 
+    public MonitorMain() {
+        super("Bisq Monitor", "bisq-monitor", VERSION);
+    }
+
     public static void main(String[] args) throws Exception {
         log.info("Monitor.VERSION: " + VERSION);
         BisqEnvironment.setDefaultAppName("bisq_monitor");

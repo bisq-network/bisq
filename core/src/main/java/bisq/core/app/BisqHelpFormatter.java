@@ -27,11 +27,22 @@ import java.util.stream.Collectors;
 
 public class BisqHelpFormatter implements HelpFormatter {
 
+    private final String fullName;
+    private final String scriptName;
+    private final String version;
+
+    public BisqHelpFormatter(String fullName, String scriptName, String version) {
+        this.fullName = fullName;
+        this.scriptName = scriptName;
+        this.version = version;
+    }
+
     public String format(Map<String, ? extends OptionDescriptor> descriptors) {
 
         StringBuilder output = new StringBuilder();
-        output.append("Options:\n");
-        output.append("\n");
+        output.append(String.format("%s version %s\n\n", fullName, version));
+        output.append(String.format("Usage: %s [options]\n\n", scriptName));
+        output.append("Options:\n\n");
 
         for (Map.Entry<String, ? extends OptionDescriptor> entry : descriptors.entrySet()) {
             String optionName = entry.getKey();

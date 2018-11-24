@@ -1,3 +1,7 @@
+Bisq Test version 0.1.0
+
+Usage: bisq-test [options]
+
 Options:
 
   --name=<String> (default: Bisq)

@@ -74,9 +74,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler {
 
+    private final String fullName;
+    private final String scriptName;
+    private final String version;
+
     protected Injector injector;
     protected AppModule module;
     protected BisqEnvironment bisqEnvironment;
+
+    public BisqExecutable(String fullName, String scriptName, String version) {
+        this.fullName = fullName;
+        this.scriptName = scriptName;
+        this.version = version;
+    }
 
     public static boolean setupInitialOptionParser(String[] args) throws IOException {
         // We don't want to do the full argument parsing here as that might easily change in update versions
@@ -116,7 +126,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     public void execute(String[] args) throws Exception {
         OptionParser parser = new OptionParser();
-        parser.formatHelpWith(new BisqHelpFormatter());
+        parser.formatHelpWith(new BisqHelpFormatter(fullName, scriptName, version));
         parser.accepts(HELP_KEY, "This help text").forHelp();
 
         this.customizeOptionParsing(parser);
