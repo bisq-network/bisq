@@ -15,12 +15,16 @@ You do _not_ need to install Gradle to complete the following command. The `grad
 
     ./gradlew build
 
+If on Windows use the `gradlew.bat` script instead.
+
 
 ## Run
 
 Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
 
     ./bisq-desktop
+
+If on Windows use the `bisq-desktop.bat` script instead.
 
 
 ## See also

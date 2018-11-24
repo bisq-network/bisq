@@ -91,6 +91,9 @@ configure([project(':desktop'),
                 from "$destinationDir/lib"
                 into "${rootProject.projectDir}/lib"
             }
+
+            if (osdetector.os != 'windows')
+                delete fileTree(dir: rootProject.projectDir, include: 'bisq-*.bat')
         }
     }
 
