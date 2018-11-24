@@ -17,9 +17,12 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AdvancedCashAccount;
@@ -29,49 +32,103 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.util.Tuple2;
+
+import org.apache.commons.lang3.StringUtils;
+
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
-import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.VPos;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.*;
 
-public class AdvancedCashForm extends GeneralAccountNumberForm {
+@Deprecated
+public class AdvancedCashForm extends PaymentMethodForm {
+    private static final Logger log = LoggerFactory.getLogger(AdvancedCashForm.class);
 
     private final AdvancedCashAccount advancedCashAccount;
+    private final AdvancedCashValidator advancedCashValidator;
+    private InputTextField accountNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AdvancedCashAccountPayload) paymentAccountPayload).getAccountNr());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow,
+                                      PaymentAccountPayload paymentAccountPayload) {
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
+                ((AdvancedCashAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 
-    public AdvancedCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AdvancedCashValidator advancedCashValidator, InputValidator inputValidator, GridPane gridPane, int
-            gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, advancedCashValidator, gridPane, gridRow, formatter);
+    public AdvancedCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AdvancedCashValidator advancedCashValidator,
+                     InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.advancedCashAccount = (AdvancedCashAccount) paymentAccount;
+        this.advancedCashValidator = advancedCashValidator;
     }
 
     @Override
-    public void addTradeCurrency() {
-        addTradeCurrencyComboBox();
-        currencyComboBox.setItems(FXCollections.observableArrayList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("UAH"),
-                new FiatCurrency("KZT"),
-                new FiatCurrency("BRL")));
-        currencyComboBox.getSelectionModel().select(0);
+    public void addFormForAddAccount() {
+        gridRowFrom = gridRow + 1;
+
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.wallet"));
+        accountNrInputTextField.setValidator(advancedCashValidator);
+        accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            advancedCashAccount.setAccountNr(newValue);
+            updateFromInputs();
+        });
+
+        addCurrenciesGrid(true);
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
+    }
+
+    private void addCurrenciesGrid(boolean isEditable) {
+        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
+
+        FlowPane flowPane = labelFlowPaneTuple2.second;
+
+        if (isEditable)
+            flowPane.setId("flow-pane-checkboxes-bg");
+        else
+            flowPane.setId("flow-pane-checkboxes-non-editable-bg");
+
+        CurrencyUtil.getAllAdvancedCashCurrencies().stream().forEach(e ->
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, advancedCashAccount));
     }
 
     @Override
-    void setAccountNumber(String newValue) {
-        advancedCashAccount.setAccountNr(newValue);
+    protected void autoFillNameTextField() {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            String accountNr = accountNrInputTextField.getText();
+            accountNr = StringUtils.abbreviate(accountNr, 9);
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
+            accountNameTextField.setText(method.concat(": ").concat(accountNr));
+        }
     }
 
     @Override
-    String getAccountNr() {
-        return advancedCashAccount.getAccountNr();
+    public void addFormForDisplayAccount() {
+        gridRowFrom = gridRow;
+        addCompactTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+                advancedCashAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+                Res.get(advancedCashAccount.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
+                advancedCashAccount.getAccountNr());
+        addLimitations(true);
+        addCurrenciesGrid(false);
     }
+
+    @Override
+    public void updateAllInputsValid() {
+        allInputsValid.set(isAccountNameValid()
+                && advancedCashValidator.validate(advancedCashAccount.getAccountNr()).isValid
+                && advancedCashAccount.getTradeCurrencies().size() > 0);
+    }
+
 }

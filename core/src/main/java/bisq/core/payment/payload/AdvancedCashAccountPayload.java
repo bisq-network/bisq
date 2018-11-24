@@ -89,7 +89,7 @@ public final class AdvancedCashAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Advanced Cash - Account no.: " + accountNr;
+        return "Advanced Cash - Wallet ID: " + accountNr;
     }
 
     @Override
