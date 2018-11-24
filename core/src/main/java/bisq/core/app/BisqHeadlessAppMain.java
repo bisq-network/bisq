@@ -21,6 +21,7 @@ import bisq.core.CoreModule;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.app.Version;
 import bisq.common.setup.CommonSetup;
 
 import joptsimple.OptionSet;
@@ -35,6 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqHeadlessAppMain extends BisqExecutable {
     protected HeadlessApp headlessApp;
+
+    public BisqHeadlessAppMain() {
+        super("Bisq Daemon", "bisqd", Version.VERSION);
+    }
 
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {

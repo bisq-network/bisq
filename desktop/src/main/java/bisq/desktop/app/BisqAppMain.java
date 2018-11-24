@@ -25,6 +25,7 @@ import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.app.Version;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.CommonSetup;
 
@@ -38,6 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
+
+    public BisqAppMain() {
+        super("Bisq Desktop", "bisq-desktop", Version.VERSION);
+    }
 
     /* @Nullable
      private BisqHttpApiServer bisqHttpApiServer;*/

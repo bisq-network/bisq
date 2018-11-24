@@ -31,7 +31,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.joptsimple.EnumValueConverter;
 
 import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.P2PService;
@@ -47,7 +46,6 @@ import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
-import org.springframework.util.StringUtils;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -72,25 +70,39 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
-import static java.lang.String.join;
 
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler {
 
+    private final String fullName;
+    private final String scriptName;
+    private final String version;
+
     protected Injector injector;
     protected AppModule module;
     protected BisqEnvironment bisqEnvironment;
+
+    public BisqExecutable(String fullName, String scriptName, String version) {
+        this.fullName = fullName;
+        this.scriptName = scriptName;
+        this.version = version;
+    }
 
     public static boolean setupInitialOptionParser(String[] args) throws IOException {
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
-        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
-        parser.accepts(AppOptionKeys.APP_NAME_KEY, description("Application name", DEFAULT_APP_NAME))
-                .withRequiredArg();
+
+        parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
+                "User data directory")
+                .withRequiredArg()
+                .defaultsTo(DEFAULT_USER_DATA_DIR);
+
+        parser.accepts(AppOptionKeys.APP_NAME_KEY,
+                "Application name")
+                .withRequiredArg()
+                .defaultsTo(DEFAULT_APP_NAME);
 
         OptionSet options;
         try {
@@ -114,6 +126,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     public void execute(String[] args) throws Exception {
         OptionParser parser = new OptionParser();
+        parser.formatHelpWith(new BisqHelpFormatter(fullName, scriptName, version));
         parser.accepts(HELP_KEY, "This help text").forHelp();
 
         this.customizeOptionParsing(parser);
@@ -155,10 +168,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         /*
          * JOptSimple does support input parsing. However, doing only options = parser.parse(args) isn't enough to trigger the parsing.
          * The parsing is done when the actual value is going to be retrieved, i.e. options.valueOf(attributename).
-         * 
+         *
          * In order to keep usability high, we work around the aforementioned characteristics by catching the exception below
          * (valueOf is called somewhere in getBisqEnvironment), thus, neatly inform the user of a ill-formed parameter and stop execution.
-         * 
+         *
          * Might be changed when the project features more user parameters meant for the user.
          */
         try {
@@ -166,7 +179,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         } catch (OptionException e) {
             // unfortunately, the OptionArgumentConversionException is not visible so we cannot catch only those.
             // hence, workaround
-            if(e.getCause() != null)
+            if (e.getCause() != null)
                 // get something like "Error while parsing application parameter '--torrcFile': File [/path/to/file] does not exist"
                 System.err.println("Error while parsing application parameter '--" + e.options().get(0) + "': " + e.getCause().getMessage());
             else
@@ -315,189 +328,251 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
     protected void customizeOptionParsing(OptionParser parser) {
         //CommonOptionKeys
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
-                description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", BisqEnvironment.LOG_LEVEL_DEFAULT))
-                .withRequiredArg();
+                "Log level")
+                .withRequiredArg()
+                .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
+                .defaultsTo(BisqEnvironment.LOG_LEVEL_DEFAULT);
 
         //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
-                description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
-                .withRequiredArg();
+                "Override hard coded seed nodes as comma separated list e.g. " +
+                        "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
+                .withRequiredArg()
+                .describedAs("host:port[,...]");
+
         parser.accepts(NetworkOptionKeys.MY_ADDRESS,
-                description("My own onion address (used for bootstrap nodes to exclude itself)", ""))
-                .withRequiredArg();
+                "My own onion address (used for bootstrap nodes to exclude itself)")
+                .withRequiredArg()
+                .describedAs("host:port");
+
         parser.accepts(NetworkOptionKeys.BAN_LIST,
-                description("Nodes to exclude from network connections.", ""))
-                .withRequiredArg();
+                "Nodes to exclude from network connections.")
+                .withRequiredArg()
+                .describedAs("host:port[,...]");
+
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY,
-                description("Port to listen on", 9999))
+                "Port to listen on")
                 .withRequiredArg()
-                .ofType(int.class);
+                .ofType(int.class)
+                .defaultsTo(9999);
+
         parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
-                description("Use localhost P2P network for development", false))
+                "Use localhost P2P network for development")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,
-                description("Max. connections a peer will try to keep", P2PService.MAX_CONNECTIONS_DEFAULT))
+                "Max. connections a peer will try to keep")
                 .withRequiredArg()
-                .ofType(int.class);
+                .ofType(int.class)
+                .defaultsTo(P2PService.MAX_CONNECTIONS_DEFAULT);
+
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS,
-                description("A proxy address to be used for Bitcoin network. [host:port]", ""))
-                .withRequiredArg();
+                "A proxy address to be used for Bitcoin network.")
+                .withRequiredArg()
+                .describedAs("host:port");
+
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
-                description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
-                .withRequiredArg();
+                "A proxy address to be used for Http requests (should be non-Tor)")
+                .withRequiredArg()
+                .describedAs("host:port");
+
         parser.accepts(NetworkOptionKeys.TORRC_FILE,
-                description("An existing torrc-file to be sourced for Tor. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten.", ""))
+                "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
+                        "which are critical to Bisq's flawless operation, cannot be overwritten.")
                 .withRequiredArg()
                 .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+
         parser.accepts(NetworkOptionKeys.TORRC_OPTIONS,
-                description("A list of torrc-entries to amend to Bisqs torrc. Note that torrc-entries, which are critical to Bisqs flawless operation, cannot be overwritten. [torrc options line, torrc option, ...]", ""))
+                "A list of torrc-entries to amend to Bisq's torrc. Note that torrc-entries," +
+                        "which are critical to Bisq's flawless operation, cannot be overwritten. " +
+                        "[torrc options line, torrc option, ...]")
                 .withRequiredArg()
                 .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"));
+
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT,
-                description("The control port of an already running Tor service to be used by Bisq [port].", ""))
+                "The control port of an already running Tor service to be used by Bisq.")
                 .availableUnless(NetworkOptionKeys.TORRC_FILE, NetworkOptionKeys.TORRC_OPTIONS)
                 .withRequiredArg()
-                .ofType(int.class);
+                .ofType(int.class)
+                .describedAs("port");
+
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD,
-                description("The password for controlling the already running Tor service.", ""))
+                "The password for controlling the already running Tor service.")
                 .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
                 .withRequiredArg();
+
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE,
-                description("The cookie file for authenticating against the already running Tor service. Use in conjunction with --" + NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, ""))
+                "The cookie file for authenticating against the already running Tor service. " +
+                        "Use in conjunction with --" + NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)
                 .availableIf(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)
                 .availableUnless(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)
                 .withRequiredArg()
                 .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
+
         parser.accepts(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE,
-                description("Use the SafeCookie method when authenticating to the already running Tor service.", ""))
+                "Use the SafeCookie method when authenticating to the already running Tor service.")
                 .availableIf(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE);
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                description("User data directory", BisqEnvironment.DEFAULT_USER_DATA_DIR))
-                .withRequiredArg();
+                "User data directory")
+                .withRequiredArg()
+                .defaultsTo(BisqEnvironment.DEFAULT_USER_DATA_DIR);
+
         parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                description("Application name", BisqEnvironment.DEFAULT_APP_NAME))
-                .withRequiredArg();
+                "Application name")
+                .withRequiredArg()
+                .defaultsTo(BisqEnvironment.DEFAULT_APP_NAME);
+
         parser.accepts(AppOptionKeys.MAX_MEMORY,
-                description("Max. permitted memory (used only at headless versions)", 600))
-                .withRequiredArg();
+                "Max. permitted memory (used only at headless versions)")
+                .withRequiredArg()
+                .defaultsTo("600");
+
         parser.accepts(AppOptionKeys.APP_DATA_DIR_KEY,
-                description("Application data directory", BisqEnvironment.DEFAULT_APP_DATA_DIR))
-                .withRequiredArg();
+                "Application data directory")
+                .withRequiredArg()
+                .defaultsTo(BisqEnvironment.DEFAULT_APP_DATA_DIR);
+
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                description("If set to true all signed network_messages from bisq developers are ignored " +
-                        "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
+                "If set to true all signed network_messages from bisq developers are ignored " +
+                        "(Global alert, Version update alert, Filters for offers, nodes or trading account data)")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.DESKTOP_WITH_HTTP_API,
-                description("If set to true Bisq Desktop starts with Http API", false))
+                "If set to true Bisq Desktop starts with Http API")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.DESKTOP_WITH_GRPC_API,
-                description("If set to true Bisq Desktop starts with gRPC API", false))
+                "If set to true Bisq Desktop starts with gRPC API")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
-                description("If that is true all the privileged features which requires a private key to enable it are overridden by a dev key pair " +
-                        "(This is for developers only!)", false))
+                "If that is true all the privileged features which requires a private key " +
+                        "to enable it are overridden by a dev key pair (This is for developers only!)")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.REFERRAL_ID,
-                description("Optional Referral ID (e.g. for API users or pro market makers)", ""))
+                "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();
+
         parser.accepts(CommonOptionKeys.USE_DEV_MODE,
-                description("Enables dev mode which is used for convenience for developer testing", false))
+                "Enables dev mode which is used for convenience for developer testing")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.DUMP_STATISTICS,
-                description("If set to true the trade statistics are stored as json file in the data dir.", false))
+                "If set to true the trade statistics are stored as json file in the data dir.")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(AppOptionKeys.PROVIDERS,
-                description("Custom providers (comma separated)", false))
-                .withRequiredArg();
+                "Custom providers (comma separated)")
+                .withRequiredArg()
+                .describedAs("host:port[,...]");
 
         //BtcOptionKeys
         parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                description("Base currency network", BisqEnvironment.getDefaultBaseCurrencyNetwork().name()))
+                "Base currency network")
                 .withRequiredArg()
-                .ofType(String.class);
-        //.withValuesConvertedBy(new EnumValueConverter(String.class));
-        parser.accepts(BtcOptionKeys.REG_TEST_HOST,
-                description("", RegTestHost.DEFAULT))
+                .ofType(String.class)
+                .defaultsTo(BisqEnvironment.getDefaultBaseCurrencyNetwork().name());
+
+        parser.accepts(BtcOptionKeys.REG_TEST_HOST)
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
-                .withValuesConvertedBy(new EnumValueConverter(RegTestHost.class));
+                .defaultsTo(RegTestHost.DEFAULT);
+
         parser.accepts(BtcOptionKeys.BTC_NODES,
-                description("Custom nodes used for BitcoinJ as comma separated IP addresses.", ""))
-                .withRequiredArg();
+                "Custom nodes used for BitcoinJ as comma separated IP addresses.")
+                .withRequiredArg()
+                .describedAs("ip[,...]");
+
         parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC,
-                description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
-                description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
-                        " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
-                description("Set to true if connection of bitcoin nodes should include clear net nodes", ""))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.USER_AGENT,
-                description("User agent at btc node connections", ""))
-                .withRequiredArg();
-        parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
-                description("Number of connections to the Bitcoin network", "9"))
+                "If set to true BitcoinJ is routed over tor (socks 5 proxy).")
                 .withRequiredArg();
 
+        parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
+                "Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
+                        " (comma separated, they get OR'd together).")
+                .withRequiredArg()
+                .describedAs("mode[,...]")
+                .defaultsTo("ALL");
+
+        parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
+                "Set to true if connection of bitcoin nodes should include clear net nodes")
+                .withRequiredArg();
+
+        parser.accepts(BtcOptionKeys.USER_AGENT,
+                "User agent at btc node connections")
+                .withRequiredArg();
+
+        parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
+                "Number of connections to the Bitcoin network")
+                .withRequiredArg()
+                .defaultsTo("9");
 
         //RpcOptionKeys
         parser.accepts(DaoOptionKeys.RPC_USER,
-                description("Bitcoind rpc username", ""))
+                "Bitcoind rpc username")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.RPC_PASSWORD,
-                description("Bitcoind rpc password", ""))
+                "Bitcoind rpc password")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.RPC_PORT,
-                description("Bitcoind rpc port", ""))
+                "Bitcoind rpc port")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
-                description("Bitcoind rpc port for block notifications", ""))
+                "Bitcoind rpc port for block notifications")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,
-                description("If set to true the blockchain data from RPC requests to Bitcoin Core are stored " +
-                        "as json file in the data dir.", false))
+                "If set to true the blockchain data from RPC requests to Bitcoin Core are " +
+                        "stored as json file in the data dir.")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .ofType(boolean.class)
+                .defaultsTo(false);
+
         parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
-                description("If set to true the node requests the blockchain data via RPC requests from Bitcoin Core and " +
-                        "provide the validated BSQ txs to the network. It requires that the other RPC properties are " +
-                        "set as well.", ""))
+                "If set to true the node requests the blockchain data via RPC requests " +
+                        "from Bitcoin Core and provide the validated BSQ txs to the network. " +
+                        "It requires that the other RPC properties are set as well.")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.GENESIS_TX_ID,
-                description("Genesis transaction ID when not using the hard coded one", ""))
+                "Genesis transaction ID when not using the hard coded one")
                 .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
-                description("Genesis transaction block height when not using the hard coded one", -1))
-                .withRequiredArg();
-        parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
-                description("Developer flag. If true it enables dao phase 2 features.", false))
+                "Genesis transaction block height when not using the hard coded one")
                 .withRequiredArg()
-                .ofType(boolean.class);
+                .defaultsTo("-1");
+
+        parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
+                "Developer flag. If true it enables dao phase 2 features.")
+                .withRequiredArg()
+                .ofType(boolean.class)
+                .defaultsTo(false);
     }
 
     public static BisqEnvironment getBisqEnvironment(OptionSet options) {
         return new BisqEnvironment(new JOptCommandLinePropertySource(BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
-    }
-
-    protected static String description(String descText, Object defaultValue) {
-        String description = "";
-        if (StringUtils.hasText(descText))
-            description = description.concat(descText);
-        if (defaultValue != null)
-            description = join(" ", description, format("(default: %s)", defaultValue));
-        return description;
     }
 
     public static void initAppDir(String appDir) {
