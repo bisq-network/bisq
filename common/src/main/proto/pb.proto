@@ -723,6 +723,7 @@ message PaymentAccountPayload {
         MoneyGramAccountPayload money_gram_account_payload = 23;
         HalCashAccountPayload hal_cash_account_payload = 24;
         PromptPayAccountPayload prompt_pay_account_payload = 25;
+        AdvancedCashAccountPayload advanced_cash_account_payload = 26;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -900,6 +901,11 @@ message F2FAccountPayload {
 message PromptPayAccountPayload {
     string prompt_pay_id = 1;
 }
+
+message AdvancedCashAccountPayload {
+    string account_nr = 1;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope

@@ -19,6 +19,7 @@ package bisq.desktop.main.account.content.fiataccounts;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
@@ -52,6 +53,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.validation.AdvancedCashValidator;
 import bisq.desktop.util.validation.AliPayValidator;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.CashAppValidator;
@@ -141,6 +143,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final HalCashValidator halCashValidator;
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
+    private final AdvancedCashValidator advancedCashValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -172,6 +175,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             HalCashValidator halCashValidator,
                             F2FValidator f2FValidator,
                             PromptPayValidator promptPayValidator,
+                            AdvancedCashValidator advancedCashValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
         super(model);
@@ -197,6 +201,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.halCashValidator = halCashValidator;
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
+        this.advancedCashValidator = advancedCashValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
@@ -465,6 +470,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new F2FForm(paymentAccount, accountAgeWitnessService, f2FValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PROMPT_PAY_ID:
                 return new PromptPayForm(paymentAccount, accountAgeWitnessService, promptPayValidator, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.ADVANCED_CASH_ID:
+                return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, advancedCashValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;
