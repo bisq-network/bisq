@@ -114,7 +114,7 @@ public class BisqHelpFormatterTest {
                 "Application data directory")
                 .withRequiredArg()
                 .ofType(File.class)
-                .defaultsTo(new File("/Users/cbeams/Library/Applicaton Support/Bisq"));
+                .defaultsTo(new File("/Users/cbeams/Library/Application Support/Bisq"));
 
         parser.accepts("enum-opt",
                 "Some option that accepts an enum value as an argument")
@@ -124,6 +124,9 @@ public class BisqHelpFormatterTest {
 
         ByteArrayOutputStream actual = new ByteArrayOutputStream();
         String expected = new String(Files.readAllBytes(Paths.get(getClass().getResource("cli-output.txt").toURI())));
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            expected = new String(Files.readAllBytes(Paths.get(getClass().getResource("cli-output_windows.txt").toURI())));
+        }
 
         parser.printHelpOn(new PrintStream(actual));
         assertThat(actual.toString(), equalTo(expected));

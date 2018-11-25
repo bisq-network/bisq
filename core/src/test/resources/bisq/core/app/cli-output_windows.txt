@@ -49,7 +49,7 @@ Options:
   --with-default-value=<String> (default: Wat)
         Some option with a default value
 
-  --data-dir=<File> (default: /Users/cbeams/Library/Application Support/Bisq)
+  --data-dir=<File> (default: \Users\cbeams\Library\Application Support\Bisq)
         Application data directory
 
   --enum-opt=<foo|bar|baz> (default: foo)
