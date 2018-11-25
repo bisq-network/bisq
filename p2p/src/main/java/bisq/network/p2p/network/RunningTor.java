@@ -24,8 +24,8 @@ import java.util.Date;
 import org.berndpruenster.netlayer.tor.ExternalTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class creates a brand new instance of the Tor onion router.
@@ -37,10 +37,10 @@ import org.slf4j.LoggerFactory;
  * @author Florian Reimair
  *
  */
+@Slf4j
 public class RunningTor extends TorMode {
 
     private static final String EXTERNAL_TOR_HIDDEN_SERVICE = "externalTorHiddenService";
-    private static final Logger log = LoggerFactory.getLogger(RunningTor.class);
     private final int controlPort;
     private final String password;
     private final File cookieFile;

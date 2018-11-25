@@ -30,8 +30,8 @@ import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.Torrc;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class creates a brand new instance of the Tor onion router.
@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author Florian Reimair
  *
  */
+@Slf4j
 public class NewTor extends TorMode {
 
     /**
@@ -54,8 +55,6 @@ public class NewTor extends TorMode {
      * subdirectory (which happens to be <code>""</code>)
      */
     private static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
-
-    private static final Logger log = LoggerFactory.getLogger(NewTor.class);
 
     private final String torrcFile;
     private final String torrcOptions;
