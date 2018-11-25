@@ -32,6 +32,12 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
  */
 public abstract class TorMode {
 
+    protected final File torDir;
+
+    public TorMode(File torDir) {
+        this.torDir = torDir;
+    }
+
     /**
      * Returns a fresh {@link Tor} object.
      * 

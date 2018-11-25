@@ -51,13 +51,12 @@ public class NewTor extends TorMode {
     private final String torrcFile;
     private final String torrcOptions;
     private final Collection<String> bridgeEntries;
-    private final File torWorkikngDirectory;
 
     public NewTor(File torWorkingDirectory, String torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
+        super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
         this.bridgeEntries = bridgeEntries;
-        this.torWorkikngDirectory = torWorkingDirectory;
     }
 
     @Override
@@ -103,7 +102,7 @@ public class NewTor extends TorMode {
                 override = new Torrc(torrcOptionsMap);
 
         log.info("Starting tor");
-        NativeTor result = new NativeTor(torWorkikngDirectory, bridgeEntries, override);
+        NativeTor result = new NativeTor(torDir, bridgeEntries, override);
         log.info(
                 "\n################################################################\n"
                         + "Tor started after {} ms. Start publishing hidden service.\n"
