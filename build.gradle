@@ -94,6 +94,8 @@ configure([project(':desktop'),
 
             if (osdetector.os != 'windows')
                 delete fileTree(dir: rootProject.projectDir, include: 'bisq-*.bat')
+            else
+                delete fileTree(dir: rootProject.projectDir, include: 'bisq-*', exclude: '*.bat')
         }
     }
 
