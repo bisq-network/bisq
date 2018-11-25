@@ -280,8 +280,8 @@ public class TorNetworkNode extends NetworkNode {
                 log.error("Could not connect to running Tor: "
                         + e.getMessage());
 
-                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing
-                // furthermore, we have no hidden services started yet, so there is no graceful
+                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing.
+                // Furthermore, we have no hidden services started yet, so there is no graceful
                 // shutdown needed either
                 System.exit(1);
             } catch (Throwable ignore) {

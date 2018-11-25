@@ -49,10 +49,11 @@ public abstract class TorMode {
      * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
      * however, does not have a Tor installation path and thus, takes the hidden
      * service path literally. Hence, we set
-     * <code>"torDir/ephemeralHiddenService"</code> as the hidden service directory.
+     * <code>"torDir/externalTorHiddenService"</code> as the hidden service
+     * directory.
      * 
      * @return <code>""</code> in {@link NewTor} Mode,
-     *         <code>"torDir/ephemeralHiddenService"</code> in {@link RunningTor}
+     *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
      *         mode
      */
     public abstract String getHiddenServiceDirectory();
