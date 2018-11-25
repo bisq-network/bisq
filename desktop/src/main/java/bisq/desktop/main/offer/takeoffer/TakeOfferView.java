@@ -321,9 +321,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             tradeFeeInBtcToggle.setManaged(false);
             tradeFeeInBsqToggle.setVisible(false);
             tradeFeeInBsqToggle.setManaged(false);
-
-            tradeFeeDescriptionLabel.setVisible(false);
-            tradeFeeDescriptionLabel.setManaged(false);
         }
     }
 
@@ -621,6 +618,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         tradeFeeInBtcLabel.visibleProperty().bind(model.isTradeFeeVisible);
         tradeFeeInBsqLabel.visibleProperty().bind(model.isTradeFeeVisible);
         tradeFeeDescriptionLabel.visibleProperty().bind(model.isTradeFeeVisible);
+        tradeFeeDescriptionLabel.managedProperty().bind(tradeFeeDescriptionLabel.visibleProperty());
 
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.getIsBtcWalletFunded().not().and(model.showPayFundsScreenDisplayed));
@@ -646,6 +644,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         tradeFeeInBtcLabel.visibleProperty().unbind();
         tradeFeeInBsqLabel.visibleProperty().unbind();
         tradeFeeDescriptionLabel.visibleProperty().unbind();
+        tradeFeeDescriptionLabel.managedProperty().unbind();
 
         // funding
         fundingHBox.visibleProperty().unbind();

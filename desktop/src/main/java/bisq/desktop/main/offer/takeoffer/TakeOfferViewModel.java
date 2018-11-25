@@ -174,6 +174,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         updateButtonDisableState();
 
         updateSpinnerInfo();
+
+        if (!DevEnv.isDaoActivated()) {
+            isTradeFeeVisible.setValue(false);
+        }
     }
 
     @Override
