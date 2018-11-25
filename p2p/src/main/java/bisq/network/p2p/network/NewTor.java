@@ -46,6 +46,15 @@ import org.slf4j.LoggerFactory;
  */
 public class NewTor extends TorMode {
 
+    /**
+     * <code>Netlayer</code> stores its hidden service files in a custom
+     * subdirectory of <code>$torDir/hiddenservice/</code>. Note that the
+     * {@link HiddenServiceSocket} does add this part on its own, hence,
+     * {@link NewTor#getHiddenServiceDirectory()} returns only the custom
+     * subdirectory (which happens to be <code>""</code>)
+     */
+    private static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+
     private static final Logger log = LoggerFactory.getLogger(NewTor.class);
 
     private final String torrcFile;
@@ -53,7 +62,7 @@ public class NewTor extends TorMode {
     private final Collection<String> bridgeEntries;
 
     public NewTor(File torWorkingDirectory, String torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
-        super(torWorkingDirectory);
+        super(torWorkingDirectory, HIDDEN_SERVICE_DIRECTORY);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
         this.bridgeEntries = bridgeEntries;

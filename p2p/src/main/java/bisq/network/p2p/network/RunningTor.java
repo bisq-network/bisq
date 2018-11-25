@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RunningTor extends TorMode {
 
+    private static final String EXTERNAL_TOR_HIDDEN_SERVICE = "externalTorHiddenService";
     private static final Logger log = LoggerFactory.getLogger(RunningTor.class);
     private final int controlPort;
     private final String password;
@@ -48,7 +49,7 @@ public class RunningTor extends TorMode {
 
     public RunningTor(final File torDir, final int controlPort, final String password, final String cookieFile,
             final boolean useSafeCookieAuthentication) {
-        super(torDir);
+        super(torDir, EXTERNAL_TOR_HIDDEN_SERVICE);
         this.controlPort = controlPort;
         this.password = password;
         this.cookieFile = new File(cookieFile);
@@ -80,7 +81,7 @@ public class RunningTor extends TorMode {
 
     @Override
     public String getHiddenServiceDirectory() {
-        return new File(torDir, "externalTorHiddenService").getAbsolutePath();
+        return new File(torDir, EXTERNAL_TOR_HIDDEN_SERVICE).getAbsolutePath();
     }
 
 }
