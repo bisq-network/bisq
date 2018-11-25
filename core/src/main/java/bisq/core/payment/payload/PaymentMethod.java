@@ -29,8 +29,8 @@ import org.bitcoinj.core.Coin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -235,19 +235,27 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                     // Altcoins
                     BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
             ));
+
+            ALL_VALUES.sort((o1, o2) -> {
+                String id1 = o1.getId();
+                if (id1.equals(CLEAR_X_CHANGE_ID))
+                    id1 = "ZELLE";
+                String id2 = o2.getId();
+                if (id2.equals(CLEAR_X_CHANGE_ID))
+                    id2 = "ZELLE";
+                return id1.compareTo(id2);
+            });
         }
-        ALL_VALUES.sort((o1, o2) -> {
-            String id1 = o1.getId();
-            if (id1.equals(CLEAR_X_CHANGE_ID))
-                id1 = "ZELLE";
-            String id2 = o2.getId();
-            if (id2.equals(CLEAR_X_CHANGE_ID))
-                id2 = "ZELLE";
-            return id1.compareTo(id2);
-        });
         return ALL_VALUES;
     }
 
+    public static List<PaymentMethod> getActivePaymentMethods() {
+        return getAllValues().stream()
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VENMO_ID))
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.CASH_APP_ID))
+                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.OK_PAY_ID))
+                .collect(Collectors.toList());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -279,8 +287,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     }
 
     public static PaymentMethod getPaymentMethodById(String id) {
-        Optional<PaymentMethod> paymentMethodOptional = getAllValues().stream().filter(e -> e.getId().equals(id)).findFirst();
-        return paymentMethodOptional.orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
+        return getAllValues().stream()
+                .filter(e -> e.getId().equals(id))
+                .findFirst()
+                .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
 
     // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
