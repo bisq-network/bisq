@@ -87,7 +87,11 @@ if [ -z "$JAVA_HOME" ]; then
     JAVA_HOME=$(/usr/libexec/java_home)
 fi
 
+# Open jdk does not has the java packager.
+# JAVA_HOME=/Library/Java/JavaVirtualMachines/oracle_jdk-10.0.2.jdk/Contents/Home
+
 echo "Using JAVA_HOME: $JAVA_HOME"
+
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
