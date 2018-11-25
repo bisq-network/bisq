@@ -35,6 +35,10 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     private static final String VERSION = "0.6.1";
     private Statistics statistics;
 
+    public StatisticsMain() {
+        super("Bisq Statsnode", "bisq-statistics", VERSION);
+    }
+
     public static void main(String[] args) throws Exception {
         log.info("Statistics.VERSION: " + VERSION);
         BisqEnvironment.setDefaultAppName("bisq_statistics");
