@@ -53,7 +53,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) boolean useSafeCookieAuthentication ) {
         networkNode = useLocalhostForP2P ?
                 new LocalhostNetworkNode(address, port, networkProtoResolver) :
-                new TorNetworkNode(port, torDir, networkProtoResolver,
+                new TorNetworkNode(port, networkProtoResolver,
                         !controlPort.isEmpty() ?
                                 new RunningTor(torDir, Integer.parseInt(controlPort), password, cookieFile, useSafeCookieAuthentication) :
                                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses()));

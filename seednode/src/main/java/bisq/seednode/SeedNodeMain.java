@@ -36,6 +36,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     private static final String VERSION = "0.8.0";
     private SeedNode seedNode;
 
+    public SeedNodeMain() {
+        super("Bisq Seednode", "bisq-seednode", VERSION);
+    }
+
     public static void main(String[] args) throws Exception {
         log.info("SeedNode.VERSION: " + VERSION);
         BisqEnvironment.setDefaultAppName("bisq_seednode");

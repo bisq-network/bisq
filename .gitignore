@@ -21,7 +21,8 @@ build
 *.java.hsp
 *.~ava
 /bundles
-/bisq*
+/bisq-*
+/lib
 /xchange
 desktop.ini
 */target/*
