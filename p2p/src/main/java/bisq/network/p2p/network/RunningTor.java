@@ -72,7 +72,7 @@ public class RunningTor extends TorMode {
 
         log.info(
                 "\n################################################################\n"
-                        + "Tor started after {} ms. Start publishing hidden service.\n"
+                        + "Connecting to Tor successful after {} ms. Start publishing hidden service.\n"
                         + "################################################################",
                 (new Date().getTime() - ts1)); // takes usually a few seconds
 
