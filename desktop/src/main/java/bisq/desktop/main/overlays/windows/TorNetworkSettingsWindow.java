@@ -20,9 +20,9 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -205,7 +205,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void addContent() {
-        addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("torNetworkSettingWindow.deleteFiles.header"));
+        addTitledGroupBg(gridPane, ++rowIndex, 2, Res.get("torNetworkSettingWindow.deleteFiles.header"));
 
         Label deleteFilesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.info"), Layout.TWICE_FIRST_ROW_DISTANCE);
         deleteFilesLabel.setWrapText(true);
@@ -216,6 +216,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.button"));
         Button deleteFilesButton = tuple.first;
+        deleteFilesButton.getStyleClass().remove("action-button");
         deleteFilesButton.setOnAction(e -> {
             tuple.second.play();
             tuple.third.setText(Res.get("torNetworkSettingWindow.deleteFiles.progress"));
@@ -232,7 +233,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         });
 
 
-        addTitledGroupBg(gridPane, ++rowIndex, 7, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++rowIndex, 8, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
+        titledGroupBg.getStyleClass().add("last");
 
         Label bridgesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.bridges.info"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         bridgesLabel.setWrapText(true);
@@ -240,8 +242,6 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setColumnSpan(bridgesLabel, 2);
         GridPane.setHalignment(bridgesLabel, HPos.LEFT);
         GridPane.setValignment(bridgesLabel, VPos.TOP);
-
-        //addTopLabelTextArea(gridPane, rowIndex, Res.get("torNetworkSettingWindow.info"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
@@ -253,7 +253,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         // providedBridges
         RadioButton providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
-        transportTypeComboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
+        transportTypeComboBox = addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
         transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
                 Transport.OBFS_4,
                 Transport.OBFS_3,
@@ -288,6 +288,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
         enterBridgeLabel = labelTextAreaTuple2.first;
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
+        bridgeEntriesTextArea.setPrefHeight(60);
 
         Label label2 = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.restartInfo"));
         label2.setWrapText(true);

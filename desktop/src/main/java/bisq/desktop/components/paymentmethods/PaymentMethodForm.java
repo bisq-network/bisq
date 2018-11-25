@@ -33,7 +33,6 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -47,7 +46,6 @@ import org.apache.commons.lang3.StringUtils;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
@@ -78,8 +76,8 @@ public abstract class PaymentMethodForm {
     protected final BooleanProperty allInputsValid = new SimpleBooleanProperty();
 
     protected int gridRowFrom;
-    protected InputTextField accountNameTextField;
-    protected ToggleButton useCustomAccountNameToggleButton;
+    InputTextField accountNameTextField;
+    ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
     public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -157,7 +155,7 @@ public abstract class PaymentMethodForm {
         return time;
     }
 
-    protected void addLimitations() {
+    protected void addLimitations(boolean isDisplayForm) {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
@@ -185,7 +183,11 @@ public abstract class PaymentMethodForm {
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
                         formatter.formatAccountAge(accountAge));
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+
+        if (isDisplayForm)
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+        else
+            addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
@@ -205,7 +207,7 @@ public abstract class PaymentMethodForm {
                 }
             });
         } else {
-            addTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
                     Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
         }
@@ -274,20 +276,6 @@ public abstract class PaymentMethodForm {
             updateAllInputsValid();
         });
         flowPane.getChildren().add(checkBox);
-    }
-
-    void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
-                                               TradeCurrency singleTradeCurrency) {
-        gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
-        field.setMouseTransparent(false);
-
-        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-
-        addLimitations();
     }
 
     abstract protected void autoFillNameTextField();

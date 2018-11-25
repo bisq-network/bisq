@@ -203,9 +203,10 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            torRcFile, torRcOptions,
+            torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
 
+    protected final boolean externalTorUseSafeCookieAuthentication;
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -284,6 +285,18 @@ public class BisqEnvironment extends StandardEnvironment {
         torRcOptions = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_OPTIONS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_OPTIONS) :
                 "";
+        externalTorControlPort = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) :
+                "";
+        externalTorPassword = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) :
+                "";
+        externalTorCookieFile = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) :
+                "";
+        externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) ?
+                true :
+                false;
 
         //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
@@ -454,6 +467,11 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
                 setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);
                 setProperty(NetworkOptionKeys.TORRC_OPTIONS, torRcOptions);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, externalTorControlPort);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, externalTorPassword);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, externalTorCookieFile);
+                if (externalTorUseSafeCookieAuthentication)
+                    setProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, "true");
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);

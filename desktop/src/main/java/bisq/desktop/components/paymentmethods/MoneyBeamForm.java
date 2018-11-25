@@ -69,7 +69,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -88,7 +88,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

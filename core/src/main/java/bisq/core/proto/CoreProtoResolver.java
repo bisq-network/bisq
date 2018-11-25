@@ -20,6 +20,7 @@ package bisq.core.proto;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.payment.AccountAgeWitness;
+import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
@@ -138,6 +139,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return USPostalMoneyOrderAccountPayload.fromProto(proto);
                 case PROMPT_PAY_ACCOUNT_PAYLOAD:
                     return PromptPayAccountPayload.fromProto(proto);
+                case ADVANCED_CASH_ACCOUNT_PAYLOAD:
+                    return AdvancedCashAccountPayload.fromProto(proto);
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PaymentAccountPayload). messageCase=" + messageCase);
             }

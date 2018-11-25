@@ -784,7 +784,7 @@ public abstract class Overlay<T extends Overlay> {
 
         Button logButton = new AutoTooltipButton(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(logButton, HPos.RIGHT);
+        GridPane.setHalignment(logButton, HPos.LEFT);
         GridPane.setRowIndex(logButton, ++rowIndex);
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> {

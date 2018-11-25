@@ -30,6 +30,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Priority;
+
+import javafx.geometry.HPos;
 
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
@@ -51,7 +54,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         if (headLine == null)
             headLine = Res.get("showWalletDataWindow.walletData");
 
-        width = 1268;
+        width = 660;
         createGridPane();
         addHeadLine();
         addContent();
@@ -77,8 +80,12 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     }
 
     private void addContent() {
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+        gridPane.getColumnConstraints().get(0).setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);
+
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
-                Res.getWithCol("showWalletDataWindow.walletData"), "");
+                Res.get("showWalletDataWindow.walletData"), "");
         TextArea textArea = labelTextAreaTuple2.second;
         Label label = labelTextAreaTuple2.first;
         label.setMinWidth(150);

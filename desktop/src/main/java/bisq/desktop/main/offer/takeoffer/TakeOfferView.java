@@ -129,14 +129,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
-            takeOfferBox, buttonBox;
+            takeOfferBox, buttonBox, firstRowHBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Label amountDescriptionLabel,
             paymentMethodLabel,
             priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, offerAvailabilityLabel, amountCurrency, priceAsPercentageDescription,
-            tradeFeeDescriptionLabel, resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel;
+            tradeFeeDescriptionLabel, resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel,
+            fakeXLabel;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField,
             volumeTextField, amountRangeTextField;
@@ -367,8 +368,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodTextField.setManaged(!showComboBox);
         paymentMethodLabel.setVisible(!showComboBox);
         paymentMethodLabel.setManaged(!showComboBox);
-        if (!showComboBox)
-            paymentMethodTextField.setText(Res.get(model.getPaymentMethod().getId()));
+
+        if (!showComboBox) {
+            paymentMethodTextField.setText(model.getPossiblePaymentAccounts().get(0).getAccountName());
+        }
+
         currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
         amountDescriptionLabel.setText(model.getAmountDescription());
 
@@ -566,6 +570,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void updateOfferElementsStyle() {
+        GridPane.setColumnSpan(firstRowHBox, 1);
+
         final String activeInputStyle = "input-with-border";
         final String readOnlyInputStyle = "input-with-border-readonly";
         amountValueCurrencyBox.getStyleClass().remove(activeInputStyle);
@@ -580,8 +586,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         minAmountValueCurrencyBox.getStyleClass().add(readOnlyInputStyle);
 
         resultLabel.getStyleClass().add("small");
+        xLabel.getStyleClass().add("small");
         xIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
         fakeXIcon.setStyle(String.format("-fx-font-family: %s; -fx-font-size: %s;", MaterialDesignIcon.CLOSE.fontFamily(), "1em"));
+        fakeXLabel.getStyleClass().add("small");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -822,9 +830,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         columnConstraints1.setMinWidth(200);
         ColumnConstraints columnConstraints2 = new ColumnConstraints();
         columnConstraints2.setHgrow(Priority.ALWAYS);
-        ColumnConstraints columnConstraints3 = new ColumnConstraints();
-        columnConstraints3.setHgrow(Priority.NEVER);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2, columnConstraints3);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
         scrollPane.setContent(gridPane);
     }
 
@@ -1094,10 +1100,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         VBox amountBox = amountInputBoxTuple.second;
 
         // x
-        Label xLabel = new Label();
+        xLabel = new Label();
         xIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", xLabel);
         xIcon.getStyleClass().add("opaque-icon");
-        xLabel.setPadding(new Insets(24, 3, 0, 3));
+        xLabel.getStyleClass().addAll("opaque-icon-character");
 
         // price
         Tuple3<HBox, TextField, Label> priceValueCurrencyBoxTuple = getNonEditableValueBox();
@@ -1114,7 +1120,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         // =
         resultLabel = new AutoTooltipLabel("=");
-        resultLabel.getStyleClass().add("opaque-icon-character");
+        resultLabel.getStyleClass().addAll("opaque-icon-character");
 
         // volume
         Tuple3<HBox, InfoInputTextField, Label> volumeValueCurrencyBoxTuple = getNonEditableValueBoxWithInfo();
@@ -1127,13 +1133,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         volumeDescriptionLabel = volumeInputBoxTuple.first;
         VBox volumeBox = volumeInputBoxTuple.second;
 
-        HBox hBox = new HBox();
-        hBox.setSpacing(5);
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(amountBox, xLabel, priceBox, resultLabel, volumeBox);
-        GridPane.setRowIndex(hBox, gridRow);
-        GridPane.setMargin(hBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
-        gridPane.getChildren().add(hBox);
+        firstRowHBox = new HBox();
+        firstRowHBox.setSpacing(5);
+        firstRowHBox.setAlignment(Pos.CENTER_LEFT);
+        firstRowHBox.getChildren().addAll(amountBox, xLabel, priceBox, resultLabel, volumeBox);
+        GridPane.setColumnSpan(firstRowHBox, 2);
+        GridPane.setRowIndex(firstRowHBox, gridRow);
+        GridPane.setMargin(firstRowHBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
+        gridPane.getChildren().add(firstRowHBox);
     }
 
     private void addSecondRow() {
@@ -1162,10 +1169,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountRangeBox = amountInputBoxTuple.second;
         amountRangeBox.setVisible(false);
 
-        Label fakeXLabel = new Label();
+        fakeXLabel = new Label();
         fakeXIcon = getIconForLabel(MaterialDesignIcon.CLOSE, "2em", fakeXLabel);
-        fakeXLabel.setPadding(new Insets(14, 3, 0, 3));
         fakeXLabel.setVisible(false); // we just use it to get the same layout as the upper row
+        fakeXLabel.getStyleClass().add("opaque-icon-character");
 
         HBox hBox = new HBox();
         hBox.setSpacing(5);
@@ -1173,7 +1180,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         hBox.getChildren().addAll(amountRangeBox, fakeXLabel, priceAsPercentageInputBox);
 
         GridPane.setRowIndex(hBox, ++gridRow);
-        GridPane.setMargin(hBox, new Insets(0, 10, 18, 0));
+        GridPane.setMargin(hBox, new Insets(0, 10, 10, 0));
         gridPane.getChildren().add(hBox);
     }
 
@@ -1252,10 +1259,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String promptText) {
         Label descriptionLabel = new AutoTooltipLabel(promptText);
         descriptionLabel.setId("input-description-label");
-        descriptionLabel.setPrefWidth(190);
+        descriptionLabel.setPrefWidth(170);
 
         VBox box = new VBox();
-        box.setSpacing(4);
+        box.setPadding(new Insets(10, 0, 0, 0));
+        box.setSpacing(2);
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);
     }

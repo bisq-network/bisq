@@ -21,10 +21,10 @@
 <?import bisq.desktop.components.AutoTooltipCheckBox?>
 <?import bisq.desktop.components.AutoTooltipLabel?>
 <?import bisq.desktop.components.AutoTooltipRadioButton?>
+<?import bisq.desktop.components.BisqTextArea?>
+<?import bisq.desktop.components.BisqTextField?>
 <?import bisq.desktop.components.InputTextField?>
 <?import bisq.desktop.components.TitledGroupBg?>
-<?import com.jfoenix.controls.JFXTextArea?>
-<?import com.jfoenix.controls.JFXTextField?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -45,12 +45,12 @@
     </padding>
 
     <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
-    <JFXTextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"
-                 GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false" labelFloat="true">
+    <BisqTextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"
+                  GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false" labelFloat="true">
         <GridPane.margin>
             <Insets top="25"/>
         </GridPane.margin>
-    </JFXTextArea>
+    </BisqTextArea>
 
     <AutoTooltipCheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1"/>
 
@@ -82,12 +82,12 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <JFXTextField fx:id="onionAddress" GridPane.rowIndex="5"
-                  editable="false" focusTraversable="false" labelFloat="true">
+    <BisqTextField fx:id="onionAddress" GridPane.rowIndex="5"
+                   editable="false" focusTraversable="false" labelFloat="true">
         <GridPane.margin>
             <Insets top="60.0"/>
         </GridPane.margin>
-    </JFXTextField>
+    </BisqTextField>
 
     <VBox GridPane.rowIndex="6" GridPane.hgrow="ALWAYS" GridPane.vgrow="SOMETIMES">
         <AutoTooltipLabel fx:id="p2PPeersLabel" styleClass="small-text"/>
@@ -132,8 +132,8 @@
         </TableView>
     </VBox>
 
-    <JFXTextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" editable="false"
-                  focusTraversable="false" labelFloat="true"/>
+    <BisqTextField fx:id="totalTrafficTextField" GridPane.rowIndex="7" editable="false"
+                   focusTraversable="false" labelFloat="true"/>
 
     <AutoTooltipButton fx:id="openTorSettingsButton" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
 

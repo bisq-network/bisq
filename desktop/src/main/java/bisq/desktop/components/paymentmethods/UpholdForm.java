@@ -72,7 +72,7 @@ public class UpholdForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -105,7 +105,7 @@ public class UpholdForm extends PaymentMethodForm {
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 upholdAccount.getAccountId()).second;
         field.setMouseTransparent(false);
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 

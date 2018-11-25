@@ -150,6 +150,12 @@ public enum Param {
         this(defaultValue, paramType, 1, 1);
     }
 
+    /**
+     * @param defaultValue  Value at the start of the DAO
+     * @param paramType     Type of parameter
+     * @param maxDecrease   Decrease of param value limited to current value / maxDecrease
+     * @param maxIncrease   Increase of param value limited to current value * maxIncrease
+     */
     Param(String defaultValue, ParamType paramType, double maxDecrease, double maxIncrease) {
         this.defaultValue = defaultValue;
         this.paramType = paramType;

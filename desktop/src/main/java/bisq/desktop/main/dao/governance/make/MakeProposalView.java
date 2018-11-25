@@ -130,7 +130,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
         proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
-                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                Res.get("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setMaxWidth(300);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
             @Override

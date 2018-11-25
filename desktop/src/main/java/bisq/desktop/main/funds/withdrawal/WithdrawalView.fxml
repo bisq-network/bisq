@@ -43,7 +43,7 @@
         </padding>
 
         <columnConstraints>
-            <ColumnConstraints hgrow="NEVER" minWidth="500"/>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="500"/>
         </columnConstraints>
     </GridPane>
 </VBox>

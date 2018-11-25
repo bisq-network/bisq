@@ -86,7 +86,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
                 nameAndCode);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -110,7 +110,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = fasterPaymentsAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

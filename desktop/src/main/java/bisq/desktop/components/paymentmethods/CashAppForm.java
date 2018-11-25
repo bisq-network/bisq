@@ -70,7 +70,7 @@ public class CashAppForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -89,7 +89,7 @@ public class CashAppForm extends PaymentMethodForm {
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override

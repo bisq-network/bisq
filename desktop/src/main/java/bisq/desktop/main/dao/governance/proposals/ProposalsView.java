@@ -667,7 +667,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteFields.add(voteTitledGroupBg);
 
         Tuple3<Label, TextField, VBox> meritTuple = addTopLabelTextField(root, gridRow,
-                Res.getWithCol("dao.proposal.myVote.merit"), 40);
+                Res.get("dao.proposal.myVote.merit"), 40);
         Label meritLabel = meritTuple.first;
         meritTextField = meritTuple.second;
         meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
@@ -675,19 +675,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteFields.add(meritTextField);
 
         stakeInputTextField = addInputTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.stake"));
+                Res.get("dao.proposal.myVote.stake"));
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
         voteFields.add(stakeInputTextField);
 
         Tuple3<Label, TxIdTextField, VBox> tuple = addTopLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.blindVoteTxId"), 0);
+                Res.get("dao.proposal.myVote.blindVoteTxId"), 0);
         blindVoteTxIdTextField = tuple.second;
         blindVoteTxIdContainer = tuple.third;
         blindVoteTxIdTextField.setBsq(true);
         voteFields.add(blindVoteTxIdContainer);
 
         tuple = addTopLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.revealTxId"), 0);
+                Res.get("dao.proposal.myVote.revealTxId"), 0);
         revealTxIdTextField = tuple.second;
         revealTxIdTextField.setBsq(true);
         revealTxIdContainer = tuple.third;

@@ -20,6 +20,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
@@ -50,7 +51,6 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -90,6 +90,8 @@ import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
@@ -198,11 +200,10 @@ public class BuyerStep2View extends TradeStepView {
 
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
-        TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 2,
+        TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.COMPACT_GROUP_DISTANCE);
-        accountTitledGroupBg.getStyleClass().add("last");
-        TextFieldWithCopyIcon field = addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 0,
+        TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
@@ -210,7 +211,7 @@ public class BuyerStep2View extends TradeStepView {
 
         if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
                 !(paymentAccountPayload instanceof F2FAccountPayload))
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+            addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
                     Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
@@ -299,6 +300,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.PROMPT_PAY_ID:
                 gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.ADVANCED_CASH_ID:
+                gridRow = AdvancedCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
@@ -322,7 +326,7 @@ public class BuyerStep2View extends TradeStepView {
             }
         }
 
-        GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
+        GridPane.setRowSpan(accountTitledGroupBg, gridRow - 1);
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);

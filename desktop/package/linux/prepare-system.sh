@@ -13,7 +13,7 @@ sudo apt-get dist-upgrade
 if [ ! -f "${JAVA_HOME}/jre/lib/security/local_policy.jar" ]; then
     echo "Enabling strong crypto support for Java.."
 
-    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
+    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip
 
     checksum=f3020a3922efd6626c2fff45695d527f34a8020e938a49292561f18ad1320b59 # see https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md
 

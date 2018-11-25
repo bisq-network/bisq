@@ -10,6 +10,7 @@ bisq.asset.coins.BitcoinCash
 bisq.asset.coins.BitcoinClashic
 bisq.asset.coins.BitcoinCore
 bisq.asset.coins.BitcoinInstant
+bisq.asset.coins.BitcoinRhodium
 bisq.asset.coins.Bitcoin$Mainnet
 bisq.asset.coins.Bitcoin$Regtest
 bisq.asset.coins.Bitcoin$Testnet

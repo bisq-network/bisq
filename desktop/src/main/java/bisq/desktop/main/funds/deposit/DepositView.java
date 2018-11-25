@@ -132,6 +132,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));

@@ -513,6 +513,10 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTotalAmountOfUnLockedTxOutputs();
     }
 
+    public long getTotalAmountOfConfiscatedTxOutputs() {
+        return daoStateService.getTotalAmountOfConfiscatedTxOutputs();
+    }
+
     public Optional<Integer> getLockTime(String txId) {
         return daoStateService.getLockTime(txId);
     }

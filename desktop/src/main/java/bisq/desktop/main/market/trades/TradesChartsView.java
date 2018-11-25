@@ -83,11 +83,10 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -96,7 +95,6 @@ import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
-    private static final Logger log = LoggerFactory.getLogger(TradesChartsView.class);
 
     private final BSFormatter formatter;
 
@@ -180,13 +178,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
+        tabPaneSelectionModel = Objects.requireNonNull(GUIUtil.getParentOfType(root, JFXTabPane.class)).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
         currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(25);
+        currencyComboBox.setVisibleRowCount(12);
 
         if (model.showAllTradeCurrenciesProperty.get())
             currencyComboBox.getSelectionModel().select(0);
@@ -233,8 +231,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
                         priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
 
-                        if (tableView.getColumns().contains(marketColumn))
-                            tableView.getColumns().remove(marketColumn);
+                        tableView.getColumns().remove(marketColumn);
                     }
                     layout();
                     return null;
@@ -306,7 +303,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY = new NumberAxis();
         priceAxisY.setForceZeroInRange(false);
         priceAxisY.setAutoRanging(true);
-        priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
+        priceAxisY.setTickLabelFormatter(new StringConverter<>() {
             @Override
             public String toString(Number object) {
                 String currencyCode = model.getCurrencyCode();
@@ -325,7 +322,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        priceChart = new CandleStickChart(priceAxisX, priceAxisY, new StringConverter<Number>() {
+        priceChart = new CandleStickChart(priceAxisX, priceAxisY, new StringConverter<>() {
             @Override
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
@@ -362,7 +359,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisY.setForceZeroInRange(true);
         volumeAxisY.setAutoRanging(true);
         volumeAxisY.setLabel(Res.get("shared.volumeWithCur", Res.getBaseCurrencyCode()));
-        volumeAxisY.setTickLabelFormatter(new StringConverter<Number>() {
+        volumeAxisY.setTickLabelFormatter(new StringConverter<>() {
             @Override
             public String toString(Number object) {
                 return formatter.formatCoin(Coin.valueOf(MathUtils.doubleToLong((double) object)));
@@ -374,7 +371,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
 
-        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY, new StringConverter<Number>() {
+        volumeChart = new VolumeChart(volumeAxisX, volumeAxisY, new StringConverter<>() {
             @Override
             public String toString(Number object) {
                 return formatter.formatCoinWithCode(Coin.valueOf((long) object));
@@ -421,7 +418,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private StringConverter<Number> getTimeAxisStringConverter() {
-        return new StringConverter<Number>() {
+        return new StringConverter<>() {
             @Override
             public String toString(Number object) {
                 long index = MathUtils.doubleToLong((double) object);
@@ -501,20 +498,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
-        TableColumn<TradeStatistics2, TradeStatistics2> dateColumn = new AutoTooltipTableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.dateTime")) {
+        TableColumn<TradeStatistics2, TradeStatistics2> dateColumn = new AutoTooltipTableColumn<>(Res.get("shared.dateTime")) {
             {
                 setMinWidth(240);
                 setMaxWidth(240);
             }
         };
+        dateColumn.getStyleClass().add("number-column");
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -526,24 +523,24 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        dateColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+        dateColumn.setComparator(Comparator.comparing(TradeStatistics2::getTradeDate));
         tableView.getColumns().add(dateColumn);
 
         // market
-        marketColumn = new AutoTooltipTableColumn<TradeStatistics2, TradeStatistics2>(Res.get("shared.market")) {
+        marketColumn = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
                 setMaxWidth(130);
             }
         };
+        marketColumn.getStyleClass().add("number-column");
         marketColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         marketColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -555,7 +552,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        marketColumn.setComparator((o1, o2) -> o1.getTradeDate().compareTo(o2.getTradeDate()));
+        marketColumn.setComparator(Comparator.comparing(TradeStatistics2::getTradeDate));
         tableView.getColumns().add(marketColumn);
 
         // price
@@ -563,12 +560,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceColumn.getStyleClass().add("number-column");
         priceColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -580,7 +576,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        priceColumn.setComparator((o1, o2) -> o1.getTradePrice().compareTo(o2.getTradePrice()));
+        priceColumn.setComparator(Comparator.comparing(TradeStatistics2::getTradePrice));
         tableView.getColumns().add(priceColumn);
 
         // amount
@@ -588,12 +584,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         amountColumn.getStyleClass().add("number-column");
         amountColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -606,7 +601,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        amountColumn.setComparator((o1, o2) -> o1.getTradeAmount().compareTo(o2.getTradeAmount()));
+        amountColumn.setComparator(Comparator.comparing(TradeStatistics2::getTradeAmount));
         tableView.getColumns().add(amountColumn);
 
         // volume
@@ -614,12 +609,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeColumn.getStyleClass().add("number-column");
         volumeColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -636,20 +630,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeColumn.setComparator((o1, o2) -> {
             final Volume tradeVolume1 = o1.getTradeVolume();
             final Volume tradeVolume2 = o2.getTradeVolume();
-            return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
+            return tradeVolume1.compareTo(tradeVolume2);
         });
         tableView.getColumns().add(volumeColumn);
 
         // paymentMethod
         TableColumn<TradeStatistics2, TradeStatistics2> paymentMethodColumn = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod"));
+        paymentMethodColumn.getStyleClass().add("number-column");
         paymentMethodColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         paymentMethodColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -661,19 +655,19 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        paymentMethodColumn.setComparator((o1, o2) -> getPaymentMethodLabel(o1).compareTo(getPaymentMethodLabel(o2)));
+        paymentMethodColumn.setComparator(Comparator.comparing(this::getPaymentMethodLabel));
         tableView.getColumns().add(paymentMethodColumn);
 
         // direction
         TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new AutoTooltipTableColumn<>(Res.get("shared.offerType"));
+        directionColumn.getStyleClass().add("number-column");
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<TradeStatistics2, TradeStatistics2>, TableCell<TradeStatistics2,
-                        TradeStatistics2>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<TradeStatistics2, TradeStatistics2> call(
                             TableColumn<TradeStatistics2, TradeStatistics2> column) {
-                        return new TableCell<TradeStatistics2, TradeStatistics2>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -685,7 +679,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         };
                     }
                 });
-        directionColumn.setComparator((o1, o2) -> getDirectionLabel(o1).compareTo(getDirectionLabel(o2)));
+        directionColumn.setComparator(Comparator.comparing(this::getDirectionLabel));
         tableView.getColumns().add(directionColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

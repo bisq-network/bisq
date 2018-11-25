@@ -71,6 +71,7 @@ import javafx.geometry.Insets;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
+import javafx.collections.SetChangeListener;
 
 import javafx.util.StringConverter;
 
@@ -104,6 +105,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             priceCheckBoxListener, priceAlertHighFocusListener, priceAlertLowFocusListener, marketAlertTriggerFocusListener;
     private ChangeListener<String> tokenInputTextFieldListener, priceAlertHighListener, priceAlertLowListener, marketAlertTriggerListener;
     private ChangeListener<Number> priceFeedServiceListener;
+    private SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
     private int gridRow = 0;
     private int testMsgCounter = 0;
@@ -135,6 +137,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+        createListeners();
         createSetupFields();
         createSettingsFields();
         createMarketAlertFields();
@@ -143,6 +146,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        addListeners();
+
         // setup
         tokenInputTextField.textProperty().addListener(tokenInputTextFieldListener);
         downloadButton.setOnAction(e -> onDownload());
@@ -165,7 +170,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         addMarketAlertButton.setOnAction(e -> onAddMarketAlert());
         manageAlertsButton.setOnAction(e -> onManageMarketAlerts());
 
-        paymentAccountsComboBox.setItems(FXCollections.observableArrayList(user.getPaymentAccountsAsObservable()));
+        fillPaymentAccounts();
 
         // price alert
         priceAlertHighInputTextField.textProperty().addListener(priceAlertHighListener);
@@ -195,6 +200,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
+        removeListeners();
+
         // setup
         tokenInputTextField.textProperty().removeListener(tokenInputTextFieldListener);
         downloadButton.setOnAction(null);
@@ -525,7 +532,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("account.notifications.priceAlert.title"), 20);
         currencyComboBox = FormBuilder.addComboBox(root, gridRow,
-                Res.getWithCol("list.currency.select"), 40);
+                Res.get("list.currency.select"), 40);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -540,7 +547,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         });
 
         priceAlertHighInputTextField = addInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.high.label"));
+                Res.get("account.notifications.priceAlert.high.label"));
         priceAlertHighListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
@@ -566,7 +573,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             }
         };
         priceAlertLowInputTextField = addInputTextField(root, ++gridRow,
-                Res.getWithCol("account.notifications.priceAlert.low.label"));
+                Res.get("account.notifications.priceAlert.low.label"));
         priceAlertLowListener = (observable, oldValue, newValue) -> {
             long priceAlertHighTextFieldValue = getPriceAsLong(priceAlertHighInputTextField);
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
@@ -774,5 +781,23 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             updatePriceAlertFields();
         }
     }
+
+    private void createListeners() {
+        paymentAccountsChangeListener = change -> fillPaymentAccounts();
+    }
+
+    private void addListeners() {
+        user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
+    }
+
+
+    private void removeListeners() {
+        user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
+    }
+
+    private void fillPaymentAccounts() {
+        paymentAccountsComboBox.setItems(FXCollections.observableArrayList(user.getPaymentAccounts()));
+    }
+
 }
 

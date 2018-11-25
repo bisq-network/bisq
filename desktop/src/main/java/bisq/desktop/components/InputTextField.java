@@ -24,6 +24,8 @@ import bisq.core.util.validation.InputValidator;
 
 import com.jfoenix.controls.JFXTextField;
 
+import javafx.scene.control.Skin;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -46,8 +48,10 @@ public class InputTextField extends JFXTextField {
             (new InputValidator.ValidationResult(true));
 
     private final JFXInputValidator jfxValidationWrapper = new JFXInputValidator();
+    private double inputLineExtension = 0;
 
     private InputValidator validator;
+
 
     public InputValidator getValidator() {
         return validator;
@@ -89,6 +93,10 @@ public class InputTextField extends JFXTextField {
         });
     }
 
+    public InputTextField(double inputLineExtension) {
+        this();
+        this.inputLineExtension = inputLineExtension;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -104,5 +112,9 @@ public class InputTextField extends JFXTextField {
 
     public ObjectProperty<InputValidator.ValidationResult> validationResultProperty() {
         return validationResult;
+    }
+
+    protected Skin<?> createDefaultSkin() {
+        return new JFXTextFieldSkinBisqStyle<>(this, inputLineExtension);
     }
 }

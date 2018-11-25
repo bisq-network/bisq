@@ -119,6 +119,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private void addContent() {
+        gridPane.getColumnConstraints().remove(1);
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+
         InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
@@ -287,7 +290,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));

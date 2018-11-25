@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
@@ -66,8 +67,6 @@ import com.google.common.io.ByteStreams;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import com.jfoenix.controls.JFXTextArea;
 
 import javafx.stage.FileChooser;
 
@@ -691,7 +690,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messagesAnchorPane = new AnchorPane();
             VBox.setVgrow(messagesAnchorPane, Priority.ALWAYS);
 
-            inputTextArea = new JFXTextArea();
+            inputTextArea = new BisqTextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
             if (!(this instanceof ArbitratorDisputeView))

@@ -81,7 +81,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
@@ -105,7 +105,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         TradeCurrency singleTradeCurrency = chaseQuickPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        addLimitations();
+        addLimitations(true);
     }
 
     @Override
