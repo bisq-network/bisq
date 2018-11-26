@@ -24,7 +24,6 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.storage.FileUtil;
 import bisq.common.util.Utilities;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
@@ -47,14 +46,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.net.Socket;
 
-import java.nio.file.Paths;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +68,6 @@ public class TorNetworkNode extends NetworkNode {
 
 
     private HiddenServiceSocket hiddenServiceSocket;
-    private final File torDir;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
@@ -87,9 +80,8 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver, TorMode torMode) {
+    public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, TorMode torMode) {
         super(servicePort, networkProtoResolver);
-        this.torDir = torDir;
         this.torMode = torMode;
     }
 
@@ -100,8 +92,7 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
-        FileUtil.rollingBackup(hiddenservice, "private_key", 20);
+        torMode.doRollingBackup();
 
         if (setupListener != null)
             addSetupListener(setupListener);
@@ -280,8 +271,8 @@ public class TorNetworkNode extends NetworkNode {
                 log.error("Could not connect to running Tor: "
                         + e.getMessage());
 
-                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing
-                // furthermore, we have no hidden services started yet, so there is no graceful
+                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing.
+                // Furthermore, we have no hidden services started yet, so there is no graceful
                 // shutdown needed either
                 System.exit(1);
             } catch (Throwable ignore) {

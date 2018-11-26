@@ -24,8 +24,8 @@ import java.util.Date;
 import org.berndpruenster.netlayer.tor.ExternalTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class creates a brand new instance of the Tor onion router.
@@ -37,19 +37,19 @@ import org.slf4j.LoggerFactory;
  * @author Florian Reimair
  *
  */
+@Slf4j
 public class RunningTor extends TorMode {
 
-    private static final Logger log = LoggerFactory.getLogger(RunningTor.class);
+    private static final String EXTERNAL_TOR_HIDDEN_SERVICE = "externalTorHiddenService";
     private final int controlPort;
     private final String password;
-    private final String torDir;
     private final File cookieFile;
     private final boolean useSafeCookieAuthentication;
 
 
     public RunningTor(final File torDir, final int controlPort, final String password, final String cookieFile,
             final boolean useSafeCookieAuthentication) {
-        this.torDir = torDir.getAbsolutePath();
+        super(torDir, EXTERNAL_TOR_HIDDEN_SERVICE);
         this.controlPort = controlPort;
         this.password = password;
         this.cookieFile = new File(cookieFile);
@@ -72,7 +72,7 @@ public class RunningTor extends TorMode {
 
         log.info(
                 "\n################################################################\n"
-                        + "Tor started after {} ms. Start publishing hidden service.\n"
+                        + "Connecting to Tor successful after {} ms. Start publishing hidden service.\n"
                         + "################################################################",
                 (new Date().getTime() - ts1)); // takes usually a few seconds
 
@@ -81,7 +81,7 @@ public class RunningTor extends TorMode {
 
     @Override
     public String getHiddenServiceDirectory() {
-        return torDir + File.separator + "externalTorHiddenService";
+        return new File(torDir, EXTERNAL_TOR_HIDDEN_SERVICE).getAbsolutePath();
     }
 
 }

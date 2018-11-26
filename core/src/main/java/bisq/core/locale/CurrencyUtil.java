@@ -147,6 +147,20 @@ public class CurrencyUtil {
     }
 
     // At OKPay you can exchange internally those currencies
+    public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("UAH"),
+                new FiatCurrency("KZT"),
+                new FiatCurrency("BRL")
+        ));
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
     public static List<TradeCurrency> getAllOKPayCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR"),

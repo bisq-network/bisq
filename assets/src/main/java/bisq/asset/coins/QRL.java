@@ -20,6 +20,7 @@ package bisq.asset.coins;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
+// ICO token
 public class QRL extends Coin {
 
     public QRL() {

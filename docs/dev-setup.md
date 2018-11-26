@@ -61,14 +61,14 @@ Here is an overview:
 
 ## Run Bisq seednode
 
-For localhost/regtest mode run the `SeedNodeMain.java` class or the `seednode.jar` (inside the `seednode/build/libs` folder) with following program arguments:
+For localhost/regtest mode run the `SeedNodeMain` class or `./bisq-seednode` script in the root project dir with following program arguments:
 
     --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=2002 --myAddress=localhost:2002 --appName=bisq-BTC_REGTEST_Seed_2002
 
 
 ### Run Bisq arbitrator instance
 
-For localhost/regtest mode run the `BisqAppMain.java` class or the `desktop.jar` (inside the `desktop/build/libs` folder) with following program arguments:
+For localhost/regtest mode run the `BisqAppMain` class or `./bisq-desktop` script in the root project dir with following program arguments:
 
     --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=4444 --appName=bisq-BTC_REGTEST_arbitrator
 
@@ -79,7 +79,7 @@ _Note: You need only register once but if you have shut down all nodes (includin
 
 ### Run two Bisq trade instances
 
-For localhost/regtest mode run the `BisqAppMain.java` class or the `desktop.jar` (inside the `desktop/build/libs` folder) with following program arguments:
+For localhost/regtest mode run the `BisqAppMain` class or `./bisq-desktop` script in the root project dir with following program arguments:
 
     --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=5555 --appName=bisq-BTC_REGTEST_Alice
 

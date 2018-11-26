@@ -20,6 +20,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
@@ -298,6 +299,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
                 gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.ADVANCED_CASH_ID:
+                gridRow = AdvancedCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);

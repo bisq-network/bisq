@@ -15,12 +15,16 @@ You do _not_ need to install Gradle to complete the following command. The `grad
 
     ./gradlew build
 
+If on Windows use the `gradlew.bat` script instead.
+
 
 ## Run
 
-The Bisq executable jar is now available in the `desktop/build/libs/` directory. Run it as follows, replacing `{version}` with the actual version found in the filename:
+Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
 
-    java -jar desktop/build/libs/desktop-{version}-all.jar
+    ./bisq-desktop
+
+If on Windows use the `bisq-desktop.bat` script instead.
 
 
 ## See also

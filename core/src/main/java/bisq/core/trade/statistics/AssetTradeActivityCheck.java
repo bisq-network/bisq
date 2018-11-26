@@ -61,7 +61,7 @@ public class AssetTradeActivityCheck {
 
     public void onAllServicesInitialized() {
         Date compareDate = new Date(new Date().getTime() - Duration.ofDays(120).toMillis());
-        long minTradeAmount = Coin.parseCoin("0.001").value;
+        long minTradeAmount = Coin.parseCoin("0.01").value;
         long minNumOfTrades = 3;
 
         Map<String, Tuple2<Long, Integer>> tradeStatMap = new HashMap<>();
@@ -144,35 +144,6 @@ public class AssetTradeActivityCheck {
     private boolean isWarmingUp(String code) {
         Set<String> newlyAdded = new HashSet<>();
 
-        // v0.7.1 Jul 4 2018
-        newlyAdded.add("ZOC");
-        newlyAdded.add("AQUA");
-        newlyAdded.add("BTDX");
-        newlyAdded.add("BTCC");
-        newlyAdded.add("BTI");
-        newlyAdded.add("CRDS");
-        newlyAdded.add("CNMC");
-        newlyAdded.add("TARI");
-        newlyAdded.add("DAC");
-        newlyAdded.add("DRIP");
-        newlyAdded.add("FTO");
-        newlyAdded.add("GRFT");
-        newlyAdded.add("LIKE");
-        newlyAdded.add("LOBS");
-        newlyAdded.add("MAX");
-        newlyAdded.add("MEC");
-        newlyAdded.add("MCC");
-        newlyAdded.add("XMN");
-        newlyAdded.add("XMY");
-        newlyAdded.add("NANO");
-        newlyAdded.add("NPW");
-        newlyAdded.add("NIM");
-        newlyAdded.add("PIX");
-        newlyAdded.add("PXL");
-        newlyAdded.add("PRIV");
-        newlyAdded.add("TRIT");
-        newlyAdded.add("WAVI");
-
         // v0.8.0 Aug 22 2018
         // none added
 
@@ -187,7 +158,10 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("GBK");
         newlyAdded.add("KEK");
         newlyAdded.add("LOKI");
+        newlyAdded.add("MASK");
         newlyAdded.add("MBGL");
+        newlyAdded.add("MOX");
+        newlyAdded.add("MUE");
         newlyAdded.add("NEOS");
         newlyAdded.add("PZDC");
         newlyAdded.add("QMCoin");
@@ -198,6 +172,7 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("MAI");
         newlyAdded.add("TRTL");
         newlyAdded.add("ZER");
+        newlyAdded.add("XRC");
 
         return newlyAdded.contains(code);
     }

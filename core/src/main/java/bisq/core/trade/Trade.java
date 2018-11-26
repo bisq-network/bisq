@@ -30,7 +30,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
@@ -523,14 +522,12 @@ public abstract class Trade implements Tradable, Model {
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        if (ArbitratorSelection.isNewRuleActivated()) {
-            Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getArbitratorByNodeAddress(arbitratorNodeAddress);
-            if (optionalArbitrator.isPresent()) {
-                Arbitrator arbitrator = optionalArbitrator.get();
-                arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-                arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-                UserThread.runAfter(() -> this.persist(), 1);
-            }
+        Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getArbitratorByNodeAddress(arbitratorNodeAddress);
+        if (optionalArbitrator.isPresent()) {
+            Arbitrator arbitrator = optionalArbitrator.get();
+            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
+            UserThread.runAfter(this::persist, 1);
         }
 
         createTradeProtocol();
