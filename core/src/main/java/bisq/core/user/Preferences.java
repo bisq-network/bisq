@@ -631,6 +631,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setTakeOfferSelectedPaymentAccountId(String value) {
+        prefPayload.setTakeOfferSelectedPaymentAccountId(value);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -839,5 +844,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcUser(String value);
 
         void setRpcPw(String value);
+
+        void setTakeOfferSelectedPaymentAccountId(String value);
     }
 }
