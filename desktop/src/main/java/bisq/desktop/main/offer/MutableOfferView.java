@@ -404,13 +404,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeInBtcToggle.setMouseTransparent(true);
         tradeFeeInBsqToggle.setMouseTransparent(true);
 
-        int delay = 500;
-        int diff = 100;
+        setDepositTitledGroupBg.setVisible(false);
+        setDepositTitledGroupBg.setManaged(false);
 
-        transitions.fadeOutAndRemove(setDepositTitledGroupBg, delay, (event) -> {
-        });
-        delay -= diff;
-        transitions.fadeOutAndRemove(advancedOptionsBox, delay);
+        advancedOptionsBox.setVisible(false);
+        advancedOptionsBox.setManaged(false);
 
         model.onShowPayFundsScreen();
 
