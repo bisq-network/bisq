@@ -305,8 +305,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code), Res.get("shared.amountHelp"));
                         priceColumn.setTitle(formatter.getPriceWithCurrencyCode(code));
 
-                        if (tableView.getColumns().contains(marketColumn))
-                            tableView.getColumns().remove(marketColumn);
+                        tableView.getColumns().remove(marketColumn);
                     }
 
                     return null;
