@@ -81,6 +81,18 @@ configure([project(':desktop'),
         doLast {
             // copy generated shell scripts, e.g. `bisq-desktop` directly to the project
             // root directory for discoverability and ease of use
+
+            // TODO @cbeams The copy task below fails because the copied files are conflicting with the project
+            // folder name. I temporarily delete those files as I think they are duplicated anyway (bisq-* are probably
+            // the one to use). Would be good if those files don't get created in the first place.
+            // The .bat files are also deleted.
+            delete fileTree(dir: "$destinationDir/bin", include: 'desktop*')
+            delete fileTree(dir: "$destinationDir/bin", include: 'monitor*')
+            delete fileTree(dir: "$destinationDir/bin", include: 'seednode*')
+            delete fileTree(dir: "$destinationDir/bin", include: 'pricenode*')
+            delete fileTree(dir: "$destinationDir/bin", include: 'statsnode*')
+            delete fileTree(dir: "$destinationDir/bin", include: 'relay*')
+
             copy {
                 from "$destinationDir/bin"
                 into rootProject.projectDir
