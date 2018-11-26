@@ -37,6 +37,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.NodeAddress;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
@@ -164,7 +166,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
                     if (!createOfferViewOpen) {
-                        if (!arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage())) {
+                        boolean arbitratorAvailableForLanguage = arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
+                        if (!arbitratorAvailableForLanguage) {
                             showNoArbitratorForUserLocaleWarning();
                         }
                         openCreateOffer(tradeCurrency);
@@ -177,11 +180,19 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onTakeOffer(Offer offer) {
                     if (!takeOfferViewOpen) {
-                        if (!arbitratorManager.getArbitratorLanguages(offer.getArbitratorNodeAddresses()).stream()
-                                .anyMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
-                            showNoArbitratorForUserLocaleWarning();
+                        List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
+                        List<String> arbitratorLanguages = arbitratorManager.getArbitratorLanguages(arbitratorNodeAddresses);
+                        if (arbitratorLanguages.isEmpty()) {
+                            // In case we get an offer which has been created with arbitrators which are not available
+                            // anymore we don't want to call the showNoArbitratorForUserLocaleWarning
+                            openTakeOffer(offer);
+                        } else {
+                            if (arbitratorLanguages.stream()
+                                    .noneMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
+                                showNoArbitratorForUserLocaleWarning();
+                            }
+                            openTakeOffer(offer);
                         }
-                        openTakeOffer(offer);
                     } else {
                         log.error("You have already a \"Take offer\" tab open.");
                     }
