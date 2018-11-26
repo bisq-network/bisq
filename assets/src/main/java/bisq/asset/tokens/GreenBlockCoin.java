@@ -19,6 +19,7 @@ package bisq.asset.tokens;
 
 import bisq.asset.Erc20Token;
 
+// ICO token
 public class GreenBlockCoin extends Erc20Token {
 
     public GreenBlockCoin() {
