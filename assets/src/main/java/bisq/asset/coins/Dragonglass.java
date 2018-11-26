@@ -20,7 +20,7 @@ package bisq.asset.coins;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-// ICO token
+// Not an ICO token (see https://github.com/bisq-network/proposals/issues/57#issuecomment-441671418)
 public class Dragonglass extends Coin {
 
     public Dragonglass() {
