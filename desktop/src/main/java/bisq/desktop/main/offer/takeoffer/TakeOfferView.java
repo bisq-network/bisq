@@ -321,9 +321,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             tradeFeeInBtcToggle.setManaged(false);
             tradeFeeInBsqToggle.setVisible(false);
             tradeFeeInBsqToggle.setManaged(false);
-
-            tradeFeeDescriptionLabel.setVisible(false);
-            tradeFeeDescriptionLabel.setManaged(false);
         }
     }
 
