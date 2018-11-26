@@ -666,7 +666,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         ImageView p2PNetworkIcon = new ImageView();
         setRightAnchor(p2PNetworkIcon, 10d);
-        setBottomAnchor(p2PNetworkIcon, 7d);
+        setBottomAnchor(p2PNetworkIcon, 5d);
         p2PNetworkIcon.setOpacity(0.4);
         p2PNetworkIcon.idProperty().bind(model.getP2PNetworkIconId());
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
