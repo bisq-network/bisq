@@ -27,7 +27,7 @@ package bisq.asset;
  */
 public class AddressValidationResult {
 
-    private static AddressValidationResult VALID_ADDRESS = new AddressValidationResult(true, "", "");
+    private static final AddressValidationResult VALID_ADDRESS = new AddressValidationResult(true, "", "");
 
     private final boolean isValid;
     private final String message;

@@ -149,15 +149,12 @@ public class AssetTradeActivityCheck {
 
         // v0.9.0 (Date TBD)
         newlyAdded.add("ACM");
-        newlyAdded.add("BTC2");
         newlyAdded.add("BLUR");
         newlyAdded.add("CHA");
         newlyAdded.add("CROAT");
         newlyAdded.add("DRGL");
         newlyAdded.add("ETHS");
-        newlyAdded.add("GBK");
         newlyAdded.add("KEK");
-        newlyAdded.add("LOKI");
         newlyAdded.add("MASK");
         newlyAdded.add("MBGL");
         newlyAdded.add("MOX");
@@ -165,7 +162,6 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("NEOS");
         newlyAdded.add("PZDC");
         newlyAdded.add("QMCoin");
-        newlyAdded.add("QRL");
         newlyAdded.add("RADS");
         newlyAdded.add("RYO");
         newlyAdded.add("SUB1X");
