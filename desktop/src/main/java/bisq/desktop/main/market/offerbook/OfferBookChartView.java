@@ -172,6 +172,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
         bottomHBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(bottomHBox, new Insets(-5, 0, 0, 0));
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
         tupleBuy.second.setUserData(OfferPayload.Direction.BUY.name());
