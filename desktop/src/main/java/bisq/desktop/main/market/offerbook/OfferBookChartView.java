@@ -88,6 +88,8 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
@@ -116,7 +118,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
-    private ChangeListener<Number> bisqWindowVerticalSizeListener;
     private final double initialOfferTableViewHeight = 109;
     private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight / 4.0) + 10.0; // initial visible row count=4
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
@@ -209,7 +210,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 tradeCurrency -> {
                     String code = tradeCurrency.getCode();
                     volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
-                    xAxis.setTickLabelFormatter(new StringConverter<Number>() {
+                    xAxis.setTickLabelFormatter(new StringConverter<>() {
                         @Override
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
@@ -276,7 +277,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
         sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
 
-        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
+        ChangeListener<Number> bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
             double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
             if (buyOfferTableView.getHeight() != newTableViewHeight) {
                 buyOfferTableView.setMinHeight(newTableViewHeight);
@@ -302,14 +303,19 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void createChart() {
         xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
-        xAxis.setAutoRanging(true);
+        xAxis.setAutoRanging(false);
+        xAxis.setTickLabelGap(6);
+        xAxis.setTickMarkVisible(false);
+        xAxis.setMinorTickVisible(false);
 
         NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setSide(Side.RIGHT);
         yAxis.setAutoRanging(true);
-        yAxis.setLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode()));
-        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", ""));
+        yAxis.setTickMarkVisible(false);
+        yAxis.setMinorTickVisible(false);
+        yAxis.setTickLabelGap(5);
+        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis, "", " " + Res.getBaseCurrencyCode()));
 
         seriesBuy = new XYChart.Series<>();
         seriesSell = new XYChart.Series<>();
@@ -320,13 +326,42 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setId("charts");
         areaChart.setMinHeight(300);
         areaChart.setPrefHeight(300);
-        areaChart.setPadding(new Insets(0, 30, 0, 0));
+        areaChart.setCreateSymbols(false);
+        areaChart.setPadding(new Insets(0, 10, 0, 10));
         areaChart.getData().addAll(seriesBuy, seriesSell);
     }
 
     private void updateChartData() {
         seriesBuy.getData().clear();
         seriesSell.getData().clear();
+
+        final Optional<XYChart.Data> buyMinOptional = model.getBuyData().stream()
+                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
+                .or(() -> Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE)));
+
+        final Optional<XYChart.Data> buyMaxOptional = model.getBuyData().stream()
+                .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
+                .or(() -> Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE)));
+
+        final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
+                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
+                .or(() -> Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE)));
+
+        final Optional<XYChart.Data> sellMaxOptional = model.getSellData().stream()
+                .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
+                .or(() -> Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE)));
+
+        final double minValue = Double.min((double) buyMinOptional.get().getXValue(), (double) sellMinOptional.get().getXValue());
+        final double maxValue = Double.max((double) buyMaxOptional.get().getXValue(), (double) sellMaxOptional.get().getXValue());
+
+        if (minValue == Double.MAX_VALUE || maxValue == Double.MIN_VALUE) {
+            xAxis.setAutoRanging(true);
+        } else {
+            xAxis.setAutoRanging(false);
+            xAxis.setLowerBound(minValue);
+            xAxis.setUpperBound(maxValue);
+            xAxis.setTickUnit((maxValue - minValue) / 13);
+        }
 
         //noinspection unchecked
         seriesBuy.getData().addAll(model.getBuyData());
@@ -350,12 +385,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         priceColumn.getStyleClass().add("number-column");
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
+                        return new TableCell<>() {
                             private Offer offer;
-                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
@@ -382,8 +417,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                                 model.getZeroDecimalsForPrice(offer)));
                                     }
                                 } else {
-                                    if (listener != null)
-                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
+                                    model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                     setGraphic(null);
@@ -401,12 +435,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         volumeColumn.getStyleClass().add("number-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
+                        return new TableCell<>() {
                             private Offer offer;
-                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
@@ -433,8 +467,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                                 model.getMaxNumberOfPriceZeroDecimalsToColorize(offer)));
                                     }
                                 } else {
-                                    if (listener != null)
-                                        model.priceFeedService.updateCounterProperty().removeListener(listener);
+                                    model.priceFeedService.updateCounterProperty().removeListener(listener);
                                     this.offer = null;
                                     setText("");
                                     setGraphic(null);
@@ -451,10 +484,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         amountColumn.getStyleClass().add("number-column");
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem, OfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OfferListItem offerListItem, boolean empty) {
                                 super.updateItem(offerListItem, empty);
@@ -470,7 +503,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         // trader avatar
-        TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<OfferListItem, OfferListItem>(Res.get("offerbook.trader")) {
+        TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
@@ -479,12 +512,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         };
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
-                new Callback<TableColumn<OfferListItem, OfferListItem>, TableCell<OfferListItem,
-                        OfferListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<OfferListItem, OfferListItem> call(TableColumn<OfferListItem, OfferListItem> column) {
-                        return new TableCell<OfferListItem, OfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OfferListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
