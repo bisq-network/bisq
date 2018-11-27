@@ -524,6 +524,10 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-rd-white;
 }
 
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
+}
+
 .jfx-toggle-button,
 .jfx-toggle-button:armed,
 .jfx-toggle-button:hover,
@@ -756,6 +760,10 @@ bg color of non edit textFields: fafafa
 
 .nav-price-balance .jfx-combo-box > .input-line {
     -fx-pref-height: 0px;
+}
+
+.jfx-badge > .nav-button {
+    -fx-translate-y: 1;
 }
 
 .nav-button {
