@@ -184,9 +184,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
 
+        final Region daoButtonSpacer = getNavigationSpacer();
+
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             daoButton.setVisible(false);
             daoButton.setManaged(false);
+            daoButtonSpacer.setVisible(false);
+            daoButtonSpacer.setManaged(false);
         }
 
         root.sceneProperty().addListener((observable, oldValue, newValue) -> {
@@ -197,6 +201,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                         if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
                             daoButton.setVisible(true);
                             daoButton.setManaged(true);
+                            daoButtonSpacer.setVisible(true);
+                            daoButtonSpacer.setManaged(true);
                         }
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                         marketButton.fire();
@@ -258,7 +264,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
+                getNavigationSpacer(), accountButton, daoButtonSpacer, daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
