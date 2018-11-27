@@ -60,9 +60,8 @@
 .candlestick-bar {
     -fx-padding: 5;
     -demo-bar-fill: -bs-sell;
-    -fx-background-color: linear-gradient(derive(-demo-bar-fill, -30%), derive(-demo-bar-fill, -40%)),
-    -demo-bar-fill;
-    -fx-background-insets: 0, 1;
+    -fx-background-color: -demo-bar-fill;
+    -fx-background-insets: 0;
 }
 
 .candlestick-bar.close-above-open {
