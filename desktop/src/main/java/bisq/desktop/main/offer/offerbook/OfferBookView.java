@@ -27,6 +27,7 @@ import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
@@ -151,9 +152,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     public void initialize() {
-        root.setPadding(new Insets(20, 25, 5, 25));
+        root.setPadding(new Insets(15, 15, 5, 15));
 
-        addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
+        titledGroupBg.getStyleClass().add("last");
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER_LEFT);
@@ -197,7 +199,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setRowIndex(tableView, ++gridRow);
         GridPane.setColumnIndex(tableView, 0);
         GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(10, -10, -10, -10));
+        GridPane.setMargin(tableView, new Insets(10, 0, -10, 0));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
 
@@ -247,7 +249,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         GridPane.setValignment(nrOfOffersLabel, VPos.TOP);
         GridPane.setRowIndex(nrOfOffersLabel, ++gridRow);
         GridPane.setColumnIndex(nrOfOffersLabel, 0);
-        GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, -5));
+        GridPane.setMargin(nrOfOffersLabel, new Insets(10, 0, 0, 0));
         root.getChildren().add(nrOfOffersLabel);
 
         offerListListener = c -> nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));

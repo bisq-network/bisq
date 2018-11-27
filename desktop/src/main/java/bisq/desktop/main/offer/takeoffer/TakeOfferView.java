@@ -820,7 +820,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addGridPane() {
         gridPane = new GridPane();
         gridPane.getStyleClass().add("content-pane");
-        gridPane.setPadding(new Insets(30, 25, -1, 25));
+        gridPane.setPadding(new Insets(15, 15, -1, 15));
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         ColumnConstraints columnConstraints1 = new ColumnConstraints();

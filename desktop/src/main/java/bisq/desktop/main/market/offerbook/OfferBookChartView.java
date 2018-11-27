@@ -30,7 +30,6 @@ import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.CurrencyListItem;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.AppOptionKeys;
@@ -92,6 +91,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 
 @FxmlView
@@ -148,7 +148,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
 
-        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = FormBuilder.addTopLabelComboBox(Res.get("shared.currency"), Res.get("list.currency.select"), 5);
+        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
+                Res.get("list.currency.select"), 0);
         this.currencyComboBox = currencyComboBoxTuple.third;
         this.currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
