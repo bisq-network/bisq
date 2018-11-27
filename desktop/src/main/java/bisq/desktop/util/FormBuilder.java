@@ -160,6 +160,7 @@ public class FormBuilder {
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text, double top) {
         Label label = new AutoTooltipLabel(text);
         label.setWrapText(true);
+        label.setMaxWidth(600);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setHgrow(label, Priority.ALWAYS);
         GridPane.setRowIndex(label, rowIndex);

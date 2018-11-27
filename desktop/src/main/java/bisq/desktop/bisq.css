@@ -259,6 +259,10 @@ bg color of non edit textFields: fafafa
     -fx-border-color: -bs-rd-separator-dark;
 }
 
+.separator:vertical *.line {
+    -fx-border-width: 0 1 0 0;
+}
+
 .jfx-progress-bar > .bar,
 .jfx-progress-bar:indeterminate > .bar {
     -fx-background-color: -bs-rd-green;
@@ -1485,16 +1489,9 @@ textfield */
 
 /* TitledGroupBg */
 
-.titled-group-bg-label {
-    -fx-font-size: 1.308em;
+.titled-group-bg-label, .titled-group-bg-label-active {
+    -fx-font-size: 1.077em;
     -fx-font-family: "IBM Plex Sans Medium";
-    -fx-text-fill: -bs-rd-black;
-    -fx-background-color: transparent;
-}
-
-.titled-group-bg-label-active {
-    -fx-font-weight: normal;
-    -fx-font-size: 1.308em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
