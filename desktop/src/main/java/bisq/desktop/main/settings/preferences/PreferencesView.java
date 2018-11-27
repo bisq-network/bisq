@@ -50,6 +50,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -176,7 +177,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         initializeSeparator();
         initializeDisplayCurrencies();
         initializeDisplayOptions();
-        initializeDaoOptions();
+        if (DevEnv.isDaoActivated())
+            initializeDaoOptions();
     }
 
 
@@ -189,7 +191,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
-        activateDaoPreferences();
+        if (DevEnv.isDaoActivated())
+            activateDaoPreferences();
     }
 
     @Override
@@ -197,7 +200,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
-        deactivateDaoPreferences();
+        if (DevEnv.isDaoActivated())
+            deactivateDaoPreferences();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
