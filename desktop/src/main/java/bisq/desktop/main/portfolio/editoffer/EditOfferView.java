@@ -200,6 +200,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
                     log.debug("Edit offer was successful");
                     new Popup<>().feedback(Res.get("editOffer.success")).show();
                     spinnerInfoLabel.setText("");
+                    busyAnimation.stop();
                     close();
                 }, (message) -> {
                     log.error(message);

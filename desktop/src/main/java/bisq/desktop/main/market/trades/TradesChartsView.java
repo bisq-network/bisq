@@ -144,6 +144,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     public void initialize() {
+        root.setAlignment(Pos.CENTER_LEFT);
         toolBox = getToolBox();
         createCharts();
         createTable();
@@ -343,6 +344,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setPrefHeight(198);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
+        priceChart.setPadding(new Insets(0));
         //noinspection unchecked
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
@@ -389,6 +391,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeChart.setPrefHeight(148);
         volumeChart.setMaxHeight(200);
         volumeChart.setLegendVisible(false);
+        volumeChart.setPadding(new Insets(0));
     }
 
     private void updateChartData() {

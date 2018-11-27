@@ -156,7 +156,7 @@ bg color of non edit textFields: fafafa
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
-    -fx-selection-bar: derive(-fx-accent, 50%);
+    -fx-selection-bar: -bs-rd-nav-primary-background;
 
     -fx-selection-bar-non-focused: -fx-selection-bar;
 
@@ -259,6 +259,10 @@ bg color of non edit textFields: fafafa
     -fx-border-color: -bs-rd-separator-dark;
 }
 
+.separator:vertical *.line {
+    -fx-border-width: 0 1 0 0;
+}
+
 .jfx-progress-bar > .bar,
 .jfx-progress-bar:indeterminate > .bar {
     -fx-background-color: -bs-rd-green;
@@ -343,7 +347,7 @@ bg color of non edit textFields: fafafa
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background: -fx-selection-bar;
-    -fx-background-color: derive(-fx-accent, 60%);
+    -fx-background-color: -fx-selection-bar;
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
@@ -522,6 +526,10 @@ bg color of non edit textFields: fafafa
     -fx-font-weight: bold;
     -fx-font-size: 0.692em;
     -fx-text-fill: -bs-rd-white;
+}
+
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
 }
 
 .jfx-toggle-button,
@@ -758,6 +766,10 @@ bg color of non edit textFields: fafafa
     -fx-pref-height: 0px;
 }
 
+.jfx-badge > .nav-button {
+    -fx-translate-y: 1;
+}
+
 .nav-button {
     -fx-cursor: hand;
     -fx-background-color: transparent;
@@ -913,6 +925,8 @@ textfield */
 
 #funds-confidence {
     -fx-progress-color: -bs-dim-grey;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
 }
 
 .hyperlink,
@@ -1475,16 +1489,9 @@ textfield */
 
 /* TitledGroupBg */
 
-.titled-group-bg-label {
-    -fx-font-size: 1.308em;
+.titled-group-bg-label, .titled-group-bg-label-active {
+    -fx-font-size: 1.077em;
     -fx-font-family: "IBM Plex Sans Medium";
-    -fx-text-fill: -bs-rd-black;
-    -fx-background-color: transparent;
-}
-
-.titled-group-bg-label-active {
-    -fx-font-weight: normal;
-    -fx-font-size: 1.308em;
     -fx-text-fill: -bs-rd-black;
     -fx-background-color: transparent;
 }
@@ -1622,8 +1629,8 @@ textfield */
 }
 
 #charts .axis, #price-chart .axis, #volume-chart .axis {
-    -fx-tick-label-fill: -bs-rd-black;
-    -fx-tick-label-font-size: 0.846em;
+    -fx-tick-label-fill: -bs-rd-font-lighter;
+    -fx-tick-label-font-size: 0.769em;
 }
 
 #charts .chart-plot-background {
@@ -1656,7 +1663,7 @@ textfield */
 
 #charts .axis-label {
     -fx-font-size: 0.769em;
-    -fx-alignment: center;
+    -fx-alignment: left;
 }
 /********************************************************************************************************************
  *                                                                                                                  *

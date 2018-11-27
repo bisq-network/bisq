@@ -169,7 +169,7 @@ public class GUIUtil {
         //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
-                    .onClose(runnable::run)
+                    .onClose(runnable)
                     .useIUnderstandButton()
                     .show();
             DontShowAgainLookup.dontShowAgain(key, true);
@@ -211,7 +211,7 @@ public class GUIUtil {
                 PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
-                    persisted.getList().stream().forEach(paymentAccount -> {
+                    persisted.getList().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);
@@ -307,7 +307,7 @@ public class GUIUtil {
                                         (item.numTrades == 1 ? postFixSingle : postFixMulti));
                                 numberOfOffers.getStyleClass().add("offer-label-small");
                                 AnchorPane.setRightAnchor(numberOfOffers, 0.0);
-                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 2.0);
                                 pane.getChildren().add(numberOfOffers);
                             }
                     }
@@ -628,14 +628,6 @@ public class GUIUtil {
         return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
-    @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
-    public static String getPercentageOfTradeAmountForBsq(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        // TODO convert to BTC with market price
-        return "";
-       /* return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
-                " " + Res.get("guiUtil.ofTradeAmount") + ")";*/
-    }
-
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
         while (parent != null) {
@@ -710,7 +702,7 @@ public class GUIUtil {
                     .actionButtonText(Res.get("shared.shutDown"))
                     .onAction(() -> {
                         preferences.setResyncSpvRequested(true);
-                        UserThread.runAfter(BisqApp.getShutDownHandler()::run, 100, TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(BisqApp.getShutDownHandler(), 100, TimeUnit.MILLISECONDS);
                     })
                     .hideCloseButton()
                     .show();
@@ -810,7 +802,7 @@ public class GUIUtil {
                         txSize / 1000d,
                         type))
                 .actionButtonText(Res.get("shared.yes"))
-                .onAction(actionHandler::run)
+                .onAction(actionHandler)
                 .closeButtonText(Res.get("shared.cancel"))
                 .show();
     }
@@ -833,12 +825,12 @@ public class GUIUtil {
                                                                                                    Consumer<TradeCurrency> onTradeCurrencySelectedHandler) {
         gridRow = addRegionCountry(gridPane, gridRow, onCountrySelectedHandler);
 
-        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.<TradeCurrency>addComboBox(gridPane, ++gridRow,
+        ComboBox<TradeCurrency> currencyComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                 Res.get("shared.currency"));
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 
-        currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        currencyComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(TradeCurrency currency) {
                 return currency.getNameAndCode();
@@ -851,9 +843,8 @@ public class GUIUtil {
         });
         currencyComboBox.setDisable(true);
 
-        currencyComboBox.setOnAction(e -> {
-            onTradeCurrencySelectedHandler.accept(currencyComboBox.getSelectionModel().getSelectedItem());
-        });
+        currencyComboBox.setOnAction(e ->
+                onTradeCurrencySelectedHandler.accept(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         return new Tuple2<>(currencyComboBox, gridRow);
     }
@@ -865,7 +856,7 @@ public class GUIUtil {
 
         ComboBox<bisq.core.locale.Region> regionComboBox = tuple3.second;
         regionComboBox.setPromptText(Res.get("payment.select.region"));
-        regionComboBox.setConverter(new StringConverter<bisq.core.locale.Region>() {
+        regionComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(bisq.core.locale.Region region) {
                 return region.name;
@@ -882,7 +873,7 @@ public class GUIUtil {
         countryComboBox.setVisibleRowCount(15);
         countryComboBox.setDisable(true);
         countryComboBox.setPromptText(Res.get("payment.select.country"));
-        countryComboBox.setConverter(new StringConverter<Country>() {
+        countryComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Country country) {
                 return country.name + " (" + country.code + ")";
@@ -902,9 +893,8 @@ public class GUIUtil {
             }
         });
 
-        countryComboBox.setOnAction(e -> {
-            onCountrySelectedHandler.accept(countryComboBox.getSelectionModel().getSelectedItem());
-        });
+        countryComboBox.setOnAction(e ->
+                onCountrySelectedHandler.accept(countryComboBox.getSelectionModel().getSelectedItem()));
 
         return gridRow;
     }

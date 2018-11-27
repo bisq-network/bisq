@@ -166,8 +166,6 @@ class TransactionsListItem {
         txConfidenceIndicator.setId("funds-confidence");
         tooltip = new Tooltip(Res.get("shared.notUsedYet"));
         txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefHeight(30);
-        txConfidenceIndicator.setPrefWidth(30);
         txConfidenceIndicator.setTooltip(tooltip);
 
         txConfidenceListener = new TxConfidenceListener(txId) {

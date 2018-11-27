@@ -397,11 +397,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
-
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, -30d);
                     }
 
                     @Override
@@ -455,7 +454,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, -30d);
                     }
 
                     @Override
