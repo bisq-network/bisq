@@ -17,11 +17,9 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Coin;
 import bisq.asset.Base58BitcoinAddressValidator;
-
+import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
-import org.bitcoinj.core.NetworkParameters;
 
 public class BitcoinRhodium extends Coin {
 
