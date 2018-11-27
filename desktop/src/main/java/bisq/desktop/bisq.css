@@ -921,6 +921,8 @@ textfield */
 
 #funds-confidence {
     -fx-progress-color: -bs-dim-grey;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
 }
 
 .hyperlink,
