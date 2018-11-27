@@ -119,7 +119,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         PaymentAccountPayload sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
-                Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
+                Layout.TWICE_FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
                 formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
