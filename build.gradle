@@ -106,7 +106,7 @@ configure([project(':desktop'),
 
             // edit generated shell scripts such that they expect to be executed in the
             // project root dir as opposed to a 'bin' subdirectory
-            def windowsScriptFile = file("${rootProject.projectDir}/bisq-$applicationName.bat")
+            def windowsScriptFile = file("${rootProject.projectDir}/bisq-${applicationName}.bat")
             windowsScriptFile.text = windowsScriptFile.text.replace(
                 'set APP_HOME=%DIRNAME%..', 'set APP_HOME=%DIRNAME%')
 
