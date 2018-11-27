@@ -286,9 +286,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void onErase() {
         try {
-            boolean success = mobileNotificationService.sendEraseMessage();
-            if (!success)
-                log.warn("Erase message sending did not succeed");
+            mobileNotificationService.sendEraseMessage();
             reset();
         } catch (Exception e) {
             new Popup<>().error(e.toString()).show();
