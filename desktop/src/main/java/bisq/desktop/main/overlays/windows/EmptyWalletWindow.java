@@ -149,7 +149,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             gridPane.getColumnConstraints().remove(1);
 
         if (isBtc)
-            addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
+            addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 0);
 
         Coin totalBalance = getWalletService().getAvailableBalance();
         balanceTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
