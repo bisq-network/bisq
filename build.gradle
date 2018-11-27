@@ -47,7 +47,6 @@ configure(subprojects) {
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/8.0.3/release/' }
     }
 
     dependencies {
@@ -188,10 +187,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6') {
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.1') {
             exclude(module: 'slf4j-api')
         }
-        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6') {
+        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6.1') {
             exclude(module: 'slf4j-api')
         }
         compile('org.apache.httpcomponents:httpclient:4.5.3') {
