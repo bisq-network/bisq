@@ -494,7 +494,7 @@ public class CurrencyUtil {
     // Excludes all assets which got removed by DAO voting
     public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService) {
         return getAllSortedCryptoCurrencies().stream()
-                .filter(e -> assetService.isActive(e.getCode()))
+                .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
                 .collect(Collectors.toList());
     }
 }
