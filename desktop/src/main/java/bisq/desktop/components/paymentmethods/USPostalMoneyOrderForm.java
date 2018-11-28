@@ -76,7 +76,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
 
         postalAddressTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.postal.address"), "").second;
-        postalAddressTextArea.setPrefHeight(60);
+        postalAddressTextArea.setPrefHeight(70);
         //postalAddressTextArea.setValidator(usPostalMoneyOrderValidator);
         postalAddressTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             usPostalMoneyOrderAccount.setPostalAddress(newValue);
@@ -108,7 +108,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
                 usPostalMoneyOrderAccount.getHolderName());
         TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());
-        textArea.setPrefHeight(60);
+        textArea.setPrefHeight(70);
         textArea.setEditable(false);
         TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";

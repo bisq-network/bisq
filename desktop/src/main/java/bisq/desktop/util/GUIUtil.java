@@ -404,7 +404,7 @@ public class GUIUtil {
                                         (offerCountOptional.get() == 1 ? postFixSingle : postFixMulti));
                                 numberOfOffers.getStyleClass().add("offer-label-small");
                                 AnchorPane.setRightAnchor(numberOfOffers, 0.0);
-                                AnchorPane.setBottomAnchor(numberOfOffers, 0.0);
+                                AnchorPane.setBottomAnchor(numberOfOffers, 2.0);
                                 pane.getChildren().add(numberOfOffers);
                             }
                     }

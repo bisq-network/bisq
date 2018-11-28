@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -88,7 +90,7 @@ public final class PromptPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "PromptPay ID: " + promptPayId;
+        return Res.getWithCol("payment.promptPay.promptPayId") + promptPayId;
     }
 
     @Override

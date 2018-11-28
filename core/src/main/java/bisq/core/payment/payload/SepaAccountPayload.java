@@ -19,6 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -146,15 +147,15 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", Country code: " + getCountryCode();
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", " + Res.getWithCol("payment.bank.country") + " " + getCountryCode();
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
-                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
+                Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);
     }
 
     @Override

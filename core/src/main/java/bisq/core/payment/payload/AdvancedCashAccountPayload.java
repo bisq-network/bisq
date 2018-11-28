@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -89,7 +91,7 @@ public final class AdvancedCashAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Advanced Cash - Wallet ID: " + accountNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.wallet") + " " + accountNr;
     }
 
     @Override

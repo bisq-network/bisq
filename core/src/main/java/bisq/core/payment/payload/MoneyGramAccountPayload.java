@@ -19,6 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -110,16 +111,17 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "MoneyGram - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String state = BankUtil.isStateRequired(countryCode) ? ("State: " + this.state + "\n") : "";
-        return "Full name: " + holderName + "\n" +
+        String state = BankUtil.isStateRequired(countryCode) ? (Res.getWithCol("payment.account.state") +
+                " " + this.state + "\n") : "";
+        return Res.getWithCol("payment.account.fullName") + " " + holderName + "\n" +
                 state +
-                "Country: " + CountryUtil.getNameByCode(countryCode) + "\n" +
-                "Email: " + email;
+                Res.getWithCol("payment.account.country") + " " + CountryUtil.getNameByCode(countryCode) + "\n" +
+                Res.getWithCol("payment.email") + " " + email;
     }
 
     @Override
