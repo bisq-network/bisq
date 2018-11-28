@@ -356,7 +356,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setGraphic(iconView);
         iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
         createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
-
         setDirectionTitles();
     }
 
@@ -861,13 +860,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         iconView.setId("image-remove");
                                         title = Res.get("shared.remove");
                                         button.setId("cancel-button");
-                                        button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
+
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
-                                        button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
                                         title = Res.get("offerbook.takeOffer");
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));

@@ -46,7 +46,7 @@
 .candlestick-line {
     -stick-line-fill: -bs-sell;
     -fx-stroke: -stick-line-fill;
-    -fx-stroke-width: 1x;
+    -fx-stroke-width: 1px;
 }
 
 .candlestick-line.close-above-open {

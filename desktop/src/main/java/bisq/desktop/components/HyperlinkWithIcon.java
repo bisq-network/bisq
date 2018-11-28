@@ -44,7 +44,7 @@ public class HyperlinkWithIcon extends Hyperlink {
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);
-        icon.getStyleClass().add("hyperlink");
+        icon.getStyleClass().addAll("hyperlink", "no-underline");
         icon.setPadding(new Insets(0));
 
         setGraphic(icon);

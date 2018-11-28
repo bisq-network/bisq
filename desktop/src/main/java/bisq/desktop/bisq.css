@@ -936,10 +936,12 @@ textfield */
 .hyperlink:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
+    -fx-underline: true;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
-.hyperlink {
-    -fx-text-fill: -fx-accent;
+.hyperlink.no-underline {
+    -fx-underline: false;
 }
 
 .hyperlink:hover {
@@ -1059,7 +1061,7 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text {
-    -fx-fill: -fx-accent;
+    -fx-fill: -bs-rd-font-dark;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
@@ -1682,7 +1684,6 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-
 #sell-button-big {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
@@ -1692,6 +1693,12 @@ textfield */
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
+}
+
+#sell-button-big.grey-style, #buy-button-big.grey-style,
+#sell-button.grey-style, #buy-button.grey-style {
+    -fx-background-color: -bs-rd-grey-light;
+    -fx-text-fill: -bs-rd-font-dark-grey;
 }
 
 .action-button:disabled, #sell-button:disabled, #buy-button:disabled {
