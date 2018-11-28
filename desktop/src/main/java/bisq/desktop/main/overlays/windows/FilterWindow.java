@@ -21,7 +21,6 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
@@ -49,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
+import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private SendFilterMessageHandler sendFilterMessageHandler;
@@ -126,19 +126,19 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
-        InputTextField offerIdsInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers"));
-        InputTextField nodesInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions"));
+        InputTextField offerIdsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers"));
+        InputTextField nodesInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
         nodesInputTextField.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
-        InputTextField paymentAccountFilterInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts"));
+        InputTextField paymentAccountFilterInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
         paymentAccountFilterInputTextField.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
-        InputTextField bannedCurrenciesInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
-        InputTextField bannedPaymentMethodsInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods"));
+        InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
+        InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField arbitratorsInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
-        InputTextField seedNodesInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
-        InputTextField priceRelayNodesInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
-        InputTextField btcNodesInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
+        InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
+        InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
+        InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
+        InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork"));
 
         final Filter filter = filterManager.getDevelopersFilter();
