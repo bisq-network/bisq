@@ -656,28 +656,28 @@ public class FormBuilder {
     // Label  + TextField + Label  + TextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
-        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
-
+    public static Tuple4<Label, TextField, Label, TextField> addCompactTopLabelTextFieldTopLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
         TextField textField1 = new BisqTextField();
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
-        Label label2 = new AutoTooltipLabel(title2);
-        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+
+        final Tuple2<Label, VBox> topLabelWithVBox1 = getTopLabelWithVBox(title1, textField1);
+
         TextField textField2 = new BisqTextField();
         textField2.setEditable(false);
         textField2.setMouseTransparent(true);
         textField2.setFocusTraversable(false);
 
+        final Tuple2<Label, VBox> topLabelWithVBox2 = getTopLabelWithVBox(title2, textField2);
+
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        hBox.getChildren().addAll(textField1, label2, textField2);
+        hBox.getChildren().addAll(topLabelWithVBox1.second, topLabelWithVBox2.second);
         GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         gridPane.getChildren().add(hBox);
 
-        return new Tuple4<>(label1, textField1, label2, textField2);
+        return new Tuple4<>(topLabelWithVBox1.first, textField1, topLabelWithVBox2.first, textField2);
     }
 
 

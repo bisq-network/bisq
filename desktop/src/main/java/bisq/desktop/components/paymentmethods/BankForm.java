@@ -419,7 +419,7 @@ abstract class BankForm extends GeneralBankForm {
     private void addHolderNameAndIdForDisplayAccount() {
         String countryCode = bankAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
-            Tuple4<Label, TextField, Label, TextField> tuple = addLabelTextFieldLabelTextField(gridPane, ++gridRow,
+            Tuple4<Label, TextField, Label, TextField> tuple = addCompactTopLabelTextFieldTopLabelTextField(gridPane, ++gridRow,
                     Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
