@@ -19,6 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -117,17 +118,17 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
 
     @Override
     public String getPaymentDetails() {
-        return "Western Union - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        String cityState = BankUtil.isStateRequired(countryCode) ? ("City / State: " + city + " / " + state + "\n")
-                : ("City: " + city + "\n");
-        return "Full name: " + holderName + "\n" +
+        String cityState = BankUtil.isStateRequired(countryCode) ? (Res.get("payment.account.city") + " / " + Res.getWithCol("payment.account.state") + " " + city + " / " + state + "\n")
+                : (Res.getWithCol("payment.account.city") + " " + city + "\n");
+        return Res.getWithCol("payment.account.fullName") + " " + holderName + "\n" +
                 cityState +
-                "County: " + CountryUtil.getNameByCode(countryCode) + "\n" +
-                "Email: " + email;
+                Res.getWithCol("payment.country") + " " + CountryUtil.getNameByCode(countryCode) + "\n" +
+                Res.getWithCol("payment.email") + " " + email;
     }
 
     @Override

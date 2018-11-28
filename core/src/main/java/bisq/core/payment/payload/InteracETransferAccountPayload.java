@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -105,15 +107,17 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return "Interac e-Transfer - Holder name: " + holderName + ", email: " + email + ", secret question: " + question + ", answer: " + answer;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.get("payment.email") + " " + email + ", " + Res.getWithCol("payment.secret") + " " +
+                question + ", " + Res.getWithCol("payment.answer") + " " + answer;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
-                "Email: " + email + "\n" +
-                "Secret question: " + question + "\n" +
-                "Answer: " + answer;
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+                Res.getWithCol("payment.email") + " " + email + "\n" +
+                Res.getWithCol("payment.secret") + " " + question + "\n" +
+                Res.getWithCol("payment.answer") + " " + answer;
     }
 
     @Override
