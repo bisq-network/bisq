@@ -936,10 +936,12 @@ textfield */
 .hyperlink:focused {
     -fx-border-style: none;
     -fx-border-width: 0px;
+    -fx-underline: true;
+    -fx-text-fill: -bs-rd-font-dark;
 }
 
-.hyperlink {
-    -fx-text-fill: -fx-accent;
+.hyperlink.no-underline {
+    -fx-underline: false;
 }
 
 .hyperlink:hover {
@@ -1059,7 +1061,7 @@ textfield */
 }
 
 .table-view .table-row-cell .hyperlink .text {
-    -fx-fill: -fx-accent;
+    -fx-fill: -bs-rd-font-dark;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
