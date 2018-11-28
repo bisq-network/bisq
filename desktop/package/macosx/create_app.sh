@@ -19,7 +19,10 @@ EXE_JAR=build/libs/desktop-$version-all.jar
 echo Unzipping jar to delete module config
 tmp=build/libs/tmp
 unzip -o -q $EXE_JAR -d $tmp
-rm $tmp/module-info.class
+
+# Sometimes $tmp/module-info.class is not available. TODO check why and if still needed
+rm -f $tmp/module-info.class
+
 rm $EXE_JAR
 echo Zipping jar again without module config
 cd $tmp; zip -r -q -X "../desktop-$version-all.jar" *
