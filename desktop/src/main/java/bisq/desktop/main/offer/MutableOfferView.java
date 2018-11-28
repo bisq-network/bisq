@@ -309,12 +309,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
-            nextButton.setId("buy-button");
             percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
         } else {
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
-            nextButton.setId("sell-button");
             percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
         }
 

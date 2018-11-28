@@ -1684,7 +1684,6 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-
 #sell-button-big {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
@@ -1694,6 +1693,12 @@ textfield */
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
+}
+
+#sell-button-big.grey-style, #buy-button-big.grey-style,
+#sell-button.grey-style, #buy-button.grey-style {
+    -fx-background-color: -bs-rd-grey-light;
+    -fx-text-fill: -bs-rd-font-dark-grey;
 }
 
 .action-button:disabled, #sell-button:disabled, #buy-button:disabled {

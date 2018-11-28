@@ -29,20 +29,20 @@
     -fx-image: url("../../images/remove.png");
 }
 
-#image-buy {
-    -fx-image: url("../../images/buy.png");
-}
-
 #image-buy-white {
     -fx-image: url("../../images/buy_white.png");
 }
 
-#image-sell {
-    -fx-image: url("../../images/sell.png");
+#image-buy-green {
+    -fx-image: url("../../images/buy_green.png");
 }
 
 #image-sell-white {
     -fx-image: url("../../images/sell_white.png");
+}
+
+#image-sell-red {
+    -fx-image: url("../../images/sell_red.png");
 }
 
 #image-expand {
@@ -51,14 +51,6 @@
 
 #image-collapse {
     -fx-image: url("../../images/collapse.png");
-}
-
-#image-buy-large {
-    -fx-image: url("../../images/buy_large.png");
-}
-
-#image-sell-large {
-    -fx-image: url("../../images/sell_large.png");
 }
 
 /* navigation buttons */
