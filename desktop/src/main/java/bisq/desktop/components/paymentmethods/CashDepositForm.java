@@ -70,7 +70,7 @@ public class CashDepositForm extends GeneralBankForm {
                     data.getHolderName() + " / " + data.getHolderEmail());
 
         if (!showRequirements)
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), Res.get("payment.bank.country"),
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), Res.getWithCol("payment.bank.country"),
                     CountryUtil.getNameAndCode(countryCode));
         else
             requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
@@ -109,13 +109,13 @@ public class CashDepositForm extends GeneralBankForm {
         if (bankNameBankIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel + " / " +
-                            bankIdLabel + ":",
+                            bankIdLabel,
                     data.getBankName() + " / " + data.getBankId());
         }
         if (bankNameBranchIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankNameLabel + " / " +
-                            branchIdLabel + ":",
+                            branchIdLabel,
                     data.getBankName() + " / " + data.getBranchId());
         }
 
@@ -125,7 +125,7 @@ public class CashDepositForm extends GeneralBankForm {
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && !branchIdAccountNrCombined && bankIdBranchIdCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow,
                     bankIdLabel + " / " +
-                            branchIdLabel + ":",
+                            branchIdLabel,
                     data.getBankId() + " / " + data.getBranchId());
         }
 
@@ -135,7 +135,7 @@ public class CashDepositForm extends GeneralBankForm {
         if (!bankNameBranchIdCombined && !bankIdBranchIdCombined && branchIdAccountNrCombined) {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     branchIdLabel + " / " +
-                            accountNrLabel + ":",
+                            accountNrLabel,
                     data.getBranchId() + " / " + data.getAccountNr());
         }
 

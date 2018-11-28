@@ -164,25 +164,25 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     @Override
     public String getPaymentDetailsForTradePopup() {
         String bankName = BankUtil.isBankNameRequired(countryCode) ?
-                BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
+                BankUtil.getBankNameLabel(countryCode) + ": " + this.bankName + "\n" : "";
         String bankId = BankUtil.isBankIdRequired(countryCode) ?
-                BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
+                BankUtil.getBankIdLabel(countryCode) + ": " + this.bankId + "\n" : "";
         String branchId = BankUtil.isBranchIdRequired(countryCode) ?
-                BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
+                BankUtil.getBranchIdLabel(countryCode) + ": " + this.branchId + "\n" : "";
         String nationalAccountId = BankUtil.isNationalAccountIdRequired(countryCode) ?
-                BankUtil.getNationalAccountIdLabel(countryCode) + " " + this.nationalAccountId + "\n" : "";
+                BankUtil.getNationalAccountIdLabel(countryCode) + ": " + this.nationalAccountId + "\n" : "";
         String accountNr = BankUtil.isAccountNrRequired(countryCode) ?
-                BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
+                BankUtil.getAccountNrLabel(countryCode) + ": " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
-                BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
+                BankUtil.getAccountTypeLabel(countryCode) + ": " + this.accountType + "\n" : "";
         String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
-                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+                (BankUtil.getHolderIdLabel(countryCode) + ": " + holderTaxId + "\n") : "";
         String requirementsString = requirements != null && !requirements.isEmpty() ?
-                ("Extra requirements: " + requirements + "\n") : "";
+                (Res.getWithCol("payment.extras") + " " + requirements + "\n") : "";
         String emailString = holderEmail != null ?
-                (Res.get("payment.email") + " " + holderEmail + "\n") : "";
+                (Res.getWithCol("payment.email") + " " + holderEmail + "\n") : "";
 
-        return "Holder name: " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
                 emailString +
                 bankName +
                 bankId +
@@ -192,7 +192,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 accountType +
                 holderTaxIdString +
                 requirementsString +
-                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
+                Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);
     }
 
     public String getHolderIdLabel() {
