@@ -311,11 +311,17 @@ abstract class BankForm extends GeneralBankForm {
             validateInput(countryCode);
 
             holderNameInputTextField.resetValidation();
+            holderNameInputTextField.validate();
             bankNameInputTextField.resetValidation();
+            bankNameInputTextField.validate();
             bankIdInputTextField.resetValidation();
+            bankIdInputTextField.validate();
             branchIdInputTextField.resetValidation();
+            branchIdInputTextField.validate();
             accountNrInputTextField.resetValidation();
+            accountNrInputTextField.validate();
             nationalAccountIdInputTextField.resetValidation();
+            nationalAccountIdInputTextField.validate();
 
             boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
             if (requiresHolderId) {
