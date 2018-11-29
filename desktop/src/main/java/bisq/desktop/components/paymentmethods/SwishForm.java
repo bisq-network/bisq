@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class SwishForm extends PaymentMethodForm {
@@ -50,9 +51,9 @@ public class SwishForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((SwishAccountPayload) paymentAccountPayload).getHolderName());
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SwishAccountPayload) paymentAccountPayload).getMobileNr());
         return gridRow;
     }
