@@ -156,7 +156,8 @@ bg color of non edit textFields: fafafa
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
-    -fx-selection-bar: -bs-rd-nav-primary-background;
+    /*-fx-selection-bar: -bs-rd-nav-primary-background;*/
+    -fx-selection-bar: #e1f5e3;
 
     -fx-selection-bar-non-focused: -fx-selection-bar;
 
@@ -1034,7 +1035,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
-    -fx-fill: -bs-rd-white;
+    -fx-fill: -bs-rd-black;
 }
 
 .table-view .table-row-cell:selected .button .text {
@@ -1047,7 +1048,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .copy-icon .text {
-    -fx-fill: -bs-rd-white;
+    -fx-fill: -bs-rd-black;
 }
 
 .table-view .table-row-cell:selected .copy-icon .text:hover {
@@ -1055,7 +1056,7 @@ textfield */
 }
 
 .table-view .table-row-cell:selected .hyperlink .text {
-    -fx-fill: -bs-rd-white;
+    -fx-fill: -bs-rd-black;
     -fx-border-style: none;
     -fx-border-width: 0px;
 }
