@@ -358,6 +358,14 @@ public class CashDepositForm extends GeneralBankForm {
             accountNrInputTextField.resetValidation();
             nationalAccountIdInputTextField.resetValidation();
 
+            holderNameInputTextField.validate();
+            emailInputTextField.validate();
+            bankNameInputTextField.validate();
+            bankIdInputTextField.validate();
+            branchIdInputTextField.validate();
+            accountNrInputTextField.validate();
+            nationalAccountIdInputTextField.validate();
+
             boolean requiresHolderId = BankUtil.isHolderIdRequired(countryCode);
             if (requiresHolderId) {
                 holderNameInputTextField.minWidthProperty().unbind();
