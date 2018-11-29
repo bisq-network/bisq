@@ -87,7 +87,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -523,8 +522,8 @@ public class DaoFacade implements DaoSetupService {
 
 
     public List<Bond> getAllBonds() {
-        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
-        bonds.addAll(bondedRolesRepository.getBonds());
+        List<Bond> bonds = bondedReputationRepository.getActiveBonds();
+        bonds.addAll(bondedRolesRepository.getActiveBonds());
         return bonds;
     }
 

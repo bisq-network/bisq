@@ -842,16 +842,17 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                 iconButton = item.getIconButton();
                                 if (iconButton != null) {
                                     iconButton.setOnAction(e -> {
+                                        onSelectProposal(item);
                                         if (areVoteButtonsVisible) {
-                                            onSelectProposal(item);
-                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
-                                                onRemoveProposal();
-                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
                                                 onReject();
                                             else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
                                                 onIgnore();
                                             else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
                                                 onAccept();
+                                        } else {
+                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                                onRemoveProposal();
                                         }
                                     });
 

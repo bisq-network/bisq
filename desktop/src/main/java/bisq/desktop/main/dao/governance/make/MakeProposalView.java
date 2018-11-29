@@ -29,7 +29,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.bond.Bond;
@@ -83,7 +82,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
-    private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final PhasesView phasesView;
@@ -107,7 +105,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     private MakeProposalView(DaoFacade daoFacade,
-                             BsqWalletService bsqWalletService,
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              PhasesView phasesView,
@@ -115,7 +112,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
-        this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.phasesView = phasesView;

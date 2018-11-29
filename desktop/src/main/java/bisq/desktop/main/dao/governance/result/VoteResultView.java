@@ -333,6 +333,16 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 .stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
+                .filter(evaluatedProposal -> {
+                    boolean containsKey = ballotByProposalTxIdMap.containsKey(evaluatedProposal.getProposalTxId());
+
+                    // We saw in testing that the ballot was not there for an evaluatedProposal. We could not reproduce that
+                    // so far but to avoid a nullPointer we filter out such cases.
+                    if (!containsKey)
+                        log.warn("ballotByProposalTxIdMap does not contain expected proposalTxId()={}", evaluatedProposal.getProposalTxId());
+
+                    return containsKey;
+                })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))

@@ -40,8 +40,10 @@ import javafx.collections.ObservableList;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
@@ -183,6 +185,10 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     public boolean isBondedAssetAlreadyInBond(R bondedAsset) {
         boolean contains = bondByUidMap.containsKey(bondedAsset.getUid());
         return contains && bondByUidMap.get(bondedAsset.getUid()).getLockupTxId() != null;
+    }
+
+    public List<Bond> getActiveBonds() {
+        return bonds.stream().filter(bond -> bond.isActive()).collect(Collectors.toList());
     }
 
 

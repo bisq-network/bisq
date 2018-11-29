@@ -70,6 +70,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             reimbursementIssuanceTxTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
     private HyperlinkWithIcon hyperlinkWithIcon;
+    private Coin availableAmount;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +205,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
-        Coin availableAmount = issuedAmountFromGenesis
+        availableAmount = issuedAmountFromGenesis
                 .add(issuedAmountFromCompRequests)
                 .add(issuedAmountFromReimbursementRequests)
                 .subtract(burntFee)
@@ -224,14 +225,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updatePrice() {
-        Coin issuedAmount = daoFacade.getGenesisTotalSupply();
         Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
         if (optionalBsqPrice.isPresent()) {
             Price bsqPrice = optionalBsqPrice.get();
             priceTextField.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
 
             marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
-                    priceFeedService.getMarketPrice("USD"), issuedAmount));
+                    priceFeedService.getMarketPrice("USD"), availableAmount));
         } else {
             priceTextField.setText(Res.get("shared.na"));
             marketCapTextField.setText(Res.get("shared.na"));

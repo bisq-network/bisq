@@ -74,9 +74,7 @@ public class BondedReputationRepository extends BondRepository<BondedReputation,
         // listeners and update our data with stale data from bondedRolesRepository. After that the bondedRolesRepository
         // gets triggered the listeners and we would miss the current state if we would not listen here as well on the
         // bond list.
-        bondedRolesRepository.getBonds().addListener((ListChangeListener<BondedRole>) c -> {
-            update();
-        });
+        bondedRolesRepository.getBonds().addListener((ListChangeListener<BondedRole>) c -> update());
     }
 
 
