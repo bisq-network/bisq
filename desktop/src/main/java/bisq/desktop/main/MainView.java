@@ -391,7 +391,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         marketPriceBox.setAlignment(Pos.CENTER_LEFT);
 
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
-        priceComboBox.setVisibleRowCount(20);
+        priceComboBox.setVisibleRowCount(12);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setPadding(new Insets(0, 0, -4, 0));

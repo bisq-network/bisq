@@ -190,7 +190,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox = currencyBoxTuple.third;
 
         paymentMethodComboBox = paymentBoxTuple.third;
-        paymentMethodComboBox.setVisibleRowCount(20);
+        paymentMethodComboBox.setVisibleRowCount(12);
         paymentMethodComboBox.setButtonCell(GUIUtil.getPaymentMethodButtonCell());
         paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
 
