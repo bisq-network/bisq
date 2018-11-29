@@ -202,6 +202,14 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
 
+        if (selectedTab != null && selectedTab.getContent() != null) {
+            if (selectedTab.getContent() instanceof ScrollPane) {
+                ((ScrollPane) selectedTab.getContent()).setContent(null);
+            } else {
+                selectedTab.setContent(null);
+            }
+        }
+
         if (view instanceof ArbitratorRegistrationView) {
             if (arbitratorRegistrationTab != null) {
                 selectedTab = arbitratorRegistrationTab;
