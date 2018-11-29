@@ -55,6 +55,8 @@ public class MoneyGramForm extends PaymentMethodForm {
         final MoneyGramAccountPayload payload = (MoneyGramAccountPayload) paymentAccountPayload;
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.email"),
+                payload.getEmail());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(((MoneyGramAccountPayload) paymentAccountPayload).getCountryCode()));
@@ -62,8 +64,6 @@ public class MoneyGramForm extends PaymentMethodForm {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("payment.account.state"),
                     payload.getState());
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
-                payload.getEmail());
 
         return gridRow;
     }
