@@ -159,8 +159,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.Offer"));
 
-        String fiatDirectionInfo = ":";
-        String btcDirectionInfo = ":";
+        String fiatDirectionInfo = "";
+        String btcDirectionInfo = "";
         OfferPayload.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.get("shared.offerType");
