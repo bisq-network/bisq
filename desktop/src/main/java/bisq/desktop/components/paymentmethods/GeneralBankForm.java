@@ -101,7 +101,7 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
     }
 
     void validateInput(String countryCode) {
-        if (BankUtil.useValidation(countryCode) && !validatorsApplied) {
+        if (BankUtil.useValidation(countryCode)) {
             validatorsApplied = true;
             if (useHolderID)
                 holderIdInputTextField.setValidator(inputValidator);
