@@ -104,6 +104,16 @@ configure([project(':desktop'),
                 into "${rootProject.projectDir}/lib"
             }
 
+            // edit generated shell scripts such that they expect to be executed in the
+            // project root dir as opposed to a 'bin' subdirectory
+            def windowsScriptFile = file("${rootProject.projectDir}/bisq-${applicationName}.bat")
+            windowsScriptFile.text = windowsScriptFile.text.replace(
+                'set APP_HOME=%DIRNAME%..', 'set APP_HOME=%DIRNAME%')
+
+            def unixScriptFile = file("${rootProject.projectDir}/bisq-$applicationName")
+            unixScriptFile.text = unixScriptFile.text.replace(
+                'cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`" >/dev/null')
+
             if (osdetector.os != 'windows')
                 delete fileTree(dir: rootProject.projectDir, include: 'bisq-*.bat')
             else
@@ -114,18 +124,6 @@ configure([project(':desktop'),
     startScripts {
         // rename scripts from, e.g. `desktop` to `bisq-desktop`
         applicationName = "bisq-$applicationName"
-
-        // edit generated shell scripts such that they expect to be executed in the
-        // project root dir as opposed to a 'bin' subdirectory
-        doLast {
-            def windowsScriptFile = file getWindowsScript()
-            windowsScriptFile.text = windowsScriptFile.text.replace(
-                'set APP_HOME=%DIRNAME%..', 'set APP_HOME=%DIRNAME%')
-
-            def unixScriptFile = file getUnixScript()
-            unixScriptFile.text = unixScriptFile.text.replace(
-                'cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`" >/dev/null')
-        }
     }
 }
 
