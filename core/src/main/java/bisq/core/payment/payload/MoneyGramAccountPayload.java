@@ -120,7 +120,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 " " + this.state + "\n") : "";
         return Res.getWithCol("payment.account.fullName") + " " + holderName + "\n" +
                 state +
-                Res.getWithCol("payment.account.country") + " " + CountryUtil.getNameByCode(countryCode) + "\n" +
+                Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode) + "\n" +
                 Res.getWithCol("payment.email") + " " + email;
     }
 
