@@ -67,7 +67,7 @@ public class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificati
 
     public void show() {
         if (headLine == null)
-            headLine = Res.get("dao.proofOfBurn.signature.window.title");
+            headLine = Res.get("dao.proofOfBurn.verify.window.title");
 
         width = 800;
         createGridPane();
@@ -82,9 +82,9 @@ public class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificati
         FormBuilder.addTopLabelTextField(gridPane, rowIndex, Res.get("dao.proofOfBurn.pubKey"), pubKey, 40);
         InputTextField messageInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.message"));
         InputTextField signatureInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.sig"));
-        Button signButton = FormBuilder.addButton(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.sign"), 10);
+        Button verifyButton = FormBuilder.addButton(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.verify"), 10);
 
-        signButton.setOnAction(e -> {
+        verifyButton.setOnAction(e -> {
             try {
                 verificationResultBox.setVisible(true);
                 proofOfBurnService.verify(messageInputTextField.getText(), pubKey, signatureInputTextField.getText());

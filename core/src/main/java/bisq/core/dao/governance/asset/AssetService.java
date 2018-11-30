@@ -36,6 +36,7 @@ import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -84,6 +85,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     private final WalletsManager walletsManager;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final DaoStateService daoStateService;
+    private final BsqFormatter bsqFormatter;
 
     @Getter
     private IntegerProperty updateFlag = new SimpleIntegerProperty(0);
@@ -104,12 +106,14 @@ public class AssetService implements DaoSetupService, DaoStateListener {
                         BtcWalletService btcWalletService,
                         WalletsManager walletsManager,
                         TradeStatisticsManager tradeStatisticsManager,
-                        DaoStateService daoStateService) {
+                        DaoStateService daoStateService,
+                        BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.walletsManager = walletsManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.daoStateService = daoStateService;
+        this.bsqFormatter = bsqFormatter;
     }
 
     public void onAllServicesInitialized() {
@@ -211,6 +215,13 @@ public class AssetService implements DaoSetupService, DaoStateListener {
 
     @NotNull
     private Long getLookBackPeriodInDays(StatefulAsset statefulAsset) {
+        // We need to use the block height of the fee payment tx not the current one as feePerDay might have been
+        // changed in the meantime.
+        long bsqFeePerDay = statefulAsset.getLastFeePayment()
+                .flatMap(feePayment -> daoStateService.getTx(feePayment.getTxId()))
+                .map(tx -> daoStateService.getParamValueAsCoin(Param.ASSET_LISTING_FEE_PER_DAY, tx.getBlockHeight()).value)
+                .orElse(bsqFormatter.parseParamValueToCoin(Param.ASSET_LISTING_FEE_PER_DAY, Param.ASSET_LISTING_FEE_PER_DAY.getDefaultValue()).value);
+
         return statefulAsset.getLastFeePayment()
                 .map(feePayment -> feePayment.daysCoveredByFee(bsqFeePerDay))
                 .orElse(DEFAULT_LOOK_BACK_PERIOD);

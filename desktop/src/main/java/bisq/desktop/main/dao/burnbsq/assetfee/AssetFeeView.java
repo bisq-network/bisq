@@ -164,20 +164,29 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         payFeeButton.setOnAction((event) -> {
             Coin listingFee = getListingFee();
-            try {
-                Transaction transaction = assetService.payFee(selectedAsset, listingFee.value);
-                Coin miningFee = transaction.getFee();
-                int txSize = transaction.bitcoinSerialize().length;
+            long days = getDays();
+            // We don't allow shorter periods as it would allow an attacker to try to deactivate other coins by making a
+            // small fee payment to reduce the trial period and look back period.
+            // Still not a perfect solution but should be good enough for now.
+            long minDays = 30;
+            if (days >= minDays) {
+                try {
+                    Transaction transaction = assetService.payFee(selectedAsset, listingFee.value);
+                    Coin miningFee = transaction.getFee();
+                    int txSize = transaction.bitcoinSerialize().length;
 
-                if (!DevEnv.isDevMode()) {
-                    GUIUtil.showBsqFeeInfoPopup(listingFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                            Res.get("dao.burnBsq.assetFee"), () -> doPublishFeeTx(transaction));
-                } else {
-                    doPublishFeeTx(transaction);
+                    if (!DevEnv.isDevMode()) {
+                        GUIUtil.showBsqFeeInfoPopup(listingFee, miningFee, txSize, bsqFormatter, btcFormatter,
+                                Res.get("dao.burnBsq.assetFee"), () -> doPublishFeeTx(transaction));
+                    } else {
+                        doPublishFeeTx(transaction);
+                    }
+                } catch (InsufficientMoneyException | TxException e) {
+                    e.printStackTrace();
+                    new Popup<>().error(e.toString()).show();
                 }
-            } catch (InsufficientMoneyException | TxException e) {
-                e.printStackTrace();
-                new Popup<>().error(e.toString()).show();
+            } else {
+                new Popup<>().warning(Res.get("dao.burnBsq.assets.toFewDays", minDays)).show();
             }
         });
 
@@ -229,12 +238,15 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         };
 
         amountInputTextFieldListener = (observable, oldValue, newValue) -> {
-            long days = getListingFee().value / assetService.getFeePerDay().value;
-            trialPeriodTextField.setText(Res.get("dao.burnBsq.assets.days", days));
+            trialPeriodTextField.setText(Res.get("dao.burnBsq.assets.days", getDays()));
             updateButtonState();
         };
 
         updateListener = observable -> updateList();
+    }
+
+    private long getDays() {
+        return getListingFee().value / assetService.getFeePerDay().value;
     }
 
     private void updateList() {

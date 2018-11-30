@@ -204,7 +204,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                             boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
                             String txId = blindVotePayload.getBlindVote().getTxId();
                             if (success) {
-                                log.info("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
+                                log.warn("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
                                         "the P2P network as append only data. blindVoteTxId={}", txId);
                             } else {
                                 log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
@@ -220,7 +220,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                     boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
                     String txId = proposalPayload.getProposal().getTxId();
                     if (success) {
-                        log.info("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
+                        log.warn("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
                                 "the P2P network as append only data. proposalTxId={}", txId);
                     } else {
                         log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);

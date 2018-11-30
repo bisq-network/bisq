@@ -224,7 +224,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (selectedProposalListItem != null) {
 
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getBallots().stream()
+            Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
@@ -329,10 +329,19 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getBallots()
-                .stream()
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
+                .filter(evaluatedProposal -> {
+                    boolean containsKey = ballotByProposalTxIdMap.containsKey(evaluatedProposal.getProposalTxId());
+
+                    // We saw in testing that the ballot was not there for an evaluatedProposal. We could not reproduce that
+                    // so far but to avoid a nullPointer we filter out such cases.
+                    if (!containsKey)
+                        log.warn("ballotByProposalTxIdMap does not contain expected proposalTxId()={}", evaluatedProposal.getProposalTxId());
+
+                    return containsKey;
+                })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))

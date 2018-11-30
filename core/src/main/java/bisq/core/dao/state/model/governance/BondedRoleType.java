@@ -34,7 +34,7 @@ public enum BondedRoleType {
     GITHUB_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/16", true),
     FORUM_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/19", true),
     TWITTER_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/21", true),
-    SLACK_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/23", true),
+    ROCKET_CHAT_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/79", true),
     YOUTUBE_ADMIN(5_000, 60, "https://github.com/bisq-network/roles/issues/56", true),
 
     // maintainers
