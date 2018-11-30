@@ -48,7 +48,7 @@ public class GenesisTxInfo {
     private static final String MAINNET_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
     private static final int MAINNET_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
 
-    private static final String TESTNET_GENESIS_TX_ID = "ea639932ffff90189377bfdab7252ac88c18934cb2758740da91a76efd9d590c";
+    private static final String TESTNET_GENESIS_TX_ID = "83007e4d9c351adee7b9c1b24c66d04f82e32714029923b815142f84152e9185";
     private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1446068; // 2018-11-30
 
     private static final String REGTEST_GENESIS_TX_ID = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
