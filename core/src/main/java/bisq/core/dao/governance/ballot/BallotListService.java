@@ -88,8 +88,12 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
                             Ballot ballot = new Ballot(proposal); // vote is null
                             log.info("We create a new ballot with a proposal and add it to our list. " +
                                     "Vote is null at that moment. proposalTxId={}", proposal.getTxId());
-                            ballotList.add(ballot);
-                            listeners.forEach(l -> l.onListChanged(ballotList.getList()));
+                            if (!ballotList.contains(ballot)) {
+                                ballotList.add(ballot);
+                                listeners.forEach(l -> l.onListChanged(ballotList.getList()));
+                            } else {
+                                log.warn("Ballot already exist on our ballotList");
+                            }
                         });
                 persist();
             }

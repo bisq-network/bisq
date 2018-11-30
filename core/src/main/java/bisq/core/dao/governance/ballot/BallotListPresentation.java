@@ -31,6 +31,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +43,12 @@ import lombok.extern.slf4j.Slf4j;
 public class BallotListPresentation implements BallotListService.BallotListChangeListener, DaoStateListener {
     private final BallotListService ballotListService;
     private final PeriodService periodService;
+    private final ProposalValidator proposalValidator;
 
     @Getter
-    private final ObservableList<Ballot> ballots = FXCollections.observableArrayList();
+    private final ObservableList<Ballot> allBallots = FXCollections.observableArrayList();
     @Getter
-    private final FilteredList<Ballot> ballotsOfCycle = new FilteredList<>(ballots);
+    private final FilteredList<Ballot> ballotsOfCycle = new FilteredList<>(allBallots);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +62,7 @@ public class BallotListPresentation implements BallotListService.BallotListChang
                                   ProposalValidator proposalValidator) {
         this.ballotListService = ballotListService;
         this.periodService = periodService;
+        this.proposalValidator = proposalValidator;
 
         daoStateService.addBsqStateListener(this);
         ballotListService.addListener(this);
@@ -92,7 +95,13 @@ public class BallotListPresentation implements BallotListService.BallotListChang
 
     @Override
     public void onListChanged(List<Ballot> list) {
-        ballots.clear();
-        ballots.addAll(list);
+        allBallots.clear();
+        allBallots.addAll(list);
+    }
+
+    public List<Ballot> getValidAndConfirmedBallots() {
+        return allBallots.stream()
+                .filter(ballot -> proposalValidator.isValidAndConfirmed(ballot.getProposal()))
+                .collect(Collectors.toList());
     }
 }

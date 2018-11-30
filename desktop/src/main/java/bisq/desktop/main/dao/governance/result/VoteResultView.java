@@ -224,7 +224,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (selectedProposalListItem != null) {
 
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getBallots().stream()
+            Optional<Ballot> optionalBallot = daoFacade.getValidAndConfirmedBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
@@ -329,8 +329,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getBallots()
-                .stream()
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getValidAndConfirmedBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(evaluatedProposal -> {

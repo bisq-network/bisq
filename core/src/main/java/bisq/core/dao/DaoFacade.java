@@ -326,8 +326,12 @@ public class DaoFacade implements DaoSetupService {
     // Use case: Present lists
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Ballot> getBallots() {
-        return ballotListPresentation.getBallots();
+    public ObservableList<Ballot> getAllBallots() {
+        return ballotListPresentation.getAllBallots();
+    }
+
+    public List<Ballot> getValidAndConfirmedBallots() {
+        return ballotListPresentation.getValidAndConfirmedBallots();
     }
 
     public FilteredList<Ballot> getBallotsOfCycle() {
