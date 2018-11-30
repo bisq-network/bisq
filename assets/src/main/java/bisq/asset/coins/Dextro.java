@@ -17,6 +17,7 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
@@ -28,6 +29,22 @@ public class Dextro extends Coin {
     }
 
 
+    public static class DextroAddressValidator extends Base58BitcoinAddressValidator {
+
+        public DextroAddressValidator() {
+            super(new DextroParams());
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (!address.matches("^[D][a-km-zA-HJ-NP-Z1-9]{33}$"))
+                return AddressValidationResult.invalidStructure();
+
+            return super.validate(address);
+        }
+    }
+
+    
     public static class DextroParams extends NetworkParametersAdapter {
 
         public DextroParams() {
