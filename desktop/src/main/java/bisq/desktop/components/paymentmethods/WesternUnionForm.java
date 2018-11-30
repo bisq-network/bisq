@@ -57,13 +57,13 @@ public class WesternUnionForm extends PaymentMethodForm {
         final WesternUnionAccountPayload payload = (WesternUnionAccountPayload) paymentAccountPayload;
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.fullName"),
                 payload.getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.email"),
+                payload.getEmail());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.city"),
                 payload.getCity());
         if (BankUtil.isStateRequired(payload.getCountryCode()))
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.state"),
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.state"),
                     payload.getState());
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
-                payload.getEmail());
 
         return gridRow;
     }

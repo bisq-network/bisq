@@ -47,7 +47,7 @@ public class BalanceTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BalanceTextField(String label) {
-        textField = new JFXTextField();
+        textField = new BisqTextField();
         textField.setLabelFloat(true);
         textField.setPromptText(label);
         textField.setFocusTraversable(false);

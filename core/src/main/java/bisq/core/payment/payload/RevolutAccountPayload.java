@@ -89,7 +89,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + accountId;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + accountId;
     }
 
     @Override

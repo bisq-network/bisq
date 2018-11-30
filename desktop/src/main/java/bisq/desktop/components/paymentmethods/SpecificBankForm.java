@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -40,6 +39,7 @@ import javafx.scene.layout.GridPane;
 
 import javafx.beans.binding.Bindings;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldButton;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldButton;
 
@@ -104,7 +104,7 @@ public class SpecificBankForm extends BankForm {
 
     @Override
     public void addAcceptedBanksForDisplayAccount() {
-        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.banks"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.banks"),
                 Joiner.on(", ").join(specificBanksAccountPayload.getAcceptedBanks())).second.setMouseTransparent(false);
     }
 

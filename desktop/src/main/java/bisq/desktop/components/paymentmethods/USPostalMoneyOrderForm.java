@@ -46,8 +46,8 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName());
-        TextArea textArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
-        textArea.setPrefHeight(60);
+        TextArea textArea = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
+        textArea.setPrefHeight(70);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
         textArea.setText(((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getPostalAddress());

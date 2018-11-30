@@ -90,7 +90,7 @@ public final class PromptPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.getWithCol("payment.promptPay.promptPayId") + promptPayId;
+        return Res.getWithCol("payment.promptPay.promptPayId") + " " + promptPayId;
     }
 
     @Override
