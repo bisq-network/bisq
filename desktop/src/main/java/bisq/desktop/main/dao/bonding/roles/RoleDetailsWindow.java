@@ -69,7 +69,7 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(70, 80, 60, 80));
         gridPane.getStyleClass().add("grid-pane");
     }
 
@@ -83,8 +83,8 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.unlockTime"),
                 Res.get("dao.bond.details.blocks", bondedRoleType.getUnlockTimeInBlocks()));
 
-        FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.bond.details.link"),
-                bondedRoleType.getLink(), bondedRoleType.getLink());
+        FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.bond.details.link"),
+                bondedRoleType.getLink(), bondedRoleType.getLink(), 0);
 
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.isSingleton"),
                 bsqFormatter.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
