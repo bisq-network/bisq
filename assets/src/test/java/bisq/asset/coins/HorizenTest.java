@@ -21,10 +21,10 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class ZenCashTest extends AbstractAssetTest {
+public class HorizenTest extends AbstractAssetTest {
 
-    public ZenCashTest() {
-        super(new ZenCash());
+    public HorizenTest() {
+        super(new Horizen());
     }
 
     @Test

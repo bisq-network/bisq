@@ -26,6 +26,7 @@ bisq.asset.coins.Dragonglass
 bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
 bisq.asset.coins.Gridcoin
+bisq.asset.coins.Horizen
 bisq.asset.coins.Kekcoin
 bisq.asset.coins.Litecoin$Mainnet
 bisq.asset.coins.Litecoin$Regtest
@@ -50,7 +51,6 @@ bisq.asset.coins.TurtleCoin
 bisq.asset.coins.Unobtanium
 bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
-bisq.asset.coins.ZenCash
 bisq.asset.coins.Zero
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.EtherStone
