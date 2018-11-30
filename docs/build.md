@@ -24,7 +24,7 @@ Bisq executables are now available in the root project directory. Run Bisq Deskt
 
     ./bisq-desktop
 
-If on Windows use the `bisq-desktop.bat` script instead.
+If on Windows run `gradlew.bat build` instead.
 
 
 ## See also
