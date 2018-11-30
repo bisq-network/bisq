@@ -29,6 +29,7 @@ bisq.asset.coins.Dash$Mainnet
 bisq.asset.coins.Dash$Regtest
 bisq.asset.coins.Dash$Testnet
 bisq.asset.coins.Decred
+bisq.asset.coins.Dextro
 bisq.asset.coins.Dogecoin
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DRIP
