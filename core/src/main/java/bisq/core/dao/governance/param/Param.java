@@ -110,6 +110,16 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
+  /*  // TODO for testnet we want to have a short cycle of about a week
+    PHASE_UNDEFINED("0", ParamType.BLOCK),
+    PHASE_PROPOSAL("300", ParamType.BLOCK, 3, 3),     // 2 days
+    PHASE_BREAK1("10", ParamType.BLOCK, 3, 3),       // 10 blocks
+    PHASE_BLIND_VOTE("300", ParamType.BLOCK, 3, 3),   // 2 days
+    PHASE_BREAK2("10", ParamType.BLOCK, 3, 23),      // 10 blocks
+    PHASE_VOTE_REVEAL("150", ParamType.BLOCK, 3, 3),  // 1 day
+    PHASE_BREAK3("10", ParamType.BLOCK, 3, 3),       // 10 blocks
+    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);       // 2 blocks*/
+
     // TODO for dev testing we use short periods...
     // Period phase ("11 blocks atm)
     PHASE_UNDEFINED("0", ParamType.BLOCK),
