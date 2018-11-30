@@ -330,8 +330,8 @@ public class DaoFacade implements DaoSetupService {
         return ballotListPresentation.getAllBallots();
     }
 
-    public List<Ballot> getValidAndConfirmedBallots() {
-        return ballotListPresentation.getValidAndConfirmedBallots();
+    public List<Ballot> getAllValidBallots() {
+        return ballotListPresentation.getAllValidBallots();
     }
 
     public FilteredList<Ballot> getBallotsOfCycle() {

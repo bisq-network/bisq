@@ -99,9 +99,11 @@ public class BallotListPresentation implements BallotListService.BallotListChang
         allBallots.addAll(list);
     }
 
-    public List<Ballot> getValidAndConfirmedBallots() {
+    // We cannot do a phase and cycle check as we are interested in historical ballots as well
+    public List<Ballot> getAllValidBallots() {
         return allBallots.stream()
-                .filter(ballot -> proposalValidator.isValidAndConfirmed(ballot.getProposal()))
+                .filter(ballot -> proposalValidator.areDataFieldsValid(ballot.getProposal()))
+                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
                 .collect(Collectors.toList());
     }
 }
