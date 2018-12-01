@@ -39,8 +39,11 @@ public class QMCoinTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYheO");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#");
+        assertInvalidAddress("qSXwS2opau1PYsvj4PrirPkP6LQHeKbQDx");
+        assertInvalidAddress("QbvD8CPJwAmpQoE8CQhzcfWp1EAmT2E2989");
+        assertInvalidAddress("QUAzsb7nq07XVsRy9vjaE4kTUpgP1pFeoL");
+        assertInvalidAddress("QQDvVM2s3WYa8EZQS1s2OsRkR4zmrjy94d");
+        assertInvalidAddress("QgdkWtsy1inr9j8RUrqDIVnrJmhE28WnLX");
+        assertInvalidAddress("Qii56aanBMiEPpjHoaE4lgEW4jPuhGjuj5");
     }
 }

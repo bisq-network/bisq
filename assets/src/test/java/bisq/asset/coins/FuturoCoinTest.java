@@ -46,5 +46,6 @@ public class FuturoCoinTest extends AbstractAssetTest {
         assertInvalidAddress("FheRu8mY47PpUCx4kvjgsRQcLtoG9uDbT9");
         assertInvalidAddress("Fd7gZ7dNJ1toY6TeWy3rf2dUvyRudggTL");
         assertInvalidAddress("FbRXmJUDgf5URuVGyM223P8R2JArXSSm61");
+        assertInvalidAddress("fbRXmJUDgf5URuVGyM223P8R2JArXSSm6u");
     }
 }
