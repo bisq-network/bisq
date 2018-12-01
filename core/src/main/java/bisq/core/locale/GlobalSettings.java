@@ -25,11 +25,18 @@ import java.util.Locale;
 
 public class GlobalSettings {
     private static boolean useAnimations = true;
-    private static Locale locale = Locale.getDefault();
+    private static Locale locale;
     private static final ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(locale);
     private static TradeCurrency defaultTradeCurrency;
     private static String btcDenomination;
 
+    static {
+        locale = Locale.getDefault();
+
+        // On some systems there is not country defined, in that case we use en_US
+        if (locale.getCountry() == null || locale.getCountry().isEmpty())
+            locale = Locale.US;
+    }
 
     public static void setLocale(Locale locale) {
         GlobalSettings.locale = locale;
