@@ -37,8 +37,9 @@ public class CryptonodesTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYheO");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#");
+        assertInvalidAddress("cmqiMdMJuXf3meR3Qxy9hhHS85tuTRMRbub");
+        assertInvalidAddress("CjMRzBHViq7WGgJUuNdiuks39ZCMjyG7UT");
+        assertInvalidAddress("cYXaTfAEMrvr3cZEQ30UxKJuzbvBwgTR2e");
+        assertInvalidAddress("cX38diq2mcFpBMEWbTRvyrdbINBjyv2nq9");
     }
 }

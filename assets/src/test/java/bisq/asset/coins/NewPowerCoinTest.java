@@ -37,8 +37,9 @@ public class NewPowerCoinTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("1111111111111111111111111111111111");
-        assertInvalidAddress("2222222222222222222222222222222222");
-        assertInvalidAddress("3333333333333333333333333333333333");
+        assertInvalidAddress("nXNc8LCAe2dHumQ9vTyogRXUzGw3PJHr55");
+        assertInvalidAddress("NhWDeD4UaNK20j8oSKr9u7EAUkCFZxEsDr");
+        assertInvalidAddress("NNTuHe4p5Xr8kyN2AJjJS9dcBoG1XQKkW6r");
+        assertInvalidAddress("NQebfMl6pijp2KvFHTKQktD4y2cSKknQEg");
     }
 }
