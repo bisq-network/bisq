@@ -37,8 +37,9 @@ public class DRIPTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYheO");
-        assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhek#");
+        assertInvalidAddress("dFJku78A14HYwPSzC5PtUmda7jMr5pbD2B");
+        assertInvalidAddress("DAeiBSH4nudXgoxS4kY6uhTPobc7ALrWDAe");
+        assertInvalidAddress("DRbnCYbuMXdKI4y8dya9EnocL47gFjErWe");
+        assertInvalidAddress("DTPAqTryNRCE2FgsxzohTtJXf0BCDnG6Rc");
     }
 }

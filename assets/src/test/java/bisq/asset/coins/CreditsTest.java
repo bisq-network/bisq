@@ -40,6 +40,6 @@ public class CreditsTest extends AbstractAssetTest {
         assertInvalidAddress("1fXBhPhSxx1wqxGQCryfgn6iU1M1XFUuCo32");
         assertInvalidAddress("CMde7YERCFWkCL2W5i8uyJmnpCVj8Chh");
         assertInvalidAddress("CcbqU3MLZuGAED2CuhUkquyJxKaSJqv6V6#");
-        assertInvalidAddress("bKaig5pznaUgiLqe6WkoCNGagNMhNLtqhKkggg");
+        assertInvalidAddress("cKaig5pznaUgiLqe6WkoCNGagNMhNLtqhK");
     }
 }

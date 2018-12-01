@@ -37,6 +37,7 @@ public class SUB1XTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
+        assertInvalidAddress("zKi6EksPCZoMi6EGXS9vWVed4NeSov2ZS4");
         assertInvalidAddress("ZDxdoVuyosZ6vY3LZAP1Z4H4eXMq2ZpAC7");
         assertInvalidAddress("ZKi6EksPCZoMi6EGXS9vWVedqwfov2ZS4");
         assertInvalidAddress("ZT29B3yDJq1jzkqwrwBs4LnraM3E854MAPRm");
