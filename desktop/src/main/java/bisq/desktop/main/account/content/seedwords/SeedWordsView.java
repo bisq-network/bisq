@@ -52,6 +52,7 @@ import javafx.beans.value.ChangeListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
@@ -247,9 +248,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void doRestore() {
-        final LocalDate value = restoreDatePicker.getValue();
+        LocalDate value = restoreDatePicker.getValue();
+        if (value == null) {
+            // If no date was specified, use Bisq 0.5 release date (no current Bisq wallet could have been created before that date).
+            value = LocalDate.of(2017, Month.JUNE, 28);
+        }
         //TODO Is ZoneOffset correct?
-        long date = value != null ? value.atStartOfDay().toEpochSecond(ZoneOffset.UTC) : 0;
+        long date = value.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
         GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
     }
