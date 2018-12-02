@@ -122,6 +122,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     public List<MyVote> getMyVoteListForCycle() {
         return myVoteList.getList().stream()
+                .filter(e -> daoStateService.getCurrentCycle() != null)
                 .filter(e -> daoStateService.getCurrentCycle().isInCycle(e.getHeight()))
                 .collect(Collectors.toList());
     }

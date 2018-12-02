@@ -77,6 +77,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
         // different to our current height.
         boolean noSnapshotCandidateOrDifferentHeight = snapshotCandidate == null || snapshotCandidate.getChainHeight() != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
+                !daoStateService.getBlocks().isEmpty() &&
                 isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
                 noSnapshotCandidateOrDifferentHeight) {
             // At trigger event we store the latest snapshotCandidate to disc
@@ -108,7 +109,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void applySnapshot() {
+    public void applySnapshot(boolean fromReorg) {
         DaoState persisted = daoStateStorageService.getPersistedBsqState();
         if (persisted != null) {
             LinkedList<Block> blocks = persisted.getBlocks();
@@ -117,6 +118,11 @@ public class DaoStateSnapshotService implements DaoStateListener {
                 log.info("applySnapshot from persisted daoState with height of last block {}", heightOfLastBlock);
                 if (isValidHeight(heightOfLastBlock))
                     daoStateService.applySnapshot(persisted);
+            } else if (fromReorg) {
+                log.info("We got a reorg and we want to apply the snapshot but it is empty. That is expected in the first blocks until the " +
+                        "first snapshot has been created. We use our applySnapshot method and restart from the genesis tx");
+                persisted.setChainHeight(genesisTxInfo.getGenesisBlockHeight());
+                daoStateService.applySnapshot(persisted);
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");

@@ -29,6 +29,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public final class PeriodService {
     private final DaoStateService daoStateService;
@@ -52,6 +54,7 @@ public final class PeriodService {
         return daoStateService.getCycles();
     }
 
+    @Nullable
     public Cycle getCurrentCycle() {
         return daoStateService.getCurrentCycle();
     }
@@ -65,7 +68,9 @@ public final class PeriodService {
     }
 
     public DaoPhase.Phase getCurrentPhase() {
-        return getCurrentCycle().getPhaseForHeight(this.getChainHeight()).get();
+        return getCurrentCycle() != null ?
+                getCurrentCycle().getPhaseForHeight(this.getChainHeight()).orElse(DaoPhase.Phase.UNDEFINED) :
+                DaoPhase.Phase.UNDEFINED;
     }
 
     public boolean isFirstBlockInCycle(int height) {

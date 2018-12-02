@@ -55,6 +55,8 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -99,6 +101,8 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot(DaoState snapshot) {
+        log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());
+
         daoState.setChainHeight(snapshot.getChainHeight());
 
         daoState.getBlocks().clear();
@@ -155,8 +159,9 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getCycles();
     }
 
+    @Nullable
     public Cycle getCurrentCycle() {
-        return getCycles().getLast();
+        return !getCycles().isEmpty() ? getCycles().getLast() : null;
     }
 
     public Optional<Cycle> getCycle(int height) {

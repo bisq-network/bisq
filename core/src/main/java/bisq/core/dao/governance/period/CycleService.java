@@ -105,9 +105,9 @@ public class CycleService implements DaoStateListener, DaoSetupService {
         // applied the new cycle yet. But the first block of the old cycle will always be the same as the
         // first block of the new cycle.
         Cycle cycle = null;
-        if (blockHeight != genesisBlockHeight && isFirstBlockAfterPreviousCycle(blockHeight, cycles)) {
+        if (blockHeight != genesisBlockHeight && isFirstBlockAfterPreviousCycle(blockHeight, cycles) && !cycles.isEmpty()) {
             // We have the not update daoStateService.getCurrentCycle() so we grab here the previousCycle
-            final Cycle previousCycle = cycles.getLast();
+            Cycle previousCycle = cycles.getLast();
             // We create the new cycle as clone of the previous cycle and only if there have been change events we use
             // the new values from the change event.
             cycle = createNewCycle(blockHeight, previousCycle);
