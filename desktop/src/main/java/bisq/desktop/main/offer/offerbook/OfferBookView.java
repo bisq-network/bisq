@@ -56,7 +56,6 @@ import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -396,7 +395,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     Res.get("popup.warning.noTradingAccountSetup.msg"),
                     FiatAccountsView.class,
                     "navigation.account");
-        } else if (!model.hasPaymentAccountForCurrency() && !DevEnv.isDevMode()) {
+        } else if (!model.hasPaymentAccountForCurrency()) {
             new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                     .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                     .actionButtonText(Res.get("offerbook.yesCreateOffer"))
