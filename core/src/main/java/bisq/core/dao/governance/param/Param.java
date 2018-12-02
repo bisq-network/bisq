@@ -110,26 +110,25 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
-  /*  // TODO for testnet we want to have a short cycle of about a week
+    // TODO for testnet we want to have a short cycle of about a week
     PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL("300", ParamType.BLOCK, 3, 3),     // 2 days
+    PHASE_PROPOSAL("380", ParamType.BLOCK, 3, 3),     // 2,6 days
     PHASE_BREAK1("10", ParamType.BLOCK, 3, 3),       // 10 blocks
     PHASE_BLIND_VOTE("300", ParamType.BLOCK, 3, 3),   // 2 days
     PHASE_BREAK2("10", ParamType.BLOCK, 3, 23),      // 10 blocks
-    PHASE_VOTE_REVEAL("150", ParamType.BLOCK, 3, 3),  // 1 day
+    PHASE_VOTE_REVEAL("300", ParamType.BLOCK, 3, 3),  // 2 day
     PHASE_BREAK3("10", ParamType.BLOCK, 3, 3),       // 10 blocks
-    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);       // 2 blocks*/
+    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);       // 2 blocks
 
-    // TODO for dev testing we use short periods...
-    // Period phase ("11 blocks atm)
-    PHASE_UNDEFINED("0", ParamType.BLOCK),
+    // TODO for dev testing we use very short periods...
+    /*PHASE_UNDEFINED("0", ParamType.BLOCK),
     PHASE_PROPOSAL("4", ParamType.BLOCK, 3, 3),
     PHASE_BREAK1("1", ParamType.BLOCK, 3, 3),
     PHASE_BLIND_VOTE("2", ParamType.BLOCK, 3, 3),
     PHASE_BREAK2("1", ParamType.BLOCK, 3, 23),
     PHASE_VOTE_REVEAL("2", ParamType.BLOCK, 3, 3),
     PHASE_BREAK3("1", ParamType.BLOCK, 3, 3),
-    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);
+    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);*/
 
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
