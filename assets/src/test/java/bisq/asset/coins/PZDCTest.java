@@ -17,11 +17,9 @@
 
 package bisq.asset.coins;
 
-import org.junit.Test;
-
-
-
 import bisq.asset.AbstractAssetTest;
+
+import org.junit.Test;
 
 public class PZDCTest extends AbstractAssetTest {
 
