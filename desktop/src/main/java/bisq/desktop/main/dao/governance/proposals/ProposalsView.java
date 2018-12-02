@@ -781,7 +781,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getLink());
-                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
                                 } else {
