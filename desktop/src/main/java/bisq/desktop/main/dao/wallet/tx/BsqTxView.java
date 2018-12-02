@@ -239,8 +239,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
             chainSyncIndicator.setManaged(!synced);
-            if (bsqBlockChainHeight > 0)
-                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletChainHeight);
+            if (bsqBlockChainHeight != bsqWalletChainHeight)
+                chainSyncIndicator.setProgress(-1);
 
             if (synced) {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
