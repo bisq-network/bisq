@@ -139,7 +139,7 @@ class TransactionsListItem {
                                 else if (txTypeOptional.get().equals(TxType.REIMBURSEMENT_REQUEST))
                                     details = Res.get("funds.tx.reimbursementRequestTxFee");
                                 else
-                                    details = Res.get("funds.tx.proposalTxFee");
+                                    details = Res.get("funds.tx.daoTxFee");
                             }
                         } else {
                             outgoing = true;
