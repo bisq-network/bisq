@@ -354,7 +354,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     }
 
     private void rePublishOnceWellConnected() {
-        if ((p2PService.getNumConnectedPeers().get() > 4 && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
+        int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
             int chainHeight = periodService.getChainHeight();
             myBlindVoteList.stream()
                     .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),

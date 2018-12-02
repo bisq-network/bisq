@@ -229,7 +229,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private void rePublishOnceWellConnected() {
-        if ((p2PService.getNumConnectedPeers().get() > 4 && p2PService.isBootstrapped())) {
+        int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped())) {
             p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener);
             rePublish();
         }
