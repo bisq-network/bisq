@@ -172,6 +172,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         gridPane.setPadding(new Insets(35, 40, 30, 40));
         gridPane.getStyleClass().add("grid-pane");
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+        gridPane.setPrefWidth(900);
     }
 
     private void addContent() {
@@ -291,7 +292,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addTradeAmountPayoutControls() {
-
         buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.buyer")));
         buyerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
@@ -300,7 +300,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 Res.get("shared.seller")));
         sellerGetsAllRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
                 Res.get("shared.seller")));
-
         customRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.custom"));
 
         VBox radioButtonPane = new VBox();
@@ -310,7 +309,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 customRadioButton);
 
         addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"),
-                radioButtonPane, 10).second.getChildren();
+                radioButtonPane, 10);
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -394,16 +393,22 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addPayoutAmountTextFields() {
-        buyerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.buyer"));
+        buyerPayoutAmountInputTextField = new InputTextField();
         buyerPayoutAmountInputTextField.setEditable(false);
+        buyerPayoutAmountInputTextField.setPromptText(Res.get("disputeSummaryWindow.payoutAmount.buyer"));
 
-        sellerPayoutAmountInputTextField = addInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.seller"));
+        sellerPayoutAmountInputTextField = new InputTextField();
+        sellerPayoutAmountInputTextField.setPromptText(Res.get("disputeSummaryWindow.payoutAmount.seller"));
         sellerPayoutAmountInputTextField.setEditable(false);
 
-        isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.invert"), 15);
+        isLoserPublisherCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.payoutAmount.invert"));
+
+        VBox vBox = new VBox();
+        vBox.setSpacing(10);
+        vBox.getChildren().addAll(buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, isLoserPublisherCheckBox);
+
+        VBox vBox2 = addTopLabelWithVBox(gridPane, rowIndex, Res.get("disputeSummaryWindow.payout"), vBox, 10).second;
+        GridPane.setColumnIndex(vBox2, 1);
     }
 
     private void addReasonControls() {
@@ -421,10 +426,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
                 reasonWasBankRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton);
 
-        GridPane.setColumnSpan(
-                addTopLabelWithVBox(gridPane, ++rowIndex,
-                        Res.get("disputeSummaryWindow.reason"),
-                        feeRadioButtonPane, 10).second, 2);
+        VBox vBox = addTopLabelWithVBox(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.reason"),
+                feeRadioButtonPane, 10).second;
+        GridPane.setColumnSpan(vBox, 2);
 
         reasonToggleGroup = new ToggleGroup();
         reasonWasBugRadioButton.setToggleGroup(reasonToggleGroup);
@@ -483,12 +488,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addSummaryNotes() {
-
         summaryNotesTextArea = new BisqTextArea();
         summaryNotesTextArea.setPromptText(Res.get("disputeSummaryWindow.addSummaryNotes"));
         summaryNotesTextArea.setWrapText(true);
 
-        final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex,
+        Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, ++rowIndex,
                 Res.get("disputeSummaryWindow.summaryNotes"), summaryNotesTextArea, 0);
         GridPane.setColumnSpan(topLabelWithVBox.second, 2);
 
