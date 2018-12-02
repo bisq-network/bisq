@@ -32,6 +32,8 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
@@ -48,6 +50,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 
 import javafx.geometry.Insets;
@@ -215,12 +218,23 @@ public class ContractWindow extends Overlay<ContractWindow> {
             viewContractStage.initOwner(rootScene.getWindow());
             viewContractStage.initModality(Modality.NONE);
             viewContractStage.initStyle(StageStyle.UTILITY);
+            viewContractStage.setOpacity(0);
             viewContractStage.show();
 
             Window window = rootScene.getWindow();
             double titleBarHeight = window.getHeight() - rootScene.getHeight();
             viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
             viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+            // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
+            // and after a short moment in the correct position
+            UserThread.execute(() -> viewContractStage.setOpacity(1));
+
+            viewContractScene.setOnKeyPressed(ev -> {
+                if (ev.getCode() == KeyCode.ESCAPE) {
+                    ev.consume();
+                    viewContractStage.hide();
+                }
+            });
         });
 
         Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
