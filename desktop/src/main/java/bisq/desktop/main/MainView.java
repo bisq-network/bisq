@@ -148,7 +148,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<Boolean> splashP2PNetworkVisibleListener;
     private BusyAnimation splashP2PNetworkBusyAnimation;
     private Label splashP2PNetworkLabel;
-    private ProgressBar btcSyncIndicator;
+    private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
 
@@ -666,8 +666,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // P2P Network
         Label p2PNetworkLabel = new AutoTooltipLabel();
         p2PNetworkLabel.setId("footer-pane");
-        setRightAnchor(p2PNetworkLabel, 33d);
-        setBottomAnchor(p2PNetworkLabel, 7d);
         p2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
         ImageView p2PNetworkIcon = new ImageView();
@@ -687,9 +685,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.getUpdatedDataReceived().addListener((observable, oldValue, newValue) -> {
             p2PNetworkIcon.setOpacity(1);
+            p2pNetworkProgressBar.setProgress(0);
         });
 
-        return new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
+        p2pNetworkProgressBar = new JFXProgressBar(-1);
+        p2pNetworkProgressBar.setMaxHeight(2);
+        p2pNetworkProgressBar.prefWidthProperty().bind(p2PNetworkLabel.widthProperty());
+
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER_RIGHT);
+        vBox.getChildren().addAll(p2PNetworkLabel, p2pNetworkProgressBar);
+        setRightAnchor(vBox, 33d);
+        setBottomAnchor(vBox, 5d);
+
+        return new AnchorPane(separator, blockchainSyncBox, versionLabel, vBox, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);
