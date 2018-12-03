@@ -39,8 +39,8 @@ $JAVA_HOME/bin/javapackager \
 # uncomment because the build VM does not support alien
 #sudo alien -r -c -k deploy/bundles/bisq-$version.deb
 
-cp "deploy/bundles/bisq-$version.deb" "/home/$USER/Desktop/Bisq-64bit-$version.deb"
-mv "deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
+cp "deploy/bisq-$version.deb" "/home/$USER/Desktop/Bisq-64bit-$version.deb"
+mv "deploy/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
 rm -r deploy/
 
 cd package/linux
