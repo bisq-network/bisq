@@ -27,7 +27,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -88,6 +87,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addAddressTextField;
 import static bisq.desktop.util.FormBuilder.addButton;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -185,7 +185,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressTextField.setPaymentLabel(paymentLabelString);
 
 
-        amountTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("funds.deposit.amount"));
+        amountTextField = addInputTextField(gridPane, ++gridRow, Res.get("funds.deposit.amount"));
+        amountTextField.setMaxWidth(380);
         if (DevEnv.isDevMode())
             amountTextField.setText("10");
 
@@ -376,6 +377,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        addressColumn.getStyleClass().add("address-column");
         addressColumn.setCellFactory(
                 new Callback<>() {
 
