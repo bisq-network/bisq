@@ -36,7 +36,6 @@ bg color of non edit textFields: fafafa
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
 
-
 .root {
     -bs-very-dark-grey3: #444; /* 3 usages */
     -bs-grey: #666666; /* 8 usages */
@@ -156,7 +155,6 @@ bg color of non edit textFields: fafafa
 
     -fx-default-button: derive(-fx-accent, 95%);
     -fx-focus-color: -fx-accent;
-    /*-fx-selection-bar: -bs-rd-nav-primary-background;*/
     -fx-selection-bar: #e1f5e3;
 
     -fx-selection-bar-non-focused: -fx-selection-bar;
@@ -298,6 +296,14 @@ bg color of non edit textFields: fafafa
     -fx-padding: 0 40 0 40;
     -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 2, 0, 0, 0, 1);
     -fx-cursor: hand;
+}
+
+.jfx-button:hover {
+    -fx-background-color: derive(-bs-rd-grey-light, 30%);
+}
+
+.action-button:hover {
+    -fx-background-color: derive(-bs-rd-green-dark, 30%);
 }
 
 .action-button {
@@ -1685,6 +1691,10 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
+#buy-button-big:hover, #buy-button:hover {
+    -fx-background-color: derive(-bs-buy, 30%);
+}
+
 #sell-button-big {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
@@ -1694,6 +1704,10 @@ textfield */
 #sell-button {
     -fx-background-color: -bs-sell;
     -fx-text-fill: -bs-rd-white;
+}
+
+#sell-button-big:hover, #sell-button:hover {
+    -fx-background-color: derive(-bs-sell, 30%);
 }
 
 #sell-button-big.grey-style, #buy-button-big.grey-style,
@@ -1829,6 +1843,10 @@ textfield */
     -fx-background-radius: 0 4 4 0;
     -fx-background-color: -bs-rd-white;
     -fx-effect: dropshadow(gaussian, -bs-rd-black-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-left:hover, #toggle-right:hover, #toggle-center:hover {
+    -fx-background-color: -bs-toggle-selected;
 }
 
 /********************************************************************************************************************
