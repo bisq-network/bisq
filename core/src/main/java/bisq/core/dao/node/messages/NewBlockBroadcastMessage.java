@@ -17,7 +17,7 @@
 
 package bisq.core.dao.node.messages;
 
-import bisq.core.dao.state.blockchain.RawBlock;
+import bisq.core.dao.node.full.RawBlock;
 
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;

@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.state.model.DaoState;
+
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import io.bisq.generated.protobuffer.PB;

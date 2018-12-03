@@ -40,6 +40,8 @@ public class OfferBookListItemMaker {
     public static final Property<OfferBookListItem, OfferPayload.Direction> direction = new Property<>();
     public static final Property<OfferBookListItem, Boolean> useMarketBasedPrice = new Property<>();
     public static final Property<OfferBookListItem, Double> marketPriceMargin = new Property<>();
+    public static final Property<OfferBookListItem, String> baseCurrencyCode = new Property<>();
+    public static final Property<OfferBookListItem, String> counterCurrencyCode = new Property<>();
 
     public static final Instantiator<OfferBookListItem> OfferBookListItem = lookup ->
             new OfferBookListItem(make(btcUsdOffer.but(
@@ -49,7 +51,10 @@ public class OfferBookListItemMaker {
                     with(OfferMaker.direction, lookup.valueOf(direction, OfferPayload.Direction.BUY)),
                     with(OfferMaker.useMarketBasedPrice, lookup.valueOf(useMarketBasedPrice, false)),
                     with(OfferMaker.marketPriceMargin, lookup.valueOf(marketPriceMargin, 0.0)),
-                    with(OfferMaker.id, lookup.valueOf(id, "1234")))));
+                    with(OfferMaker.baseCurrencyCode, lookup.valueOf(baseCurrencyCode, "BTC")),
+                    with(OfferMaker.counterCurrencyCode, lookup.valueOf(counterCurrencyCode, "USD")),
+                    with(OfferMaker.id, lookup.valueOf(id, "1234"))
+            )));
 
     public static final Instantiator<OfferBookListItem> OfferBookListItemWithRange = lookup ->
             new OfferBookListItem(make(btcUsdOffer.but(

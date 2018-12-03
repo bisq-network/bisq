@@ -18,18 +18,20 @@
 package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
+
+import com.neemre.btcdcli4j.core.http.HttpLayerException;
 
 import javax.inject.Inject;
 
@@ -244,8 +246,16 @@ public class FullNode extends BsqNode {
         String errorMessage = "An error occurred: Error=" + throwable.toString();
         log.error(errorMessage);
 
-        if (throwable instanceof BlockNotConnectingException)
+        if (throwable instanceof BlockNotConnectingException) {
             startReOrgFromLastSnapshot();
+        } else if (throwable instanceof RpcException &&
+                throwable.getCause() != null &&
+                throwable.getCause() instanceof HttpLayerException &&
+                ((HttpLayerException) throwable.getCause()).getCode() == 1004004) {
+            errorMessage = "You have configured Bisq to run as DAO full node but there is not " +
+                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                    "starting Bisq.";
+        }
 
         if (errorMessageHandler != null)
             errorMessageHandler.handleErrorMessage(errorMessage);

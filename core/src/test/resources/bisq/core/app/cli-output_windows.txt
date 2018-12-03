@@ -1,0 +1,57 @@
+Bisq Test version 0.1.0
+
+Usage: bisq-test [options]
+
+Options:
+
+  --name=<String> (default: Bisq)
+        The name of the Bisq node
+
+  --another-option=<String> (default: WAT)
+        This is a long description which will need to break over multiple
+        linessssssssssss such that no line is longer than 80 characters in the
+        help output.
+
+  --exactly-72-char-description=<String>
+        012345678911234567892123456789312345678941234567895123456789612345678971
+
+  --exactly-72-char-description-with-spaces=<String>
+        123456789 123456789 123456789 123456789 123456789 123456789 123456789 1
+
+  --90-char-description-without-spaces=<String>
+        -123456789-223456789-323456789-423456789-523456789-623456789-723456789-823456789-923456789
+
+  --90-char-description-with-space-at-char-80=<String>
+        -123456789-223456789-323456789-423456789-523456789-623456789-723456789-823456789
+        923456789
+
+  --90-char-description-with-spaces-at-chars-5-and-80=<String>
+        -123
+        56789-223456789-323456789-423456789-523456789-623456789-723456789-823456789
+        923456789
+
+  --90-char-description-with-space-at-char-73=<String>
+        -123456789-223456789-323456789-423456789-523456789-623456789-723456789-8
+        3456789-923456789
+
+  --1-char-description-with-only-a-space=<String>
+
+  --empty-description=<String>
+
+  --no-description=<String>
+
+  --no-arg
+        Some description
+
+  --optional-arg=<value>
+        Option description
+
+  --with-default-value=<String> (default: Wat)
+        Some option with a default value
+
+  --data-dir=<File> (default: \Users\cbeams\Library\Application Support\Bisq)
+        Application data directory
+
+  --enum-opt=<foo|bar|baz> (default: foo)
+        Some option that accepts an enum value as an argument
+

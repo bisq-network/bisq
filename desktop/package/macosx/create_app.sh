@@ -6,7 +6,7 @@ mkdir -p deploy
 
 set -e
 
-version="0.8.0"
+version="0.9.0"
 
 cd ..
 ./gradlew :desktop:build -x test shadowJar
@@ -19,7 +19,10 @@ EXE_JAR=build/libs/desktop-$version-all.jar
 echo Unzipping jar to delete module config
 tmp=build/libs/tmp
 unzip -o -q $EXE_JAR -d $tmp
-rm $tmp/module-info.class
+
+# Sometimes $tmp/module-info.class is not available. TODO check why and if still needed
+rm -f $tmp/module-info.class
+
 rm $EXE_JAR
 echo Zipping jar again without module config
 cd $tmp; zip -r -q -X "../desktop-$version-all.jar" *
@@ -87,7 +90,11 @@ if [ -z "$JAVA_HOME" ]; then
     JAVA_HOME=$(/usr/libexec/java_home)
 fi
 
+# Open jdk does not has the java packager.
+# JAVA_HOME=/Library/Java/JavaVirtualMachines/oracle_jdk-10.0.2.jdk/Contents/Home
+
 echo "Using JAVA_HOME: $JAVA_HOME"
+
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \

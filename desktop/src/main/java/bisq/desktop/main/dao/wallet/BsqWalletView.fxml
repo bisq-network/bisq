@@ -25,7 +25,7 @@
             xmlns:fx="http://javafx.com/fxml">
 
     <VBox fx:id="leftVBox" prefWidth="240" spacing="5" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"
-          AnchorPane.topAnchor="20"/>
+          AnchorPane.topAnchor="15"/>
 
     <ScrollPane fitToWidth="true" fitToHeight="true"
                 AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="270.0"

@@ -17,7 +17,6 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
@@ -223,7 +222,7 @@ public final class TradeStatistics implements LazyProcessedPayload, ProtectedSto
     }
 
     public String getCurrencyCode() {
-        return CurrencyUtil.isCryptoCurrency(baseCurrency) ? baseCurrency : counterCurrency;
+        return baseCurrency.equals("BTC") ? counterCurrency : baseCurrency;
     }
 
     public Coin getTradeAmount() {

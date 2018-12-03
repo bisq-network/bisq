@@ -6,7 +6,7 @@ mkdir -p deploy
 set -e
 
 # Edit version
-version=0.8.0
+version=0.9.0
 
 dir="/media/sf_vm_shared_ubuntu14_32bit"
 

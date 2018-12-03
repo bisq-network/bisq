@@ -35,6 +35,7 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.NetworkParameters;
 
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
@@ -170,6 +171,15 @@ public class BisqEnvironment extends StandardEnvironment {
         return Paths.get(userDataDir, appName).toString();
     }
 
+    // Util to set isDaoActivated to true if either set as program argument or we run testnet or regtest.
+    // Can be removed once DAO is live.
+    public static boolean isDaoActivated(Environment environment) {
+        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
+        return daoActivatedFromOptions || isRegTestOrTestNet;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -193,12 +203,10 @@ public class BisqEnvironment extends StandardEnvironment {
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
-            referralId, daoActivated;
-    @Getter
-    protected final String httpApiHost, httpApiPort;
-    @Getter
-    protected boolean httpApiExperimentalFeaturesEnabled;
+            torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
+
+    protected final boolean externalTorUseSafeCookieAuthentication;
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -241,13 +249,6 @@ public class BisqEnvironment extends StandardEnvironment {
         referralId = commandLineProperties.containsProperty(AppOptionKeys.REFERRAL_ID) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.REFERRAL_ID) :
                 "";
-        httpApiExperimentalFeaturesEnabled = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_EXPERIMENTAL_FEATURES_ENABLED);
-        httpApiHost = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_HOST) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_HOST) :
-                "127.0.0.1";
-        httpApiPort = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_PORT) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_PORT) :
-                "8080";
         useDevMode = commandLineProperties.containsProperty(CommonOptionKeys.USE_DEV_MODE) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.USE_DEV_MODE) :
                 "";
@@ -278,6 +279,24 @@ public class BisqEnvironment extends StandardEnvironment {
         socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
+        torRcFile = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_FILE) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_FILE) :
+                "";
+        torRcOptions = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_OPTIONS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_OPTIONS) :
+                "";
+        externalTorControlPort = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) :
+                "";
+        externalTorPassword = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) :
+                "";
+        externalTorCookieFile = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) :
+                "";
+        externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) ?
+                true :
+                false;
 
         //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
@@ -446,6 +465,13 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
+                setProperty(NetworkOptionKeys.TORRC_FILE, torRcFile);
+                setProperty(NetworkOptionKeys.TORRC_OPTIONS, torRcOptions);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, externalTorControlPort);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, externalTorPassword);
+                setProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, externalTorCookieFile);
+                if (externalTorUseSafeCookieAuthentication)
+                    setProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, "true");
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);

@@ -72,8 +72,7 @@ public final class BranchIdValidator extends BankValidator {
     }
 
     private String getLabel() {
-        String label = BankUtil.getBranchIdLabel(countryCode);
-        return label.substring(0, label.length() - 1);
+        return BankUtil.getBranchIdLabel(countryCode);
     }
 
 }

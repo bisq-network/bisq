@@ -18,12 +18,14 @@
 package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import javax.inject.Inject;
 
@@ -112,7 +114,12 @@ public class ProposalValidator {
             }
             if (proposal instanceof CompensationProposal) {
                 if (optionalTx.get().getTxType() != TxType.COMPENSATION_REQUEST) {
-                    log.error("TxType is not PROPOSAL. proposal.getTxId()={}", proposal.getTxId());
+                    log.error("TxType is not a COMPENSATION_REQUEST. proposal.getTxId()={}", proposal.getTxId());
+                    return false;
+                }
+            } else if (proposal instanceof ReimbursementProposal) {
+                if (optionalTx.get().getTxType() != TxType.REIMBURSEMENT_REQUEST) {
+                    log.error("TxType is not a REIMBURSEMENT_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else {

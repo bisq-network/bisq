@@ -17,7 +17,7 @@
 
 package bisq.core.dao.state;
 
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
 
 public interface DaoStateListener {
     void onNewBlockHeight(int blockHeight);

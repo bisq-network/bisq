@@ -24,38 +24,22 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.util.Tuple2;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ArbitratorSelection {
-    @Getter
-    private static boolean isNewRuleActivated;
-
-    static {
-        try {
-            //TODO set activation data to 1 month after release
-            Date activationDate = new SimpleDateFormat("dd/MM/yyyy").parse("20/11/2018");
-            isNewRuleActivated = new Date().after(activationDate);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static Arbitrator getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
                                                     ArbitratorManager arbitratorManager) {
@@ -72,6 +56,7 @@ public class ArbitratorSelection {
         List<String> lastAddressesUsedInTrades = list.stream()
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
                 .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(TradeStatistics2.ARBITRATOR_ADDRESS))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Set<String> arbitrators = arbitratorManager.getArbitratorsObservableMap().values().stream()

@@ -21,10 +21,8 @@ import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.RawTxOutput;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 

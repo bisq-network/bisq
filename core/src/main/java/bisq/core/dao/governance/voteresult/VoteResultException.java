@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.voteresult;
 
-import bisq.core.dao.governance.ballot.Ballot;
+import bisq.core.dao.state.model.governance.Ballot;
 
 import java.util.List;
 

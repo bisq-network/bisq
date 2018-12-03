@@ -51,6 +51,10 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
+    public ExecutableForAppWithP2p(String fullName, String scriptName, String version) {
+        super(fullName, scriptName, version);
+    }
+
     @Override
     protected void configUserThread() {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()

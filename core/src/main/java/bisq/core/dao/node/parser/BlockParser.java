@@ -17,11 +17,11 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.RawBlock;
-import bisq.core.dao.state.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
 
 import bisq.common.app.DevEnv;
 
@@ -121,7 +121,7 @@ public class BlockParser {
 
     private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockNotConnectingException {
         LinkedList<Block> blocks = daoStateService.getBlocks();
-        if (!isBlockConnecting(rawBlock, blocks)) {
+        if (!isBlockConnecting(rawBlock, blocks) && !blocks.isEmpty()) {
             Block last = blocks.getLast();
             log.warn("addBlock called with a not connecting block. New block:\n" +
                             "height()={}, hash()={}, lastBlock.height()={}, lastBlock.hash()={}",

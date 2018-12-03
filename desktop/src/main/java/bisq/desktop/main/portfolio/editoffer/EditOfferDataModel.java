@@ -22,6 +22,7 @@ import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
@@ -38,6 +39,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -54,7 +56,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService,
+    EditOfferDataModel(OpenOfferManager openOfferManager,
+                       BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
                        User user,
@@ -63,9 +66,11 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        PriceFeedService priceFeedService,
                        FilterManager filterManager,
                        AccountAgeWitnessService accountAgeWitnessService,
+                       TradeWalletService tradeWalletService,
                        FeeService feeService,
                        ReferralIdService referralIdService,
-                       BSFormatter formatter,
+                       BsqFormatter bsqFormatter,
+                       BSFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver) {
         super(openOfferManager,
                 btcWalletService,
@@ -77,9 +82,11 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 priceFeedService,
                 filterManager,
                 accountAgeWitnessService,
+                tradeWalletService,
                 feeService,
                 referralIdService,
-                formatter);
+                bsqFormatter,
+                btcFormatter);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 

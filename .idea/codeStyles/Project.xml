@@ -25,11 +25,13 @@
           <emptyLine />
           <package name="bisq.core" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="bisq.asset" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="bisq.network" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="bisq.common" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="bisq.httpapi" withSubpackages="true" static="false" />
+          <package name="bisq.asset" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="io.bisq.generated" withSubpackages="true" static="false" />
           <emptyLine />
@@ -76,6 +78,8 @@
           <package name="org.apache.commons" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="de.jensd.fx" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="com.jfoenix" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="org.controlsfx" withSubpackages="true" static="false" />
           <emptyLine />
@@ -168,6 +172,7 @@
           <package name="" withSubpackages="true" static="false" />
         </value>
       </option>
+      <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
     </JavaCodeStyleSettings>
     <Properties>
       <option name="KEEP_BLANK_LINES" value="true" />

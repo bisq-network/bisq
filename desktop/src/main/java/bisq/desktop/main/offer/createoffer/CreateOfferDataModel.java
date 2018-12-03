@@ -25,6 +25,7 @@ import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -34,6 +35,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -59,9 +61,11 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 PriceFeedService priceFeedService,
                                 FilterManager filterManager,
                                 AccountAgeWitnessService accountAgeWitnessService,
+                                TradeWalletService tradeWalletService,
                                 FeeService feeService,
                                 ReferralIdService referralIdService,
-                                BSFormatter formatter) {
+                                BsqFormatter bsqFormatter,
+                                BSFormatter btcFormatter) {
         super(openOfferManager,
                 btcWalletService,
                 bsqWalletService,
@@ -72,8 +76,10 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 priceFeedService,
                 filterManager,
                 accountAgeWitnessService,
+                tradeWalletService,
                 feeService,
                 referralIdService,
-                formatter);
+                bsqFormatter,
+                btcFormatter);
     }
 }
