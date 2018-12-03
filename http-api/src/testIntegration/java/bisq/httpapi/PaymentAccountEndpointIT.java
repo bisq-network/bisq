@@ -2,6 +2,19 @@ package bisq.httpapi;
 
 import bisq.core.locale.CountryUtil;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+
+
+
 import bisq.httpapi.model.payment.AliPayPaymentAccount;
 import bisq.httpapi.model.payment.CashAppPaymentAccount;
 import bisq.httpapi.model.payment.CashDepositPaymentAccount;
@@ -29,20 +42,6 @@ import bisq.httpapi.model.payment.UpholdPaymentAccount;
 import bisq.httpapi.model.payment.VenmoPaymentAccount;
 import bisq.httpapi.model.payment.WeChatPayPaymentAccount;
 import bisq.httpapi.model.payment.WesternUnionPaymentAccount;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-
-
-
 import com.github.javafaker.Faker;
 import io.restassured.http.ContentType;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
@@ -70,7 +69,7 @@ public class PaymentAccountEndpointIT {
 
         final SepaPaymentAccount accountToCreate = ApiTestHelper.randomValidCreateSepaAccountPayload();
 
-        final String expectedPaymentDetails = String.format("SEPA - Holder name: %s, IBAN: %s, BIC: %s, Country code: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
+        final String expectedPaymentDetails = String.format("SEPA - Account owner full name: %s, IBAN: %s, BIC: %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
 
         given().
                 port(alicePort).
@@ -163,7 +162,7 @@ public class PaymentAccountEndpointIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.cashTag = faker.commerce().promotionCode();
 
-        final String expectedPaymentDetails = String.format("CashApp - Account: %s", accountToCreate.cashTag);
+        final String expectedPaymentDetails = String.format("Cash App - Account: %s", accountToCreate.cashTag);
 
         given().
                 port(alicePort).
@@ -246,7 +245,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.email = faker.internet().emailAddress();
         accountToCreate.holderName = faker.name().fullName();
 
-        final String expectedPaymentDetails = String.format("Chase QuickPay - Holder name: %s, email: %s", accountToCreate.holderName, accountToCreate.email);
+        final String expectedPaymentDetails = String.format("Chase QuickPay - Account owner full name: %s, Email %s", accountToCreate.holderName, accountToCreate.email);
 
         given().
                 port(alicePort).
@@ -282,7 +281,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
         accountToCreate.address = "1ab616x3JxQsXsExCKX4iirdFwVDDXuwo";
 
-        final String expectedPaymentDetails = String.format("Receivers altcoin address: %s", accountToCreate.address);
+        final String expectedPaymentDetails = String.format("Receiver's altcoin address: %s", accountToCreate.address);
 
         given().
                 port(alicePort).
@@ -317,7 +316,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.contact = faker.phoneNumber().cellPhone();
         accountToCreate.extraInfo = faker.address().fullAddress();
 
-        final String expectedPaymentDetails = String.format("Face to Face - Contact: %s, city: %s, additional information: %s", accountToCreate.contact, accountToCreate.city, accountToCreate.extraInfo);
+        final String expectedPaymentDetails = String.format("Face to face (in person) - Contact info: %s, City for 'Face to face' meeting: %s, Additional information: %s", accountToCreate.contact, accountToCreate.city, accountToCreate.extraInfo);
 
         given().
                 port(alicePort).
@@ -353,7 +352,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.accountNr = faker.finance().iban();
         accountToCreate.sortCode = faker.address().zipCode();
 
-        final String expectedPaymentDetails = String.format("FasterPayments - UK Sort code: %s, Account number: %s", accountToCreate.sortCode, accountToCreate.accountNr);
+        final String expectedPaymentDetails = String.format("Faster Payments - UK Sort code: %s, Account number: %s", accountToCreate.sortCode, accountToCreate.accountNr);
 
         given().
                 port(alicePort).
@@ -423,7 +422,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.question = faker.witcher().quote();
         accountToCreate.answer = faker.witcher().character();
 
-        final String expectedPaymentDetails = String.format("Interac e-Transfer - Holder name: %s, email: %s, secret question: %s, answer: %s", accountToCreate.holderName, accountToCreate.emailOrMobileNr, accountToCreate.question, accountToCreate.answer);
+        final String expectedPaymentDetails = String.format("Interac e-Transfer - Account owner full name: %s, Email %s, Secret question: %s, Answer: %s", accountToCreate.holderName, accountToCreate.emailOrMobileNr, accountToCreate.question, accountToCreate.answer);
 
         given().
                 port(alicePort).
@@ -459,7 +458,7 @@ public class PaymentAccountEndpointIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountId = faker.idNumber().valid();
 
-        final String expectedPaymentDetails = String.format("MoneyBeam - Account: %s", accountToCreate.accountId);
+        final String expectedPaymentDetails = String.format("MoneyBeam (N26) - Account: %s", accountToCreate.accountId);
 
         given().
                 port(alicePort).
@@ -495,7 +494,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.email = faker.internet().emailAddress();
 
-        final String expectedPaymentDetails = String.format("MoneyGram - Full name: %s, State: %s, Country: %s, Email: %s", accountToCreate.holderName, accountToCreate.state, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
+        final String expectedPaymentDetails = String.format("MoneyGram - Full name (first, middle, last): %s, State/Province/Region: %s, Country of bank: %s, Email: %s", accountToCreate.holderName, accountToCreate.state, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
 
         given().
                 port(alicePort).
@@ -538,7 +537,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
-        final String expectedPaymentDetails = String.format("National Bank transfer - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
+        final String expectedPaymentDetails = String.format("National bank transfer - Account owner full name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
 
         given().
                 port(alicePort).
@@ -611,7 +610,7 @@ public class PaymentAccountEndpointIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountNr = faker.idNumber().valid();
 
-        final String expectedPaymentDetails = String.format("PerfectMoney - Account no.: %s", accountToCreate.accountNr);
+        final String expectedPaymentDetails = String.format("Perfect Money - Account no.: %s", accountToCreate.accountNr);
 
         given().
                 port(alicePort).
@@ -645,7 +644,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.accountId = faker.idNumber().valid();
         accountToCreate.holderName = faker.name().fullName();
 
-        final String expectedPaymentDetails = String.format("Popmoney - Holder name: %s, email or phone no.: %s", accountToCreate.holderName, accountToCreate.accountId);
+        final String expectedPaymentDetails = String.format("Popmoney - Account owner full name: %s, Email or phone no.: %s", accountToCreate.holderName, accountToCreate.accountId);
 
         given().
                 port(alicePort).
@@ -679,7 +678,7 @@ public class PaymentAccountEndpointIT {
         ApiTestHelper.randomizeAccountPayload(accountToCreate);
         accountToCreate.accountId = faker.idNumber().valid();
 
-        final String expectedPaymentDetails = String.format("Revolut - Account:%s", accountToCreate.accountId);
+        final String expectedPaymentDetails = String.format("Revolut - Account: %s", accountToCreate.accountId);
 
         given().
                 port(alicePort).
@@ -719,7 +718,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.holderTaxId = faker.finance().creditCard();
 
-        final String expectedPaymentDetails = String.format("Transfer with same Bank - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
+        final String expectedPaymentDetails = String.format("Transfer with same bank - Account owner full name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode));
 
         given().
                 port(alicePort).
@@ -766,7 +765,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.selectedTradeCurrency = faker.options().option("PLN", "USD", "EUR", "GBP");
         accountToCreate.tradeCurrencies = Collections.singletonList(accountToCreate.selectedTradeCurrency);
 
-        final String expectedPaymentDetails = String.format("SEPA Instant - Holder name: %s, IBAN: %s, BIC: %s, Country code: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
+        final String expectedPaymentDetails = String.format("SEPA Instant Payments - Account owner full name: %s, IBAN: %s, BIC: %s, Country of bank: %s", accountToCreate.holderName, accountToCreate.iban, accountToCreate.bic, accountToCreate.countryCode);
 
         given().
                 port(alicePort).
@@ -812,7 +811,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.acceptedBanks = Arrays.asList(faker.finance().bic(), faker.finance().bic());
 
         final String acceptedBanks = accountToCreate.acceptedBanks.stream().reduce((i, a) -> a.length() > 0 ? i + ", " + a : i).orElse("");
-        final String expectedPaymentDetails = String.format("Transfers with specific banks - Holder name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s, Accepted banks: %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode), acceptedBanks);
+        final String expectedPaymentDetails = String.format("Transfers with specific banks - Account owner full name: %s, Bank name: %s, Bank ID (BIC/SWIFT): %s, Branch no.: %s, Account no. (IBAN): %s, Country of bank: %s, Accepted banks (ID): %s", accountToCreate.holderName, accountToCreate.bankName, accountToCreate.bankId, accountToCreate.branchId, accountToCreate.accountNr, CountryUtil.getNameByCode(accountToCreate.countryCode), acceptedBanks);
 
         given().
                 port(alicePort).
@@ -854,7 +853,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.mobileNr = faker.phoneNumber().cellPhone();
 
-        final String expectedPaymentDetails = String.format("Swish - Holder name: %s, mobile no.: %s", accountToCreate.holderName, accountToCreate.mobileNr);
+        final String expectedPaymentDetails = String.format("Swish - Account owner full name: %s, Mobile no.: %s", accountToCreate.holderName, accountToCreate.mobileNr);
 
         given().
                 port(alicePort).
@@ -922,7 +921,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.postalAddress = faker.address().fullAddress();
 
-        final String expectedPaymentDetails = String.format("US Postal Money Order - Holder name: %s, postal address: %s", accountToCreate.holderName, accountToCreate.postalAddress);
+        final String expectedPaymentDetails = String.format("US Postal Money Order - Account owner full name: %s, Postal address: %s", accountToCreate.holderName, accountToCreate.postalAddress);
 
         given().
                 port(alicePort).
@@ -957,7 +956,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.holderName = faker.name().fullName();
         accountToCreate.venmoUserName = faker.name().username();
 
-        final String expectedPaymentDetails = String.format("Venmo - Holder name: %s, Venmo username: %s", accountToCreate.holderName, accountToCreate.venmoUserName);
+        final String expectedPaymentDetails = String.format("Venmo - Account owner full name: %s, Venmo username: %s", accountToCreate.holderName, accountToCreate.venmoUserName);
 
         given().
                 port(alicePort).
@@ -1028,7 +1027,7 @@ public class PaymentAccountEndpointIT {
         accountToCreate.email = faker.internet().emailAddress();
         accountToCreate.state = faker.address().state();
 
-        final String expectedPaymentDetails = String.format("Western Union - Full name: %s, City: %s, County: %s, Email: %s", accountToCreate.holderName, accountToCreate.city, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
+        final String expectedPaymentDetails = String.format("Western Union - Full name (first, middle, last): %s, City: %s, Country: %s, Email: %s", accountToCreate.holderName, accountToCreate.city, CountryUtil.getNameByCode(accountToCreate.countryCode), accountToCreate.email);
 
         given().
                 port(alicePort).

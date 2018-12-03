@@ -21,6 +21,7 @@ COPY assets /bisq/assets/
 COPY common /bisq/common/
 COPY core /bisq/core/
 COPY p2p /bisq/p2p/
+COPY pricenode /bisq/pricenode/
 RUN ../gradlew --no-daemon build -x test
 
 COPY http-api /bisq/http-api
