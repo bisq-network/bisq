@@ -1093,6 +1093,10 @@ textfield */
     -fx-border-width: 0px;
 }
 
+.table-view.large-rows .table-row-cell {
+    -fx-cell-size: 47px;
+}
+
 .number-column.table-cell {
 
     -fx-font-family: "IBM Plex Mono";
