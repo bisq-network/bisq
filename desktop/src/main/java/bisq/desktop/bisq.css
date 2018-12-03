@@ -1104,6 +1104,10 @@ textfield */
     -fx-padding: 0 0 0 0;
 }
 
+.address-column {
+    -fx-alignment: center !important;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Icons                                                                       *

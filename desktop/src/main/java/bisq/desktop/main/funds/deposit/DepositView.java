@@ -377,6 +377,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        addressColumn.getStyleClass().add("address-column");
         addressColumn.setCellFactory(
                 new Callback<>() {
 
