@@ -38,51 +38,28 @@ java -jar ./package/macosx/tools-1.0.jar $EXE_JAR
 echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
 
-# vmPath=/Volumes
-vmPath=/Users/dev
-linux32=$vmPath/vm_shared_ubuntu14_32bit
+#vmPath=/Users/christoph/Documents/Workspaces/Java
+vmPath=/Volumes
 linux64=$vmPath/vm_shared_ubuntu
-win32=$vmPath/vm_shared_windows_32bit
 win64=$vmPath/vm_shared_windows
 
-mkdir -p $linux32 $linux64 $win32 $win64
+mkdir -p $linux64 $win64
 
 cp $EXE_JAR "deploy/Bisq-$version.jar"
 
 # copy app jar to VM shared folders
-cp $EXE_JAR "$linux32/Bisq-$version.jar"
 cp $EXE_JAR "$linux64/Bisq-$version.jar"
 # At windows we don't add the version nr as it would keep multiple versions of jar files in app dir
-cp $EXE_JAR "$win32/Bisq.jar"
 cp $EXE_JAR "$win64/Bisq.jar"
 
-# copy bouncycastle jars to VM shared folders
-# bc_lib1=bcpg-jdk15on-1.56.jar
-# cp build/app/lib/$bc_lib1 "$linux32/$bc_lib1"
-# cp build/app/lib/$bc_lib1 "$linux64/$bc_lib1"
-# cp build/app/lib/$bc_lib1 "$win32/$bc_lib1"
-# cp build/app/lib/$bc_lib1 "$win64/$bc_lib1"
-
-# bc_lib2=bcprov-jdk15on-1.56.jar
-# cp build/app/lib/$bc_lib2 "$linux32/$bc_lib2"
-# cp build/app/lib/$bc_lib2 "$linux64/$bc_lib2"
-# cp build/app/lib/$bc_lib2 "$win32/$bc_lib2"
-# cp build/app/lib/$bc_lib2 "$win64/$bc_lib2"
-
 # Copy packager scripts to VM. No need to checkout the source as we only are interested in the build scripts.
-rm -rf "$linux32/package"
 rm -rf "$linux64/package"
-rm -rf "$win32/package"
 rm -rf "$win64/package"
 
-mkdir -p "$linux32/package"
 mkdir -p "$linux64/package"
-mkdir -p "$win32/package"
 mkdir -p "$win64/package"
 
-cp -r package/linux "$linux32/package"
 cp -r package/linux "$linux64/package"
-cp -r package/windows "$win32/package"
 cp -r package/windows "$win64/package"
 
 
@@ -110,7 +87,8 @@ $JAVA_HOME/bin/javapackager \
     -srcdir deploy \
     -srcfiles "Bisq-$version.jar" \
     -appclass bisq.desktop.app.BisqAppMain \
-    -outfile Bisq
+    -outfile Bisq \
+    -v
 
 open deploy
 

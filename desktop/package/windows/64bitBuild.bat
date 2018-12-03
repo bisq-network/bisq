@@ -20,6 +20,8 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -vendor Bisq ^
 -outdir %outdir% ^
 -appclass bisq.desktop.app.BisqAppMain ^
--srcfiles %outdir%\Bisq.jar ^
+-srcdir %outdir% ^
+-srcfiles Bisq.jar ^
 -outfile Bisq ^
--Bruntime="%JAVA_HOME%\jre"
+-Bruntime="%JAVA_HOME%\jre" ^
+-v
