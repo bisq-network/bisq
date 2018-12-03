@@ -496,8 +496,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void createTable() {
         tableView = new TableView<>();
-        tableView.setMinHeight(140);
-        tableView.setPrefHeight(140);
+        tableView.setMinHeight(130);
+        tableView.setPrefHeight(130);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
         // date
