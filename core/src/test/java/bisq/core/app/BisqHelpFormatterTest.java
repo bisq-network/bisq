@@ -125,7 +125,10 @@ public class BisqHelpFormatterTest {
         ByteArrayOutputStream actual = new ByteArrayOutputStream();
         String expected = new String(Files.readAllBytes(Paths.get(getClass().getResource("cli-output.txt").toURI())));
         if (System.getProperty("os.name").startsWith("Windows")) {
-            expected = new String(Files.readAllBytes(Paths.get(getClass().getResource("cli-output_windows.txt").toURI())));
+            // Load the expected content from a different file for Windows due to different path separator
+            // And normalize line endings to LF in case the file has CRLF line endings
+            expected = new String(Files.readAllBytes(Paths.get(getClass().getResource("cli-output_windows.txt").toURI())))
+                    .replaceAll("\\r\\n?", "\n");
         }
 
         parser.printHelpOn(new PrintStream(actual));
