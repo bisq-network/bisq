@@ -284,10 +284,12 @@ public class RpcService {
                                     try {
                                         opReturnData = Utils.HEX.decode(chunks[1]);
                                     } catch (Throwable t) {
-                                        // We get sometimes exceptions, seems BitcoinJ
-                                        // cannot handle all existing OP_RETURN data, but we ignore them
-                                        // anyway as our OP_RETURN data is valid in BitcoinJ
-                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
+                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
+                                                " / chunks[1]=" + chunks[1] +
+                                                "\nWe get sometimes exceptions with opReturn data, seems BitcoinJ " +
+                                                "cannot handle all " +
+                                                "existing OP_RETURN data, but we ignore them anyway as the OP_RETURN " +
+                                                "data used for DAO transactions are all valid in BitcoinJ");
                                     }
                                 }
                             }
