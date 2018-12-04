@@ -8,7 +8,13 @@ set -e
 # Edit version
 version=0.9.0
 
-dir="/media/sf_vm_shared_ubuntu"
+sharedDir="/media/sf_vm_shared_ubuntu"
+
+dir="/home/$USER/Desktop/build"
+mkdir -p $dir
+
+cp "$sharedDir/Bisq-$version.jar" "$dir/Bisq-$version.jar"
+chmod o+rx "$dir/Bisq-$version.jar"
 
 # Note: fakeroot needs to be installed on Linux
 
@@ -42,5 +48,6 @@ $JAVA_HOME/bin/javapackager \
 cp "deploy/bisq-$version.deb" "/home/$USER/Desktop/Bisq-64bit-$version.deb"
 mv "deploy/bisq-$version.deb" "/media/sf_vm_shared_ubuntu/Bisq-64bit-$version.deb"
 rm -r deploy/
+rm -r $dir
 
 cd package/linux
