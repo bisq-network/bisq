@@ -22,11 +22,11 @@ import bisq.core.dao.node.full.RawBlock;
 import lombok.Getter;
 
 @Getter
-public class BlockNotConnectingException extends Exception {
+public class BlockHashNotConnectingException extends Exception {
 
     private RawBlock rawBlock;
 
-    public BlockNotConnectingException(RawBlock rawBlock) {
+    public BlockHashNotConnectingException(RawBlock rawBlock) {
         this.rawBlock = rawBlock;
     }
 }
