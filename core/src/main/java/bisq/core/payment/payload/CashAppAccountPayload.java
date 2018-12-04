@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -89,7 +91,7 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "CashApp - Account: " + cashTag;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + cashTag;
     }
 
     @Override

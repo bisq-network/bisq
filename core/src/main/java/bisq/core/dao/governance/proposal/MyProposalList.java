@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.governance.ConsensusCritical;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.common.proto.persistable.PersistableList;
 

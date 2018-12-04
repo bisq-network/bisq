@@ -8,7 +8,7 @@
 
 # pull base image
 FROM openjdk:8-jdk
-ENV version 0.8.0
+ENV version 0.9.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends openjfx && rm -rf /var/lib/apt/lists/* &&
 apt-get install -y vim fakeroot

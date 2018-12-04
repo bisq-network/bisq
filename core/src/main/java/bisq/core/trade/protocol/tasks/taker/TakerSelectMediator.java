@@ -21,9 +21,16 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.MediatorSelectionRule;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerSelectMediator extends TradeTask {
@@ -36,10 +43,20 @@ public class TakerSelectMediator extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            List<NodeAddress> acceptedMediatorAddresses = processModel.getUser().getAcceptedMediatorAddresses();
+            checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
+            checkArgument(!acceptedMediatorAddresses.isEmpty(), "acceptedMediatorAddresses must not be empty");
+            NodeAddress mediatorNodeAddress;
+            try {
+                mediatorNodeAddress = MediatorSelectionRule.select(acceptedMediatorAddresses, processModel.getOffer());
+            } catch (Throwable t) {
+                // In case the mediator from the offer is not available anymore we just use the first.
+                // Mediators are not implemented anyway and we will remove it with the new trade protocol but we
+                // still need to be backward compatible so we cannot remove it now.
+                mediatorNodeAddress = acceptedMediatorAddresses.get(0);
+            }
 
-            trade.setMediatorNodeAddress(MediatorSelectionRule.select(processModel.getUser().getAcceptedMediatorAddresses(),
-                    processModel.getOffer()));
-
+            trade.setMediatorNodeAddress(mediatorNodeAddress);
             complete();
         } catch (Throwable t) {
             failed(t);

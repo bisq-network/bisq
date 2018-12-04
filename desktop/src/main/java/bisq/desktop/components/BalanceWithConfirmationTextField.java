@@ -30,6 +30,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
+import com.jfoenix.controls.JFXTextField;
+
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
@@ -62,7 +64,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BalanceWithConfirmationTextField() {
-        textField = new TextField();
+        textField = new JFXTextField();
         textField.setFocusTraversable(false);
         textField.setEditable(false);
 

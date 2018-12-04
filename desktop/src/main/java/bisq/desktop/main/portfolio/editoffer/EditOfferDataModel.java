@@ -39,6 +39,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -55,8 +56,37 @@ class EditOfferDataModel extends MutableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService, Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService, FilterManager filterManager, AccountAgeWitnessService accountAgeWitnessService, TradeWalletService tradeWalletService, FeeService feeService, ReferralIdService referralIdService, BSFormatter formatter, CorePersistenceProtoResolver corePersistenceProtoResolver) {
-        super(openOfferManager, btcWalletService, bsqWalletService, preferences, user, keyRing, p2PService, priceFeedService, filterManager, accountAgeWitnessService, tradeWalletService, feeService, referralIdService, formatter);
+    EditOfferDataModel(OpenOfferManager openOfferManager,
+                       BtcWalletService btcWalletService,
+                       BsqWalletService bsqWalletService,
+                       Preferences preferences,
+                       User user,
+                       KeyRing keyRing,
+                       P2PService p2PService,
+                       PriceFeedService priceFeedService,
+                       FilterManager filterManager,
+                       AccountAgeWitnessService accountAgeWitnessService,
+                       TradeWalletService tradeWalletService,
+                       FeeService feeService,
+                       ReferralIdService referralIdService,
+                       BsqFormatter bsqFormatter,
+                       BSFormatter btcFormatter,
+                       CorePersistenceProtoResolver corePersistenceProtoResolver) {
+        super(openOfferManager,
+                btcWalletService,
+                bsqWalletService,
+                preferences,
+                user,
+                keyRing,
+                p2PService,
+                priceFeedService,
+                filterManager,
+                accountAgeWitnessService,
+                tradeWalletService,
+                feeService,
+                referralIdService,
+                bsqFormatter,
+                btcFormatter);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 

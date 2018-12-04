@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.CashAppValidator;
 
@@ -31,14 +32,11 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 // Removed due too high chargeback risk
 @Deprecated
@@ -48,7 +46,7 @@ public class CashAppForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), ((CashAppAccountPayload) paymentAccountPayload).getCashTag());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), ((CashAppAccountPayload) paymentAccountPayload).getCashTag());
         return gridRow;
     }
 
@@ -62,7 +60,7 @@ public class CashAppForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setCashTag(newValue);
@@ -71,32 +69,27 @@ public class CashAppForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String accountNr = accountIdInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), account.getCashTag()).second;
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.cashApp.cashTag"), account.getCashTag()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(true);
     }
 
     @Override

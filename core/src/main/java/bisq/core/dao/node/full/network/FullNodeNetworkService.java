@@ -22,11 +22,11 @@ import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDa
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.RawBlock;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
@@ -204,7 +204,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                             boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
                             String txId = blindVotePayload.getBlindVote().getTxId();
                             if (success) {
-                                log.info("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
+                                log.warn("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
                                         "the P2P network as append only data. blindVoteTxId={}", txId);
                             } else {
                                 log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
@@ -220,7 +220,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                     boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
                     String txId = proposalPayload.getProposal().getTxId();
                     if (success) {
-                        log.info("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
+                        log.warn("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
                                 "the P2P network as append only data. proposalTxId={}", txId);
                     } else {
                         log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);

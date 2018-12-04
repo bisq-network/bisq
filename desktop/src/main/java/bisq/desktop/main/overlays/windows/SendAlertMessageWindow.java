@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
@@ -37,11 +38,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private final boolean useDevPrivilegeKeys;
@@ -74,10 +76,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         if (headLine == null)
             headLine = Res.get("sendAlertMessageWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();
@@ -111,26 +112,31 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10).second;
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+        gridPane.getColumnConstraints().remove(1);
+
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
                 Res.get("sendAlertMessageWindow.alertMsg"),
                 Res.get("sendAlertMessageWindow.enterMsg"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(150);
         CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("sendAlertMessageWindow.isUpdate"), "").second;
+                Res.get("sendAlertMessageWindow.isUpdate"));
         isUpdateCheckBox.setSelected(true);
 
-        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("sendAlertMessageWindow.version")).second;
+        InputTextField versionInputTextField = FormBuilder.addInputTextField(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.version"));
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
         Button sendButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.send"));
+        sendButton.getStyleClass().add("action-button");
+        sendButton.setDefaultButton(true);
         sendButton.setOnAction(e -> {
             final String version = versionInputTextField.getText();
             boolean versionOK = false;
@@ -176,7 +182,6 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeAlertMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));

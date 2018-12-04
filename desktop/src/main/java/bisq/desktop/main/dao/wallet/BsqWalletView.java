@@ -24,35 +24,27 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.ViewPath;
-import bisq.desktop.components.AutoTooltipToggleButton;
+import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.dao.wallet.tx.BsqTxView;
-import bisq.desktop.util.Colors;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
-
 import javafx.fxml.FXML;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-
-import javafx.beans.value.ChangeListener;
+import java.util.Arrays;
+import java.util.List;
 
 @FxmlView
 public class BsqWalletView extends ActivatableViewAndModel {
@@ -69,6 +61,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
     private AnchorPane content;
 
     private Class<? extends View> selectedViewClass;
+    private ToggleGroup toggleGroup;
 
     @Inject
     private BsqWalletView(CachingViewLoader viewLoader, Navigation navigation) {
@@ -86,11 +79,12 @@ public class BsqWalletView extends ActivatableViewAndModel {
             loadView(selectedViewClass);
         };
 
-        ToggleGroup toggleGroup = new ToggleGroup();
-        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, AwesomeIcon.DASHBOARD);
-        send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, AwesomeIcon.SIGNOUT);
-        receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, AwesomeIcon.SIGNIN);
-        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, AwesomeIcon.TABLE);
+        toggleGroup = new ToggleGroup();
+        List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, BsqWalletView.class);
+        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, baseNavPath);
+        send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, baseNavPath);
+        receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, baseNavPath);
+        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, baseNavPath);
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
 
         // TODO just until DAO is enabled
@@ -141,81 +135,13 @@ public class BsqWalletView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof BsqDashboardView) dashboard.setSelected(true);
-        else if (view instanceof BsqSendView) send.setSelected(true);
-        else if (view instanceof BsqReceiveView) receive.setSelected(true);
-        else if (view instanceof BsqTxView) transactions.setSelected(true);
+        if (view instanceof BsqDashboardView) toggleGroup.selectToggle(dashboard);
+        else if (view instanceof BsqSendView) toggleGroup.selectToggle(send);
+        else if (view instanceof BsqReceiveView) toggleGroup.selectToggle(receive);
+        else if (view instanceof BsqTxView) toggleGroup.selectToggle(transactions);
     }
 
     public Class<? extends View> getSelectedViewClass() {
         return selectedViewClass;
     }
 }
-
-
-class MenuItem extends AutoTooltipToggleButton {
-
-    private final ChangeListener<Boolean> selectedPropertyChangeListener;
-    private final ChangeListener<Boolean> disablePropertyChangeListener;
-    private final Navigation navigation;
-    private final Class<? extends View> viewClass;
-
-    MenuItem(Navigation navigation, ToggleGroup toggleGroup, String title, Class<? extends View> viewClass, AwesomeIcon awesomeIcon) {
-        this.navigation = navigation;
-        this.viewClass = viewClass;
-
-        setToggleGroup(toggleGroup);
-        setText(title);
-        setId("account-settings-item-background-active");
-        setPrefHeight(40);
-        setPrefWidth(240);
-        setAlignment(Pos.CENTER_LEFT);
-
-        Label icon = new Label();
-        AwesomeDude.setIcon(icon, awesomeIcon);
-        if (viewClass == BsqReceiveView.class) {
-            icon.setRotate(180);
-            icon.setPadding(new Insets(0, 0, 0, 5));
-        } else {
-            icon.setPadding(new Insets(0, 5, 0, 0));
-        }
-        icon.setTextFill(Paint.valueOf("#333"));
-        icon.setAlignment(Pos.CENTER);
-        icon.setMinWidth(25);
-        icon.setMaxWidth(25);
-        setGraphic(icon);
-
-        selectedPropertyChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue) {
-                setId("account-settings-item-background-selected");
-                icon.setTextFill(Colors.BLUE);
-            } else {
-                setId("account-settings-item-background-active");
-                icon.setTextFill(Paint.valueOf("#333"));
-            }
-        };
-
-        disablePropertyChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue) {
-                setId("account-settings-item-background-disabled");
-                icon.setTextFill(Paint.valueOf("#ccc"));
-            } else {
-                setId("account-settings-item-background-active");
-                icon.setTextFill(Paint.valueOf("#333"));
-            }
-        };
-    }
-
-    public void activate() {
-        setOnAction((event) -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, viewClass));
-        selectedProperty().addListener(selectedPropertyChangeListener);
-        disableProperty().addListener(disablePropertyChangeListener);
-    }
-
-    public void deactivate() {
-        setOnAction(null);
-        selectedProperty().removeListener(selectedPropertyChangeListener);
-        disableProperty().removeListener(disablePropertyChangeListener);
-    }
-}
-

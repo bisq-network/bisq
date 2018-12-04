@@ -328,7 +328,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     ObservableList<PaymentMethod> getPaymentMethods() {
-        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getAllValues());
+        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getActivePaymentMethods());
         list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;
     }
@@ -420,7 +420,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         String result = "";
         if (item != null) {
             Offer offer = item.getOffer();
-            result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            result = Res.get("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String countryCode = offer.getCountryCode();
@@ -491,9 +491,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void fillAllTradeCurrencies() {
         allTradeCurrencies.clear();
         // Used for ignoring filter (show all)
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG));
+        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
         allTradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, GUIUtil.EDIT_FLAG));
+        allTradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, ""));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

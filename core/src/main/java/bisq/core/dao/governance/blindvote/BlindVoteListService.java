@@ -23,7 +23,7 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;

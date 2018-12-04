@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 // We dont translate here as it is for dev only purpose
 public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
@@ -73,10 +73,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         if (headLine == null)
             headLine = "Emergency MultiSig payout tool"; // We dont translate here as it is for dev only purpose
 
-        width = 1000;
+        width = 1068;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();
@@ -100,27 +99,28 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     }
 
     private void addContent() {
+        gridPane.getColumnConstraints().remove(1);
         // We dont translate here as it is for dev only purpose
-        InputTextField depositTxHex = addLabelInputTextField(gridPane, ++rowIndex, "depositTxHex:").second;
+        InputTextField depositTxHex = addInputTextField(gridPane, ++rowIndex, "depositTxHex");
 
-        InputTextField buyerPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "buyerPayoutAmount:").second;
-        InputTextField sellerPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "sellerPayoutAmount:").second;
-        InputTextField arbitratorPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorPayoutAmount:").second;
-        InputTextField txFee = addLabelInputTextField(gridPane, ++rowIndex, "Tx fee:").second;
+        InputTextField buyerPayoutAmount = addInputTextField(gridPane, ++rowIndex, "buyerPayoutAmount");
+        InputTextField sellerPayoutAmount = addInputTextField(gridPane, ++rowIndex, "sellerPayoutAmount");
+        InputTextField arbitratorPayoutAmount = addInputTextField(gridPane, ++rowIndex, "arbitratorPayoutAmount");
+        InputTextField txFee = addInputTextField(gridPane, ++rowIndex, "Tx fee");
 
-        InputTextField buyerAddressString = addLabelInputTextField(gridPane, ++rowIndex, "buyerAddressString:").second;
-        InputTextField sellerAddressString = addLabelInputTextField(gridPane, ++rowIndex, "sellerAddressString:").second;
-        InputTextField arbitratorAddressString = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorAddressString:").second;
+        InputTextField buyerAddressString = addInputTextField(gridPane, ++rowIndex, "buyerAddressString");
+        InputTextField sellerAddressString = addInputTextField(gridPane, ++rowIndex, "sellerAddressString");
+        InputTextField arbitratorAddressString = addInputTextField(gridPane, ++rowIndex, "arbitratorAddressString");
 
-        InputTextField buyerPrivateKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "buyerPrivateKeyAsHex:").second;
-        InputTextField sellerPrivateKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "sellerPrivateKeyAsHex:").second;
-        InputTextField arbitratorPrivateKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorPrivateKeyAsHex:").second;
+        InputTextField buyerPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "buyerPrivateKeyAsHex");
+        InputTextField sellerPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPrivateKeyAsHex");
+        InputTextField arbitratorPrivateKeyAsHex = addInputTextField(gridPane, ++rowIndex, "arbitratorPrivateKeyAsHex");
 
-        InputTextField buyerPubKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "buyerPubKeyAsHex:").second;
-        InputTextField sellerPubKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "sellerPubKeyAsHex:").second;
-        InputTextField arbitratorPubKeyAsHex = addLabelInputTextField(gridPane, ++rowIndex, "arbitratorPubKeyAsHex:").second;
+        InputTextField buyerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "buyerPubKeyAsHex");
+        InputTextField sellerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPubKeyAsHex");
+        InputTextField arbitratorPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "arbitratorPubKeyAsHex");
 
-        InputTextField P2SHMultiSigOutputScript = addLabelInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript:").second;
+        InputTextField P2SHMultiSigOutputScript = addInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript");
 
 
         // Notes:

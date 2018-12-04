@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import bisq.desktop.util.FormBuilder;
@@ -35,6 +36,7 @@ import bisq.core.locale.Res;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import com.google.inject.name.Named;
 
@@ -53,7 +55,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 
@@ -64,10 +65,10 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
-import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
@@ -142,30 +143,28 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         gridPane.setHgap(5);
         gridPane.setVgap(5);
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
         columnConstraints1.setHgrow(Priority.SOMETIMES);
         columnConstraints1.setMinWidth(200);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        columnConstraints1.setMaxWidth(500);
+        gridPane.getColumnConstraints().addAll(columnConstraints1);
         root.getChildren().add(gridPane);
 
-        addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
-        TextField pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
+        addTitledGroupBg(gridPane, gridRow, 4, Res.get("account.tab.arbitratorRegistration"));
+        TextField pubKeyTextField = addTopLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView<String>> tuple = FormBuilder.addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
+        Tuple3<Label, ListView<String>, VBox> tuple = FormBuilder.addTopLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
         languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
+        languagesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
-                return new ListCell<String>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -192,10 +191,10 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             }
         });
 
-        languageComboBox = FormBuilder.<String>addLabelComboBox(gridPane, ++gridRow).second;
+        languageComboBox = FormBuilder.addComboBox(gridPane, ++gridRow);
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
         languageComboBox.setPromptText(Res.get("shared.addLanguage"));
-        languageComboBox.setConverter(new StringConverter<String>() {
+        languageComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(String code) {
                 return LanguageUtil.getDisplayName(code);
@@ -208,18 +207,23 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         });
         languageComboBox.setOnAction(e -> onAddLanguage());
 
-        Button registerButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"));
+        final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"), Res.get("account.arbitratorRegistration.revoke"));
+        Button registerButton = buttonButtonTuple2.first;
         registerButton.disableProperty().bind(model.registrationEditDisabled);
         registerButton.setOnAction(e -> onRegister());
 
-        Button revokeButton = addButton(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.revoke"));
+        Button revokeButton = buttonButtonTuple2.second;
         revokeButton.setDefaultButton(false);
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
+                Res.get("shared.information"), Layout.GROUP_DISTANCE);
+
+        titledGroupBg.getStyleClass().add("last");
+
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
-        GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(infoLabel, new Insets(Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
     }
 

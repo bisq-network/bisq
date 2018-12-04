@@ -18,11 +18,14 @@
 package bisq.desktop.main.overlays.notifications;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -43,30 +46,24 @@ import javafx.collections.ObservableList;
 
 import javafx.util.Duration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Notification extends Overlay<Notification> {
-    private static final Logger log = LoggerFactory.getLogger(Notification.class);
     private boolean hasBeenDisplayed;
     private boolean autoClose;
     private Timer autoCloseTimer;
 
     public Notification() {
-        width = 345; // 320 visible bg because of insets
+        width = 413; // 320 visible bg because of insets
         NotificationCenter.add(this);
         type = Type.Notification;
     }
 
-    public void onReadyForDisplay() {
+    void onReadyForDisplay() {
         super.display();
 
         if (autoClose && autoCloseTimer == null)
             autoCloseTimer = UserThread.runAfter(this::doClose, 6);
 
-        stage.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> {
-            doClose();
-        });
+        stage.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> doClose());
     }
 
     @Override
@@ -90,11 +87,6 @@ public class Notification extends Overlay<Notification> {
 
     public Notification disputeHeadLine(String tradeId) {
         return headLine(Res.get("notification.ticket.headline", tradeId));
-    }
-
-    @Override
-    protected void addSeparator() {
-        // dont show a separator
     }
 
     @Override
@@ -181,7 +173,7 @@ public class Notification extends Overlay<Notification> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(15, 15, 30, 30));
+        gridPane.setPadding(new Insets(62, 62, 62, 62));
     }
 
     @Override
@@ -192,9 +184,17 @@ public class Notification extends Overlay<Notification> {
 
     @Override
     protected void applyStyles() {
-        gridPane.setId("notification-popup-bg");
+        gridPane.getStyleClass().add("notification-popup-bg");
         if (headLineLabel != null)
-            headLineLabel.setId("notification-popup-headline");
+            headLineLabel.getStyleClass().add("notification-popup-headline");
+
+        headlineIcon.getStyleClass().add("popup-icon-information");
+        headlineIcon.setManaged(true);
+        headlineIcon.setVisible(true);
+        headlineIcon.setPadding(new Insets(1));
+        FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1em");
+        if (actionButton != null)
+            actionButton.getStyleClass().add("compact-button");
     }
 
     @Override
@@ -207,8 +207,9 @@ public class Notification extends Overlay<Notification> {
     protected void layout() {
         Window window = owner.getScene().getWindow();
         double titleBarHeight = window.getHeight() - owner.getScene().getHeight();
-        stage.setX(Math.round(window.getX() + window.getWidth() - stage.getWidth()));
-        stage.setY(Math.round(window.getY() + titleBarHeight));
+        double shadowInset = 44;
+        stage.setX(Math.round(window.getX() + window.getWidth() + shadowInset - stage.getWidth()));
+        stage.setY(Math.round(window.getY() + titleBarHeight - shadowInset));
     }
 
     @Override
@@ -218,19 +219,6 @@ public class Notification extends Overlay<Notification> {
     @Override
     protected void removeEffectFromBackground() {
     }
-
-   /* @Override
-    protected void addCloseButton() {
-        closeButton = new AutoTooltipButton(Res.get("shared.close"));
-        closeButton.setOnAction(event -> {
-            hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
-        });
-        GridPane.setHalignment(closeButton, HPos.RIGHT);
-        GridPane.setRowIndex(closeButton, ++rowIndex);
-        GridPane.setColumnIndex(closeButton, 1);
-        gridPane.getChildren().add(closeButton);
-    }*/
 
     public boolean isHasBeenDisplayed() {
         return hasBeenDisplayed;

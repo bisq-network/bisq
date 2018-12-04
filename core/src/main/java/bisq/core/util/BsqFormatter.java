@@ -18,9 +18,12 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.state.governance.Param;
+import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
+import bisq.core.util.validation.BtcAddressValidator;
+import bisq.core.util.validation.InputValidator;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
@@ -46,7 +49,7 @@ public class BsqFormatter extends BSFormatter {
     private final MonetaryFormat btcCoinFormat;
 
     @Inject
-    private BsqFormatter() {
+    public BsqFormatter() {
         super();
 
         btcCoinFormat = super.coinFormat;
@@ -111,119 +114,94 @@ public class BsqFormatter extends BSFormatter {
         return super.formatCoinWithCode(satoshi, btcCoinFormat);
     }
 
+    public String formatBTCWithCode(Coin coin) {
+        return super.formatCoinWithCode(coin, btcCoinFormat);
+    }
+
+    public String formatBTC(Coin coin) {
+        return super.formatCoin(coin.value, btcCoinFormat);
+    }
+
     public Coin parseToBTC(String input) {
         return super.parseToCoin(input, btcCoinFormat);
     }
 
-    public String formatParamValue(Param param, long value) {
-        switch (param) {
-            case UNDEFINED:
-                return Res.get("shared.na");
+    public void validateBtcInput(String input) throws ValidationException {
+        validateCoinInput(input, btcCoinFormat);
+    }
 
-            case DEFAULT_MAKER_FEE_BSQ:
-            case DEFAULT_TAKER_FEE_BSQ:
-            case MIN_MAKER_FEE_BSQ:
-            case MIN_TAKER_FEE_BSQ:
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-            case MIN_MAKER_FEE_BTC:
-            case MIN_TAKER_FEE_BTC:
-                return formatToPercentWithSymbol(value / 10000d);
+    public void validateBsqInput(String input) throws ValidationException {
+        validateCoinInput(input, this.coinFormat);
+    }
 
-            case PROPOSAL_FEE:
-            case BLIND_VOTE_FEE:
-            case COMPENSATION_REQUEST_MIN_AMOUNT:
-            case COMPENSATION_REQUEST_MAX_AMOUNT:
-            case REIMBURSEMENT_MIN_AMOUNT:
-            case REIMBURSEMENT_MAX_AMOUNT:
-                return formatCoinWithCode(Coin.valueOf(value));
-
-            case QUORUM_COMP_REQUEST:
-            case QUORUM_REIMBURSEMENT:
-            case QUORUM_CHANGE_PARAM:
-            case QUORUM_ROLE:
-            case QUORUM_CONFISCATION:
-            case QUORUM_GENERIC:
-            case QUORUM_REMOVE_ASSET:
-                return formatCoinWithCode(Coin.valueOf(value));
-
-            case THRESHOLD_COMP_REQUEST:
-            case THRESHOLD_REIMBURSEMENT:
-            case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_ROLE:
-            case THRESHOLD_CONFISCATION:
-            case THRESHOLD_GENERIC:
-            case THRESHOLD_REMOVE_ASSET:
-                return formatToPercentWithSymbol(value / 10000d);
-
-            case PHASE_UNDEFINED:
-                return Res.get("shared.na");
-            case PHASE_PROPOSAL:
-            case PHASE_BREAK1:
-            case PHASE_BLIND_VOTE:
-            case PHASE_BREAK2:
-            case PHASE_VOTE_REVEAL:
-            case PHASE_BREAK3:
-            case PHASE_RESULT:
-                return Res.get("dao.param.blocks", value);
-
-            default:
-                return Res.get("shared.na");
+    private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ValidationException {
+        try {
+            coinFormat.parse(cleanDoubleInput(input));
+        } catch (Throwable t) {
+            throw new ValidationException("Invalid format for a " + coinFormat.code() + " value");
         }
     }
 
-    public long parseParamValue(Param param, String inputValue) {
-        switch (param) {
+    public String formatParamValue(Param param, String value) {
+        switch (param.getParamType()) {
             case UNDEFINED:
-                return 0;
-
-            case DEFAULT_MAKER_FEE_BSQ:
-            case DEFAULT_TAKER_FEE_BSQ:
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-                return (long) (parsePercentStringToDouble(inputValue) * 10000);
-
-            case PROPOSAL_FEE:
-            case BLIND_VOTE_FEE:
-            case COMPENSATION_REQUEST_MIN_AMOUNT:
-            case COMPENSATION_REQUEST_MAX_AMOUNT:
-            case REIMBURSEMENT_MIN_AMOUNT:
-            case REIMBURSEMENT_MAX_AMOUNT:
-                return parseToCoin(inputValue).value;
-
-
-            case QUORUM_COMP_REQUEST:
-            case QUORUM_REIMBURSEMENT:
-            case QUORUM_CHANGE_PARAM:
-            case QUORUM_ROLE:
-            case QUORUM_CONFISCATION:
-            case QUORUM_GENERIC:
-            case QUORUM_REMOVE_ASSET:
-                return parseToCoin(inputValue).value;
-
-
-            case THRESHOLD_COMP_REQUEST:
-            case THRESHOLD_REIMBURSEMENT:
-            case THRESHOLD_CHANGE_PARAM:
-            case THRESHOLD_ROLE:
-            case THRESHOLD_CONFISCATION:
-            case THRESHOLD_GENERIC:
-            case THRESHOLD_REMOVE_ASSET:
-                return (long) (parsePercentStringToDouble(inputValue) * 10000);
-
-            case PHASE_UNDEFINED:
-                return 0;
-            case PHASE_PROPOSAL:
-            case PHASE_BREAK1:
-            case PHASE_BLIND_VOTE:
-            case PHASE_BREAK2:
-            case PHASE_VOTE_REVEAL:
-            case PHASE_BREAK3:
-            case PHASE_RESULT:
-                return Long.valueOf(inputValue);
-
+                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+            case BSQ:
+                return formatCoinWithCode(parseToCoin(value));
+            case BTC:
+                return formatBTCWithCode(parseToBTC(value));
+            case PERCENT:
+                return formatToPercentWithSymbol(parsePercentStringToDouble(value));
+            case BLOCK:
+                return Res.get("dao.param.blocks", Integer.parseInt(value));
+            case ADDRESS:
+                return value;
             default:
-                return 0;
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+        }
+    }
+
+    public Coin parseParamValueToCoin(Param param, String inputValue) {
+        switch (param.getParamType()) {
+            case BSQ:
+                return parseToCoin(inputValue);
+            case BTC:
+                return parseToBTC(inputValue);
+            default:
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+        }
+    }
+
+    public int parseParamValueToBlocks(Param param, String inputValue) {
+        switch (param.getParamType()) {
+            case BLOCK:
+                return Integer.parseInt(inputValue);
+            default:
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+        }
+    }
+
+    public String parseParamValueToString(Param param, String inputValue) throws ValidationException {
+        switch (param.getParamType()) {
+            case UNDEFINED:
+                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+            case BSQ:
+                return formatCoin(parseParamValueToCoin(param, inputValue));
+            case BTC:
+                return formatBTC(parseParamValueToCoin(param, inputValue));
+            case PERCENT:
+                return formatToPercent(parsePercentStringToDouble(inputValue));
+
+            case BLOCK:
+                return Integer.toString(parseParamValueToBlocks(param, inputValue));
+            case ADDRESS:
+                InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
+                if (validationResult.isValid)
+                    return inputValue;
+                else
+                    throw new ValidationException(validationResult.errorMessage);
+            default:
+                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
         }
     }
 }
