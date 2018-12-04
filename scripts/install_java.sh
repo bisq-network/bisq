@@ -1,14 +1,32 @@
 #!/usr/bin/env bash
 
 JAVA_HOME=/usr/lib/jvm/openjdk-10.0.2
+JDK_FILENAME=openjdk-10.0.2_linux-x64_bin.tar.gz
+JDK_URL=https://download.java.net/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_linux-x64_bin.tar.gz
+
+# Determine which package manager to use depending on the distribution
+declare -A osInfo;
+osInfo[/etc/redhat-release]=yum
+osInfo[/etc/arch-release]=pacman
+osInfo[/etc/gentoo-release]=emerge
+osInfo[/etc/SuSE-release]=zypp
+osInfo[/etc/debian_version]=apt-get
+for f in ${!osInfo[@]}
+do
+    if [[ -f $f ]]; then
+        PACKAGE_MANAGER=${osInfo[$f]}
+        break
+    fi
+done
 
 if [ ! -d "$JAVA_HOME" ]; then
-    apt-get -y install curl
+    # Ensure curl is installed since it may not be
+    $PACKAGE_MANAGER -y install curl
 
-    curl -L -O https://download.java.net/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_linux-x64_bin.tar.gz
+    curl -L -O $JDK_URL
     mkdir -p $JAVA_HOME
-    tar -zxf openjdk-10.0.2_linux-x64_bin.tar.gz -C $JAVA_HOME --strip 1
-    rm openjdk-10.0.2_linux-x64_bin.tar.gz
+    tar -zxf $JDK_FILENAME -C $JAVA_HOME --strip 1
+    rm $JDK_FILENAME
 
     update-alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2000
     update-alternatives --install /usr/bin/javac javac $JAVA_HOME/bin/javac 2000
