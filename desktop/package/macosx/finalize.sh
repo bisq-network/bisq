@@ -38,7 +38,7 @@ cp "$linux64/$deb64" "$target_dir/"
 
 exe="Bisq-$version.exe"
 exe64="Bisq-64bit-$version.exe"
-cp "$win64/bundles/$exe" "$target_dir/$exe64"
+cp "$win64/$exe" "$target_dir/$exe64"
 
 cd "$target_dir"
 
