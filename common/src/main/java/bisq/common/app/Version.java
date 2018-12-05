@@ -27,7 +27,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "0.8.0";
+    public static final String VERSION = "0.9.0";
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
@@ -120,8 +120,11 @@ public class Version {
 
     //TODO move to consensus area
     public static final byte COMPENSATION_REQUEST = (byte) 0x01;
+    public static final byte REIMBURSEMENT_REQUEST = (byte) 0x01;
     public static final byte PROPOSAL = (byte) 0x01;
     public static final byte BLIND_VOTE = (byte) 0x01;
     public static final byte VOTE_REVEAL = (byte) 0x01;
     public static final byte LOCKUP = (byte) 0x01;
+    public static final byte ASSET_LISTING_FEE = (byte) 0x01;
+    public static final byte PROOF_OF_BURN = (byte) 0x01;
 }

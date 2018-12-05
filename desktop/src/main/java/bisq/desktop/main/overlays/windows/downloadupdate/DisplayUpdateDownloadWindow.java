@@ -31,6 +31,8 @@ import bisq.common.util.Utilities;
 
 import com.google.common.base.Joiner;
 
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -86,12 +88,11 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     }
 
     public void show() {
-        width = 900;
+        width = 968;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = Res.get("displayUpdateDownloadWindow.headline");
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();
@@ -121,6 +122,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
 
         Button downloadButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.label"));
+        downloadButton.getStyleClass().add("action-button");
         downloadButton.setDefaultButton(true);
 
         busyAnimation = new BusyAnimation(false);
@@ -138,22 +140,18 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
 
-
-        Label downloadingFileLabel = addLabel(gridPane, ++rowIndex, Res.get("displayUpdateDownloadWindow.downloadingFile", ""));
-        GridPane.setColumnIndex(downloadingFileLabel, 0);
+        Label downloadingFileLabel = addLabel(gridPane, ++rowIndex,
+                Res.get("displayUpdateDownloadWindow.downloadingFile", ""));
         downloadingFileLabel.setOpacity(0.2);
+        GridPane.setHalignment(downloadingFileLabel, HPos.LEFT);
 
-        progressBar = new ProgressBar(0L);
-        progressBar.setPrefWidth(200);
+        progressBar = new JFXProgressBar(0L);
         progressBar.setMaxHeight(4);
         progressBar.managedProperty().bind(progressBar.visibleProperty());
-        progressBar.setVisible(false);
 
-        GridPane.setRowIndex(progressBar, rowIndex);
-        GridPane.setColumnIndex(progressBar, 1);
+        GridPane.setRowIndex(progressBar, ++rowIndex);
         GridPane.setHalignment(progressBar, HPos.LEFT);
         GridPane.setFillWidth(progressBar, true);
-        GridPane.setMargin(progressBar, new Insets(3, 0, 0, 10));
         gridPane.getChildren().add(progressBar);
 
 

@@ -37,7 +37,7 @@ public class QMCoin extends Coin {
 
         @Override
         public AddressValidationResult validate(String address) {
-            if (!address.matches("^[Q][a-km-zA-HJ-NP-Z1-9]{25,34}$"))
+            if (!address.matches("^[Q][a-km-zA-HJ-NP-Z1-9]{24,33}$"))
                 return AddressValidationResult.invalidStructure();
 
             return super.validate(address);

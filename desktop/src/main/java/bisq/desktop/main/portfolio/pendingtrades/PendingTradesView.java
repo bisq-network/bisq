@@ -68,6 +68,10 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
 
@@ -134,8 +138,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openTrades"))));
         tableView.setMinHeight(100);
 
-        tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
-        dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
         volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
                 return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
@@ -148,16 +152,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             else
                 return 0;
         });
-        priceColumn.setComparator((o1, o2) -> o1.getPrice().compareTo(o2.getPrice()));
-        paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
+        priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
+        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getTrade().getOffer() != null ?
+                o.getTrade().getOffer().getPaymentMethod().getId() : null));
         avatarColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
                 return o1.getTrade().getTradingPeerNodeAddress().getFullAddress().compareTo(o2.getTrade().getTradingPeerNodeAddress().getFullAddress());
             else
                 return 0;
         });
-        roleColumn.setComparator((o1, o2) -> model.getMyRole(o1).compareTo(model.getMyRole(o2)));
-        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
+        roleColumn.setComparator(Comparator.comparing(model::getMyRole));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -192,6 +197,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (scene != null) {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
+            //TODO: in what cases is it necessary to request focus?
             /*appFocusSubscription = EasyBind.subscribe(scene.getWindow().focusedProperty(), isFocused -> {
                 if (isFocused && model.dataModel.selectedItemProperty.get() != null) {
                     // Focus selectedItem from model
@@ -290,12 +296,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
         tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem,
                             PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -321,12 +327,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -344,12 +349,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -366,12 +370,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -388,12 +391,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -410,12 +412,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setPaymentMethodColumnCellFactory() {
         paymentMethodColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         paymentMethodColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -432,12 +433,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setMarketColumnCellFactory() {
         marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         marketColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -451,12 +451,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private void setRoleColumnCellFactory() {
         roleColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         roleColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(
                             TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -474,12 +473,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private TableColumn<PendingTradesListItem, PendingTradesListItem> setAvatarColumnCellFactory() {
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
-                new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
-                        PendingTradesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
-                        return new TableCell<PendingTradesListItem, PendingTradesListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
@@ -489,6 +487,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final Offer offer = trade.getOffer();
+                                    checkNotNull(offer, "Offer must not be null in PendingTradesView");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,

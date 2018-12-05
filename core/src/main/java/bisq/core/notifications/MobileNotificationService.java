@@ -22,7 +22,9 @@ import bisq.core.user.Preferences;
 import bisq.network.NetworkOptionKeys;
 import bisq.network.http.HttpClient;
 
+import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import com.google.gson.Gson;
 
@@ -30,16 +32,25 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
 import org.apache.commons.codec.binary.Hex;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -57,6 +68,9 @@ public class MobileNotificationService {
     private final MobileMessageEncryption mobileMessageEncryption;
     private final MobileNotificationValidator mobileNotificationValidator;
     private final HttpClient httpClient;
+
+    private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
+            "MobileNotificationService", 10, 15, 10 * 60);
     @Getter
     private final MobileModel mobileModel;
 
@@ -114,11 +128,8 @@ public class MobileNotificationService {
             preferences.setPhoneKeyAndToken(keyAndToken);
             if (!setupConfirmationSent) {
                 try {
-                    boolean success = sendConfirmationMessage();
-                    if (success)
-                        setupConfirmationSent = true;
-                    else
-                        log.warn("sendConfirmationMessage failed");
+                    sendConfirmationMessage();
+                    setupConfirmationSent = true;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -129,7 +140,35 @@ public class MobileNotificationService {
         }
     }
 
-    public boolean sendMessage(MobileMessage message, boolean useSound) throws Exception {
+    /**
+     *
+     * @param message           The message to send
+     * @param useSound          If a sound should be used on the mobile device.
+     * @return Returns true if the message was sent. It does not reflect if the sending was successful.
+     *                          The result and error handlers carry that information.
+     * @throws Exception
+     */
+    public boolean sendMessage(MobileMessage message,
+                               boolean useSound) throws Exception {
+        return sendMessage(message, useSound,
+                result -> log.debug("sendMessage result=" + result),
+                throwable -> log.error("sendMessage failed. throwable=" + throwable.toString()));
+    }
+
+    /**
+     *
+     * @param message           The message to send
+     * @param useSound          If a sound should be used on the mobile device.
+     * @param resultHandler     The result of the send operation (sent on a custom thread)
+     * @param errorHandler      Carries the throwable if an error occurred at sending (sent on a custom thread)
+     * @return Returns true if the message was sent. It does not reflect if the sending was successful.
+     *                          The result and error handlers carry that information.
+     * @throws Exception
+     */
+    private boolean sendMessage(MobileMessage message,
+                                boolean useSound,
+                                Consumer<String> resultHandler,
+                                Consumer<Throwable> errorHandler) throws Exception {
         log.info("Send message: '{}'", message.getMessage());
         if (mobileModel.getKey() == null)
             return false;
@@ -180,14 +219,16 @@ public class MobileNotificationService {
         log.info("key = " + mobileModel.getKey());
         log.info("iv = " + iv);
         log.info("encryptedJson = " + cipher);
-        return doSendMessage(iv, cipher, useSound);
+
+        doSendMessage(iv, cipher, useSound, resultHandler, errorHandler);
+        return true;
     }
 
-    public boolean sendEraseMessage() throws Exception {
+    public void sendEraseMessage() throws Exception {
         MobileMessage message = new MobileMessage("",
                 "",
                 MobileMessageType.ERASE);
-        return sendMessage(message, false);
+        sendMessage(message, false);
     }
 
     public void reset() {
@@ -197,15 +238,19 @@ public class MobileNotificationService {
     }
 
 
-    private boolean sendConfirmationMessage() throws Exception {
+    private void sendConfirmationMessage() throws Exception {
         log.info("sendConfirmationMessage");
         MobileMessage message = new MobileMessage("",
                 "",
                 MobileMessageType.SETUP_CONFIRMATION);
-        return sendMessage(message, true);
+        sendMessage(message, true);
     }
 
-    private boolean doSendMessage(String iv, String cipher, boolean useSound) throws Exception {
+    private void doSendMessage(String iv,
+                               String cipher,
+                               boolean useSound,
+                               Consumer<String> resultHandler,
+                               Consumer<Throwable> errorHandler) throws Exception {
         String msg;
         if (mobileModel.getOs() == null)
             throw new RuntimeException("No mobileModel OS set");
@@ -244,9 +289,26 @@ public class MobileNotificationService {
         log.info("Send: isAndroid={}\nuseSound={}\ntokenAsHex={}\nmsgAsHex={}",
                 isAndroid, useSound, tokenAsHex, msgAsHex);
 
-        String result = httpClient.requestWithGET(param, "User-Agent", "bisq/" +
-                Version.VERSION + ", uid:" + httpClient.getUid());
-        log.info("result: " + result);
-        return result.equals(SUCCESS);
+        String threadName = "sendMobileNotification-" + msgAsHex.substring(0, 5) + "...";
+        ListenableFuture<String> future = executorService.submit(() -> {
+            Thread.currentThread().setName(threadName);
+            String result = httpClient.requestWithGET(param, "User-Agent",
+                    "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
+            log.info("sendMobileNotification result: " + result);
+            checkArgument(result.equals(SUCCESS), "Result was not 'success'. result=" + result);
+            return result;
+        });
+
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(String result) {
+                UserThread.execute(() -> resultHandler.accept(result));
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> errorHandler.accept(throwable));
+            }
+        });
     }
 }

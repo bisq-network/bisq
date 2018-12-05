@@ -18,7 +18,7 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 
 import org.bitcoinj.core.TransactionOutput;
 

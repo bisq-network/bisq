@@ -20,7 +20,7 @@ public class NationalAccountIdValidator extends BankValidator {
                     return super.validate(input);
                 else {
                     String nationalAccountIdLabel = BankUtil.getNationalAccountIdLabel(countryCode);
-                    return new ValidationResult(false, Res.get("validation.nationalAccountId", nationalAccountIdLabel.substring(0, nationalAccountIdLabel.length() - 1), length));
+                    return new ValidationResult(false, Res.get("validation.nationalAccountId", nationalAccountIdLabel, length));
                 }
 
                 default:

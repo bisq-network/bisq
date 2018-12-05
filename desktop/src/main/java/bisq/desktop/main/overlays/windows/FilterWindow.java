@@ -46,8 +46,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private SendFilterMessageHandler sendFilterMessageHandler;
@@ -82,10 +83,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (headLine == null)
             headLine = Res.get("filterWindow.headline");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();
@@ -119,24 +119,27 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
+        gridPane.getColumnConstraints().remove(1);
+        gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
+
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
-        InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
-        InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
+        InputTextField offerIdsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers"));
+        InputTextField nodesInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
         nodesInputTextField.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
-        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
+        InputTextField paymentAccountFilterInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
         paymentAccountFilterInputTextField.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
-        InputTextField bannedCurrenciesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies")).second;
-        InputTextField bannedPaymentMethodsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
+        InputTextField bannedCurrenciesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedCurrencies"));
+        InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField arbitratorsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators")).second;
-        InputTextField seedNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode")).second;
-        InputTextField priceRelayNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode")).second;
-        InputTextField btcNodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode")).second;
-        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork")).second;
+        InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
+        InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
+        InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
+        InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
+        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork"));
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
@@ -287,7 +290,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));

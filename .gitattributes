@@ -1,0 +1,16 @@
+# Auto detect text files and normalize line endings to LF
+# This will handle all files NOT found below
+* text=auto
+
+# These text files should retain Windows line endings (CRLF)
+*.bat           text eol=crlf
+
+# These binary files should be left untouched
+# (binary is a macro for -text -diff)
+*.bmp           binary
+*.gif           binary
+*.ico           binary
+*.jar           binary
+*.jpg           binary
+*.jpeg          binary
+*.png           binary

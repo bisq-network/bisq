@@ -151,6 +151,13 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         }
     }
 
+    public void reset() {
+        lastRequestedBlockHeight = 0;
+        lastReceivedBlockHeight = 0;
+        retryCounter = 0;
+        requestBlocksHandlerMap.values().forEach(RequestBlocksHandler::cancel);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -273,8 +280,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                     log.info("requestBlocks with startBlockHeight={} from peer {}", startBlockHeight, peersNodeAddress);
                     requestBlocksHandler.requestBlocks();
                 } else {
-                    //TODO check with re-orgs
-                    // FIXME when a lot of blocks are created we get caught here. Seems to be a threading issue...
                     log.warn("startBlockHeight must not be smaller than lastReceivedBlockHeight. That should never happen." +
                             "startBlockHeight={},lastReceivedBlockHeight={}", startBlockHeight, lastReceivedBlockHeight);
                     DevEnv.logErrorAndThrowIfDevMode("startBlockHeight must be larger than lastReceivedBlockHeight. startBlockHeight=" +

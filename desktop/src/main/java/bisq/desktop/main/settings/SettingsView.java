@@ -58,9 +58,9 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
-        preferencesTab.setText(Res.get("settings.tab.preferences"));
-        networkTab.setText(Res.get("settings.tab.network"));
-        aboutTab.setText(Res.get("settings.tab.about"));
+        preferencesTab.setText(Res.get("settings.tab.preferences").toUpperCase());
+        networkTab.setText(Res.get("settings.tab.network").toUpperCase());
+        aboutTab.setText(Res.get("settings.tab.about").toUpperCase());
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SettingsView.class) == 1)
@@ -68,13 +68,17 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == preferencesTab)
-                navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-            else if (newValue == networkTab)
-                navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
-            else if (newValue == aboutTab)
-                navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
+            navigationToTabContent(newValue);
         };
+    }
+
+    private void navigationToTabContent(Tab newValue) {
+        if (newValue == preferencesTab)
+            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
+        else if (newValue == networkTab)
+            navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
+        else if (newValue == aboutTab)
+            navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
     }
 
     @Override
@@ -83,12 +87,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         Tab selectedItem = root.getSelectionModel().getSelectedItem();
-        if (selectedItem == preferencesTab)
-            navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
-        else if (selectedItem == networkTab)
-            navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
-        else if (selectedItem == aboutTab)
-            navigation.navigateTo(MainView.class, SettingsView.class, AboutView.class);
+        navigationToTabContent(selectedItem);
     }
 
     @Override

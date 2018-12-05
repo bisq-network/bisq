@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
@@ -121,6 +122,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -257,10 +259,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         TableColumn<Dispute, Dispute> stateColumn = getStateColumn();
         tableView.getColumns().add(stateColumn);
 
-        tradeIdColumn.setComparator((o1, o2) -> o1.getTradeId().compareTo(o2.getTradeId()));
-        dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
-        buyerOnionAddressColumn.setComparator((o1, o2) -> getBuyerOnionAddressColumnLabel(o1).compareTo(getBuyerOnionAddressColumnLabel(o2)));
-        sellerOnionAddressColumn.setComparator((o1, o2) -> getSellerOnionAddressColumnLabel(o1).compareTo(getSellerOnionAddressColumnLabel(o2)));
+        tradeIdColumn.setComparator(Comparator.comparing(Dispute::getTradeId));
+        dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
+        buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
+        sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
         marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
@@ -282,7 +284,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
+                disputeManager.getDisputesAsObservableList().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();
                     List<Dispute> list;
                     if (!map.containsKey(tradeId))
@@ -292,13 +294,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     list.add(dispute);
                 });
                 List<List<Dispute>> disputeGroups = new ArrayList<>();
-                map.entrySet().stream().forEach(entry -> disputeGroups.add(entry.getValue()));
+                map.forEach((key, value) -> disputeGroups.add(value));
                 disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
 
                 // We don't translate that as it is not intended for the public
                 stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
-                disputeGroups.stream().forEach(disputeGroup -> {
+                disputeGroups.forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
                     stringBuilder.append("##########################################################################################/\n")
                             .append("## Trade ID: ")
@@ -317,14 +319,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     }
                     stringBuilder.append("##########################################################################################/\n")
                             .append("\n");
-                    disputeGroup.stream().forEach(dispute -> {
+                    disputeGroup.forEach(dispute -> {
                         stringBuilder
                                 .append("*******************************************************************************************\n")
                                 .append("** Trader's ID: ")
                                 .append(dispute.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
-                        dispute.getDisputeCommunicationMessages().stream().forEach(m -> {
+                        dispute.getDisputeCommunicationMessages().forEach(m -> {
                             String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
@@ -409,18 +411,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 startDate = new Date(0); // print all from start
 
                 HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
+                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
 
                 final Date finalStartDate = startDate;
                 List<Dispute> disputes = new ArrayList<>(map.values());
-                disputes.sort((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
+                disputes.sort(Comparator.comparing(Dispute::getOpeningDate));
                 List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
                 StringBuilder sb = new StringBuilder();
                 // We don't translate that as it is not intended for the public
-                subLists.stream().forEach(list -> {
+                subLists.forEach(list -> {
                     StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
                     StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
-                    list.stream().forEach(dispute -> {
+                    list.forEach(dispute -> {
                         if (dispute.getOpeningDate().after(finalStartDate)) {
                             String txId = dispute.getDepositTxId();
                             sb1.append("window.open(\"https://blockchain.info/tx/").append(txId).append("\", '_blank');\n");
@@ -676,7 +678,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessages();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
-            sortedList.setComparator((o1, o2) -> new Date(o1.getDate()).compareTo(new Date(o2.getDate())));
+            sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
 
@@ -688,7 +690,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             messagesAnchorPane = new AnchorPane();
             VBox.setVgrow(messagesAnchorPane, Priority.ALWAYS);
 
-            inputTextArea = new TextArea();
+            inputTextArea = new BisqTextArea();
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
             if (!(this instanceof ArbitratorDisputeView))
@@ -740,10 +742,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 messagesAnchorPane.getChildren().addAll(tableGroupHeadline, messageListView);
             }
 
-            messageListView.setCellFactory(new Callback<ListView<DisputeCommunicationMessage>, ListCell<DisputeCommunicationMessage>>() {
+            messageListView.setCellFactory(new Callback<>() {
                 @Override
                 public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
-                    return new ListCell<DisputeCommunicationMessage>() {
+                    return new ListCell<>() {
                         ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
@@ -801,7 +803,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
                                 boolean senderIsTrader = message.isSenderIsTrader();
-                                boolean isMyMsg = isTrader ? senderIsTrader : !senderIsTrader;
+                                boolean isMyMsg = isTrader == senderIsTrader;
 
                                 arrow.setVisible(!message.isSystemMessage());
                                 arrow.setManaged(!message.isSystemMessage());
@@ -1007,7 +1009,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.select"));
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.select"));
         column.setMinWidth(80);
         column.setMaxWidth(80);
         column.setSortable(false);
@@ -1015,13 +1017,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         column.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute,
-                        Dispute>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute,
                             Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
 
                             Button button;
 
@@ -1050,7 +1051,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.details")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.details")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -1058,11 +1059,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override
@@ -1090,17 +1091,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.date")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.date")) {
             {
                 setMinWidth(180);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -1116,17 +1117,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.tradeId")) {
             {
                 setMinWidth(110);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -1157,17 +1158,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.buyerAddress")) {
             {
                 setMinWidth(170);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -1183,17 +1184,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.sellerAddress")) {
             {
                 setMinWidth(170);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -1236,17 +1237,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getMarketColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("shared.market")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -1262,17 +1263,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getRoleColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.role")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.role")) {
             {
                 setMinWidth(130);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -1292,21 +1293,21 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getStateColumn() {
-        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<Dispute, Dispute>(Res.get("support.state")) {
+        TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.state")) {
             {
                 setMinWidth(50);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<Dispute, Dispute>, TableCell<Dispute, Dispute>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
-                        return new TableCell<Dispute, Dispute>() {
+                        return new TableCell<>() {
 
 
-                            public ReadOnlyBooleanProperty closedProperty;
-                            public ChangeListener<Boolean> listener;
+                            ReadOnlyBooleanProperty closedProperty;
+                            ChangeListener<Boolean> listener;
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {

@@ -39,15 +39,16 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.Vote;
 import bisq.core.dao.governance.myvote.MyVote;
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
+import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
@@ -55,6 +56,7 @@ import bisq.core.util.BsqFormatter;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -71,7 +73,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
@@ -104,6 +108,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
     private final DaoStateService daoStateService;
+    private final ChangeParamValidator changeParamValidator;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -114,9 +119,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private TableView<ProposalsListItem> tableView;
     private TitledGroupBg voteTitledGroupBg;
-    private Label revealTxIdLabel, blindVoteTxIdLabel, voteButtonInfoLabel;
+    private Label voteButtonInfoLabel;
     private TxIdTextField revealTxIdTextField, blindVoteTxIdTextField;
     private TextField meritTextField;
+    private VBox blindVoteTxIdContainer, revealTxIdContainer;
     private Button removeProposalButton, acceptButton, rejectButton, ignoreButton, voteButton;
     private InputTextField stakeInputTextField;
     private ScrollPane proposalDisplayView;
@@ -132,6 +138,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ListChangeListener<Ballot> ballotListChangeListener;
     private ChangeListener<String> stakeListener;
     private Subscription selectedProposalSubscription, phaseSubscription;
+    private boolean areVoteButtonsVisible;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,12 +150,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           BsqWalletService bsqWalletService,
                           PhasesView phasesView,
                           DaoStateService daoStateService,
+                          ChangeParamValidator changeParamValidator,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
+        this.changeParamValidator = changeParamValidator;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -183,7 +192,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
-        daoFacade.getBallots().addListener(ballotListChangeListener);
+        daoFacade.getAllBallots().addListener(ballotListChangeListener);
         daoFacade.addBsqStateListener(this);
         bsqWalletService.addBsqBalanceListener(this);
 
@@ -211,7 +220,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         sortedList.comparatorProperty().unbind();
 
         daoFacade.getActiveOrMyUnconfirmedProposals().removeListener(proposalListChangeListener);
-        daoFacade.getBallots().removeListener(ballotListChangeListener);
+        daoFacade.getAllBallots().removeListener(ballotListChangeListener);
         daoFacade.removeBsqStateListener(this);
         bsqWalletService.removeBsqBalanceListener(this);
 
@@ -306,7 +315,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 4);
         tableView.layout();
         root.layout();
     }
@@ -346,7 +355,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         ignoreButton = tuple.third;
         acceptButton.setOnAction(event -> onAccept());
         rejectButton.setOnAction(event -> onReject());
-        ignoreButton.setOnAction(event -> onCancelVote());
+        ignoreButton.setOnAction(event -> onIgnore());
 
         voteButtons.clear();
         voteButtons.add(voteButton);
@@ -405,13 +414,18 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private void onRemoveProposal() {
         if (daoFacade.phaseProperty().get() == DaoPhase.Phase.PROPOSAL) {
-            final Proposal proposal = selectedItem.getProposal();
-            if (daoFacade.removeMyProposal(proposal)) {
-                hideProposalDisplay();
-            } else {
-                new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
-            }
-            tableView.getSelectionModel().clearSelection();
+            Proposal proposal = selectedItem.getProposal();
+            new Popup<>().warning(Res.get("dao.proposal.active.remove.confirm"))
+                    .actionButtonText(Res.get("dao.proposal.active.remove.doRemove"))
+                    .onAction(() -> {
+                        if (daoFacade.removeMyProposal(proposal)) {
+                            hideProposalDisplay();
+                        } else {
+                            new Popup<>().warning(Res.get("dao.proposal.active.remove.failed")).show();
+                        }
+                        tableView.getSelectionModel().clearSelection();
+                    })
+                    .show();
         }
     }
 
@@ -466,7 +480,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         updateStateAfterVote();
     }
 
-    private void onCancelVote() {
+    private void onIgnore() {
         daoFacade.setVote(getBallotListItem().getBallot(), null);
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
@@ -481,8 +495,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             Coin miningFee = miningFeeAndTxSize.first;
             int txSize = miningFeeAndTxSize.second;
             Coin blindVoteFee = daoFacade.getBlindVoteFeeForCycle();
-            GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.blindVote"), () -> publishBlindVote(stake));
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(blindVoteFee, miningFee, txSize, bsqFormatter, btcFormatter,
+                        Res.get("dao.blindVote"), () -> publishBlindVote(stake));
+            } else {
+                publishBlindVote(stake);
+            }
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException exception) {
             new Popup<>().warning(exception.toString()).show();
         }
@@ -543,28 +561,26 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             stakeInputTextField.setMouseTransparent(true);
         }
 
-        boolean showVoteFields = isBlindVotePhaseButNotLastBlock || hasAlreadyVoted;
+        boolean hasProposals = !daoFacade.getActiveOrMyUnconfirmedProposals().isEmpty();
+        boolean showVoteFields = (isBlindVotePhaseButNotLastBlock && hasProposals) || hasAlreadyVoted;
 
         voteFields.forEach(node -> {
             node.setVisible(showVoteFields);
             node.setManaged(showVoteFields);
         });
+        areVoteButtonsVisible = hasProposals && isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted;
         voteButtons.forEach(button -> {
-            button.setVisible(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
-            button.setManaged(isBlindVotePhaseButNotLastBlock && !hasAlreadyVoted);
+            button.setVisible(areVoteButtonsVisible);
+            button.setManaged(areVoteButtonsVisible);
         });
 
         blindVoteTxIdTextField.setup("");
         revealTxIdTextField.setup("");
 
-        blindVoteTxIdLabel.setVisible(false);
-        blindVoteTxIdLabel.setManaged(false);
-        blindVoteTxIdTextField.setVisible(false);
-        blindVoteTxIdTextField.setManaged(false);
-        revealTxIdLabel.setVisible(false);
-        revealTxIdLabel.setManaged(false);
-        revealTxIdTextField.setVisible(false);
-        revealTxIdTextField.setManaged(false);
+        blindVoteTxIdContainer.setVisible(false);
+        blindVoteTxIdContainer.setManaged(false);
+        revealTxIdContainer.setVisible(false);
+        revealTxIdContainer.setManaged(false);
 
         if (hasAlreadyVoted) {
             voteTitledGroupBg.setText(Res.get("dao.proposal.votes.header.voted"));
@@ -579,18 +595,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
                     if (myVote.getTxId() != null) {
                         blindVoteTxIdTextField.setup(myVote.getTxId());
-                        blindVoteTxIdLabel.setVisible(true);
-                        blindVoteTxIdLabel.setManaged(true);
-                        blindVoteTxIdTextField.setVisible(true);
-                        blindVoteTxIdTextField.setManaged(true);
+                        blindVoteTxIdContainer.setVisible(true);
+                        blindVoteTxIdContainer.setManaged(true);
                     }
 
                     if (myVote.getRevealTxId() != null) {
                         revealTxIdTextField.setup(myVote.getRevealTxId());
-                        revealTxIdLabel.setVisible(true);
-                        revealTxIdLabel.setManaged(true);
-                        revealTxIdTextField.setVisible(true);
-                        revealTxIdTextField.setManaged(true);
+                        revealTxIdContainer.setVisible(true);
+                        revealTxIdContainer.setManaged(true);
                     }
                 } else {
                     stakeInputTextField.clear();
@@ -625,7 +637,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         TableGroupHeadline proposalsHeadline = new TableGroupHeadline(Res.get("dao.proposal.active.header"));
         GridPane.setRowIndex(proposalsHeadline, ++gridRow);
         GridPane.setMargin(proposalsHeadline, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
-        GridPane.setColumnSpan(proposalsHeadline, 2);
         root.getChildren().add(proposalsHeadline);
 
         tableView = new TableView<>();
@@ -636,18 +647,16 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         GridPane.setMargin(tableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 5, -10));
-        GridPane.setColumnSpan(tableView, 2);
         root.getChildren().add(tableView);
 
         tableView.setItems(sortedList);
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, bsqWalletService, daoFacade);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade, changeParamValidator);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
-        GridPane.setColumnSpan(proposalDisplayView, 2);
         GridPane.setHgrow(proposalDisplayView, Priority.ALWAYS);
         root.getChildren().add(proposalDisplayView);
     }
@@ -657,39 +666,34 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 Res.get("dao.proposal.votes.header"), 20);
         voteFields.add(voteTitledGroupBg);
 
-        Tuple2<Label, TextField> meritTuple = addLabelTextField(root, gridRow,
-                Res.getWithCol("dao.proposal.myVote.merit"), 40);
+        Tuple3<Label, TextField, VBox> meritTuple = addTopLabelTextField(root, gridRow,
+                Res.get("dao.proposal.myVote.merit"), 40);
         Label meritLabel = meritTuple.first;
         meritTextField = meritTuple.second;
         meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
         voteFields.add(meritLabel);
         voteFields.add(meritTextField);
 
-        Tuple2<Label, InputTextField> stakeTuple = addLabelInputTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.stake"));
-        Label stakeLabel = stakeTuple.first;
-        stakeInputTextField = stakeTuple.second;
+        stakeInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("dao.proposal.myVote.stake"));
         stakeInputTextField.setValidator(new BsqValidator(bsqFormatter));
-        voteFields.add(stakeLabel);
         voteFields.add(stakeInputTextField);
 
-        Tuple2<Label, TxIdTextField> blindVoteTxIdTuple = addLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.blindVoteTxId"));
-        blindVoteTxIdLabel = blindVoteTxIdTuple.first;
-        blindVoteTxIdTextField = blindVoteTxIdTuple.second;
+        Tuple3<Label, TxIdTextField, VBox> tuple = addTopLabelTxIdTextField(root, ++gridRow,
+                Res.get("dao.proposal.myVote.blindVoteTxId"), 0);
+        blindVoteTxIdTextField = tuple.second;
+        blindVoteTxIdContainer = tuple.third;
         blindVoteTxIdTextField.setBsq(true);
-        voteFields.add(blindVoteTxIdLabel);
-        voteFields.add(blindVoteTxIdTextField);
+        voteFields.add(blindVoteTxIdContainer);
 
-        Tuple2<Label, TxIdTextField> revealTxIdTuple = addLabelTxIdTextField(root, ++gridRow,
-                Res.getWithCol("dao.proposal.myVote.revealTxId"));
-        revealTxIdLabel = revealTxIdTuple.first;
-        revealTxIdTextField = revealTxIdTuple.second;
+        tuple = addTopLabelTxIdTextField(root, ++gridRow,
+                Res.get("dao.proposal.myVote.revealTxId"), 0);
+        revealTxIdTextField = tuple.second;
         revealTxIdTextField.setBsq(true);
-        voteFields.add(revealTxIdLabel);
-        voteFields.add(revealTxIdTextField);
+        revealTxIdContainer = tuple.third;
+        voteFields.add(revealTxIdContainer);
 
-        Tuple3<Button, BusyAnimation, Label> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
+        Tuple4<Button, BusyAnimation, Label, HBox> voteButtonTuple = addButtonBusyAnimationLabelAfterGroup(root, ++gridRow,
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
         voteButtons.add(voteButton);
@@ -777,7 +781,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getLink());
-                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
                                 } else {
@@ -819,32 +823,50 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
 
         column = new TableColumn<>();
-        column.setMinWidth(40);
+        column.setMinWidth(50);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<ProposalsListItem, ProposalsListItem>,
-                TableCell<ProposalsListItem, ProposalsListItem>>() {
-
+        column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
                     ProposalsListItem> column) {
-                return new TableCell<ProposalsListItem, ProposalsListItem>() {
-                    Label icon;
+                return new TableCell<>() {
+                    Button iconButton;
 
                     @Override
                     public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
-
                         if (item != null && !empty) {
-                            if (icon == null) {
+                            if (iconButton == null) {
                                 item.onPhaseChanged(currentPhase);
-                                icon = item.getIcon();
-                                setGraphic(icon);
+                                iconButton = item.getIconButton();
+                                if (iconButton != null) {
+                                    iconButton.setOnAction(e -> {
+                                        onSelectProposal(item);
+                                        if (areVoteButtonsVisible) {
+                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                                onReject();
+                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
+                                                onIgnore();
+                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
+                                                onAccept();
+                                        } else {
+                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                                onRemoveProposal();
+                                        }
+                                    });
+
+                                    if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                        iconButton.setMouseTransparent(true);
+                                        iconButton.setStyle("-fx-cursor: default;");
+                                    }
+                                    setGraphic(iconButton);
+                                }
                             }
                         } else {
                             setGraphic(null);
-                            if (icon != null)
-                                icon = null;
+                            if (iconButton != null)
+                                iconButton = null;
                         }
                     }
                 };

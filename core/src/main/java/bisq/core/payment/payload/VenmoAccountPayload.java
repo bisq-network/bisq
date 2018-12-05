@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -94,7 +96,8 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Venmo - Holder name: " + holderName + ", Venmo username: " + venmoUserName;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.getWithCol("payment.venmo.venmoUserName") + " " + venmoUserName;
     }
 
     @Override

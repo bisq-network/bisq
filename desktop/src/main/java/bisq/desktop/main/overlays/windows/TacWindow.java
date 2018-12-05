@@ -52,7 +52,7 @@ public class TacWindow extends Overlay<TacWindow> {
             this.width = primaryScreenBoundsWidth * 0.8;
             log.warn("Very small screen: primaryScreenBounds=" + primaryScreenBounds.toString());
         } else {
-            width = 900;
+            width = 968;
         }
     }
 

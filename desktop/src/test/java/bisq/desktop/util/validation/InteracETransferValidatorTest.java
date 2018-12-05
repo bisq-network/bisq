@@ -41,7 +41,11 @@ public class InteracETransferValidatorTest {
 
     @Test
     public void validate() throws Exception {
-        InteracETransferValidator validator = new InteracETransferValidator();
+        InteracETransferValidator validator = new InteracETransferValidator(
+                new EmailValidator(),
+                new InteracETransferQuestionValidator(new LengthValidator(), new RegexValidator()),
+                new InteracETransferAnswerValidator(new LengthValidator(), new RegexValidator())
+        );
 
         assertTrue(validator.validate("name@domain.tld").isValid);
         assertTrue(validator.validate("n1.n2@c.dd").isValid);

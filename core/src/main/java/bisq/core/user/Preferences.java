@@ -23,6 +23,7 @@ import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.dao.DaoOptionKeys;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -74,8 +75,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Preferences implements PersistedDataHost, BridgeAddressProvider {
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
+            new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
+            new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/"),
             new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
+            new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
             new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/btc/tx/", "https://live.blockcypher.com/btc/address/"),
             new BlockChainExplorer("Tradeblock", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/transactions/", "https://www.biteasy.com/addresses/"),
@@ -85,9 +88,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/")
-
-    ));
+    )
+    );
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
+            new BlockChainExplorer("Blockstream.info", "https://blockstream.info/testnet/tx/", "https://blockstream.info/testnet/address/"),
+            new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/address/"),
             new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/btc-testnet/tx/", "https://live.blockcypher.com/btc-testnet/address/"),
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Biteasy", "https://www.biteasy.com/testnet/transactions/", "https://www.biteasy.com/testnet/addresses/"),
@@ -139,9 +144,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private final Storage<PreferencesPayload> storage;
     private final BisqEnvironment bisqEnvironment;
-    private final String btcNodesFromOptions;
-    private final String useTorFlagFromOptions;
-    private final String referralIdFromOptions;
+    private final String btcNodesFromOptions, useTorFlagFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
+            rpcUserFromOptions, rpcPasswordFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -157,13 +161,20 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        BisqEnvironment bisqEnvironment,
                        @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions,
-                       @Named(AppOptionKeys.REFERRAL_ID) String referralId) {
+                       @Named(AppOptionKeys.REFERRAL_ID) String referralId,
+                       @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
+                       @Named(DaoOptionKeys.RPC_USER) String rpcUser,
+                       @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword) {
+
 
         this.storage = storage;
         this.bisqEnvironment = bisqEnvironment;
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.useTorFlagFromOptions = useTorFlagFromOptions;
         this.referralIdFromOptions = referralId;
+        this.fullDaoNodeFromOptions = fullDaoNode;
+        this.rpcUserFromOptions = rpcUser;
+        this.rpcPasswordFromOptions = rpcPassword;
 
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
@@ -206,7 +217,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Override
     public void readPersisted() {
         PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("PreferencesPayload", 100);
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         TradeCurrency preferredTradeCurrency;
         if (persisted != null) {
             prefPayload = persisted;
@@ -287,6 +298,15 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
         if (referralIdFromOptions != null && !referralIdFromOptions.isEmpty())
             setReferralId(referralIdFromOptions);
+
+        if (fullDaoNodeFromOptions != null && !fullDaoNodeFromOptions.isEmpty())
+            setDaoFullNode(fullDaoNodeFromOptions.toLowerCase().equals("true"));
+
+        if (rpcUserFromOptions != null && !rpcUserFromOptions.isEmpty())
+            setRpcUser(rpcUserFromOptions);
+
+        if (rpcPasswordFromOptions != null && !rpcPasswordFromOptions.isEmpty())
+            setRpcPw(rpcPasswordFromOptions);
 
         // For users from old versions the 4 flags a false but we want to have it true by default
         // PhoneKeyAndToken is also null so we can use that to enable the flags
@@ -596,6 +616,27 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.useStandbyModeProperty.set(useStandbyMode);
     }
 
+    public void setDaoFullNode(boolean value) {
+        prefPayload.setDaoFullNode(value);
+        persist();
+    }
+
+    public void setRpcUser(String value) {
+        prefPayload.setRpcUser(value);
+        persist();
+    }
+
+    public void setRpcPw(String value) {
+        prefPayload.setRpcPw(value);
+        persist();
+    }
+
+    public void setTakeOfferSelectedPaymentAccountId(String value) {
+        prefPayload.setTakeOfferSelectedPaymentAccountId(value);
+        persist();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -651,9 +692,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
-        // This check includes localhost, so we also override useTorForBitcoinJ
-        if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet.
+        // At testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
@@ -673,6 +714,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
     }
 
+    //TODO remove and use isPayFeeInBtc instead
     public boolean getPayFeeInBtc() {
         return prefPayload.isPayFeeInBtc();
     }
@@ -796,5 +838,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         long getWithdrawalTxFeeInBytes();
 
         void setUseStandbyMode(boolean useStandbyMode);
+
+        void setDaoFullNode(boolean value);
+
+        void setRpcUser(String value);
+
+        void setRpcPw(String value);
+
+        void setTakeOfferSelectedPaymentAccountId(String value);
     }
 }

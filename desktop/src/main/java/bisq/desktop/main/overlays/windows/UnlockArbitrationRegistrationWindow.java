@@ -17,8 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -26,17 +24,20 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-
-import javafx.geometry.Insets;
+import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
+
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldWithVBox;
 
 public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrationRegistrationWindow> {
     private final boolean useDevPrivilegeKeys;
@@ -78,7 +79,6 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addInputFields();
         addButtons();
         applyStyles();
@@ -112,25 +112,23 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     }
 
     private void addInputFields() {
-        Label label = new AutoTooltipLabel(Res.get("shared.enterPrivKey"));
+        final Tuple3<Label, InputTextField, VBox> labelInputTextFieldTuple2 = addTopLabelInputTextFieldWithVBox(gridPane,
+                ++rowIndex, Res.get("shared.enterPrivKey"), 3);
+        GridPane.setColumnSpan(labelInputTextFieldTuple2.third, 2);
+        Label label = labelInputTextFieldTuple2.first;
         label.setWrapText(true);
-        GridPane.setMargin(label, new Insets(3, 0, 0, 0));
-        GridPane.setRowIndex(label, ++rowIndex);
 
-        keyInputTextField = new InputTextField();
+        keyInputTextField = labelInputTextFieldTuple2.second;
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
-        GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
-        GridPane.setRowIndex(keyInputTextField, rowIndex);
-        GridPane.setColumnIndex(keyInputTextField, 1);
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(newValue.length() == 0);
         keyInputTextField.textProperty().addListener(changeListener);
-        gridPane.getChildren().addAll(label, keyInputTextField);
     }
 
     private void addButtons() {
-        unlockButton = new AutoTooltipButton(Res.get("shared.unlock"));
-        unlockButton.setDefaultButton(true);
+        final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), Res.get("shared.close"));
+        unlockButton = buttonButtonTuple2.first;
         unlockButton.setDisable(keyInputTextField.getText().length() == 0);
         unlockButton.setOnAction(e -> {
             if (privKeyHandler.checkKey(keyInputTextField.getText()))
@@ -139,18 +137,11 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
                 new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
-        Button closeButton = new AutoTooltipButton(Res.get("shared.close"));
+        Button closeButton = buttonButtonTuple2.second;
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
         });
-
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(unlockButton, closeButton);
-        gridPane.getChildren().add(hBox);
     }
 
 }

@@ -31,7 +31,13 @@ public class BankUtil {
     // BankName
     @SuppressWarnings("SameReturnValue")
     public static boolean isBankNameRequired(String countryCode) {
+        // Currently we always return true but lets keep that method to be more flexible in case we what to not show
+        // it at some new payment method.
+        return true;
+         /*
         switch (countryCode) {
+            // We show always the bank name as it is needed in specific banks.
+            // Though that handling should be optimized in futures.
             case "GB":
             case "US":
             case "NZ":
@@ -39,17 +45,14 @@ public class BankUtil {
             case "CA":
             case "SE":
             case "HK":
-                // We show always the bank name as it is needed in specific banks.
-                // Though that handling should be optimized in futures.
-                return true;
-            // return false;
+                return false;
             case "MX":
             case "BR":
             case "AR":
                 return true;
             default:
                 return true;
-        }
+        }*/
     }
 
     public static String getBankNameLabel(String countryCode) {
@@ -86,12 +89,12 @@ public class BankUtil {
     public static String getBankIdLabel(String countryCode) {
         switch (countryCode) {
             case "CA":
-                return "Institution Number:";// do not translate as it is used in english only
+                return "Institution Number";// do not translate as it is used in english only
             case "MX":
             case "HK":
                 return Res.get("payment.bankCode");
             default:
-                return isBankIdRequired(countryCode) ? Res.getWithCol("payment.bankId") : Res.get("payment.bankIdOptional");
+                return isBankIdRequired(countryCode) ? Res.get("payment.bankId") : Res.get("payment.bankIdOptional");
         }
 
     }
@@ -119,15 +122,15 @@ public class BankUtil {
     public static String getBranchIdLabel(String countryCode) {
         switch (countryCode) {
             case "GB":
-                return "UK sort code:"; // do not translate as it is used in english only
+                return "UK sort code"; // do not translate as it is used in english only
             case "US":
-                return "Routing Number:"; // do not translate as it is used in english only
+                return "Routing Number"; // do not translate as it is used in english only
             case "BR":
-                return "Código da Agência:"; // do not translate as it is used in portuguese only
+                return "Código da Agência"; // do not translate as it is used in portuguese only
             case "AU":
-                return "BSB code:"; // do not translate as it is used in english only
+                return "BSB code"; // do not translate as it is used in english only
             case "CA":
-                return "Transit Number:"; // do not translate as it is used in english only
+                return "Transit Number"; // do not translate as it is used in english only
             default:
                 return isBranchIdRequired(countryCode) ? Res.get("payment.branchNr") : Res.get("payment.branchNrOptional");
         }
@@ -154,15 +157,15 @@ public class BankUtil {
             case "HK":
                 return Res.get("payment.accountNr");
             case "NO":
-                return "Kontonummer:"; // do not translate as it is used in norwegian only
+                return "Kontonummer"; // do not translate as it is used in norwegian only
             case "SE":
-                return "Bankgiro number:"; // do not translate as it is used in swedish only
+                return "Bankgiro number"; // do not translate as it is used in swedish only
             case "MX":
-                return "CLABE:"; // do not translate as it is used in spanish only
+                return "CLABE"; // do not translate as it is used in spanish only
             case "CL":
-                return "Cuenta:"; // do not translate as it is used in spanish only
+                return "Cuenta"; // do not translate as it is used in spanish only
             case "AR":
-                return "Número de cuenta:"; // do not translate as it is used in spanish only
+                return "Número de cuenta"; // do not translate as it is used in spanish only
             default:
                 return Res.get("payment.accountNrLabel");
         }
@@ -218,11 +221,11 @@ public class BankUtil {
     public static String getHolderIdLabel(String countryCode) {
         switch (countryCode) {
             case "BR":
-                return "Cadastro de Pessoas Físicas (CPF):"; // do not translate as it is used in portuguese only
+                return "Cadastro de Pessoas Físicas (CPF)"; // do not translate as it is used in portuguese only
             case "CL":
-                return "Rol Único Tributario (RUT):";  // do not translate as it is used in spanish only
+                return "Rol Único Tributario (RUT)";  // do not translate as it is used in spanish only
             case "AR":
-                return "CUIL/CUIT:"; // do not translate as it is used in spanish only
+                return "CUIL/CUIT"; // do not translate as it is used in spanish only
             default:
                 return Res.get("payment.personalId");
         }
@@ -231,13 +234,13 @@ public class BankUtil {
     public static String getHolderIdLabelShort(String countryCode) {
         switch (countryCode) {
             case "BR":
-                return "CPF:"; // do not translate as it is used in portuguese only
+                return "CPF"; // do not translate as it is used in portuguese only
             case "CL":
-                return "RUT:";  // do not translate as it is used in spanish only
+                return "RUT";  // do not translate as it is used in spanish only
             case "AR":
-                return "CUIT:";
+                return "CUIT";
             default:
-                return "ID:";
+                return "ID";
         }
     }
 

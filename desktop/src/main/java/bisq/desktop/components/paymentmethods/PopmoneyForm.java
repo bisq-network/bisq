@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PopmoneyValidator;
 
@@ -31,14 +32,12 @@ import bisq.core.payment.payload.PopmoneyAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class PopmoneyForm extends PaymentMethodForm {
     private final PopmoneyAccount account;
@@ -46,9 +45,9 @@ public class PopmoneyForm extends PaymentMethodForm {
     private InputTextField accountIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((PopmoneyAccountPayload) paymentAccountPayload).getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), ((PopmoneyAccountPayload) paymentAccountPayload).getAccountId());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), ((PopmoneyAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
 
@@ -62,15 +61,15 @@ public class PopmoneyForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.getWithCol("payment.account.owner")).second;
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue);
             updateFromInputs();
         });
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setAccountId(newValue);
@@ -79,34 +78,29 @@ public class PopmoneyForm extends PaymentMethodForm {
 
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String accountNr = accountIdInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 account.getHolderName());
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), account.getAccountId()).second;
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"), account.getAccountId()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(true);
     }
 
     @Override

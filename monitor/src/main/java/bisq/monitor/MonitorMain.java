@@ -42,6 +42,10 @@ public class MonitorMain extends ExecutableForAppWithP2p {
     private static final String VERSION = "1.0.1";
     private Monitor monitor;
 
+    public MonitorMain() {
+        super("Bisq Monitor", "bisq-monitor", VERSION);
+    }
+
     public static void main(String[] args) throws Exception {
         log.info("Monitor.VERSION: " + VERSION);
         BisqEnvironment.setDefaultAppName("bisq_monitor");
@@ -119,16 +123,20 @@ public class MonitorMain extends ExecutableForAppWithP2p {
         super.customizeOptionParsing(parser);
 
         parser.accepts(MonitorOptionKeys.SLACK_URL_SEED_CHANNEL,
-                description("Set slack secret for seed node monitor", ""))
+                "Set slack secret for seed node monitor")
                 .withRequiredArg();
+
         parser.accepts(MonitorOptionKeys.SLACK_BTC_SEED_CHANNEL,
-                description("Set slack secret for Btc node monitor", ""))
+                "Set slack secret for Btc node monitor")
                 .withRequiredArg();
+
         parser.accepts(MonitorOptionKeys.SLACK_PROVIDER_SEED_CHANNEL,
-                description("Set slack secret for provider node monitor", ""))
+                "Set slack secret for provider node monitor")
                 .withRequiredArg();
+
         parser.accepts(MonitorOptionKeys.PORT,
-                description("Set port to listen on", "80"))
-                .withRequiredArg();
+                "Set port to listen on")
+                .withRequiredArg()
+                .defaultsTo("80");
     }
 }

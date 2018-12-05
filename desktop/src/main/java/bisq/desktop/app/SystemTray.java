@@ -52,7 +52,8 @@ public class SystemTray {
 
     private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
     private static final String ICON_LO_RES = "/images/system_tray_icon.png";
-    private static final String ICON_WINDOWS = "/images/system_tray_icon_windows.png";
+    private static final String ICON_WINDOWS_LO_RES = "/images/system_tray_icon_windows.png";
+    private static final String ICON_WINDOWS_HI_RES = "/images/system_tray_icon_windows@2x.png";
     private static final String ICON_LINUX = "/images/system_tray_icon_linux.png";
 
 
@@ -98,7 +99,7 @@ public class SystemTray {
         if (Utilities.isOSX())
             path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
         else if (Utilities.isWindows())
-            path = ICON_WINDOWS;
+            path = ImageUtil.isRetina() ? ICON_WINDOWS_HI_RES : ICON_WINDOWS_LO_RES;
         else
             path = ICON_LINUX;
 
