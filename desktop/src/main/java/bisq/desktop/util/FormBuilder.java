@@ -410,6 +410,10 @@ public class FormBuilder {
         return addTopLabelTextArea(gridPane, rowIndex, title, prompt, -Layout.FLOATING_LABEL_DISTANCE);
     }
 
+    public static Tuple2<Label, TextArea> addCompactTopLabelTextArea(GridPane gridPane, int rowIndex, int colIndex, String title, String prompt) {
+        return addTopLabelTextArea(gridPane, rowIndex, colIndex, title, prompt, -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
     public static Tuple2<Label, TextArea> addTopLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
         return addTopLabelTextArea(gridPane, rowIndex, title, prompt, 0);
     }
@@ -1173,6 +1177,7 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithCopyIcon, top);
+        topLabelWithVBox.second.setAlignment(Pos.TOP_LEFT);
         GridPane.setColumnIndex(topLabelWithVBox.second, colIndex);
 
         return new Tuple2<>(topLabelWithVBox.first, textFieldWithCopyIcon);

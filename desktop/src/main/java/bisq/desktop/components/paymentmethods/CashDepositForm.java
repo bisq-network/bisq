@@ -123,7 +123,7 @@ public class CashDepositForm extends GeneralBankForm {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), bankNameLabel, data.getBankName());
 
         if (!bankNameBankIdCombined && !bankNameBranchIdCombined && !branchIdAccountNrCombined && bankIdBranchIdCombined) {
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     bankIdLabel + " / " +
                             branchIdLabel,
                     data.getBankId() + " / " + data.getBranchId());
@@ -144,7 +144,7 @@ public class CashDepositForm extends GeneralBankForm {
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), branchIdLabel, data.getBranchId());
 
         if (!branchIdAccountNrCombined && accountNrAccountTypeCombined) {
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow,
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     accountNrLabel + " / " + accountTypeLabel,
                     data.getAccountNr() + " / " + data.getAccountType());
         }
@@ -162,7 +162,7 @@ public class CashDepositForm extends GeneralBankForm {
                             " / " + data.getAccountNr());
 
         if (showRequirements) {
-            TextArea textArea = addTopLabelTextArea(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
+            TextArea textArea = addCompactTopLabelTextArea(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     Res.get("payment.extras"), "").second;
             textArea.setMinHeight(45);
             textArea.setMaxHeight(45);
