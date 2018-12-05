@@ -135,6 +135,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.name"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
+        column.getStyleClass().add("first-column");
         column.setCellFactory(
                 new Callback<>() {
                     @Override
@@ -285,6 +286,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
         column = new TableColumn<>();
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<>() {
                     @Override

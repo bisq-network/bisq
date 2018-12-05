@@ -536,7 +536,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        addressColumn.getStyleClass().add("address-column");
+
         addressColumn.setCellFactory(
                 new Callback<>() {
 
@@ -569,6 +569,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setBalanceColumnCellFactory() {
+        balanceColumn.getStyleClass().add("last-column");
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
                 new Callback<>() {
@@ -588,6 +589,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setSelectColumnCellFactory() {
+        selectColumn.getStyleClass().add("first-column");
         selectColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         selectColumn.setCellFactory(

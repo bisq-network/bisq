@@ -282,6 +282,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
         column.setMaxWidth(column.getMinWidth() + 20);
+        column.getStyleClass().add("first-column");
 
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
@@ -492,6 +493,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(70);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {

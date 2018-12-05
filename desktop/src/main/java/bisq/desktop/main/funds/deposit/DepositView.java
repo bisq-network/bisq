@@ -319,6 +319,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setUsageColumnCellFactory() {
+        usageColumn.getStyleClass().add("last-column");
         usageColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         usageColumn.setCellFactory(new Callback<>() {
 
@@ -342,6 +343,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     }
 
     private void setSelectColumnCellFactory() {
+        selectColumn.getStyleClass().add("first-column");
         selectColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         selectColumn.setCellFactory(
@@ -377,7 +379,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        addressColumn.getStyleClass().add("address-column");
+
         addressColumn.setCellFactory(
                 new Callback<>() {
 

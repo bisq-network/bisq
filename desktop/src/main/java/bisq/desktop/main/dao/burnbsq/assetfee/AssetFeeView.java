@@ -296,6 +296,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.nameAndCode"));
         column.setMinWidth(120);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -406,6 +407,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burnBsq.assets.totalFee"));
         column.setMinWidth(120);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override

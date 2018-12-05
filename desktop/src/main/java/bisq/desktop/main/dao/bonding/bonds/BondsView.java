@@ -142,6 +142,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(80);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -268,6 +269,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockupTxId"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<>() {
                     @Override

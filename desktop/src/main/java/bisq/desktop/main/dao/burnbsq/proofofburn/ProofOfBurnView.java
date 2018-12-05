@@ -297,6 +297,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         column = new AutoTooltipTableColumn<>(Res.get("dao.proofOfBurn.amount"));
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.getStyleClass().add("first-column");
         column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<MyProofOfBurnListItem, MyProofOfBurnListItem> call(TableColumn<MyProofOfBurnListItem,
@@ -440,6 +441,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         column = new AutoTooltipTableColumn<>("");
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<>() {
 
@@ -478,6 +480,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.proofOfBurn.amount"));
         column.setMinWidth(80);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -603,6 +606,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         column = new AutoTooltipTableColumn<>("");
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(80);
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<>() {
 

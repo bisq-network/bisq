@@ -1013,6 +1013,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         column.setMinWidth(80);
         column.setMaxWidth(80);
         column.setSortable(false);
+        column.getStyleClass().add("first-column");
 
         column.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
@@ -1298,6 +1299,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 setMinWidth(50);
             }
         };
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
         column.setCellFactory(
                 new Callback<>() {

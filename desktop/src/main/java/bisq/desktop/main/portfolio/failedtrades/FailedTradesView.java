@@ -41,6 +41,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+
 @FxmlView
 public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTradesViewModel> {
 
@@ -81,9 +83,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         setMarketColumnCellFactory();
         setStateColumnCellFactory();
 
-        tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
-        dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
-        priceColumn.setComparator((o1, o2) -> o1.getTrade().getTradePrice().compareTo(o2.getTrade().getTradePrice()));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
+        priceColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradePrice()));
 
         volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
@@ -98,8 +100,8 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                 return 0;
         });
 
-        stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
-        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
+        stateColumn.setComparator(Comparator.comparing(model::getState));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -120,15 +122,15 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
 
     private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.getStyleClass().add("first-column");
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(TableColumn<FailedTradesListItem,
                             FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -153,12 +155,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -175,12 +176,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setMarketColumnCellFactory() {
         marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         marketColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -192,14 +192,14 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     }
 
     private void setStateColumnCellFactory() {
+        stateColumn.getStyleClass().add("last-column");
         stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         stateColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -217,12 +217,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -236,12 +235,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -255,12 +253,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -277,12 +274,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<FailedTradesListItem, FailedTradesListItem>, TableCell<FailedTradesListItem,
-                        FailedTradesListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<FailedTradesListItem, FailedTradesListItem> call(
                             TableColumn<FailedTradesListItem, FailedTradesListItem> column) {
-                        return new TableCell<FailedTradesListItem, FailedTradesListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);

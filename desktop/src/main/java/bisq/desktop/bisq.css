@@ -402,7 +402,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: -bs-dim-grey;
 }
 
-.jfx-text-field:readonly {
+.jfx-text-field:readonly, .hyperlink-with-icon {
     -fx-background-color: -bs-rd-grey-medium-light;
     -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
 }
@@ -424,14 +424,6 @@ bg color of non edit textFields: fafafa
     -fx-background-color: transparent;
     -fx-border-width: 0;
 }
-
-/* hyperlink-with-icon has same style as jfx-text-field:readonly */
-
-.hyperlink-with-icon {
-    -fx-background-color: -bs-rd-grey-medium-light;
-    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
-}
-
 
 #info-field {
     -fx-prompt-text-fill: -bs-rd-black;
@@ -968,12 +960,48 @@ textfield */
  ******************************************************************************/
 
 .table-view .table-cell {
-    -fx-alignment: center;
-    -fx-padding: 3 0 2 0;
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 2 0;
+    /*-fx-padding: 3 0 2 0;*/
 }
 
-#addressColumn {
-    -fx-alignment: center-left;
+.table-view .table-cell.last-column {
+    -fx-alignment: center-right;
+    -fx-padding: 2 10 2 0;
+}
+
+.table-view .table-cell.last-column.avatar-column {
+    -fx-alignment: center;
+    -fx-padding: 2 0 2 0;
+}
+
+.table-view .column-header.last-column {
+    -fx-padding: 0 10 0 0;
+}
+
+.table-view .column-header.last-column .label {
+    -fx-alignment: center-right;
+}
+
+.table-view .column-header.last-column.avatar-column {
+    -fx-padding: 0;
+}
+
+.table-view .column-header.last-column.avatar-column .label {
+    -fx-alignment: center;
+}
+
+.table-view .table-cell.first-column {
+    -fx-padding: 2 0 2 10;
+}
+
+.table-view .column-header.first-column {
+    -fx-padding: 0 0 0 10;
+}
+
+.number-column.table-cell {
+    -fx-font-size: 1em;
+    -fx-padding: 0 0 0 0;
 }
 
 .table-view .filler {
@@ -985,17 +1013,19 @@ textfield */
 }
 
 .table-view .column-header .label {
-    -fx-alignment: center;
+    -fx-alignment: center-left;
     -fx-font-weight: normal;
     -fx-font-size: 0.923em;
+    -fx-padding: 0;
 }
 
 .table-view .column-header {
     -fx-background-color: -bs-rd-grey-very-light;
+    -fx-padding: 0;
 }
 
 .table-view .focus {
-    -fx-alignment: center;
+    -fx-alignment: center-left;
 }
 
 .table-view .text {
@@ -1095,17 +1125,6 @@ textfield */
 
 .table-view.large-rows .table-row-cell {
     -fx-cell-size: 47px;
-}
-
-.number-column.table-cell {
-
-    -fx-font-family: "IBM Plex Mono";
-    -fx-font-size: 1em;
-    -fx-padding: 0 0 0 0;
-}
-
-.address-column {
-    -fx-alignment: center !important;
 }
 
 /*******************************************************************************
@@ -1680,7 +1699,7 @@ textfield */
 
 #charts .axis-label {
     -fx-font-size: 0.769em;
-    -fx-alignment: left;
+    -fx-alignment: center-left;
 }
 /********************************************************************************************************************
  *                                                                                                                  *

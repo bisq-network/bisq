@@ -45,6 +45,7 @@ public class HyperlinkWithIcon extends Hyperlink {
         icon.setMinWidth(20);
         icon.setOpacity(0.7);
         icon.getStyleClass().addAll("hyperlink", "no-underline");
+        setPadding(new Insets(0));
         icon.setPadding(new Insets(0));
 
         setGraphic(icon);

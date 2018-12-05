@@ -507,7 +507,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 setMaxWidth(240);
             }
         };
-        dateColumn.getStyleClass().add("number-column");
+        dateColumn.getStyleClass().addAll("number-column", "first-column");
         dateColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         dateColumn.setCellFactory(
                 new Callback<>() {
@@ -663,7 +663,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         // direction
         TableColumn<TradeStatistics2, TradeStatistics2> directionColumn = new AutoTooltipTableColumn<>(Res.get("shared.offerType"));
-        directionColumn.getStyleClass().add("number-column");
+        directionColumn.getStyleClass().addAll("number-column", "last-column");
         directionColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         directionColumn.setCellFactory(
                 new Callback<>() {

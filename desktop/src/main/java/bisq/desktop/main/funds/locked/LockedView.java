@@ -61,6 +61,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -116,9 +118,9 @@ public class LockedView extends ActivatableView<VBox, Void> {
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
 
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        detailsColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
-        balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
+        addressColumn.setComparator(Comparator.comparing(LockedListItem::getAddressString));
+        detailsColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
+        balanceColumn.setComparator(Comparator.comparing(LockedListItem::getBalance));
         dateColumn.setComparator((o1, o2) -> {
             if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
                 return getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate());
@@ -168,16 +170,12 @@ public class LockedView extends ActivatableView<VBox, Void> {
         observableList.setAll(tradeManager.getLockedTradesStream()
                 .map(trade -> {
                     final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                    if (addressEntryOptional.isPresent()) {
-                        return new LockedListItem(trade,
-                                addressEntryOptional.get(),
-                                btcWalletService,
-                                formatter);
-                    } else {
-                        return null;
-                    }
+                    return addressEntryOptional.map(addressEntry -> new LockedListItem(trade,
+                            addressEntry,
+                            btcWalletService,
+                            formatter)).orElse(null);
                 })
-                .filter(e -> e != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList()));
     }
 
@@ -193,7 +191,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
         } else if (openOfferManager.getOpenOfferById(offerId).isPresent()) {
             return Optional.of(openOfferManager.getOpenOfferById(offerId).get());
         } else {
-            return Optional.<Tradable>empty();
+            return Optional.empty();
         }
     }
 
@@ -215,14 +213,14 @@ public class LockedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setDateColumnCellFactory() {
+        dateColumn.getStyleClass().add("first-column");
         dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        dateColumn.setCellFactory(new Callback<TableColumn<LockedListItem, LockedListItem>,
-                TableCell<LockedListItem, LockedListItem>>() {
+        dateColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
                     LockedListItem> column) {
-                return new TableCell<LockedListItem, LockedListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final LockedListItem item, boolean empty) {
@@ -243,13 +241,12 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void setDetailsColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<TableColumn<LockedListItem, LockedListItem>,
-                TableCell<LockedListItem, LockedListItem>>() {
+        detailsColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
                     LockedListItem> column) {
-                return new TableCell<LockedListItem, LockedListItem>() {
+                return new TableCell<>() {
 
                     private HyperlinkWithIcon field;
 
@@ -285,15 +282,14 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        addressColumn.getStyleClass().add("address-column");
+
         addressColumn.setCellFactory(
-                new Callback<TableColumn<LockedListItem, LockedListItem>, TableCell<LockedListItem,
-                        LockedListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
                             LockedListItem> column) {
-                        return new TableCell<LockedListItem, LockedListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -318,15 +314,15 @@ public class LockedView extends ActivatableView<VBox, Void> {
     }
 
     private void setBalanceColumnCellFactory() {
+        balanceColumn.getStyleClass().add("last-column");
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<LockedListItem, LockedListItem>, TableCell<LockedListItem,
-                        LockedListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
                             LockedListItem> column) {
-                        return new TableCell<LockedListItem, LockedListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final LockedListItem item, boolean empty) {
                                 super.updateItem(item, empty);

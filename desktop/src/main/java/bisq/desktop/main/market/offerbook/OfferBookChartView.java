@@ -434,7 +434,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         volumeColumn.setMinWidth(115);
         volumeColumn.setSortable(false);
         volumeColumn.textProperty().bind(volumeColumnLabel);
-        volumeColumn.getStyleClass().add("number-column");
+        volumeColumn.getStyleClass().addAll("number-column", "first-column");
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
                 new Callback<>() {
@@ -504,14 +504,19 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
+        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+
         // trader avatar
-        TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
+        TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(isSellOffer ?
+                Res.get("shared.sellerUpperCase") : Res.get("shared.buyerUpperCase")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
                 setSortable(true);
             }
         };
+
+        avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
                 new Callback<>() {
@@ -533,6 +538,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                             model.accountAgeWitnessService,
                                             formatter,
                                             useDevPrivilegeKeys);
+//                                    setAlignment(Pos.CENTER);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
@@ -558,7 +564,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         Label titleLabel = new AutoTooltipLabel();
         titleLabel.getStyleClass().add("table-title");
 
-        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
         AutoTooltipButton button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
