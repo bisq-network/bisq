@@ -68,7 +68,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import static bisq.core.btc.BaseCurrencyNetwork.BTC_MAINNET;
+import static bisq.core.btc.BaseCurrencyNetwork.BTC_REGTEST;
+import static bisq.core.btc.BaseCurrencyNetwork.BTC_TESTNET;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
 
 @Slf4j
 public abstract class BisqExecutable implements GracefulShutDownHandler {
@@ -481,10 +485,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
         //BtcOptionKeys
         parser.accepts(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                "Base currency network")
+                format("Base currency network (default: %s)", BisqEnvironment.getDefaultBaseCurrencyNetwork().name()))
                 .withRequiredArg()
                 .ofType(String.class)
-                .defaultsTo(BisqEnvironment.getDefaultBaseCurrencyNetwork().name());
+                .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
 
         parser.accepts(BtcOptionKeys.REG_TEST_HOST)
                 .withRequiredArg()
