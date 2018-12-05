@@ -386,7 +386,7 @@ public class OfferEndpointIT {
 
     @InSequence(8)
     @Test
-    public void createOffer_validMarketPriceBasedOfferAndHasFunds_returnsOffer() throws Exception {
+    public void createOffer_validMarketPriceBasedOfferAndHasFunds_returnsOffer() {
         final int alicePort = getAlicePort();
 
         final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
@@ -446,7 +446,7 @@ public class OfferEndpointIT {
      */
     @InSequence(9)
     @Test
-    public void withdrawFunds_fromOfferFundingAddress_returns422() throws Exception {
+    public void withdrawFunds_fromOfferFundingAddress_returns422() {
         final List<WalletAddress> btcWalletAddresses = ApiTestHelper.getBtcWalletAddresses(getAlicePort()).walletAddresses;
         final WalletAddress walletAddress = btcWalletAddresses.stream().filter(address -> AddressEntry.Context.OFFER_FUNDING.equals(address.context)).findFirst().get();
         final WithdrawFundsForm data = new WithdrawFundsForm();
@@ -490,8 +490,8 @@ public class OfferEndpointIT {
         takeOffer_template("non-existing-id", payload, 404);
     }
 
-    private void takeOffer_template(String offerId, TakeOffer payload, int expectedStatusCode) {
-        given().
+    private ValidatableResponse takeOffer_template(String offerId, TakeOffer payload, int expectedStatusCode) {
+        return given().
                 port(getBobPort()).
                 body(payload).
                 contentType(ContentType.JSON).
@@ -501,6 +501,13 @@ public class OfferEndpointIT {
 //
         then().
                 statusCode(expectedStatusCode)
+        ;
+    }
+
+    private void takeOffer_errorTemplate(String offerId, TakeOffer payload, int expectedStatusCode, String expectedError) {
+        takeOffer_template(offerId, payload, expectedStatusCode)
+                .body("errors[0]", equalTo(expectedError))
+                .body("errors.size()", equalTo(1))
         ;
     }
 
@@ -535,20 +542,6 @@ public class OfferEndpointIT {
         then().
                 statusCode(422)
         ;
-    }
-
-    @InSequence(10)
-    @Test
-    public void takeOffer_paymentAccountNotFound_returns425() {
-        final TakeOffer payload = new TakeOffer("non-existing-account", 1);
-        takeOffer_template(createdOffer.id, payload, 425);
-    }
-
-    @InSequence(10)
-    @Test
-    public void takeOffer_incompatiblePaymentAccount_returns423() {
-        final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
-        takeOffer_template(createdOffer.id, payload, 423);
     }
 
     @Ignore("Bug in tradeManager.onTakeOffer which resolves instead of reject in this scenario")
@@ -598,7 +591,21 @@ public class OfferEndpointIT {
 
     @InSequence(13)
     @Test
-    public void takeOffer_takerSameAsMaker_returns428() {
+    public void takeOffer_paymentAccountNotFound_returns422() {
+        final TakeOffer payload = new TakeOffer("non-existing-account", 1);
+        takeOffer_template(createdOffer.id, payload, 422);
+    }
+
+    @InSequence(13)
+    @Test
+    public void takeOffer_incompatiblePaymentAccount_returns422() {
+        final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
+        takeOffer_errorTemplate(createdOffer.id, payload, 422, String.format("PaymentAccount is not valid for offer, needs %s", alicePaymentAccount.tradeCurrencies.get(0)));
+    }
+
+    @InSequence(14)
+    @Test
+    public void takeOffer_takerSameAsMaker_returns422() {
         final int alicePort = getAlicePort();
 
         final TakeOffer payload = new TakeOffer();
@@ -616,11 +623,13 @@ public class OfferEndpointIT {
                 post("/api/v1/offers/" + offerId + "/take").
 //
         then().
-                statusCode(428)
+                statusCode(422)
+                .body("errors[0]", equalTo(String.format("Payment account for given id does not exist: %s", payload.paymentAccountId)))
+                .body("errors.size()", equalTo(1))
         ;
     }
 
-    @InSequence(14)
+    @InSequence(15)
     @Test
     public void takeOffer_validPaymentMethodAndHasFunds_returnsTrade() {
         final int alicePort = getAlicePort();
@@ -707,7 +716,7 @@ public class OfferEndpointIT {
         ;
     }
 
-    @InSequence(15)
+    @InSequence(16)
     @Test
     public void cancelOffer_notMyOffer_returns404() throws Exception {
         createOffer_validPayloadAndHasFunds_returnsOffer();
@@ -726,9 +735,9 @@ public class OfferEndpointIT {
         assertOfferExists(bobPort, createdOffer.id);
     }
 
-    @InSequence(16)
+    @InSequence(17)
     @Test
-    public void cancelOffer_ownExistingOffer_returns200() throws Exception {
+    public void cancelOffer_ownExistingOffer_returns200() {
         final int alicePort = getAlicePort();
         given().
                 port(alicePort).
@@ -750,9 +759,9 @@ public class OfferEndpointIT {
         ;
     }
 
-    @InSequence(17)
+    @InSequence(18)
     @Test
-    public void cancelOffer_ownNonExistingOffer_returns404() throws Exception {
+    public void cancelOffer_ownNonExistingOffer_returns404() {
         final int alicePort = getAlicePort();
         given().
                 port(alicePort).

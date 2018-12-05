@@ -21,16 +21,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
-import bisq.httpapi.exceptions.AmountTooHighException;
-import bisq.httpapi.exceptions.InsufficientMoneyException;
-import bisq.httpapi.exceptions.NotBootstrappedException;
-import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.model.InputDataForOffer;
-import bisq.httpapi.model.OfferDetail;
-import bisq.httpapi.model.PriceType;
-import bisq.httpapi.service.endpoint.OfferBuilder;
-import bisq.httpapi.util.ResourceHelper;
-
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -44,6 +34,15 @@ import static java.util.stream.Collectors.toList;
 
 
 
+import bisq.httpapi.exceptions.AmountTooHighException;
+import bisq.httpapi.exceptions.InsufficientMoneyException;
+import bisq.httpapi.exceptions.NotBootstrappedException;
+import bisq.httpapi.exceptions.NotFoundException;
+import bisq.httpapi.model.InputDataForOffer;
+import bisq.httpapi.model.OfferDetail;
+import bisq.httpapi.model.PriceType;
+import bisq.httpapi.service.endpoint.OfferBuilder;
+import bisq.httpapi.util.ResourceHelper;
 import javax.validation.ValidationException;
 
 public class OfferFacade {
