@@ -294,6 +294,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.getStyleClass().add("first-column");
         tradeIdColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
         tradeIdColumn.setCellFactory(
                 new Callback<>() {
@@ -472,6 +473,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<PendingTradesListItem, PendingTradesListItem> setAvatarColumnCellFactory() {
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellFactory(
                 new Callback<>() {
 

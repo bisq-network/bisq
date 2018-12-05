@@ -427,6 +427,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         TableColumn<CycleListItem, CycleListItem> column;
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.cycle"));
         column.setMinWidth(160);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -521,6 +522,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.issuance"));
         column.setMinWidth(70);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -554,6 +556,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setMinWidth(190);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -724,6 +727,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
         column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -765,6 +769,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column.setSortable(false);
         column.setMinWidth(50);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -841,6 +846,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stake"));
         column.setSortable(false);
         column.setMinWidth(100);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {

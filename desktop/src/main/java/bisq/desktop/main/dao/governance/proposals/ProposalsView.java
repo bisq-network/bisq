@@ -712,14 +712,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setMinWidth(190);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
-                        ProposalsListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalsListItem, ProposalsListItem> call(
                             TableColumn<ProposalsListItem, ProposalsListItem> column) {
-                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -741,12 +741,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         column.setMinWidth(60);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
-                        ProposalsListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalsListItem, ProposalsListItem> call(
                             TableColumn<ProposalsListItem, ProposalsListItem> column) {
-                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -766,13 +765,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
-                        ProposalsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
                             ProposalsListItem> column) {
-                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -801,12 +799,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         column.setMinWidth(60);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<ProposalsListItem, ProposalsListItem>, TableCell<ProposalsListItem,
-                        ProposalsListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ProposalsListItem, ProposalsListItem> call(
                             TableColumn<ProposalsListItem, ProposalsListItem> column) {
-                        return new TableCell<ProposalsListItem, ProposalsListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -825,6 +822,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         column = new TableColumn<>();
         column.setMinWidth(50);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override

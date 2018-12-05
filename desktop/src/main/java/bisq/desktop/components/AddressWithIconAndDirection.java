@@ -23,11 +23,11 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -35,7 +35,7 @@ import javafx.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AddressWithIconAndDirection extends AnchorPane {
+public class AddressWithIconAndDirection extends HBox {
     private static final Logger log = LoggerFactory.getLogger(AddressWithIconAndDirection.class);
     private final Hyperlink hyperlink;
 
@@ -48,28 +48,21 @@ public class AddressWithIconAndDirection extends AnchorPane {
             directionIcon.setRotate(180);
         directionIcon.setMouseTransparent(true);
 
-        HBox hBox = new HBox();
-        hBox.setSpacing(-1);
+        setAlignment(Pos.CENTER_LEFT);
         Label label = new AutoTooltipLabel(text);
         label.setMouseTransparent(true);
-        HBox.setMargin(label, new Insets(3, 0, 0, 0));
+        HBox.setMargin(directionIcon, new Insets(0, 3, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);
 
         hyperlink = new HyperlinkWithIcon(address, awesomeIcon);
-        HBox.setMargin(hyperlink, new Insets(0, 0, 0, 0));
+        HBox.setMargin(hyperlink, new Insets(0));
         HBox.setHgrow(hyperlink, Priority.SOMETIMES);
         // You need to set max width to Double.MAX_VALUE to make HBox.setHgrow working like expected!
         // also pref width needs to be not default (-1)
         hyperlink.setMaxWidth(Double.MAX_VALUE);
         hyperlink.setPrefWidth(0);
 
-        hBox.getChildren().addAll(label, hyperlink);
-
-        AnchorPane.setLeftAnchor(directionIcon, 3.0);
-        AnchorPane.setTopAnchor(directionIcon, 4.0);
-        AnchorPane.setLeftAnchor(hBox, 22.0);
-        AnchorPane.setRightAnchor(hBox, 15.0);
-        getChildren().addAll(directionIcon, hBox);
+        getChildren().addAll(directionIcon, label, hyperlink);
     }
 
     public void setOnAction(EventHandler<ActionEvent> handler) {

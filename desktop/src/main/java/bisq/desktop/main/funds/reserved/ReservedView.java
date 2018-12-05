@@ -61,6 +61,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -116,9 +118,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
 
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        detailsColumn.setComparator((o1, o2) -> o1.getOpenOffer().getId().compareTo(o2.getOpenOffer().getId()));
-        balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
+        addressColumn.setComparator(Comparator.comparing(ReservedListItem::getAddressString));
+        detailsColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getId()));
+        balanceColumn.setComparator(Comparator.comparing(ReservedListItem::getBalance));
         dateColumn.setComparator((o1, o2) -> {
             if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
                 return getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate());
@@ -168,16 +170,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         observableList.setAll(openOfferManager.getObservableList().stream()
                 .map(openOffer -> {
                     Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
-                    if (addressEntryOptional.isPresent()) {
-                        return new ReservedListItem(openOffer,
-                                addressEntryOptional.get(),
-                                btcWalletService,
-                                formatter);
-                    } else {
-                        return null;
-                    }
+                    return addressEntryOptional.map(addressEntry -> new ReservedListItem(openOffer,
+                            addressEntry,
+                            btcWalletService,
+                            formatter)).orElse(null);
                 })
-                .filter(e -> e != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList()));
     }
 
@@ -215,14 +213,14 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setDateColumnCellFactory() {
+        dateColumn.getStyleClass().add("first-column");
         dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        dateColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
-                TableCell<ReservedListItem, ReservedListItem>>() {
+        dateColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                     ReservedListItem> column) {
-                return new TableCell<ReservedListItem, ReservedListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final ReservedListItem item, boolean empty) {
@@ -243,13 +241,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void setDetailsColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<TableColumn<ReservedListItem, ReservedListItem>,
-                TableCell<ReservedListItem, ReservedListItem>>() {
+        detailsColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                     ReservedListItem> column) {
-                return new TableCell<ReservedListItem, ReservedListItem>() {
+                return new TableCell<>() {
 
                     private HyperlinkWithIcon field;
 
@@ -283,16 +280,16 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void setAddressColumnCellFactory() {
+        addressColumn.getStyleClass().add("last-column");
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        addressColumn.getStyleClass().add("address-column");
+
         addressColumn.setCellFactory(
-                new Callback<TableColumn<ReservedListItem, ReservedListItem>, TableCell<ReservedListItem,
-                        ReservedListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                             ReservedListItem> column) {
-                        return new TableCell<ReservedListItem, ReservedListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -317,15 +314,15 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void setBalanceColumnCellFactory() {
+        balanceColumn.getStyleClass().add("last-column");
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<ReservedListItem, ReservedListItem>, TableCell<ReservedListItem,
-                        ReservedListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
                             ReservedListItem> column) {
-                        return new TableCell<ReservedListItem, ReservedListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ReservedListItem item, boolean empty) {
                                 super.updateItem(item, empty);

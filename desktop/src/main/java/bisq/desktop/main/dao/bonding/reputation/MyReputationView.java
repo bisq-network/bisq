@@ -289,6 +289,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         column = new AutoTooltipTableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(120);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -452,6 +453,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         column = new TableColumn<>();
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<>() {
                     @Override

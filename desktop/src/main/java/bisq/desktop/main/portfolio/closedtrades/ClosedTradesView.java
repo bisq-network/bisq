@@ -221,6 +221,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
 
     private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.getStyleClass().add("first-column");
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
                 new Callback<>() {
@@ -318,6 +319,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
+        avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
                 new Callback<>() {
@@ -345,7 +347,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             model.accountAgeWitnessService,
                                             formatter,
                                             useDevPrivilegeKeys);
-                                    setPadding(new Insets(1, 0, 0, 0));
+                                    setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

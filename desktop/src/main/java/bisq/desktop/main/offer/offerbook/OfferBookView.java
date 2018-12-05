@@ -119,7 +119,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
-    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
+            priceColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -212,9 +213,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
-        TableColumn<OfferBookListItem, OfferBookListItem> avatarColumn = getAvatarColumn();
-        tableView.getColumns().add(avatarColumn);
+        avatarColumn = getAvatarColumn();
         tableView.getColumns().add(getActionColumn());
+        tableView.getColumns().add(avatarColumn);
 
         tableView.getSortOrder().add(priceColumn);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -299,12 +300,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     if (showAll) {
                         volumeColumn.setTitleWithHelpText(Res.get("shared.amountMinMax"), Res.get("shared.amountHelp"));
                         priceColumn.setTitle(Res.get("shared.price"));
+                        priceColumn.getStyleClass().remove("first-column");
 
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(0, marketColumn);
                     } else {
                         volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code), Res.get("shared.amountHelp"));
                         priceColumn.setTitle(formatter.getPriceWithCurrencyCode(code));
+                        priceColumn.getStyleClass().add("first-column");
 
                         tableView.getColumns().remove(marketColumn);
                     }
@@ -355,6 +358,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setGraphic(iconView);
         iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
         createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
+        avatarColumn.setTitle(direction == OfferPayload.Direction.SELL ? Res.get("shared.buyerUpperCase") : Res.get("shared.sellerUpperCase"));
         setDirectionTitles();
     }
 
@@ -555,7 +559,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 setMinWidth(40);
             }
         };
-        column.getStyleClass().add("number-column");
+        column.getStyleClass().addAll("number-column", "first-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -778,7 +782,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>("") {
+        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.actions")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -883,6 +887,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 isInsufficientTradeLimit));
 
                                     button.updateText(title);
+                                    setPadding(new Insets(0, 15, 0, 0));
                                     setGraphic(button);
                                 } else {
                                     setGraphic(null);
@@ -899,14 +904,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
                 setSortable(true);
             }
         };
+        column.getStyleClass().addAll("last-column", "avatar-column");
         column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         column.setCellFactory(
                 new Callback<>() {

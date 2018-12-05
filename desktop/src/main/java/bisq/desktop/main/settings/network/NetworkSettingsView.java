@@ -166,6 +166,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
+        onionAddressColumn.getStyleClass().add("first-column");
         creationDateColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.creationDateColumn")));
         connectionTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.connectionTypeColumn")));
         totalTrafficTextField.setPromptText(Res.get("settings.net.totalTrafficLabel"));
@@ -173,6 +174,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         sentBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.sentBytesColumn")));
         receivedBytesColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.receivedBytesColumn")));
         peerTypeColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.peerTypeColumn")));
+        peerTypeColumn.getStyleClass().add("last-column");
         openTorSettingsButton.updateText(Res.get("settings.net.openTorSettingsButton"));
 
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
