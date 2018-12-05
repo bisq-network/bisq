@@ -17,15 +17,16 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.bonding.lockup.LockupType;
+import bisq.core.dao.governance.asset.AssetConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import bisq.common.util.Utilities;
 
@@ -106,20 +107,30 @@ class OpReturnParser {
                 else
                     break;
             case LOCKUP:
-                if (!BondingConsensus.hasOpReturnDataValidLength(opReturnData))
+                if (!BondConsensus.hasOpReturnDataValidLength(opReturnData))
                     return TxOutputType.INVALID_OUTPUT;
-                Optional<LockupType> lockupType = BondingConsensus.getLockupType(opReturnData);
-                if (!lockupType.isPresent()) {
-                    log.warn("No lockupType found for lockup tx, opReturnData=" + Utilities.encodeToHex(opReturnData));
+                Optional<LockupReason> optionalLockupReason = BondConsensus.getLockupReason(opReturnData);
+                if (!optionalLockupReason.isPresent()) {
+                    log.warn("No lockupReason found for lockup tx, opReturnData=" + Utilities.encodeToHex(opReturnData));
                     return TxOutputType.INVALID_OUTPUT;
                 }
 
-                int lockTime = BondingConsensus.getLockTime(opReturnData);
-                if (BondingConsensus.isLockTimeInValidRange(lockTime)) {
+                int lockTime = BondConsensus.getLockTime(opReturnData);
+                if (BondConsensus.isLockTimeInValidRange(lockTime)) {
                     return TxOutputType.LOCKUP_OP_RETURN_OUTPUT;
                 } else {
                     break;
                 }
+            case ASSET_LISTING_FEE:
+                if (AssetConsensus.hasOpReturnDataValidLength(opReturnData))
+                    return TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT;
+                else
+                    break;
+            case PROOF_OF_BURN:
+                if (ProofOfBurnConsensus.hasOpReturnDataValidLength(opReturnData))
+                    return TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT;
+                else
+                    break;
             default:
                 throw new InvalidParsingConditionException("We must have a defined opReturnType as it was checked earlier in the caller.");
         }

@@ -19,7 +19,6 @@ package bisq.core.dao.governance.votereveal;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -33,12 +32,12 @@ import bisq.core.dao.governance.blindvote.BlindVoteValidator;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 
@@ -248,14 +247,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");
-            }
-
-            @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                log.error(exception.toString());
-                // TODO handle
-                voteRevealExceptions.add(new VoteRevealException("Publishing of voteRevealTx failed.",
-                        exception, voteRevealTx));
             }
 
             @Override

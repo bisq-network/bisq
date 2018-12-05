@@ -115,6 +115,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
     String rpcUser;
     @Nullable
     String rpcPw;
+    @Nullable
+    String takeOfferSelectedPaymentAccountId;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +187,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         Optional.ofNullable(phoneKeyAndToken).ifPresent(builder::setPhoneKeyAndToken);
         Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
         Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
+        Optional.ofNullable(takeOfferSelectedPaymentAccountId).ifPresent(builder::setTakeOfferSelectedPaymentAccountId);
 
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
@@ -249,6 +252,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseStandbyMode(),
                 proto.getIsDaoFullNode(),
                 proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
-                proto.getRpcPw().isEmpty() ? null : proto.getRpcPw());
+                proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
+                proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId());
     }
 }

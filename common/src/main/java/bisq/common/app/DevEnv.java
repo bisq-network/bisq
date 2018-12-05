@@ -65,7 +65,6 @@ public class DevEnv {
         DevEnv.daoActivated = daoActivated;
     }
 
-
     public static void logErrorAndThrowIfDevMode(String msg) {
         log.error(msg);
         if (devMode)

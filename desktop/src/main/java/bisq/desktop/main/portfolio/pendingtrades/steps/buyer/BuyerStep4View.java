@@ -29,7 +29,6 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.AddressEntryException;
@@ -48,7 +47,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -58,6 +56,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
 import javafx.geometry.Insets;
 
@@ -65,13 +64,16 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+
 public class BuyerStep4View extends TradeStepView {
     // private final ChangeListener<Boolean> focusedPropertyListener;
 
     private InputTextField withdrawAddressTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
     private TitledGroupBg withdrawTitledGroupBg;
-    private Label withdrawAddressLabel;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -124,38 +126,37 @@ public class BuyerStep4View extends TradeStepView {
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void addContent() {
-        FormBuilder.addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
-        FormBuilder.addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);
 
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
+        addTitledGroupBg(gridPane, gridRow, 5, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
+        addCompactTopLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.TWICE_FIRST_ROW_DISTANCE);
+
+        addCompactTopLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.tradeFee"), model.getTradeFee());
         final String miningFee = model.dataModel.isMaker() ?
                 Res.get("portfolio.pending.step5_buyer.makersMiningFee") :
                 Res.get("portfolio.pending.step5_buyer.takersMiningFee");
-        FormBuilder.addLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
-        withdrawTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
-        FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        final Tuple2<Label, InputTextField> tuple2 = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
-        withdrawAddressLabel = tuple2.first;
-        withdrawAddressLabel.setManaged(false);
-        withdrawAddressLabel.setVisible(false);
-        withdrawAddressTextField = tuple2.second;
+        addCompactTopLabelTextField(gridPane, ++gridRow, miningFee, model.getTxFee());
+        withdrawTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.COMPACT_GROUP_DISTANCE);
+        withdrawTitledGroupBg.getStyleClass().add("last");
+        addCompactTopLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        withdrawAddressTextField = addInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress"));
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         useSavingsWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
-        useSavingsWalletButton.setDefaultButton(false);
+        useSavingsWalletButton.setDefaultButton(true);
+        useSavingsWalletButton.getStyleClass().add("action-button");
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
         withdrawToExternalWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.withdrawExternal"));
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
-        GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(15, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(5, 10, 0, 0));
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
@@ -176,12 +177,14 @@ public class BuyerStep4View extends TradeStepView {
     }
 
     private void onWithdrawal() {
-        withdrawAddressLabel.setManaged(true);
-        withdrawAddressLabel.setVisible(true);
         withdrawAddressTextField.setManaged(true);
         withdrawAddressTextField.setVisible(true);
         GridPane.setRowSpan(withdrawTitledGroupBg, 2);
         withdrawToExternalWalletButton.setDefaultButton(true);
+        useSavingsWalletButton.setDefaultButton(false);
+        withdrawToExternalWalletButton.getStyleClass().add("action-button");
+        useSavingsWalletButton.getStyleClass().remove("action-button");
+
         withdrawToExternalWalletButton.setOnAction(e -> {
             if (model.dataModel.isReadyForTxBroadcast())
                 reviewWithdrawal();

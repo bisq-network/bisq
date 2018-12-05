@@ -18,35 +18,40 @@
 package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
-import bisq.core.util.validation.InputValidator;
 
-public final class PasswordValidator extends InputValidator {
+import com.jfoenix.validation.base.ValidatorBase;
 
-    private ValidationResult externalValidationResult;
+import javafx.scene.control.TextInputControl;
+
+public final class PasswordValidator extends ValidatorBase {
+
+    private boolean passwordsMatch = true;
 
     @Override
-    public ValidationResult validate(String input) {
-        ValidationResult result = validateIfNotEmpty(input);
-        if (result.isValid)
-            result = validateMinLength(input);
-
-        if (externalValidationResult != null && !externalValidationResult.isValid)
-            return externalValidationResult;
-
-        return result;
+    protected void eval() {
+        if (srcControl.get() instanceof TextInputControl) {
+            evalTextInputField();
+        }
     }
 
-    public void setExternalValidationResult(ValidationResult externalValidationResult) {
-        this.externalValidationResult = externalValidationResult;
+    private void evalTextInputField() {
+        TextInputControl textField = (TextInputControl) srcControl.get();
+        String text = textField.getText();
+        hasErrors.set(false);
+
+        if (!passwordsMatch) {
+            hasErrors.set(true);
+            message.set(Res.get("password.passwordsDoNotMatch"));
+        } else if (text.length() < 8) {
+            hasErrors.set(true);
+            message.set(Res.get("validation.passwordTooShort"));
+        } else if (text.length() > 50) {
+            hasErrors.set(true);
+            message.set(Res.get("validation.passwordTooLong"));
+        }
     }
 
-    private ValidationResult validateMinLength(String input) {
-        if (input.length() < 8)
-            return new ValidationResult(false, Res.get("validation.passwordTooShort"));
-        else if (input.length() > 50)
-            return new ValidationResult(false, Res.get("validation.passwordTooLong"));
-        else
-            return new ValidationResult(true);
+    public void setPasswordsMatch(boolean isMatch) {
+        this.passwordsMatch = isMatch;
     }
-
 }

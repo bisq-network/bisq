@@ -84,7 +84,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Override
     public void initialize() {
         log.debug("initialize ");
-        tradersDisputesTab.setText(Res.get("support.tab.support"));
+        tradersDisputesTab.setText(Res.get("support.tab.support").toUpperCase());
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
                 loadView(viewPath.tip());
@@ -108,10 +108,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 .anyMatch(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
-            arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets"));
+            arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets").toUpperCase());
             arbitratorsDisputesTab.setClosable(false);
             root.getTabs().add(arbitratorsDisputesTab);
-            tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets"));
+            tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
         }
     }
 

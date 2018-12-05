@@ -17,8 +17,8 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.OKPayValidator;
 
@@ -34,10 +34,8 @@ import bisq.core.util.validation.InputValidator;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
@@ -47,10 +45,9 @@ import javafx.geometry.VPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @Deprecated
 public class OKPayForm extends PaymentMethodForm {
@@ -62,7 +59,7 @@ public class OKPayForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
                 ((OKPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
@@ -78,7 +75,7 @@ public class OKPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.wallet")).second;
+        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.wallet"));
         accountNrInputTextField.setValidator(okPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             okPayAccount.setAccountNr(newValue);
@@ -86,8 +83,8 @@ public class OKPayForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
@@ -104,23 +101,7 @@ public class OKPayForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
         CurrencyUtil.getAllOKPayCurrencies().stream().forEach(e ->
-        {
-            CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
-            checkBox.setMouseTransparent(!isEditable);
-            checkBox.setSelected(okPayAccount.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
-            checkBox.setTooltip(new Tooltip(e.getName()));
-            checkBox.setOnAction(event -> {
-                if (checkBox.isSelected())
-                    okPayAccount.addCurrency(e);
-                else
-                    okPayAccount.removeCurrency(e);
-
-                updateAllInputsValid();
-            });
-            flowPane.getChildren().add(checkBox);
-        });
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, okPayAccount));
 
         GridPane.setRowIndex(flowPane, gridRow);
         GridPane.setColumnIndex(flowPane, 1);
@@ -129,7 +110,7 @@ public class OKPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String accountNr = accountNrInputTextField.getText();
             accountNr = StringUtils.abbreviate(accountNr, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
@@ -140,14 +121,14 @@ public class OKPayForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(okPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
+        TextField field = FormBuilder.addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
                 okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 

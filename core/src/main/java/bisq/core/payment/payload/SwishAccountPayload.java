@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -92,13 +94,14 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Swish - Holder name: " + holderName + ", mobile no.: " + mobileNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName +
+                ", " + Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
-                "Mobile no.: " + mobileNr;
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+                Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 
     @Override

@@ -34,7 +34,6 @@ import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositT
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
-import bisq.core.trade.protocol.tasks.taker.TakerSelectArbitrator;
 import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
 import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
@@ -114,7 +113,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                TakerSelectArbitrator.class,
                 TakerSelectMediator.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,

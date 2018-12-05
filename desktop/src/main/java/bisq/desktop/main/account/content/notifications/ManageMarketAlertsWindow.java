@@ -66,7 +66,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         if (headLine == null)
             headLine = Res.get("account.notifications.marketAlert.manageAlerts.title");
 
-        width = 900;
+        width = 968;
         createGridPane();
         addHeadLine();
         addContent();

@@ -30,6 +30,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.filter.FilterManager;
@@ -152,6 +153,7 @@ public class BisqSetup {
     private final MarketAlerts marketAlerts;
     private final VoteResultService voteResultService;
     private final AssetTradeActivityCheck tradeActivityCheck;
+    private final AssetService assetService;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -226,6 +228,7 @@ public class BisqSetup {
                      MarketAlerts marketAlerts,
                      VoteResultService voteResultService,
                      AssetTradeActivityCheck tradeActivityCheck,
+                     AssetService assetService,
                      BSFormatter formatter) {
 
 
@@ -263,6 +266,7 @@ public class BisqSetup {
         this.marketAlerts = marketAlerts;
         this.voteResultService = voteResultService;
         this.tradeActivityCheck = tradeActivityCheck;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -629,6 +633,8 @@ public class BisqSetup {
 
         tradeStatisticsManager.onAllServicesInitialized();
         tradeActivityCheck.onAllServicesInitialized();
+
+        assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
 

@@ -25,7 +25,6 @@ import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
-import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 
@@ -66,10 +65,9 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         if (headLine == null)
             headLine = Res.get("selectBaseCurrencyWindow.headline");
 
-        width = 700;
+        width = 768;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         addCloseButton();
         applyStyles();
@@ -90,9 +88,7 @@ public class SelectBaseCurrencyWindow extends Overlay<SelectBaseCurrencyWindow> 
         Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.msg", BisqEnvironment.getBaseCurrencyNetwork().getCurrencyName()), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        Tuple2<Label, ComboBox<BaseCurrencyNetwork>> tuple = FormBuilder.addLabelComboBox(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.select"));
-
-        comboBox = tuple.second;
+        comboBox = FormBuilder.addComboBox(gridPane, ++rowIndex, Res.get("selectBaseCurrencyWindow.select"));
         comboBox.setPromptText(Res.get("shared.select"));
         List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
         // show ony mainnet in production version

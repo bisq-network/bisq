@@ -79,12 +79,13 @@ public class AvoidStandbyModeService {
             OutputStream outputStream = null;
             InputStream inputStream = null;
             try {
-                inputStream = getClass().getClassLoader().getResourceAsStream("silent.aiff");
-                File soundFile = File.createTempFile("Bisq-", "-PreventAppNap-soundFile");
-                soundFile.deleteOnExit();
-                outputStream = new FileOutputStream(soundFile);
-                IOUtils.copy(inputStream, outputStream);
-                outputStream.close();
+                inputStream = getClass().getClassLoader().getResourceAsStream("prevent-app-nap-silent-sound.aiff");
+                File soundFile = new File(BisqEnvironment.getStaticAppDataDir(), "prevent-app-nap-silent-sound.aiff");
+                if (!soundFile.exists()) {
+                    outputStream = new FileOutputStream(soundFile);
+                    IOUtils.copy(inputStream, outputStream);
+                }
+
                 AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
                 byte tempBuffer[] = new byte[10000];
                 AudioFormat audioFormat = audioInputStream.getFormat();

@@ -20,6 +20,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
@@ -50,7 +51,6 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -75,17 +75,23 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
@@ -188,17 +194,26 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected void addContent() {
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
+
         addTradeInfoBlock();
 
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
-        TitledGroupBg accountTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1,
+        TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
-                Layout.GROUP_DISTANCE);
-        TextFieldWithCopyIcon field = FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
+                Layout.COMPACT_GROUP_DISTANCE);
+        TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 0,
+                Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
+
+        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
+                !(paymentAccountPayload instanceof F2FAccountPayload))
+            addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
+                    Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
+                    Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
         switch (paymentMethodId) {
             case PaymentMethod.OK_PAY_ID:
@@ -285,14 +300,12 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.PROMPT_PAY_ID:
                 gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.ADVANCED_CASH_ID:
+                gridRow = AdvancedCashForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
-
-        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
-                !(paymentAccountPayload instanceof F2FAccountPayload))
-            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                    Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         Trade trade = model.getTrade();
         if (trade != null && model.getUser().getPaymentAccounts() != null) {
@@ -307,16 +320,16 @@ public class BuyerStep2View extends TradeStepView {
                         .findFirst()
                         .ifPresent(paymentAccount -> {
                             String accountName = paymentAccount.getAccountName();
-                            FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                                    Res.getWithCol("portfolio.pending.step2_buyer.buyerAccount"), accountName);
+                            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, 0,
+                                    Res.get("portfolio.pending.step2_buyer.buyerAccount"), accountName);
                         });
             }
         }
 
-        GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
+        GridPane.setRowSpan(accountTitledGroupBg, gridRow - 1);
 
-        Tuple3<Button, BusyAnimation, Label> tuple3 = FormBuilder.addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
-                Res.get("portfolio.pending.step2_buyer.paymentStarted"));
+        Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
+                Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;

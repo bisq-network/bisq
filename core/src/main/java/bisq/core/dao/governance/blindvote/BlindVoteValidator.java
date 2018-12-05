@@ -18,10 +18,10 @@
 package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import javax.inject.Inject;
 

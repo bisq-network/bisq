@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -94,13 +96,13 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Chase QuickPay - Holder name: " + holderName + ", email: " + email;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.get("payment.email") + " " + email;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
-                "Email: " + email;
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+                Res.getWithCol("payment.email") + " " + email;
     }
 
     @Override

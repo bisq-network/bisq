@@ -17,6 +17,8 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.dao.state.model.governance.Proposal;
+
 import org.bitcoinj.core.Transaction;
 
 import lombok.Value;

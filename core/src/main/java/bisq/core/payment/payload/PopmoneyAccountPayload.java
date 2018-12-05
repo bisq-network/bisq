@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -92,7 +94,8 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Popmoney - Holder name: " + holderName + ", email or phone no.: " + accountId;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.getWithCol("payment.popmoney.accountId") + " " + accountId;
     }
 
     @Override

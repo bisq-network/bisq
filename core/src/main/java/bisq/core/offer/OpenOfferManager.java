@@ -563,15 +563,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
                 if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
-                    final Offer offer = openOffer.getOffer();
+                    Offer offer = openOffer.getOffer();
                     if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostName()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
-                        arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
-                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
-
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
+                            arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                            openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
+
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
                             // in trade price between the peers. Also here poor connectivity might cause market price API connection
                             // losses and therefore an outdated market price.

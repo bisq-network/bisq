@@ -19,21 +19,26 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.validation.BtcAddressValidator;
+import bisq.core.util.validation.InputValidator;
+
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ChangeParamValidator extends ProposalValidator {
@@ -59,120 +64,127 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    // TODO
-    public void validateParamValue(Param param, long paramValue) throws ChangeParamValidationException {
-        // max 4 times the current value. min 25% of current value as general boundaries
-        checkMinMax(param, paramValue, 300, -75);
+    public void validateParamValue(Param param, String inputValue) throws ValidationException {
+        double maxDecrease = param.getMaxDecrease();
+        double maxIncrease = param.getMaxIncrease();
+        Coin newValueAsBtcCoin;
+        Coin newValueAsBsqCoin = null;
+        Coin currentValueAsCoin;
+        switch (param.getParamType()) {
+            case UNDEFINED:
+                break;
+            case BSQ:
+                bsqFormatter.validateBsqInput(inputValue);
+                newValueAsBsqCoin = bsqFormatter.parseToCoin(inputValue);
+                checkArgument(newValueAsBsqCoin.isPositive(), "Input must be positive");
+                currentValueAsCoin = daoStateService.getParamValueAsCoin(param, periodService.getChainHeight());
+                checkArgument(!currentValueAsCoin.equals(newValueAsBsqCoin), "Your input must be different to the current value");
+                validateChangeRange((double) currentValueAsCoin.value, (double) newValueAsBsqCoin.value, maxDecrease, maxIncrease);
+                break;
+            case BTC:
+                bsqFormatter.validateBtcInput(inputValue);
+                newValueAsBtcCoin = bsqFormatter.parseToBTC(inputValue);
+                checkArgument(newValueAsBtcCoin.value >= Restrictions.getMinNonDustOutput().value,
+                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                checkArgument(newValueAsBtcCoin.isPositive(), "Input must be positive");
+                currentValueAsCoin = daoStateService.getParamValueAsCoin(param, periodService.getChainHeight());
+                checkArgument(!currentValueAsCoin.equals(newValueAsBtcCoin), "Your input must be different to the current value");
+                validateChangeRange((double) currentValueAsCoin.value, (double) newValueAsBtcCoin.value, maxDecrease, maxIncrease);
+                break;
+            case PERCENT:
+                double newValueAsPercentDouble = bsqFormatter.parsePercentStringToDouble(inputValue);
+                checkArgument(newValueAsPercentDouble > 0.5, "Threshold must be larger than 50%.");
+                double currentValueAsPercentDouble = daoStateService.getParamValueAsPercentDouble(param, periodService.getChainHeight());
+                checkArgument(currentValueAsPercentDouble != newValueAsPercentDouble, "Your input must be different to the current value");
+                validateChangeRange(currentValueAsPercentDouble, newValueAsPercentDouble, maxDecrease, maxIncrease);
+                break;
+            case BLOCK:
+                int newValueAsBlock = Integer.parseInt(inputValue);
+                checkArgument(newValueAsBlock > 0, "newValueAsBlock must be > 0");
+                int currentValueAsBlock = daoStateService.getParamValueAsBlock(param, periodService.getChainHeight());
+                checkArgument(currentValueAsBlock != newValueAsBlock, "Your input must be different to the current value");
+                validateChangeRange((double) currentValueAsBlock, (double) newValueAsBlock, maxDecrease, maxIncrease);
+                break;
+            case ADDRESS:
+                String currentValue = daoStateService.getParamValue(param, periodService.getChainHeight());
+                checkArgument(!currentValue.equals(inputValue), "Your input must be different to the current value");
+                InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
+                if (!validationResult.isValid)
+                    throw new AddressFormatException(validationResult.errorMessage);
 
+                break;
+        }
+
+        // Add here more fine tuned custom validations...
         switch (param) {
             case UNDEFINED:
                 break;
 
-            case DEFAULT_MAKER_FEE_BSQ:
-                break;
-            case DEFAULT_TAKER_FEE_BSQ:
-                break;
-            case MIN_MAKER_FEE_BSQ:
-                break;
-            case MIN_TAKER_FEE_BSQ:
-                break;
             case DEFAULT_MAKER_FEE_BTC:
-                break;
             case DEFAULT_TAKER_FEE_BTC:
-                break;
             case MIN_MAKER_FEE_BTC:
-                break;
             case MIN_TAKER_FEE_BTC:
                 break;
 
-            case PROPOSAL_FEE:
+            case DEFAULT_MAKER_FEE_BSQ:
+            case DEFAULT_TAKER_FEE_BSQ:
+            case MIN_MAKER_FEE_BSQ:
+            case MIN_TAKER_FEE_BSQ:
                 break;
+
+            case PROPOSAL_FEE:
             case BLIND_VOTE_FEE:
                 break;
 
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case REIMBURSEMENT_MIN_AMOUNT:
-                if (paramValue < Restrictions.getMinNonDustOutput().value)
-                    throw new ChangeParamValidationException(Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                checkMinMax(param, paramValue, 100, -50);
-                break;
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
-                checkMinMax(param, paramValue, 100, -50);
+                checkNotNull(newValueAsBsqCoin, "newValueAsBsqCoin must not be null");
+                checkArgument(newValueAsBsqCoin.value >= Restrictions.getMinNonDustOutput().value,
+                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
                 break;
 
             case QUORUM_COMP_REQUEST:
-                break;
             case QUORUM_REIMBURSEMENT:
-                break;
             case QUORUM_CHANGE_PARAM:
-                break;
             case QUORUM_ROLE:
-                break;
             case QUORUM_CONFISCATION:
-                break;
             case QUORUM_GENERIC:
-                break;
             case QUORUM_REMOVE_ASSET:
                 break;
 
             case THRESHOLD_COMP_REQUEST:
-                break;
             case THRESHOLD_REIMBURSEMENT:
-                break;
             case THRESHOLD_CHANGE_PARAM:
-                break;
             case THRESHOLD_ROLE:
-                break;
             case THRESHOLD_CONFISCATION:
-                break;
             case THRESHOLD_GENERIC:
-                break;
             case THRESHOLD_REMOVE_ASSET:
+                break;
+
+            case RECIPIENT_BTC_ADDRESS:
                 break;
 
             case PHASE_UNDEFINED:
                 break;
             case PHASE_PROPOSAL:
-                break;
             case PHASE_BREAK1:
-                break;
             case PHASE_BLIND_VOTE:
-                break;
             case PHASE_BREAK2:
-                break;
             case PHASE_VOTE_REVEAL:
-                break;
             case PHASE_BREAK3:
-                break;
             case PHASE_RESULT:
                 break;
         }
     }
 
-    private void checkMinMax(Param param, long paramValue, long maxPercentChange, long minPercentChange) throws ChangeParamValidationException {
-        long max = getNewValueByPercentChange(param, maxPercentChange);
-        if (paramValue > max)
-            throw new ChangeParamValidationException(Res.get("validation.inputTooLarge", bsqFormatter.formatParamValue(param, max)));
-        long min = getNewValueByPercentChange(param, minPercentChange);
-        if (paramValue < min)
-            throw new ChangeParamValidationException(Res.get("validation.inputTooSmall", bsqFormatter.formatParamValue(param, min)));
-    }
+    private void validateChangeRange(double currentValue, double newValue, double min, double max) throws ValidationException {
+        double change = newValue / currentValue;
+        if (change > max)
+            throw new ValidationException("Input is larger than " + max + " times the current value.");
 
-    /**
-     * @param param         The param to change
-     * @param percentChange 100 means 100% more than current value -> 2 times current value. -50 means half of the current value
-     * @return The new value.
-     */
-    //TODO add test
-    // TODO use multiplier to make it more intuitive? (4,4) means 4 times current value for max and divided by 4 to get min value)
-    @VisibleForTesting
-    long getNewValueByPercentChange(Param param, long percentChange) {
-        checkArgument(percentChange > -100, "percentChange must be bigger than -100");
-        return (getCurrentValue(param) * 100 * (100 + percentChange)) / 10000;
-    }
-
-    private long getCurrentValue(Param param) {
-        return daoStateService.getParamValue(param, periodService.getChainHeight());
+        if (change < (1 / min))
+            throw new ValidationException("Input is smaller than " + 1 / min + " times the current value.");
     }
 }

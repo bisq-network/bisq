@@ -67,9 +67,12 @@ public class ProtoUtil {
     @Nullable
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
         E result = Enums.getIfPresent(enumType, name).orNull();
-        if (result == null)
+        if (result == null) {
             log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
-
+            // TODO returning null here can cause problems in caller. Maybe we should throw an exception? Or maybe
+            // better to ensure that enums have always a default value with represents an undefined state and we fall
+            // back to that.
+        }
         return result;
     }
 

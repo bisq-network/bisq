@@ -25,7 +25,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
-import bisq.desktop.util.validation.PasswordValidator;
 
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.crypto.ScryptUtil;
@@ -49,7 +48,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
@@ -59,7 +57,6 @@ import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 
 import javafx.beans.property.BooleanProperty;
@@ -80,9 +77,10 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.util.FormBuilder.addButton;
-import static bisq.desktop.util.FormBuilder.addLabelDatePicker;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addPasswordTextField;
+import static bisq.desktop.util.FormBuilder.addPrimaryActionButton;
+import static bisq.desktop.util.FormBuilder.addTextArea;
+import static bisq.desktop.util.FormBuilder.addTopLabelDatePicker;
 import static com.google.common.base.Preconditions.checkArgument;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
@@ -103,7 +101,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     private ChangeListener<String> changeListener;
     private ChangeListener<String> wordsTextAreaChangeListener;
     private ChangeListener<Boolean> seedWordsValidChangeListener;
-    private LocalDate walletCreationDate;
     private boolean hideForgotPasswordButton = false;
 
 
@@ -121,7 +118,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         this.walletsManager = walletsManager;
         this.storageDir = storageDir;
         type = Type.Attention;
-        width = 800;
+        width = 900;
     }
 
 
@@ -141,7 +138,6 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         createGridPane();
         addHeadLine();
-        addSeparator();
         addInputFields();
         addButtons();
         applyStyles();
@@ -193,19 +189,11 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        Label label = new AutoTooltipLabel(Res.get("password.enterPassword"));
-        label.setWrapText(true);
-        GridPane.setMargin(label, new Insets(3, 0, 0, 0));
-        GridPane.setRowIndex(label, ++rowIndex);
-
-        passwordTextField = new PasswordTextField();
-        GridPane.setMargin(passwordTextField, new Insets(3, 0, 0, 0));
-        GridPane.setRowIndex(passwordTextField, rowIndex);
-        GridPane.setColumnIndex(passwordTextField, 1);
-        PasswordValidator passwordValidator = new PasswordValidator();
-        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordValidator.validate(newValue).isValid);
+        passwordTextField = addPasswordTextField(gridPane, ++rowIndex, Res.get("password.enterPassword"));
+        GridPane.setColumnSpan(passwordTextField, 1);
+        GridPane.setHalignment(passwordTextField, HPos.LEFT);
+        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordTextField.validate());
         passwordTextField.textProperty().addListener(changeListener);
-        gridPane.getChildren().addAll(label, passwordTextField);
     }
 
     private void addButtons() {
@@ -214,6 +202,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         unlockButton = new AutoTooltipButton(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
+        unlockButton.getStyleClass().add("action-button");
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
             String password = passwordTextField.getText();
@@ -257,9 +246,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         HBox hBox = new HBox();
         hBox.setMinWidth(560);
+        hBox.setPadding(new Insets(15, 0, 0, 0));
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setColumnIndex(hBox, 1);
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().add(unlockButton);
         if (!hideForgotPasswordButton)
@@ -271,48 +260,34 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.SOMETIMES);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        columnConstraints1.setHalignment(HPos.LEFT);
+        columnConstraints1.setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(columnConstraints1);
     }
 
     private void showRestoreScreen() {
         Label headLine2Label = new AutoTooltipLabel(Res.get("seed.restore.title"));
-        headLine2Label.setId("popup-headline");
+        headLine2Label.getStyleClass().add("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);
         GridPane.setRowIndex(headLine2Label, ++rowIndex);
-        GridPane.setColumnSpan(headLine2Label, 2);
         GridPane.setMargin(headLine2Label, new Insets(30, 0, 0, 0));
         gridPane.getChildren().add(headLine2Label);
 
-        Separator separator = new Separator();
-        separator.setMouseTransparent(true);
-        separator.setOrientation(Orientation.HORIZONTAL);
-        separator.getStyleClass().add("separator");
-        GridPane.setHalignment(separator, HPos.CENTER);
-        GridPane.setRowIndex(separator, ++rowIndex);
-        GridPane.setColumnSpan(separator, 2);
-
-        gridPane.getChildren().add(separator);
-
-        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
-        seedWordsTextArea = tuple.second;
+        seedWordsTextArea = addTextArea(gridPane, ++rowIndex, Res.get("seed.enterSeedWords"), 5);
+        ;
         seedWordsTextArea.setPrefHeight(60);
-        seedWordsTextArea.getStyleClass().add("text-area");
 
-        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
-                Res.get("seed.creationDate"));
+        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addTopLabelDatePicker(gridPane, ++rowIndex,
+                Res.get("seed.creationDate"), 10);
         datePicker = labelDatePickerTuple2.second;
-        restoreButton = addButton(gridPane, ++rowIndex, Res.get("seed.restore"));
+        restoreButton = addPrimaryActionButton(gridPane, ++rowIndex, Res.get("seed.restore"), 0);
         restoreButton.setDefaultButton(true);
-        stage.setHeight(340);
+        stage.setHeight(570);
 
 
         // wallet creation date is not encrypted
-        walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate walletCreationDate = Instant.ofEpochSecond(walletsManager.getChainSeedCreationTimeSeconds()).atZone(ZoneId.systemDefault()).toLocalDate();
         log.info("walletCreationDate " + walletCreationDate);
         datePicker.setValue(walletCreationDate);
         restoreButton.disableProperty().bind(createBooleanBinding(() -> !seedWordsValid.get() || !seedWordsEdited.get(),

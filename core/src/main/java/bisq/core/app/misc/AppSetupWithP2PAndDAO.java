@@ -17,12 +17,14 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
-import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
+import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
-import bisq.core.dao.governance.role.BondedRolesService;
+import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
+import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -33,6 +35,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,8 +54,10 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyVoteListService myVoteListService,
                                  BallotListService ballotListService,
                                  MyBlindVoteListService myBlindVoteListService,
-                                 BondedRolesService bondedRolesService,
-                                 AssetService assetService) {
+                                 MyProposalListService myProposalListService,
+                                 MyReputationListService myReputationListService,
+                                 MyProofOfBurnListService myProofOfBurnListService,
+                                 @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         super(encryptionService,
                 keyRing,
                 p2PService,
@@ -62,11 +67,15 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
 
         this.daoSetup = daoSetup;
 
-        persistedDataHosts.add(myVoteListService);
-        persistedDataHosts.add(ballotListService);
-        persistedDataHosts.add(myBlindVoteListService);
-        persistedDataHosts.add(bondedRolesService);
-        persistedDataHosts.add(assetService);
+        // TODO Should be refactored/removed. In the meantime keep in sync with CorePersistedDataHost
+        if (daoActivated) {
+            persistedDataHosts.add(myVoteListService);
+            persistedDataHosts.add(ballotListService);
+            persistedDataHosts.add(myBlindVoteListService);
+            persistedDataHosts.add(myProposalListService);
+            persistedDataHosts.add(myReputationListService);
+            persistedDataHosts.add(myProofOfBurnListService);
+        }
     }
 
     @Override

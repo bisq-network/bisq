@@ -17,11 +17,9 @@
 
 package bisq.asset.coins;
 
-import org.junit.Test;
-
-
-
 import bisq.asset.AbstractAssetTest;
+
+import org.junit.Test;
 
 public class PZDCTest extends AbstractAssetTest {
 
@@ -42,6 +40,9 @@ public class PZDCTest extends AbstractAssetTest {
     public void testInvalidAddresses() {
         assertInvalidAddress("pGXsg0jSMzh1dSqggRvHjPvE3cnwvuXC7s");
         assertInvalidAddress("PKfRRcjwzKFq3dIqE9gq8Ztxn922W4GZhm");
+        assertInvalidAddress("PKfRRcjwzKFq3d0qE9gq8Ztxn922W4GZhm");
+        assertInvalidAddress("PKfRRcjwzKFq3dOqE9gq8Ztxn922W4GZhm");
+        assertInvalidAddress("PKfRRcjwzKFq3dlqE9gq8Ztxn922W4GZhm");
         assertInvalidAddress("PXP75NnwDryYswQb9RaPFBchqLRSvBmDP");
         assertInvalidAddress("PKr3vQ7S");
     }
