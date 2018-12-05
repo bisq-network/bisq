@@ -20,8 +20,12 @@ package bisq.core.dao.node;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.BlockParser;
+import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
@@ -29,6 +33,11 @@ import bisq.network.p2p.P2PServiceListener;
 import bisq.common.handlers.ErrorMessageHandler;
 
 import com.google.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +60,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected boolean p2pNetworkReady;
     @Nullable
     protected ErrorMessageHandler errorMessageHandler;
+    protected List<RawBlock> pendingBlocks = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,19 +189,87 @@ public abstract class BsqNode implements DaoSetupService {
         log.info("onParseBlockChainComplete");
         parseBlockchainComplete = true;
         daoStateService.onParseBlockChainComplete();
-
-        // log.error("COMPLETED: sb1={}\nsb2={}", BlockParser.sb1.toString(), BlockParser.sb2.toString());
-        // log.error("equals? " + BlockParser.sb1.toString().equals(BlockParser.sb2.toString()));
-        // Utilities.copyToClipboard(BlockParser.sb1.toString() + "\n\n\n" + BlockParser.sb2.toString());
     }
 
     @SuppressWarnings("WeakerAccess")
     protected void startReOrgFromLastSnapshot() {
         daoStateSnapshotService.applySnapshot(true);
-        startParseBlocks();
     }
 
-    protected boolean isBlockAlreadyAdded(RawBlock rawBlock) {
-        return daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent();
+
+    protected Optional<Block> doParseBlock(RawBlock rawBlock) throws RequiredReorgFromSnapshotException {
+        // We check if we have a block with that height. If so we return. We do not use the chainHeight as with genesis
+        // height we have no block but chainHeight is initially set to genesis height (bad design ;-( but a bit tricky
+        // to change now as it used in many areas.)
+        if (daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent()) {
+            log.info("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
+            return Optional.empty();
+        }
+
+        try {
+            Block block = blockParser.parseBlock(rawBlock);
+
+            if (pendingBlocks.contains(rawBlock))
+                pendingBlocks.remove(rawBlock);
+
+            // After parsing we check if we have pending blocks we might have received earlier but which have been
+            // not connecting from the latest height we had. The list is sorted by height
+            if (!pendingBlocks.isEmpty()) {
+                // To avoid ConcurrentModificationException we copy the list. It might be altered in the method call
+                ArrayList<RawBlock> tempPendingBlocks = new ArrayList<>(pendingBlocks);
+                for (RawBlock tempPendingBlock : tempPendingBlocks) {
+                    try {
+                        doParseBlock(tempPendingBlock);
+                    } catch (RequiredReorgFromSnapshotException e1) {
+                        // In case we got a reorg we break the iteration
+                        break;
+                    }
+                }
+            }
+
+            return Optional.of(block);
+        } catch (BlockHeightNotConnectingException e) {
+            // There is no guaranteed order how we receive blocks. We could have received block 102 before 101.
+            // If block is in future we move the block to teh pendingBlocks list. At next block we look up the
+            // list if there is any potential candidate with the correct height and if so we remove that from that list.
+
+            int heightForNextBlock = daoStateService.getChainHeight() + 1;
+            if (rawBlock.getHeight() > heightForNextBlock) {
+                pendingBlocks.add(rawBlock);
+                pendingBlocks.sort(Comparator.comparing(RawBlock::getHeight));
+                log.info("We received an block with a future block height. We store it as pending and try to apply " +
+                        "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+            } else if (rawBlock.getHeight() >= daoStateService.getGenesisBlockHeight()) {
+                // We received an older block. We compare if we have it in our chain.
+                Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(rawBlock.getHeight());
+                if (optionalBlock.isPresent()) {
+                    if (optionalBlock.get().getHash().equals(rawBlock.getPreviousBlockHash())) {
+                        log.info("We received an old block we have already parsed and added. We ignore it.");
+                    } else {
+                        log.info("We received an old block with a different hash. We ignore it. Hash={}", rawBlock.getHash());
+                    }
+                } else {
+                    log.info("In case we have reset from genesis height we would not find the block");
+                }
+            } else {
+                log.info("We ignore it as it was before genesis height");
+            }
+        } catch (BlockHashNotConnectingException throwable) {
+            Optional<Block> lastBlock = daoStateService.getLastBlock();
+            log.warn("Block not connecting:\n" +
+                            "New block height/hash/previousBlockHash={}/{}/{}, latest block height/hash={}/{}",
+                    rawBlock.getHeight(),
+                    rawBlock.getHash(),
+                    rawBlock.getPreviousBlockHash(),
+                    lastBlock.isPresent() ? lastBlock.get().getHeight() : "lastBlock not present",
+                    lastBlock.isPresent() ? lastBlock.get().getHash() : "lastBlock not present");
+
+            pendingBlocks.clear();
+            startReOrgFromLastSnapshot();
+            throw new RequiredReorgFromSnapshotException(rawBlock);
+        }
+
+
+        return Optional.empty();
     }
 }

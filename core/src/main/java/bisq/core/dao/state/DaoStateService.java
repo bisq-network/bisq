@@ -193,10 +193,16 @@ public class DaoStateService implements DaoSetupService {
 
     // Second we get the block added with empty txs
     public void onNewBlockWithEmptyTxs(Block block) {
-        daoState.getBlocks().add(block);
-        daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
+        if (daoState.getBlocks().isEmpty() && block.getHeight() != getGenesisBlockHeight()) {
+            log.warn("We don't have any blocks yet and we received a block which is not the genesis block. " +
+                    "We ignore that block as the first block need to be the genesis block. " +
+                    "That might happen in edge cases at reorgs.");
+        } else {
+            daoState.getBlocks().add(block);
+            daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
-        log.info("New Block added at blockHeight " + block.getHeight());
+            log.info("New Block added at blockHeight " + block.getHeight());
+        }
     }
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
@@ -224,7 +230,7 @@ public class DaoStateService implements DaoSetupService {
     public boolean isBlockHashKnown(String blockHash) {
         // TODO(chirhonul): If performance of O(n) time in number of blocks becomes an issue,
         // we should keep a HashMap of block hash -> Block to make this method O(1).
-        return getBlocks().stream().anyMatch(block -> block.getHash() == blockHash);
+        return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
     }
 
     public Optional<Block> getLastBlock() {

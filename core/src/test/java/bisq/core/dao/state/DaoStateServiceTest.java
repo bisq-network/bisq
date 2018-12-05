@@ -40,8 +40,8 @@ public class DaoStateServiceTest {
         Block block = new Block(0, 1534800000, "fakeblockhash0", null);
         stateService.onNewBlockWithEmptyTxs(block);
         Assert.assertEquals(
-                "Block that was added should exist.",
-                true,
+                "Block has to be genesis block to get added.",
+                false,
                 stateService.isBlockHashKnown("fakeblockhash0")
         );
 
@@ -61,11 +61,6 @@ public class DaoStateServiceTest {
                 "Block that was never added should still not exist after adding more blocks.",
                 false,
                 stateService.isBlockHashKnown("fakeblockhash4")
-        );
-        Assert.assertEquals(
-                "Block that was added along with more blocks should exist.",
-                true,
-                stateService.isBlockHashKnown("fakeblockhash3")
         );
     }
 }

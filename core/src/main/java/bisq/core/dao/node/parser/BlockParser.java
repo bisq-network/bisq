@@ -18,7 +18,8 @@
 package bisq.core.dao.node.parser;
 
 import bisq.core.dao.node.full.RawBlock;
-import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -74,9 +75,10 @@ public class BlockParser {
      *
      * @param rawBlock  Contains all transactions of a bitcoin block without any BSQ specific data
      * @return Block: Gets created from the rawBlock but contains only BSQ specific transactions.
-     * @throws BlockNotConnectingException If new block does not connect to previous block
+     * @throws BlockHashNotConnectingException If new block does not connect to previous block
+     * @throws BlockHeightNotConnectingException If new block height is not current cahin Height + 1
      */
-    public Block parseBlock(RawBlock rawBlock) throws BlockNotConnectingException {
+    public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         int blockHeight = rawBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
 
@@ -108,41 +110,32 @@ public class BlockParser {
         List<Tx> txList = block.getTxs();
 
         rawBlock.getRawTxs().forEach(rawTx ->
-            txParser.findTx(rawTx,
-                    genesisTxId,
-                    genesisBlockHeight,
-                    genesisTotalSupply)
-                    .ifPresent(txList::add));
-        log.debug("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
+                txParser.findTx(rawTx,
+                        genesisTxId,
+                        genesisBlockHeight,
+                        genesisTotalSupply)
+                        .ifPresent(txList::add));
+        log.info("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;
     }
 
-    private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockNotConnectingException {
+    private void validateIfBlockIsConnecting(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         LinkedList<Block> blocks = daoStateService.getBlocks();
-        if (!isBlockConnecting(rawBlock, blocks) && !blocks.isEmpty()) {
-            Block last = blocks.getLast();
-            log.warn("addBlock called with a not connecting block. New block:\n" +
-                            "height()={}, hash()={}, lastBlock.height()={}, lastBlock.hash()={}",
-                    rawBlock.getHeight(),
-                    rawBlock.getHash(),
-                    last != null ? last.getHeight() : "null",
-                    last != null ? last.getHash() : "null");
-            throw new BlockNotConnectingException(rawBlock);
-        }
+
+        if (blocks.isEmpty())
+            return;
+
+        Block last = blocks.getLast();
+        if (last.getHeight() + 1 != rawBlock.getHeight())
+            throw new BlockHeightNotConnectingException(rawBlock);
+
+        if (!last.getHash().equals(rawBlock.getPreviousBlockHash()))
+            throw new BlockHashNotConnectingException(rawBlock);
     }
 
     private boolean isBlockAlreadyAdded(RawBlock rawBlock) {
         return daoStateService.isBlockHashKnown(rawBlock.getHash());
-    }
-
-    private boolean isBlockConnecting(RawBlock rawBlock, LinkedList<Block> blocks) {
-        // Case 1: blocks is empty
-        // Case 2: blocks not empty. Last block must match new blocks getPreviousBlockHash and
-        // height of last block +1 must be new blocks height
-        return blocks.isEmpty() ||
-                (blocks.getLast().getHash().equals(rawBlock.getPreviousBlockHash()) &&
-                        blocks.getLast().getHeight() + 1 == rawBlock.getHeight());
     }
 }
