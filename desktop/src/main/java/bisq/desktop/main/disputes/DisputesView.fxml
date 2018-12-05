@@ -17,14 +17,14 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import com.jfoenix.controls.JFXTabPane?>
 <?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="bisq.desktop.main.disputes.DisputesView"
-         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-         AnchorPane.topAnchor="0.0"
-         xmlns:fx="http://javafx.com/fxml">
+<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.disputes.DisputesView"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+            AnchorPane.topAnchor="0.0"
+            xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="tradersDisputesTab" closable="false"/>
 
-</TabPane>
+</JFXTabPane>

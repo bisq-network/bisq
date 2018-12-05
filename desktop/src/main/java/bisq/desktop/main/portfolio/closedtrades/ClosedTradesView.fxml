@@ -17,7 +17,7 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.control.Button?>
+<?import bisq.desktop.components.AutoTooltipButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
@@ -25,7 +25,7 @@
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.closedtrades.ClosedTradesView"
       spacing="10" alignment="CENTER_RIGHT" xmlns:fx="http://javafx.com/fxml">
     <padding>
-        <Insets bottom="0.0" left="10.0" right="10.0" top="10.0"/>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
@@ -41,5 +41,5 @@
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
-    <Button fx:id="exportButton"/>
+    <AutoTooltipButton fx:id="exportButton"/>
 </VBox>

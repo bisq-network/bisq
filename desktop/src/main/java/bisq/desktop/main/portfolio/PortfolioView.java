@@ -55,7 +55,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;
     private Tab editOpenOfferTab;
-    private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed"));
+    private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed").toUpperCase());
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -78,9 +78,12 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     public void initialize() {
-        openOffersTab.setText(Res.get("portfolio.tab.openOffers"));
-        pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades"));
-        closedTradesTab.setText(Res.get("portfolio.tab.history"));
+        root.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+        failedTradesTab.setClosable(false);
+
+        openOffersTab.setText(Res.get("portfolio.tab.openOffers").toUpperCase());
+        pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades").toUpperCase());
+        closedTradesTab.setText(Res.get("portfolio.tab.history").toUpperCase());
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
@@ -179,7 +182,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
                 if (editOfferView == null) {
                     editOfferView = (EditOfferView) view;
                     editOfferView.applyOpenOffer(openOffer);
-                    editOpenOfferTab = new Tab(Res.get("portfolio.tab.editOpenOffer"));
+                    editOpenOfferTab = new Tab(Res.get("portfolio.tab.editOpenOffer").toUpperCase());
                     editOfferView.setCloseHandler(() -> {
                         root.getTabs().remove(editOpenOfferTab);
                     });

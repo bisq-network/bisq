@@ -30,6 +30,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.filter.FilterManager;
@@ -49,6 +50,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -150,6 +152,8 @@ public class BisqSetup {
     private final PriceAlert priceAlert;
     private final MarketAlerts marketAlerts;
     private final VoteResultService voteResultService;
+    private final AssetTradeActivityCheck tradeActivityCheck;
+    private final AssetService assetService;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -223,6 +227,8 @@ public class BisqSetup {
                      PriceAlert priceAlert,
                      MarketAlerts marketAlerts,
                      VoteResultService voteResultService,
+                     AssetTradeActivityCheck tradeActivityCheck,
+                     AssetService assetService,
                      BSFormatter formatter) {
 
 
@@ -259,6 +265,8 @@ public class BisqSetup {
         this.priceAlert = priceAlert;
         this.marketAlerts = marketAlerts;
         this.voteResultService = voteResultService;
+        this.tradeActivityCheck = tradeActivityCheck;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -624,6 +632,9 @@ public class BisqSetup {
         }
 
         tradeStatisticsManager.onAllServicesInitialized();
+        tradeActivityCheck.onAllServicesInitialized();
+
+        assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
 

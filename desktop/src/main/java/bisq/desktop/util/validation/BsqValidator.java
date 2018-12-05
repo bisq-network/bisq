@@ -94,7 +94,8 @@ public class BsqValidator extends AltcoinValidator {
         if (Restrictions.isAboveDust(coin))
             return new ValidationResult(true);
         else
-            return new ValidationResult(false, Res.get("validation.btc.amountBelowDust", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
+            return new ValidationResult(false, Res.get("validation.amountBelowDust",
+                    bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
     }
 
     private ValidationResult validateIfNotFractionalBtcValue(String input) {

@@ -19,16 +19,16 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.P2PService;
 
@@ -153,11 +153,6 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
             }
 
             @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                errorMessageHandler.handleErrorMessage(exception.getMessage());
-            }
-
-            @Override
             public void onFailure(TxBroadcastException exception) {
                 errorMessageHandler.handleErrorMessage(exception.getMessage());
             }
@@ -234,7 +229,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private void rePublishOnceWellConnected() {
-        if ((p2PService.getNumConnectedPeers().get() > 4 && p2PService.isBootstrapped())) {
+        int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped())) {
             p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener);
             rePublish();
         }
@@ -256,9 +252,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {
-        return daoStateService.getTx(proposal.getTxId())
-                .filter(tx -> isTxInProposalPhaseAndCycle(tx, periodService, daoStateService))
-                .isPresent();
+        boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+        return isMine(proposal) && inPhase;
 
     }
 

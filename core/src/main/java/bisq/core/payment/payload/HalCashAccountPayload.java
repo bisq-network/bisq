@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -87,12 +89,12 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "HalCash - Mobile no.: " + mobileNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Mobile no.: " + mobileNr;
+        return Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 
     @Override

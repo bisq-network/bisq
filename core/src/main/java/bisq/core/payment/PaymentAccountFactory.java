@@ -76,6 +76,10 @@ public class PaymentAccountFactory {
                 return new HalCashAccount();
             case PaymentMethod.F2F_ID:
                 return new F2FAccount();
+            case PaymentMethod.PROMPT_PAY_ID:
+                return new PromptPayAccount();
+            case PaymentMethod.ADVANCED_CASH_ID:
+                return new AdvancedCashAccount();
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }

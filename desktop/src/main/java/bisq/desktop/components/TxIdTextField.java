@@ -33,6 +33,8 @@ import org.bitcoinj.core.TransactionConfidence;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXTextField;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -97,7 +99,7 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
         AnchorPane.setTopAnchor(blockExplorerIcon, 4.0);
 
-        textField = new TextField();
+        textField = new JFXTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.setTooltip(tooltip);
@@ -156,6 +158,13 @@ public class TxIdTextField extends AnchorPane {
                 txConfidenceIndicator.setVisible(true);
                 AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
             }
+        } else {
+            //TODO we should show some placeholder in case of a tx which we are not aware of but which can be
+            // confirmed already. This is for instance the case of the other peers trade fee tx, as it is not related
+            // to our wallet we don't have a confidence object but we should show that it is in a unknown state instead
+            // of not showing anything which causes confusion that the tx was not broadcasted. Best would be to request
+            // it from a block explorer service but that is a bit too heavy for that use case...
+            // Maybe a question mark with a tooltip explaining why we don't know about the confidence might be ok...
         }
     }
 }

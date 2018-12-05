@@ -29,22 +29,24 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.exceptions.ValidationException;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.bond.Bond;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
-import bisq.core.dao.governance.role.BondedRole;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+
+import bisq.asset.Asset;
 
 import bisq.network.p2p.P2PService;
 
@@ -77,14 +79,9 @@ import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-
-
-import bisq.asset.Asset;
-
 @FxmlView
 public class MakeProposalView extends ActivatableView<GridPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
-    private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final PhasesView phasesView;
@@ -108,7 +105,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Inject
     private MakeProposalView(DaoFacade daoFacade,
-                             BsqWalletService bsqWalletService,
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
                              PhasesView phasesView,
@@ -116,7 +112,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              BSFormatter btcFormatter,
                              BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
-        this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.phasesView = phasesView;
@@ -125,14 +120,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.bsqFormatter = bsqFormatter;
     }
 
-
     @Override
     public void initialize() {
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.<ProposalType>addLabelComboBox(root, gridRow,
-                Res.getWithCol("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
+                Res.get("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        proposalTypeComboBox.setMaxWidth(300);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(ProposalType proposalType) {
@@ -216,9 +211,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin miningFee = transaction.getFee();
             int txSize = transaction.bitcoinSerialize().length;
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
-            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                    Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
 
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                        Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
+            } else {
+                doPublishMyProposal(proposal, transaction);
+            }
         } catch (InsufficientMoneyException e) {
             BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
             new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
@@ -255,17 +254,19 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
 
-        BondedRole bondedRole;
         switch (type) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
-                checkNotNull(proposalDisplay.bsqAddressTextField,
-                        "proposalDisplay.bsqAddressTextField must not be null");
                 return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()),
-                        proposalDisplay.bsqAddressTextField.getText());
+                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+            case REIMBURSEMENT_REQUEST:
+                checkNotNull(proposalDisplay.requestedBsqTextField,
+                        "proposalDisplay.requestedBsqTextField must not be null");
+                return daoFacade.getReimbursementProposalWithTransaction(proposalDisplay.nameTextField.getText(),
+                        proposalDisplay.linkInputTextField.getText(),
+                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
                         "proposalDisplay.paramComboBox must no tbe null");
@@ -279,7 +280,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     throw new ValidationException("paramValue is null or empty");
 
                 try {
-                    long paramValue = bsqFormatter.parseParamValue(selectedParam, paramValueAsString);
+                    String paramValue = bsqFormatter.parseParamValueToString(selectedParam, paramValueAsString);
+                    proposalDisplay.paramValueTextField.setText(paramValue);
                     log.info("Change param: paramValue={}, paramValueAsString={}", paramValue, paramValueAsString);
 
                     changeParamValidator.validateParamValue(selectedParam, paramValue);
@@ -294,17 +296,17 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case BONDED_ROLE:
                 checkNotNull(proposalDisplay.bondedRoleTypeComboBox,
                         "proposalDisplay.bondedRoleTypeComboBox must not be null");
-                bondedRole = new BondedRole(proposalDisplay.nameTextField.getText(),
+                Role role = new Role(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
                         proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem());
-                return daoFacade.getBondedRoleProposalWithTransaction(bondedRole);
+                return daoFacade.getBondedRoleProposalWithTransaction(role);
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
-                bondedRole = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+                Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
                 return daoFacade.getConfiscateBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText(),
-                        bondedRole.getHash());
+                        bond.getLockupTxId());
             case GENERIC:
                 return daoFacade.getGenericProposalWithTransaction(proposalDisplay.nameTextField.getText(),
                         proposalDisplay.linkInputTextField.getText());
@@ -324,7 +326,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, bsqWalletService, daoFacade);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
@@ -361,7 +363,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 .filter(Objects::nonNull).forEach(e -> {
             if (e instanceof InputTextField) {
                 InputTextField inputTextField = (InputTextField) e;
-                inputsValid.set(inputsValid.get() && inputTextField.getValidator().validate(e.getText()).isValid);
+                inputsValid.set(inputsValid.get() &&
+                        inputTextField.getValidator() != null &&
+                        inputTextField.getValidator().validate(e.getText()).isValid);
             }
         });
         proposalDisplay.getComboBoxes().stream()

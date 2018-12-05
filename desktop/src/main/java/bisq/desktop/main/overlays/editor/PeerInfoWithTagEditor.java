@@ -20,7 +20,6 @@ package bisq.desktop.main.overlays.editor;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
-import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
@@ -29,6 +28,7 @@ import bisq.core.offer.Offer;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javafx.animation.Interpolator;
@@ -42,9 +42,12 @@ import javafx.stage.Window;
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
@@ -66,6 +69,9 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 @Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
@@ -89,7 +95,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         this.offer = offer;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        width = 400;
+        width = 468;
         type = Type.Undefined;
         if (INSTANCE != null)
             INSTANCE.hide();
@@ -119,7 +125,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     public PeerInfoWithTagEditor numTrades(int numTrades) {
         this.numTrades = numTrades;
         if (numTrades == 0)
-            width = 500;
+            width = 568;
         return this;
     }
 
@@ -172,14 +178,20 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     private void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex,
-                Res.get("peerInfo.nrOfTrades"),
-                numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet"));
-        if (accountAge != null)
-            FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("peerInfo.age"), accountAge);
+        gridPane.setPadding(new Insets(64));
 
-        inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
+        final Tuple3<Label, TextField, VBox> onionTuple = addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.onionAddress"), hostName);
+        GridPane.setColumnSpan(onionTuple.third, 2);
+        onionTuple.second.setMouseTransparent(false);
+
+        GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex,
+                Res.get("peerInfo.nrOfTrades"),
+                numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet")).third, 2);
+        if (accountAge != null)
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.age"), accountAge).third, 2);
+
+        inputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
+        GridPane.setColumnSpan(inputTextField, 2);
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
@@ -293,9 +305,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void applyStyles() {
-        gridPane.setId("peer-info-popup-bg");
+        gridPane.getStyleClass().add("peer-info-popup-bg");
         if (headLineLabel != null)
-            headLineLabel.setId("peer-info-popup-headline");
+            headLineLabel.getStyleClass().add("peer-info-popup-headline");
     }
 
     @Override

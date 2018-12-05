@@ -20,7 +20,6 @@ package bisq.core.dao.governance.blindvote;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -28,21 +27,22 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.exceptions.PublishToP2PNetworkException;
-import bisq.core.dao.governance.ballot.BallotList;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
-import bisq.core.dao.governance.merit.Merit;
 import bisq.core.dao.governance.merit.MeritConsensus;
-import bisq.core.dao.governance.merit.MeritList;
 import bisq.core.dao.governance.myvote.MyVoteListService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.Merit;
+import bisq.core.dao.state.model.governance.MeritList;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.P2PService;
 
@@ -82,6 +82,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Publishes blind vote tx and blind vote payload to p2p network.
@@ -278,8 +280,10 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .filter(txId -> periodService.isTxInPastCycle(txId, periodService.getChainHeight()))
                 .collect(Collectors.toSet());
 
-        return new MeritList(daoStateService.getIssuanceSet().stream()
+        return new MeritList(daoStateService.getIssuanceSet(IssuanceType.COMPENSATION).stream()
                 .map(issuance -> {
+                    checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION,
+                            "IssuanceType must be COMPENSATION for MeritList");
                     // We check if it is our proposal
                     if (!myCompensationProposalTxIs.contains(issuance.getTxId()))
                         return null;
@@ -334,13 +338,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             }
 
             @Override
-            public void onTxMalleability(TxMalleabilityException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
-                exceptionHandler.handleException(exception);
-            }
-
-            @Override
             public void onFailure(TxBroadcastException exception) {
                 // TODO handle
                 // We need to be sure that in case of a failed tx the locked stake gets unlocked!
@@ -357,7 +354,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     }
 
     private void rePublishOnceWellConnected() {
-        if ((p2PService.getNumConnectedPeers().get() > 4 && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
+        int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
             int chainHeight = periodService.getChainHeight();
             myBlindVoteList.stream()
                     .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),

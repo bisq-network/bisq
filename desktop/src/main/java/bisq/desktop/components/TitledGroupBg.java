@@ -41,7 +41,7 @@ public class TitledGroupBg extends Pane {
 
         label = new AutoTooltipLabel();
         label.textProperty().bind(text);
-        label.setLayoutX(8);
+        label.setLayoutX(4);
         label.setLayoutY(-8);
         label.setPadding(new Insets(0, 7, 0, 5));
         setActive();
@@ -49,13 +49,20 @@ public class TitledGroupBg extends Pane {
     }
 
     public void setInactive() {
-        setId("titled-group-bg");
-        label.setId("titled-group-bg-label");
+        resetStyles();
+        getStyleClass().add("titled-group-bg");
+        label.getStyleClass().add("titled-group-bg-label");
+    }
+
+    private void resetStyles() {
+        getStyleClass().removeAll("titled-group-bg", "titled-group-bg-active");
+        label.getStyleClass().removeAll("titled-group-bg-label", "titled-group-bg-label-active");
     }
 
     private void setActive() {
-        setId("titled-group-bg-active");
-        label.setId("titled-group-bg-label-active");
+        resetStyles();
+        getStyleClass().add("titled-group-bg-active");
+        label.getStyleClass().add("titled-group-bg-label-active");
     }
 
     public String getText() {

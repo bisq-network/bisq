@@ -30,16 +30,16 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.CycleService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -224,7 +224,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (selectedProposalListItem != null) {
 
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getBallots().stream()
+            Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
@@ -329,10 +329,19 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getBallots()
-                .stream()
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
+                .filter(evaluatedProposal -> {
+                    boolean containsKey = ballotByProposalTxIdMap.containsKey(evaluatedProposal.getProposalTxId());
+
+                    // We saw in testing that the ballot was not there for an evaluatedProposal. We could not reproduce that
+                    // so far but to avoid a nullPointer we filter out such cases.
+                    if (!containsKey)
+                        log.warn("ballotByProposalTxIdMap does not contain expected proposalTxId()={}", evaluatedProposal.getProposalTxId());
+
+                    return containsKey;
+                })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))
@@ -347,7 +356,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, bsqWalletService, daoFacade);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -615,7 +624,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getLink(), AwesomeIcon.EXTERNAL_LINK);
-                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
                                 } else {
@@ -850,74 +859,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         };
                     }
                 });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.blindVoteTxId"));
-        column.setSortable(false);
-        column.setMinWidth(130);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String blindVoteTxId = item.getBlindVoteTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(blindVoteTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getBlindVoteTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", blindVoteTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-        votesTableView.getColumns().add(column);
-
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.voteRevealTxId"));
-        column.setSortable(false);
-        column.setMinWidth(140);
-        column.setMaxWidth(column.getMinWidth());
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<VoteListItem, VoteListItem> call(TableColumn<VoteListItem,
-                    VoteListItem> column) {
-                return new TableCell<>() {
-                    private HyperlinkWithIcon hyperlinkWithIcon;
-
-                    @Override
-                    public void updateItem(final VoteListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        //noinspection Duplicates
-                        if (item != null && !empty) {
-                            String voteRevealTxId = item.getVoteRevealTxId();
-                            hyperlinkWithIcon = new HyperlinkWithIcon(voteRevealTxId, AwesomeIcon.EXTERNAL_LINK);
-                            hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item.getVoteRevealTxId()));
-                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", voteRevealTxId)));
-                            setGraphic(hyperlinkWithIcon);
-                        } else {
-                            setGraphic(null);
-                            if (hyperlinkWithIcon != null)
-                                hyperlinkWithIcon.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
         votesTableView.getColumns().add(column);
     }
 

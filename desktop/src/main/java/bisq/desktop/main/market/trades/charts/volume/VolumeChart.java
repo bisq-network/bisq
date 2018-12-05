@@ -68,7 +68,7 @@ public class VolumeChart extends XYChart<Number, Number> {
                     double candleWidth = -1;
                     if (getXAxis() instanceof NumberAxis) {
                         NumberAxis xa = (NumberAxis) getXAxis();
-                        candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.90; // use 90% width between ticks
+                        candleWidth = xa.getDisplayPosition(xa.getTickUnit()) * 0.60; // use 90% width between ticks
                     }
 
                     // 97 is visible chart data height if chart height is 140.

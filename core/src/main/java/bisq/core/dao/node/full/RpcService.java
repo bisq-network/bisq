@@ -17,12 +17,11 @@
 
 package bisq.core.dao.node.full;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoOptionKeys;
-import bisq.core.dao.state.blockchain.PubKeyScript;
-import bisq.core.dao.state.blockchain.RawBlock;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.RawTxOutput;
-import bisq.core.dao.state.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.PubKeyScript;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
@@ -90,15 +89,23 @@ public class RpcService {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public RpcService(@Named(DaoOptionKeys.RPC_USER) String rpcUser,
-                      @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
+    public RpcService(Preferences preferences,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
                       @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        this.rpcUser = rpcUser;
-        this.rpcPassword = rpcPassword;
-        this.rpcPort = rpcPort;
-        this.rpcBlockPort = rpcBlockPort;
+        this.rpcUser = preferences.getRpcUser();
+        this.rpcPassword = preferences.getRpcPw();
+
+        // mainnet is 8332, testnet 18332, regtest 18443
+        boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
+        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
+        this.rpcPort = isPortSet ? rpcPort :
+                isMainnet ? "8332" :
+                        isTestnet ? "18332" :
+                                "18443"; // regtest
+        this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
+
         this.dumpBlockchainData = dumpBlockchainData;
     }
 
@@ -277,10 +284,12 @@ public class RpcService {
                                     try {
                                         opReturnData = Utils.HEX.decode(chunks[1]);
                                     } catch (Throwable t) {
-                                        // We get sometimes exceptions, seems BitcoinJ
-                                        // cannot handle all existing OP_RETURN data, but we ignore them
-                                        // anyway as our OP_RETURN data is valid in BitcoinJ
-                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
+                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
+                                                " / chunks[1]=" + chunks[1] +
+                                                "\nWe get sometimes exceptions with opReturn data, seems BitcoinJ " +
+                                                "cannot handle all " +
+                                                "existing OP_RETURN data, but we ignore them anyway as the OP_RETURN " +
+                                                "data used for DAO transactions are all valid in BitcoinJ");
                                     }
                                 }
                             }

@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
 
@@ -31,22 +32,13 @@ import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import org.apache.commons.lang3.StringUtils;
-
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
-import javafx.geometry.Insets;
-import javafx.geometry.VPos;
-
-import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class UpholdForm extends PaymentMethodForm {
     private final UpholdAccount upholdAccount;
@@ -55,7 +47,7 @@ public class UpholdForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 ((UpholdAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
@@ -72,7 +64,7 @@ public class UpholdForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId")).second;
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             upholdAccount.setAccountId(newValue);
@@ -80,68 +72,40 @@ public class UpholdForm extends PaymentMethodForm {
         });
 
         addCurrenciesGrid(true);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
-        GridPane.setValignment(label, VPos.TOP);
-        FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
+
+        FlowPane flowPane = FormBuilder.addTopLabelFlowPane(gridPane, ++gridRow,
+                Res.get("payment.supportedCurrencies"), 0).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllUpholdCurrencies().stream().forEach(e ->
-        {
-            CheckBox checkBox = new CheckBox(e.getCode());
-            checkBox.setMouseTransparent(!isEditable);
-            checkBox.setSelected(upholdAccount.getTradeCurrencies().contains(e));
-            checkBox.setMinWidth(60);
-            checkBox.setMaxWidth(checkBox.getMinWidth());
-            checkBox.setTooltip(new Tooltip(e.getName()));
-            checkBox.setOnAction(event -> {
-                if (checkBox.isSelected())
-                    upholdAccount.addCurrency(e);
-                else
-                    upholdAccount.removeCurrency(e);
-
-                updateAllInputsValid();
-            });
-            flowPane.getChildren().add(checkBox);
-        });
-
-        GridPane.setRowIndex(flowPane, gridRow);
-        GridPane.setColumnIndex(flowPane, 1);
-        gridPane.getChildren().add(flowPane);
+        CurrencyUtil.getAllUpholdCurrencies().forEach(e ->
+                fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, upholdAccount));
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String AccountId = accountIdInputTextField.getText();
-            AccountId = StringUtils.abbreviate(AccountId, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(AccountId));
-        }
+        setAccountNameWithString(accountIdInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 upholdAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(upholdAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"),
                 upholdAccount.getAccountId()).second;
         field.setMouseTransparent(false);
-        addLimitations();
+        addLimitations(true);
         addCurrenciesGrid(false);
     }
 

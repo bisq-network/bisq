@@ -90,9 +90,9 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        offerBookTab.setText(Res.get("market.tabs.offerBook"));
-        spreadTab.setText(Res.get("market.tabs.spread"));
-        tradesTab.setText(Res.get("market.tabs.trades"));
+        offerBookTab.setText(Res.get("market.tabs.offerBook").toUpperCase());
+        spreadTab.setText(Res.get("market.tabs.spread").toUpperCase());
+        tradesTab.setText(Res.get("market.tabs.trades").toUpperCase());
 
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(MarketView.class) == 1)

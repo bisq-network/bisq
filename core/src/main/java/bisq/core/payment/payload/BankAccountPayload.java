@@ -19,6 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.Res;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -123,21 +124,21 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     @Override
     public String getPaymentDetailsForTradePopup() {
         String bankName = BankUtil.isBankNameRequired(countryCode) ?
-                BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
+                BankUtil.getBankNameLabel(countryCode) + ": " + this.bankName + "\n" : "";
         String bankId = BankUtil.isBankIdRequired(countryCode) ?
-                BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
+                BankUtil.getBankIdLabel(countryCode) + ": " + this.bankId + "\n" : "";
         String branchId = BankUtil.isBranchIdRequired(countryCode) ?
-                BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
+                BankUtil.getBranchIdLabel(countryCode) + ": " + this.branchId + "\n" : "";
         String nationalAccountId = BankUtil.isNationalAccountIdRequired(countryCode) ?
-                BankUtil.getNationalAccountIdLabel(countryCode) + " " + this.nationalAccountId + "\n" : "";
+                BankUtil.getNationalAccountIdLabel(countryCode) + ": " + this.nationalAccountId + "\n" : "";
         String accountNr = BankUtil.isAccountNrRequired(countryCode) ?
-                BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
+                BankUtil.getAccountNrLabel(countryCode) + ": " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
-                BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
+                BankUtil.getAccountTypeLabel(countryCode) + ": " + this.accountType + "\n" : "";
         String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
-                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+                (BankUtil.getHolderIdLabel(countryCode) + ": " + holderTaxId + "\n") : "";
 
-        return "Holder name: " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
                 bankName +
                 bankId +
                 branchId +
@@ -145,7 +146,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                 accountNr +
                 accountType +
                 holderTaxIdString +
-                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
+                Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);
     }
 
     protected String getHolderIdLabel() {

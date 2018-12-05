@@ -19,8 +19,10 @@ package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.governance.Issuance;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.MeritList;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.util.Utilities;
@@ -68,8 +70,11 @@ public class MeritConsensus {
                 .filter(merit -> isSignatureValid(merit.getSignature(), merit.getIssuance().getPubKey(), blindVoteTxId))
                 .mapToLong(merit -> {
                     try {
-                        return getWeightedMeritAmount(merit.getIssuance().getAmount(),
-                                merit.getIssuance().getChainHeight(),
+                        Issuance issuance = merit.getIssuance();
+                        checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION,
+                                "issuance must be of type COMPENSATION");
+                        return getWeightedMeritAmount(issuance.getAmount(),
+                                issuance.getChainHeight(),
                                 txChainHeight,
                                 BLOCKS_PER_YEAR);
                     } catch (Throwable t) {
@@ -148,6 +153,7 @@ public class MeritConsensus {
                 .mapToLong(merit -> {
                     try {
                         Issuance issuance = merit.getIssuance();
+                        checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION, "issuance must be of type COMPENSATION");
                         int issuanceHeight = issuance.getChainHeight();
                         checkArgument(issuanceHeight <= currentChainHeight,
                                 "issuanceHeight must not be larger as currentChainHeight");
