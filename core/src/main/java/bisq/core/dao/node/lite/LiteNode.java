@@ -23,7 +23,7 @@ import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.parser.BlockParser;
-import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 
@@ -121,6 +121,15 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
+    @Override
+    protected void startReOrgFromLastSnapshot() {
+        super.startReOrgFromLastSnapshot();
+
+        int startBlockHeight = getStartBlockHeight();
+        liteNodeNetworkService.reset();
+        liteNodeNetworkService.requestBlocks(startBlockHeight);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -137,30 +146,24 @@ public class LiteNode extends BsqNode {
         // 144 blocks a day would result in about 4000 in a month, so if a user downloads the app after 1 months latest
         // release it will be a bit of a performance hit. It is a one time event as the snapshots gets created and be
         // used at next startup.
-        long startTs = System.currentTimeMillis();
-        blockList.forEach(this::parseBlock);
-        log.info("Parsing of {} blocks took {} sec.", blockList.size(), (System.currentTimeMillis() - startTs) / 1000D);
+        for (RawBlock block : blockList) {
+            try {
+                doParseBlock(block);
+            } catch (RequiredReorgFromSnapshotException e1) {
+                // In case we got a reorg we break the iteration
+                break;
+            }
+        }
+
         onParseBlockChainComplete();
     }
 
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
-        log.info("onNewBlockReceived: block at height {}", block.getHeight());
-        parseBlock(block);
-    }
-
-    private void parseBlock(RawBlock rawBlock) {
-        if (!isBlockAlreadyAdded(rawBlock)) {
-            try {
-                blockParser.parseBlock(rawBlock);
-            } catch (BlockNotConnectingException throwable) {
-                startReOrgFromLastSnapshot();
-            } catch (Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
-                if (errorMessageHandler != null)
-                    errorMessageHandler.handleErrorMessage(throwable.toString());
-            }
+        log.info("onNewBlockReceived: block at height {}, hash={}", block.getHeight(), block.getHash());
+        try {
+            doParseBlock(block);
+        } catch (RequiredReorgFromSnapshotException ignore) {
         }
     }
 }

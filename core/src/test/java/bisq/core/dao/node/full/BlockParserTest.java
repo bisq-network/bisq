@@ -19,7 +19,6 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
@@ -28,8 +27,6 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import org.bitcoinj.core.Coin;
 
-import com.neemre.btcdcli4j.core.BitcoindException;
-import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.RawBlock;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 
@@ -137,7 +134,7 @@ public class BlockParserTest {
     }
 
     @Test
-    public void testParseBlocks() throws BitcoindException, CommunicationException, BlockNotConnectingException, RpcException {
+    public void testParseBlocks() {
         // Setup blocks to test, starting before genesis
         // Only the transactions related to bsq are relevant, no checks are done on correctness of blocks or other txs
         // so hashes and most other data don't matter

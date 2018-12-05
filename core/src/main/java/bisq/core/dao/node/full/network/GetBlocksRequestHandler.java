@@ -93,9 +93,8 @@ class GetBlocksRequestHandler {
         Log.traceCall(getBlocksRequest + "\n\tconnection=" + connection);
         List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
-        final GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
-        log.debug("getBlocksResponse " + getBlocksResponse.getRequestNonce());
-        log.info("Received getBlocksResponse from {} for blocks from height {}",
+        GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
+        log.info("Received GetBlocksRequest from {} for blocks from height {}",
                 connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight());
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -108,7 +107,7 @@ class GetBlocksRequestHandler {
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getBlocksResponse);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {

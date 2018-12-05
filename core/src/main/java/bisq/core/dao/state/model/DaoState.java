@@ -69,7 +69,7 @@ public class DaoState implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Getter
-    private int chainHeight;
+    private int chainHeight; // Is set initially to genesis height
     @Getter
     private final LinkedList<Block> blocks;
     @Getter
