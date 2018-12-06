@@ -23,7 +23,6 @@ import bisq.httpapi.exceptions.IncompatiblePaymentAccountException;
 import bisq.httpapi.exceptions.InsufficientMoneyException;
 import bisq.httpapi.exceptions.NoAcceptedArbitratorException;
 import bisq.httpapi.exceptions.NotFoundException;
-import bisq.httpapi.exceptions.OfferTakerSameAsMakerException;
 import bisq.httpapi.exceptions.PaymentAccountNotFoundException;
 import bisq.httpapi.facade.OfferFacade;
 import bisq.httpapi.model.InputDataForOffer;
@@ -138,7 +137,7 @@ public class OfferEndpoint {
     public void takeOffer(@Suspended final AsyncResponse asyncResponse, @PathParam("id") String id, @Valid TakeOffer data) {
         UserThread.execute(() -> {
             try {
-                final CompletableFuture<Trade> completableFuture = offerFacade.offerTake(id, data.paymentAccountId, data.amount, true);
+                final CompletableFuture<Trade> completableFuture = offerFacade.offerTake(id, data.paymentAccountId, data.amount, true, data.maxFundsForTrade);
                 completableFuture.thenApply(trade -> asyncResponse.resume(new TradeDetails(trade)))
                         .exceptionally(e -> {
                             final Throwable cause = e.getCause();
@@ -146,16 +145,6 @@ public class OfferEndpoint {
                             if (cause instanceof ValidationException) {
                                 final int status = 422;
                                 responseBuilder = toValidationErrorResponse(cause, status);
-                            } else if (cause instanceof IncompatiblePaymentAccountException) {
-                                responseBuilder = toValidationErrorResponse(cause, 423);
-                            } else if (cause instanceof NoAcceptedArbitratorException) {
-                                responseBuilder = toValidationErrorResponse(cause, 424);
-                            } else if (cause instanceof PaymentAccountNotFoundException) {
-                                responseBuilder = toValidationErrorResponse(cause, 425);
-                            } else if (cause instanceof InsufficientMoneyException) {
-                                responseBuilder = toValidationErrorResponse(cause, 427);
-                            } else if (cause instanceof OfferTakerSameAsMakerException) {
-                                responseBuilder = toValidationErrorResponse(cause, 428);
                             } else if (cause instanceof NotFoundException) {
                                 responseBuilder = toValidationErrorResponse(cause, 404);
                             } else {

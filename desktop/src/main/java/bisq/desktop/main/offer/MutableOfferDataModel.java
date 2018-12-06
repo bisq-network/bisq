@@ -139,7 +139,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected double marketPriceMargin = 0;
     protected Coin txFeeFromFeeService = Coin.ZERO;
     protected boolean marketPriceAvailable;
-    protected int feeTxSize = 260; // size of typical tx with 1 input
+    protected int feeTxSize = TxFeeEstimation.TYPICAL_TX_WITH_1_INPUT_SIZE;
     protected int feeTxSizeEstimationRecursionCounter;
     protected boolean allowAmountUpdate = true;
 

@@ -39,6 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class TxFeeEstimation {
+    public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 260;
     private static int counter;
 
     public static Tuple2<Coin, Integer> getEstimatedFeeAndTxSizeForTaker(Coin reservedFundsForOffer,

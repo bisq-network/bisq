@@ -19,11 +19,13 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -90,7 +92,9 @@ public class TradeManagerOnOfferTakeTest {
     private OpenOfferManager openOfferManager;
     private ClosedTradableManager closedTradableManager;
     private FailedTradesManager failedTradesManager;
+    private FeeService feeService;
     private P2PService p2PService;
+    private Preferences preferences;
     private PriceFeedService priceFeedService;
     private FilterManager filterManager;
     private TradeStatisticsManager tradeStatisticsManager;
@@ -127,12 +131,15 @@ public class TradeManagerOnOfferTakeTest {
 //        TODO stub more precisely, ideally with exact values or at least matchers
         when(btcWalletService.getOrCreateAddressEntry(any(), any())).thenReturn(addressEntry);
         when(btcWalletService.getFreshAddressEntry()).thenReturn(addressEntry);
+        when(btcWalletService.getAvailableBalance()).thenReturn(Coin.SATOSHI);
 
         bsqWalletService = null;
         openOfferManager = null;
         closedTradableManager = null;
         failedTradesManager = null;
+        feeService = null;
         p2PService = mock(P2PService.class);
+        preferences = null;
         priceFeedService = null;
         filterManager = mock(FilterManager.class);
 
@@ -646,12 +653,13 @@ public class TradeManagerOnOfferTakeTest {
                 params.fundsNeededForTrade,
                 params.offer,
                 params.paymentAccountId,
-                params.useSavingsWallet);
+                params.useSavingsWallet,
+                params.maxFundsForTrade);
     }
 
     @NotNull
     private TradeManager getTradeManager() {
-        final TradeManager tradeManager = new TradeManager(user, keyRing, btcWalletService, bsqWalletService, tradeWalletService, openOfferManager, closedTradableManager, failedTradesManager, p2PService, priceFeedService, filterManager, tradeStatisticsManager, referralIdService, persistenceProtoResolver, accountAgeWitnessService, arbitratorManager, clock, storageDir);
+        final TradeManager tradeManager = new TradeManager(user, keyRing, btcWalletService, bsqWalletService, tradeWalletService, openOfferManager, closedTradableManager, failedTradesManager, feeService, p2PService, preferences, priceFeedService, filterManager, tradeStatisticsManager, referralIdService, persistenceProtoResolver, accountAgeWitnessService, arbitratorManager, clock, storageDir);
         tradeManager.readPersisted();
         return tradeManager;
     }
@@ -745,6 +753,7 @@ public class TradeManagerOnOfferTakeTest {
     }
 
     private class OnTakeOfferParams {
+        Long maxFundsForTrade;
         Coin amount;
         Coin txFee;
         Coin takerFee;

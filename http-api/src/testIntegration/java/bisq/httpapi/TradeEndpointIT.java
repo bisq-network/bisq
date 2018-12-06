@@ -4,8 +4,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 
-import bisq.httpapi.model.payment.SepaPaymentAccount;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +13,7 @@ import static org.hamcrest.Matchers.*;
 
 
 
+import bisq.httpapi.model.payment.SepaPaymentAccount;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.DockerContainer;
 import org.hamcrest.Matcher;
@@ -24,25 +23,19 @@ import org.jboss.arquillian.junit.InSequence;
 @RunWith(Arquillian.class)
 public class TradeEndpointIT {
 
+    private static String tradeId;
     @DockerContainer
     Container alice;
-
     @DockerContainer
     Container bob;
-
     @DockerContainer
     Container arbitrator;
-
     @SuppressWarnings("unused")
     @DockerContainer(order = 4)
     Container seedNode;
-
     @DockerContainer
     Container bitcoin;
-
     OfferEndpointIT offerResourceIT = new OfferEndpointIT();
-
-    private static String tradeId;
 
     {
         alice = offerResourceIT.alice;
@@ -76,8 +69,9 @@ public class TradeEndpointIT {
                         get("/api/v1/trades").
 //
         then().
-                        statusCode(200)
-                .extract().jsonPath().getString("trades[0].id");
+                        statusCode(200).
+                        body("trades[0].id", isA(String.class)).
+                        extract().jsonPath().getString("trades[0].id");
     }
 
     @InSequence(1)
@@ -95,8 +89,8 @@ public class TradeEndpointIT {
                 get("/api/v1/trades").
 //
         then().
-                statusCode(200)
-                .and().body("trades[0].id", isA(String.class)).
+                statusCode(200).
+                and().body("trades[0].id", isA(String.class)).
 
                 and().body("trades[0].offer.id", isA(String.class)).
                 and().body("trades[0].offer.acceptedCountryCodes", equalTo(alicePaymentAccount.acceptedCountries)).

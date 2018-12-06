@@ -313,7 +313,8 @@ class TakeOfferDataModel extends OfferDataModel {
                     fundsNeededForTrade,
                     offer,
                     paymentAccount.getId(),
-                    useSavingsWallet
+                    useSavingsWallet,
+                    null
             );
             futureTrade.thenAccept(tradeResultHandler::handleResult);
             futureTrade.exceptionally(throwable -> {

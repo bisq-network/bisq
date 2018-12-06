@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 
 import java.math.BigDecimal;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,27 +42,61 @@ import org.jboss.arquillian.junit.InSequence;
 @RunWith(Arquillian.class)
 public class OfferEndpointIT {
 
+    static SepaPaymentAccount alicePaymentAccount;
+    static SepaPaymentAccount bobPaymentAccount;
+    static OfferDetail createdOffer;
+    private static String bobIncompatiblePaymentAccountId;
+    private static String tradeCurrency;
     @DockerContainer
     Container alice = ContainerFactory.createApiContainer("alice", "8080->8080", 3333, true, true);
-
     @DockerContainer
     Container bob = ContainerFactory.createApiContainer("bob", "8081->8080", 3333, true, true);
-
     @DockerContainer
     Container arbitrator = ContainerFactory.createApiContainer("arbitrator", "8082->8080", 3335, true, true);
-
     @SuppressWarnings("unused")
     @DockerContainer(order = 4)
     Container seedNode = ContainerFactory.createSeedNodeContainer();
-
     @DockerContainer
     Container bitcoin = ContainerFactory.createBitcoinContainer();
 
-    static SepaPaymentAccount alicePaymentAccount;
-    static SepaPaymentAccount bobPaymentAccount;
-    private static String bobIncompatiblePaymentAccountId;
-    private static String tradeCurrency;
-    static OfferDetail createdOffer;
+    @NotNull
+    private static JSONObject toJsonObject(InputDataForOffer offer) {
+        final JSONObject jsonOffer = new JSONObject();
+        putIfNotNull(jsonOffer, "fundUsingBisqWallet", offer.fundUsingBisqWallet);
+        putIfNotNull(jsonOffer, "amount", offer.amount);
+        putIfNotNull(jsonOffer, "minAmount", offer.minAmount);
+        putIfNotNull(jsonOffer, "direction", offer.direction);
+        putIfNotNull(jsonOffer, "fixedPrice", offer.fixedPrice);
+        putIfNotNull(jsonOffer, "marketPair", offer.marketPair);
+        putIfNotNull(jsonOffer, "priceType", offer.priceType);
+        putIfNotNull(jsonOffer, "accountId", offer.accountId);
+        putIfNotNull(jsonOffer, "percentageFromMarketPrice", offer.percentageFromMarketPrice);
+        return jsonOffer;
+    }
+
+    private static void putIfNotNull(JSONObject jsonObject, String key, Object value) {
+        if (null == value) {
+            return;
+        }
+        if (value instanceof Enum)
+            //noinspection unchecked
+            jsonObject.put(key, value.toString());
+        else
+            //noinspection unchecked
+            jsonObject.put(key, value);
+    }
+
+    private static void assertOfferExists(int apiPort, String offerId) {
+        given().
+                port(apiPort).
+//
+        when().
+                get("/api/v1/offers/" + offerId).
+//
+        then().
+                statusCode(200)
+        ;
+    }
 
     @InSequence
     @Test
@@ -151,7 +186,7 @@ public class OfferEndpointIT {
         final InputDataForOffer offer = getOfferToCreateFixedBuy(tradeCurrency, alicePaymentAccount.id);
         offer.priceType = PriceType.PERCENTAGE.name();
         offer.percentageFromMarketPrice = null;
-        createOffer_template(offer, 422);
+        createOffer_template(offer, 422, "When choosing PERCENTAGE price marketPriceMargin must be set");
     }
 
     @InSequence(3)
@@ -171,6 +206,8 @@ public class OfferEndpointIT {
 //
         then().
                 statusCode(422)
+                .and().body("errors[0]", equalTo("When choosing FIXED price fiatPrice must be set with a price > 0"))
+                .and().body("errors.size()", equalTo(1))
         ;
     }
 
@@ -446,7 +483,7 @@ public class OfferEndpointIT {
      */
     @InSequence(9)
     @Test
-    public void withdrawFunds_fromOfferFundingAddress_returns422() {
+    public void withdrawFunds_fromOfferFundingAddress_returns422status() {
         final List<WalletAddress> btcWalletAddresses = ApiTestHelper.getBtcWalletAddresses(getAlicePort()).walletAddresses;
         final WalletAddress walletAddress = btcWalletAddresses.stream().filter(address -> AddressEntry.Context.OFFER_FUNDING.equals(address.context)).findFirst().get();
         final WithdrawFundsForm data = new WithdrawFundsForm();
@@ -497,37 +534,49 @@ public class OfferEndpointIT {
                 contentType(ContentType.JSON).
 //
         when().
-                post("/api/v1/offers/" + offerId + "/take").
+                        post("/api/v1/offers/" + offerId + "/take").
 //
         then().
-                statusCode(expectedStatusCode)
-        ;
+                        statusCode(expectedStatusCode)
+                ;
     }
 
     private void takeOffer_errorTemplate(String offerId, TakeOffer payload, int expectedStatusCode, String expectedError) {
-        takeOffer_template(offerId, payload, expectedStatusCode)
-                .body("errors[0]", equalTo(expectedError))
-                .body("errors.size()", equalTo(1))
-        ;
+        takeOffer_errorTemplate(offerId, payload, expectedStatusCode, Collections.singletonList(expectedError));
+    }
+
+    private void takeOffer_errorTemplate(String offerId, TakeOffer payload, int expectedStatusCode, List<String> expectedErrors) {
+        final ValidatableResponse validatableResponse = takeOffer_template(offerId, payload, expectedStatusCode);
+        for (int i = 0; i < expectedErrors.size(); i++) {
+            validatableResponse.body("errors[" + i + "]", equalTo(expectedErrors.get(i)));
+        }
+        validatableResponse.body("errors.size()", equalTo(expectedErrors.size()));
     }
 
     @InSequence(10)
     @Test
-    public void takeOffer_validPayloadButNoFunds_returns427status() {
+    public void takeOffer_validPayloadButNoFunds_returns422status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
-        takeOffer_template(createdOffer.id, payload, 427);
+        takeOffer_errorTemplate(createdOffer.id, payload, 422, "Available balance 0 is less than needed amount: 1");
     }
 
     @InSequence(10)
     @Test
-    public void takeOffer_paymentAccountIdMissing_returns422status() {
+    public void takeOffer_paymentAccountIdIsEmptyString_returns422status() {
+        final TakeOffer payload = new TakeOffer("", 1);
+        takeOffer_errorTemplate(createdOffer.id, payload, 422, "paymentAccountId may not be empty");
+    }
+
+    @InSequence(10)
+    @Test
+    public void takeOffer_paymentAccountIdIsNull_returns422status() {
         final TakeOffer payload = new TakeOffer(null, 1);
-        takeOffer_template(createdOffer.id, payload, 422);
+        takeOffer_errorTemplate(createdOffer.id, payload, 422, Arrays.asList("paymentAccountId may not be empty", "paymentAccountId may not be null"));
     }
 
     @InSequence(10)
     @Test
-    public void takeOffer_amountMissing_returns422() {
+    public void takeOffer_amountMissing_returns422status() {
         final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1);
         final JSONObject jsonPayload = toJsonObject(payload);
         jsonPayload.remove("amount");
@@ -541,6 +590,8 @@ public class OfferEndpointIT {
 //
         then().
                 statusCode(422)
+                .body("errors[0]", equalTo("amount must be greater than or equal to 1"))
+                .body("errors.size()", equalTo(1))
         ;
     }
 
@@ -591,21 +642,28 @@ public class OfferEndpointIT {
 
     @InSequence(13)
     @Test
-    public void takeOffer_paymentAccountNotFound_returns422() {
+    public void takeOffer_paymentAccountNotFound_returns422status() {
         final TakeOffer payload = new TakeOffer("non-existing-account", 1);
         takeOffer_template(createdOffer.id, payload, 422);
     }
 
     @InSequence(13)
     @Test
-    public void takeOffer_incompatiblePaymentAccount_returns422() {
+    public void takeOffer_incompatiblePaymentAccount_returns422status() {
         final TakeOffer payload = new TakeOffer(bobIncompatiblePaymentAccountId, 1);
         takeOffer_errorTemplate(createdOffer.id, payload, 422, String.format("PaymentAccount is not valid for offer, needs %s", alicePaymentAccount.tradeCurrencies.get(0)));
     }
 
+    @InSequence(13)
+    @Test
+    public void takeOffer_maxFundsForTradeExceeded_returns422status() {
+        final TakeOffer payload = new TakeOffer(bobPaymentAccount.id, 1, 0L);
+        takeOffer_errorTemplate(createdOffer.id, payload, 422, "Funds needed for traded calculated by Bisq exceed specified limit");
+    }
+
     @InSequence(14)
     @Test
-    public void takeOffer_takerSameAsMaker_returns422() {
+    public void takeOffer_takerSameAsMaker_returns422status() {
         final int alicePort = getAlicePort();
 
         final TakeOffer payload = new TakeOffer();
@@ -636,7 +694,7 @@ public class OfferEndpointIT {
         final int bobPort = getBobPort();
 
         final TakeOffer payload = new TakeOffer();
-        payload.amount = 6250000;
+        payload.amount = createdOffer.amount;
         payload.paymentAccountId = bobPaymentAccount.id;
 
         final String offerId = createdOffer.id;
@@ -790,50 +848,11 @@ public class OfferEndpointIT {
     }
 
     @NotNull
-    private static JSONObject toJsonObject(InputDataForOffer offer) {
-        final JSONObject jsonOffer = new JSONObject();
-        putIfNotNull(jsonOffer, "fundUsingBisqWallet", offer.fundUsingBisqWallet);
-        putIfNotNull(jsonOffer, "amount", offer.amount);
-        putIfNotNull(jsonOffer, "minAmount", offer.minAmount);
-        putIfNotNull(jsonOffer, "direction", offer.direction);
-        putIfNotNull(jsonOffer, "fixedPrice", offer.fixedPrice);
-        putIfNotNull(jsonOffer, "marketPair", offer.marketPair);
-        putIfNotNull(jsonOffer, "priceType", offer.priceType);
-        putIfNotNull(jsonOffer, "accountId", offer.accountId);
-        putIfNotNull(jsonOffer, "percentageFromMarketPrice", offer.percentageFromMarketPrice);
-        return jsonOffer;
-    }
-
-    @NotNull
     private JSONObject toJsonObject(TakeOffer payload) {
         final JSONObject json = new JSONObject();
         putIfNotNull(json, "paymentAccountId", payload.paymentAccountId);
         putIfNotNull(json, "amount", payload.amount);
         return json;
-    }
-
-    private static void putIfNotNull(JSONObject jsonObject, String key, Object value) {
-        if (null == value) {
-            return;
-        }
-        if (value instanceof Enum)
-            //noinspection unchecked
-            jsonObject.put(key, value.toString());
-        else
-            //noinspection unchecked
-            jsonObject.put(key, value);
-    }
-
-    private static void assertOfferExists(int apiPort, String offerId) {
-        given().
-                port(apiPort).
-//
-        when().
-                get("/api/v1/offers/" + offerId).
-//
-        then().
-                statusCode(200)
-        ;
     }
 
     private int getArbitratorPort() {
