@@ -201,9 +201,9 @@ public class WalletConfig extends AbstractIdleService {
             // in the checkpoints file and then download the rest from the network. It makes things much faster.
             // Checkpoint files are made using the BuildCheckpoints tool and usually we have to download the
             // last months worth or more (takes a few seconds).
-            path = "/wallet/checkpoints";
+            path = "/wallet/checkpoints.txt";
         } else if (params.equals(TestNet3Params.get())) {
-            path = "/wallet/checkpoints.testnet";
+            path = "/wallet/checkpoints.testnet.txt";
         }
         if (path != null) {
             try {
