@@ -70,7 +70,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

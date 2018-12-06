@@ -132,13 +132,13 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 
             addContent();
-            addCloseButton();
+            addButtons();
             applyStyles();
             display();
         }
     }
 
-    protected void addCloseButton() {
+    protected void addButtons() {
         closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());
 

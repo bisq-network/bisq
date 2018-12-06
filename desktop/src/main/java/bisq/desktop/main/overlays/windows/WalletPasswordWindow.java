@@ -196,7 +196,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         passwordTextField.textProperty().addListener(changeListener);
     }
 
-    private void addButtons() {
+    @Override
+    protected void addButtons() {
         BusyAnimation busyAnimation = new BusyAnimation(false);
         Label deriveStatusLabel = new AutoTooltipLabel();
 

@@ -73,7 +73,7 @@ public class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificati
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

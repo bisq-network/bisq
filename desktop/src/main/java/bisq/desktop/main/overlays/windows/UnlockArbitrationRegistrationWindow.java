@@ -125,7 +125,8 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
         keyInputTextField.textProperty().addListener(changeListener);
     }
 
-    private void addButtons() {
+    @Override
+    protected void addButtons() {
         final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), Res.get("shared.close"));
         unlockButton = buttonButtonTuple2.first;

@@ -94,7 +94,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }
@@ -310,7 +310,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     }
 
     @Override
-    protected void addCloseButton() {
+    protected void addButtons() {
         closeButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.ignoreDownload"));
         closeButton.setOnAction(event -> doClose());
         actionButton = new AutoTooltipButton(Res.get("displayUpdateDownloadWindow.button.downloadLater"));

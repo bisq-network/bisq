@@ -59,7 +59,7 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }
@@ -78,8 +78,8 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
     }
 
     @Override
-    protected void addCloseButton() {
-        super.addCloseButton();
+    protected void addButtons() {
+        super.addButtons();
 
         closeButton.setText(Res.get("shared.cancel"));
 
