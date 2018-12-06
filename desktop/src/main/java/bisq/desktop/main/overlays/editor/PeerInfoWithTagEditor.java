@@ -136,7 +136,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         onShow();
     }
@@ -290,9 +290,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     @Override
-    protected void addCloseButton() {
+    protected void addButtons() {
         buttonDistance = 10;
-        super.addCloseButton();
+        super.addButtons();
 
         actionButton.setOnAction(event -> save());
     }

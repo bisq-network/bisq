@@ -70,7 +70,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

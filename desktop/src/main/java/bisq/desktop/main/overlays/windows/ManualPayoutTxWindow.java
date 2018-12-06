@@ -77,7 +77,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }
@@ -201,8 +201,8 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     }
 
     @Override
-    protected void addCloseButton() {
-        super.addCloseButton();
+    protected void addButtons() {
+        super.addButtons();
         actionButton.setOnAction(event -> actionHandlerOptional.ifPresent(Runnable::run));
     }
 }

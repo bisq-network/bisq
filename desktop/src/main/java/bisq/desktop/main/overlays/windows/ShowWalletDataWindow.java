@@ -58,7 +58,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

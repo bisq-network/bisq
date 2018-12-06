@@ -94,7 +94,7 @@ public class FeeOptionWindow extends Overlay<FeeOptionWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         addDontShowAgainCheckBox();
         applyStyles();
         display();
