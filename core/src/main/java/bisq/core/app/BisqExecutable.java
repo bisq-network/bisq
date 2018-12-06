@@ -415,6 +415,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 "Use the SafeCookie method when authenticating to the already running Tor service.")
                 .availableIf(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE);
 
+        parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
+                "Use stream isolation for Tor.");
+
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
                 "User data directory")
