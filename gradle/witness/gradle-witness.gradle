@@ -12,9 +12,6 @@
 
 dependencyVerification {
     verify = [
-        'bisq:core:4d0e437026e53968298710acd8bc2e4b1b0e1d37859c69359cf63e073ae02b86',
-        'bisq:p2p:c36dde32292ca7335ea594e0cf36f8f766cd3689cd3886b095def3ff946ed60b',
-        'bisq:common:d9fef12428771154ca70d9299a36feb1d855b07242822a96a16f43260af03149',
         'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
         'org.reactfx:reactfx:81ec8fe545d65661222735711114c2ce427e2187a65f1722e8ac4e4805beeca3',
         'net.glxn:qrgen:c85d9d8512d91e8ad11fe56259a7825bd50ce0245447e236cf168d1b17591882',
@@ -32,7 +29,6 @@ dependencyVerification {
         'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
         'net.sf.jopt-simple:jopt-simple:6f45c00908265947c39221035250024f2caec9a15c1c8cf553ebeecee289f342',
         'org.fxmisc.easybind:easybind:666af296dda6de68751668a62661571b5238ac6f1c07c8a204fc6f902b222aaf',
-        'bisq:assets:121fd110d20b451203ec3cdfcb23682c9e1a3aa3d1e7f0158c581ad20b865b6c',
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
