@@ -194,13 +194,15 @@ public class ProposalDisplay {
                 Res.get("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
         nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
-        nameTextField.setValidator(new InputValidator());
+        if (isMakeProposalScreen)
+            nameTextField.setValidator(new InputValidator());
         inputControls.add(nameTextField);
 
         linkInputTextField = addInputTextField(gridPane, ++gridRow,
                 Res.get("dao.proposal.display.link"));
         linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
-        linkInputTextField.setValidator(new InputValidator());
+        if (isMakeProposalScreen)
+            linkInputTextField.setValidator(new InputValidator());
         inputControls.add(linkInputTextField);
 
         Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
@@ -222,15 +224,17 @@ public class ProposalDisplay {
                 checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 inputControls.add(requestedBsqTextField);
 
-                BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
-                if (proposalType == ProposalType.COMPENSATION_REQUEST) {
-                    bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
-                    bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
-                } else if (proposalType == ProposalType.REIMBURSEMENT_REQUEST) {
-                    bsqValidator.setMinValue(daoFacade.getMinReimbursementRequestAmount());
-                    bsqValidator.setMaxValue(daoFacade.getMaxReimbursementRequestAmount());
+                if (isMakeProposalScreen) {
+                    BsqValidator bsqValidator = new BsqValidator(bsqFormatter);
+                    if (proposalType == ProposalType.COMPENSATION_REQUEST) {
+                        bsqValidator.setMinValue(daoFacade.getMinCompensationRequestAmount());
+                        bsqValidator.setMaxValue(daoFacade.getMaxCompensationRequestAmount());
+                    } else if (proposalType == ProposalType.REIMBURSEMENT_REQUEST) {
+                        bsqValidator.setMinValue(daoFacade.getMinReimbursementRequestAmount());
+                        bsqValidator.setMaxValue(daoFacade.getMaxReimbursementRequestAmount());
+                    }
+                    requestedBsqTextField.setValidator(bsqValidator);
                 }
-                requestedBsqTextField.setValidator(bsqValidator);
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
@@ -264,7 +268,7 @@ public class ProposalDisplay {
                         paramValueTextField.clear();
                         String currentValue = bsqFormatter.formatParamValue(newValue, daoFacade.getParamValue(newValue));
                         paramValueTextField.setPromptText(Res.get("dao.param.currentValue", currentValue));
-                        if (changeParamValidator != null) {
+                        if (changeParamValidator != null && isMakeProposalScreen) {
                             ChangeParamInputValidator validator = new ChangeParamInputValidator(newValue, changeParamValidator);
                             paramValueTextField.setValidator(validator);
                         }
