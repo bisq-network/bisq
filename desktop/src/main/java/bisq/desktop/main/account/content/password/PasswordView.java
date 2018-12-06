@@ -116,13 +116,14 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         pwButton.setOnAction(e -> {
             if (!walletsManager.areWalletsEncrypted()) {
                 new Popup<>().backgroundInfo(Res.get("password.backupReminder"))
-                        .closeButtonText(Res.get("password.backupWasDone"))
-                        .onClose(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
+                        .secondaryActionButtonText(Res.get("password.backupWasDone"))
+                        .onSecondaryAction(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
                         .actionButtonTextWithGoTo("navigation.account.walletSeed")
                         .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
                             navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
                         })
+                        .width(800)
                         .show();
             } else {
                 onApplyPassword(busyAnimation, deriveStatusLabel);
