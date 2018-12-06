@@ -819,8 +819,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         tableView.getColumns().add(column);
 
 
-        column = new TableColumn<>();
-        column.setMinWidth(50);
+        column = new TableColumn<>(Res.get("dao.proposal.table.header.myVote"));
+        column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
