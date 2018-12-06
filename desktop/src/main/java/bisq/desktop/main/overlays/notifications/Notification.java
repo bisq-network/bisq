@@ -177,9 +177,9 @@ public class Notification extends Overlay<Notification> {
     }
 
     @Override
-    protected void addCloseButton() {
+    protected void addButtons() {
         buttonDistance = 10;
-        super.addCloseButton();
+        super.addButtons();
     }
 
     @Override

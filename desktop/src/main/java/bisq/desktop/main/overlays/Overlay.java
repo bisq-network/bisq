@@ -77,6 +77,7 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -132,35 +133,36 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected final static double DEFAULT_WIDTH = 668;
-    protected int rowIndex = -1;
-    protected String headLine;
-    protected Label headlineIcon;
-    protected String message;
-    protected String closeButtonText;
-    protected String actionButtonText;
-    protected double width = DEFAULT_WIDTH;
-    protected Pane owner;
+
+    protected Stage stage;
     protected GridPane gridPane;
+    protected Pane owner;
+
+    protected int rowIndex = -1;
+    protected double width = DEFAULT_WIDTH;
+    protected double buttonDistance = 20;
+
+    protected boolean showReportErrorButtons;
+    private boolean showBusyAnimation;
+    protected boolean hideCloseButton;
+    protected boolean isDisplayed;
+    protected boolean useAnimation = true;
+
+    protected Label headlineIcon, headLineLabel, messageLabel;
+    protected String headLine, message, closeButtonText, actionButtonText,
+            secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
+            truncatedMessage;
+    private String headlineStyle;
+    protected Button actionButton, secondaryActionButton;
     protected AutoTooltipButton closeButton;
+
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
-    protected Stage stage;
-    protected boolean showReportErrorButtons;
-    protected Label messageLabel;
-    protected String truncatedMessage;
-    private boolean showBusyAnimation;
-    protected Button actionButton;
-    protected Label headLineLabel;
-    protected String dontShowAgainId;
-    protected String dontShowAgainText;
+    protected Optional<Runnable> secondaryActionHandlerOptional = Optional.<Runnable>empty();
     protected ChangeListener<Number> positionListener;
+
     protected Timer centerTime;
-    protected double buttonDistance = 20;
     protected Type type = Type.Undefined;
-    protected boolean hideCloseButton;
-    protected boolean useAnimation = true;
-    private String headlineStyle;
-    protected boolean isDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +184,7 @@ public abstract class Overlay<T extends Overlay> {
             if (showReportErrorButtons)
                 addReportErrorButtons();
 
-            addCloseButton();
+            addButtons();
             addDontShowAgainCheckBox();
             applyStyles();
             onShow();
@@ -241,6 +243,12 @@ public abstract class Overlay<T extends Overlay> {
 
     public T onAction(Runnable actionHandler) {
         this.actionHandlerOptional = Optional.of(actionHandler);
+        //noinspection unchecked
+        return (T) this;
+    }
+
+    public T onSecondaryAction(Runnable secondaryActionHandlerOptional) {
+        this.secondaryActionHandlerOptional = Optional.of(secondaryActionHandlerOptional);
         //noinspection unchecked
         return (T) this;
     }
@@ -382,6 +390,12 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T secondaryActionButtonTextWithGoTo(String target) {
+        this.secondaryActionButtonText = Res.get("shared.goTo", Res.get(target));
+        //noinspection unchecked
+        return (T) this;
+    }
+
     public T closeButtonTextWithGoTo(String target) {
         this.closeButtonText = Res.get("shared.goTo", Res.get(target));
         //noinspection unchecked
@@ -394,9 +408,15 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T secondaryActionButtonText(String secondaryActionButtonText) {
+        this.secondaryActionButtonText = secondaryActionButtonText;
+        //noinspection unchecked
+        return (T) this;
+    }
+
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
-        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler()::run);
+        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler());
         //noinspection unchecked
         return (T) this;
     }
@@ -831,7 +851,7 @@ public abstract class Overlay<T extends Overlay> {
         }
     }
 
-    protected void addCloseButton() {
+    protected void addButtons() {
         if (!hideCloseButton) {
             closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.getStyleClass().add("compact-button");
@@ -851,10 +871,22 @@ public abstract class Overlay<T extends Overlay> {
             Pane spacer = new Pane();
             HBox hBox = new HBox();
             hBox.setSpacing(10);
+
+            hBox.getChildren().addAll(spacer, actionButton);
+
+            if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
+                secondaryActionButton = new AutoTooltipButton(secondaryActionButtonText);
+                secondaryActionButton.setOnAction(event -> {
+                    hide();
+                    secondaryActionHandlerOptional.ifPresent(Runnable::run);
+                });
+
+                hBox.getChildren().add(secondaryActionButton);
+            }
+
             if (!hideCloseButton)
-                hBox.getChildren().addAll(spacer, actionButton, closeButton);
-            else
-                hBox.getChildren().addAll(spacer, actionButton);
+                hBox.getChildren().add(closeButton);
+
             HBox.setHgrow(spacer, Priority.ALWAYS);
             spacer.setMaxWidth(Double.MAX_VALUE);
 
@@ -882,10 +914,7 @@ public abstract class Overlay<T extends Overlay> {
     protected void setTruncatedMessage() {
         if (message != null && message.length() > 1800)
             truncatedMessage = StringUtils.abbreviate(message, 1800);
-        else if (message != null)
-            truncatedMessage = message;
-        else
-            truncatedMessage = "";
+        else truncatedMessage = Objects.requireNonNullElse(message, "");
     }
 
     protected double getDuration(double duration) {

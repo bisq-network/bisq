@@ -449,10 +449,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
                 Res.get("list.currency.select"));
         currencyComboBox = currencyComboBoxTuple.third;
-        currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"), model.preferences));
-        currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"), model.preferences));
+        currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.trade"),
+                Res.get("shared.trades"), model.preferences));
+        currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.trade"),
+                Res.get("shared.trades"), model.preferences));
 
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
 

@@ -56,7 +56,7 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }
