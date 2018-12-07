@@ -47,6 +47,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import java.net.Socket;
 import java.security.SecureRandom;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -77,6 +78,8 @@ public class TorNetworkNode extends NetworkNode {
     private TorMode torMode;
 
     private boolean streamIsolation = false;
+
+    private Socks5Proxy socksProxy;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -118,18 +121,21 @@ public class TorNetworkNode extends NetworkNode {
     // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
         try {
-            tor = Tor.getDefault();
-
-            String stream = "";
+            String stream = null;
             if (streamIsolation) {
                 // create a random string
                 byte[] bytes = new byte[512]; // note that getProxy does Sha256 that string anyways
                 new SecureRandom().nextBytes(bytes);
-                stream = new String(bytes);
+                stream = Base64.getEncoder().encodeToString(bytes);
             }
 
-            // ask for the connection
-            return tor != null ? tor.getProxy(stream) : null;
+            if (socksProxy == null || streamIsolation) {
+                tor = Tor.getDefault();
+
+                // ask for the connection
+                socksProxy = tor != null ? tor.getProxy(stream) : null;
+            }
+            return socksProxy;
         } catch (TorCtlException e) {
             log.error("TorCtlException at getSocksProxy: " + e.toString());
             e.printStackTrace();
