@@ -45,8 +45,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import java.net.Socket;
-
+import java.security.SecureRandom;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -76,13 +77,19 @@ public class TorNetworkNode extends NetworkNode {
 
     private TorMode torMode;
 
+    private boolean streamIsolation = false;
+
+    private Socks5Proxy socksProxy;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, TorMode torMode) {
+    public TorNetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver, boolean useStreamIsolation,
+            TorMode torMode) {
         super(servicePort, networkProtoResolver);
         this.torMode = torMode;
+        this.streamIsolation = useStreamIsolation;
     }
 
 
@@ -114,8 +121,21 @@ public class TorNetworkNode extends NetworkNode {
     // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
         try {
-            tor = Tor.getDefault();
-            return tor != null ? tor.getProxy() : null;
+            String stream = null;
+            if (streamIsolation) {
+                // create a random string
+                byte[] bytes = new byte[512]; // note that getProxy does Sha256 that string anyways
+                new SecureRandom().nextBytes(bytes);
+                stream = Base64.getEncoder().encodeToString(bytes);
+            }
+
+            if (socksProxy == null || streamIsolation) {
+                tor = Tor.getDefault();
+
+                // ask for the connection
+                socksProxy = tor != null ? tor.getProxy(stream) : null;
+            }
+            return socksProxy;
         } catch (TorCtlException e) {
             log.error("TorCtlException at getSocksProxy: " + e.toString());
             e.printStackTrace();

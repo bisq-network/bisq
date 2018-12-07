@@ -35,4 +35,5 @@ public class NetworkOptionKeys {
     public static final String EXTERNAL_TOR_PASSWORD = "torControlPassword";
     public static final String EXTERNAL_TOR_COOKIE_FILE = "torControlCookieFile";
     public static final String EXTERNAL_TOR_USE_SAFECOOKIE = "torControlUseSafeCookieAuth";
+    public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
 }
