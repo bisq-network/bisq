@@ -416,7 +416,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .availableIf(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE);
 
         parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
-                "Use stream isolation for Tor.");
+                "Use stream isolation for Tor [experimental!].");
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
