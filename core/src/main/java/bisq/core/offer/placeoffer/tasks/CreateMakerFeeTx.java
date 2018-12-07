@@ -86,8 +86,8 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                                 // returned (tradeFeeTx would be null in that case)
                                 UserThread.execute(() -> {
                                     if (!completed) {
-                                        offer.setOfferFeePaymentTxId(tradeFeeTx.getHashAsString());
-                                        model.setTransaction(tradeFeeTx);
+                                        offer.setOfferFeePaymentTxId(transaction.getHashAsString());
+                                        model.setTransaction(transaction);
                                         walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
 
                                         model.getOffer().setState(Offer.State.OFFER_FEE_PAID);

@@ -17,21 +17,21 @@
 
 package bisq.core.btc.model;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class InputsAndChangeOutput {
-    public final ArrayList<RawTransactionInput> rawTransactionInputs;
+    public final List<RawTransactionInput> rawTransactionInputs;
 
     // Is set to 0L in case we don't have an output
     public final long changeOutputValue;
     @Nullable
     public final String changeOutputAddress;
 
-    public InputsAndChangeOutput(ArrayList<RawTransactionInput> rawTransactionInputs, long changeOutputValue, @Nullable String changeOutputAddress) {
+    public InputsAndChangeOutput(List<RawTransactionInput> rawTransactionInputs, long changeOutputValue, @Nullable String changeOutputAddress) {
         checkArgument(!rawTransactionInputs.isEmpty(), "rawInputs.isEmpty()");
 
         this.rawTransactionInputs = rawTransactionInputs;

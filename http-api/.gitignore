@@ -1,0 +1,18 @@
+# Maven
+target/
+
+# Gradle
+.gradle
+build
+
+# Idea
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Vim
+*.sw[op]
+
+out/

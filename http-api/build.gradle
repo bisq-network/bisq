@@ -1,0 +1,114 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'application'
+}
+
+group = 'network.bisq'
+version = '0.8.0-SNAPSHOT'
+
+sourceCompatibility = 1.10
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+mainClassName = 'bisq.httpapi.app.HttpApiMain'
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/master/release/' }
+    maven { url 'https://repo.maven.apache.org/maven2' }
+    maven { url 'https://dl.bintray.com/jerady/maven' }
+}
+
+dependencies {
+    compile project(':common')
+    compile project(':assets')
+    compile project(':core')
+    compile project(':p2p')
+
+    compile "io.dropwizard:dropwizard-core:1.2.2"
+    compile "io.dropwizard:dropwizard-forms:1.2.2"
+    compile "io.dropwizard:dropwizard-jackson:1.2.2"
+    compile "io.dropwizard:dropwizard-jersey:1.2.2"
+    compile "io.dropwizard:dropwizard-util:1.2.2"
+
+    runtime 'org.bouncycastle:bcprov-jdk15on:1.56'
+    compileOnly 'org.projectlombok:lombok:1.18.2'
+    annotationProcessor 'org.projectlombok:lombok:1.18.2'
+    testCompile 'junit:junit:4.12'
+    testCompile('org.mockito:mockito-core:2.8.9') {
+        exclude(module: 'objenesis')
+    }
+    testCompile 'org.powermock:powermock-module-junit4:1.7.1'
+    testCompile 'org.powermock:powermock-api-mockito2:1.7.1'
+    testCompile 'org.jmockit:jmockit:1.30'
+    testCompile 'org.springframework:spring-test:4.3.6.RELEASE'
+    testCompile 'com.natpryce:make-it-easy:4.0.1'
+    testCompileOnly 'org.projectlombok:lombok:1.18.2'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+
+    // Converted from Bisq-API projects maven file (http://sagioto.github.io/maven2gradle/)
+    // TODO add exclusions
+    compile "com.google.guava:guava:20.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.1"
+    compile "com.fasterxml.jackson.core:jackson-core:2.9.1"
+    compile "com.fasterxml.jackson.core:jackson-annotations:2.9.1"
+    compile "javax.xml.bind:jaxb-api:2.3.0"
+    compile "org.projectlombok:lombok:1.18.2"
+    compile "org.slf4j:slf4j-api:1.7.22"
+    compile "ch.qos.logback:logback-core:1.1.10"
+    compile "ch.qos.logback:logback-classic:1.1.10"
+    compile "com.sun.activation:javax.activation:1.2.0"
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:2.7.5"
+    testCompile "org.jmockit:jmockit:1.30"
+    testCompile "com.github.javafaker:javafaker:0.14"
+    testCompile "org.arquillian.universe:arquillian-junit:1.2.0.1"
+    testCompile "org.arquillian.universe:arquillian-cube-docker:1.2.0.1"
+    testCompile "org.arquillian.cube:arquillian-cube-docker:1.15.3"
+    testCompile "io.rest-assured:rest-assured:3.0.2"
+
+    compile "com.smoketurner:dropwizard-swagger:1.2.2-2"
+}
+
+sourceSets {
+    testIntegration {
+        java.srcDir 'src/testIntegration/java'
+        resources.srcDir 'src/testIntegration/resources'
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task testIntegration(type: Test) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs the integration tests.'
+
+    maxHeapSize = '1024m'
+
+    testClassesDir = sourceSets.testIntegration.output.classesDir
+    classpath = sourceSets.testIntegration.runtimeClasspath
+
+    binResultsDir = file("$buildDir/integration-test-results/binary/testIntegration")
+
+    reports {
+        html.destination = "$buildDir/reports/integration-test"
+        junitXml.destination = "$buildDir/integration-test-results"
+    }
+
+    systemProperties = [
+            CUBE_LOGGER_ENABLE: System.getenv('CUBE_LOGGER_ENABLE')
+    ]
+
+    testLogging.showStandardStreams = true
+    testLogging.exceptionFormat = 'full'
+
+    mustRunAfter tasks.test
+}
+
+build.dependsOn installDist
+installDist.destinationDir = file('build/app')
+distZip.enabled = false

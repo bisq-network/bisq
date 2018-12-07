@@ -85,6 +85,11 @@ public class BisqHeadlessAppMain extends BisqExecutable {
         headlessApp.setGracefulShutDownHandler(this);
     }
 
+    @Override
+    public void onSetupComplete() {
+        log.info("onSetupComplete");
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////

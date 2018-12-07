@@ -54,7 +54,6 @@ public class BisqHeadlessApp implements HeadlessApp {
     public void startApplication() {
         try {
             bisqSetup = injector.getInstance(BisqSetup.class);
-            bisqSetup.addBisqSetupCompleteListener(this);
 
             corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
             tradeManager = injector.getInstance(TradeManager.class);
