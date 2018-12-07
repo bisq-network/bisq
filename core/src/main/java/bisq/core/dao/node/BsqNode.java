@@ -229,9 +229,13 @@ public abstract class BsqNode implements DaoSetupService {
 
             int heightForNextBlock = daoStateService.getChainHeight() + 1;
             if (rawBlock.getHeight() > heightForNextBlock) {
-                pendingBlocks.add(rawBlock);
-                log.info("We received an block with a future block height. We store it as pending and try to apply " +
-                        "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+                if (!pendingBlocks.contains(rawBlock)) {
+                    pendingBlocks.add(rawBlock);
+                    log.info("We received an block with a future block height. We store it as pending and try to apply " +
+                            "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+                } else {
+                    log.warn("We received an block with a future block height but we had it already added to our pendingBlocks.");
+                }
             } else if (rawBlock.getHeight() >= daoStateService.getGenesisBlockHeight()) {
                 // We received an older block. We compare if we have it in our chain.
                 Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(rawBlock.getHeight());
