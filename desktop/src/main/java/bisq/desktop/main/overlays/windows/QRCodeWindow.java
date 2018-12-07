@@ -85,7 +85,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         GridPane.setColumnSpan(infoLabel, 2);
         gridPane.getChildren().add(infoLabel);
 
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

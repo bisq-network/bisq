@@ -63,7 +63,7 @@ public class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWind
         createGridPane();
         addHeadLine();
         addContent();
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

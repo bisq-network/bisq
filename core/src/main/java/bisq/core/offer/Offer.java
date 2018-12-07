@@ -70,11 +70,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class Offer implements NetworkPayload, PersistablePayload {
 
-    // We allow max. 2 % difference between own offerPayload price calculation and takers calculation.
+    // We allow max. 0.5 % difference between own offerPayload price calculation and takers calculation.
     // Market price might be different at maker's and takers side so we need a bit of tolerance.
     // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
     // from one provider.
-    final static double PRICE_TOLERANCE = 0.02;
+    final static double PRICE_TOLERANCE = 0.005;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -207,15 +207,20 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
 
-        double factor = (double) takersTradePrice / (double) offerPrice.getValue();
+        double relation = (double) takersTradePrice / (double) offerPrice.getValue();
         // We allow max. 2 % difference between own offerPayload price calculation and takers calculation.
         // Market price might be different at maker's and takers side so we need a bit of tolerance.
         // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
         // from one provider.
-        if (Math.abs(1 - factor) > PRICE_TOLERANCE) {
+
+        double deviation = Math.abs(1 - relation);
+        log.info("Price at take-offer time: id={}, currency={}, takersPrice={}, makersPrice={}, deviation={}",
+                getShortId(), getCurrencyCode(), takersTradePrice, offerPrice.getValue(),
+                deviation * 100 + "%");
+        if (deviation > PRICE_TOLERANCE) {
             String msg = "Taker's trade price is too far away from our calculated price based on the market price.\n" +
-                    "tradePrice=" + tradePrice.getValue() + "\n" +
-                    "offerPrice=" + offerPrice.getValue();
+                    "takersPrice=" + tradePrice.getValue() + "\n" +
+                    "makersPrice=" + offerPrice.getValue();
             log.warn(msg);
             throw new TradePriceOutOfToleranceException(msg);
         }

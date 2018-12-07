@@ -206,7 +206,7 @@ public class BisqEnvironment extends StandardEnvironment {
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
 
-    protected final boolean externalTorUseSafeCookieAuthentication;
+    protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
@@ -295,6 +295,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) :
                 "";
         externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) ?
+                true :
+                false;
+        torStreamIsolation = commandLineProperties.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION) ?
                 true :
                 false;
 
@@ -472,6 +475,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, externalTorCookieFile);
                 if (externalTorUseSafeCookieAuthentication)
                     setProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, "true");
+                if (torStreamIsolation)
+                    setProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION, "true");
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);
