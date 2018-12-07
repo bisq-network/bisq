@@ -98,14 +98,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
         parser.allowsUnrecognizedOptions();
 
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                "User data directory")
-                .withRequiredArg()
-                .defaultsTo(DEFAULT_USER_DATA_DIR);
+                format("User data directory (default: %s)", DEFAULT_USER_DATA_DIR))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                "Application name")
-                .withRequiredArg()
-                .defaultsTo(DEFAULT_APP_NAME);
+                format("Application name (default: %s)", DEFAULT_APP_NAME))
+                .withRequiredArg();
 
         OptionSet options;
         try {
@@ -327,10 +325,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
     protected void customizeOptionParsing(OptionParser parser) {
         //CommonOptionKeys
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
-                "Log level")
+                format("Log level (default: %s)", BisqEnvironment.LOG_LEVEL_DEFAULT))
                 .withRequiredArg()
-                .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE")
-                .defaultsTo(BisqEnvironment.LOG_LEVEL_DEFAULT);
+                .describedAs("OFF|ALL|ERROR|WARN|INFO|DEBUG|TRACE");
 
         //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
@@ -351,22 +348,19 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
         // use a fixed port as arbitrator use that for his ID
         parser.accepts(NetworkOptionKeys.PORT_KEY,
-                "Port to listen on")
+                format("Port to listen on (default: %s)", "9999"))
                 .withRequiredArg()
-                .ofType(int.class)
-                .defaultsTo(9999);
+                .ofType(int.class);
 
         parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
-                "Use localhost P2P network for development")
+                format("Use localhost P2P network for development (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,
-                "Max. connections a peer will try to keep")
+                format("Max. connections a peer will try to keep (default: %s)", P2PService.MAX_CONNECTIONS_DEFAULT))
                 .withRequiredArg()
-                .ofType(int.class)
-                .defaultsTo(P2PService.MAX_CONNECTIONS_DEFAULT);
+                .ofType(int.class);
 
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS,
                 "A proxy address to be used for Bitcoin network.")
@@ -420,66 +414,57 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                "User data directory")
-                .withRequiredArg()
-                .defaultsTo(BisqEnvironment.DEFAULT_USER_DATA_DIR);
+                format("User data directory (default: %s)", BisqEnvironment.DEFAULT_USER_DATA_DIR))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                "Application name")
-                .withRequiredArg()
-                .defaultsTo(BisqEnvironment.DEFAULT_APP_NAME);
+                format("Application name (default: %s)", BisqEnvironment.DEFAULT_APP_NAME))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.MAX_MEMORY,
-                "Max. permitted memory (used only at headless versions)")
-                .withRequiredArg()
-                .defaultsTo("600");
+                format("Max. permitted memory (used only at headless versions) (default: %s)", "600"))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.APP_DATA_DIR_KEY,
-                "Application data directory")
-                .withRequiredArg()
-                .defaultsTo(BisqEnvironment.DEFAULT_APP_DATA_DIR);
+                format("Application data directory (default: %s)", BisqEnvironment.DEFAULT_APP_DATA_DIR))
+                .withRequiredArg();
 
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                "If set to true all signed network_messages from bisq developers are ignored " +
-                        "(Global alert, Version update alert, Filters for offers, nodes or trading account data)")
+                format("If set to true all signed network_messages from bisq developers are ignored " +
+                        "(Global alert, Version update alert, Filters for offers, nodes or trading account data) (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.DESKTOP_WITH_HTTP_API,
-                "If set to true Bisq Desktop starts with Http API")
+                format("If set to true Bisq Desktop starts with Http API (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.DESKTOP_WITH_GRPC_API,
-                "If set to true Bisq Desktop starts with gRPC API")
+                format("If set to true Bisq Desktop starts with gRPC API (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS,
-                "If that is true all the privileged features which requires a private key " +
-                        "to enable it are overridden by a dev key pair (This is for developers only!)")
+                format("If that is true all the privileged features which requires a private key " +
+                        "to enable it are overridden by a dev key pair (This is for developers only!) (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.REFERRAL_ID,
                 "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();
 
         parser.accepts(CommonOptionKeys.USE_DEV_MODE,
-                "Enables dev mode which is used for convenience for developer testing")
+                format("Enables dev mode which is used for convenience for developer testing (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.DUMP_STATISTICS,
-                "If set to true the trade statistics are stored as json file in the data dir.")
+                format("If set to true the trade statistics are stored as json file in the data dir. (default: %s)",
+                        "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(AppOptionKeys.PROVIDERS,
                 "Custom providers (comma separated)")
@@ -493,10 +478,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .ofType(String.class)
                 .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
 
-        parser.accepts(BtcOptionKeys.REG_TEST_HOST)
+        parser.accepts(BtcOptionKeys.REG_TEST_HOST,
+                format("(default: %s)", RegTestHost.DEFAULT))
                 .withRequiredArg()
-                .ofType(RegTestHost.class)
-                .defaultsTo(RegTestHost.DEFAULT);
+                .ofType(RegTestHost.class);
 
         parser.accepts(BtcOptionKeys.BTC_NODES,
                 "Custom nodes used for BitcoinJ as comma separated IP addresses.")
@@ -508,11 +493,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
-                "Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
-                        " (comma separated, they get OR'd together).")
+                format("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
+                        " (comma separated, they get OR'd together). (default: %s)", "ALL"))
                 .withRequiredArg()
-                .describedAs("mode[,...]")
-                .defaultsTo("ALL");
+                .describedAs("mode[,...]");
 
         parser.accepts(BtcOptionKeys.USE_ALL_PROVIDED_NODES,
                 "Set to true if connection of bitcoin nodes should include clear net nodes")
@@ -523,9 +507,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .withRequiredArg();
 
         parser.accepts(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC,
-                "Number of connections to the Bitcoin network")
-                .withRequiredArg()
-                .defaultsTo("9");
+                format("Number of connections to the Bitcoin network (default: %s)", "9"))
+                .withRequiredArg();
 
         //RpcOptionKeys
         parser.accepts(DaoOptionKeys.RPC_USER,
@@ -545,11 +528,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,
-                "If set to true the blockchain data from RPC requests to Bitcoin Core are " +
-                        "stored as json file in the data dir.")
+                format("If set to true the blockchain data from RPC requests to Bitcoin Core are " +
+                        "stored as json file in the data dir. (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
 
         parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
                 "If set to true the node requests the blockchain data via RPC requests " +
@@ -562,15 +544,13 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
-                "Genesis transaction block height when not using the hard coded one")
-                .withRequiredArg()
-                .defaultsTo("-1");
+                format("Genesis transaction block height when not using the hard coded one (default: %s)", "-1"))
+                .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
-                "Developer flag. If true it enables dao phase 2 features.")
+                format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "false"))
                 .withRequiredArg()
-                .ofType(boolean.class)
-                .defaultsTo(false);
+                .ofType(boolean.class);
     }
 
     public static BisqEnvironment getBisqEnvironment(OptionSet options) {
