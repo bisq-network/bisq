@@ -829,42 +829,36 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
                     ProposalsListItem> column) {
                 return new TableCell<>() {
-                    Button iconButton;
-
                     @Override
                     public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            if (iconButton == null) {
-                                item.onPhaseChanged(currentPhase);
-                                iconButton = item.getIconButton();
-                                if (iconButton != null) {
-                                    iconButton.setOnAction(e -> {
-                                        onSelectProposal(item);
-                                        if (areVoteButtonsVisible) {
-                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
-                                                onReject();
-                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
-                                                onIgnore();
-                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
-                                                onAccept();
-                                        } else {
-                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
-                                                onRemoveProposal();
-                                        }
-                                    });
-
-                                    if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
-                                        iconButton.setMouseTransparent(true);
-                                        iconButton.setStyle("-fx-cursor: default;");
+                            item.onPhaseChanged(currentPhase);
+                            Button iconButton = item.getIconButton();
+                            if (iconButton != null) {
+                                iconButton.setOnAction(e -> {
+                                    onSelectProposal(item);
+                                    if (areVoteButtonsVisible) {
+                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                            onReject();
+                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
+                                            onIgnore();
+                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
+                                            onAccept();
+                                    } else {
+                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                            onRemoveProposal();
                                     }
-                                    setGraphic(iconButton);
+                                });
+
+                                if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                    iconButton.setMouseTransparent(true);
+                                    iconButton.setStyle("-fx-cursor: default;");
                                 }
+                                setGraphic(iconButton);
                             }
                         } else {
                             setGraphic(null);
-                            if (iconButton != null)
-                                iconButton = null;
                         }
                     }
                 };
