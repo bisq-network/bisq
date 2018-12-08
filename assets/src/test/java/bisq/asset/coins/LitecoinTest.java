@@ -24,7 +24,7 @@ import org.junit.Test;
 public class LitecoinTest extends AbstractAssetTest {
 
     public LitecoinTest() {
-        super(new Litecoin.Mainnet());
+        super(new Litecoin());
     }
 
     @Test

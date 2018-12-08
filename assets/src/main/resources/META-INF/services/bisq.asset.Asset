@@ -17,9 +17,7 @@ bisq.asset.coins.Byteball
 bisq.asset.coins.Chaucha
 bisq.asset.coins.Counterparty
 bisq.asset.coins.Croat
-bisq.asset.coins.Dash$Mainnet
-bisq.asset.coins.Dash$Regtest
-bisq.asset.coins.Dash$Testnet
+bisq.asset.coins.Dash
 bisq.asset.coins.Decred
 bisq.asset.coins.Dogecoin
 bisq.asset.coins.Dragonglass
@@ -27,9 +25,7 @@ bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
 bisq.asset.coins.Gridcoin
 bisq.asset.coins.Kekcoin
-bisq.asset.coins.Litecoin$Mainnet
-bisq.asset.coins.Litecoin$Regtest
-bisq.asset.coins.Litecoin$Testnet
+bisq.asset.coins.Litecoin
 bisq.asset.coins.Mask
 bisq.asset.coins.MobitGlobal
 bisq.asset.coins.Monero
