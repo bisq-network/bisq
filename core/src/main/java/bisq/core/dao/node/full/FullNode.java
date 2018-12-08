@@ -32,6 +32,7 @@ import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
 
 import com.neemre.btcdcli4j.core.http.HttpLayerException;
+import com.neemre.btcdcli4j.daemon.NotificationHandlerException;
 
 import javax.inject.Inject;
 
@@ -240,13 +241,64 @@ public class FullNode extends BsqNode {
     private void handleError(Throwable throwable) {
         String errorMessage = "An error occurred: Error=" + throwable.toString();
         log.error(errorMessage);
-        if (throwable instanceof RpcException &&
-                throwable.getCause() != null &&
-                throwable.getCause() instanceof HttpLayerException &&
-                ((HttpLayerException) throwable.getCause()).getCode() == 1004004) {
-            errorMessage = "You have configured Bisq to run as DAO full node but there is not " +
-                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
-                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.";
+        if (throwable instanceof RpcException) {
+            Throwable cause = throwable.getCause();
+            if (cause != null) {
+                if (cause instanceof HttpLayerException) {
+                    if (((HttpLayerException) cause).getCode() == 1004004)
+                        errorMessage = "You have configured Bisq to run as DAO full node but there is not " +
+                                "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                                "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.";
+                } else if (cause instanceof NotificationHandlerException) {
+                    log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
+                    // TODO need check types for startReOrgFromLastSnapshot?
+                    // IO_UNKNOWN requires startReOrgFromLastSnapshot
+                      /* switch (((NotificationHandlerException) throwable).getError()) {
+                            case ARGS_COUNT_UNEVEN:
+                            case ARGS_COUNT_UNEQUAL:
+                            case ARGS_VALUE_NEGATIVE:
+                            case ARGS_NULL:
+                            case ARGS_CONTAIN_NULL:
+                            case ARGS_HTTP_METHOD_UNSUPPORTED:
+                            case ARGS_HTTP_AUTHSCHEME_UNSUPPORTED:
+                            case ARGS_BTCD_BLOCKSTATUS_UNSUPPORTED:
+                            case ARGS_BTCD_CHAINSTATUS_UNSUPPORTED:
+                            case ARGS_BTCD_CHAINTYPE_UNSUPPORTED:
+                            case ARGS_BTCD_CHECKLEVEL_UNSUPPORTED:
+                            case ARGS_BTCD_CONNECTIONTYPE_UNSUPPORTED:
+                            case ARGS_BTCD_NETWORKTYPE_UNSUPPORTED:
+                            case ARGS_BTCD_PAYMENTCATEGORY_UNSUPPORTED:
+                            case ARGS_BTCD_PEERCONTROL_UNSUPPORTED:
+                            case ARGS_BTCD_SCRIPTTYPE_UNSUPPORTED:
+                            case ARGS_BTCD_SIGHASHTYPE_UNSUPPORTED:
+                            case ARGS_BTCD_NOTIFICATION_UNSUPPORTED:
+                            case ARGS_BTCD_PROVIDER_NULL:
+                            case REQUEST_HTTP_FAULT:
+                            case RESPONSE_HTTP_CLIENT_FAULT:
+                            case RESPONSE_HTTP_SERVER_FAULT:
+                            case RESPONSE_JSONRPC_NULL:
+                            case RESPONSE_JSONRPC_NULL_ID:
+                            case RESPONSE_JSONRPC_UNEQUAL_IDS:
+                            case IO_STREAM_UNCLOSED:
+                            case IO_SOCKET_UNINITIALIZED:
+                            case IO_SERVERSOCKET_UNINITIALIZED:
+                                 break;
+                            case IO_UNKNOWN:
+                                startReOrgFromLastSnapshot();
+                                break;
+                            case IO_COMMUNICATION:
+                            case IO_BITCOIND:
+                            case PARSE_URI_FAILED:
+                            case PARSE_JSON_UNKNOWN:
+                            case PARSE_JSON_MALFORMED:
+                            case MAP_JSON_UNKNOWN:
+                            default:
+                                break;
+                        }*/
+
+                    startReOrgFromLastSnapshot();
+                }
+            }
         }
 
         if (errorMessageHandler != null)
