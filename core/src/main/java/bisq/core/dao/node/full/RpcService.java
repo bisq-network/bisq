@@ -138,7 +138,7 @@ public class RpcService {
                 daemon = new BtcdDaemonImpl(client, throwable -> {
                     throwable.printStackTrace();
                     log.error(throwable.toString());
-                    errorHandler.accept(new RpcException(throwable));
+                    UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
                 });
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                 this.client = client;
