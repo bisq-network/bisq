@@ -139,6 +139,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ChangeListener<String> stakeListener;
     private Subscription selectedProposalSubscription, phaseSubscription;
     private boolean areVoteButtonsVisible;
+    private TableColumn<ProposalsListItem, ProposalsListItem> lastColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -615,6 +616,18 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             voteButton.setVisible(false);
             voteButton.setManaged(false);
         }
+
+        switch (daoFacade.phaseProperty().get()) {
+            case PROPOSAL:
+                lastColumn.setText(Res.get("dao.proposal.table.header.remove"));
+                break;
+            case BLIND_VOTE:
+                lastColumn.setText(Res.get("dao.proposal.table.header.myVote"));
+                break;
+            default:
+                lastColumn.setText("");
+                break;
+        }
     }
 
     private boolean hasVotedOnProposal() {
@@ -819,8 +832,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         tableView.getColumns().add(column);
 
 
-        column = new TableColumn<>();
-        column.setMinWidth(50);
+        column = new TableColumn<>(Res.get("dao.proposal.table.header.myVote"));
+        column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -829,47 +842,42 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             public TableCell<ProposalsListItem, ProposalsListItem> call(TableColumn<ProposalsListItem,
                     ProposalsListItem> column) {
                 return new TableCell<>() {
-                    Button iconButton;
-
                     @Override
                     public void updateItem(final ProposalsListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            if (iconButton == null) {
-                                item.onPhaseChanged(currentPhase);
-                                iconButton = item.getIconButton();
-                                if (iconButton != null) {
-                                    iconButton.setOnAction(e -> {
-                                        onSelectProposal(item);
-                                        if (areVoteButtonsVisible) {
-                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
-                                                onReject();
-                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
-                                                onIgnore();
-                                            else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
-                                                onAccept();
-                                        } else {
-                                            if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
-                                                onRemoveProposal();
-                                        }
-                                    });
-
-                                    if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
-                                        iconButton.setMouseTransparent(true);
-                                        iconButton.setStyle("-fx-cursor: default;");
+                            item.onPhaseChanged(currentPhase);
+                            Button iconButton = item.getIconButton();
+                            if (iconButton != null) {
+                                iconButton.setOnAction(e -> {
+                                    onSelectProposal(item);
+                                    if (areVoteButtonsVisible) {
+                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.ACCEPT)
+                                            onReject();
+                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REJECT)
+                                            onIgnore();
+                                        else if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.IGNORE)
+                                            onAccept();
+                                    } else {
+                                        if (iconButton.getUserData() == ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL)
+                                            onRemoveProposal();
                                     }
-                                    setGraphic(iconButton);
+                                });
+
+                                if (!areVoteButtonsVisible && iconButton.getUserData() != ProposalsListItem.IconButtonTypes.REMOVE_PROPOSAL) {
+                                    iconButton.setMouseTransparent(true);
+                                    iconButton.setStyle("-fx-cursor: default;");
                                 }
+                                setGraphic(iconButton);
                             }
                         } else {
                             setGraphic(null);
-                            if (iconButton != null)
-                                iconButton = null;
                         }
                     }
                 };
             }
         });
         tableView.getColumns().add(column);
+        lastColumn = column;
     }
 }
