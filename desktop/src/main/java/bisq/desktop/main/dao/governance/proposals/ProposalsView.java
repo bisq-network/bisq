@@ -139,6 +139,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private ChangeListener<String> stakeListener;
     private Subscription selectedProposalSubscription, phaseSubscription;
     private boolean areVoteButtonsVisible;
+    private TableColumn<ProposalsListItem, ProposalsListItem> lastColumn;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -615,6 +616,18 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             voteButton.setVisible(false);
             voteButton.setManaged(false);
         }
+
+        switch (daoFacade.phaseProperty().get()) {
+            case PROPOSAL:
+                lastColumn.setText(Res.get("dao.proposal.table.header.remove"));
+                break;
+            case BLIND_VOTE:
+                lastColumn.setText(Res.get("dao.proposal.table.header.myVote"));
+                break;
+            default:
+                lastColumn.setText("");
+                break;
+        }
     }
 
     private boolean hasVotedOnProposal() {
@@ -865,5 +878,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             }
         });
         tableView.getColumns().add(column);
+        lastColumn = column;
     }
 }
