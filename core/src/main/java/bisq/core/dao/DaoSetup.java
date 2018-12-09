@@ -36,12 +36,11 @@ import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.state.DaoStateService;
 
-import bisq.common.handlers.ErrorMessageHandler;
-
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * High level entry point for Dao domain.
@@ -94,8 +93,10 @@ public class DaoSetup {
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }
 
-    public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
+    public void onAllServicesInitialized(Consumer<String> errorMessageHandler,
+                                         Consumer<String> warnMessageHandler) {
         bsqNode.setErrorMessageHandler(errorMessageHandler);
+        bsqNode.setWarnMessageHandler(warnMessageHandler);
 
         daoSetupServices.forEach(daoSetupServices -> {
             daoSetupServices.addListeners();

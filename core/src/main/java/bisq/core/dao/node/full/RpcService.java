@@ -139,8 +139,8 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
                 daemon = new BtcdDaemonImpl(client, throwable -> {
-                    throwable.printStackTrace();
                     log.error(throwable.toString());
+                    throwable.printStackTrace();
                     UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
                 });
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
