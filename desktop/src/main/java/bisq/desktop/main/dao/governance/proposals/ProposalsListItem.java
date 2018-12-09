@@ -29,17 +29,11 @@ import bisq.core.util.BsqFormatter;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import javafx.animation.FillTransition;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 import javafx.beans.value.ChangeListener;
-
-import javafx.util.Duration;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -79,10 +73,6 @@ public class ProposalsListItem {
     @Getter
     private Button iconButton;
 
-    // A Shape used to perform fill transition, never to be shown. The Cell listens to the Shape's fill property.
-    @Getter
-    private Rectangle colorTransition;
-
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,20 +106,12 @@ public class ProposalsListItem {
         daoFacade.phaseProperty().addListener(phaseChangeListener);
 
         onPhaseChanged(daoFacade.phaseProperty().get());
-
-        colorTransition = new Rectangle(1, 1, new Color(0, 0, 0, 0));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setVote(@Nullable Vote vote) {
-        if (ballot != null && ballot.getVote() != vote)
-            onVoteChanged(vote);
-        daoFacade.setVote(ballot, vote);
-    }
 
     public void cleanup() {
         daoFacade.phaseProperty().removeListener(phaseChangeListener);
@@ -184,25 +166,6 @@ public class ProposalsListItem {
             iconButton.getStyleClass().add("hidden-icon-button");
             iconButton.layout();
         }
-    }
-
-    private void onVoteChanged(Vote to) {
-        // TODO: Get colors from css directly, for styles:
-        // dao-accepted-icon, dao-rejected-icon, dao-ignored-icon
-        Color fromColor = Color.web("25B135", 0.5);
-        Color toColor = Color.web("25B135", 0);
-        if (to == null) {
-            fromColor = Color.web("AAAAAA", 0.5);
-            toColor = Color.web("AAAAAA", 0);
-        } else if (!to.isAccepted()) {
-            fromColor = Color.web("dd0000", 0.5);
-            toColor = Color.web("dd0000", 0);
-        }
-
-        FillTransition ft = new FillTransition(Duration.millis(10000), colorTransition, fromColor, toColor);
-        ft.setCycleCount(1);
-        ft.setAutoReverse(false);
-        ft.play();
     }
 
     private String getNext(IconButtonTypes iconButtonTypes) {
