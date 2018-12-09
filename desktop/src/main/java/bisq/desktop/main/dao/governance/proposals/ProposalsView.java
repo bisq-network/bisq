@@ -63,6 +63,8 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXButton;
+
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -76,7 +78,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 
 import javafx.geometry.Insets;
 
@@ -471,19 +472,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onAccept() {
-        getBallotListItem().setVote(new Vote(true));
+        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onReject() {
-        getBallotListItem().setVote(new Vote(false));
+        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onIgnore() {
-        getBallotListItem().setVote(null);
+        daoFacade.setVote(getBallotListItem().getBallot(), null);
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
@@ -848,7 +849,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             item.onPhaseChanged(currentPhase);
-                            Button iconButton = item.getIconButton();
+                            JFXButton iconButton = item.getIconButton();
                             if (iconButton != null) {
                                 iconButton.setOnAction(e -> {
                                     onSelectProposal(item);
@@ -875,29 +876,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             setGraphic(null);
                         }
                     }
-
-                    final ChangeListener<Paint> paintListener = (observable, oldValue, newValue) -> {
-                        ProposalsListItem item = getItem();
-                        if (item != null && item.getColorTransition() != null) {
-                            String bgColor = item.getColorTransition().getFill().toString().substring(2, 10);
-                            setStyle("-fx-background-color: #" + bgColor + ";");
-                        } else {
-                            setStyle("-fx-background-color: transparent;");
-                        }
-                    };
-
-                    Object a = new Object() {{
-                        itemProperty().addListener((obs, oldItem, newItem) -> {
-                            if (oldItem != null && oldItem.getColorTransition() != null) {
-                                oldItem.getColorTransition().fillProperty().removeListener(paintListener);
-                                setStyle("-fx-background-color: transparent;");
-                            }
-                            if (newItem != null && newItem.getColorTransition() != null) {
-                                newItem.getColorTransition().fillProperty().addListener(paintListener);
-                            }
-                        });
-                    }};
-
                 };
             }
         });
