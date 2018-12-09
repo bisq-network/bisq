@@ -163,7 +163,7 @@ configure(project(':common')) {
         compile 'org.slf4j:slf4j-api:1.7.22'
         compile 'ch.qos.logback:logback-core:1.1.10'
         compile 'ch.qos.logback:logback-classic:1.1.10'
-        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'com.google.code.findbugs:jsr305:3.0.2'
         compile 'com.google.guava:guava:20.0'
         compile('com.google.inject:guice:4.1.0') {
             exclude(module: 'guava')
@@ -213,7 +213,7 @@ configure(project(':core')) {
         compile project(':assets')
         compile project(':p2p')
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:3864e1c4') {
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:065d3786') {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -221,7 +221,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
             exclude(module: 'jackson-databind')
         }
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:3864e1c4') {
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:065d3786') {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')

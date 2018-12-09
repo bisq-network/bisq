@@ -30,6 +30,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Utils;
 
 import com.neemre.btcdcli4j.core.BitcoindException;
+import com.neemre.btcdcli4j.core.BtcdCli4jVersion;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
@@ -107,6 +108,8 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         this.dumpBlockchainData = dumpBlockchainData;
+
+        log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
     }
 
 
