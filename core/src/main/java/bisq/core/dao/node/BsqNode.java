@@ -30,14 +30,13 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 
-import bisq.common.handlers.ErrorMessageHandler;
-
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +58,9 @@ public abstract class BsqNode implements DaoSetupService {
     protected boolean parseBlockchainComplete;
     protected boolean p2pNetworkReady;
     @Nullable
-    protected ErrorMessageHandler errorMessageHandler;
+    protected Consumer<String> errorMessageHandler;
+    @Nullable
+    protected Consumer<String> warnMessageHandler;
     protected List<RawBlock> pendingBlocks = new ArrayList<>();
 
 
@@ -134,8 +135,12 @@ public abstract class BsqNode implements DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setErrorMessageHandler(@Nullable ErrorMessageHandler errorMessageHandler) {
+    public void setErrorMessageHandler(Consumer<String> errorMessageHandler) {
         this.errorMessageHandler = errorMessageHandler;
+    }
+
+    public void setWarnMessageHandler(Consumer<String> warnMessageHandler) {
+        this.warnMessageHandler = warnMessageHandler;
     }
 
     public abstract void shutDown();

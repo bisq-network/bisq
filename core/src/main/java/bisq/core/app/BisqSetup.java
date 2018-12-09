@@ -161,8 +161,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
-            spvFileCorruptedHandler, lockedUpFundsHandler, daoSetupErrorHandler, filterWarningHandler,
-            displaySecurityRecommendationHandler, displayLocalhostHandler, wrongOSArchitectureHandler;
+            spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
+            filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
+            wrongOSArchitectureHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -626,8 +627,11 @@ public class BisqSetup {
 
         if (DevEnv.isDaoActivated()) {
             daoSetup.onAllServicesInitialized(errorMessage -> {
-                if (daoSetupErrorHandler != null)
-                    daoSetupErrorHandler.accept(errorMessage);
+                if (daoErrorMessageHandler != null)
+                    daoErrorMessageHandler.accept(errorMessage);
+            }, warningMessage -> {
+                if (daoWarnMessageHandler != null)
+                    daoWarnMessageHandler.accept(warningMessage);
             });
         }
 

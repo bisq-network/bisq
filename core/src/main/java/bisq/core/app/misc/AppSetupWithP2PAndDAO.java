@@ -82,6 +82,6 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
     protected void onBasicServicesInitialized() {
         super.onBasicServicesInitialized();
 
-        daoSetup.onAllServicesInitialized(log::error);
+        daoSetup.onAllServicesInitialized(log::error, log::warn);
     }
 }

@@ -32,6 +32,7 @@ import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
 
 import com.neemre.btcdcli4j.core.http.HttpLayerException;
+import com.neemre.btcdcli4j.daemon.NotificationHandlerException;
 
 import javax.inject.Inject;
 
@@ -240,16 +241,30 @@ public class FullNode extends BsqNode {
     private void handleError(Throwable throwable) {
         String errorMessage = "An error occurred: Error=" + throwable.toString();
         log.error(errorMessage);
-        if (throwable instanceof RpcException &&
-                throwable.getCause() != null &&
-                throwable.getCause() instanceof HttpLayerException &&
-                ((HttpLayerException) throwable.getCause()).getCode() == 1004004) {
-            errorMessage = "You have configured Bisq to run as DAO full node but there is not " +
-                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
-                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.";
+        throwable.printStackTrace();
+
+        if (throwable instanceof RpcException) {
+            Throwable cause = throwable.getCause();
+            if (cause != null) {
+                if (cause instanceof HttpLayerException) {
+                    if (((HttpLayerException) cause).getCode() == 1004004) {
+                        if (warnMessageHandler != null)
+                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
+                                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
+                        return;
+                    }
+                } else if (cause instanceof NotificationHandlerException) {
+                    // Maybe we need to react specifically to errors as in NotificationHandlerException.getError()
+                    // So far only IO_UNKNOWN was observed
+                    log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
+                    startReOrgFromLastSnapshot();
+                    return;
+                }
+            }
         }
 
         if (errorMessageHandler != null)
-            errorMessageHandler.handleErrorMessage(errorMessage);
+            errorMessageHandler.accept(errorMessage);
     }
 }
