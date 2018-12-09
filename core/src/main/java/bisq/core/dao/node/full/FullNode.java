@@ -249,7 +249,7 @@ public class FullNode extends BsqNode {
                 if (cause instanceof HttpLayerException) {
                     if (((HttpLayerException) cause).getCode() == 1004004) {
                         if (warnMessageHandler != null)
-                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is not " +
+                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
                                     "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
                                     "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
                         return;
