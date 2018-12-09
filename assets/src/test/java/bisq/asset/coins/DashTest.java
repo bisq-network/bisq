@@ -24,7 +24,7 @@ import org.junit.Test;
 public class DashTest extends AbstractAssetTest {
 
     public DashTest() {
-        super(new Dash.Mainnet());
+        super(new Dash());
     }
 
     @Test
