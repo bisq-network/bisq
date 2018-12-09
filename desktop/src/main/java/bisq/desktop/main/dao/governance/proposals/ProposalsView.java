@@ -76,6 +76,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 
 import javafx.geometry.Insets;
 
@@ -470,19 +471,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onAccept() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
+        getBallotListItem().setVote(new Vote(true));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onReject() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
+        getBallotListItem().setVote(new Vote(false));
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
 
     private void onIgnore() {
-        daoFacade.setVote(getBallotListItem().getBallot(), null);
+        getBallotListItem().setVote(null);
         proposalDisplay.applyBallot(getBallotListItem().getBallot());
         updateStateAfterVote();
     }
@@ -874,6 +875,29 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             setGraphic(null);
                         }
                     }
+
+                    final ChangeListener<Paint> paintListener = (observable, oldValue, newValue) -> {
+                        ProposalsListItem item = getItem();
+                        if (item != null && item.getColorTransition() != null) {
+                            String bgColor = item.getColorTransition().getFill().toString().substring(2, 10);
+                            setStyle("-fx-background-color: #" + bgColor + ";");
+                        } else {
+                            setStyle("-fx-background-color: transparent;");
+                        }
+                    };
+
+                    Object a = new Object() {{
+                        itemProperty().addListener((obs, oldItem, newItem) -> {
+                            if (oldItem != null && oldItem.getColorTransition() != null) {
+                                oldItem.getColorTransition().fillProperty().removeListener(paintListener);
+                                setStyle("-fx-background-color: transparent;");
+                            }
+                            if (newItem != null && newItem.getColorTransition() != null) {
+                                newItem.getColorTransition().fillProperty().addListener(paintListener);
+                            }
+                        });
+                    }};
+
                 };
             }
         });
