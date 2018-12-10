@@ -1,13 +1,14 @@
 ;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bisq with application files
 [Setup]
+
 AppId={{bisq}}
 AppName=Bisq
 AppVersion=0.9.0
 AppVerName=Bisq
 AppPublisher=Bisq
 AppComments=Bisq
-AppCopyright=Copyright (C) 2016
+AppCopyright=Copyright (C) 2018
 AppPublisherURL=https://bisq.network
 AppSupportURL=https://bisq.network
 ;AppUpdatesURL=http://java.com/
@@ -26,10 +27,10 @@ MinVersion=0,5.1
 OutputBaseFilename=Bisq
 Compression=lzma
 SolidCompression=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=poweruser
 SetupIconFile=Bisq\Bisq.ico
 UninstallDisplayIcon={app}\Bisq.ico
-UninstallDisplayName=﻿Bisq
+UninstallDisplayName=Bisq
 WizardImageStretch=No
 WizardSmallImageFile=Bisq-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
@@ -64,11 +65,24 @@ begin
   Result := False;
 end;
 
+//Delete old app directory to prevent issues during update
+procedure DeleteOldAppDataDirectory;
+var
+  entry: String;
+begin
+  entry := ExpandConstant('{localappdata}') + '\Bisq\';
+  if DirExists(entry) then begin
+    DelTree(entry, true, true, true);
+  end
+end;
+
+
 function InitializeSetup(): Boolean;
 begin
 // Possible future improvements:
 //   if version less or same => just launch app
 //   if upgrade => check if same app is running and wait for it to exit
 //   Add pack200/unpack200 support?
+  DeleteOldAppDataDirectory;
   Result := True;
 end;
