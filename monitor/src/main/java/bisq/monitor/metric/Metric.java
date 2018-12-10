@@ -26,6 +26,7 @@ import java.util.Properties;
  */
 public abstract class Metric extends Thread {
 
+    private static final String INTERVAL = "run.interval";
     private volatile boolean shutdown = false;
     protected Properties properties;
 
@@ -35,6 +36,9 @@ public abstract class Metric extends Thread {
     protected Properties configuration;
 
     protected Metric(final Properties properties) {
+        // set human readable name
+        super.setName(this.getClass().getSimpleName());
+
         // set as daemon, so that the jvm does not terminate the thread
         setDaemon(true);
 
@@ -46,8 +50,6 @@ public abstract class Metric extends Thread {
                 myProperties.put(key.substring(key.indexOf(".") + 1), v);
         });
         configure(myProperties);
-
-        super.setName(this.getClass().getSimpleName());
     }
 
     /**
@@ -55,20 +57,23 @@ public abstract class Metric extends Thread {
      * 
      * @param properties
      */
-    public void configure(Properties properties) {
-        this.properties = properties;
+    private void configure(final Properties properties) {
+        if(!properties.containsKey(INTERVAL)) {
+            shutdown = true;
+            System.out.println(this.getName() + " is missing mandatory '" + INTERVAL + "' property. Will not run.");
+        }
+        this.configuration = properties;
     }
 
     @Override
     public void run() {
         while (!shutdown) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
             execute();
+            try {
+                Thread.sleep(Long.parseLong(configuration.getProperty(INTERVAL)) * 1000);
+            } catch (InterruptedException ignore) {
+                // TODO Auto-generated catch block
+            }
         }
         System.out.println(this.getName() + " shutdown");
     }
@@ -83,6 +88,9 @@ public abstract class Metric extends Thread {
      */
     public void shutdown() {
         shutdown = true;
+
+        // interrupt the timer immediately so we can swiftly shut down
+        this.interrupt();
         System.out.println(this.getName() + " shutdown requested");
     }
 
