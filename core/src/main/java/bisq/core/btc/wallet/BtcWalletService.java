@@ -656,6 +656,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public void resetAddressEntriesForOpenOffer(String offerId) {
+        log.info("resetAddressEntriesForOpenOffer offerId={}", offerId);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
