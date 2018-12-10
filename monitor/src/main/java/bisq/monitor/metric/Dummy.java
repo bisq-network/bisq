@@ -26,8 +26,10 @@ import java.util.Properties;
  */
 public class Dummy extends Metric {
 
-    public Dummy(Properties properties) {
+    public Dummy(final Properties properties) {
         super(properties);
+
+        System.out.println(this.configuration.toString());
     }
 
     @Override

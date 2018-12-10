@@ -27,11 +27,26 @@ import java.util.Properties;
 public abstract class Metric extends Thread {
 
     private volatile boolean shutdown = false;
+    protected Properties properties;
 
-    public Metric(Properties properties) {
+    /**
+     * The properties of this very {@link Metric}
+     */
+    protected Properties configuration;
+
+    protected Metric(final Properties properties) {
         // set as daemon, so that the jvm does not terminate the thread
         setDaemon(true);
-        configure(properties);
+
+        // only configure the Properties which belong to us
+        final Properties myProperties = new Properties();
+        properties.forEach((k, v) -> {
+            String key = (String) k;
+            if (key.startsWith(this.getClass().getSimpleName()))
+                myProperties.put(key.substring(key.indexOf(".") + 1), v);
+        });
+        configure(myProperties);
+
         super.setName(this.getClass().getSimpleName());
     }
 
@@ -41,7 +56,7 @@ public abstract class Metric extends Thread {
      * @param properties
      */
     public void configure(Properties properties) {
-
+        this.properties = properties;
     }
 
     @Override

@@ -31,7 +31,7 @@ import bisq.monitor.metric.Metric;
  */
 public class Monitor {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         new Monitor().start();
     }
 
@@ -43,11 +43,14 @@ public class Monitor {
     /**
      * Starts up all configured Metrics.
      * 
-     * @throws InterruptedException
+     * @throws Exception
      */
-    private void start() throws InterruptedException {
+    private void start() throws Exception {
+        Properties properties = new Properties();
+        properties.load(this.getClass().getClassLoader().getResourceAsStream("metrics.properties"));
+
         // assemble Metrics
-        metrics.add(new Dummy(new Properties()));
+        metrics.add(new Dummy(properties));
 
         // fire up all Metrics
         for (Metric current : metrics)
