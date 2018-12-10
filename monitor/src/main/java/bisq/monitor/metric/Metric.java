@@ -34,6 +34,7 @@ public abstract class Metric extends Thread {
      * The properties of this very {@link Metric}
      */
     protected Properties configuration;
+    protected boolean suspend = false;
 
     protected Metric() {
         // set human readable name
@@ -49,6 +50,8 @@ public abstract class Metric extends Thread {
      * @param properties
      */
     public void configure(final Properties properties) {
+        System.out.println(this.getName() + " (re)loading config...");
+
         // only configure the Properties which belong to us
         final Properties myProperties = new Properties();
         properties.forEach((k, v) -> {
@@ -57,10 +60,15 @@ public abstract class Metric extends Thread {
                 myProperties.put(key.substring(key.indexOf(".") + 1), v);
         });
 
+        if (suspend && myProperties.getProperty("enabled", "false").equals("true")) {
+            suspend = false;
+            System.out.println(this.getName() + " got activated. Starting up.");
+        }
+
         // do some checks
         if (myProperties.isEmpty() || !myProperties.getProperty("enabled", "false").equals("true")
                 || !myProperties.containsKey(INTERVAL)) {
-            shutdown = true;
+            suspend = true;
 
             // some informative log output
             if (myProperties.isEmpty())
@@ -73,17 +81,27 @@ public abstract class Metric extends Thread {
                 System.out.println(this.getName() + " is misconfigured. Will not run.");
         }
 
+        interrupt();
         this.configuration = myProperties;
     }
 
     @Override
     public void run() {
         while (!shutdown) {
-            execute();
-            try {
-                Thread.sleep(Long.parseLong(configuration.getProperty(INTERVAL)) * 1000);
-            } catch (InterruptedException ignore) {
-                // TODO Auto-generated catch block
+            synchronized (this) {
+                while (suspend)
+                    try {
+                        wait();
+                    } catch (InterruptedException ignore) {
+                        // TODO Auto-generated catch block
+                    }
+
+                execute();
+                try {
+                    Thread.sleep(Long.parseLong(configuration.getProperty(INTERVAL)) * 1000);
+                } catch (InterruptedException ignore) {
+                    // TODO Auto-generated catch block
+                }
             }
         }
         System.out.println(this.getName() + " shutdown");

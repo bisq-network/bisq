@@ -85,4 +85,41 @@ public class MonitorInfrastructureTests {
         DUT.shutdown();
         DUT.join();
     }
+
+    @Test
+    public void reloadConfig() throws InterruptedException {
+        // our dummy
+        Dummy DUT = new Dummy();
+
+        // disable
+        DUT.configure(new Properties());
+        DUT.start();
+        // wait for the thread to be started
+        Thread.sleep(100);
+        Assert.assertEquals(Thread.State.WAITING, DUT.getState());
+
+        // enable
+        Properties properties = new Properties();
+        properties.put("Dummy.enabled", "true");
+        properties.put("Dummy.run.interval", "1");
+        DUT.configure(properties);
+        // wait for things to be done
+        Thread.sleep(100);
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
+
+        // disable again
+        DUT.configure(new Properties());
+        Thread.sleep(100);
+        Assert.assertEquals(Thread.State.WAITING, DUT.getState());
+
+        // enable again
+        DUT.configure(properties);
+        // wait for things to be done
+        Thread.sleep(100);
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
+
+        // graceful shutdown
+        DUT.shutdown();
+        DUT.join();
+    }
 }
