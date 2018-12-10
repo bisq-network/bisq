@@ -28,14 +28,13 @@ public class Dummy extends Metric {
 
     public Dummy() {
         super();
-
-        System.out.println(this.configuration.toString());
     }
 
     @Override
     public void configure(Properties properties) {
         super.configure(properties);
 
+        System.out.println(this.configuration.toString());
         // TODO check if we need to restart this Metric
     }
 

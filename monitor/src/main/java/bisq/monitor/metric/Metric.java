@@ -58,9 +58,19 @@ public abstract class Metric extends Thread {
         });
 
         // do some checks
-        if (!myProperties.containsKey(INTERVAL)) {
+        if (myProperties.isEmpty() || !myProperties.getProperty("enabled", "false").equals("true")
+                || !myProperties.containsKey(INTERVAL)) {
             shutdown = true;
-            System.out.println(this.getName() + " is missing mandatory '" + INTERVAL + "' property. Will not run.");
+
+            // some informative log output
+            if (myProperties.isEmpty())
+                System.out.println(this.getName() + " is not configured at all. Will not run.");
+            else if (!myProperties.getProperty("enabled", "false").equals("true"))
+                System.out.println(this.getName() + " is deactivated. Will not run.");
+            else if (!myProperties.containsKey(INTERVAL))
+                System.out.println(this.getName() + " is missing mandatory '" + INTERVAL + "' property. Will not run.");
+            else
+                System.out.println(this.getName() + " is misconfigured. Will not run.");
         }
 
         this.configuration = myProperties;
