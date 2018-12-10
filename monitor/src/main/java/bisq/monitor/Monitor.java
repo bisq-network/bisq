@@ -17,28 +17,64 @@
 
 package bisq.monitor;
 
-import bisq.monitor.metrics.MetricsModel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
-import com.google.inject.Injector;
+import bisq.monitor.metric.Dummy;
+import bisq.monitor.metric.Metric;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
+/**
+ * Monitor executable for the Bisq network.
+ * 
+ * @author Florian Reimair
+ */
 public class Monitor {
-    @Setter
-    private Injector injector;
-    @Getter
-    private MetricsModel metricsModel;
 
-    public Monitor() {
+    public static void main(String[] args) throws InterruptedException {
+        new Monitor().start();
     }
 
-    public void startApplication() {
-        metricsModel = injector.getInstance(MetricsModel.class);
+    /**
+     * A list of all active {@link Metric}s
+     */
+    private List<Metric> metrics = new ArrayList<>();
 
-        MonitorAppSetup appSetup = injector.getInstance(MonitorAppSetup.class);
-        appSetup.start();
+    /**
+     * Starts up all configured Metrics.
+     * 
+     * @throws InterruptedException
+     */
+    private void start() throws InterruptedException {
+        // assemble Metrics
+        metrics.add(new Dummy(new Properties()));
+
+        // fire up all Metrics
+        for (Metric current : metrics)
+            current.start();
+
+        // exit Metrics gracefully on shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                for (Metric current : metrics) {
+                    current.shutdown();
+                    try {
+                        // we need to join each metric, as they probably need time to gracefully shut
+                        // down
+                        current.join();
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    System.out.println("system halt");
+                }
+            }
+        });
+
+        // prevent the main thread to terminate
+        System.out.println("joining metrics...");
+        for (Metric current : metrics)
+            current.join();
     }
 }
