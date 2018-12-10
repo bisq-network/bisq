@@ -17,6 +17,7 @@
 
 package bisq.monitor;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -31,7 +32,10 @@ import bisq.monitor.metric.Metric;
  */
 public class Monitor {
 
+    private static String[] args = {};
+
     public static void main(String[] args) throws Exception {
+        Monitor.args = args;
         new Monitor().start();
     }
 
@@ -46,8 +50,7 @@ public class Monitor {
      * @throws Exception
      */
     private void start() throws Exception {
-        Properties properties = new Properties();
-        properties.load(this.getClass().getClassLoader().getResourceAsStream("metrics.properties"));
+        Properties properties = getProperties();
 
         // assemble Metrics
         metrics.add(new Dummy(properties));
@@ -79,5 +82,23 @@ public class Monitor {
         System.out.println("joining metrics...");
         for (Metric current : metrics)
             current.join();
+    }
+
+    /**
+     * Overloads a default set of properties with a file if given
+     * 
+     * @return a set of properties
+     * @throws Exception
+     */
+    private Properties getProperties() throws Exception {
+        Properties defaults = new Properties();
+        defaults.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
+
+        Properties result = new Properties(defaults);
+
+        if(args.length > 0)
+            result.load(new FileInputStream(args[0]));
+
+        return result;
     }
 }
