@@ -35,21 +35,12 @@ public abstract class Metric extends Thread {
      */
     protected Properties configuration;
 
-    protected Metric(final Properties properties) {
+    protected Metric() {
         // set human readable name
         super.setName(this.getClass().getSimpleName());
 
         // set as daemon, so that the jvm does not terminate the thread
         setDaemon(true);
-
-        // only configure the Properties which belong to us
-        final Properties myProperties = new Properties();
-        properties.forEach((k, v) -> {
-            String key = (String) k;
-            if (key.startsWith(this.getClass().getSimpleName()))
-                myProperties.put(key.substring(key.indexOf(".") + 1), v);
-        });
-        configure(myProperties);
     }
 
     /**
@@ -57,12 +48,22 @@ public abstract class Metric extends Thread {
      * 
      * @param properties
      */
-    private void configure(final Properties properties) {
-        if(!properties.containsKey(INTERVAL)) {
+    public void configure(final Properties properties) {
+        // only configure the Properties which belong to us
+        final Properties myProperties = new Properties();
+        properties.forEach((k, v) -> {
+            String key = (String) k;
+            if (key.startsWith(this.getClass().getSimpleName()))
+                myProperties.put(key.substring(key.indexOf(".") + 1), v);
+        });
+
+        // do some checks
+        if (!myProperties.containsKey(INTERVAL)) {
             shutdown = true;
             System.out.println(this.getName() + " is missing mandatory '" + INTERVAL + "' property. Will not run.");
         }
-        this.configuration = properties;
+
+        this.configuration = myProperties;
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import bisq.monitor.metric.Dummy;
 import bisq.monitor.metric.Metric;
+import sun.misc.Signal;
 
 /**
  * Monitor executable for the Bisq network.
@@ -50,10 +51,19 @@ public class Monitor {
      * @throws Exception
      */
     private void start() throws Exception {
-        Properties properties = getProperties();
-
         // assemble Metrics
-        metrics.add(new Dummy(properties));
+        metrics.add(new Dummy());
+
+        // configure Metrics
+        Properties properties = getProperties();
+        for (Metric current : metrics)
+            current.configure(properties);
+
+        // prepare configuration reload
+        // Note that this is most likely only work on Linux
+        Signal.handle(new Signal("USR1"), signal -> {
+            reload();
+        });
 
         // fire up all Metrics
         for (Metric current : metrics)
@@ -82,6 +92,20 @@ public class Monitor {
         System.out.println("joining metrics...");
         for (Metric current : metrics)
             current.join();
+    }
+
+    /**
+     * Reload the configuration from disk.
+     */
+    private void reload() {
+        try {
+            Properties properties = getProperties();
+            for (Metric current : metrics)
+                current.configure(properties);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**

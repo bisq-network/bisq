@@ -26,10 +26,17 @@ import java.util.Properties;
  */
 public class Dummy extends Metric {
 
-    public Dummy(final Properties properties) {
-        super(properties);
+    public Dummy() {
+        super();
 
         System.out.println(this.configuration.toString());
+    }
+
+    @Override
+    public void configure(Properties properties) {
+        super.configure(properties);
+
+        // TODO check if we need to restart this Metric
     }
 
     @Override
