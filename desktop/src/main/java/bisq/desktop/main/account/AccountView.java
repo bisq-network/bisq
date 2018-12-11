@@ -100,6 +100,8 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 else
                     loadView(viewPath.tip());
+            } else {
+                resetSelectedTab();
             }
         };
 
@@ -115,22 +117,20 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (arbitratorRegistrationTab != null) {
+            if (arbitratorRegistrationTab != null && selectedTab != arbitratorRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            } else if (newValue == fiatAccountsTab) {
+            } else if (newValue == fiatAccountsTab && selectedTab != fiatAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
-            } else if (newValue == altcoinAccountsTab) {
+            } else if (newValue == altcoinAccountsTab && selectedTab != altcoinAccountsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
-            } else if (newValue == notificationTab) {
+            } else if (newValue == notificationTab && selectedTab != notificationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, MobileNotificationsView.class);
-            } else if (newValue == passwordTab) {
+            } else if (newValue == passwordTab && selectedTab != passwordTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, PasswordView.class);
-            } else if (newValue == seedwordsTab) {
+            } else if (newValue == seedwordsTab && selectedTab != seedwordsTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, SeedWordsView.class);
-            } else if (newValue == backupTab) {
+            } else if (newValue == backupTab && selectedTab != backupTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, BackupView.class);
-            } else {
-                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
             }
         };
 
@@ -202,13 +202,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
 
-        if (selectedTab != null && selectedTab.getContent() != null) {
-            if (selectedTab.getContent() instanceof ScrollPane) {
-                ((ScrollPane) selectedTab.getContent()).setContent(null);
-            } else {
-                selectedTab.setContent(null);
-            }
-        }
+        resetSelectedTab();
 
         if (view instanceof ArbitratorRegistrationView) {
             if (arbitratorRegistrationTab != null) {
@@ -238,5 +232,15 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             selectedTab.setContent(view.getRoot());
         }
         root.getSelectionModel().select(selectedTab);
+    }
+
+    private void resetSelectedTab() {
+        if (selectedTab != null && selectedTab.getContent() != null) {
+            if (selectedTab.getContent() instanceof ScrollPane) {
+                ((ScrollPane) selectedTab.getContent()).setContent(null);
+            } else {
+                selectedTab.setContent(null);
+            }
+        }
     }
 }

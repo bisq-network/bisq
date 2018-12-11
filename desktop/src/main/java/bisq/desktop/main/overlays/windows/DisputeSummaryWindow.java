@@ -267,7 +267,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 formatter.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
-                formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
+                formatter.formatVolumeWithCode(contract.getTradeVolume()));
     }
 
     private void addCheckboxes() {

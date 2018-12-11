@@ -133,7 +133,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
-                formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
+                formatter.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
