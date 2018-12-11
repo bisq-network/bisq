@@ -56,7 +56,7 @@ public abstract class Metric extends Thread {
         final Properties myProperties = new Properties();
         properties.forEach((k, v) -> {
             String key = (String) k;
-            if (key.startsWith(this.getClass().getSimpleName()))
+            if (key.startsWith(getName()))
                 myProperties.put(key.substring(key.indexOf(".") + 1), v);
         });
 

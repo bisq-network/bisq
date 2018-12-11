@@ -91,12 +91,22 @@ public class MonitorInfrastructureTests {
         // our dummy
         Dummy DUT = new Dummy();
 
+        // a second dummy to run as well
+        Dummy DUT2 = new Dummy();
+        DUT2.setName("Dummy2");
+        Properties dummy2Properties = new Properties();
+        dummy2Properties.put("Dummy2.enabled", "true");
+        dummy2Properties.put("Dummy2.run.interval", "1");
+        DUT2.configure(dummy2Properties);
+        DUT2.start();
+
         // disable
         DUT.configure(new Properties());
         DUT.start();
         // wait for the thread to be started
         Thread.sleep(100);
         Assert.assertEquals(Thread.State.WAITING, DUT.getState());
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
 
         // enable
         Properties properties = new Properties();
@@ -106,20 +116,25 @@ public class MonitorInfrastructureTests {
         // wait for things to be done
         Thread.sleep(100);
         Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
 
         // disable again
         DUT.configure(new Properties());
         Thread.sleep(100);
         Assert.assertEquals(Thread.State.WAITING, DUT.getState());
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
 
         // enable again
         DUT.configure(properties);
         // wait for things to be done
         Thread.sleep(100);
         Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
+        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
 
         // graceful shutdown
         DUT.shutdown();
         DUT.join();
+        DUT2.shutdown();
+        DUT2.join();
     }
 }
