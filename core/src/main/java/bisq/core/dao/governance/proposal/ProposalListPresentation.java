@@ -21,7 +21,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import org.bitcoinj.core.TransactionConfidence;
 

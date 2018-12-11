@@ -19,11 +19,8 @@ package bisq.core.dao.node.full;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoOptionKeys;
-import bisq.core.dao.state.blockchain.PubKeyScript;
-import bisq.core.dao.state.blockchain.RawBlock;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.RawTxOutput;
-import bisq.core.dao.state.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.PubKeyScript;
+import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
@@ -33,6 +30,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Utils;
 
 import com.neemre.btcdcli4j.core.BitcoindException;
+import com.neemre.btcdcli4j.core.BtcdCli4jVersion;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
@@ -110,6 +108,8 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         this.dumpBlockchainData = dumpBlockchainData;
+
+        log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
     }
 
 
@@ -138,7 +138,11 @@ public class RpcService {
 
                 nodeConfig.setProperty("node.bitcoind.http.auth_scheme", "Basic");
                 BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
-                daemon = new BtcdDaemonImpl(client);
+                daemon = new BtcdDaemonImpl(client, throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                    UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
+                });
                 log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                 this.client = client;
             } catch (BitcoindException | CommunicationException e) {
@@ -287,10 +291,12 @@ public class RpcService {
                                     try {
                                         opReturnData = Utils.HEX.decode(chunks[1]);
                                     } catch (Throwable t) {
-                                        // We get sometimes exceptions, seems BitcoinJ
-                                        // cannot handle all existing OP_RETURN data, but we ignore them
-                                        // anyway as our OP_RETURN data is valid in BitcoinJ
-                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() + " / chunks[1]=" + chunks[1]);
+                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
+                                                " / chunks[1]=" + chunks[1] +
+                                                "\nWe get sometimes exceptions with opReturn data, seems BitcoinJ " +
+                                                "cannot handle all " +
+                                                "existing OP_RETURN data, but we ignore them anyway as the OP_RETURN " +
+                                                "data used for DAO transactions are all valid in BitcoinJ");
                                     }
                                 }
                             }

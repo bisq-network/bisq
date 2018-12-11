@@ -18,6 +18,7 @@
 package bisq.core.monetary;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -31,12 +32,11 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Bitcoin price value with variable precision.
- *
+ * <p>
  * <br/>
  * We wrap an object implementing the {@link Monetary} interface from bitcoinj. We respect the
  * number of decimal digits of precision specified in the {@code smallestUnitExponent()}, defined in
  * those classes, like {@link Fiat} or {@link Altcoin}.
- *
  */
 public class Price extends MonetaryWrapper implements Comparable<Price> {
     private static final Logger log = LoggerFactory.getLogger(Price.class);
@@ -54,11 +54,11 @@ public class Price extends MonetaryWrapper implements Comparable<Price> {
      * Parse the Bitcoin {@code Price} given a {@code currencyCode} and {@code inputValue}.
      *
      * @param currencyCode The currency code to parse, e.g "USD" or "LTC".
-     * @param value        The value to parse as a String, e.g "2.54" or "-0.0001".
-     * @return             The parsed Price.
+     * @param input        The input value to parse as a String, e.g "2.54" or "-0.0001".
+     * @return The parsed Price.
      */
-    public static Price parse(String currencyCode, String value) {
-        final String cleaned = value.replace(",", ".");
+    public static Price parse(String currencyCode, String input) {
+        String cleaned = BSFormatter.convertCharsForNumber(input);
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return new Price(Fiat.parseFiat(currencyCode, cleaned));
         else
@@ -70,7 +70,7 @@ public class Price extends MonetaryWrapper implements Comparable<Price> {
      *
      * @param currencyCode The currency code to parse, e.g "USD" or "LTC".
      * @param value        The value to parse.
-     * @return             The parsed Price.
+     * @return The parsed Price.
      */
     public static Price valueOf(String currencyCode, long value) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {

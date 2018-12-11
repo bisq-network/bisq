@@ -34,7 +34,12 @@ public class TooltipUtil {
                         labeled.setTooltip(null);
                     }
                 } else if (untruncatedText != null && !untruncatedText.trim().isEmpty()) {
-                    labeled.setTooltip(new Tooltip(untruncatedText));
+                    final Tooltip tooltip = new Tooltip(untruncatedText);
+
+                    // Force tooltip to use color, as it takes in some cases the color of the parent label
+                    // and can't be overriden by class or id
+                    tooltip.setStyle("-fx-text-fill: -bs-rd-black;");
+                    labeled.setTooltip(tooltip);
                 }
             }
         }

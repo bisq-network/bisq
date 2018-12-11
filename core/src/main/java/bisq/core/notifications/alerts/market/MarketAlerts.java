@@ -189,9 +189,9 @@ public class MarketAlerts {
                                     shortOfferId,
                                     MobileMessageType.MARKET);
                             try {
-                                boolean success = mobileNotificationService.sendMessage(message);
-                                if (success) {
-                                    // In case we have disabled alerts we do not get a success msg back and we do not
+                                boolean wasSent = mobileNotificationService.sendMessage(message);
+                                if (wasSent) {
+                                    // In case we have disabled alerts wasSent is false and we do not
                                     // persist the offer
                                     marketAlertFilter.addAlertId(alertId);
                                     user.persist();

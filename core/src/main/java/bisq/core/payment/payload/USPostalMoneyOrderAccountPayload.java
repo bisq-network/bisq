@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -94,14 +96,15 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
 
     @Override
     public String getPaymentDetails() {
-        return "US Postal Money Order - Holder name: " + holderName + ", postal address: " + postalAddress;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.getWithCol("payment.postal.address") + " " + postalAddress;
     }
 
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
-                "Postal address: " + postalAddress;
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+                Res.getWithCol("payment.postal.address") + " " + postalAddress;
     }
 
     @Override

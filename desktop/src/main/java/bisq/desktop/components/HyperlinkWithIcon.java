@@ -44,7 +44,8 @@ public class HyperlinkWithIcon extends Hyperlink {
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setMinWidth(20);
         icon.setOpacity(0.7);
-        icon.getStyleClass().add("hyperlink");
+        icon.getStyleClass().addAll("hyperlink", "no-underline");
+        setPadding(new Insets(0));
         icon.setPadding(new Insets(0));
 
         setGraphic(icon);
@@ -52,7 +53,7 @@ public class HyperlinkWithIcon extends Hyperlink {
         setGraphicTextGap(7.0);
 
         //TODO: replace workaround of setting the style this way
-        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: -bs-black"));
+        tooltipProperty().addListener((observable, oldValue, newValue) -> newValue.setStyle("-fx-text-fill: #000"));
     }
 
     public void clear() {

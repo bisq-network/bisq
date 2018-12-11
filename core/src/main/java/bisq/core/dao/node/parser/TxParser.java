@@ -17,20 +17,18 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.node.full.RawTx;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.TempTx;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import org.bitcoinj.core.Coin;
 
@@ -143,8 +141,8 @@ public class TxParser {
         boolean bsqOutputFound = txOutputParser.isBsqOutputFound();
 
         long burntBsq = remainingInputValue + burntBondValue;
-        boolean hasBurntBSQ = burntBsq > 0;
-        if (hasBurntBSQ)
+        boolean hasBurntBsq = burntBsq > 0;
+        if (hasBurntBsq)
             tempTx.setBurntFee(burntBsq);
 
 
@@ -154,14 +152,14 @@ public class TxParser {
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
 
-        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBSQ, unLockInputValid);
+        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
         tempTx.setTxType(txType);
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
             txOutputParser.invalidateUTXOCandidates();
 
-            if (hasBurntBSQ) {
+            if (hasBurntBsq) {
                 log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
                         burntBsq / 100D, tempTx);
             }
@@ -205,6 +203,8 @@ public class TxParser {
                     processVoteReveal(blockHeight, tempTx);
                     break;
                 case LOCKUP:
+                case ASSET_LISTING_FEE:
+                case PROOF_OF_BURN:
                     // do nothing
                     break;
             }
@@ -298,8 +298,7 @@ public class TxParser {
         if (!isPhaseValid(blockHeight, phase)) {
             return false;
         }
-
-        long paramValue = daoStateService.getParamValue(param, blockHeight);
+        long paramValue = daoStateService.getParamValueAsCoin(param, blockHeight).value;
         boolean isFeeCorrect = bsqFee == paramValue;
         if (!isFeeCorrect) {
             log.warn("Invalid fee. used fee={}, required fee={}", bsqFee, paramValue);
@@ -425,6 +424,10 @@ public class TxParser {
                 return TxType.VOTE_REVEAL;
             case LOCKUP:
                 return TxType.LOCKUP;
+            case ASSET_LISTING_FEE:
+                return TxType.ASSET_LISTING_FEE;
+            case PROOF_OF_BURN:
+                return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
                 return TxType.INVALID;

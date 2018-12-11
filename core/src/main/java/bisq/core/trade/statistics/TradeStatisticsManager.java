@@ -177,8 +177,9 @@ public class TradeStatisticsManager {
             // Need a more scalable solution later when we get more volume.
             // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to
             // get improved. Maybe a LevelDB like DB...? Could be impl. in a headless version only.
-            List<TradeStatisticsForJson> list = observableTradeStatisticsSet.stream().map(TradeStatisticsForJson::new).collect(Collectors.toList());
-            list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
+            List<TradeStatisticsForJson> list = observableTradeStatisticsSet.stream().map(TradeStatisticsForJson::new)
+                    .sorted((o1, o2) -> (Long.compare(o2.tradeDate, o1.tradeDate)))
+                    .collect(Collectors.toList());
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
             jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");

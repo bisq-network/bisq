@@ -30,6 +30,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.filter.FilterManager;
@@ -152,6 +153,7 @@ public class BisqSetup {
     private final MarketAlerts marketAlerts;
     private final VoteResultService voteResultService;
     private final AssetTradeActivityCheck tradeActivityCheck;
+    private final AssetService assetService;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -159,8 +161,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
-            spvFileCorruptedHandler, lockedUpFundsHandler, daoSetupErrorHandler, filterWarningHandler,
-            displaySecurityRecommendationHandler, displayLocalhostHandler, wrongOSArchitectureHandler;
+            spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
+            filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
+            wrongOSArchitectureHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -226,6 +229,7 @@ public class BisqSetup {
                      MarketAlerts marketAlerts,
                      VoteResultService voteResultService,
                      AssetTradeActivityCheck tradeActivityCheck,
+                     AssetService assetService,
                      BSFormatter formatter) {
 
 
@@ -263,6 +267,7 @@ public class BisqSetup {
         this.marketAlerts = marketAlerts;
         this.voteResultService = voteResultService;
         this.tradeActivityCheck = tradeActivityCheck;
+        this.assetService = assetService;
         this.formatter = formatter;
     }
 
@@ -586,7 +591,7 @@ public class BisqSetup {
         tradeManager.getAddressEntriesForAvailableBalanceStream()
                 .filter(addressEntry -> addressEntry.getOfferId() != null)
                 .forEach(addressEntry -> {
-                    log.debug("swapPendingOfferFundingEntries, offerId={}, OFFER_FUNDING", addressEntry.getOfferId());
+                    log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
 
@@ -622,13 +627,18 @@ public class BisqSetup {
 
         if (DevEnv.isDaoActivated()) {
             daoSetup.onAllServicesInitialized(errorMessage -> {
-                if (daoSetupErrorHandler != null)
-                    daoSetupErrorHandler.accept(errorMessage);
+                if (daoErrorMessageHandler != null)
+                    daoErrorMessageHandler.accept(errorMessage);
+            }, warningMessage -> {
+                if (daoWarnMessageHandler != null)
+                    daoWarnMessageHandler.accept(warningMessage);
             });
         }
 
         tradeStatisticsManager.onAllServicesInitialized();
         tradeActivityCheck.onAllServicesInitialized();
+
+        assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
 

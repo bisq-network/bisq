@@ -17,23 +17,14 @@
 
 package bisq.desktop.components;
 
-import bisq.core.locale.Res;
+
+import bisq.desktop.util.validation.JFXInputValidator;
+
 import bisq.core.util.validation.InputValidator;
 
-import org.controlsfx.control.PopOver;
+import com.jfoenix.controls.JFXTextField;
 
-import javafx.stage.Window;
-
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Effect;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
-
-import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
+import javafx.scene.control.Skin;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -51,15 +42,16 @@ import javafx.beans.property.SimpleObjectProperty;
  */
 //TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements. Also
 // consider replacement with controlsFX components.
-public class InputTextField extends TextField {
-
-    private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
+public class InputTextField extends JFXTextField {
 
     private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
             (new InputValidator.ValidationResult(true));
 
-    private static PopOver errorMessageDisplay;
-    private Region layoutReference = this;
+    private final JFXInputValidator jfxValidationWrapper = new JFXInputValidator();
+    private double inputLineExtension = 0;
+
+    private InputValidator validator;
+
 
     public InputValidator getValidator() {
         return validator;
@@ -69,19 +61,6 @@ public class InputTextField extends TextField {
         this.validator = validator;
     }
 
-    private InputValidator validator;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static void hideErrorMessageDisplay() {
-        if (errorMessageDisplay != null)
-            errorMessageDisplay.hide();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -89,52 +68,43 @@ public class InputTextField extends TextField {
     public InputTextField() {
         super();
 
+        getValidators().add(jfxValidationWrapper);
+
         validationResult.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                setEffect(newValue.isValid ? null : invalidEffect);
+                if (newValue.isValid) {
+                    resetValidation();
+                } else {
+                    resetValidation();
+                    validate();
 
-                if (newValue.isValid)
-                    hideErrorMessageDisplay();
-                else
-                    applyErrorMessage(newValue);
+                    jfxValidationWrapper.applyErrorMessage(newValue);
+                }
+                validate();
             }
         });
 
-        sceneProperty().addListener((ov, oldValue, newValue) -> {
-            // we got removed from the scene so hide the popup (if open)
-            if (newValue == null)
-                hideErrorMessageDisplay();
-        });
-
         focusedProperty().addListener((o, oldValue, newValue) -> {
-            if (oldValue && !newValue && validator != null)
-                validationResult.set(validator.validate(getText()));
+            if (oldValue && !newValue && validator != null) {
+                this.validationResult.set(validator.validate(getText()));
+            } else if (!oldValue && newValue && validator != null) {
+                this.validationResult.set(new InputValidator.ValidationResult(true));
+            }
         });
     }
 
+    public InputTextField(double inputLineExtension) {
+        this();
+        this.inputLineExtension = inputLineExtension;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void resetValidation() {
-        setEffect(null);
-        hideErrorMessageDisplay();
+        jfxValidationWrapper.resetValidation();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @param layoutReference The node used as reference for positioning. If not set explicitly the
-     *                        ValidatingTextField instance is used.
-     */
-    public void setLayoutReference(Region layoutReference) {
-        this.layoutReference = layoutReference;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -144,48 +114,7 @@ public class InputTextField extends TextField {
         return validationResult;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyErrorMessage(InputValidator.ValidationResult validationResult) {
-        if (errorMessageDisplay != null)
-            errorMessageDisplay.hide();
-
-        if (!validationResult.isValid) {
-            createErrorPopOver(validationResult.errorMessage);
-            if (getScene() != null)
-                errorMessageDisplay.show(getScene().getWindow(), getErrorPopupPosition().getX(),
-                        getErrorPopupPosition().getY());
-
-            if (errorMessageDisplay != null)
-                errorMessageDisplay.setDetached(false);
-        }
+    protected Skin<?> createDefaultSkin() {
+        return new JFXTextFieldSkinBisqStyle<>(this, inputLineExtension);
     }
-
-    private Point2D getErrorPopupPosition() {
-        Window window = getScene().getWindow();
-        Point2D point;
-        point = layoutReference.localToScene(0, 0);
-        double x = Math.floor(point.getX() + window.getX() + layoutReference.getWidth() + 20 - getPadding().getLeft() -
-                getPadding().getRight());
-        double y = Math.floor(point.getY() + window.getY() + getHeight() / 2 - getPadding().getTop() - getPadding()
-                .getBottom());
-        return new Point2D(x, y);
-    }
-
-
-    private static void createErrorPopOver(String errorMessage) {
-        Label errorLabel = new AutoTooltipLabel(errorMessage);
-        errorLabel.setId("validation-error");
-        errorLabel.setPadding(new Insets(0, 10, 0, 10));
-        errorLabel.setOnMouseClicked(e -> hideErrorMessageDisplay());
-
-        errorMessageDisplay = new PopOver(errorLabel);
-        errorMessageDisplay.setDetachable(true);
-        errorMessageDisplay.setDetachedTitle(Res.get("shared.close"));
-        errorMessageDisplay.setArrowIndent(5);
-    }
-
 }

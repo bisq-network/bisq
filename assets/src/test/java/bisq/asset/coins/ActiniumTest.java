@@ -32,6 +32,9 @@ public class ActiniumTest extends AbstractAssetTest {
         assertValidAddress("NLzB9iUGJ8GaKSn9GfVKfd55QVRdNdz9FK");
         assertValidAddress("NSz7PKmo1sLQYtFuZjTQ1zZXhPQtHLScKT");
         assertValidAddress("NTFtsh4Ff2ijPNsnQAUf5fKTp7DJaGxSZK");
+        assertValidAddress("PLRiNpnTzWqufAoRFN1u9zBstHqjyM2qgB");
+        assertValidAddress("PMFpWHR2AbBwaR4G2rA5nWB1F7cbZWua5Z");
+        assertValidAddress("P9XE6tupGocWnsNgoUxRPzASYAPVAyu2T8");
     }
 
     @Test
@@ -39,5 +42,8 @@ public class ActiniumTest extends AbstractAssetTest {
         assertInvalidAddress("MgTFtsh4Ff2ijPNsnQAUf5fKTp7DJaGxSZK");
         assertInvalidAddress("F9z7PKmo1sLQYtFuZjTQ1zZXhPQtHLScKT");
         assertInvalidAddress("16Ftsh4Ff2ijPNsnQAUf5fKTp7DJaGxSZK");
+        assertInvalidAddress("Z6Ftsh7LfGijPVzmQAUf5fKTp7DJaGxSZK");
+        assertInvalidAddress("G5Fmxy4Ff2ijLjsnQAUf5fKTp7DJaGxACV");
+        assertInvalidAddress("D4Hmqy4Ff2ijXYsnQAUf5fKTp7DJaGxBhJ");
     }
 }

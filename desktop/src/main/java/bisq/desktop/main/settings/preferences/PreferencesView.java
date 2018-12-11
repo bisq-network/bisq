@@ -50,7 +50,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
-import bisq.common.util.Tuple2;
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -60,16 +60,21 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Separator;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 
 import javafx.beans.value.ChangeListener;
@@ -81,6 +86,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -98,14 +104,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
     private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
-    private CheckBox useAnimationsCheckBox, avoidStandbyModeCheckBox,
-            showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
+    private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
+            useCustomFee;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField, rpcUserTextField;
-    private CheckBox isDaoFullNodeCheckBox;
+    private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
-    private Label rpcUserLabel, rpcPwLabel;
 
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
@@ -157,6 +162,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     public void initialize() {
+
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
         languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
@@ -168,22 +174,25 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         allFiatCurrencies.removeAll(fiatCurrencies);
 
         initializeGeneralOptions();
+        initializeSeparator();
         initializeDisplayCurrencies();
         initializeDisplayOptions();
-        initializeDaoOptions();
+        if (DevEnv.isDaoActivated())
+            initializeDaoOptions();
     }
 
 
     @Override
     protected void activate() {
         // We want to have it updated in case an asset got removed
-        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService));
+        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService));
         allCryptoCurrencies.removeAll(cryptoCurrencies);
 
         activateGeneralOptions();
         activateDisplayCurrencies();
         activateDisplayPreferences();
-        activateDaoPreferences();
+        if (DevEnv.isDaoActivated())
+            activateDaoPreferences();
     }
 
     @Override
@@ -191,7 +200,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateGeneralOptions();
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
-        deactivateDaoPreferences();
+        if (DevEnv.isDaoActivated())
+            deactivateDaoPreferences();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -200,12 +210,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void initializeGeneralOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
-        GridPane.setColumnSpan(titledGroupBg, 4);
+        GridPane.setColumnSpan(titledGroupBg, 1);
 
         // selectBaseCurrencyNetwork
-        selectBaseCurrencyNetworkComboBox = FormBuilder.<BaseCurrencyNetwork>addLabelComboBox(root, gridRow,
-                Res.getWithCol("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE).second;
+        selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
+                Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
 
+        selectBaseCurrencyNetworkComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("settings.preferences.selectCurrencyNetwork"),
+                selectBaseCurrencyNetworkComboBox, false));
         selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
@@ -220,17 +232,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        userLanguageComboBox = FormBuilder.<String>addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("shared.language")).second;
-        userCountryComboBox = FormBuilder.<Country>addLabelComboBox(root, ++gridRow,
-                Res.getWithCol("shared.country")).second;
-        blockChainExplorerComboBox = FormBuilder.<BlockChainExplorer>addLabelComboBox(root, ++gridRow,
-                Res.get("setting.preferences.explorer")).second;
+        userLanguageComboBox = FormBuilder.addComboBox(root, ++gridRow,
+                Res.get("shared.language"));
+        userCountryComboBox = FormBuilder.addComboBox(root, ++gridRow,
+                Res.get("shared.country"));
+        userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
+                false));
+        blockChainExplorerComboBox = FormBuilder.addComboBox(root, ++gridRow,
+                Res.get("setting.preferences.explorer"));
+        blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
+                blockChainExplorerComboBox, false));
 
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
+        Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
-        useCustomFeeCheckbox = tuple.third;
+        useCustomFee = tuple.third;
 
         useCustomFeeCheckboxListener = (observable, oldValue, newValue) -> {
             preferences.setUseCustomWithdrawalTxFee(newValue);
@@ -278,8 +294,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         transactionFeeChangeListener = (observable, oldValue, newValue) -> transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
 
         // deviation
-        deviationInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("setting.preferences.deviation")).second;
+        deviationInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.deviation"));
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {
@@ -302,67 +318,89 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         };
 
         // ignoreTraders
-        ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
-                Res.get("setting.preferences.ignorePeers")).second;
+        ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.ignorePeers"));
         ignoreTradersListListener = (observable, oldValue, newValue) ->
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue)
                         .replace(":9999", "").replace(".onion", "")
                         .split(",")));
 
         // referralId
-        referralIdInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId")).second;
+        referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
         referralIdListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue))
                 referralIdService.setReferralId(newValue);
         };
 
         // AvoidStandbyModeService
-        avoidStandbyModeCheckBox = addLabelCheckBox(root, ++gridRow,
-                Res.get("setting.preferences.avoidStandbyMode"), "").second;
+        avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
+                Res.get("setting.preferences.avoidStandbyMode"));
+    }
+
+    private void initializeSeparator() {
+        final Separator separator = new Separator(Orientation.VERTICAL);
+        separator.setPadding(new Insets(0, 10, 0, 10));
+        GridPane.setColumnIndex(separator, 1);
+        GridPane.setHalignment(separator, HPos.CENTER);
+        GridPane.setRowIndex(separator, 0);
+        GridPane.setRowSpan(separator, GridPane.REMAINING);
+        root.getChildren().add(separator);
     }
 
     private void initializeDisplayCurrencies() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.preferences.currenciesInList"),
-                Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 4);
+        int displayCurrenciesGridRowIndex = 0;
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 9, Res.get("setting.preferences.currenciesInList"));
+        GridPane.setColumnIndex(titledGroupBg, 2);
+        GridPane.setColumnSpan(titledGroupBg, 2);
 
 
-        preferredTradeCurrencyComboBox = FormBuilder.<TradeCurrency>addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+        preferredTradeCurrencyComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex++, Res.get("setting.preferences.prefCurrency"),
+                Layout.FIRST_ROW_DISTANCE);
+        GridPane.setColumnIndex(preferredTradeCurrencyComboBox, 2);
+
+        preferredTradeCurrencyComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                return tradeCurrency.getDisplayPrefix() + tradeCurrency.getNameAndCode();
+            public String toString(TradeCurrency object) {
+                return object.getCode() + " - " + object.getName();
             }
 
             @Override
-            public TradeCurrency fromString(String s) {
+            public TradeCurrency fromString(String string) {
                 return null;
             }
         });
 
-        Tuple2<Label, ListView<FiatCurrency>> fiatTuple = FormBuilder.addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
-        GridPane.setValignment(fiatTuple.first, VPos.TOP);
+        preferredTradeCurrencyComboBox.setButtonCell(GUIUtil.getTradeCurrencyButtonCell("", "",
+                Collections.emptyMap()));
+        preferredTradeCurrencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory("", "",
+                Collections.emptyMap()));
+
+        Tuple3<Label, ListView<FiatCurrency>, VBox> fiatTuple = FormBuilder.addTopLabelListView(root, displayCurrenciesGridRowIndex, Res.get("setting.preferences.displayFiat"));
+
+        int listRowSpan = 6;
+        GridPane.setColumnIndex(fiatTuple.third, 2);
+        GridPane.setRowSpan(fiatTuple.third, listRowSpan);
+
+        GridPane.setValignment(fiatTuple.third, VPos.TOP);
+        GridPane.setMargin(fiatTuple.third, new Insets(10, 0, 0, 0));
         fiatCurrenciesListView = fiatTuple.second;
-        fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        fiatCurrenciesListView.setMinHeight(9 * Layout.LIST_ROW_HEIGHT + 2);
+        fiatCurrenciesListView.setPrefHeight(10 * Layout.LIST_ROW_HEIGHT + 2);
         Label placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noFiat"));
         placeholder.setWrapText(true);
         fiatCurrenciesListView.setPlaceholder(placeholder);
-        fiatCurrenciesListView.setCellFactory(new Callback<ListView<FiatCurrency>, ListCell<FiatCurrency>>() {
+        fiatCurrenciesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<FiatCurrency> call(ListView<FiatCurrency> list) {
-                return new ListCell<FiatCurrency>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
-
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, -30d);
                     }
 
                     @Override
@@ -391,21 +429,23 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        Tuple2<Label, ListView<CryptoCurrency>> cryptoCurrenciesTuple = FormBuilder.addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
-        GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
-        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
+        Tuple3<Label, ListView<CryptoCurrency>, VBox> cryptoCurrenciesTuple = FormBuilder.addTopLabelListView(root, displayCurrenciesGridRowIndex, Res.get("setting.preferences.displayAltcoins"));
+
+        GridPane.setColumnIndex(cryptoCurrenciesTuple.third, 3);
+        GridPane.setRowSpan(cryptoCurrenciesTuple.third, listRowSpan);
+
+        GridPane.setValignment(cryptoCurrenciesTuple.third, VPos.TOP);
+        GridPane.setMargin(cryptoCurrenciesTuple.third, new Insets(0, 0, 0, 20));
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
-        GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
-        GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
-        cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        cryptoCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        cryptoCurrenciesListView.setMinHeight(9 * Layout.LIST_ROW_HEIGHT + 2);
+        cryptoCurrenciesListView.setPrefHeight(10 * Layout.LIST_ROW_HEIGHT + 2);
         placeholder = new AutoTooltipLabel(Res.get("setting.preferences.noAltcoins"));
         placeholder.setWrapText(true);
         cryptoCurrenciesListView.setPlaceholder(placeholder);
-        cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
+        cryptoCurrenciesListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
-                return new ListCell<CryptoCurrency>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -414,7 +454,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, -30d);
                     }
 
                     @Override
@@ -443,12 +483,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        fiatCurrenciesComboBox = FormBuilder.<FiatCurrency>addLabelComboBox(root, ++gridRow).second;
+        fiatCurrenciesComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
+        GridPane.setColumnIndex(fiatCurrenciesComboBox, 2);
+        GridPane.setValignment(fiatCurrenciesComboBox, VPos.TOP);
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
-        fiatCurrenciesComboBox.setButtonCell(new ListCell<FiatCurrency>() {
+        fiatCurrenciesComboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(final FiatCurrency item, boolean empty) {
                 super.updateItem(item, empty);
+                this.setVisible(item != null || !empty);
+
                 if (empty || item == null) {
                     setText(Res.get("setting.preferences.addFiat"));
                 } else {
@@ -456,7 +500,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         });
-        fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
+        fiatCurrenciesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(FiatCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -468,14 +512,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        Tuple2<Label, ComboBox<CryptoCurrency>> labelComboBoxTuple2 = FormBuilder.addLabelComboBox(root, gridRow);
-        cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
+        cryptoCurrenciesComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
+        GridPane.setValignment(cryptoCurrenciesComboBox, VPos.TOP);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
-        cryptoCurrenciesComboBox.setButtonCell(new ListCell<CryptoCurrency>() {
+        cryptoCurrenciesComboBox.setButtonCell(new ListCell<>() {
             @Override
             protected void updateItem(final CryptoCurrency item, boolean empty) {
                 super.updateItem(item, empty);
+                this.setVisible(item != null || !empty);
+
+
                 if (empty || item == null) {
                     setText(Res.get("setting.preferences.addAltcoin"));
                 } else {
@@ -483,7 +530,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 }
             }
         });
-        cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
+        cryptoCurrenciesComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(CryptoCurrency tradeCurrency) {
                 return tradeCurrency.getNameAndCode();
@@ -498,44 +545,36 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void initializeDisplayOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 4);
+        GridPane.setColumnSpan(titledGroupBg, 1);
 
-        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.useAnimations"), "").second;
+//        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        useAnimations = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
-        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"), "").second;
-        resetDontShowAgainButton = addLabelButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"),
-                Res.get("setting.preferences.reset"), 0).second;
+        sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
+        resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
+        resetDontShowAgainButton.getStyleClass().add("compact-button");
+        resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resetDontShowAgainButton, Priority.ALWAYS);
+        GridPane.setColumnIndex(resetDontShowAgainButton, 0);
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(daoOptionsTitledGroupBg, 4);
-        resyncDaoButton = addLabelButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"),
-                Res.get("setting.preferences.dao.resync.button"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
+        resyncDaoButton = addButton(root, gridRow, Res.get("setting.preferences.dao.resync.label"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        resyncDaoButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncDaoButton, Priority.ALWAYS);
 
-        isDaoFullNodeCheckBox = addLabelCheckBox(root, ++gridRow, Res.getWithCol("setting.preferences.dao.isDaoFullNode")).second;
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcUser"));
-        rpcUserLabel = tuple.first;
-        rpcUserLabel.setVisible(false);
-        rpcUserLabel.setManaged(false);
-        rpcUserTextField = tuple.second;
+        isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
+        rpcUserTextField = addInputTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcUser"));
         rpcUserTextField.setVisible(false);
         rpcUserTextField.setManaged(false);
-        Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcPw"));
-        rpcPwLabel = tuple2.first;
-        rpcPwLabel.setVisible(false);
-        rpcPwLabel.setManaged(false);
-        rpcPwTextField = tuple2.second;
+        rpcPwTextField = addPasswordTextField(root, ++gridRow, Res.getWithCol("setting.preferences.dao.rpcPw"));
         rpcPwTextField.setVisible(false);
         rpcPwTextField.setManaged(false);
 
-        rpcUserListener = (observable, oldValue, newValue) -> {
-            preferences.setRpcUser(rpcUserTextField.getText());
-        };
-        rpcPwListener = (observable, oldValue, newValue) -> {
-            preferences.setRpcPw(rpcPwTextField.getText());
-        };
+        rpcUserListener = (observable, oldValue, newValue) -> preferences.setRpcUser(rpcUserTextField.getText());
+        rpcPwListener = (observable, oldValue, newValue) -> preferences.setRpcPw(rpcPwTextField.getText());
     }
 
 
@@ -556,7 +595,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
 
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
-        useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
+        useCustomFee.setSelected(useCustomWithdrawalTxFee);
 
         transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
         if (!useCustomWithdrawalTxFee) {
@@ -570,7 +609,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
-        userLanguageComboBox.setConverter(new StringConverter<String>() {
+        userLanguageComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(String code) {
                 return LanguageUtil.getDisplayName(code);
@@ -612,7 +651,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         userCountryComboBox.setItems(countries);
         userCountryComboBox.getSelectionModel().select(preferences.getUserCountry());
-        userCountryComboBox.setConverter(new StringConverter<Country>() {
+        userCountryComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(Country country) {
                 return CountryUtil.getNameByCode(country.code);
@@ -632,7 +671,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         blockChainExplorerComboBox.setItems(blockExplorers);
         blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
-        blockChainExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
+        blockChainExplorerComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(BlockChainExplorer blockChainExplorer) {
                 return blockChainExplorer.name;
@@ -651,7 +690,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
-        useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
+        useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
         referralIdInputTextField.textProperty().addListener(referralIdListener);
     }
 
@@ -666,7 +705,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
         preferredTradeCurrencyComboBox.getSelectionModel().select(preferences.getPreferredTradeCurrency());
-        preferredTradeCurrencyComboBox.setVisibleRowCount(25);
+        preferredTradeCurrencyComboBox.setVisibleRowCount(12);
         preferredTradeCurrencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
@@ -709,55 +748,52 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         showOwnOffersInOfferBook.setSelected(preferences.isShowOwnOffersInOfferBook());
         showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
 
-        useAnimationsCheckBox.setSelected(preferences.isUseAnimations());
-        useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
+        useAnimations.setSelected(preferences.isUseAnimations());
+        useAnimations.setOnAction(e -> preferences.setUseAnimations(useAnimations.isSelected()));
 
         // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
         // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
 
-        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.isSortMarketCurrenciesNumerically());
-        sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
+        sortMarketCurrenciesNumerically.setSelected(preferences.isSortMarketCurrenciesNumerically());
+        sortMarketCurrenciesNumerically.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
-        avoidStandbyModeCheckBox.setSelected(!preferences.isUseStandbyMode());
-        avoidStandbyModeCheckBox.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyModeCheckBox.isSelected()));
+        avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
+        avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
     }
 
     private void activateDaoPreferences() {
         boolean daoFullNode = preferences.isDaoFullNode();
-        isDaoFullNodeCheckBox.setSelected(daoFullNode);
+        isDaoFullNodeToggleButton.setSelected(daoFullNode);
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
         if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() || rpcPw == null || rpcPw.isEmpty())) {
             log.warn("You have full DAO node selected but have not provided the rpc username and password. We reset daoFullNode to false");
-            isDaoFullNodeCheckBox.setSelected(false);
+            isDaoFullNodeToggleButton.setSelected(false);
         }
         rpcUserTextField.setText(rpcUser);
         rpcPwTextField.setText(rpcPw);
         updateDaoFields();
 
-        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() -> {
-            new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                    .useShutDownButton()
-                    .hideCloseButton()
-                    .show();
-        }));
+        resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() ->
+                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show()));
 
-        isDaoFullNodeCheckBox.setOnAction(e -> {
+        isDaoFullNodeToggleButton.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
-            if (isDaoFullNodeCheckBox.isSelected() && preferences.showAgain(key)) {
+            if (isDaoFullNodeToggleButton.isSelected() && preferences.showAgain(key)) {
                 String url = "https://bisq.network/docs/dao-full-node";
                 new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
-                        .onAction(() -> {
-                            GUIUtil.openWebPage(url);
-                        })
+                        .onAction(() -> GUIUtil.openWebPage(url))
                         .actionButtonText(Res.get("setting.preferences.dao.fullNodeInfo.ok"))
                         .closeButtonText(Res.get("setting.preferences.dao.fullNodeInfo.cancel"))
                         .onClose(() -> UserThread.execute(() -> {
-                            isDaoFullNodeCheckBox.setSelected(false);
+                            isDaoFullNodeToggleButton.setSelected(false);
                             updateDaoFields();
                         }))
                         .dontShowAgainId(key)
@@ -773,14 +809,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void updateDaoFields() {
-        boolean isDaoFullNode = isDaoFullNodeCheckBox.isSelected();
+        boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
         GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 4 : 2);
-        rpcUserLabel.setVisible(isDaoFullNode);
-        rpcUserLabel.setManaged(isDaoFullNode);
         rpcUserTextField.setVisible(isDaoFullNode);
         rpcUserTextField.setManaged(isDaoFullNode);
-        rpcPwLabel.setVisible(isDaoFullNode);
-        rpcPwLabel.setManaged(isDaoFullNode);
         rpcPwTextField.setVisible(isDaoFullNode);
         rpcPwTextField.setManaged(isDaoFullNode);
         preferences.setDaoFullNode(isDaoFullNode);
@@ -822,7 +854,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         if (transactionFeeChangeListener != null)
             feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
-        useCustomFeeCheckbox.selectedProperty().removeListener(useCustomFeeCheckboxListener);
+        useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
         referralIdInputTextField.textProperty().removeListener(referralIdListener);
     }
 
@@ -831,17 +863,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDisplayPreferences() {
-        useAnimationsCheckBox.setOnAction(null);
+        useAnimations.setOnAction(null);
         // useStickyMarketPriceCheckBox.setOnAction(null);
-        sortMarketCurrenciesNumericallyCheckBox.setOnAction(null);
+        sortMarketCurrenciesNumerically.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
-        avoidStandbyModeCheckBox.setOnAction(null);
+        avoidStandbyMode.setOnAction(null);
     }
 
     private void deactivateDaoPreferences() {
         resyncDaoButton.setOnAction(null);
-        isDaoFullNodeCheckBox.setOnAction(null);
+        isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcUserListener);
     }

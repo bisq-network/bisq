@@ -23,6 +23,9 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
+import org.libdohj.Version;
+
+import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
 
@@ -86,10 +89,9 @@ public class WalletAppSetup {
               @Nullable Runnable showFirstPopupIfResyncSPVRequestedHandler,
               Runnable walletPasswordHandler,
               Runnable downloadCompleteHandler,
-              Runnable walletInitializedHandler
-
-    ) {
-        log.info("init");
+              Runnable walletInitializedHandler) {
+        log.info("Initialize WalletAppSetup with BitcoinJ version {} and LibDohJ version {} with hash of BitcoinJ commit {}",
+                VersionMessage.BITCOINJ_VERSION, Version.VERSION, Version.BITCOINJ_VERSION);
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),
@@ -100,7 +102,7 @@ public class WalletAppSetup {
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
                         int peers = (int) numPeers;
-                        getBtcSyncProgress().set(percentage);
+                        btcSyncProgress.set(percentage);
                         if (percentage == 1) {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,

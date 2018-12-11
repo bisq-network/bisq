@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
@@ -48,12 +49,13 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Preconditions;
+
 import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -80,7 +82,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
-    Button exportButton;
+    AutoTooltipButton exportButton;
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
     private final BSFormatter formatter;
@@ -101,7 +103,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
-        this.preferences = preferences;
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -169,15 +170,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
                 String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
                 String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
-                return address1 != null && address2 != null ? address1.compareTo(address2) : 0;
+                return address1.compareTo(address2);
             } else
                 return 0;
         });
-        stateColumn.setComparator((o1, o2) -> model.getState(o1).compareTo(model.getState(o2)));
+        stateColumn.setComparator(Comparator.comparing(model::getState));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
-        exportButton.setText(Res.get("shared.exportCSV"));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -220,15 +221,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
 
     private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.getStyleClass().add("first-column");
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         tradeIdColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem,
                             ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -259,12 +260,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -281,12 +281,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setMarketColumnCellFactory() {
         marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         marketColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -300,12 +299,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setStateColumnCellFactory() {
         stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         stateColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -321,13 +319,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
+        avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
@@ -338,6 +336,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     final Offer offer = trade.getOffer();
+                                    Preconditions.checkNotNull(offer, "Offer must not be null");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,
@@ -348,7 +347,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             model.accountAgeWitnessService,
                                             formatter,
                                             useDevPrivilegeKeys);
-                                    setPadding(new Insets(1, 0, 0, 0));
+                                    setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
@@ -363,12 +362,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -382,12 +380,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -401,12 +398,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -423,12 +419,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<ClosedTradableListItem, ClosedTradableListItem>, TableCell<ClosedTradableListItem,
-                        ClosedTradableListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
                             TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-                        return new TableCell<ClosedTradableListItem, ClosedTradableListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final ClosedTradableListItem item, boolean empty) {
                                 super.updateItem(item, empty);
