@@ -311,14 +311,27 @@ configure(project(':desktop')) {
 
 
 configure(project(':monitor')) {
-    mainClassName = 'bisq.monitor.MonitorMain'
+    mainClassName = 'bisq.monitor.Monitor'
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
 
     dependencies {
-        compile project(':core')
-        compile "com.sparkjava:spark-core:$sparkVersion"
-        compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
+        compile 'org.slf4j:slf4j-api:1.7.22'
+        compile 'ch.qos.logback:logback-core:1.1.10'
+        compile 'ch.qos.logback:logback-classic:1.1.10'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.2'
+        testCompile 'org.junit.jupiter:junit-jupiter-params:5.3.2'
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testRuntime('org.junit.jupiter:junit-jupiter-engine:5.3.2')
     }
 }
 
