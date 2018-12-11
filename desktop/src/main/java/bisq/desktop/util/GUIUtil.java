@@ -813,10 +813,13 @@ public class GUIUtil {
         int maxHeight = rowHeight * maxNumRows + headerHeight;
         checkArgument(maxHeight >= minHeight, "maxHeight cannot be smaller as minHeight");
         int height = Math.min(maxHeight, Math.max(minHeight, size * rowHeight + headerHeight));
-        tableView.setMaxHeight(-1);
-        tableView.setMinHeight(-1);
-        tableView.setMaxHeight(height);
-        tableView.setMinHeight(height);
+
+        tableView.setPrefHeight(-1);
+        // We need to delay the setter to the next render frame as otherwise views don' get updated in some cases
+        // Not 100% clear what causes that issue, but seems the requestLayout method is not called otherwise
+        UserThread.execute(() -> {
+            tableView.setPrefHeight(height);
+        });
     }
 
     public static Tuple2<ComboBox<TradeCurrency>, Integer> addRegionCountryTradeCurrencyComboBoxes(GridPane gridPane,
