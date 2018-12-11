@@ -797,6 +797,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 inputIsMarketBasedPrice = true;
             }
         marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+
+        // We want to trigger a recalculation of the volume
+        UserThread.execute(() -> {
+            onFocusOutVolumeTextField(true, false);
+        });
     }
 
     void onFocusOutVolumeTextField(boolean oldValue, boolean newValue) {
