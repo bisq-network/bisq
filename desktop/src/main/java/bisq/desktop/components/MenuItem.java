@@ -58,7 +58,7 @@ public class MenuItem extends JFXButton implements Toggle {
         this.viewClass = viewClass;
         this.baseNavPath = baseNavPath;
 
-        setLabelText(title.toUpperCase());
+        setLabelText(title);
         setPrefHeight(40);
         setPrefWidth(240);
         setAlignment(Pos.CENTER_LEFT);
