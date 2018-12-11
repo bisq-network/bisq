@@ -815,10 +815,12 @@ public class GUIUtil {
         int height = Math.min(maxHeight, Math.max(minHeight, size * rowHeight + headerHeight));
 
         tableView.setPrefHeight(-1);
+        tableView.setVisible(false);
         // We need to delay the setter to the next render frame as otherwise views don' get updated in some cases
         // Not 100% clear what causes that issue, but seems the requestLayout method is not called otherwise
         UserThread.execute(() -> {
             tableView.setPrefHeight(height);
+            tableView.setVisible(true);
         });
     }
 
