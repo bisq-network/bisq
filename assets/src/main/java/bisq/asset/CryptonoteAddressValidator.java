@@ -49,6 +49,10 @@ public class CryptonoteAddressValidator implements AddressValidator {
 				//Aeon & Blur-type addresses
 				return AddressValidationResult.validAddress();
 			}
+			else if (prefix.length() == 4 && address.length() == 94 + prefix.length()) {
+			    // FourtyTwo type address
+				return AddressValidationResult.validAddress();
+			}
 			else {
 				//Non-supported prefix
 				return AddressValidationResult.invalidStructure();
