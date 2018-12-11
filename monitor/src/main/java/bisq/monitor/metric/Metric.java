@@ -19,11 +19,14 @@ package bisq.monitor.metric;
 
 import java.util.Properties;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Metric base class.
  * 
  * @author Florian Reimair
  */
+@Slf4j
 public abstract class Metric extends Thread {
 
     private static final String INTERVAL = "run.interval";
@@ -50,7 +53,7 @@ public abstract class Metric extends Thread {
      * @param properties
      */
     public void configure(final Properties properties) {
-        System.out.println(this.getName() + " (re)loading config...");
+        log.info("{} (re)loading config...", getName());
 
         // only configure the Properties which belong to us
         final Properties myProperties = new Properties();
@@ -62,7 +65,7 @@ public abstract class Metric extends Thread {
 
         if (suspend && myProperties.getProperty("enabled", "false").equals("true")) {
             suspend = false;
-            System.out.println(this.getName() + " got activated. Starting up.");
+            log.info("{} got activated. Starting up.", getName());
         }
 
         // do some checks
@@ -72,13 +75,13 @@ public abstract class Metric extends Thread {
 
             // some informative log output
             if (myProperties.isEmpty())
-                System.out.println(this.getName() + " is not configured at all. Will not run.");
+                log.error("{} is not configured at all. Will not run.", getName());
             else if (!myProperties.getProperty("enabled", "false").equals("true"))
-                System.out.println(this.getName() + " is deactivated. Will not run.");
+                log.info("{} is deactivated. Will not run.", getName());
             else if (!myProperties.containsKey(INTERVAL))
-                System.out.println(this.getName() + " is missing mandatory '" + INTERVAL + "' property. Will not run.");
+                log.error("{} is missing mandatory '" + INTERVAL + "' property. Will not run.", getName());
             else
-                System.out.println(this.getName() + " is misconfigured. Will not run.");
+                log.error("{} is misconfigured. Will not run.", getName());
         }
 
         interrupt();
@@ -104,7 +107,7 @@ public abstract class Metric extends Thread {
                 }
             }
         }
-        System.out.println(this.getName() + " shutdown");
+        log.info("{} shutdown", getName());
     }
 
     /**
@@ -120,7 +123,7 @@ public abstract class Metric extends Thread {
 
         // interrupt the timer immediately so we can swiftly shut down
         this.interrupt();
-        System.out.println(this.getName() + " shutdown requested");
+        log.debug("{} shutdown requested", getName());
     }
 
 }

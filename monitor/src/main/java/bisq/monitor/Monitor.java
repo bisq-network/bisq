@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import bisq.monitor.metric.Dummy;
 import bisq.monitor.metric.Metric;
+import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;
 
 /**
@@ -31,6 +32,7 @@ import sun.misc.Signal;
  * 
  * @author Florian Reimair
  */
+@Slf4j
 public class Monitor {
 
     private static String[] args = {};
@@ -83,13 +85,13 @@ public class Monitor {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    System.out.println("system halt");
+                    log.trace("system halt");
                 }
             }
         });
 
         // prevent the main thread to terminate
-        System.out.println("joining metrics...");
+        log.trace("joining metrics...");
         for (Metric current : metrics)
             current.join();
     }

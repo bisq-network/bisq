@@ -19,11 +19,14 @@ package bisq.monitor.metric;
 
 import java.util.Properties;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A dummy metric for development purposes.
  * 
  * @author Florian Reimair
  */
+@Slf4j
 public class Dummy extends Metric {
 
     public Dummy() {
@@ -34,13 +37,13 @@ public class Dummy extends Metric {
     public void configure(Properties properties) {
         super.configure(properties);
 
-        System.out.println(this.configuration.toString());
+        log.info(this.configuration.toString());
         // TODO check if we need to restart this Metric
     }
 
     @Override
     protected void execute() {
-        System.out.println(this.getName() + " running");
+        log.info(this.getName() + " running");
     }
 
 }
