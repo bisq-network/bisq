@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -88,14 +89,14 @@ public abstract class BaseProposalFactory<R extends Proposal> {
         try {
             final Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee);
+            Transaction preparedBurnFeeTx = getPreparedProposalTx(fee);
 
             // payload does not have txId at that moment
             byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal);
             byte[] opReturnData = getOpReturnData(hashOfPayload);
 
             // We add the BTC inputs for the miner fee.
-            final Transaction txWithBtcFee = completeTx(preparedBurnFeeTx, opReturnData, proposal);
+            Transaction txWithBtcFee = completeTx(preparedBurnFeeTx, opReturnData, proposal);
 
             // We sign the BSQ inputs of the final tx.
             Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
@@ -104,6 +105,10 @@ public abstract class BaseProposalFactory<R extends Proposal> {
         } catch (WalletException | TransactionVerificationException e) {
             throw new TxException(e);
         }
+    }
+
+    protected Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
+        return bsqWalletService.getPreparedProposalTx(fee);
     }
 
     protected byte[] getOpReturnData(byte[] hashOfPayload) {

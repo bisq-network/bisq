@@ -326,7 +326,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         checkArgument(listingFee % 100 == 0, "Fee must be a multiple of 1 BSQ (100 satoshi).");
         try {
             // We create a prepared Bsq Tx for the listing fee.
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedBurnFeeTx(Coin.valueOf(listingFee));
+            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedAssetListingFeeTx(Coin.valueOf(listingFee));
             byte[] hash = AssetConsensus.getHash(statefulAsset);
             byte[] opReturnData = AssetConsensus.getOpReturnData(hash);
             // We add the BTC inputs for the miner fee.

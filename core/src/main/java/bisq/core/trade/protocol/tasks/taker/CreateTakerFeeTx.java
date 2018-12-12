@@ -104,7 +104,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         });
             } else {
                 final BsqWalletService bsqWalletService = processModel.getBsqWalletService();
-                Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedBurnFeeTx(trade.getTakerFee());
+                Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedTradeFeeTx(trade.getTakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,

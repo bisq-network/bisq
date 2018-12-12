@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal.reimbursement;
 
+import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -78,6 +79,11 @@ public class ReimbursementProposalFactory extends BaseProposalFactory<Reimbursem
                 link,
                 requestedBsq,
                 bsqAddress);
+    }
+
+    @Override
+    protected Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
+        return bsqWalletService.getPreparedIssuanceCandidateTx(fee);
     }
 
     @Override

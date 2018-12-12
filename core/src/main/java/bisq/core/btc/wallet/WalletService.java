@@ -465,6 +465,10 @@ public abstract class WalletService {
         return outputs;
     }
 
+    public int getNumUtxos() {
+        return wallet.getUnspents().size();
+    }
+
     public boolean isAddressUnused(Address address) {
         return getNumTxOutputsForAddress(address) == 0;
     }
