@@ -68,7 +68,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void start() {
-        daoStateService.getCycles().add(getFirstCycle());
+        addFirstCycle();
     }
 
 
@@ -95,6 +95,28 @@ public class CycleService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addFirstCycle() {
+        daoStateService.getCycles().add(getFirstCycle());
+    }
+
+    public int getCycleIndex(Cycle cycle) {
+        return (cycle.getHeightOfFirstBlock() - genesisBlockHeight) / cycle.getDuration();
+    }
+
+    public boolean isTxInCycle(Cycle cycle, String txId) {
+        return daoStateService.getTx(txId).filter(tx -> isBlockHeightInCycle(tx.getBlockHeight(), cycle)).isPresent();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isBlockHeightInCycle(int blockHeight, Cycle cycle) {
+        return blockHeight >= cycle.getHeightOfFirstBlock() &&
+                blockHeight <= cycle.getHeightOfLastBlock();
+    }
 
     private Optional<Cycle> maybeCreateNewCycle(int blockHeight, LinkedList<Cycle> cycles) {
         // We want to set the correct phase and cycle before we start parsing a new block.
@@ -127,24 +149,6 @@ public class CycleService implements DaoStateListener, DaoSetupService {
                 .collect(Collectors.toList());
         return new Cycle(genesisBlockHeight, ImmutableList.copyOf(daoPhasesWithDefaultDuration));
     }
-
-    public int getCycleIndex(Cycle cycle) {
-        return (cycle.getHeightOfFirstBlock() - genesisBlockHeight) / cycle.getDuration();
-    }
-
-    public boolean isTxInCycle(Cycle cycle, String txId) {
-        return daoStateService.getTx(txId).filter(tx -> isBlockHeightInCycle(tx.getBlockHeight(), cycle)).isPresent();
-    }
-
-    private boolean isBlockHeightInCycle(int blockHeight, Cycle cycle) {
-        return blockHeight >= cycle.getHeightOfFirstBlock() &&
-                blockHeight <= cycle.getHeightOfLastBlock();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Cycle createNewCycle(int blockHeight, Cycle previousCycle) {
         List<DaoPhase> daoPhaseList = previousCycle.getDaoPhaseList().stream()
