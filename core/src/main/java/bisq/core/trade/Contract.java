@@ -17,8 +17,11 @@
 
 package bisq.core.trade;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
@@ -218,6 +221,17 @@ public final class Contract implements NetworkPayload {
 
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
+    }
+
+    public Volume getTradeVolume() {
+        Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
+
+        if (getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
+            volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+        else if (CurrencyUtil.isFiatCurrency(getOfferPayload().getCurrencyCode()))
+            volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+
+        return volumeByAmount;
     }
 
     public Price getTradePrice() {
