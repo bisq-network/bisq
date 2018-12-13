@@ -70,14 +70,16 @@ public class TxOutputParser {
     // Private
     private int lockTime;
     private final List<TempTxOutput> utxoCandidates = new ArrayList<>();
+    private boolean confirmed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    TxOutputParser(DaoStateService daoStateService) {
+    TxOutputParser(DaoStateService daoStateService, boolean confirmed) {
         this.daoStateService = daoStateService;
+        this.confirmed = confirmed;
     }
 
 
@@ -132,7 +134,8 @@ public class TxOutputParser {
     }
 
     void commitUTXOCandidates() {
-        utxoCandidates.forEach(output -> daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
+        utxoCandidates.forEach(output ->
+                daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output), confirmed));
     }
 
     /**

@@ -113,7 +113,8 @@ public class BlockParser {
                 txParser.findTx(rawTx,
                         genesisTxId,
                         genesisBlockHeight,
-                        genesisTotalSupply)
+                        genesisTotalSupply,
+                        true)
                         .ifPresent(txList::add));
         log.info("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
 

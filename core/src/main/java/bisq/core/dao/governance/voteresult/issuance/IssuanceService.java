@@ -80,7 +80,7 @@ public class IssuanceService {
                         String pubKey = txInput.getPubKey();
                         Issuance issuance = new Issuance(tx.getId(), chainHeight, amount, pubKey, issuanceType);
                         daoStateService.addIssuance(issuance);
-                        daoStateService.addUnspentTxOutput(txOutput);
+                        daoStateService.addUnspentTxOutput(txOutput, true);
 
                         StringBuilder sb = new StringBuilder();
                         sb.append("\n################################################################################\n");
