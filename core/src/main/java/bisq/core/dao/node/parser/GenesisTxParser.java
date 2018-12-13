@@ -47,7 +47,7 @@ public class GenesisTxParser {
         ImmutableList<TempTxOutput> outputs = genesisTx.getTempTxOutputs();
         for (int i = 0; i < outputs.size(); ++i) {
             TempTxOutput tempTxOutput = outputs.get(i);
-            daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput));
+            daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(tempTxOutput), true);
         }
     }
 

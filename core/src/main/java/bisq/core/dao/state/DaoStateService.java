@@ -21,6 +21,7 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.UnconfirmedState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -65,6 +66,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class DaoStateService implements DaoSetupService {
     private final DaoState daoState;
+    private final UnconfirmedState unconfirmedState;
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
@@ -78,6 +80,7 @@ public class DaoStateService implements DaoSetupService {
     @Inject
     public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
         this.daoState = daoState;
+        this.unconfirmedState = new UnconfirmedState();
         this.genesisTxInfo = genesisTxInfo;
         this.bsqFormatter = bsqFormatter;
     }
@@ -396,12 +399,22 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getUnspentTxOutputMap();
     }
 
-    public void addUnspentTxOutput(TxOutput txOutput) {
-        getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
+    public void addUnspentTxOutput(TxOutput txOutput, boolean confirmed) {
+        if (confirmed) {
+            getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
+        } else {
+            unconfirmedState.getUnspentTxOutputMap().put(txOutput.getKey(),txOutput);
+            log.info("Unconfirmed txout added, txid=" + txOutput.getTxId());
+        }
     }
 
-    public void removeUnspentTxOutput(TxOutput txOutput) {
-        getUnspentTxOutputMap().remove(txOutput.getKey());
+    public void removeUnspentTxOutput(TxOutput txOutput, boolean confirmed) {
+        if (confirmed) {
+            getUnspentTxOutputMap().remove(txOutput.getKey());
+        } else {
+            unconfirmedState.getUnspentTxOutputMap().remove(txOutput.getKey());
+            log.info("Unconfirmed txout spent, txid=" + txOutput.getTxId());
+        }
     }
 
     public boolean isUnspent(TxOutputKey key) {
@@ -889,8 +902,13 @@ public class DaoStateService implements DaoSetupService {
     // SpentInfo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSpentInfo(TxOutputKey txOutputKey, SpentInfo spentInfo) {
-        daoState.getSpentInfoMap().put(txOutputKey, spentInfo);
+    public void setSpentInfo(TxOutputKey txOutputKey, SpentInfo spentInfo, boolean confirmed) {
+        if (confirmed) {
+            daoState.getSpentInfoMap().put(txOutputKey, spentInfo);
+        } else {
+            unconfirmedState.getSpentInfoMap().put(txOutputKey, spentInfo);
+            log.info("Unconfirmed txout parsed, txid=" + txOutputKey.getTxId());
+        }
     }
 
     public Optional<SpentInfo> getSpentInfo(TxOutput txOutput) {

@@ -51,6 +51,7 @@ public class TxInputParser {
 
     // Private
     private int numVoteRevealInputs = 0;
+    private boolean confirmed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,8 +59,10 @@ public class TxInputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TxInputParser(DaoStateService daoStateService) {
+    public TxInputParser(DaoStateService daoStateService, boolean confirmed) {
+
         this.daoStateService = daoStateService;
+        this.confirmed = confirmed;
     }
 
 
@@ -135,8 +138,10 @@ public class TxInputParser {
                                 break;
                         }
 
-                        daoStateService.setSpentInfo(connectedTxOutput.getKey(), new SpentInfo(blockHeight, txId, inputIndex));
-                        daoStateService.removeUnspentTxOutput(connectedTxOutput);
+                        daoStateService.setSpentInfo(connectedTxOutput.getKey(),
+                                new SpentInfo(blockHeight, txId, inputIndex),
+                                confirmed);
+                        daoStateService.removeUnspentTxOutput(connectedTxOutput, confirmed);
                     });
         } else {
             log.warn("Connected txOutput {} at input {} of txId {} is confiscated ", txOutputKey, inputIndex, txId);
