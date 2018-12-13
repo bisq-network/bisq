@@ -113,6 +113,13 @@ public class BisqRiskAnalysis implements RiskAnalysis {
         if (tx.getConfidence().getSource() == TransactionConfidence.Source.SELF)
             return Result.OK;
 
+        // Relative time-locked transactions are risky too. We can't check the locks because usually we don't know the
+        // spent outputs (to know when they were created).
+        if (tx.hasRelativeLockTime()) {
+            nonFinal = tx;
+            return Result.NON_FINAL;
+        }
+
         if (wallet == null)
             return null;
 
@@ -157,7 +164,7 @@ public class BisqRiskAnalysis implements RiskAnalysis {
      */
     public static RuleViolation isStandard(Transaction tx) {
         // TODO: Finish this function off.
-        if (tx.getVersion() > 1 || tx.getVersion() < 1) {
+        if (tx.getVersion() > 2 || tx.getVersion() < 1) {
             log.warn("TX considered non-standard due to unknown version number {}", tx.getVersion());
             return RuleViolation.VERSION;
         }
