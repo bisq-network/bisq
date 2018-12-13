@@ -6,7 +6,7 @@ mkdir -p deploy
 set -e
 
 # Edit version
-version=0.9.0
+version=0.9.1
 
 sharedDir="/media/sf_vm_shared_ubuntu"
 

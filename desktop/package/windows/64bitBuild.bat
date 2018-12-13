@@ -7,7 +7,7 @@
 
 cd ../../
 
-SET version=0.9.0
+SET version=0.9.1
 
 :: Private setup
 ::SET outdir=\\VBOXSVR\vm_shared_windows
