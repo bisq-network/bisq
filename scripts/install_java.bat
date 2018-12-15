@@ -1,6 +1,6 @@
 @echo off
 
-::Ensure we have administrative privileges in order to install files and set environment variables
+:: Ensure we have administrative privileges in order to install files and set environment variables
 >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
 if '%errorlevel%' == '0' (
     ::If no error is encountered, we have administrative privileges
@@ -30,7 +30,7 @@ if exist "%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%" (
 
 echo Downloading required files to %TEMP%
 powershell -Command "Invoke-WebRequest %jdk_url% -OutFile $env:temp\%jdk_filename%.tar.gz"
-::Download 7zip (command line version) in order to extract the tar.gz file since there is no native support in Windows
+:: Download 7zip (command line version) in order to extract the tar.gz file since there is no native support in Windows
 powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7za920.zip -OutFile $env:temp\7za920.zip"
 powershell -Command "Expand-Archive $env:temp\7za920.zip -DestinationPath $env:temp\7za920 -Force"
 
@@ -49,8 +49,9 @@ del /Q %TEMP%\%jdk_filename%.tar.gz
 
 :SetEnvVars
 echo Setting environment variables
-setx /M JAVA_HOME "%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%"
+powershell -Command "[Environment]::SetEnvironmentVariable('JAVA_HOME', '%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%', 'Machine')"
 set java_bin=%%JAVA_HOME%%\bin
-echo %PATH%|find /i "%java_bin%">nul  || setx /M PATH "%PATH%;%java_bin%"
+echo %PATH%|find /i "%java_bin%">nul || powershell -Command "[Environment]::SetEnvironmentVariable('PATH', '%PATH%;%java_bin%', 'Machine')"
 
+echo Done!
 pause
