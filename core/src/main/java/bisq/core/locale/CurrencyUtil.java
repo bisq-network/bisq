@@ -137,6 +137,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XMR", "Monero"));
         result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
+        result.add(new CryptoCurrency("REOSC", "REOSC Ecosystem"));        
         result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
         result.add(new CryptoCurrency("UNO", "Unobtanium"));
