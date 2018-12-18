@@ -95,8 +95,6 @@ public class WalletConfig extends AbstractIdleService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface BisqWalletFactory extends WalletProtobufSerializer.WalletFactory {
-        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
-
         Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet);
     }
 
