@@ -65,6 +65,7 @@ class BtcDeterministicKeyChain extends DeterministicKeyChain {
         return new BtcDeterministicKeyChain(keyCrypter, aesKey, this);
     }
 
+    @Override
     protected DeterministicKeyChain makeKeyChainFromSeed(DeterministicSeed seed) {
         return new BtcDeterministicKeyChain(seed);
     }
