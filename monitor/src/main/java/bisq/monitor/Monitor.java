@@ -28,6 +28,7 @@ import org.berndpruenster.netlayer.tor.Tor;
 
 import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.metric.Metric;
+import bisq.monitor.metric.TorRoundtripTime;
 import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;
 
@@ -62,6 +63,7 @@ public class Monitor {
 
         // assemble Metrics
         metrics.add(new TorStartupTime());
+        metrics.add(new TorRoundtripTime());
 
         // configure Metrics
         Properties properties = getProperties();
