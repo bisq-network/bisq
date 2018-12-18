@@ -327,6 +327,10 @@ configure(project(':monitor')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6') {
+            exclude(module: 'slf4j-api')
+        }
+
         testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.2'
         testCompile 'org.junit.jupiter:junit-jupiter-params:5.3.2'
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"

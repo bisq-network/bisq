@@ -17,10 +17,14 @@
 
 package bisq.monitor;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
 
 import bisq.monitor.metric.Dummy;
 import bisq.monitor.metric.Metric;
@@ -37,7 +41,7 @@ public class Monitor {
 
     private static String[] args = {};
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         Monitor.args = args;
         new Monitor().start();
     }
@@ -52,7 +56,10 @@ public class Monitor {
      * 
      * @throws Exception
      */
-    private void start() throws Exception {
+    private void start() throws Throwable {
+        // start Tor
+        Tor.setDefault(new NativeTor(new File("monitor-tor")));
+
         // assemble Metrics
         metrics.add(new Dummy());
 
