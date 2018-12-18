@@ -20,6 +20,8 @@ package bisq.monitor.metric;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Properties;
+
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
@@ -33,16 +35,29 @@ import org.berndpruenster.netlayer.tor.Torrc;
  */
 public class TorStartupTime extends Metric {
 
+    private static final String SOCKS_PORT = "run.socksPort";
     private final File torWorkingDirectory = new File("metric_torStartupTime");
-    private final Torrc torOverrides;
+    private Torrc torOverrides;
 
-    public TorStartupTime() throws IOException {
+    public TorStartupTime() {
         super();
+    }
 
-        LinkedHashMap<String, String> overrides = new LinkedHashMap<String, String>();
-        overrides.put("SOCKSPort", "90501");
+    @Override
+    public void configure(Properties properties) {
+        synchronized (this) {
+            super.configure(properties);
 
-        torOverrides = new Torrc(overrides);
+            LinkedHashMap<String, String> overrides = new LinkedHashMap<String, String>();
+            overrides.put("SOCKSPort", configuration.getProperty(SOCKS_PORT, "90500"));
+
+            try {
+                torOverrides = new Torrc(overrides);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

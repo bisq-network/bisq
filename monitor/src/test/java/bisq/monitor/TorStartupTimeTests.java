@@ -56,6 +56,7 @@ public class TorStartupTimeTests {
         Properties configuration = new Properties();
         configuration.put("TorStartupTimeDut.enabled", "true");
         configuration.put("TorStartupTimeDut.run.interval", "2");
+        configuration.put("TorStartupTimeDut.run.socksPort", "9999");
 
         TorStartupTimeDut DUT = new TorStartupTimeDut();
         DUT.configure(configuration);
