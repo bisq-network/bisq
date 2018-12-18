@@ -27,12 +27,7 @@ import org.berndpruenster.netlayer.tor.Torrc;
 
 /**
  * A Metric to measure the deployment and startup time of the packaged Tor
- * binaries. The data offered to the Prometheus server reflects the last run.
- * <p>
- * Note that scraping this very metric more often than the interval value
- * results in equal values which in turn affects subsequent calculations like
- * average. However, we consider this to be good enough - and as long we are
- * committed to use Prometheus, we really do not have a choice.
+ * binaries.
  * 
  * @author Florian Reimair
  */

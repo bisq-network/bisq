@@ -31,7 +31,6 @@ public abstract class Metric extends Thread {
 
     private static final String INTERVAL = "run.interval";
     private volatile boolean shutdown = false;
-    protected Properties properties;
 
     /**
      * The properties of this very {@link Metric}
