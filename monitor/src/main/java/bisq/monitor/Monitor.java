@@ -26,7 +26,7 @@ import java.util.Properties;
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 
-import bisq.monitor.metric.Dummy;
+import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.metric.Metric;
 import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;
@@ -61,7 +61,7 @@ public class Monitor {
         Tor.setDefault(new NativeTor(new File("monitor-tor")));
 
         // assemble Metrics
-        metrics.add(new Dummy());
+        metrics.add(new TorStartupTime());
 
         // configure Metrics
         Properties properties = getProperties();
