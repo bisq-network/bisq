@@ -119,6 +119,19 @@ public abstract class Metric extends Thread {
     protected abstract void execute();
 
     /**
+     * Report our findings.
+     * <p>
+     * TODO atm we construct the report string to be used for graphite. We, of
+     * course, need to send it to the graphite service eventually.
+     * 
+     * @param value
+     */
+    protected void report(long value) {
+        String report = "bisq." + getName() + " " + value + " " + System.currentTimeMillis();
+        System.err.println("Report: " + report);
+    }
+
+    /**
      * Initiate graceful shutdown of the Metric.
      */
     public void shutdown() {
