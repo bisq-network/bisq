@@ -52,7 +52,7 @@ public abstract class Metric extends Thread {
      * 
      * @param properties
      */
-    public void configure(final Properties properties) {
+    public synchronized void configure(final Properties properties) {
         log.info("{} (re)loading config...", getName());
 
         // only configure the Properties which belong to us
@@ -99,7 +99,10 @@ public abstract class Metric extends Thread {
                         // TODO Auto-generated catch block
                     }
 
-                execute();
+                synchronized (this) {
+                    execute();
+                }
+
                 try {
                     Thread.sleep(Long.parseLong(configuration.getProperty(INTERVAL)) * 1000);
                 } catch (InterruptedException ignore) {
@@ -121,8 +124,10 @@ public abstract class Metric extends Thread {
     public void shutdown() {
         shutdown = true;
 
-        // interrupt the timer immediately so we can swiftly shut down
-        this.interrupt();
+        synchronized (this) {
+            // interrupt the timer immediately so we can swiftly shut down
+            this.interrupt();
+        }
         log.debug("{} shutdown requested", getName());
     }
 
