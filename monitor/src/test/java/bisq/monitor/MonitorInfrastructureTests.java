@@ -40,9 +40,13 @@ public class MonitorInfrastructureTests {
         public Dummy() {
         }
 
+        public boolean active() {
+            return enabled();
+        }
+
         @Override
         protected void execute() {
-            log.info("{} running", getName());
+            // do nothing
         }
 
     }
@@ -63,8 +67,7 @@ public class MonitorInfrastructureTests {
         Dummy DUT = new Dummy();
         DUT.configure(lut.get(configuration));
         DUT.start();
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.WAITING, DUT.getState());
+        Assert.assertFalse(DUT.active());
     }
 
     @Test
@@ -76,8 +79,7 @@ public class MonitorInfrastructureTests {
         Dummy DUT = new Dummy();
         DUT.configure(correct);
         DUT.start();
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
+        Assert.assertTrue(DUT.active());
 
         // graceful shutdown
         DUT.shutdown();
@@ -101,33 +103,26 @@ public class MonitorInfrastructureTests {
         // disable
         DUT.configure(new Properties());
         DUT.start();
-        // wait for the thread to be started
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.WAITING, DUT.getState());
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
+        Assert.assertFalse(DUT.active());
+        Assert.assertTrue(DUT2.active());
 
         // enable
         Properties properties = new Properties();
         properties.put("Dummy.enabled", "true");
         properties.put("Dummy.run.interval", "1");
         DUT.configure(properties);
-        // wait for things to be done
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
+        Assert.assertTrue(DUT.active());
+        Assert.assertTrue(DUT2.active());
 
         // disable again
         DUT.configure(new Properties());
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.WAITING, DUT.getState());
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
+        Assert.assertFalse(DUT.active());
+        Assert.assertTrue(DUT2.active());
 
         // enable again
         DUT.configure(properties);
-        // wait for things to be done
-        Thread.sleep(100);
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT.getState());
-        Assert.assertEquals(Thread.State.TIMED_WAITING, DUT2.getState());
+        Assert.assertTrue(DUT.active());
+        Assert.assertTrue(DUT2.active());
 
         // graceful shutdown
         DUT.shutdown();

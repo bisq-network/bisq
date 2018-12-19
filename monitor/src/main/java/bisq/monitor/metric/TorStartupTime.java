@@ -45,9 +45,9 @@ public class TorStartupTime extends Metric {
 
     @Override
     public void configure(Properties properties) {
-        synchronized (this) {
-            super.configure(properties);
+        super.configure(properties);
 
+        synchronized (this) {
             LinkedHashMap<String, String> overrides = new LinkedHashMap<String, String>();
             overrides.put("SOCKSPort", configuration.getProperty(SOCKS_PORT, "90500"));
 

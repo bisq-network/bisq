@@ -18,6 +18,7 @@
 package bisq.monitor.metric;
 
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +37,60 @@ public abstract class Metric extends Thread {
      * The properties of this very {@link Metric}
      */
     protected Properties configuration;
-    protected boolean suspend = false;
 
+    /**
+     * enable/disable helper
+     */
+    private final ReentrantLock lock = new ReentrantLock();
+
+    /**
+     * disable execution
+     */
+    private void disable() {
+        if (enabled())
+            lock.lock();
+    }
+
+    /**
+     * enable execution
+     */
+    private void enable() {
+        if (!enabled())
+            lock.unlock();
+    }
+
+    /**
+     * @return true if execution is enabled
+     */
+    protected boolean enabled() {
+        return !lock.isLocked();
+    }
+
+    /**
+     * puts the Thread into a waiting position in case the Metric is disabled.
+     * Blocking! Resumes execution if the Metric gets re-enabled.
+     */
+    private void waitIfDisabled() {
+        // the thread gets into a waiting position until anyone unlocks the lock. If we
+        // are suspended, we wait.
+        lock.lock();
+        // if execution gets resumed, we continue and readily release the lock as its
+        // sole purpose is to control our execution
+        lock.unlock();
+    }
+
+    /**
+     * Constructor.
+     */
     protected Metric() {
         // set human readable name
         super.setName(this.getClass().getSimpleName());
 
         // set as daemon, so that the jvm does not terminate the thread
         setDaemon(true);
+
+        // disable by default
+        disable();
     }
 
     /**
@@ -51,62 +98,68 @@ public abstract class Metric extends Thread {
      * 
      * @param properties
      */
-    public synchronized void configure(final Properties properties) {
-        log.info("{} (re)loading config...", getName());
+    public void configure(final Properties properties) {
+        synchronized (this) {
+            log.info("{} (re)loading config...", getName());
 
-        // only configure the Properties which belong to us
-        final Properties myProperties = new Properties();
-        properties.forEach((k, v) -> {
-            String key = (String) k;
-            if (key.startsWith(getName()))
-                myProperties.put(key.substring(key.indexOf(".") + 1), v);
-        });
+            // only configure the Properties which belong to us
+            final Properties myProperties = new Properties();
+            properties.forEach((k, v) -> {
+                String key = (String) k;
+                if (key.startsWith(getName()))
+                    myProperties.put(key.substring(key.indexOf(".") + 1), v);
+            });
 
-        if (suspend && myProperties.getProperty("enabled", "false").equals("true")) {
-            suspend = false;
-            log.info("{} got activated. Starting up.", getName());
+            // configure all properties that belong to us
+            this.configuration = myProperties;
+
+            // decide whether to enable or disable the task
+            if (myProperties.isEmpty() || !myProperties.getProperty("enabled", "false").equals("true")
+                    || !myProperties.containsKey(INTERVAL)) {
+                disable();
+
+                // some informative log output
+                if (myProperties.isEmpty())
+                    log.error("{} is not configured at all. Will not run.", getName());
+                else if (!myProperties.getProperty("enabled", "false").equals("true"))
+                    log.info("{} is deactivated. Will not run.", getName());
+                else if (!myProperties.containsKey(INTERVAL))
+                    log.error("{} is missing mandatory '" + INTERVAL + "' property. Will not run.", getName());
+                else
+                    log.error("{} is misconfigured. Will not run.", getName());
+            } else if (!enabled() && myProperties.getProperty("enabled", "false").equals("true")) {
+                // check if this Metric got activated after being disabled.
+                // if so, resume execution
+                enable();
+                log.info("{} got activated. Starting up.", getName());
+            }
         }
-
-        // do some checks
-        if (myProperties.isEmpty() || !myProperties.getProperty("enabled", "false").equals("true")
-                || !myProperties.containsKey(INTERVAL)) {
-            suspend = true;
-
-            // some informative log output
-            if (myProperties.isEmpty())
-                log.error("{} is not configured at all. Will not run.", getName());
-            else if (!myProperties.getProperty("enabled", "false").equals("true"))
-                log.info("{} is deactivated. Will not run.", getName());
-            else if (!myProperties.containsKey(INTERVAL))
-                log.error("{} is missing mandatory '" + INTERVAL + "' property. Will not run.", getName());
-            else
-                log.error("{} is misconfigured. Will not run.", getName());
-        }
-
-        interrupt();
-        this.configuration = myProperties;
     }
 
     @Override
     public void run() {
         while (!shutdown) {
+            waitIfDisabled();
+
+            // if we get here after getting resumed we check for the shutdown condition
+            if (shutdown)
+                break;
+
+            // if not, execute all the things
             synchronized (this) {
-                while (suspend)
-                    try {
-                        wait();
-                    } catch (InterruptedException ignore) {
-                        // TODO Auto-generated catch block
-                    }
+                execute();
+            }
 
-                synchronized (this) {
-                    execute();
-                }
+            // make sure our configuration is not changed in the moment we want to query it
+            String interval;
+            synchronized (this) {
+                interval = configuration.getProperty(INTERVAL);
+            }
 
-                try {
-                    Thread.sleep(Long.parseLong(configuration.getProperty(INTERVAL)) * 1000);
-                } catch (InterruptedException ignore) {
-                    // TODO Auto-generated catch block
-                }
+            // and go to sleep for the configured amount of time.
+            try {
+                Thread.sleep(Long.parseLong(interval) * 1000);
+            } catch (InterruptedException ignore) {
             }
         }
         log.info("{} shutdown", getName());
@@ -136,10 +189,9 @@ public abstract class Metric extends Thread {
     public void shutdown() {
         shutdown = true;
 
-        synchronized (this) {
-            // interrupt the timer immediately so we can swiftly shut down
-            this.interrupt();
-        }
+        // resume execution if suspended
+        enable();
+
         log.debug("{} shutdown requested", getName());
     }
 
