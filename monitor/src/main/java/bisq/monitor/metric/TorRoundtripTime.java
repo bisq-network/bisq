@@ -18,13 +18,17 @@
 package bisq.monitor.metric;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.LongSummaryStatistics;
+import java.util.Map;
+
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksException;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
 /**
@@ -34,6 +38,7 @@ import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
  */
 public class TorRoundtripTime extends Metric {
 
+    private static final String SAMPLE_SIZE = "run.sampleSize";
     private static final String HOSTS = "run.hosts";
 
     public TorRoundtripTime() {
@@ -52,28 +57,57 @@ public class TorRoundtripTime extends Metric {
                 // parse Url
                 URL tmp = new URL(current);
 
-                // start timer - we do not need System.nanoTime as we expect our result to be in
-                // seconds time.
-                long start = System.currentTimeMillis();
+                List<Long> samples = new ArrayList<>();
 
-                // connect
-                socket = new SocksSocket(proxy, tmp.getHost(), tmp.getPort());
+                while (samples.size() < Integer.parseInt(configuration.getProperty(SAMPLE_SIZE, "1"))) {
+                    // start timer - we do not need System.nanoTime as we expect our result to be in
+                    // seconds time.
+                    long start = System.currentTimeMillis();
 
-                // by the time we get here, we are connected
-                report(System.currentTimeMillis() - start);
+                    // connect
+                    socket = new SocksSocket(proxy, tmp.getHost(), tmp.getPort());
+
+                    // by the time we get here, we are connected
+                    samples.add(System.currentTimeMillis() - start);
+
+                    // cleanup
+                    socket.close();
+                }
+
+                // aftermath
+                Collections.sort(samples);
+
+                // - average, max, min , samplesize
+                LongSummaryStatistics statistics = samples.stream().mapToLong(val -> val).summaryStatistics();
+
+                Map<String, String> results = new HashMap<>();
+                results.put("average", String.valueOf(Math.round(statistics.getAverage())));
+                results.put("max", String.valueOf(statistics.getMax()));
+                results.put("min", String.valueOf(statistics.getMin()));
+                results.put("sampleSize", String.valueOf(statistics.getCount()));
+
+                // - p25, median, p75
+                Integer[] percentiles = new Integer[]{25, 50, 75};
+                for(Integer percentile : percentiles) {
+                    double rank = statistics.getCount() * percentile / 100;
+                    Long percentileValue;
+                    if (samples.size() <= rank + 1)
+                        percentileValue = samples.get(samples.size() - 1);
+                    else if (Math.floor(rank) == rank)
+                        percentileValue = samples.get((int) rank);
+                    else
+                        percentileValue = Math.round(samples.get((int) Math.floor(rank))
+                                + (samples.get((int) (Math.floor(rank) + 1)) - samples.get((int) Math.floor(rank)))
+                                        / (rank - Math.floor(rank)));
+                    results.put("p" + percentile, String.valueOf(percentileValue));
+                }
+
+                // report
+                report(results);
             }
-        } catch (TorCtlException | SocksException | UnknownHostException | MalformedURLException e) {
+        } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        } finally {
-            // close the connection
-            if (socket != null)
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
         }
     }
 }

@@ -17,6 +17,8 @@
 
 package bisq.monitor.metric;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -179,8 +181,25 @@ public abstract class Metric extends Thread {
      * @param value
      */
     protected void report(long value) {
-        String report = "bisq." + getName() + " " + value + " " + System.currentTimeMillis();
-        System.err.println("Report: " + report);
+        HashMap<String, String> result = new HashMap<String, String>();
+        result.put("", String.valueOf(value));
+        report(result);
+    }
+
+    /**
+     * Report our findings.
+     * <p>
+     * TODO atm we construct the report string to be used for graphite. We, of
+     * course, need to send it to the graphite service eventually.
+     * 
+     * @param values Map<key,value>
+     */
+    protected void report(Map<String, String> values) {
+        long timestamp = System.currentTimeMillis();
+        values.forEach((key, value) -> {
+            String report = "bisq." + getName() + ("".equals(key) ? "" : "." + key) + " " + value + " " + timestamp;
+            System.err.println("Report: " + report);
+        });
     }
 
     /**
