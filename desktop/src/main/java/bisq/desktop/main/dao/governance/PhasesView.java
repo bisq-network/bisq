@@ -22,8 +22,8 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.DaoPhase;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -57,9 +57,7 @@ public class PhasesView implements DaoStateListener {
     public int addGroup(GridPane gridPane, int gridRow) {
         addTitledGroupBg(gridPane, gridRow, 1, Res.get("dao.cycle.headline"));
         separatedPhaseBars = createSeparatedPhaseBars();
-        GridPane.setColumnSpan(separatedPhaseBars, 2);
-        GridPane.setColumnIndex(separatedPhaseBars, 0);
-        GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE - 6, 0, 0, 0));
+        GridPane.setMargin(separatedPhaseBars, new Insets(Layout.FIRST_ROW_DISTANCE + 5, 0, 0, 0));
         GridPane.setRowIndex(separatedPhaseBars, gridRow);
         gridPane.getChildren().add(separatedPhaseBars);
         return gridRow;

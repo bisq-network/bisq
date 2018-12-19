@@ -34,7 +34,6 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.TxMalleabilityException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -51,7 +50,6 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -60,13 +58,12 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import javafx.beans.value.ChangeListener;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
@@ -91,8 +88,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private InputTextField receiversAddressInputTextField, receiversBtcAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
     private TitledGroupBg btcTitledGroupBg;
-    private Label receiversBtcAddressLabel;
-    private Label btcAmountLabel;
     private ChangeListener<String> inputTextFieldListener;
 
 
@@ -213,16 +208,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void addSendBsqGroup() {
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 3);
 
-        receiversAddressInputTextField = addLabelInputTextField(root, gridRow,
-                Res.get("dao.wallet.send.receiverAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
+        receiversAddressInputTextField = addInputTextField(root, gridRow,
+                Res.get("dao.wallet.send.receiverAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         receiversAddressInputTextField.setValidator(bsqAddressValidator);
+        GridPane.setColumnSpan(receiversAddressInputTextField, 3);
 
-        amountInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.amount")).second;
-        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
+        amountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.setAmount", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         amountInputTextField.setValidator(bsqValidator);
+        GridPane.setColumnSpan(amountInputTextField, 3);
 
         focusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue)
@@ -263,36 +259,27 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
     private void setSendBtcGroupVisibleState(boolean visible) {
         btcTitledGroupBg.setVisible(visible);
-        receiversBtcAddressLabel.setVisible(visible);
         receiversBtcAddressInputTextField.setVisible(visible);
         btcAmountInputTextField.setVisible(visible);
-        btcAmountLabel.setVisible(visible);
         sendBtcButton.setVisible(visible);
 
         btcTitledGroupBg.setManaged(visible);
-        receiversBtcAddressLabel.setManaged(visible);
         receiversBtcAddressInputTextField.setManaged(visible);
         btcAmountInputTextField.setManaged(visible);
-        btcAmountLabel.setManaged(visible);
         sendBtcButton.setManaged(visible);
     }
 
     private void addSendBtcGroup() {
         btcTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.send.sendBtcFunds"), Layout.GROUP_DISTANCE);
-
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, gridRow,
+        GridPane.setColumnSpan(btcTitledGroupBg, 3);
+        receiversBtcAddressInputTextField = addInputTextField(root, gridRow,
                 Res.get("dao.wallet.send.receiverBtcAddress"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        receiversBtcAddressLabel = tuple.first;
-        receiversBtcAddressInputTextField = tuple.second;
-        receiversBtcAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
         receiversBtcAddressInputTextField.setValidator(btcAddressValidator);
+        GridPane.setColumnSpan(receiversBtcAddressInputTextField, 3);
 
-        Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
-        btcAmountLabel = tuple2.first;
-        btcAmountInputTextField = tuple2.second;
-        btcAmountInputTextField.setPromptText(Res.get("dao.wallet.send.setBtcAmount",
-                bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput().value)));
+        btcAmountInputTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.btcAmount"));
         btcAmountInputTextField.setValidator(btcValidator);
+        GridPane.setColumnSpan(btcAmountInputTextField, 3);
 
         sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
 
@@ -359,12 +346,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         @Override
                         public void onSuccess(Transaction transaction) {
                             log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
-                        }
-
-                        @Override
-                        public void onTxMalleability(TxMalleabilityException exception) {
-                            //TODO handle
-                            new Popup<>().warning(exception.toString());
                         }
 
                         @Override

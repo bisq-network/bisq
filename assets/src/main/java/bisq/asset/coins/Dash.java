@@ -21,38 +21,9 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 
 import org.libdohj.params.DashMainNetParams;
-import org.libdohj.params.DashRegTestParams;
-import org.libdohj.params.DashTestNet3Params;
 
-import org.bitcoinj.core.NetworkParameters;
-
-public abstract class Dash extends Coin {
-
-    public Dash(Network network, NetworkParameters networkParameters) {
-        super("Dash", "DASH", new Base58BitcoinAddressValidator(networkParameters), network);
-    }
-
-
-    public static class Mainnet extends Dash {
-
-        public Mainnet() {
-            super(Network.MAINNET, DashMainNetParams.get());
-        }
-    }
-
-
-    public static class Testnet extends Dash {
-
-        public Testnet() {
-            super(Network.TESTNET, DashTestNet3Params.get());
-        }
-    }
-
-
-    public static class Regtest extends Dash {
-
-        public Regtest() {
-            super(Network.REGTEST, DashRegTestParams.get());
-        }
+public class Dash extends Coin {
+    public Dash() {
+        super("Dash", "DASH", new Base58BitcoinAddressValidator(DashMainNetParams.get()), Network.MAINNET);
     }
 }

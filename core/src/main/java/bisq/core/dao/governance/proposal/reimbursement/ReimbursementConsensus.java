@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.proposal.reimbursement;
 
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.governance.Param;
 
 import org.bitcoinj.core.Coin;
 
@@ -27,11 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReimbursementConsensus {
     public static Coin getMinReimbursementRequestAmount(DaoStateService daoStateService, int chainHeight) {
-        return Coin.valueOf(daoStateService.getParamValue(Param.REIMBURSEMENT_MIN_AMOUNT, chainHeight));
+        return daoStateService.getParamValueAsCoin(Param.REIMBURSEMENT_MIN_AMOUNT, chainHeight);
     }
 
     public static Coin getMaxReimbursementRequestAmount(DaoStateService daoStateService, int chainHeight) {
-        return Coin.valueOf(daoStateService.getParamValue(Param.REIMBURSEMENT_MAX_AMOUNT, chainHeight));
+        return daoStateService.getParamValueAsCoin(Param.REIMBURSEMENT_MAX_AMOUNT, chainHeight);
     }
 
 }

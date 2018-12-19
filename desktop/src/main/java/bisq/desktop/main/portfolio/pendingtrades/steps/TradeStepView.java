@@ -20,11 +20,9 @@ package bisq.desktop.main.portfolio.pendingtrades.steps;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
@@ -34,16 +32,23 @@ import bisq.core.user.Preferences;
 
 import bisq.common.Clock;
 import bisq.common.app.Log;
+import bisq.common.util.Tuple3;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
@@ -57,6 +62,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.components.paymentmethods.PaymentMethodForm.addOpenTradeDuration;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTxIdTextField;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class TradeStepView extends AnchorPane {
@@ -89,9 +99,34 @@ public abstract class TradeStepView extends AnchorPane {
         this.model = model;
         preferences = model.dataModel.preferences;
         trade = model.dataModel.getTrade();
-        checkNotNull(trade, "trade must not be null at TradeStepView");
+        checkNotNull(trade, "Trade must not be null at TradeStepView");
 
-        gridPane = FormBuilder.addGridPane(this);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+
+        AnchorPane.setLeftAnchor(scrollPane, 10d);
+        AnchorPane.setRightAnchor(scrollPane, 10d);
+        AnchorPane.setTopAnchor(scrollPane, 10d);
+        AnchorPane.setBottomAnchor(scrollPane, 0d);
+
+        getChildren().add(scrollPane);
+
+        gridPane = new GridPane();
+
+        gridPane.setHgap(Layout.GRID_GAP);
+        gridPane.setVgap(Layout.GRID_GAP);
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHgrow(Priority.ALWAYS);
+
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+
+        scrollPane.setContent(gridPane);
 
         AnchorPane.setLeftAnchor(this, 0d);
         AnchorPane.setRightAnchor(this, 0d);
@@ -185,8 +220,18 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = FormBuilder.addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.tradeInformation"));
-        txIdTextField = FormBuilder.addLabelTxIdTextField(gridPane, gridRow, Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
+        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
+                Res.get("portfolio.pending.tradeInformation"));
+        GridPane.setColumnSpan(tradeInfoTitledGroupBg, 2);
+
+        final Tuple3<Label, TxIdTextField, VBox> labelTxIdTextFieldVBoxTuple3 =
+                addTopLabelTxIdTextField(gridPane, gridRow,
+                        Res.get("shared.depositTransactionId"),
+                        Layout.COMPACT_FIRST_ROW_DISTANCE);
+
+        GridPane.setColumnSpan(labelTxIdTextFieldVBoxTuple3.third, 2);
+        txIdTextField = labelTxIdTextFieldVBoxTuple3.second;
+
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -194,20 +239,26 @@ public abstract class TradeStepView extends AnchorPane {
             txIdTextField.cleanup();
 
         if (model.dataModel.getTrade() != null) {
-            InfoTextField infoTextField = PaymentMethodForm.addOpenTradeDuration(gridPane, ++gridRow, model.dataModel.getTrade().getOffer());
+            checkNotNull(model.dataModel.getTrade().getOffer(), "Offer must not be null in TradeStepView");
+            InfoTextField infoTextField = addOpenTradeDuration(gridPane, ++gridRow,
+                    model.dataModel.getTrade().getOffer());
             infoTextField.setContentForInfoPopOver(createInfoPopover());
         }
 
-        timeLeftTextField = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
+        final Tuple3<Label, TextField, VBox> labelTextFieldVBoxTuple3 = addCompactTopLabelTextField(gridPane, gridRow,
+                1, Res.get("portfolio.pending.remainingTime"), "");
 
-        timeLeftProgressBar = new ProgressBar(0);
+        timeLeftTextField = labelTextFieldVBoxTuple3.second;
+        timeLeftTextField.setMinWidth(400);
+
+        timeLeftProgressBar = new JFXProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
         timeLeftProgressBar.setMinHeight(9);
         timeLeftProgressBar.setMaxHeight(9);
         timeLeftProgressBar.setMaxWidth(Double.MAX_VALUE);
 
         GridPane.setRowIndex(timeLeftProgressBar, ++gridRow);
-        GridPane.setColumnIndex(timeLeftProgressBar, 1);
+        GridPane.setColumnSpan(timeLeftProgressBar, 2);
         GridPane.setFillWidth(timeLeftProgressBar, true);
         gridPane.getChildren().add(timeLeftProgressBar);
 
@@ -215,8 +266,14 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addInfoBlock() {
-        FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
-        infoLabel = FormBuilder.addMultilineLabel(gridPane, gridRow, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(),
+                Layout.COMPACT_GROUP_DISTANCE);
+        titledGroupBg.getStyleClass().add("last");
+        GridPane.setColumnSpan(titledGroupBg, 2);
+
+        infoLabel = addMultilineLabel(gridPane, gridRow, "", Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
+//        infoLabel = addMultilineLabel(gridPane, gridRow, "", 0);
+        GridPane.setColumnSpan(infoLabel, 2);
     }
 
     protected String getInfoText() {
@@ -315,7 +372,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     private void showSupportFields() {
         if (notificationGroup != null) {
-            notificationGroup.button.setText(Res.get("portfolio.pending.requestSupport"));
+            notificationGroup.button.updateText(Res.get("portfolio.pending.requestSupport"));
             notificationGroup.button.setId("open-support-button");
             notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
@@ -451,7 +508,7 @@ public abstract class TradeStepView extends AnchorPane {
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(10);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
-        Label label = FormBuilder.addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
+        Label label = addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
         label.setMaxWidth(450);
 
         HBox warningBox = new HBox();

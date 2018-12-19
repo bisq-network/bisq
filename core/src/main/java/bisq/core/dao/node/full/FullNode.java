@@ -18,18 +18,21 @@
 package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
-import bisq.core.dao.node.json.ExportJsonFilesService;
 import bisq.core.dao.node.parser.BlockParser;
-import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
+
+import com.neemre.btcdcli4j.core.http.HttpLayerException;
+import com.neemre.btcdcli4j.daemon.NotificationHandlerException;
 
 import javax.inject.Inject;
 
@@ -105,6 +108,15 @@ public class FullNode extends BsqNode {
     }
 
     @Override
+    protected void startReOrgFromLastSnapshot() {
+        super.startReOrgFromLastSnapshot();
+
+        int startBlockHeight = getStartBlockHeight();
+        rpcService.requestChainHeadHeight(chainHeight -> parseBlocksOnHeadHeight(startBlockHeight, chainHeight),
+                this::handleError);
+    }
+
+    @Override
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
 
@@ -135,13 +147,9 @@ public class FullNode extends BsqNode {
         if (!addBlockHandlerAdded) {
             addBlockHandlerAdded = true;
             rpcService.addNewBtcBlockHandler(rawBlock -> {
-                        if (!isBlockAlreadyAdded(rawBlock)) {
-                            try {
-                                Block block = blockParser.parseBlock(rawBlock);
-                                onNewBlock(block);
-                            } catch (BlockNotConnectingException throwable) {
-                                handleError(throwable);
-                            }
+                        try {
+                            doParseBlock(rawBlock).ifPresent(this::onNewBlock);
+                        } catch (RequiredReorgFromSnapshotException ignore) {
                         }
                     },
                     this::handleError);
@@ -188,13 +196,7 @@ public class FullNode extends BsqNode {
                         // if we are at chainTip, so do not include here another check as it would
                         // not trigger the listener registration.
                         parseBlocksIfNewBlockAvailable(chainHeight);
-                    }, throwable -> {
-                        if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot();
-                        } else {
-                            handleError(throwable);
-                        }
-                    });
+                    }, this::handleError);
         } else {
             log.warn("We are trying to start with a block which is above the chain height of bitcoin core. " +
                     "We need probably wait longer until bitcoin core has fully synced. " +
@@ -208,33 +210,29 @@ public class FullNode extends BsqNode {
                              Consumer<Block> newBlockHandler,
                              ResultHandler resultHandler,
                              Consumer<Throwable> errorHandler) {
-        parseBlock(startBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
+        parseBlockRecursively(startBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
     }
 
-    // Recursively request and parse all blocks
-    private void parseBlock(int blockHeight, int chainHeight,
-                            Consumer<Block> newBlockHandler, ResultHandler resultHandler,
-                            Consumer<Throwable> errorHandler) {
+    private void parseBlockRecursively(int blockHeight,
+                                       int chainHeight,
+                                       Consumer<Block> newBlockHandler,
+                                       ResultHandler resultHandler,
+                                       Consumer<Throwable> errorHandler) {
         rpcService.requestBtcBlock(blockHeight,
                 rawBlock -> {
-                    if (!isBlockAlreadyAdded(rawBlock)) {
-                        try {
-                            Block block = blockParser.parseBlock(rawBlock);
-                            newBlockHandler.accept(block);
+                    try {
+                        doParseBlock(rawBlock).ifPresent(newBlockHandler);
 
-                            // Increment blockHeight and recursively call parseBlockAsync until we reach chainHeight
-                            if (blockHeight < chainHeight) {
-                                final int newBlockHeight = blockHeight + 1;
-                                parseBlock(newBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
-                            } else {
-                                // We are done
-                                resultHandler.handleResult();
-                            }
-                        } catch (BlockNotConnectingException e) {
-                            errorHandler.accept(e);
+                        // Increment blockHeight and recursively call parseBlockAsync until we reach chainHeight
+                        if (blockHeight < chainHeight) {
+                            int newBlockHeight = blockHeight + 1;
+                            parseBlockRecursively(newBlockHeight, chainHeight, newBlockHandler, resultHandler, errorHandler);
+                        } else {
+                            // We are done
+                            resultHandler.handleResult();
                         }
-                    } else {
-                        log.info("Block was already added height=", rawBlock.getHeight());
+                    } catch (RequiredReorgFromSnapshotException ignore) {
+                        // If we get a reorg we don't continue to call parseBlockRecursively
                     }
                 },
                 errorHandler);
@@ -243,11 +241,30 @@ public class FullNode extends BsqNode {
     private void handleError(Throwable throwable) {
         String errorMessage = "An error occurred: Error=" + throwable.toString();
         log.error(errorMessage);
+        throwable.printStackTrace();
 
-        if (throwable instanceof BlockNotConnectingException)
-            startReOrgFromLastSnapshot();
+        if (throwable instanceof RpcException) {
+            Throwable cause = throwable.getCause();
+            if (cause != null) {
+                if (cause instanceof HttpLayerException) {
+                    if (((HttpLayerException) cause).getCode() == 1004004) {
+                        if (warnMessageHandler != null)
+                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
+                                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
+                        return;
+                    }
+                } else if (cause instanceof NotificationHandlerException) {
+                    // Maybe we need to react specifically to errors as in NotificationHandlerException.getError()
+                    // So far only IO_UNKNOWN was observed
+                    log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
+                    startReOrgFromLastSnapshot();
+                    return;
+                }
+            }
+        }
 
         if (errorMessageHandler != null)
-            errorMessageHandler.handleErrorMessage(errorMessage);
+            errorMessageHandler.accept(errorMessage);
     }
 }

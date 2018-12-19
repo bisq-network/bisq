@@ -33,6 +33,8 @@ import org.bitcoinj.core.TransactionConfidence;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXTextField;
+
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -97,7 +99,7 @@ public class TxIdTextField extends AnchorPane {
         AnchorPane.setRightAnchor(blockExplorerIcon, 52.0);
         AnchorPane.setTopAnchor(blockExplorerIcon, 4.0);
 
-        textField = new TextField();
+        textField = new JFXTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.setTooltip(tooltip);

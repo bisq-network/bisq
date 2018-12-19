@@ -56,7 +56,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         qrCodeImageView = new ImageView(qrImage);
 
         type = Type.Information;
-        width = 400;
+        width = 468;
         headLine(Res.get("qRCodeWindow.headline"));
         message(Res.get("qRCodeWindow.msg"));
     }
@@ -65,7 +65,6 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
     public void show() {
         createGridPane();
         addHeadLine();
-        addSeparator();
         addMessage();
 
         GridPane.setRowIndex(qrCodeImageView, ++rowIndex);
@@ -86,7 +85,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         GridPane.setColumnSpan(infoLabel, 2);
         gridPane.getChildren().add(infoLabel);
 
-        addCloseButton();
+        addButtons();
         applyStyles();
         display();
     }

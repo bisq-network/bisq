@@ -24,20 +24,19 @@ import bisq.desktop.util.validation.PromptPayValidator;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.PromptPayAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PromptPayAccountPayload;
+import bisq.core.payment.PromptPayAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PromptPayAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
-
-import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class PromptPayForm extends PaymentMethodForm {
     private final PromptPayAccount promptPayAccount;
@@ -46,7 +45,7 @@ public class PromptPayForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
                 ((PromptPayAccountPayload) paymentAccountPayload).getPromptPayId());
         return gridRow;
     }
@@ -62,8 +61,8 @@ public class PromptPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        promptPayIdInputTextField = addLabelInputTextField(gridPane, ++gridRow,
-                Res.get("payment.promptPay.promptPayId")).second;
+        promptPayIdInputTextField = addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.promptPay.promptPayId"));
         promptPayIdInputTextField.setValidator(promptPayValidator);
         promptPayIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             promptPayAccount.setPromptPayId(newValue);
@@ -72,35 +71,30 @@ public class PromptPayForm extends PaymentMethodForm {
 
         TradeCurrency singleTradeCurrency = promptPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
-        addAccountNameTextFieldWithAutoFillCheckBox();
+        addTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(false);
+        addAccountNameTextFieldWithAutoFillToggleButton();
     }
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
-            String promptPayId = promptPayIdInputTextField.getText();
-            promptPayId = StringUtils.abbreviate(promptPayId, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(promptPayId));
-        }
+        setAccountNameWithString(promptPayIdInputTextField.getText());
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 promptPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(promptPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
                 promptPayAccount.getPromptPayId()).second;
         field.setMouseTransparent(false);
         TradeCurrency singleTradeCurrency = promptPayAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
-        addLimitations();
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+        addLimitations(true);
     }
 
     @Override

@@ -83,7 +83,7 @@ public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
         });
 
         final HBox hBox = new HBox(label, helpIcon);
-        hBox.setStyle("-fx-alignment: center");
+        hBox.setStyle("-fx-alignment: center-left");
         hBox.setSpacing(4);
         setGraphic(hBox);
     }

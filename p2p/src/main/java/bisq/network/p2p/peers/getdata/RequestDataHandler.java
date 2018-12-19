@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -273,34 +272,23 @@ class RequestDataHandler implements MessageListener {
                             });
                         }
 
-                        // We process the LazyProcessedStoragePayload items (TradeStatistics) in batches with a delay in between.
-                        // We want avoid that the UI get stuck when processing many entries.
-                        // The dataStorage.add call is a bit expensive as sig checks is done there.
-
-                        // Using a background thread might be an alternative but it would require much more effort and
-                        // it would also decrease user experience if the app gets under heavy load (like at startup with wallet sync).
-                        // Beside that we mitigated the problem already as we will not get the whole TradeStatistics as we
-                        // pass the excludeKeys and we pack the latest data dump
-                        // into the resources, so a new user do not need to request all data.
-
-                        // In future we will probably limit by date or load on demand from user intent to not get too much data.
-
-                        // We split the list into sub lists with max 50 items and delay each batch with 200 ms.
-                        int size = processDelayedItems.size();
-                        int chunkSize = 50;
-                        int chunks = 1 + size / chunkSize;
-                        int startIndex = 0;
-                        for (int i = 0; i < chunks && startIndex < size; i++, startIndex += chunkSize) {
-                            long delay = (i + 1) * 200;
-                            int endIndex = Math.min(size, startIndex + chunkSize);
-                            List<NetworkPayload> subList = processDelayedItems.subList(startIndex, endIndex);
-                            UserThread.runAfter(() -> subList.stream().forEach(item -> {
-                                if (item instanceof ProtectedStorageEntry)
-                                    dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null, false, false);
-                                else if (item instanceof PersistableNetworkPayload)
-                                    dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender, false, false, false, false);
-                            }), delay, TimeUnit.MILLISECONDS);
-                        }
+                        // We changed the earlier behaviour with delayed execution of chunks of the list as it caused
+                        // worse results as if it is processed in one go.
+                        // Main reason is probably that listeners trigger more code and if that is called early at
+                        // startup we have better chances that the user has not already navigated to a screen where the
+                        // trade statistics are used for UI rendering.
+                        // We need to take care that the update period between releases stay short as with the current
+                        // situation before 0.9 release we receive 4000 objects with a newly installed client, which
+                        // causes the application to stay stuck for quite a while at startup.
+                        log.info("Start processing {} items.", processDelayedItems.size());
+                        processDelayedItems.forEach(item -> {
+                            if (item instanceof ProtectedStorageEntry)
+                                dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null,
+                                        false, false);
+                            else if (item instanceof PersistableNetworkPayload)
+                                dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender,
+                                        false, false, false, false);
+                        });
 
                         cleanup();
                         listener.onComplete();

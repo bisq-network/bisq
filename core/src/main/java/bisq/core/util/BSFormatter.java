@@ -132,6 +132,10 @@ public class BSFormatter {
         return formatCoinWithCode(coin, coinFormat);
     }
 
+    public String formatCoinWithCode(long value) {
+        return formatCoinWithCode(Coin.valueOf(value), coinFormat);
+    }
+
     public String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
     }
@@ -314,10 +318,11 @@ public class BSFormatter {
 
     @NotNull
     public String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
-        int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
+        //FIXME: temporary deactivate adding spaces in front of numbers as we don't use a monospace font right now.
+        /*int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {
             formattedNumber = " " + formattedNumber;
-        }
+        }*/
         return formattedNumber;
     }
 
@@ -562,9 +567,15 @@ public class BSFormatter {
         return value;
     }
 
-    protected String cleanDoubleInput(String input) {
-        input = input.replace(",", ".");
+    public static String convertCharsForNumber(String input) {
+        // Some languages like finnish use the long dash for the minus
+        input = input.replace("−", "-");
         input = StringUtils.deleteWhitespace(input);
+        return input.replace(",", ".");
+    }
+
+    protected String cleanDoubleInput(String input) {
+        input = convertCharsForNumber(input);
         if (input.equals("."))
             input = input.replace(".", "0.");
         if (input.equals("-."))

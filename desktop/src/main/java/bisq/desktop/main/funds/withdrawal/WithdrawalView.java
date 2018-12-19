@@ -22,19 +22,20 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.listeners.BalanceListener;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
-import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -47,6 +48,8 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -76,7 +79,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Pos;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -92,37 +98,34 @@ import javafx.util.Callback;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @FXML
-    Label inputsLabel, amountLabel, fromLabel, toLabel;
-    @FXML
-    Button withdrawButton;
+    GridPane gridPane;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
-    TextField withdrawFromTextField, withdrawToTextField, amountTextField;
-    @FXML
-    RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
-    @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
+
+    private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton;
+    private Label amountLabel;
+    private TextField amountTextField, withdrawFromTextField, withdrawToTextField;
 
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
-    private final ClosedTradableManager closedTradableManager;
-    private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     private final BSFormatter formatter;
@@ -143,6 +146,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private ToggleGroup feeToggleGroup, inputsToggleGroup;
     private final BooleanProperty useAllInputs = new SimpleBooleanProperty(true);
     private boolean feeExcluded;
+    private int rowIndex = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,8 +166,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
-        this.closedTradableManager = closedTradableManager;
-        this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.formatter = formatter;
@@ -174,21 +176,59 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        inputsLabel.setText(Res.getWithCol("funds.withdrawal.inputs"));
-        useAllInputsRadioButton.setText(Res.get("funds.withdrawal.useAllInputs"));
-        useCustomInputsRadioButton.setText(Res.get("funds.withdrawal.useCustomInputs"));
-        amountLabel.setText(Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()));
-        feeExcludedRadioButton.setText(Res.get("funds.withdrawal.feeExcluded"));
-        feeIncludedRadioButton.setText(Res.get("funds.withdrawal.feeIncluded"));
-        fromLabel.setText(Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode()));
-        toLabel.setText(Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()));
-        withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
+
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 4, Res.get("funds.deposit.withdrawFromWallet"));
+        titledGroupBg.getStyleClass().add("last");
+
+        inputsToggleGroup = new ToggleGroup();
+        inputsToggleGroupListener = (observable, oldValue, newValue) -> {
+            useAllInputs.set(newValue == useAllInputsRadioButton);
+
+            updateInputSelection();
+        };
+
+        final Tuple3<Label, RadioButton, RadioButton> labelRadioButtonRadioButtonTuple3 =
+                addTopLabelRadioButtonRadioButton(gridPane, rowIndex, inputsToggleGroup,
+                        Res.get("funds.withdrawal.inputs"),
+                        Res.get("funds.withdrawal.useAllInputs"),
+                        Res.get("funds.withdrawal.useCustomInputs"),
+                        Layout.FIRST_ROW_DISTANCE);
+
+        useAllInputsRadioButton = labelRadioButtonRadioButtonTuple3.second;
+        useCustomInputsRadioButton = labelRadioButtonRadioButtonTuple3.third;
+
+        feeToggleGroup = new ToggleGroup();
+
+        final Tuple4<Label, TextField, RadioButton, RadioButton> feeTuple3 = addTopLabelTextFieldRadioButtonRadioButton(gridPane, ++rowIndex, feeToggleGroup,
+                Res.get("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()),
+                "",
+                Res.get("funds.withdrawal.feeExcluded"),
+                Res.get("funds.withdrawal.feeIncluded"),
+                0);
+
+        amountLabel = feeTuple3.first;
+        amountTextField = feeTuple3.second;
+        amountTextField.setMinWidth(180);
+        feeExcludedRadioButton = feeTuple3.third;
+        RadioButton feeIncludedRadioButton = feeTuple3.forth;
+
+        withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
+
+        withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
+        withdrawToTextField.setMaxWidth(380);
+
+        final Button withdrawButton = addButton(gridPane, ++rowIndex, Res.get("funds.withdrawal.withdrawButton"), 15);
+
+        withdrawButton.setOnAction(event -> onWithdraw());
 
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
         selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setMaxHeight(Double.MAX_VALUE);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.withdrawal.noFundsAvailable")));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -196,8 +236,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         setBalanceColumnCellFactory();
         setSelectColumnCellFactory();
 
-        addressColumn.setComparator((o1, o2) -> o1.getAddressString().compareTo(o2.getAddressString()));
-        balanceColumn.setComparator((o1, o2) -> o1.getBalance().compareTo(o2.getBalance()));
+        addressColumn.setComparator(Comparator.comparing(WithdrawalListItem::getAddressString));
+        balanceColumn.setComparator(Comparator.comparing(WithdrawalListItem::getBalance));
         balanceColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(balanceColumn);
 
@@ -224,28 +264,18 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     amountTextField.setText("");
             }
         };
-        feeToggleGroup = new ToggleGroup();
         feeExcludedRadioButton.setToggleGroup(feeToggleGroup);
         feeIncludedRadioButton.setToggleGroup(feeToggleGroup);
         feeToggleGroupListener = (observable, oldValue, newValue) -> {
             feeExcluded = newValue == feeExcludedRadioButton;
             amountLabel.setText(feeExcluded ?
-                    Res.getWithCol("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()) :
-                    Res.getWithCol("funds.withdrawal.senderAmount", Res.getBaseCurrencyCode()));
-        };
-
-        inputsToggleGroup = new ToggleGroup();
-        useAllInputsRadioButton.setToggleGroup(inputsToggleGroup);
-        useCustomInputsRadioButton.setToggleGroup(inputsToggleGroup);
-        inputsToggleGroupListener = (observable, oldValue, newValue) -> {
-            useAllInputs.set(newValue == useAllInputsRadioButton);
-
-            updateInputSelection();
+                    Res.get("funds.withdrawal.receiverAmount", Res.getBaseCurrencyCode()) :
+                    Res.get("funds.withdrawal.senderAmount", Res.getBaseCurrencyCode()));
         };
     }
 
     private void updateInputSelection() {
-        observableList.stream().forEach(item -> {
+        observableList.forEach(item -> {
             item.setSelected(useAllInputs.get());
             selectForWithdrawal(item);
         });
@@ -292,8 +322,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @FXML
-    public void onWithdraw() {
+    private void onWithdraw() {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             try {
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
@@ -323,7 +352,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                         kb,
                                         formatter.formatCoinWithCode(receiverAmount)))
                                 .actionButtonText(Res.get("shared.yes"))
-                                .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<Transaction>() {
+                                .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<>() {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
@@ -335,13 +364,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                         List<Trade> trades = new ArrayList<>(tradeManager.getTradableList());
                                         trades.stream()
                                                 .filter(Trade::isPayoutPublished)
-                                                .forEach(trade -> {
-                                                    walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
-                                                            .ifPresent(addressEntry -> {
-                                                                if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
-                                                                    tradeManager.addTradeToClosedTrades(trade);
-                                                            });
-                                                });
+                                                .forEach(trade -> walletService.getAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT)
+                                                        .ifPresent(addressEntry -> {
+                                                            if (walletService.getBalanceForAddress(addressEntry.getAddress()).isZero())
+                                                                tradeManager.addTradeToClosedTrades(trade);
+                                                        }));
                                     }
 
                                     @Override
@@ -448,7 +475,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         } catch (AddressFormatException e) {
             new Popup<>().warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup<>().warning(Res.get("validation.btc.amountBelowDust", formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
+            new Popup<>().warning(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
         } catch (AddressEntryException e) {
             new Popup<>().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
@@ -476,18 +504,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
         selectedItems.clear();
         tableView.getSelectionModel().clearSelection();
-    }
-
-    private Optional<Tradable> getTradable(WithdrawalListItem item) {
-        String offerId = item.getAddressEntry().getOfferId();
-        Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(offerId);
-        if (tradableOptional.isPresent()) {
-            return tradableOptional;
-        } else if (failedTradesManager.getTradeById(offerId).isPresent()) {
-            return Optional.of(failedTradesManager.getTradeById(offerId).get());
-        } else {
-            return Optional.<Tradable>empty();
-        }
     }
 
     private boolean areInputsValid() {
@@ -520,14 +536,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+
         addressColumn.setCellFactory(
-                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
-                        WithdrawalListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
                             WithdrawalListItem> column) {
-                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -539,6 +555,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
+                                    setAlignment(Pos.CENTER);
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
@@ -552,15 +569,15 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setBalanceColumnCellFactory() {
+        balanceColumn.getStyleClass().add("last-column");
         balanceColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         balanceColumn.setCellFactory(
-                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
-                        WithdrawalListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
                             WithdrawalListItem> column) {
-                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -572,16 +589,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void setSelectColumnCellFactory() {
+        selectColumn.getStyleClass().add("first-column");
         selectColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         selectColumn.setCellFactory(
-                new Callback<TableColumn<WithdrawalListItem, WithdrawalListItem>, TableCell<WithdrawalListItem,
-                        WithdrawalListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
                             WithdrawalListItem> column) {
-                        return new TableCell<WithdrawalListItem, WithdrawalListItem>() {
+                        return new TableCell<>() {
 
                             CheckBox checkBox = new AutoTooltipCheckBox();
 

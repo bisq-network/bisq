@@ -17,7 +17,6 @@
 
 package bisq.core.setup;
 
-import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -59,7 +58,7 @@ public class CoreSetup {
     }
 
     private static void setupLog(BisqEnvironment bisqEnvironment) {
-        String logPath = Paths.get(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
+        String logPath = Paths.get(bisqEnvironment.getAppDataDir(), "bisq").toString();
         Log.setup(logPath);
         log.info("\n\n\nLog files under: " + logPath);
         Utilities.printSysInfo();

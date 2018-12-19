@@ -57,6 +57,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.util.Comparator;
+
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.getIconButton;
@@ -109,10 +111,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
 
-        offerIdColumn.setComparator((o1, o2) -> o1.getOffer().getId().compareTo(o2.getOffer().getId()));
-        directionColumn.setComparator((o1, o2) -> o1.getOffer().getDirection().compareTo(o2.getOffer().getDirection()));
-        marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
-        amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
+        offerIdColumn.setComparator(Comparator.comparing(o -> o.getOffer().getId()));
+        directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         priceColumn.setComparator((o1, o2) -> {
             Price price1 = o1.getOffer().getPrice();
             Price price2 = o2.getOffer().getPrice();
@@ -123,7 +125,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             Volume offerVolume2 = o2.getOffer().getVolume();
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
-        dateColumn.setComparator((o1, o2) -> o1.getOffer().getDate().compareTo(o2.getOffer().getDate()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -144,9 +146,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
             model.onDeactivateOpenOffer(openOffer,
-                    () -> {
-                        log.debug("Deactivate offer was successful");
-                    },
+                    () -> log.debug("Deactivate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
@@ -159,9 +159,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onActivateOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
             model.onActivateOpenOffer(openOffer,
-                    () -> {
-                        log.debug("Activate offer was successful");
-                    },
+                    () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
@@ -219,13 +217,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void setOfferIdColumnCellFactory() {
         offerIdColumn.setCellValueFactory((openOfferListItem) -> new ReadOnlyObjectWrapper<>(openOfferListItem.getValue()));
+        offerIdColumn.getStyleClass().addAll("number-column", "first-column");
         offerIdColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
                             OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
@@ -251,12 +250,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setDateColumnCellFactory() {
         dateColumn.setCellValueFactory((openOfferListItem) -> new ReadOnlyObjectWrapper<>(openOfferListItem.getValue()));
         dateColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -276,12 +274,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setAmountColumnCellFactory() {
         amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -302,12 +299,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setPriceColumnCellFactory() {
         priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         priceColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -328,12 +324,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setVolumeColumnCellFactory() {
         volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         volumeColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -354,12 +349,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setDirectionColumnCellFactory() {
         directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         directionColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -380,12 +374,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setMarketColumnCellFactory() {
         marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         marketColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem,
-                        OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -406,10 +399,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void setDeactivateColumnCellFactory() {
         deactivateItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         deactivateItemColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             CheckBox checkBox;
 
@@ -455,12 +448,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void setRemoveColumnCellFactory() {
+        removeItemColumn.getStyleClass().addAll("last-column", "avatar-column");
         removeItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
         removeItemColumn.setCellFactory(
-                new Callback<TableColumn<OpenOfferListItem, OpenOfferListItem>, TableCell<OpenOfferListItem, OpenOfferListItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
-                        return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override

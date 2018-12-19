@@ -42,8 +42,6 @@ public class RelayMain {
     static {
         // Need to set default locale initially otherwise we get problems at non-english OS
         Locale.setDefault(new Locale("en", Locale.getDefault().getCountry()));
-
-        Utilities.removeCryptographyRestrictions();
     }
 
     /**

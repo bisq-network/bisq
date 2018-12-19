@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -139,12 +141,12 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Transfers with specific banks - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return super.getPaymentDetailsForTradePopup() + "\n" +
-                "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
+                Res.getWithCol("payment.accepted.banks") + " " + Joiner.on(", ").join(acceptedBanks);
     }
 }

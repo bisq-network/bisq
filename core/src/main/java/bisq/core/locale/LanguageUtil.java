@@ -39,12 +39,12 @@ public class LanguageUtil {
             "hu", // Hungarian
             "ro", // Romanian
             "ru", // Russian
-            "fr" // French
+            "fr", // French
+            "vi", // Vietnamese
+            "th" // Thai
             /*
             // not translated yet
-            "vi" // Vietnamese --> waiting for new translations for DAO
             "fa" // Persian --> waiting for third review
-            "th", // Thai --> render issues atm
             "tr" // Turkish
             "it", // Italian
             "ja", // Japanese

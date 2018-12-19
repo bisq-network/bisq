@@ -106,7 +106,7 @@ public class MonitorP2PService implements SetupListener, PersistedDataHost {
 
     @Override
     public void onTorNodeReady() {
-        socks5ProxyProvider.setSocks5ProxyInternal(networkNode.getSocksProxy());
+        socks5ProxyProvider.setSocks5ProxyInternal(networkNode);
         listener.onTorNodeReady();
     }
 

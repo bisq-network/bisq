@@ -101,7 +101,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, confidenceColumn, revertTxColumn;
     @FXML
-    Button exportButton;
+    AutoTooltipButton exportButton;
 
     private final DisplayedTransactions displayedTransactions;
     private final SortedList<TransactionsListItem> sortedDisplayedTransactions;
@@ -154,6 +154,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
+        tableView.getStyleClass().add("large-rows");
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -215,13 +216,18 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         };
 
         keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event))
+            if (Utilities.isAltOrCtrlPressed(KeyCode.R, event)) {
+                if (revertTxColumn.isVisible()) {
+                    confidenceColumn.getStyleClass().remove("last-column");
+                } else {
+                    confidenceColumn.getStyleClass().add("last-column");
+                }
                 revertTxColumn.setVisible(!revertTxColumn.isVisible());
-            else if (Utilities.isAltOrCtrlPressed(KeyCode.A, event))
+            } else if (Utilities.isAltOrCtrlPressed(KeyCode.A, event))
                 showStatisticsPopup();
         };
 
-        exportButton.setText(Res.get("shared.exportCSV"));
+        exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -297,18 +303,18 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setDateColumnCellFactory() {
+        dateColumn.getStyleClass().add("first-column");
         dateColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         dateColumn.setMaxWidth(200);
         dateColumn.setMinWidth(dateColumn.getMaxWidth());
         dateColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
@@ -328,13 +334,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void setDetailsColumnCellFactory() {
         detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         detailsColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
 
                             private HyperlinkWithIcon field;
 
@@ -364,14 +369,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void setAddressColumnCellFactory() {
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+
         addressColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
 
                             private AddressWithIconAndDirection field;
 
@@ -400,13 +405,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private void setTransactionColumnCellFactory() {
         transactionColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         transactionColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -435,13 +439,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         amountColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         amountColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
@@ -459,16 +462,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void setConfidenceColumnCellFactory() {
+        confidenceColumn.getStyleClass().add("last-column");
         confidenceColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         confidenceColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
@@ -486,16 +489,16 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void setRevertTxColumnCellFactory() {
+        revertTxColumn.getStyleClass().add("last-column");
         revertTxColumn.setCellValueFactory((addressListItem) ->
                 new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         revertTxColumn.setCellFactory(
-                new Callback<TableColumn<TransactionsListItem, TransactionsListItem>, TableCell<TransactionsListItem,
-                        TransactionsListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
                             TransactionsListItem> column) {
-                        return new TableCell<TransactionsListItem, TransactionsListItem>() {
+                        return new TableCell<>() {
                             Button button;
 
                             @Override

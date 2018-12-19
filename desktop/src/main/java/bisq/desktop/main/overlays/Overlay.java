@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
@@ -35,6 +36,8 @@ import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import org.apache.commons.lang3.StringUtils;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -51,7 +54,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -63,7 +65,6 @@ import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 
 import javafx.beans.value.ChangeListener;
 
@@ -76,6 +77,7 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -130,35 +132,37 @@ public abstract class Overlay<T extends Overlay> {
         }
     }
 
-    protected final static double DEFAULT_WIDTH = 600;
-    protected int rowIndex = -1;
-    protected String headLine;
-    protected String message;
-    protected String closeButtonText;
-    protected String actionButtonText;
-    protected double width = DEFAULT_WIDTH;
-    protected Pane owner;
+    protected final static double DEFAULT_WIDTH = 668;
+
+    protected Stage stage;
     protected GridPane gridPane;
-    protected Button closeButton;
+    protected Pane owner;
+
+    protected int rowIndex = -1;
+    protected double width = DEFAULT_WIDTH;
+    protected double buttonDistance = 20;
+
+    protected boolean showReportErrorButtons;
+    private boolean showBusyAnimation;
+    protected boolean hideCloseButton;
+    protected boolean isDisplayed;
+    protected boolean useAnimation = true;
+
+    protected Label headlineIcon, headLineLabel, messageLabel;
+    protected String headLine, message, closeButtonText, actionButtonText,
+            secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
+            truncatedMessage;
+    private String headlineStyle;
+    protected Button actionButton, secondaryActionButton;
+    protected AutoTooltipButton closeButton;
+
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
-    protected Stage stage;
-    protected boolean showReportErrorButtons;
-    protected Label messageLabel;
-    protected String truncatedMessage;
-    private boolean showBusyAnimation;
-    protected Button actionButton;
-    protected Label headLineLabel;
-    protected String dontShowAgainId;
-    protected String dontShowAgainText;
+    protected Optional<Runnable> secondaryActionHandlerOptional = Optional.<Runnable>empty();
     protected ChangeListener<Number> positionListener;
+
     protected Timer centerTime;
-    protected double buttonDistance = 20;
     protected Type type = Type.Undefined;
-    protected boolean hideCloseButton;
-    protected boolean useAnimation = true;
-    private String headlineStyle;
-    protected boolean isDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +176,6 @@ public abstract class Overlay<T extends Overlay> {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             addHeadLine();
-            addSeparator();
 
             if (showBusyAnimation)
                 addBusyAnimation();
@@ -181,7 +184,7 @@ public abstract class Overlay<T extends Overlay> {
             if (showReportErrorButtons)
                 addReportErrorButtons();
 
-            addCloseButton();
+            addButtons();
             addDontShowAgainCheckBox();
             applyStyles();
             onShow();
@@ -240,6 +243,12 @@ public abstract class Overlay<T extends Overlay> {
 
     public T onAction(Runnable actionHandler) {
         this.actionHandlerOptional = Optional.of(actionHandler);
+        //noinspection unchecked
+        return (T) this;
+    }
+
+    public T onSecondaryAction(Runnable secondaryActionHandlerOptional) {
+        this.secondaryActionHandlerOptional = Optional.of(secondaryActionHandlerOptional);
         //noinspection unchecked
         return (T) this;
     }
@@ -381,6 +390,12 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T secondaryActionButtonTextWithGoTo(String target) {
+        this.secondaryActionButtonText = Res.get("shared.goTo", Res.get(target));
+        //noinspection unchecked
+        return (T) this;
+    }
+
     public T closeButtonTextWithGoTo(String target) {
         this.closeButtonText = Res.get("shared.goTo", Res.get(target));
         //noinspection unchecked
@@ -393,9 +408,15 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T secondaryActionButtonText(String secondaryActionButtonText) {
+        this.secondaryActionButtonText = secondaryActionButtonText;
+        //noinspection unchecked
+        return (T) this;
+    }
+
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
-        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler()::run);
+        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler());
         //noinspection unchecked
         return (T) this;
     }
@@ -451,7 +472,7 @@ public abstract class Overlay<T extends Overlay> {
         gridPane = new GridPane();
         gridPane.setHgap(5);
         gridPane.setVgap(5);
-        gridPane.setPadding(new Insets(30, 30, 30, 30));
+        gridPane.setPadding(new Insets(64, 64, 64, 64));
         gridPane.setPrefWidth(width);
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
@@ -544,7 +565,7 @@ public abstract class Overlay<T extends Overlay> {
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
                     new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), -10, interpolator)
+                    new KeyValue(gridPane.translateYProperty(), -50, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
@@ -692,13 +713,41 @@ public abstract class Overlay<T extends Overlay> {
 
 
     protected void applyStyles() {
-        if (type.animationType == AnimationType.SlideDownFromCenterTop)
-            gridPane.setId("popup-bg-top");
-        else
-            gridPane.setId("popup-bg");
+        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+            gridPane.getStyleClass().add("popup-bg-top");
+        } else {
+            gridPane.getStyleClass().add("popup-bg");
+        }
 
-        if (headLineLabel != null)
-            headLineLabel.setId("popup-headline");
+
+        if (headLineLabel != null) {
+
+            switch (type) {
+                case Information:
+                case BackgroundInfo:
+                case Instruction:
+                case Confirmation:
+                case Feedback:
+                case Notification:
+                case Attention:
+                    headLineLabel.getStyleClass().add("popup-headline-information");
+                    headlineIcon.getStyleClass().add("popup-icon-information");
+                    headlineIcon.setManaged(true);
+                    headlineIcon.setVisible(true);
+                    FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
+                    break;
+                case Warning:
+                case Error:
+                    headLineLabel.getStyleClass().add("popup-headline-warning");
+                    headlineIcon.getStyleClass().add("popup-icon-warning");
+                    headlineIcon.setManaged(true);
+                    headlineIcon.setVisible(true);
+                    FormBuilder.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
+                    break;
+                default:
+                    headLineLabel.getStyleClass().add("popup-headline");
+            }
+        }
     }
 
     protected void setModality() {
@@ -714,30 +763,24 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
+            HBox hBox = new HBox();
+            hBox.setSpacing(7);
             headLineLabel = new AutoTooltipLabel(headLine);
+            headlineIcon = new Label();
+            headlineIcon.setManaged(false);
+            headlineIcon.setVisible(false);
+            headlineIcon.setPadding(new Insets(3));
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
                 headLineLabel.setStyle(headlineStyle);
 
-            GridPane.setHalignment(headLineLabel, HPos.LEFT);
-            GridPane.setRowIndex(headLineLabel, rowIndex);
-            GridPane.setColumnSpan(headLineLabel, 2);
-            gridPane.getChildren().addAll(headLineLabel);
-        }
-    }
+            hBox.getChildren().addAll(headlineIcon, headLineLabel);
 
-    protected void addSeparator() {
-        if (headLine != null) {
-            Separator separator = new Separator();
-            separator.setMouseTransparent(true);
-            separator.setOrientation(Orientation.HORIZONTAL);
-            separator.getStyleClass().add("separator");
-            GridPane.setHalignment(separator, HPos.CENTER);
-            GridPane.setRowIndex(separator, ++rowIndex);
-            GridPane.setColumnSpan(separator, 2);
-
-            gridPane.getChildren().add(separator);
+            GridPane.setHalignment(hBox, HPos.LEFT);
+            GridPane.setRowIndex(hBox, rowIndex);
+            GridPane.setColumnSpan(hBox, 2);
+            gridPane.getChildren().addAll(hBox);
         }
     }
 
@@ -761,9 +804,8 @@ public abstract class Overlay<T extends Overlay> {
 
         Button logButton = new AutoTooltipButton(Res.get("popup.reportError.log"));
         GridPane.setMargin(logButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(logButton, HPos.RIGHT);
+        GridPane.setHalignment(logButton, HPos.LEFT);
         GridPane.setRowIndex(logButton, ++rowIndex);
-        GridPane.setColumnIndex(logButton, 1);
         gridPane.getChildren().add(logButton);
         logButton.setOnAction(event -> {
             try {
@@ -779,7 +821,6 @@ public abstract class Overlay<T extends Overlay> {
         Button gitHubButton = new AutoTooltipButton(Res.get("popup.reportError.gitHub"));
         GridPane.setHalignment(gitHubButton, HPos.RIGHT);
         GridPane.setRowIndex(gitHubButton, ++rowIndex);
-        GridPane.setColumnIndex(gitHubButton, 1);
         gridPane.getChildren().add(gitHubButton);
         gitHubButton.setOnAction(event -> {
             if (message != null)
@@ -810,14 +851,16 @@ public abstract class Overlay<T extends Overlay> {
         }
     }
 
-    protected void addCloseButton() {
+    protected void addButtons() {
         if (!hideCloseButton) {
             closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+            closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
         }
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
+            actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
             actionButton.setOnAction(event -> {
@@ -828,11 +871,24 @@ public abstract class Overlay<T extends Overlay> {
             Pane spacer = new Pane();
             HBox hBox = new HBox();
             hBox.setSpacing(10);
+
+            hBox.getChildren().addAll(spacer, actionButton);
+
+            if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
+                secondaryActionButton = new AutoTooltipButton(secondaryActionButtonText);
+                secondaryActionButton.setOnAction(event -> {
+                    hide();
+                    secondaryActionHandlerOptional.ifPresent(Runnable::run);
+                });
+
+                hBox.getChildren().add(secondaryActionButton);
+            }
+
             if (!hideCloseButton)
-                hBox.getChildren().addAll(spacer, closeButton, actionButton);
-            else
-                hBox.getChildren().addAll(spacer, actionButton);
+                hBox.getChildren().add(closeButton);
+
             HBox.setHgrow(spacer, Priority.ALWAYS);
+            spacer.setMaxWidth(Double.MAX_VALUE);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);
             GridPane.setRowIndex(hBox, ++rowIndex);
@@ -842,10 +898,10 @@ public abstract class Overlay<T extends Overlay> {
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
             GridPane.setHalignment(closeButton, HPos.RIGHT);
+            GridPane.setColumnSpan(closeButton, 2);
             if (!showReportErrorButtons)
                 GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
             GridPane.setRowIndex(closeButton, ++rowIndex);
-            GridPane.setColumnIndex(closeButton, 1);
             gridPane.getChildren().add(closeButton);
         }
     }
@@ -858,10 +914,7 @@ public abstract class Overlay<T extends Overlay> {
     protected void setTruncatedMessage() {
         if (message != null && message.length() > 1800)
             truncatedMessage = StringUtils.abbreviate(message, 1800);
-        else if (message != null)
-            truncatedMessage = message;
-        else
-            truncatedMessage = "";
+        else truncatedMessage = Objects.requireNonNullElse(message, "");
     }
 
     protected double getDuration(double duration) {

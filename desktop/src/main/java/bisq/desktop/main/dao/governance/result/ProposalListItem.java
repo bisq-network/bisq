@@ -19,17 +19,17 @@ package bisq.desktop.main.dao.governance.result;
 
 import bisq.desktop.util.FormBuilder;
 
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.ballot.vote.Vote;
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.proposal.compensation.CompensationProposal;
-import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposal;
-import bisq.core.dao.governance.proposal.param.ChangeParamProposal;
-import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposal;
-import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposal;
-import bisq.core.dao.governance.proposal.role.BondedRoleProposal;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
@@ -119,9 +119,9 @@ public class ProposalListItem {
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
                 return changeParamProposal.getParam().getDisplayString();
             case BONDED_ROLE:
-                BondedRoleProposal bondedRoleProposal = (BondedRoleProposal) proposal;
-                BondedRole bondedRole = bondedRoleProposal.getBondedRole();
-                return Res.get("dao.bond.bondedRoleType." + bondedRole.getBondedRoleType().name());
+                RoleProposal roleProposal = (RoleProposal) proposal;
+                Role role = roleProposal.getRole();
+                return Res.get("dao.bond.bondedRoleType." + role.getBondedRoleType().name());
             case CONFISCATE_BOND:
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
                 // TODO add info to bond
