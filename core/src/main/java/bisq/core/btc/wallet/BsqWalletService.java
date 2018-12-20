@@ -23,6 +23,8 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.dao.node.full.RawTx;
+import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -56,6 +58,7 @@ import javax.inject.Inject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +82,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final BsqCoinSelector bsqCoinSelector;
     private final NonBsqCoinSelector nonBsqCoinSelector;
     private final DaoStateService daoStateService;
+    private final TxParser txParser;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
 
@@ -106,6 +110,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             BsqCoinSelector bsqCoinSelector,
                             NonBsqCoinSelector nonBsqCoinSelector,
                             DaoStateService daoStateService,
+                            TxParser txParser,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -115,6 +120,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.bsqCoinSelector = bsqCoinSelector;
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
+        this.txParser = txParser;
 
         if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             walletsSetup.addSetupCompletedHandler(() -> {
@@ -307,8 +313,59 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     private void updateBsqWalletTransactions() {
         walletTransactions.setAll(getTransactions(false));
-        // walletTransactions.setAll(getBsqWalletTransactions());
+        parsePending();
         updateBsqBalance();
+    }
+
+    private void parsePending() {
+        // The transactions must be parsed in dependence order since they might spend previous
+        // unconfirmed outputs
+        List<Transaction> orderedPending = sortTxnsByDependency(getPendingWalletTransactionsStream()
+                .collect(Collectors.toSet()));
+        orderedPending.stream()
+                .filter(tx -> {
+                    // Don't try to parse pending orders unless all inputs are known
+                    return tx.getInputs().stream().noneMatch(input -> input.getConnectedOutput() == null);
+                })
+                .forEach(tx -> txParser.findTx(
+                        RawTx.fromTransaction(tx, daoStateService.getBlockHeightOfLastBlock() + 1), false));
+    }
+
+    /**
+     * TODO: This is copied from bitcoinj. Better make this public in bitcoinj
+     * Creates and returns a new List with the same txns as inputSet
+     * but txns are sorted by depencency (a topological sort).
+     * If tx B spends tx A, then tx A should be before tx B on the returned List.
+     * Several invocations to this method with the same inputSet could result in lists with txns in different order,
+     * as there is no guarantee on the order of the returned txns besides what was already stated.
+     */
+    private List<Transaction> sortTxnsByDependency(Set<Transaction> inputSet) {
+        ArrayList<Transaction> result = new ArrayList<>(inputSet);
+        for (int i = 0; i < result.size() - 1; i++) {
+            boolean txAtISpendsOtherTxInTheList;
+            do {
+                txAtISpendsOtherTxInTheList = false;
+                for (int j = i + 1; j < result.size(); j++) {
+                    if (spends(result.get(i), result.get(j))) {
+                        Transaction transactionAtI = result.remove(i);
+                        result.add(j, transactionAtI);
+                        txAtISpendsOtherTxInTheList = true;
+                        break;
+                    }
+                }
+            } while (txAtISpendsOtherTxInTheList);
+        }
+        return result;
+    }
+
+    /** Finds whether txA spends txB */
+    private boolean spends(Transaction txA, Transaction txB) {
+        for (TransactionInput txInput : txA.getInputs()) {
+            if (txInput.getOutpoint().getHash().equals(txB.getHash())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Set<Transaction> getBsqWalletTransactions() {

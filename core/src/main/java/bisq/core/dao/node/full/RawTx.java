@@ -26,6 +26,8 @@ import bisq.common.proto.network.NetworkPayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.bitcoinj.core.Transaction;
+
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -60,6 +62,25 @@ public final class RawTx extends BaseTx implements NetworkPayload {
                 tx.getTime(),
                 tx.getTxInputs(),
                 rawTxOutputs);
+    }
+
+    // Convert pending bitcoinj transaction to rawtx
+    public static RawTx fromTransaction(Transaction tx, int blockHeight) {
+        ImmutableList<TxInput> txInputs = ImmutableList.copyOf(tx.getInputs().stream()
+                .map(TxInput::fromTransactionInput)
+                .collect(Collectors.toList()));
+
+        ImmutableList<RawTxOutput> rawTxOutputs = ImmutableList.copyOf(tx.getOutputs().stream()
+                .map(RawTxOutput::fromTransactionOutput)
+                .collect(Collectors.toList()));
+        return new RawTx(String.valueOf(tx.getVersion()),
+                tx.getHashAsString(),
+                blockHeight,
+                "",
+                tx.getUpdateTime().getTime(),
+                txInputs,
+                rawTxOutputs
+        );
     }
 
     private final ImmutableList<RawTxOutput> rawTxOutputs;

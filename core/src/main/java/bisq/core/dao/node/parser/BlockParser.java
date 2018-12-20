@@ -113,8 +113,7 @@ public class BlockParser {
                 txParser.findTx(rawTx,
                         genesisTxId,
                         genesisBlockHeight,
-                        genesisTotalSupply,
-                        true)
+                        genesisTotalSupply)
                         .ifPresent(txList::add));
 
         if (System.currentTimeMillis() - startTs > 0)

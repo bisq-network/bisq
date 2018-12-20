@@ -21,7 +21,9 @@ import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
@@ -34,7 +36,16 @@ public class UnconfirmedState {
     private final Map<TxOutputKey, TxOutput> nonBsqTxOutputMap = new HashMap<>();
     @Getter
     private final Map<TxOutputKey, SpentInfo> spentInfoMap = new HashMap<>();
+    @Getter
+    private final List<String> parsedTxList = new ArrayList<>();
 
     public UnconfirmedState() {
+    }
+
+    public void reset() {
+        unspentTxOutputMap.clear();
+        nonBsqTxOutputMap.clear();
+        spentInfoMap.clear();
+        parsedTxList.clear();
     }
 }

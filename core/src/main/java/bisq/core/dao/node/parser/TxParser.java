@@ -68,12 +68,11 @@ public class TxParser {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<Tx> findTx(RawTx rawTx, String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply,
-                               boolean confirmed) {
-        if (confirmed && GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight))
+    public Optional<Tx> findTx(RawTx rawTx, String genesisTxId, int genesisBlockHeight, Coin genesisTotalSupply) {
+        if (GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight))
             return Optional.of(GenesisTxParser.getGenesisTx(rawTx, genesisTotalSupply, daoStateService));
         else
-            return findTx(rawTx, confirmed);
+            return findTx(rawTx, true);
     }
 
     // Apply state changes to tx, inputs and outputs
@@ -81,7 +80,10 @@ public class TxParser {
     // Any tx with BSQ input is a BSQ tx.
     // There might be txs without any valid BSQ txOutput but we still keep track of it,
     // for instance to calculate the total burned BSQ.
-    private Optional<Tx> findTx(RawTx rawTx, boolean confirmed) {
+    public Optional<Tx> findTx(RawTx rawTx, boolean confirmed) {
+        if (!confirmed && !daoStateService.addUnconfirmed(rawTx.getId()))
+            return Optional.empty();
+
         int blockHeight = rawTx.getBlockHeight();
         TempTx tempTx = TempTx.fromRawTx(rawTx);
 

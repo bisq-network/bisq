@@ -44,6 +44,7 @@ import javax.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -193,6 +194,7 @@ public class DaoStateService implements DaoSetupService {
     public void onNewBlockHeight(int blockHeight) {
         daoState.setChainHeight(blockHeight);
         daoStateListeners.forEach(listener -> listener.onNewBlockHeight(blockHeight));
+        unconfirmedState.reset();
     }
 
     // Second we get the block added with empty txs
@@ -395,22 +397,29 @@ public class DaoStateService implements DaoSetupService {
     // UnspentTxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Returns copy of unspent tx map and unconfirmed unspent tx map
     public Map<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
-        return daoState.getUnspentTxOutputMap();
+        Map<TxOutputKey, TxOutput> unspent = new HashMap();
+        unspent.putAll(daoState.getUnspentTxOutputMap());
+        unconfirmedState.getSpentInfoMap().forEach((txOutputKey, spentInfo) -> {
+            unspent.remove(txOutputKey);
+        });
+        unspent.putAll(unconfirmedState.getUnspentTxOutputMap());
+        return unspent;
     }
 
     public void addUnspentTxOutput(TxOutput txOutput, boolean confirmed) {
         if (confirmed) {
-            getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
+            daoState.getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
         } else {
-            unconfirmedState.getUnspentTxOutputMap().put(txOutput.getKey(),txOutput);
+            unconfirmedState.getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
             log.info("Unconfirmed txout added, txid=" + txOutput.getTxId());
         }
     }
 
     public void removeUnspentTxOutput(TxOutput txOutput, boolean confirmed) {
         if (confirmed) {
-            getUnspentTxOutputMap().remove(txOutput.getKey());
+            daoState.getUnspentTxOutputMap().remove(txOutput.getKey());
         } else {
             unconfirmedState.getUnspentTxOutputMap().remove(txOutput.getKey());
             log.info("Unconfirmed txout spent, txid=" + txOutput.getTxId());
@@ -437,7 +446,6 @@ public class DaoStateService implements DaoSetupService {
         // The above isUnspent call satisfies optionalTxOutput.isPresent()
         checkArgument(optionalTxOutput.isPresent(), "optionalTxOutput must be present");
         TxOutput txOutput = optionalTxOutput.get();
-
         switch (txOutput.getTxOutputType()) {
             case UNDEFINED_OUTPUT:
                 return false;
@@ -945,6 +953,17 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputsByTxOutputType(TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Unconfirmed tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean addUnconfirmed(String txId) {
+        if (unconfirmedState.getParsedTxList().contains(txId))
+            return false;
+        else
+            unconfirmedState.getParsedTxList().add(txId);
+        return true;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners

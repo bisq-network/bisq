@@ -25,6 +25,13 @@ import bisq.common.proto.network.NetworkPayload;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.ScriptChunk;
+
+import com.neemre.btcdcli4j.core.domain.Output;
+
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +56,20 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
                 txOutput.getAddress(),
                 txOutput.getOpReturnData(),
                 txOutput.getBlockHeight());
+    }
+
+    // Convert unconfirmed bitcoinj outputs to rawtxoutput
+    // There will be no blockheight set yet for unconfirmed tx
+    public static RawTxOutput fromTransactionOutput(TransactionOutput output) {
+        List<ScriptChunk> l = output.getScriptPubKey().isOpReturn() ? output.getScriptPubKey().getChunks() : null;
+        byte[] opret = output.getScriptPubKey().isOpReturn() ? output.getScriptPubKey().getChunks().get(1).data : null;
+        return new RawTxOutput(output.getIndex(),
+                output.getValue().getValue(),
+                output.getParentTransactionHash().toString(),
+                null,
+                null,
+                opret,
+                0);
     }
 
     public RawTxOutput(int index,
