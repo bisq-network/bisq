@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.governance.period.CycleService;
+
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -41,6 +43,7 @@ public class DaoStateSnapshotServiceTest {
     public void setup() {
         daoStateSnapshotService = new DaoStateSnapshotService(mock(DaoStateService.class),
                 mock(GenesisTxInfo.class),
+                mock(CycleService.class),
                 mock(DaoStateStorageService.class));
     }
 

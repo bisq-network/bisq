@@ -23,6 +23,9 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.dao.exceptions.IncompleteBitcoinjTransactionException;
+import bisq.core.dao.node.full.RawTx;
+import bisq.core.dao.node.parser.TxParser;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -56,6 +59,7 @@ import javax.inject.Inject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +83,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final BsqCoinSelector bsqCoinSelector;
     private final NonBsqCoinSelector nonBsqCoinSelector;
     private final DaoStateService daoStateService;
+    private final TxParser txParser;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
 
@@ -106,6 +111,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             BsqCoinSelector bsqCoinSelector,
                             NonBsqCoinSelector nonBsqCoinSelector,
                             DaoStateService daoStateService,
+                            TxParser txParser,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -115,6 +121,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.bsqCoinSelector = bsqCoinSelector;
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
+        this.txParser = txParser;
 
         if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
             walletsSetup.addSetupCompletedHandler(() -> {
@@ -307,8 +314,23 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     private void updateBsqWalletTransactions() {
         walletTransactions.setAll(getTransactions(false));
-        // walletTransactions.setAll(getBsqWalletTransactions());
+        parsePending();
         updateBsqBalance();
+    }
+
+    private void parsePending() {
+        // The transactions must be parsed in creation order since they might spend previous
+        // unconfirmed outputs
+        List<Transaction> orderedPending = getPendingWalletTransactionsStream()
+                .sorted((tx1, tx2) -> tx1.getUpdateTime().compareTo(tx2.getUpdateTime()))
+                .collect(Collectors.toList());
+        orderedPending.stream()
+                .filter(tx -> {
+                    // Don't try to parse pending orders unless all inputs are known
+                    return tx.getInputs().stream().noneMatch(input -> input.getConnectedOutput() == null);
+                })
+                .forEach(tx -> txParser.findTx(
+                        RawTx.fromTransaction(tx, daoStateService.getBlockHeightOfLastBlock() + 1), false));
     }
 
     private Set<Transaction> getBsqWalletTransactions() {

@@ -17,11 +17,14 @@
 
 package bisq.core.dao.state.model.blockchain;
 
+import bisq.core.dao.exceptions.IncompleteBitcoinjTransactionException;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
+
+import org.bitcoinj.core.TransactionInput;
 
 import java.util.Optional;
 
@@ -46,6 +49,14 @@ public final class TxInput implements PersistablePayload, ImmutableDaoStateModel
         return new TxInput(txInput.getConnectedTxOutputTxId(),
                 txInput.getConnectedTxOutputIndex(),
                 txInput.getPubKey());
+    }
+
+    // Parse unconfirmed bitcoinj tx
+    // Doesn't handle unconnected inputs, make sure to clean the inputs to be parsed
+    public static TxInput fromTransactionInput(TransactionInput input) {
+        return new TxInput(input.getConnectedOutput().getParentTransactionHash().toString(),
+                input.getConnectedOutput().getIndex(),
+                null);
     }
 
     private final String connectedTxOutputTxId;
