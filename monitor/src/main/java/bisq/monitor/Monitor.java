@@ -59,7 +59,7 @@ public class Monitor {
      */
     private void start() throws Throwable {
         // start Tor
-        Tor.setDefault(new NativeTor(new File("monitor-tor")));
+        Tor.setDefault(new NativeTor(new File("monitor-tor"), null, null, false));
 
         // assemble Metrics
         metrics.add(new TorStartupTime());
@@ -103,6 +103,9 @@ public class Monitor {
         log.trace("joining metrics...");
         for (Metric current : metrics)
             current.join();
+
+        log.info("shutting down tor");
+        Tor.getDefault().shutdown();
     }
 
     /**

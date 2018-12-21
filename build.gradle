@@ -327,7 +327,7 @@ configure(project(':monitor')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6') {
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.2') {
             exclude(module: 'slf4j-api')
         }
 
