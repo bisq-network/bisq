@@ -64,22 +64,23 @@ public class TorStartupTime extends Metric {
     protected void execute() {
         // cleanup installation
         torWorkingDirectory.delete();
-
+        Tor tor = null;
         // start timer - we do not need System.nanoTime as we expect our result to be in
-        // seconds time.
+        // tenth of seconds time.
         long start = System.currentTimeMillis();
 
         try {
-            Tor tor = new NativeTor(torWorkingDirectory, null, torOverrides);
+            tor = new NativeTor(torWorkingDirectory, null, torOverrides);
 
             // stop the timer and set its timestamp
             report(System.currentTimeMillis() - start);
-
-            // cleanup
-            tor.shutdown();
         } catch (TorCtlException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } finally {
+            // cleanup
+            if (tor != null)
+                tor.shutdown();
         }
     }
 }
