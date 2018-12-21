@@ -77,7 +77,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "3. The " + Res.getBaseCurrencyName() + " market price is delivered by 3rd parties (BitcoinAverage, Poloniex, Coinmarketcap). " +
                 "It is your responsibility to verify the price with other sources for correctness.\n\n" +
 
-                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the users confirms " +
+                "4. Any Fiat payment method carries a potential risk for bank chargeback. By accepting the \"User Agreement\" the user confirms " +
                 "to be aware of those risks and in no case will claim legal responsibility to the authors or copyright holders of the software.\n\n" +
 
                 "5. Any dispute, controversy or claim arising out of or relating to the use of the software shall be settled by arbitration in " +
@@ -87,7 +87,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "6. The user confirms that he has read and agreed to the rules regarding the dispute process:\n" +
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
                 "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
-                "    - If the bank of the fiat sender charges fees the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
+                "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
                 "    - You must cooperate with the arbitrator during the arbitration process.\n" +
                 "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
                 "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +
