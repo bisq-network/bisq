@@ -20,17 +20,31 @@ package bisq.core.offer;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.filter.FilterManager;
+import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.payment.BankAccount;
+import bisq.core.payment.CountryBasedPaymentAccount;
+import bisq.core.payment.F2FAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.SepaAccount;
+import bisq.core.payment.SepaInstantAccount;
+import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
+
+import bisq.network.p2p.P2PService;
 
 import bisq.common.util.MathUtils;
 
@@ -39,6 +53,9 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class holds utility methods for the creation of an Offer.
@@ -332,5 +350,112 @@ public class OfferUtil {
             feeInFiatAsString = Res.get("shared.na");
         }
         return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
+    }
+
+    public static ArrayList<String> getAcceptedCountryCodes(PaymentAccount paymentAccount) {
+        ArrayList<String> acceptedCountryCodes = null;
+        if (paymentAccount instanceof SepaAccount) {
+            acceptedCountryCodes = new ArrayList<>(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
+        } else if (paymentAccount instanceof SepaInstantAccount) {
+            acceptedCountryCodes = new ArrayList<>(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
+        } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
+            acceptedCountryCodes = new ArrayList<>();
+            Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
+            if (country != null)
+                acceptedCountryCodes.add(country.code);
+        }
+        return acceptedCountryCodes;
+    }
+
+    public static ArrayList<String> getAcceptedBanks(PaymentAccount paymentAccount) {
+        ArrayList<String> acceptedBanks = null;
+        if (paymentAccount instanceof SpecificBanksAccount) {
+            acceptedBanks = new ArrayList<>(((SpecificBanksAccount) paymentAccount).getAcceptedBanks());
+        } else if (paymentAccount instanceof SameBankAccount) {
+            acceptedBanks = new ArrayList<>();
+            acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
+        }
+        return acceptedBanks;
+    }
+
+    public static String getBankId(PaymentAccount paymentAccount) {
+        return paymentAccount instanceof BankAccount ? ((BankAccount) paymentAccount).getBankId() : null;
+    }
+
+    // That is optional and set to null if not supported (AltCoins, OKPay,...)
+    public static String getCountryCode(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof CountryBasedPaymentAccount) {
+            Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
+            return country != null ? country.code : null;
+        } else {
+            return null;
+        }
+    }
+
+    public static long getMaxTradeLimit(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
+        if (paymentAccount != null)
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
+        else
+            return 0;
+    }
+
+    public static long getMaxTradePeriod(PaymentAccount paymentAccount) {
+        return paymentAccount.getPaymentMethod().getMaxTradePeriod();
+    }
+
+    public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
+                                                      ReferralIdService referralIdService,
+                                                      PaymentAccount paymentAccount,
+                                                      String currencyCode) {
+        Map<String, String> extraDataMap = null;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            extraDataMap = new HashMap<>();
+            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+        }
+
+        if (referralIdService.getOptionalReferralId().isPresent()) {
+            if (extraDataMap == null)
+                extraDataMap = new HashMap<>();
+            extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
+        }
+
+        if (paymentAccount instanceof F2FAccount) {
+            if (extraDataMap == null)
+                extraDataMap = new HashMap<>();
+            extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
+            extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
+        }
+
+        return extraDataMap;
+    }
+
+    public static void validateOfferData(FilterManager filterManager,
+                                         P2PService p2PService,
+                                         Coin buyerSecurityDepositAsCoin,
+                                         PaymentAccount paymentAccount,
+                                         String currencyCode, Coin makerFeeAsCoin) {
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMaxBuyerSecurityDeposit()) <= 0,
+                "securityDeposit must be not exceed " +
+                        Restrictions.getMaxBuyerSecurityDeposit().toFriendlyString());
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.getMinBuyerSecurityDeposit()) >= 0,
+                "securityDeposit must be not be less than " +
+                        Restrictions.getMinBuyerSecurityDeposit().toFriendlyString());
+
+        checkArgument(!filterManager.isCurrencyBanned(currencyCode),
+                Res.get("offerbook.warning.currencyBanned"));
+        checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
+                Res.get("offerbook.warning.paymentMethodBanned"));
+        checkNotNull(makerFeeAsCoin, "makerFee must not be null");
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
+    }
+
+    public static Coin getFundsNeededForOffer(Coin tradeAmount, Coin buyerSecurityDeposit, OfferPayload.Direction direction) {
+        boolean buyOffer = isBuyOffer(direction);
+        Coin needed = buyOffer ? buyerSecurityDeposit : Restrictions.getSellerSecurityDeposit();
+        if (!buyOffer)
+            needed = needed.add(tradeAmount);
+
+        return needed;
     }
 }

@@ -213,6 +213,7 @@ configure(project(':core')) {
         compile project(':assets')
         compile project(':p2p')
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        compile "javax.validation:validation-api:1.1.0.Final"
         compile('network.bisq.btcd-cli4j:btcd-cli4j-core:065d3786') {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')

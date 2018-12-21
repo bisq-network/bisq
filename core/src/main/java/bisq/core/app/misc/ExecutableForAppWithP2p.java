@@ -64,6 +64,11 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
         UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
     }
 
+    @Override
+    public void onSetupComplete() {
+        log.info("onSetupComplete");
+    }
+
     // We don't use the gracefulShutDown implementation of the super class as we have a limited set of modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {

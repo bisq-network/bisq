@@ -323,7 +323,7 @@ public class FilterManager {
         return user.getDevelopersFilter();
     }
 
-    public boolean isCurrencyBanned(String currencyCode) {
+    public boolean isCurrencyBanned(@Nullable String currencyCode) {
         return getFilter() != null &&
                 getFilter().getBannedCurrencies() != null &&
                 getFilter().getBannedCurrencies().stream()
@@ -337,7 +337,7 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(paymentMethod.getId()));
     }
 
-    public boolean isOfferIdBanned(String offerId) {
+    public boolean isOfferIdBanned(@Nullable String offerId) {
         return getFilter() != null &&
                 getFilter().getBannedOfferIds().stream()
                         .anyMatch(e -> e.equals(offerId));

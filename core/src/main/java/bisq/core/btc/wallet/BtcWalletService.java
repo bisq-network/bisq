@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
@@ -955,6 +956,24 @@ public class BtcWalletService extends WalletService {
         return counter < 10 &&
                 (tx.getFee().value < targetFee ||
                         tx.getFee().value - targetFee > 1000);
+    }
+
+    public int getEstimatedFeeTxSize(List<Coin> outputValues, Coin txFee)
+            throws InsufficientMoneyException, AddressFormatException {
+        Transaction transaction = new Transaction(params);
+        Address dummyAddress = wallet.currentReceiveKey().toAddress(BisqEnvironment.getParameters());
+        outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
+
+        SendRequest sendRequest = SendRequest.forTx(transaction);
+        sendRequest.shuffleOutputs = false;
+        sendRequest.aesKey = aesKey;
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.changeAddress = dummyAddress;
+        wallet.completeTx(sendRequest);
+        return transaction.bitcoinSerialize().length;
     }
 
 
