@@ -1,17 +1,23 @@
-;This file will be executed next to the application bundle image
+﻿;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bisq with application files
-[Setup]
+#define AppVersion GetEnv('version')
+#define FileVersion GetEnv('file_version')
+#define AppCopyrightYear GetDateTimeString('yyyy', '-', ':')
 
+[Setup]
 AppId={{bisq}}
 AppName=Bisq
-AppVersion=0.9.1
-AppVerName=Bisq
+AppVersion={#AppVersion}
+AppVerName=Bisq v{#AppVersion}
 AppPublisher=Bisq
 AppComments=Bisq
-AppCopyright=Copyright (C) 2018
+AppCopyright=Copyright (C) {#AppCopyrightYear}
 AppPublisherURL=https://bisq.network
-AppSupportURL=https://bisq.network
-;AppUpdatesURL=http://java.com/
+AppSupportURL=https://bisq.community
+;AppUpdatesURL=https://github.com/bisq-network/bisq/releases
+VersionInfoVersion={#FileVersion}
+VersionInfoDescription=Bisq Setup
+VersionInfoCopyright=Copyright (C) {#AppCopyrightYear}
 DefaultDirName={localappdata}\Bisq
 DisableStartupPrompt=Yes
 DisableDirPage=Yes
@@ -24,7 +30,7 @@ DefaultGroupName=Bisq
 LicenseFile=
 ;WinXP or above
 MinVersion=0,5.1
-OutputBaseFilename=Bisq
+OutputBaseFilename=Bisq-{#AppVersion}
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
