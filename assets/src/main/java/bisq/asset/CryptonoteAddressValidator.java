@@ -49,6 +49,10 @@ public class CryptonoteAddressValidator implements AddressValidator {
 				//Aeon & Blur-type addresses
 				return AddressValidationResult.validAddress();
 			}
+            else if (prefix.length() == 4 && address.length() == 94 + prefix.length()) {
+			    // FourtyTwo-type address
+				return AddressValidationResult.validAddress();
+			}
 			else {
 				//Non-supported prefix
 				return AddressValidationResult.invalidStructure();
@@ -61,6 +65,10 @@ public class CryptonoteAddressValidator implements AddressValidator {
 			}	
 			else if (subAddressPrefix.length() == 2 && address.length() == 95 + subAddressPrefix.length()) {
 				// Aeon, Mask & Blur-type subaddress
+				return AddressValidationResult.validAddress();
+			}
+            if (subAddressPrefix.length() == 5 && address.length() == 96 + subAddressPrefix.length()) {
+				// FourtyTwo-type subaddress
 				return AddressValidationResult.validAddress();
 			}
 			else {
