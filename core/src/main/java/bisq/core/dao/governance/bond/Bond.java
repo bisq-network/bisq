@@ -53,8 +53,10 @@ public abstract class Bond<T extends BondedAsset> {
     }
 
     public boolean isActive() {
-        return bondState != BondState.READY_FOR_LOCKUP &&
-                bondState != BondState.UNLOCKED;
+        return bondState == BondState.LOCKUP_TX_CONFIRMED ||
+                bondState == BondState.UNLOCK_TX_PENDING ||
+                bondState == BondState.UNLOCK_TX_CONFIRMED ||
+                bondState == BondState.UNLOCKING;
     }
 
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
