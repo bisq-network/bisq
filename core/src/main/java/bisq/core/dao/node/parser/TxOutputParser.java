@@ -102,7 +102,6 @@ public class TxOutputParser {
     }
 
     void processTxOutput(TempTxOutput tempTxOutput) {
-        // TODO(sq): this doens't make sense, how could a new output be confiscated?
         if (!daoStateService.isConfiscated(tempTxOutput.getKey())) {
             // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
             // another output index is invalid.
