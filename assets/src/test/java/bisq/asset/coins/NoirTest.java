@@ -1,4 +1,3 @@
-
 /*
  * This file is part of Bisq.
  *
@@ -25,6 +24,20 @@ import org.junit.Test;
 public class NoirTest extends AbstractAssetWithDefaultValidatorTest {
 
     public NoirTest() {
-        super("Noir", "NOR", new RegexAddressValidator("^[Z][_A-z0-9]*([_A-z0-9])*$"));
+        super(new Noir());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("ZMZ6M64FiFjPjmzXRf7xBuyarorUmT8uyG");
+        assertValidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("");
+        assertInvalidAddress("21HQQgsvLTgN9xD9hNmAgAreakzVzQUSLSHa");
+        assertInvalidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7*");
+        assertInvalidAddress("ZHoMM3vccwGrAQocmmp9ZHA7Gjg9Uqkok7#jHt5jtP");
     }
 }
