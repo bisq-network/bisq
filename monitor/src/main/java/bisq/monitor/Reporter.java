@@ -15,36 +15,37 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.monitor.metric;
+package bisq.monitor;
 
-import java.util.Properties;
-
-import bisq.monitor.Reporter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
 
 /**
- * A dummy metric for development purposes.
+ * Reports findings to a specific service/file/place using the proper means to
+ * do so.
  * 
  * @author Florian Reimair
  */
-@Slf4j
-public class Dummy extends Metric {
+public abstract class Reporter {
 
-    public Dummy(Reporter reporter) {
-        super(reporter);
-    }
+    /**
+     * Report our findings.
+     * @param value
+     */
+    public abstract void report(long value);
 
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
+    /**
+     * Report our findings.
+     * 
+     * @param values Map<metric name, metric value>
+     */
+    public abstract void report(Map<String, String> values);
 
-        log.info(this.configuration.toString());
-        // TODO check if we need to restart this Metric
-    }
-
-    @Override
-    protected void execute() {
-        log.info(this.getName() + " running");
-    }
+    /**
+     * Report our findings.
+     * 
+     * @param values Map<metric name, metric value>
+     * @param prefix for example "bisq.torStartupTime"
+     */
+    public abstract void report(Map<String, String> values, String prefix);
 
 }

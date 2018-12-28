@@ -27,6 +27,7 @@ import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 
 import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorRoundtripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
@@ -63,9 +64,13 @@ public class Monitor {
         Tor.setDefault(new NativeTor(new File("monitor-tor"), null, null, false));
 
         // assemble Metrics
-        metrics.add(new TorStartupTime());
-        metrics.add(new TorRoundtripTime());
-        metrics.add(new TorHiddenServiceStartupTime());
+        // - create reporters
+        ConsoleReporter consoleReporter = new ConsoleReporter();
+
+        // - add available metrics with their reporters
+        metrics.add(new TorStartupTime(consoleReporter));
+        metrics.add(new TorRoundtripTime(consoleReporter));
+        metrics.add(new TorHiddenServiceStartupTime(consoleReporter));
 
         // configure Metrics
         Properties properties = getProperties();

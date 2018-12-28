@@ -17,11 +17,10 @@
 
 package bisq.monitor.metric;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
+import bisq.monitor.Reporter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,6 +43,11 @@ public abstract class Metric extends Thread {
      * enable/disable helper
      */
     private final ReentrantLock lock = new ReentrantLock();
+
+    /**
+     * our reporter
+     */
+    protected final Reporter reporter;
 
     /**
      * disable execution
@@ -84,9 +88,11 @@ public abstract class Metric extends Thread {
     /**
      * Constructor.
      */
-    protected Metric() {
+    protected Metric(Reporter reporter) {
         // set human readable name
         super.setName(this.getClass().getSimpleName());
+
+        this.reporter = reporter;
 
         // set as daemon, so that the jvm does not terminate the thread
         setDaemon(true);
@@ -171,36 +177,6 @@ public abstract class Metric extends Thread {
      * Gets scheduled repeatedly.
      */
     protected abstract void execute();
-
-    /**
-     * Report our findings.
-     * <p>
-     * TODO atm we construct the report string to be used for graphite. We, of
-     * course, need to send it to the graphite service eventually.
-     * 
-     * @param value
-     */
-    protected void report(long value) {
-        HashMap<String, String> result = new HashMap<String, String>();
-        result.put("", String.valueOf(value));
-        report(result);
-    }
-
-    /**
-     * Report our findings.
-     * <p>
-     * TODO atm we construct the report string to be used for graphite. We, of
-     * course, need to send it to the graphite service eventually.
-     * 
-     * @param values Map<key,value>
-     */
-    protected void report(Map<String, String> values) {
-        long timestamp = System.currentTimeMillis();
-        values.forEach((key, value) -> {
-            String report = "bisq." + getName() + ("".equals(key) ? "" : "." + key) + " " + value + " " + timestamp;
-            System.err.println("Report: " + report);
-        });
-    }
 
     /**
      * Initiate graceful shutdown of the Metric.

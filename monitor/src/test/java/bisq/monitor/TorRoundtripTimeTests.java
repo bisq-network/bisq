@@ -19,7 +19,6 @@ package bisq.monitor;
 
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.Thread.State;
 import java.util.Map;
 import java.util.Properties;
@@ -33,28 +32,34 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorRoundtripTime;
 
 public class TorRoundtripTimeTests {
 
-    private class Dut extends TorRoundtripTime {
+    private class DummyReporter extends Reporter {
 
         private Map<String, String> results;
 
-        public Dut() throws IOException {
-            super();
-        }
-
         @Override
-        protected void report(Map<String, String> values) {
-            super.report(values);
-
-            results = values;
+        public void report(long value) {
+            Assert.fail();
         }
 
         public Map<String, String> hasResults() {
             return results;
         }
+
+        @Override
+        public void report(Map<String, String> values) {
+            results = values;
+        }
+
+        @Override
+        public void report(Map<String, String> values, String prefix) {
+            report(values);
+        }
+
     }
 
     private static File workingDirectory = new File(TorRoundtripTimeTests.class.getSimpleName());
@@ -68,16 +73,18 @@ public class TorRoundtripTimeTests {
     @ValueSource(strings = { "default", "3", "4", "10" })
     public void run(String sampleSize) throws Exception {
 
+        DummyReporter reporter = new DummyReporter();
+
         // configure
         Properties configuration = new Properties();
-        configuration.put("Dut.enabled", "true");
-        configuration.put("Dut.run.interval", "2");
+        configuration.put("TorRoundtripTime.enabled", "true");
+        configuration.put("TorRoundtripTime.run.interval", "2");
         if (!"default".equals(sampleSize))
-            configuration.put("Dut.run.sampleSize", sampleSize);
+            configuration.put("TorRoundtripTime.run.sampleSize", sampleSize);
         // torproject.org hidden service
-        configuration.put("Dut.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
+        configuration.put("TorRoundtripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
 
-        Dut DUT = new Dut();
+        Metric DUT = new TorRoundtripTime(reporter);
         DUT.configure(configuration);
 
         // start
@@ -91,7 +98,7 @@ public class TorRoundtripTimeTests {
         DUT.join();
 
         // observe results
-        Map<String, String> results = DUT.hasResults();
+        Map<String, String> results = reporter.hasResults();
         Assert.assertFalse(results.isEmpty());
         Assert.assertEquals(results.get("sampleSize"), sampleSize.equals("default") ? "1" : sampleSize);
 

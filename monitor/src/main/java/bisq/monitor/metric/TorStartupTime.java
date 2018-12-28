@@ -27,6 +27,8 @@ import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.Torrc;
 
+import bisq.monitor.Reporter;
+
 /**
  * A Metric to measure the deployment and startup time of the packaged Tor
  * binaries.
@@ -39,8 +41,8 @@ public class TorStartupTime extends Metric {
     private final File torWorkingDirectory = new File("metric_torStartupTime");
     private Torrc torOverrides;
 
-    public TorStartupTime() {
-        super();
+    public TorStartupTime(Reporter reporter) {
+        super(reporter);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class TorStartupTime extends Metric {
             tor = new NativeTor(torWorkingDirectory, null, torOverrides);
 
             // stop the timer and set its timestamp
-            report(System.currentTimeMillis() - start);
+            reporter.report(System.currentTimeMillis() - start);
         } catch (TorCtlException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

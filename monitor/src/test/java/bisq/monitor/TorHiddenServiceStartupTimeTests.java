@@ -19,7 +19,7 @@ package bisq.monitor;
 
 
 import java.io.File;
-import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
@@ -30,28 +30,35 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 
 public class TorHiddenServiceStartupTimeTests {
 
-    private class Dut extends TorHiddenServiceStartupTime {
+    private class DummyReporter extends Reporter {
 
         private long result;
 
-        public Dut() throws IOException {
-            super();
-        }
-
         @Override
-        protected void report(long value) {
-            super.report(value);
-
+        public void report(long value) {
             result = value;
+
         }
 
         public long results() {
             return result;
         }
+
+        @Override
+        public void report(Map<String, String> values) {
+            report(Long.parseLong(values.values().iterator().next()));
+        }
+
+        @Override
+        public void report(Map<String, String> values, String prefix) {
+            report(values);
+        }
+
     }
 
     private final static File torWorkingDirectory = new File(TorHiddenServiceStartupTimeTests.class.getSimpleName());
@@ -64,12 +71,14 @@ public class TorHiddenServiceStartupTimeTests {
     @Test
     public void run() throws Exception {
 
+        DummyReporter reporter = new DummyReporter();
+
         // configure
         Properties configuration = new Properties();
-        configuration.put("Dut.enabled", "true");
-        configuration.put("Dut.run.interval", "5");
+        configuration.put("TorHiddenServiceStartupTime.enabled", "true");
+        configuration.put("TorHiddenServiceStartupTime.run.interval", "5");
 
-        Dut DUT = new Dut();
+        Metric DUT = new TorHiddenServiceStartupTime(reporter);
         DUT.configure(configuration);
 
         // start
@@ -80,7 +89,7 @@ public class TorHiddenServiceStartupTimeTests {
         DUT.shutdown();
 
         // observe results
-        Assert.assertTrue(DUT.results() > 0);
+        Assert.assertTrue(reporter.results() > 0);
     }
 
     @AfterAll

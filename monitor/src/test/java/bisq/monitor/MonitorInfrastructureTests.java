@@ -27,9 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import bisq.monitor.metric.Metric;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class MonitorInfrastructureTests {
 
     /**
@@ -38,6 +36,7 @@ public class MonitorInfrastructureTests {
     public class Dummy extends Metric {
 
         public Dummy() {
+            super(null);
         }
 
         public boolean active() {

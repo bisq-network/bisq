@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 
+import bisq.monitor.Reporter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -37,8 +38,8 @@ public class TorHiddenServiceStartupTime extends Metric {
     private static final String LOCAL_PORT = "run.localPort";
     private final String hiddenServiceDirectory = "metric_" + getName();
 
-    public TorHiddenServiceStartupTime() throws IOException {
-        super();
+    public TorHiddenServiceStartupTime(Reporter reporter) throws IOException {
+        super(reporter);
     }
 
     /**
@@ -81,7 +82,7 @@ public class TorHiddenServiceStartupTime extends Metric {
                 servicePort);
         hiddenServiceSocket.addReadyListener(socket -> {
             // stop the timer and report
-            report(System.currentTimeMillis() - start);
+            reporter.report(System.currentTimeMillis() - start);
             log.debug("the hidden service is ready");
             proceed();
             return null;

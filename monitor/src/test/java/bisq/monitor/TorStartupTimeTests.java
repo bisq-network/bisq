@@ -18,47 +18,54 @@
 package bisq.monitor;
 
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
+import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorStartupTime;
 
 public class TorStartupTimeTests {
 
-    private class TorStartupTimeDut extends TorStartupTime {
+    private class DummyReporter extends Reporter {
 
         private long result;
 
-        public TorStartupTimeDut() throws IOException {
-            super();
-        }
-
         @Override
-        protected void report(long value) {
-            // TODO Auto-generated method stub
-            super.report(value);
-
+        public void report(long value) {
             result = value;
-        }
 
+        }
         public long results() {
             return result;
         }
+
+        @Override
+        public void report(Map<String, String> values) {
+            report(Long.parseLong(values.values().iterator().next()));
+        }
+
+        @Override
+        public void report(Map<String, String> values, String prefix) {
+            report(values);
+        }
+
     }
 
     @Test
     public void run() throws Exception {
 
+        DummyReporter reporter = new DummyReporter();
+
         // configure
         Properties configuration = new Properties();
-        configuration.put("TorStartupTimeDut.enabled", "true");
-        configuration.put("TorStartupTimeDut.run.interval", "2");
-        configuration.put("TorStartupTimeDut.run.socksPort", "9999");
+        configuration.put("TorStartupTime.enabled", "true");
+        configuration.put("TorStartupTime.run.interval", "2");
+        configuration.put("TorStartupTime.run.socksPort", "9999");
 
-        TorStartupTimeDut DUT = new TorStartupTimeDut();
+        Metric DUT = new TorStartupTime(reporter);
         DUT.configure(configuration);
 
         // start
@@ -69,6 +76,6 @@ public class TorStartupTimeTests {
         DUT.shutdown();
 
         // observe results
-        Assert.assertTrue(DUT.results() > 0);
+        Assert.assertTrue(reporter.results() > 0);
     }
 }

@@ -31,6 +31,8 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
+import bisq.monitor.Reporter;
+
 /**
  * A Metric to measure the round-trip time to the Bisq seednodes via plain tor.
  * 
@@ -41,8 +43,8 @@ public class TorRoundtripTime extends Metric {
     private static final String SAMPLE_SIZE = "run.sampleSize";
     private static final String HOSTS = "run.hosts";
 
-    public TorRoundtripTime() {
-        super();
+    public TorRoundtripTime(Reporter reporter) {
+        super(reporter);
     }
 
     @Override
@@ -103,7 +105,7 @@ public class TorRoundtripTime extends Metric {
                 }
 
                 // report
-                report(results);
+                reporter.report(results);
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block
