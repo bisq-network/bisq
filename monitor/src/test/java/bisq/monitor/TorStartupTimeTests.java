@@ -24,7 +24,6 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorStartupTime;
 
 public class TorStartupTimeTests {

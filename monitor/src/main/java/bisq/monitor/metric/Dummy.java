@@ -19,6 +19,7 @@ package bisq.monitor.metric;
 
 import java.util.Properties;
 
+import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 import lombok.extern.slf4j.Slf4j;
 

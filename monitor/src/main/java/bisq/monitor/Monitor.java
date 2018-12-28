@@ -28,7 +28,6 @@ import org.berndpruenster.netlayer.tor.Tor;
 
 import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.reporter.ConsoleReporter;
-import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorRoundtripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import lombok.extern.slf4j.Slf4j;

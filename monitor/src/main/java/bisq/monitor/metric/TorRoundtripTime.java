@@ -31,6 +31,7 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
+import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 
 /**

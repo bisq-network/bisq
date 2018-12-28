@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 
+import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 import lombok.extern.slf4j.Slf4j;
 

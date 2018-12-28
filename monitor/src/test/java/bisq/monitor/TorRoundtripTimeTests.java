@@ -32,7 +32,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import bisq.monitor.metric.Metric;
 import bisq.monitor.metric.TorRoundtripTime;
 
 public class TorRoundtripTimeTests {

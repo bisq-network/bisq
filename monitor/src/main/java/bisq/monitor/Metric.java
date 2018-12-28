@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.monitor.metric;
+package bisq.monitor;
 
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
-import bisq.monitor.Reporter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -53,16 +52,20 @@ public abstract class Metric extends Thread {
      * disable execution
      */
     private void disable() {
-        if (enabled())
-            lock.lock();
+        synchronized (lock) {
+            if (enabled())
+                lock.lock();
+        }
     }
 
     /**
      * enable execution
      */
     private void enable() {
-        if (!enabled())
-            lock.unlock();
+        synchronized (lock) {
+            if (!enabled())
+                lock.unlock();
+        }
     }
 
     /**

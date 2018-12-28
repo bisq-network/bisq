@@ -27,6 +27,7 @@ import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.Torrc;
 
+import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
 
 /**
