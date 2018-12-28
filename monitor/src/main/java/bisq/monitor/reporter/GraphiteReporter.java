@@ -17,40 +17,54 @@
 
 package bisq.monitor.reporter;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.berndpruenster.netlayer.tor.TorSocket;
 
 import bisq.monitor.Reporter;
 
 /**
- * A simple console reporter.
+ * Reports our findings to a graphite service.
  * 
  * @author Florian Reimair
  */
-public class ConsoleReporter extends Reporter {
+public class GraphiteReporter extends Reporter {
 
     @Override
     public void report(long value, String prefix) {
         HashMap<String, String> result = new HashMap<String, String>();
         result.put("", String.valueOf(value));
-        report(result, "bisq");
+        report(result, prefix);
 
     }
 
     @Override
     public void report(long value) {
-        HashMap<String, String> result = new HashMap<String, String>();
-        result.put("", String.valueOf(value));
-        report(result);
+        report(value, "bisq");
     }
 
     @Override
     public void report(Map<String, String> values, String prefix) {
-        long timestamp = System.currentTimeMillis();
+        long timestamp = System.currentTimeMillis() / 1000;
         values.forEach((key, value) -> {
             String report = prefix + ("".equals(key) ? "" : (prefix.isEmpty() ? "" : ".") + key) + " " + value + " "
-                    + timestamp;
-            System.err.println("Report: " + report);
+                    + timestamp + "\n";
+
+            URL url;
+            try {
+                url = new URL(configuration.getProperty("serviceUrl"));
+                TorSocket socket = new TorSocket(url.getHost(), url.getPort());
+
+                socket.getOutputStream().write(report.getBytes());
+                socket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
         });
     }
 

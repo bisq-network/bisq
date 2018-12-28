@@ -59,6 +59,11 @@ public class TorRoundtripTimeTests {
             report(values);
         }
 
+        @Override
+        public void report(long value, String prefix) {
+            report(value);
+        }
+
     }
 
     private static File workingDirectory = new File(TorRoundtripTimeTests.class.getSimpleName());

@@ -106,7 +106,7 @@ public class TorRoundtripTime extends Metric {
                 }
 
                 // report
-                reporter.report(results);
+                reporter.report(results, "bisq." + getName());
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block

@@ -38,6 +38,14 @@ public abstract class Reporter extends Configurable {
     public abstract void report(long value);
 
     /**
+     * Report our findings
+     * 
+     * @param l
+     * @param prefix
+     */
+    public abstract void report(long value, String prefix);
+
+    /**
      * Report our findings.
      * 
      * @param values Map<metric name, metric value>

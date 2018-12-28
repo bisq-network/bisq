@@ -58,6 +58,11 @@ public class TorHiddenServiceStartupTimeTests {
             report(values);
         }
 
+        @Override
+        public void report(long value, String prefix) {
+            report(value);
+        }
+
     }
 
     private final static File torWorkingDirectory = new File(TorHiddenServiceStartupTimeTests.class.getSimpleName());

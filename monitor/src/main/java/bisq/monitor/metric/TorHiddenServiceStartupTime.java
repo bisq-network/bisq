@@ -83,7 +83,7 @@ public class TorHiddenServiceStartupTime extends Metric {
                 servicePort);
         hiddenServiceSocket.addReadyListener(socket -> {
             // stop the timer and report
-            reporter.report(System.currentTimeMillis() - start);
+            reporter.report(System.currentTimeMillis() - start, "bisq." + getName());
             log.debug("the hidden service is ready");
             proceed();
             return null;

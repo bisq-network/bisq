@@ -28,6 +28,7 @@ import org.berndpruenster.netlayer.tor.Tor;
 
 import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.reporter.ConsoleReporter;
+import bisq.monitor.reporter.GraphiteReporter;
 import bisq.monitor.metric.TorRoundtripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import lombok.extern.slf4j.Slf4j;
@@ -65,11 +66,12 @@ public class Monitor {
         // assemble Metrics
         // - create reporters
         ConsoleReporter consoleReporter = new ConsoleReporter();
+        Reporter graphiteReporter = new GraphiteReporter();
 
         // - add available metrics with their reporters
-        metrics.add(new TorStartupTime(consoleReporter));
-        metrics.add(new TorRoundtripTime(consoleReporter));
-        metrics.add(new TorHiddenServiceStartupTime(consoleReporter));
+        metrics.add(new TorStartupTime(graphiteReporter));
+        metrics.add(new TorRoundtripTime(graphiteReporter));
+        metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux

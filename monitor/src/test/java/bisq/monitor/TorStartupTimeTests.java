@@ -51,6 +51,11 @@ public class TorStartupTimeTests {
             report(values);
         }
 
+        @Override
+        public void report(long value, String prefix) {
+            report(value);
+
+        }
     }
 
     @Test

@@ -76,7 +76,7 @@ public class TorStartupTime extends Metric {
             tor = new NativeTor(torWorkingDirectory, null, torOverrides);
 
             // stop the timer and set its timestamp
-            reporter.report(System.currentTimeMillis() - start);
+            reporter.report(System.currentTimeMillis() - start, "bisq." + getName());
         } catch (TorCtlException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
