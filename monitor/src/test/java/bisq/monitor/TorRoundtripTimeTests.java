@@ -84,14 +84,11 @@ public class TorRoundtripTimeTests {
         configuration.put("TorRoundtripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
 
         Metric DUT = new TorRoundtripTime(reporter);
+        // start
         DUT.configure(configuration);
 
-        // start
-        DUT.start();
-
         // give it some time to start and then stop
-        while (DUT.getState() == State.NEW || DUT.getState() == State.RUNNABLE)
-            Thread.sleep(10);
+        Thread.sleep(100);
 
         DUT.shutdown();
         DUT.join();

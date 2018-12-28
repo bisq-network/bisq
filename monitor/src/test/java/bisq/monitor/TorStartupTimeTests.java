@@ -65,10 +65,8 @@ public class TorStartupTimeTests {
         configuration.put("TorStartupTime.run.socksPort", "9999");
 
         Metric DUT = new TorStartupTime(reporter);
-        DUT.configure(configuration);
-
         // start
-        DUT.start();
+        DUT.configure(configuration);
 
         // give it some time and then stop
         Thread.sleep(15 * 1000);

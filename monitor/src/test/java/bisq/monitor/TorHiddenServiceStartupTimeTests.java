@@ -78,10 +78,8 @@ public class TorHiddenServiceStartupTimeTests {
         configuration.put("TorHiddenServiceStartupTime.run.interval", "5");
 
         Metric DUT = new TorHiddenServiceStartupTime(reporter);
-        DUT.configure(configuration);
-
         // start
-        DUT.start();
+        DUT.configure(configuration);
 
         // give it some time and then stop
         Thread.sleep(180 * 1000);

@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import bisq.monitor.reporter.ConsoleReporter;
+
 public class MonitorInfrastructureTests {
 
     /**
@@ -34,7 +36,7 @@ public class MonitorInfrastructureTests {
     public class Dummy extends Metric {
 
         public Dummy() {
-            super(null);
+            super(new ConsoleReporter());
         }
 
         public boolean active() {
@@ -63,7 +65,6 @@ public class MonitorInfrastructureTests {
 
         Dummy DUT = new Dummy();
         DUT.configure(lut.get(configuration));
-        DUT.start();
         Assert.assertFalse(DUT.active());
     }
 
@@ -75,7 +76,6 @@ public class MonitorInfrastructureTests {
 
         Dummy DUT = new Dummy();
         DUT.configure(correct);
-        DUT.start();
         Assert.assertTrue(DUT.active());
 
         // graceful shutdown
@@ -95,11 +95,9 @@ public class MonitorInfrastructureTests {
         dummy2Properties.put("Dummy2.enabled", "true");
         dummy2Properties.put("Dummy2.run.interval", "1");
         DUT2.configure(dummy2Properties);
-        DUT2.start();
 
         // disable
         DUT.configure(new Properties());
-        DUT.start();
         Assert.assertFalse(DUT.active());
         Assert.assertTrue(DUT2.active());
 

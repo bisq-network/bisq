@@ -71,47 +71,48 @@ public class Monitor {
         metrics.add(new TorRoundtripTime(consoleReporter));
         metrics.add(new TorHiddenServiceStartupTime(consoleReporter));
 
-        // configure Metrics
-        Properties properties = getProperties();
-        for (Metric current : metrics)
-            current.configure(properties);
-
         // prepare configuration reload
         // Note that this is most likely only work on Linux
         Signal.handle(new Signal("USR1"), signal -> {
             reload();
         });
 
-        // fire up all Metrics
+        // configure Metrics
+        // - which also starts the metrics if appropriate
+        Properties properties = getProperties();
         for (Metric current : metrics)
-            current.start();
+            current.configure(properties);
 
         // exit Metrics gracefully on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                setName("shutdownHook");
+
                 for (Metric current : metrics) {
                     current.shutdown();
+                }
+
+                // wait for the metrics to gracefully shut down
+                for (Metric current : metrics)
                     try {
-                        // we need to join each metric, as they probably need time to gracefully shut
-                        // down
                         current.join();
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    log.trace("system halt");
-                }
+
+                log.info("shutting down tor");
+                Tor.getDefault().shutdown();
+
+                log.info("system halt");
             }
         });
 
         // prevent the main thread to terminate
-        log.trace("joining metrics...");
+        log.info("joining metrics...");
         for (Metric current : metrics)
             current.join();
-
-        log.info("shutting down tor");
-        Tor.getDefault().shutdown();
     }
 
     /**

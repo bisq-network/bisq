@@ -25,10 +25,14 @@ import java.util.Map;
  * 
  * @author Florian Reimair
  */
-public abstract class Reporter {
+public abstract class Reporter extends Configurable {
 
+    public Reporter() {
+        setName(this.getClass().getSimpleName());
+    }
     /**
      * Report our findings.
+     * 
      * @param value
      */
     public abstract void report(long value);
