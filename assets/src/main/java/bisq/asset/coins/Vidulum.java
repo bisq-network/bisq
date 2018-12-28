@@ -17,26 +17,13 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AddressValidationResult;
-import bisq.asset.AddressValidator;
+import bisq.asset.RegexAddressValidator;
 import bisq.asset.Coin;
 
 public class Vidulum extends Coin {
 
     public Vidulum() {
-        super("Vidulum", "VDL", new VidulumAddressValidator());
+        super("Vidulum", "VDL", new RegexAddressValidator("^v[1-9A-Za-z^OIl]{35}"));
     }
 
-
-    public static class VidulumAddressValidator implements AddressValidator {
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            // v is Vidulum's transparent address prefix (transparent transactions)
-            if (!address.startsWith("v1"))
-                return AddressValidationResult.invalidAddress("", "validation.altcoin.zAddressesNotSupported");
-
-            return AddressValidationResult.validAddress();
-        }
-    }
 }
