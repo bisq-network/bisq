@@ -17,27 +17,29 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import java.util.Map;
-import java.util.Properties;
+import bisq.monitor.metric.TorRoundTripTime;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import java.io.File;
+
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import bisq.monitor.metric.TorRoundtripTime;
-
 /**
  * Test the roundtrip time metric against the hidden service of torproject.org.
- * 
+ *
  * @author Florian Reimair
  */
-public class TorRoundtripTimeTests {
+public class TorRoundTripTimeTests {
 
     /**
      * A dummy Reporter for development purposes.
@@ -71,7 +73,7 @@ public class TorRoundtripTimeTests {
         }
     }
 
-    private static File workingDirectory = new File(TorRoundtripTimeTests.class.getSimpleName());
+    private static File workingDirectory = new File(TorRoundTripTimeTests.class.getSimpleName());
 
     @BeforeAll
     public static void setup() throws TorCtlException {
@@ -93,7 +95,7 @@ public class TorRoundtripTimeTests {
         // torproject.org hidden service
         configuration.put("TorRoundtripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
 
-        Metric DUT = new TorRoundtripTime(reporter);
+        Metric DUT = new TorRoundTripTime(reporter);
         // start
         DUT.configure(configuration);
 
