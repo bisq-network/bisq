@@ -38,16 +38,16 @@ import java.util.LongSummaryStatistics;
 import java.util.Map;
 
 /**
- * A Metric to measure the round-trip time to the Bisq seednodes via plain tor.
+ * A Metric to measure the round-trip time to the Bisq seed nodes via plain tor.
  *
  * @author Florian Reimair
  */
-public class TorRoundtripTime extends Metric {
+public class TorRoundTripTime extends Metric {
 
     private static final String SAMPLE_SIZE = "run.sampleSize";
     private static final String HOSTS = "run.hosts";
 
-    public TorRoundtripTime(Reporter reporter) {
+    public TorRoundTripTime(Reporter reporter) {
         super(reporter);
     }
 

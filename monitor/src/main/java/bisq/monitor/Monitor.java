@@ -18,7 +18,7 @@
 package bisq.monitor;
 
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
-import bisq.monitor.metric.TorRoundtripTime;
+import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.reporter.GraphiteReporter;
 
@@ -74,7 +74,7 @@ public class Monitor {
 
         // - add available metrics with their reporters
         metrics.add(new TorStartupTime(graphiteReporter));
-        metrics.add(new TorRoundtripTime(graphiteReporter));
+        metrics.add(new TorRoundTripTime(graphiteReporter));
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
 
         // prepare configuration reload
