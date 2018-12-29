@@ -34,10 +34,12 @@ configure(subprojects) {
         joptVersion = '5.0.3'
         langVersion = '3.4'
         libdohjVersion = '7be803fa'
+        logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
         powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
+        slf4jVersion = '1.7.22'
         sparkVersion = '2.5.2'
         springVersion = '4.3.6.RELEASE'
 
@@ -160,9 +162,9 @@ configure(project(':common')) {
             exclude(module: 'junit')
         }
         compile "org.springframework:spring-core:$springVersion"
-        compile 'org.slf4j:slf4j-api:1.7.22'
-        compile 'ch.qos.logback:logback-core:1.1.10'
-        compile 'ch.qos.logback:logback-classic:1.1.10'
+        compile 'org.slf4j:slf4j-api:$slf4jVersion'
+        compile 'ch.qos.logback:logback-core:$logbackVersion'
+        compile 'ch.qos.logback:logback-classic:$logbackVersion'
         compile 'com.google.code.findbugs:jsr305:3.0.2'
         compile 'com.google.guava:guava:20.0'
         compile('com.google.inject:guice:4.1.0') {
@@ -321,16 +323,13 @@ configure(project(':monitor')) {
     }
 
     dependencies {
-        compile 'org.slf4j:slf4j-api:1.7.22'
-        compile 'ch.qos.logback:logback-core:1.1.10'
-        compile 'ch.qos.logback:logback-classic:1.1.10'
+        compile 'org.slf4j:slf4j-api:$slf4jVersion'
+        compile 'ch.qos.logback:logback-core:$logbackVersion'
+        compile 'ch.qos.logback:logback-classic:$logbackVersion'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
         compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.2') {
-            exclude(module: 'slf4j-api')
-        }
-        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6') {
             exclude(module: 'slf4j-api')
         }
 
