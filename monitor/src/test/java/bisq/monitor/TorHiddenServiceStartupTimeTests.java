@@ -17,7 +17,6 @@
 
 package bisq.monitor;
 
-
 import java.io.File;
 import java.util.Map;
 import java.util.Properties;
@@ -34,6 +33,11 @@ import bisq.monitor.metric.TorHiddenServiceStartupTime;
 
 public class TorHiddenServiceStartupTimeTests {
 
+    private final static File torWorkingDirectory = new File(TorHiddenServiceStartupTimeTests.class.getSimpleName());
+
+    /**
+     * A dummy Reporter for development purposes.
+     */
     private class DummyReporter extends Reporter {
 
         private long result;
@@ -41,7 +45,6 @@ public class TorHiddenServiceStartupTimeTests {
         @Override
         public void report(long value) {
             result = value;
-
         }
 
         public long results() {
@@ -62,19 +65,16 @@ public class TorHiddenServiceStartupTimeTests {
         public void report(long value, String prefix) {
             report(value);
         }
-
     }
-
-    private final static File torWorkingDirectory = new File(TorHiddenServiceStartupTimeTests.class.getSimpleName());
 
     @BeforeAll
     public static void setup() throws TorCtlException {
+        // simulate the tor instance available to all metrics
         Tor.setDefault(new NativeTor(torWorkingDirectory));
     }
 
     @Test
     public void run() throws Exception {
-
         DummyReporter reporter = new DummyReporter();
 
         // configure

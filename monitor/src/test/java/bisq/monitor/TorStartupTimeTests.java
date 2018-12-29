@@ -17,7 +17,6 @@
 
 package bisq.monitor;
 
-
 import java.util.Map;
 import java.util.Properties;
 
@@ -28,6 +27,9 @@ import bisq.monitor.metric.TorStartupTime;
 
 public class TorStartupTimeTests {
 
+    /**
+     * A dummy Reporter for development purposes.
+     */
     private class DummyReporter extends Reporter {
 
         private long result;
@@ -35,8 +37,8 @@ public class TorStartupTimeTests {
         @Override
         public void report(long value) {
             result = value;
-
         }
+
         public long results() {
             return result;
         }
@@ -54,7 +56,6 @@ public class TorStartupTimeTests {
         @Override
         public void report(long value, String prefix) {
             report(value);
-
         }
     }
 

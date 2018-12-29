@@ -17,7 +17,6 @@
 
 package bisq.monitor;
 
-
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -47,7 +46,6 @@ public class MonitorInfrastructureTests {
         protected void execute() {
             // do nothing
         }
-
     }
 
     @ParameterizedTest

@@ -22,7 +22,10 @@ import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Metric base class.
+ * Starts a Metric (in its own {@link Thread}), manages its properties and shuts
+ * it down gracefully. Furthermore, configuration updates and execution are done
+ * in a thread-save manner. Implementing classes only have to implement the
+ * {@link Metric#execute()} method.
  * 
  * @author Florian Reimair
  */
@@ -79,11 +82,7 @@ public abstract class Metric extends Configurable implements Runnable {
         return !shutdown;
     }
 
-    /**
-     * Configures the Metric.
-     * 
-     * @param properties
-     */
+    @Override
     public void configure(final Properties properties) {
         synchronized (this) {
             log.info("{} (re)loading config...", getName());
@@ -113,6 +112,7 @@ public abstract class Metric extends Configurable implements Runnable {
         }
     }
 
+    @Override
     public void run() {
         while (!shutdown) {
             // if not, execute all the things

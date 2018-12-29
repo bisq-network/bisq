@@ -20,20 +20,30 @@ package bisq.monitor;
 import java.util.Properties;
 
 /**
- * Configurable is configurable.
+ * Does some precomputation for a configurable class.
  * 
  * @author Florian Reimair
  */
 public abstract class Configurable {
 
+    protected Properties configuration = new Properties();
 
-    protected Properties configuration;
     private String name;
 
     /**
-     * Configure the Configurable.
+     * Filters all java properties starting with {@link Configurable#getName()} of
+     * the class and makes them available. Does <em>NOT</em> parse the content of
+     * the properties!
+     * <p>
+     * For example, if the implementing class sets its name (using
+     * {@link Configurable#setName(String)}) to <code>MyName</code>, the list of
+     * properties is scanned for properties starting with <code>MyName</code>.
+     * Matching lines are made available to the class without the prefix. For
+     * example, a property <code>MyName.answer=42</code> is made available as
+     * <code>configuration.getProperty("answer")</code> resulting in
+     * <code>42</code>.
      * 
-     * @param properties
+     * @param properties a set of configuration properties
      */
     public void configure(final Properties properties) {
         // only configure the Properties which belong to us
@@ -52,6 +62,12 @@ public abstract class Configurable {
         return name;
     }
 
+    /**
+     * Set the name used to filter through configuration properties. See
+     * {@link Configurable#configure(Properties)}.
+     * 
+     * @param name
+     */
     protected void setName(String name) {
         this.name = name;
     }

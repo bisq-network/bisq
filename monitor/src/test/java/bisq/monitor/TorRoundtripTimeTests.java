@@ -17,9 +17,7 @@
 
 package bisq.monitor;
 
-
 import java.io.File;
-import java.lang.Thread.State;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,8 +32,16 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import bisq.monitor.metric.TorRoundtripTime;
 
+/**
+ * Test the roundtrip time metric against the hidden service of torproject.org.
+ * 
+ * @author Florian Reimair
+ */
 public class TorRoundtripTimeTests {
 
+    /**
+     * A dummy Reporter for development purposes.
+     */
     private class DummyReporter extends Reporter {
 
         private Map<String, String> results;
@@ -63,20 +69,19 @@ public class TorRoundtripTimeTests {
         public void report(long value, String prefix) {
             report(value);
         }
-
     }
 
     private static File workingDirectory = new File(TorRoundtripTimeTests.class.getSimpleName());
 
     @BeforeAll
     public static void setup() throws TorCtlException {
+        // simulate the tor instance available to all metrics
         Tor.setDefault(new NativeTor(workingDirectory));
     }
 
     @ParameterizedTest
     @ValueSource(strings = { "default", "3", "4", "10" })
     public void run(String sampleSize) throws Exception {
-
         DummyReporter reporter = new DummyReporter();
 
         // configure

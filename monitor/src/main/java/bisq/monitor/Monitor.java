@@ -65,7 +65,7 @@ public class Monitor {
 
         // assemble Metrics
         // - create reporters
-        ConsoleReporter consoleReporter = new ConsoleReporter();
+//        ConsoleReporter consoleReporter = new ConsoleReporter();
         Reporter graphiteReporter = new GraphiteReporter();
 
         // - add available metrics with their reporters
@@ -89,6 +89,7 @@ public class Monitor {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                // set the name of the Thread for debugging purposes
                 setName("shutdownHook");
 
                 for (Metric current : metrics) {
@@ -99,9 +100,7 @@ public class Monitor {
                 for (Metric current : metrics)
                     try {
                         current.join();
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    } catch (InterruptedException ignore) {
                     }
 
                 log.info("shutting down tor");
