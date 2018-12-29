@@ -31,10 +31,12 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Disabled // Ignore for normal test runs as the tests take lots of time
 public class TorHiddenServiceStartupTimeTests {
 
     private final static File torWorkingDirectory = new File("monitor/" + TorHiddenServiceStartupTimeTests.class.getSimpleName());

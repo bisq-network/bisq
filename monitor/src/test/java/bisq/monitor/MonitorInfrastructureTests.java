@@ -58,7 +58,8 @@ public class MonitorInfrastructureTests {
         lut.put("no interval", noInterval);
         Properties typo = new Properties();
         typo.put("Dummy.enabled", "true");
-        typo.put("Dummy.run.interval", "1");
+        //noinspection SpellCheckingInspection
+        typo.put("Dummy.run.inteval", "1");
         lut.put("typo", typo);
 
         Dummy DUT = new Dummy();
