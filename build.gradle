@@ -323,6 +323,8 @@ configure(project(':monitor')) {
     }
 
     dependencies {
+        compile 'com.google.guava:guava:20.0'
+
         compile 'org.slf4j:slf4j-api:$slf4jVersion'
         compile 'ch.qos.logback:logback-core:$logbackVersion'
         compile 'ch.qos.logback:logback-classic:$logbackVersion'
