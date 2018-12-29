@@ -23,7 +23,6 @@ import bisq.monitor.Reporter;
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 
 import java.io.File;
-import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +39,7 @@ public class TorHiddenServiceStartupTime extends Metric {
     private static final String LOCAL_PORT = "run.localPort";
     private final String hiddenServiceDirectory = "metric_" + getName();
 
-    public TorHiddenServiceStartupTime(Reporter reporter) throws IOException {
+    public TorHiddenServiceStartupTime(Reporter reporter) {
         super(reporter);
     }
 

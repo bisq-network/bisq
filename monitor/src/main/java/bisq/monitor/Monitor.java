@@ -34,6 +34,8 @@ import java.util.Properties;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 
 import sun.misc.Signal;
@@ -56,7 +58,7 @@ public class Monitor {
     /**
      * A list of all active {@link Metric}s
      */
-    private List<Metric> metrics = new ArrayList<>();
+    private final List<Metric> metrics = new ArrayList<>();
 
     /**
      * Starts up all configured Metrics.
@@ -108,7 +110,9 @@ public class Monitor {
                     }
 
                 log.info("shutting down tor");
-                Tor.getDefault().shutdown();
+                Tor tor = Tor.getDefault();
+                checkNotNull(tor, "tor must not be null");
+                tor.shutdown();
 
                 log.info("system halt");
             }

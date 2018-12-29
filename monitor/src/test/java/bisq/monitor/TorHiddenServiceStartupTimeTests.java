@@ -33,6 +33,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class TorHiddenServiceStartupTimeTests {
 
     private final static File torWorkingDirectory = new File("monitor/" + TorHiddenServiceStartupTimeTests.class.getSimpleName());
@@ -98,7 +100,9 @@ public class TorHiddenServiceStartupTimeTests {
 
     @AfterAll
     public static void cleanup() {
-        Tor.getDefault().shutdown();
+        Tor tor = Tor.getDefault();
+        checkNotNull(tor, "tor must not be null");
+        tor.shutdown();
         torWorkingDirectory.delete();
     }
 }

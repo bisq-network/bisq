@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * A Metric to measure the round-trip time to the Bisq seed nodes via plain tor.
  *
@@ -53,10 +55,12 @@ public class TorRoundTripTime extends Metric {
 
     @Override
     protected void execute() {
-        SocksSocket socket = null;
+        SocksSocket socket;
         try {
             // fetch proxy
-            Socks5Proxy proxy = Tor.getDefault().getProxy();
+            Tor tor = Tor.getDefault();
+            checkNotNull(tor, "tor must not be null");
+            Socks5Proxy proxy = tor.getProxy();
 
             // for each configured host
             for (String current : configuration.getProperty(HOSTS, "").split(",")) {

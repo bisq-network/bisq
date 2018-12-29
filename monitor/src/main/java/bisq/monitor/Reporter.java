@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public abstract class Reporter extends Configurable {
 
-    public Reporter() {
+    protected Reporter() {
         setName(this.getClass().getSimpleName());
     }
 
@@ -41,7 +41,7 @@ public abstract class Reporter extends Configurable {
     /**
      * Report our findings
      *
-     * @param l
+     * @param value
      * @param prefix
      */
     public abstract void report(long value, String prefix);
