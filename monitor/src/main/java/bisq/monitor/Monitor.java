@@ -17,26 +17,30 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import bisq.monitor.metric.TorRoundtripTime;
+import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.GraphiteReporter;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 
-import bisq.monitor.metric.TorStartupTime;
-import bisq.monitor.reporter.ConsoleReporter;
-import bisq.monitor.reporter.GraphiteReporter;
-import bisq.monitor.metric.TorRoundtripTime;
-import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import java.io.File;
+import java.io.FileInputStream;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import lombok.extern.slf4j.Slf4j;
+
+
+
 import sun.misc.Signal;
 
 /**
  * Monitor executable for the Bisq network.
- * 
+ *
  * @author Florian Reimair
  */
 @Slf4j
@@ -56,7 +60,7 @@ public class Monitor {
 
     /**
      * Starts up all configured Metrics.
-     * 
+     *
      * @throws Exception
      */
     private void start() throws Throwable {
@@ -132,7 +136,7 @@ public class Monitor {
 
     /**
      * Overloads a default set of properties with a file if given
-     * 
+     *
      * @return a set of properties
      * @throws Exception
      */
@@ -142,7 +146,7 @@ public class Monitor {
 
         Properties result = new Properties(defaults);
 
-        if(args.length > 0)
+        if (args.length > 0)
             result.load(new FileInputStream(args[0]));
 
         return result;

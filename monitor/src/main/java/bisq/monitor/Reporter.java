@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * Reports findings to a specific service/file/place using the proper means to
  * do so.
- * 
+ *
  * @author Florian Reimair
  */
 public abstract class Reporter extends Configurable {
@@ -30,16 +30,17 @@ public abstract class Reporter extends Configurable {
     public Reporter() {
         setName(this.getClass().getSimpleName());
     }
+
     /**
      * Report our findings.
-     * 
+     *
      * @param value
      */
     public abstract void report(long value);
 
     /**
      * Report our findings
-     * 
+     *
      * @param l
      * @param prefix
      */
@@ -47,14 +48,14 @@ public abstract class Reporter extends Configurable {
 
     /**
      * Report our findings.
-     * 
+     *
      * @param values Map<metric name, metric value>
      */
     public abstract void report(Map<String, String> values);
 
     /**
      * Report our findings.
-     * 
+     *
      * @param values Map<metric name, metric value>
      * @param prefix for example "bisq.torStartupTime"
      */

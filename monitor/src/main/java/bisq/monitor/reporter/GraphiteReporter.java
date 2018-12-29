@@ -17,18 +17,20 @@
 
 package bisq.monitor.reporter;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import bisq.monitor.Reporter;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
 
-import bisq.monitor.Reporter;
+import java.net.URL;
+
+import java.io.IOException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Reports our findings to a graphite service.
- * 
+ *
  * @author Florian Reimair
  */
 public class GraphiteReporter extends Reporter {

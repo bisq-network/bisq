@@ -17,14 +17,14 @@
 
 package bisq.monitor.reporter;
 
+import bisq.monitor.Reporter;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import bisq.monitor.Reporter;
-
 /**
  * A simple console reporter.
- * 
+ *
  * @author Florian Reimair
  */
 public class ConsoleReporter extends Reporter {

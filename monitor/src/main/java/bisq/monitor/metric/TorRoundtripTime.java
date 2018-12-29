@@ -17,8 +17,19 @@
 
 package bisq.monitor.metric;
 
-import java.io.IOException;
+import bisq.monitor.Metric;
+import bisq.monitor.Reporter;
+
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+
 import java.net.URL;
+
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,17 +37,9 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
 
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import bisq.monitor.Metric;
-import bisq.monitor.Reporter;
-
 /**
  * A Metric to measure the round-trip time to the Bisq seednodes via plain tor.
- * 
+ *
  * @author Florian Reimair
  */
 public class TorRoundtripTime extends Metric {
@@ -80,7 +83,7 @@ public class TorRoundtripTime extends Metric {
                 // aftermath
                 Collections.sort(samples);
 
-                // - average, max, min , samplesize
+                // - average, max, min , sample size
                 LongSummaryStatistics statistics = samples.stream().mapToLong(val -> val).summaryStatistics();
 
                 Map<String, String> results = new HashMap<>();
@@ -91,7 +94,7 @@ public class TorRoundtripTime extends Metric {
 
                 // - p25, median, p75
                 Integer[] percentiles = new Integer[]{25, 50, 75};
-                for(Integer percentile : percentiles) {
+                for (Integer percentile : percentiles) {
                     double rank = statistics.getCount() * percentile / 100;
                     Long percentileValue;
                     if (samples.size() <= rank + 1)
@@ -101,7 +104,7 @@ public class TorRoundtripTime extends Metric {
                     else
                         percentileValue = Math.round(samples.get((int) Math.floor(rank))
                                 + (samples.get((int) (Math.floor(rank) + 1)) - samples.get((int) Math.floor(rank)))
-                                        / (rank - Math.floor(rank)));
+                                / (rank - Math.floor(rank)));
                     results.put("p" + percentile, String.valueOf(percentileValue));
                 }
 
