@@ -47,21 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NewTor extends TorMode {
 
-    /**
-     * <code>Netlayer</code> stores its hidden service files in a custom
-     * subdirectory of <code>$torDir/hiddenservice/</code>. Note that the
-     * {@link HiddenServiceSocket} does add this part on its own, hence,
-     * {@link NewTor#getHiddenServiceDirectory()} returns only the custom
-     * subdirectory (which happens to be <code>""</code>)
-     */
-    private static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
-
     private final String torrcFile;
     private final String torrcOptions;
     private final Collection<String> bridgeEntries;
 
     public NewTor(File torWorkingDirectory, String torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
-        super(torWorkingDirectory, HIDDEN_SERVICE_DIRECTORY);
+        super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
         this.bridgeEntries = bridgeEntries;
