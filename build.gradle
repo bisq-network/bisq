@@ -163,8 +163,10 @@ configure(project(':common')) {
         }
         compile "org.springframework:spring-core:$springVersion"
         compile 'org.slf4j:slf4j-api:$slf4jVersion'
-        compile 'ch.qos.logback:logback-core:$logbackVersion'
-        compile 'ch.qos.logback:logback-classic:$logbackVersion'
+        compile 'ch.qos.logback:logback-core:1.1.10'
+        compile 'ch.qos.logback:logback-classic:1.1.10'
+        // compile 'ch.qos.logback:logback-core:$logbackVersion'
+        // compile 'ch.qos.logback:logback-classic:$logbackVersion'
         compile 'com.google.code.findbugs:jsr305:3.0.2'
         compile 'com.google.guava:guava:20.0'
         compile('com.google.inject:guice:4.1.0') {
@@ -326,8 +328,10 @@ configure(project(':monitor')) {
         compile 'com.google.guava:guava:20.0'
 
         compile 'org.slf4j:slf4j-api:$slf4jVersion'
-        compile 'ch.qos.logback:logback-core:$logbackVersion'
-        compile 'ch.qos.logback:logback-classic:$logbackVersion'
+        compile 'ch.qos.logback:logback-core:1.1.10'
+        compile 'ch.qos.logback:logback-classic:1.1.10'
+        // compile 'ch.qos.logback:logback-core:$logbackVersion'
+        // compile 'ch.qos.logback:logback-classic:$logbackVersion'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
