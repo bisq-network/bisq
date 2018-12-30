@@ -10,6 +10,7 @@
 // 4. Commit the changes
 //
 // See https://github.com/signalapp/gradle-witness#using-witness for further details.
+
 dependencyVerification {
     verify = [
         'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
