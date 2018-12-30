@@ -1,13 +1,14 @@
 ;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bisq with application files
 [Setup]
+
 AppId={{bisq}}
 AppName=Bisq
-AppVersion=0.9.0
+AppVersion=0.9.1
 AppVerName=Bisq
 AppPublisher=Bisq
 AppComments=Bisq
-AppCopyright=Copyright (C) 2016
+AppCopyright=Copyright (C) 2018
 AppPublisherURL=https://bisq.network
 AppSupportURL=https://bisq.network
 ;AppUpdatesURL=http://java.com/
@@ -29,7 +30,7 @@ SolidCompression=yes
 PrivilegesRequired=lowest
 SetupIconFile=Bisq\Bisq.ico
 UninstallDisplayIcon={app}\Bisq.ico
-UninstallDisplayName=﻿Bisq
+UninstallDisplayName=Bisq
 WizardImageStretch=No
 WizardSmallImageFile=Bisq-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
@@ -62,6 +63,96 @@ end;
 function returnFalse(): Boolean;
 begin
   Result := False;
+end;
+
+procedure DirectoryCopy(SourcePath, DestPath: string);
+var
+  FindRec: TFindRec;
+  SourceFilePath: string;
+  DestFilePath: string;
+begin
+  if FindFirst(SourcePath + '\*', FindRec) then
+  begin
+    try
+      repeat
+        if (FindRec.Name <> '.') and (FindRec.Name <> '..') then
+        begin
+          SourceFilePath := SourcePath + '\' + FindRec.Name;
+          DestFilePath := DestPath + '\' + FindRec.Name;
+          if FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then
+          begin
+            if FileCopy(SourceFilePath, DestFilePath, False) then
+            begin
+              Log(Format('Copied %s to %s', [SourceFilePath, DestFilePath]));
+            end
+              else
+            begin
+              Log(Format('Failed to copy %s to %s', [SourceFilePath, DestFilePath]));
+            end;
+          end
+            else
+          begin
+            if DirExists(DestFilePath) or CreateDir(DestFilePath) then
+            begin
+              Log(Format('Created %s', [DestFilePath]));
+              DirectoryCopy(SourceFilePath, DestFilePath);
+            end
+              else
+            begin
+              Log(Format('Failed to create %s', [DestFilePath]));
+            end;
+          end;
+        end;
+      until not FindNext(FindRec);
+    finally
+      FindClose(FindRec);
+    end;
+  end
+    else
+  begin
+    Log(Format('Failed to list %s', [SourcePath]));
+  end;
+end;
+
+//Delete old app directory to prevent issues during update
+procedure DeleteOldAppDataDirectory;
+var
+  entry: String;
+begin
+  entry := ExpandConstant('{localappdata}') + '\Bisq\';
+  if DirExists(entry) then begin
+    DelTree(entry, true, true, true);
+  end
+end;
+
+procedure DeleteTorFiles;
+var
+  mainnetDir: String;
+  torDir: String;
+  hiddenServiceDir: String;
+  hiddenServiceBackupDir : String;
+begin
+  mainnetDir := ExpandConstant('{userappdata}') + '\Bisq\btc_mainnet';
+  torDir := mainnetDir + '\tor\*';
+  hiddenServiceDir := mainnetDir + '\tor\hiddenservice';
+  hiddenServiceBackupDir := mainnetDir + '\hiddenservice_backup';
+  if DirExists(hiddenServiceDir) then begin
+   if DirExists(hiddenServiceBackupDir) then begin
+     DelTree(hiddenServiceBackupDir, true, true, true);
+   end
+   CreateDir(hiddenServiceBackupDir);
+   DirectoryCopy(hiddenServiceDir, hiddenServiceBackupDir);
+   DelTree(torDir, false, true, true);
+   CreateDir(hiddenServiceDir);
+   DirectoryCopy(hiddenServiceBackupDir, hiddenServiceDir);
+  end
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  DeleteOldAppDataDirectory;
+  DeleteTorFiles;
+  Result := '';
 end;
 
 function InitializeSetup(): Boolean;

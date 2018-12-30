@@ -130,7 +130,7 @@ public class MenuItem extends JFXButton implements Toggle {
     }
 
     public void setLabelText(String value) {
-        setText(value);
+        setText(value.toUpperCase());
     }
 
 

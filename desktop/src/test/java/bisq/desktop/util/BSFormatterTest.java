@@ -34,6 +34,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -179,6 +180,7 @@ public class BSFormatterTest {
         assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4, true, 15));
     }
 
+    @Ignore
     @Test
     public void testFormatAmountWithAlignmenWithDecimalsNoRange() {
         OfferPayload offerPayload = mock(OfferPayload.class);

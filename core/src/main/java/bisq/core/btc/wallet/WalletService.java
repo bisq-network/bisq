@@ -575,12 +575,12 @@ public abstract class WalletService {
 
     @Nullable
     public DeterministicKey findKeyFromPubKeyHash(byte[] pubKeyHash) {
-        return wallet.getActiveKeychain().findKeyFromPubHash(pubKeyHash);
+        return wallet.getActiveKeyChain().findKeyFromPubHash(pubKeyHash);
     }
 
     @Nullable
     public DeterministicKey findKeyFromPubKey(byte[] pubKey) {
-        return wallet.getActiveKeychain().findKeyFromPubKey(pubKey);
+        return wallet.getActiveKeyChain().findKeyFromPubKey(pubKey);
     }
 
     public Address freshReceiveAddress() {

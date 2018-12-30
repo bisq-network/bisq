@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="0.9.0"
+version="0.9.1"
 
 target_dir="releases/$version"
 
@@ -36,7 +36,7 @@ cp "$macOS/$dmg" "$target_dir/"
 deb64="Bisq-64bit-$version.deb"
 cp "$linux64/$deb64" "$target_dir/"
 
-exe="Bisq-$version.exe"
+exe="Bisq.exe"
 exe64="Bisq-64bit-$version.exe"
 cp "$win64/$exe" "$target_dir/$exe64"
 
@@ -52,7 +52,6 @@ gpg --digest-algo SHA256 --verify $dmg{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 
-#mkdir ../../build/vm/vm_shared_windows_32bit/$version
 cp -r . $win64/$version
 
 open "."

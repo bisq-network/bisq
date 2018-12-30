@@ -405,6 +405,7 @@ public class OfferBookViewModelTest {
         assertEquals(10, model.maxPlacesForMarketPriceMargin.intValue()); //" (-10.00%)"
     }
 
+    @Ignore
     @Test
     public void testGetPrice() {
         OfferBook offerBook = mock(OfferBook.class);

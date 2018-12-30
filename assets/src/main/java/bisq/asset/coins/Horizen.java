@@ -24,14 +24,14 @@ import bisq.asset.Coin;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Base58;
 
-public class ZenCash extends Coin {
+public class Horizen extends Coin {
 
-    public ZenCash() {
-        super("ZenCash", "ZEN", new ZenCashAddressValidator());
+    public Horizen() {
+        super("Horizen", "ZEN", new HorizenAddressValidator());
     }
 
 
-    public static class ZenCashAddressValidator implements AddressValidator {
+    public static class HorizenAddressValidator implements AddressValidator {
 
         @Override
         public AddressValidationResult validate(String address) {

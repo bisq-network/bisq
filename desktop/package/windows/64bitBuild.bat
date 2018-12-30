@@ -5,12 +5,14 @@
 :: 64 bit build
 :: Needs Inno Setup 5 or later (http://www.jrsoftware.org/isdl.php)
 
-SET version=0.9.0
+cd ../../
+
+SET version=0.9.1
 
 :: Private setup
-SET outdir=\\VBOXSVR\vm_shared_windows
+::SET outdir=\\VBOXSVR\vm_shared_windows
 :: Others might use the following
-:: SET outdir=.
+SET outdir=.
 
 call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^

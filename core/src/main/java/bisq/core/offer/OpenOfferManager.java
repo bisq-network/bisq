@@ -177,11 +177,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void cleanUpAddressEntries() {
-        Set<String> openTradesIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
+        Set<String> openOffersIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
         btcWalletService.getAddressEntriesForOpenOffer().stream()
-                .filter(e -> !openTradesIdSet.contains(e.getOfferId()))
+                .filter(e -> !openOffersIdSet.contains(e.getOfferId()))
                 .forEach(e -> {
-                    log.warn("We found an outdated addressEntry for openOffer {}", e.getOfferId());
+                    log.warn("We found an outdated addressEntry for openOffer {} (openOffers does not contain that " +
+                                    "offer), offers.size={}",
+                            e.getOfferId(), openOffers.size());
                     btcWalletService.resetAddressEntriesForOpenOffer(e.getOfferId());
                 });
     }
@@ -483,7 +485,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOffer.setState(OpenOffer.State.CANCELED);
         openOffers.remove(openOffer);
         closedTradableManager.add(openOffer);
-        log.debug("removeOpenOffer, offerId={}", offer.getId());
+        log.info("onRemoved offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
         resultHandler.handleResult();
     }

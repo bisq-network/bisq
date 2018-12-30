@@ -21,25 +21,23 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class ZenCashTest extends AbstractAssetTest {
+public class PinkcoinTest extends AbstractAssetTest {
 
-    public ZenCashTest() {
-        super(new ZenCash());
+    public PinkcoinTest() {
+        super(new Pinkcoin());
     }
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("znk62Ey7ptTyHgYLaLDTEwhLF6uN1DXTBfa");
-        assertValidAddress("znTqzi5rTXf6KJnX5tLaC5CMGHfeWJwy1c7");
-        assertValidAddress("t1V9h2P9n4sYg629Xn4jVDPySJJxGmPb1HK");
-        assertValidAddress("t3Ut4KUq2ZSMTPNE67pBU5LqYCi2q36KpXQ");
+        assertValidAddress("2KZEgvipDn5EkDAFB8UR8nVXuKuKt8rmgH");
+        assertValidAddress("2KVgwafcbw9LcJngqAzxu8UKpQSRwNhtTH");
+        assertValidAddress("2TPDcXRRmvTxJQ4V8xNhP1KmrTmH9KKCkg");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("zcKffBrza1cirFY47aKvXiV411NZMscf7zUY5bD1HwvkoQvKHgpxLYUHtMCLqBAeif1VwHmMjrMAKNrdCknCVqCzRNizHUq");
-        assertInvalidAddress("AFTqzi5rTXf6KJnX5tLaC5CMGHfeWJwy1c7");
-        assertInvalidAddress("zig-zag");
-        assertInvalidAddress("0123456789");
+        assertInvalidAddress("PPo1gCi4xoC87gZZsnU2Uj6vSgZAAD9com");
+        assertInvalidAddress("z4Vg3S5pJEJY45tHX7u6X1r9tv2DEvCShi2");
+        assertInvalidAddress("1dQT9U73rNmomYkkxQwcNYhfQr9yy4Ani");
     }
 }

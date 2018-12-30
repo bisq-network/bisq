@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 
@@ -41,6 +42,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
 
     private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
+    private final CycleService cycleService;
     private final DaoStateStorageService daoStateStorageService;
 
     private DaoState snapshotCandidate;
@@ -53,9 +55,11 @@ public class DaoStateSnapshotService implements DaoStateListener {
     @Inject
     public DaoStateSnapshotService(DaoStateService daoStateService,
                                    GenesisTxInfo genesisTxInfo,
+                                   CycleService cycleService,
                                    DaoStateStorageService daoStateStorageService) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
+        this.cycleService = cycleService;
         this.daoStateStorageService = daoStateStorageService;
 
         this.daoStateService.addBsqStateListener(this);
@@ -128,19 +132,13 @@ public class DaoStateSnapshotService implements DaoStateListener {
                         log.warn("We applied already a snapshot with chainHeight {}. We will reset the daoState and " +
                                 "start over from the genesis transaction again.", chainHeightOfLastApplySnapshot);
                         persisted = new DaoState();
-                        int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
-                        persisted.setChainHeight(genesisBlockHeight);
-                        chainHeightOfLastApplySnapshot = genesisBlockHeight;
-                        daoStateService.applySnapshot(persisted);
+                        applyEmptySnapshot(persisted);
                     }
                 }
             } else if (fromReorg) {
                 log.info("We got a reorg and we want to apply the snapshot but it is empty. That is expected in the first blocks until the " +
                         "first snapshot has been created. We use our applySnapshot method and restart from the genesis tx");
-                int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
-                persisted.setChainHeight(genesisBlockHeight);
-                chainHeightOfLastApplySnapshot = genesisBlockHeight;
-                daoStateService.applySnapshot(persisted);
+                applyEmptySnapshot(persisted);
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
@@ -151,6 +149,15 @@ public class DaoStateSnapshotService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyEmptySnapshot(DaoState persisted) {
+        int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
+        persisted.setChainHeight(genesisBlockHeight);
+        chainHeightOfLastApplySnapshot = genesisBlockHeight;
+        daoStateService.applySnapshot(persisted);
+        // In case we apply an empty snapshot we need to trigger the cycleService.addFirstCycle method
+        cycleService.addFirstCycle();
+    }
 
     @VisibleForTesting
     int getSnapshotHeight(int genesisHeight, int height, int grid) {

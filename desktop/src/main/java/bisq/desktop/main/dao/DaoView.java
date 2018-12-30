@@ -40,6 +40,7 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -136,6 +137,15 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     }
 
     private void loadView(Class<? extends View> viewClass) {
+
+        if (selectedTab != null && selectedTab.getContent() != null) {
+            if (selectedTab.getContent() instanceof ScrollPane) {
+                ((ScrollPane) selectedTab.getContent()).setContent(null);
+            } else {
+                selectedTab.setContent(null);
+            }
+        }
+
         View view = viewLoader.load(viewClass);
         if (view instanceof BsqWalletView) {
             selectedTab = bsqWalletTab;

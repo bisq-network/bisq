@@ -114,6 +114,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
     }
 
     private void swapReservedForTradeEntry() {
+        log.info("swapReservedForTradeEntry");
         processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 

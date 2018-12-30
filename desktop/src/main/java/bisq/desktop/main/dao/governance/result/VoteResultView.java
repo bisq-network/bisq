@@ -701,21 +701,14 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
                 return new TableCell<>() {
-                    Label myVoteIcon;
-
                     @Override
                     public void updateItem(final ProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            if (myVoteIcon == null) {
-                                myVoteIcon = item.getMyVoteIcon();
-                                setGraphic(myVoteIcon);
-                            }
+                            setGraphic(item.getMyVoteIcon());
                         } else {
                             setGraphic(null);
-                            if (myVoteIcon != null)
-                                myVoteIcon = null;
                         }
                     }
                 };
@@ -734,21 +727,17 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
                 return new TableCell<>() {
-                    Label icon;
-
                     @Override
                     public void updateItem(final ProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            icon = new Label();
+                            Label icon = new Label();
                             AwesomeDude.setIcon(icon, item.getIcon());
                             icon.getStyleClass().add(item.getColorStyleClass());
                             setGraphic(icon);
                         } else {
                             setGraphic(null);
-                            if (icon != null)
-                                icon = null;
                         }
                     }
                 };
