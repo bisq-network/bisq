@@ -17,21 +17,21 @@
 
 package bisq.monitor.reporter;
 
+import bisq.monitor.Reporter;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import bisq.monitor.Reporter;
-
 /**
  * A simple console reporter.
- * 
+ *
  * @author Florian Reimair
  */
 public class ConsoleReporter extends Reporter {
 
     @Override
     public void report(long value, String prefix) {
-        HashMap<String, String> result = new HashMap<String, String>();
+        HashMap<String, String> result = new HashMap<>();
         result.put("", String.valueOf(value));
         report(result, "bisq");
 
@@ -39,7 +39,7 @@ public class ConsoleReporter extends Reporter {
 
     @Override
     public void report(long value) {
-        HashMap<String, String> result = new HashMap<String, String>();
+        HashMap<String, String> result = new HashMap<>();
         result.put("", String.valueOf(value));
         report(result);
     }

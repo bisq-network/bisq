@@ -36,11 +36,11 @@ TorStartupTime.enabled=true
 TorStartupTime.run.interval=100
 TorStartupTime.run.socksPort=90500 # so that there is no interference with a system Tor
 
-#TorRoundtripTime Metric
-TorRoundtripTime.enabled=true
-TorRoundtripTime.run.interval=100
-TorRoundtripTime.run.sampleSize=5
-TorRoundtripTime.run.hosts=http://expyuzz4wqqyqhjn.onion:80 # torproject.org hidden service
+#TorRoundTripTime Metric
+TorRoundTripTime.enabled=true
+TorRoundTripTime.run.interval=100
+TorRoundTripTime.run.sampleSize=5
+TorRoundTripTime.run.hosts=http://expyuzz4wqqyqhjn.onion:80 # torproject.org hidden service
 
 #TorHiddenServiceStartupTime Metric
 TorHiddenServiceStartupTime.enabled=true

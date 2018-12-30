@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * it down gracefully. Furthermore, configuration updates and execution are done
  * in a thread-save manner. Implementing classes only have to implement the
  * {@link Metric#execute()} method.
- * 
+ *
  * @author Florian Reimair
  */
 @Slf4j
@@ -102,7 +102,7 @@ public abstract class Metric extends Configurable implements Runnable {
                 else if (!configuration.containsKey(INTERVAL))
                     log.error("{} is missing mandatory '" + INTERVAL + "' property. Will not run.", getName());
                 else
-                    log.error("{} is misconfigured. Will not run.", getName());
+                    log.error("{} is mis-configured. Will not run.", getName());
             } else if (!enabled() && configuration.getProperty("enabled", "false").equals("true")) {
                 // check if this Metric got activated after being disabled.
                 // if so, resume execution
