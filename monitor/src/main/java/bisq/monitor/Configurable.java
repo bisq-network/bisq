@@ -20,8 +20,8 @@ package bisq.monitor;
 import java.util.Properties;
 
 /**
- * Does some precomputation for a configurable class.
- * 
+ * Does some pre-computation for a configurable class.
+ *
  * @author Florian Reimair
  */
 public abstract class Configurable {
@@ -42,7 +42,7 @@ public abstract class Configurable {
      * example, a property <code>MyName.answer=42</code> is made available as
      * <code>configuration.getProperty("answer")</code> resulting in
      * <code>42</code>.
-     * 
+     *
      * @param properties a set of configuration properties
      */
     public void configure(final Properties properties) {
@@ -65,7 +65,7 @@ public abstract class Configurable {
     /**
      * Set the name used to filter through configuration properties. See
      * {@link Configurable#configure(Properties)}.
-     * 
+     *
      * @param name
      */
     protected void setName(String name) {

@@ -17,27 +17,33 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import java.util.Map;
-import java.util.Properties;
+import bisq.monitor.metric.TorRoundTripTime;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import java.io.File;
+
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import bisq.monitor.metric.TorRoundtripTime;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Test the roundtrip time metric against the hidden service of torproject.org.
- * 
+ * Test the round trip time metric against the hidden service of tor project.org.
+ *
  * @author Florian Reimair
  */
-public class TorRoundtripTimeTests {
+@Disabled // Ignore for normal test runs as the tests take lots of time
+public class TorRoundTripTimeTests {
 
     /**
      * A dummy Reporter for development purposes.
@@ -71,7 +77,7 @@ public class TorRoundtripTimeTests {
         }
     }
 
-    private static File workingDirectory = new File(TorRoundtripTimeTests.class.getSimpleName());
+    private static final File workingDirectory = new File(TorRoundTripTimeTests.class.getSimpleName());
 
     @BeforeAll
     public static void setup() throws TorCtlException {
@@ -80,20 +86,20 @@ public class TorRoundtripTimeTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "default", "3", "4", "10" })
+    @ValueSource(strings = {"default", "3", "4", "10"})
     public void run(String sampleSize) throws Exception {
         DummyReporter reporter = new DummyReporter();
 
         // configure
         Properties configuration = new Properties();
-        configuration.put("TorRoundtripTime.enabled", "true");
-        configuration.put("TorRoundtripTime.run.interval", "2");
+        configuration.put("TorRoundTripTime.enabled", "true");
+        configuration.put("TorRoundTripTime.run.interval", "2");
         if (!"default".equals(sampleSize))
-            configuration.put("TorRoundtripTime.run.sampleSize", sampleSize);
+            configuration.put("TorRoundTripTime.run.sampleSize", sampleSize);
         // torproject.org hidden service
-        configuration.put("TorRoundtripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
+        configuration.put("TorRoundTripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
 
-        Metric DUT = new TorRoundtripTime(reporter);
+        Metric DUT = new TorRoundTripTime(reporter);
         // start
         DUT.configure(configuration);
 
@@ -124,7 +130,9 @@ public class TorRoundtripTimeTests {
 
     @AfterAll
     public static void cleanup() {
-        Tor.getDefault().shutdown();
+        Tor tor = Tor.getDefault();
+        checkNotNull(tor, "tor must not be null");
+        tor.shutdown();
         workingDirectory.delete();
     }
 }

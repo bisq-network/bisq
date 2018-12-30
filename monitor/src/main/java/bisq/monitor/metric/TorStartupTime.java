@@ -17,23 +17,24 @@
 
 package bisq.monitor.metric;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Properties;
+import bisq.monitor.Metric;
+import bisq.monitor.Reporter;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.Torrc;
 
-import bisq.monitor.Metric;
-import bisq.monitor.Reporter;
+import java.io.File;
+import java.io.IOException;
+
+import java.util.LinkedHashMap;
+import java.util.Properties;
 
 /**
  * A Metric to measure the deployment and startup time of the packaged Tor
  * binaries.
- * 
+ *
  * @author Florian Reimair
  */
 public class TorStartupTime extends Metric {
@@ -51,7 +52,7 @@ public class TorStartupTime extends Metric {
         super.configure(properties);
 
         synchronized (this) {
-            LinkedHashMap<String, String> overrides = new LinkedHashMap<String, String>();
+            LinkedHashMap<String, String> overrides = new LinkedHashMap<>();
             overrides.put("SOCKSPort", configuration.getProperty(SOCKS_PORT, "90500"));
 
             try {

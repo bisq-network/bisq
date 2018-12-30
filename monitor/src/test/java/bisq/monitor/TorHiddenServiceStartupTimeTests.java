@@ -17,23 +17,29 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import java.util.Map;
-import java.util.Properties;
+import bisq.monitor.metric.TorHiddenServiceStartupTime;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import java.io.File;
+
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import static com.google.common.base.Preconditions.checkNotNull;
 
+@Disabled // Ignore for normal test runs as the tests take lots of time
 public class TorHiddenServiceStartupTimeTests {
 
-    private final static File torWorkingDirectory = new File(TorHiddenServiceStartupTimeTests.class.getSimpleName());
+    private final static File torWorkingDirectory = new File("monitor/" + TorHiddenServiceStartupTimeTests.class.getSimpleName());
 
     /**
      * A dummy Reporter for development purposes.
@@ -96,7 +102,9 @@ public class TorHiddenServiceStartupTimeTests {
 
     @AfterAll
     public static void cleanup() {
-        Tor.getDefault().shutdown();
+        Tor tor = Tor.getDefault();
+        checkNotNull(tor, "tor must not be null");
+        tor.shutdown();
         torWorkingDirectory.delete();
     }
 }

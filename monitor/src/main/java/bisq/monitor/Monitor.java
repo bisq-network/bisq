@@ -17,26 +17,32 @@
 
 package bisq.monitor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import bisq.monitor.metric.TorRoundTripTime;
+import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.GraphiteReporter;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 
-import bisq.monitor.metric.TorStartupTime;
-import bisq.monitor.reporter.ConsoleReporter;
-import bisq.monitor.reporter.GraphiteReporter;
-import bisq.monitor.metric.TorRoundtripTime;
-import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import java.io.File;
+import java.io.FileInputStream;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
+
 import sun.misc.Signal;
 
 /**
  * Monitor executable for the Bisq network.
- * 
+ *
  * @author Florian Reimair
  */
 @Slf4j
@@ -52,16 +58,16 @@ public class Monitor {
     /**
      * A list of all active {@link Metric}s
      */
-    private List<Metric> metrics = new ArrayList<>();
+    private final List<Metric> metrics = new ArrayList<>();
 
     /**
      * Starts up all configured Metrics.
-     * 
+     *
      * @throws Exception
      */
     private void start() throws Throwable {
         // start Tor
-        Tor.setDefault(new NativeTor(new File("monitor-tor"), null, null, false));
+        Tor.setDefault(new NativeTor(new File("monitor/monitor-tor"), null, null, false));
 
         // assemble Metrics
         // - create reporters
@@ -70,7 +76,7 @@ public class Monitor {
 
         // - add available metrics with their reporters
         metrics.add(new TorStartupTime(graphiteReporter));
-        metrics.add(new TorRoundtripTime(graphiteReporter));
+        metrics.add(new TorRoundTripTime(graphiteReporter));
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
 
         // prepare configuration reload
@@ -104,7 +110,9 @@ public class Monitor {
                     }
 
                 log.info("shutting down tor");
-                Tor.getDefault().shutdown();
+                Tor tor = Tor.getDefault();
+                checkNotNull(tor, "tor must not be null");
+                tor.shutdown();
 
                 log.info("system halt");
             }
@@ -132,7 +140,7 @@ public class Monitor {
 
     /**
      * Overloads a default set of properties with a file if given
-     * 
+     *
      * @return a set of properties
      * @throws Exception
      */
@@ -142,7 +150,7 @@ public class Monitor {
 
         Properties result = new Properties(defaults);
 
-        if(args.length > 0)
+        if (args.length > 0)
             result.load(new FileInputStream(args[0]));
 
         return result;

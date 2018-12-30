@@ -17,6 +17,8 @@
 
 package bisq.monitor;
 
+import bisq.monitor.reporter.ConsoleReporter;
+
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -24,8 +26,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import bisq.monitor.reporter.ConsoleReporter;
 
 public class MonitorInfrastructureTests {
 
@@ -50,7 +50,7 @@ public class MonitorInfrastructureTests {
 
     @ParameterizedTest
     @ValueSource(strings = { "empty", "no interval", "typo" })
-    public void basicConfigurationError(String configuration) throws Exception {
+    public void basicConfigurationError(String configuration) {
         HashMap<String, Properties> lut = new HashMap<>();
         lut.put("empty", new Properties());
         Properties noInterval = new Properties();
@@ -58,6 +58,7 @@ public class MonitorInfrastructureTests {
         lut.put("no interval", noInterval);
         Properties typo = new Properties();
         typo.put("Dummy.enabled", "true");
+        //noinspection SpellCheckingInspection
         typo.put("Dummy.run.inteval", "1");
         lut.put("typo", typo);
 
