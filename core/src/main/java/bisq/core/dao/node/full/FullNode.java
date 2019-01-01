@@ -242,6 +242,7 @@ public class FullNode extends BsqNode {
 
     private void handleError(Throwable throwable) {
         if (throwable instanceof BlockHashNotConnectingException || throwable instanceof BlockHeightNotConnectingException) {
+            // We do not escalate that exception as it is handled with the snapshot manager to recover its state.
             log.warn(throwable.toString());
         } else {
             String errorMessage = "An error occurred: Error=" + throwable.toString();
