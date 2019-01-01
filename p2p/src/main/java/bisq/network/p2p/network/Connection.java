@@ -678,10 +678,10 @@ public class Connection implements MessageListener {
                 // TODO sometimes we get StreamCorruptedException, OptionalDataException, IllegalStateException
                 closeConnectionReason = CloseConnectionReason.UNKNOWN_EXCEPTION;
                 log.warn("Unknown reason for exception at socket: {}\n\t" +
-                                "connection={}\n\t" +
+                                "peer={}\n\t" +
                                 "Exception={}",
                         socket.toString(),
-                        this,
+                        connection.peersNodeAddressOptional,
                         e.toString());
                 e.printStackTrace();
             }
@@ -700,7 +700,7 @@ public class Connection implements MessageListener {
         }
 
         public void stop() {
-            this.stopped = true;
+            stopped = true;
         }
 
         public RuleViolation getRuleViolation() {
@@ -709,10 +709,15 @@ public class Connection implements MessageListener {
 
         @Override
         public String toString() {
-            return "SharedSpace{" +
-                    "socket=" + socket +
-                    ", ruleViolations=" + ruleViolations +
-                    '}';
+            return "SharedModel{" +
+                    "\n     connection=" + connection +
+                    ",\n     socket=" + socket +
+                    ",\n     ruleViolations=" + ruleViolations +
+                    ",\n     stopped=" + stopped +
+                    ",\n     closeConnectionReason=" + closeConnectionReason +
+                    ",\n     ruleViolation=" + ruleViolation +
+                    ",\n     supportedCapabilities=" + supportedCapabilities +
+                    "\n}";
         }
     }
 
