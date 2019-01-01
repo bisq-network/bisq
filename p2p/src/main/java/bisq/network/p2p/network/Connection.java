@@ -28,7 +28,6 @@ import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
-import bisq.network.p2p.peers.keepalive.messages.Pong;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import bisq.network.p2p.storage.messages.RefreshOfferMessage;
@@ -811,7 +810,9 @@ public class Connection implements MessageListener {
                         log.debug("<< Received networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
 
                         int size = proto.getSerializedSize();
-                        if (networkEnvelope instanceof Pong || networkEnvelope instanceof RefreshOfferMessage) {
+                        // We comment out that part as only debug and trace log level is used. For debugging purposes
+                        // we leave the code though.
+                        /*if (networkEnvelope instanceof Pong || networkEnvelope instanceof RefreshOfferMessage) {
                             // We only log Pong and RefreshOfferMsg when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
@@ -831,7 +832,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     Utilities.toTruncatedString(proto.toString()),
                                     size);
-                        }
+                        }*/
 
                         // We want to track the size of each object even if it is invalid data
                         connection.statistic.addReceivedBytes(size);
