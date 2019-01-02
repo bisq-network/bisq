@@ -106,7 +106,8 @@ public class VoteResultConsensus {
             checkArgument(optionalBlindVoteStakeOutput.isPresent(), "blindVoteStakeOutput must be present");
             TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
             checkArgument(blindVoteStakeOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT,
-                    "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT");
+                    "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT but is " +
+                            blindVoteStakeOutput.getTxOutputType() + ". VoteRevealTx=" + voteRevealTx);
             return blindVoteStakeOutput;
         } catch (Throwable t) {
             throw new VoteResultException.ValidationException(t);
