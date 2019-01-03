@@ -775,7 +775,7 @@ public class DaoStateService implements DaoSetupService {
         if (optionalTxOutput.isPresent()) {
             TxOutput lockupTxOutput = optionalTxOutput.get();
             if (isUnspent(lockupTxOutput.getKey())) {
-                log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can confiscate it.", lockupTxOutput.getKey());
                 doConfiscateBond(lockupTxId);
             } else {
                 // We lookup for the unlock tx which need to be still in unlocking state
@@ -784,7 +784,7 @@ public class DaoStateService implements DaoSetupService {
                 String unlockTxId = optionalSpentInfo.get().getTxId();
                 if (isUnlockingAndUnspent(unlockTxId)) {
                     // We found the unlock tx is still not spend
-                    log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                    log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can We confiscate it.", lockupTxOutput.getKey());
                     doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,
