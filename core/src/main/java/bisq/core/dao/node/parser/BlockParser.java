@@ -117,7 +117,7 @@ public class BlockParser {
                         .ifPresent(txList::add));
 
         if (System.currentTimeMillis() - startTs > 0)
-            log.info("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
+            log.info("Parsing {} transactions took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;

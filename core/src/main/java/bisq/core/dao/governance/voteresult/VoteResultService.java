@@ -170,6 +170,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void maybeCalculateVoteResult(int chainHeight) {
         if (isInVoteResultPhase(chainHeight)) {
+            long startTs = System.currentTimeMillis();
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             decryptedBallotsWithMeritsSet.stream()
                     .filter(e -> !daoStateService.getDecryptedBallotsWithMeritsList().contains(e))
@@ -232,6 +233,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             daoStateService.getIssuanceCandidateTxOutputs().stream()
                     .filter(txOutput -> !daoStateService.isIssuanceTx(txOutput.getTxId()))
                     .forEach(daoStateService::addNonBsqTxOutput);
+
+            log.info("Evaluating vote result took {} ms", System.currentTimeMillis() - startTs);
         }
     }
 
