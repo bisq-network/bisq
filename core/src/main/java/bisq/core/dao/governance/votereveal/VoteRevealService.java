@@ -28,11 +28,12 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
-import bisq.core.dao.governance.blindvote.BlindVoteValidator;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -75,7 +76,6 @@ import lombok.extern.slf4j.Slf4j;
 public class VoteRevealService implements DaoStateListener, DaoSetupService {
     private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
-    private final BlindVoteValidator blindVoteValidator;
     private final PeriodService periodService;
     private final MyVoteListService myVoteListService;
     private final BsqWalletService bsqWalletService;
@@ -86,6 +86,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     //TODO UI should listen to that
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
+    private final BsqNode bsqNode;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,22 +96,23 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     @Inject
     public VoteRevealService(DaoStateService daoStateService,
                              BlindVoteListService blindVoteListService,
-                             BlindVoteValidator blindVoteValidator,
                              PeriodService periodService,
                              MyVoteListService myVoteListService,
                              BsqWalletService bsqWalletService,
                              BtcWalletService btcWalletService,
                              P2PService p2PService,
-                             WalletsManager walletsManager) {
+                             WalletsManager walletsManager,
+                             BsqNodeProvider bsqNodeProvider) {
         this.daoStateService = daoStateService;
         this.blindVoteListService = blindVoteListService;
-        this.blindVoteValidator = blindVoteValidator;
         this.periodService = periodService;
         this.myVoteListService = myVoteListService;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
         this.walletsManager = walletsManager;
+
+        bsqNode = bsqNodeProvider.getBsqNode();
     }
 
 
@@ -130,7 +132,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void start() {
-        maybeRevealVotes(daoStateService.getChainHeight());
+        maybeRevealVotes();
     }
 
 
@@ -151,7 +153,8 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     @Override
     public void onNewBlockHeight(int blockHeight) {
         // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
-        maybeRevealVotes(blockHeight);
+
+        maybeRevealVotes();
     }
 
     @Override
@@ -172,7 +175,13 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // the blind vote was created in case we have not done it already.
     // The voter need to be at least once online in the reveal phase when he has a blind vote created,
     // otherwise his vote becomes invalid and his locked stake will get unlocked
-    private void maybeRevealVotes(int chainHeight) {
+    private void maybeRevealVotes() {
+        // We must not use daoStateService.getChainHeight() because that gets updated with each parsed block but we
+        // only want to publish the vote reveal tx if our current real chain height is matching the cycle and phase and
+        // not at any intermediate height during parsing all blocks. The bsqNode knows the latest height from either
+        // Bitcoin Core or from the seed node.
+        int chainHeight = bsqNode.getChainTipHeight();
+
         if (periodService.getPhaseForHeight(chainHeight) == DaoPhase.Phase.VOTE_REVEAL) {
             myVoteListService.getMyVoteList().stream()
                     .filter(myVote -> myVote.getRevealTxId() == null) // we have not already revealed TODO
