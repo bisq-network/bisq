@@ -190,17 +190,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote);
                     } else {
-                        // Exceptional case that the user missed the vote reveal phase. We still publish the vote
-                        // reveal tx to unlock the vote stake.
-
-                        // We cannot handle that case in the parser directly to avoid that reveal tx and unlock the
-                        // BSQ because the blind vote tx is already in the snapshot and does not get parsed
-                        // again. It would require a reset of the snapshot and parse all blocks again.
-                        // As this is an exceptional case we prefer to have a simple solution instead and just
-                        // publish the vote reveal tx but are aware that is is invalid.
-                        log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
-                                "BSQ from the blind vote tx. BlindVoteTxId={}", myVote.getTxId());
-
                         boolean isAfterVoteRevealPhase = periodService.getPhaseForHeight(chainHeight).ordinal() > DaoPhase.Phase.VOTE_REVEAL.ordinal();
 
                         // We missed the reveal phase but we are in the correct cycle
@@ -210,6 +199,17 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(myVote.getTxId(), chainHeight);
 
                         if (missedPhaseSameCycle || isBlindVoteTxInPastCycle) {
+                            // Exceptional case that the user missed the vote reveal phase. We still publish the vote
+                            // reveal tx to unlock the vote stake.
+
+                            // We cannot handle that case in the parser directly to avoid that reveal tx and unlock the
+                            // BSQ because the blind vote tx is already in the snapshot and does not get parsed
+                            // again. It would require a reset of the snapshot and parse all blocks again.
+                            // As this is an exceptional case we prefer to have a simple solution instead and just
+                            // publish the vote reveal tx but are aware that is is invalid.
+                            log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
+                                    "BSQ from the blind vote tx. BlindVoteTxId={}", myVote.getTxId());
+
                             // We handle the exception here inside the stream iteration as we have not get triggered from an
                             // outside user intent anyway. We keep errors in a observable list so clients can observe that to
                             // get notified if anything went wrong.
