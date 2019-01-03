@@ -33,7 +33,7 @@ configure(subprojects) {
         jmockitVersion = '1.42'
         joptVersion = '5.0.3'
         langVersion = '3.4'
-        bitcoinjVersion = 'cd30ad5b'
+        bitcoinjVersion = '3e7ff3a'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
