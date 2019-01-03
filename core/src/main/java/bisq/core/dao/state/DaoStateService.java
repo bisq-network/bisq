@@ -68,6 +68,7 @@ public class DaoStateService implements DaoSetupService {
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    private boolean parseBlockChainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -207,11 +208,19 @@ public class DaoStateService implements DaoSetupService {
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        // We don't call it during batch parsing as that decreased performance a lot.
+        // With calling at each block we got about 50 seconds for 4000 blocks, without about 4 seconds.
+        if (parseBlockChainComplete)
+            daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
+        parseBlockChainComplete = true;
+
+        // Now we need to trigger the onParseBlockComplete to update the state in the app
+        getLastBlock().ifPresent(this::onParseBlockComplete);
+
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
