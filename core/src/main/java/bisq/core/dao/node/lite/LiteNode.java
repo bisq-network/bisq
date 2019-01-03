@@ -146,6 +146,7 @@ public class LiteNode extends BsqNode {
         // 144 blocks a day would result in about 4000 in a month, so if a user downloads the app after 1 months latest
         // release it will be a bit of a performance hit. It is a one time event as the snapshots gets created and be
         // used at next startup.
+        long ts = System.currentTimeMillis();
         for (RawBlock block : blockList) {
             try {
                 doParseBlock(block);
@@ -154,6 +155,7 @@ public class LiteNode extends BsqNode {
                 break;
             }
         }
+        log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
 
         onParseBlockChainComplete();
     }
