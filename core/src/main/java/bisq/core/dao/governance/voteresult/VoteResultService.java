@@ -355,7 +355,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         // We got a vote but we don't have the ballot (which includes the proposal)
                         // We add it to the missing list to handle it as exception later. We want all missing data so we
                         // do not throw here.
-                        log.warn("missingBallot with proposal tx={}", daoStateService.getTx(txId));
+                        log.warn("missingBallot for proposal with txId={}. Optional tx={}", txId, daoStateService.getTx(txId));
                         missingBallots.add(txId);
                         return null;
                     }
