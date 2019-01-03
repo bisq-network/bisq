@@ -188,6 +188,7 @@ public class FullNode extends BsqNode {
     private void parseBlocksOnHeadHeight(int startBlockHeight, int chainHeight) {
         if (startBlockHeight <= chainHeight) {
             log.info("parseBlocks with startBlockHeight={} and chainHeight={}", startBlockHeight, chainHeight);
+            chainTipHeight = chainHeight;
             parseBlocks(startBlockHeight,
                     chainHeight,
                     this::onNewBlock,
