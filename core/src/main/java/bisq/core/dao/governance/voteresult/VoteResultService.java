@@ -255,19 +255,24 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
                     Tx voteRevealTx = optionalVoteRevealTx.get();
                     // If we get a voteReveal tx which was published too late we ignore it.
-                    if (!VoteRevealConsensus.isVoteRevealTxInCorrectPhaseAndCycle(periodService, voteRevealTx.getId(), chainHeight)) {
+                    if (!periodService.isTxInPhaseAndCycle(voteRevealTx.getId(), DaoPhase.Phase.VOTE_REVEAL, chainHeight)) {
                         log.warn("We got a vote reveal tx with was not in the correct phase and/or cycle. voteRevealTxId={}", voteRevealTx.getId());
                         return null;
                     }
 
                     try {
                         // TODO maybe verify version in opReturn
-                        byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(opReturnData);
-                        SecretKey secretKey = VoteResultConsensus.getSecretKey(opReturnData);
+
                         TxOutput blindVoteStakeOutput = VoteResultConsensus.getConnectedBlindVoteStakeOutput(voteRevealTx, daoStateService);
-                        long blindVoteStake = blindVoteStakeOutput.getValue();
-                        Tx blindVoteTx = VoteResultConsensus.getBlindVoteTx(blindVoteStakeOutput, daoStateService, periodService, chainHeight);
-                        String blindVoteTxId = blindVoteTx.getId();
+                        String blindVoteTxId = blindVoteStakeOutput.getTxId();
+                        boolean isBlindVoteInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(blindVoteTxId, DaoPhase.Phase.BLIND_VOTE, chainHeight);
+                        // If we get a voteReveal tx which was published too late we ignore it.
+                        if (!isBlindVoteInCorrectPhaseAndCycle) {
+                            log.warn("We got a blind vote tx with was not in the correct phase and/or cycle. blindVoteTxId={}", blindVoteTxId);
+                            return null;
+                        }
+
+                        VoteResultConsensus.validateBlindVoteTx(blindVoteStakeOutput.getTxId(), daoStateService, periodService, chainHeight);
 
                         List<BlindVote> blindVoteList = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
                         Optional<BlindVote> optionalBlindVote = blindVoteList.stream()
@@ -276,12 +281,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         if (optionalBlindVote.isPresent()) {
                             BlindVote blindVote = optionalBlindVote.get();
                             try {
+                                SecretKey secretKey = VoteResultConsensus.getSecretKey(opReturnData);
                                 VoteWithProposalTxIdList voteWithProposalTxIdList = VoteResultConsensus.decryptVotes(blindVote.getEncryptedVotes(), secretKey);
                                 MeritList meritList = MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
                                 // We lookup for the proposals we have in our local list which match the txId from the
                                 // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
                                 // the voteWithProposalTxIdList
                                 BallotList ballotList = createBallotList(voteWithProposalTxIdList);
+                                byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(opReturnData);
+                                long blindVoteStake = blindVoteStakeOutput.getValue();
                                 return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
                             } catch (VoteResultException.MissingBallotException missingBallotException) {
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
@@ -347,6 +355,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         // We got a vote but we don't have the ballot (which includes the proposal)
                         // We add it to the missing list to handle it as exception later. We want all missing data so we
                         // do not throw here.
+                        log.warn("missingBallot with proposal tx={}", daoStateService.getTx(txId));
                         missingBallots.add(txId);
                         return null;
                     }
@@ -476,13 +485,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 } else {
                     evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult,
                             requiredQuorum, requiredVoteThreshold));
-                    log.warn("Proposal did not reach the requiredVoteThreshold. reachedThreshold={} %, " +
+                    log.info("Proposal did not reach the requiredVoteThreshold. reachedThreshold={} %, " +
                             "requiredVoteThreshold={} %", reachedThreshold / 100D, requiredVoteThreshold / 100D);
                 }
             } else {
                 evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult,
                         requiredQuorum, requiredVoteThreshold));
-                log.warn("Proposal did not reach the requiredQuorum. reachedQuorum={}, requiredQuorum={}",
+                log.info("Proposal did not reach the requiredQuorum. reachedQuorum={}, requiredQuorum={}",
                         reachedQuorum, requiredQuorum);
             }
         });
