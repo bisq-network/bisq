@@ -150,6 +150,15 @@ public class FullNode extends BsqNode {
             addBlockHandlerAdded = true;
             rpcService.addNewBtcBlockHandler(rawBlock -> {
                         try {
+                            // We need to call that before parsing to have set the chain tip correctly for clients
+                            // which might listen for new blocks on daoStateService. DaoStateListener.onNewBlockHeight
+                            // is called before the doParseBlock returns.
+
+                            // We only update chainTipHeight if we get a newer block
+                            int blockHeight = rawBlock.getHeight();
+                            if (blockHeight > chainTipHeight)
+                                chainTipHeight = blockHeight;
+
                             doParseBlock(rawBlock).ifPresent(this::onNewBlock);
                         } catch (RequiredReorgFromSnapshotException ignore) {
                         }
