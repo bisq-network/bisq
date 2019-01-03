@@ -38,7 +38,6 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 
@@ -181,16 +180,27 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         // not at any intermediate height during parsing all blocks. The bsqNode knows the latest height from either
         // Bitcoin Core or from the seed node.
         int chainHeight = bsqNode.getChainTipHeight();
+        myVoteListService.getMyVoteList().stream()
+                .filter(myVote -> myVote.getRevealTxId() == null) // we have not already revealed
+                .forEach(myVote -> {
+                    boolean isCorrectPhaseAndCycle = VoteRevealConsensus.isBlindVoteTxInCorrectPhaseAndCycle(periodService, myVote.getTxId(), chainHeight);
+                    boolean missedPhaseOrCycle = VoteRevealConsensus.missedPhaseOrCycle(periodService, myVote.getTxId(), chainHeight);
+                    if (isCorrectPhaseAndCycle || missedPhaseOrCycle) {
+                        // We have a blind vote and reveal it as we are in the correct phase and cycle.
 
-        if (periodService.getPhaseForHeight(chainHeight) == DaoPhase.Phase.VOTE_REVEAL) {
-            myVoteListService.getMyVoteList().stream()
-                    .filter(myVote -> myVote.getRevealTxId() == null) // we have not already revealed TODO
-                    .filter(myVote -> periodService.isTxInCorrectCycle(myVote.getTxId(), chainHeight))
-                    .forEach(myVote -> {
                         // We handle the exception here inside the stream iteration as we have not get triggered from an
                         // outside user intent anyway. We keep errors in a observable list so clients can observe that to
                         // get notified if anything went wrong.
                         try {
+                            if (missedPhaseOrCycle) {
+                                // We cannot handle that case in the parser directly to avoid that tx and unlock the
+                                // BSQ because the blind vote tx is already in the snapshot and does not get parsed
+                                // again. It would require a reset of the snapshot and parse all blocks again.
+                                // As this is an exceptional case we prefer to have a simple solution instead and just
+                                // publish the vote reveal tx but are aware that is is invalid.
+                                log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
+                                        "BSQ from the blind vote tx. BlindVoteTxId={}", myVote.getTxId());
+                            }
                             revealVote(myVote, chainHeight);
                         } catch (IOException | WalletException | TransactionVerificationException
                                 | InsufficientMoneyException e) {
@@ -199,8 +209,8 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         } catch (VoteRevealException e) {
                             voteRevealExceptions.add(e);
                         }
-                    });
-        }
+                    }
+                });
     }
 
     private void revealVote(MyVote myVote, int chainHeight) throws IOException, WalletException,
@@ -230,25 +240,18 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
         // TxOutput has to be in the current cycle. Phase is checked in the parser anyway.
         // TODO is phase check needed and done in parser still?
-        if (periodService.isTxInCorrectCycle(stakeTxOutput.getTxId(), chainHeight)) {
-            Transaction voteRevealTx = getVoteRevealTx(stakeTxOutput, opReturnData);
-            log.info("voteRevealTx={}", voteRevealTx);
-            publishTx(voteRevealTx);
+        Transaction voteRevealTx = getVoteRevealTx(stakeTxOutput, opReturnData);
+        log.info("voteRevealTx={}", voteRevealTx);
+        publishTx(voteRevealTx);
 
-            // TODO add comment...
-            // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
-            // next startup but the tx was actually broadcasted.
-            myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
+        // TODO add comment...
+        // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
+        // next startup but the tx was actually broadcasted.
+        myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
 
-            // Just for additional resilience we republish our blind votes
-            List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-            rePublishBlindVotePayloadList(sortedBlindVoteListOfCycle);
-        } else {
-            final String msg = "Tx of stake out put is not in our cycle. That must not happen.";
-            log.error("{}. chainHeight={},  blindVoteTxId()={}", msg, chainHeight, myVote.getTxId());
-            voteRevealExceptions.add(new VoteRevealException(msg,
-                    stakeTxOutput.getTxId()));
-        }
+        // Just for additional resilience we republish our blind votes
+        List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
+        rePublishBlindVotePayloadList(sortedBlindVoteListOfCycle);
     }
 
     private void publishTx(Transaction voteRevealTx) {

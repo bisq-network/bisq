@@ -309,7 +309,7 @@ public class TxParser {
     private boolean isPhaseValid(int blockHeight, DaoPhase.Phase phase) {
         boolean isInPhase = periodService.isInPhase(blockHeight, phase);
         if (!isInPhase) {
-            log.warn("Not in {} phase. blockHeight={}", phase, blockHeight);
+            log.warn("Tx is not in required phase ({}). blockHeight={}", phase, blockHeight);
         }
         return isInPhase;
     }

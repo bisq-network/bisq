@@ -254,6 +254,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     }
 
                     Tx voteRevealTx = optionalVoteRevealTx.get();
+                    // If we get a voteReveal tx which was published too late we ignore it.
+                    if (!VoteRevealConsensus.isVoteRevealTxInCorrectPhaseAndCycle(periodService, voteRevealTx.getId(), chainHeight)) {
+                        log.warn("We got a vote reveal tx with was not in the correct phase and/or cycle. voteRevealTxId={}", voteRevealTx.getId());
+                        return null;
+                    }
+
                     try {
                         // TODO maybe verify version in opReturn
                         byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(opReturnData);
