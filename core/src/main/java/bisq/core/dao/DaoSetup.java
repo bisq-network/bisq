@@ -54,8 +54,8 @@ public class DaoSetup {
     public DaoSetup(BsqNodeProvider bsqNodeProvider,
                     DaoStateService daoStateService,
                     CycleService cycleService,
-                    ProposalService proposalService,
                     BallotListService ballotListService,
+                    ProposalService proposalService,
                     BlindVoteListService blindVoteListService,
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
@@ -75,8 +75,8 @@ public class DaoSetup {
         // We need to take care of order of execution.
         daoSetupServices.add(daoStateService);
         daoSetupServices.add(cycleService);
-        daoSetupServices.add(proposalService);
         daoSetupServices.add(ballotListService);
+        daoSetupServices.add(proposalService);
         daoSetupServices.add(blindVoteListService);
         daoSetupServices.add(myBlindVoteListService);
         daoSetupServices.add(voteRevealService);
@@ -98,10 +98,12 @@ public class DaoSetup {
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.setWarnMessageHandler(warnMessageHandler);
 
-        daoSetupServices.forEach(daoSetupServices -> {
-            daoSetupServices.addListeners();
-            daoSetupServices.start();
-        });
+        // We add first all listeners at all services and then call the start methods.
+        // Some services are listening on others so we need to make sure that the
+        // listeners are set before we call start as that might trigger state change
+        // which triggers listeners.
+        daoSetupServices.forEach(DaoSetupService::addListeners);
+        daoSetupServices.forEach(DaoSetupService::start);
     }
 
     public void shutDown() {
