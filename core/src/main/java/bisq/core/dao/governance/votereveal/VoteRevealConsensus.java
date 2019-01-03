@@ -18,9 +18,7 @@
 package bisq.core.dao.governance.votereveal;
 
 import bisq.core.dao.governance.blindvote.BlindVote;
-import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
-import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Hash;
@@ -66,28 +64,5 @@ public class VoteRevealConsensus {
             log.error(e.toString());
             throw e;
         }
-    }
-
-    public static boolean isBlindVoteTxInCorrectPhaseAndCycle(PeriodService periodService, String blindVoteTxId, int chainHeight) {
-        boolean isVoteRevealPhase = periodService.getPhaseForHeight(chainHeight) == DaoPhase.Phase.VOTE_REVEAL;
-        boolean isBlindVoteTxInCorrectCycle = periodService.isTxInCorrectCycle(blindVoteTxId, chainHeight);
-        return isVoteRevealPhase && isBlindVoteTxInCorrectCycle;
-    }
-
-    public static boolean missedPhaseOrCycle(PeriodService periodService, String blindVoteTxId, int chainHeight) {
-        boolean isBlindVoteTxInCorrectCycle = periodService.isTxInCorrectCycle(blindVoteTxId, chainHeight);
-        boolean isAfterVoteRevealPhase = periodService.getPhaseForHeight(chainHeight).ordinal() > DaoPhase.Phase.VOTE_REVEAL.ordinal();
-
-        // We missed the reveal phase but we are in the correct cycle
-        boolean missedPhaseSameCycle = isAfterVoteRevealPhase && isBlindVoteTxInCorrectCycle;
-
-        // If we missed the cycle we don't care about the phase anymore.
-        boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(blindVoteTxId, chainHeight);
-        return missedPhaseSameCycle || isBlindVoteTxInPastCycle;
-    }
-
-    public static boolean isVoteRevealTxInCorrectPhaseAndCycle(PeriodService periodService, String voteRevealTxId, int chainHeight) {
-        return periodService.isTxInPhase(voteRevealTxId, DaoPhase.Phase.VOTE_REVEAL) &&
-                periodService.isTxInCorrectCycle(voteRevealTxId, chainHeight);
     }
 }
