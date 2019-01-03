@@ -218,9 +218,9 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     private void onProtectedDataAdded(ProtectedStorageEntry entry) {
-        final ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
+        ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof TempProposalPayload) {
-            final Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
+            Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
             // We do not validate if we are in current cycle and if tx is confirmed yet as the tx might be not
             // available/confirmed. But we check if we are in the proposal phase.
             if (!tempProposals.contains(proposal)) {
@@ -237,9 +237,9 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     private void onProtectedDataRemoved(ProtectedStorageEntry entry) {
-        final ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
+        ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof TempProposalPayload) {
-            final Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
+            Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
             // We allow removal only if we are in the proposal phase.
             if (periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL)) {
                 if (tempProposals.contains(proposal)) {

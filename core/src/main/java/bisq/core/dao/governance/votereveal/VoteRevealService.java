@@ -232,7 +232,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
 
             // Just for additional resilience we republish our blind votes
-            final List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
+            List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
             rePublishBlindVotePayloadList(sortedBlindVoteListOfCycle);
         } else {
             final String msg = "Tx of stake out put is not in our cycle. That must not happen.";
