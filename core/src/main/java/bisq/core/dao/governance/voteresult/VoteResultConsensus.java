@@ -106,7 +106,8 @@ public class VoteResultConsensus {
             checkArgument(optionalBlindVoteStakeOutput.isPresent(), "blindVoteStakeOutput must be present");
             TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
             checkArgument(blindVoteStakeOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT,
-                    "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT");
+                    "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT but is " +
+                            blindVoteStakeOutput.getTxOutputType() + ". VoteRevealTx=" + voteRevealTx);
             return blindVoteStakeOutput;
         } catch (Throwable t) {
             throw new VoteResultException.ValidationException(t);
@@ -123,15 +124,18 @@ public class VoteResultConsensus {
                     blindVoteTxId + " not found.");
             Tx blindVoteTx = optionalBlindVoteTx.get();
             Optional<TxType> optionalTxType = daoStateService.getOptionalTxType(blindVoteTx.getId());
-            checkArgument(optionalTxType.isPresent(), "optionalTxType must be present");
+            checkArgument(optionalTxType.isPresent(), "optionalTxType must be present" +
+                    ". blindVoteTxId=" + blindVoteTx.getId());
             checkArgument(optionalTxType.get() == TxType.BLIND_VOTE,
-                    "blindVoteTx must have type BLIND_VOTE");
+                    "blindVoteTx must have type BLIND_VOTE but is " + optionalTxType.get() +
+                            ". blindVoteTxId=" + blindVoteTx.getId());
             checkArgument(periodService.isTxInCorrectCycle(blindVoteTx.getBlockHeight(), chainHeight),
                     "blindVoteTx is not in correct cycle. blindVoteTx.getBlockHeight()="
-                            + blindVoteTx.getBlockHeight());
+                            + blindVoteTx.getBlockHeight() + ". chainHeight=" + chainHeight +
+                            ". blindVoteTxId=" + blindVoteTx.getId());
             checkArgument(periodService.isInPhase(blindVoteTx.getBlockHeight(), DaoPhase.Phase.BLIND_VOTE),
                     "blindVoteTx is not in BLIND_VOTE phase. blindVoteTx.getBlockHeight()="
-                            + blindVoteTx.getBlockHeight());
+                            + blindVoteTx.getBlockHeight() + ". blindVoteTxId=" + blindVoteTx.getId());
             return blindVoteTx;
         } catch (Throwable t) {
             throw new VoteResultException.ValidationException(t);

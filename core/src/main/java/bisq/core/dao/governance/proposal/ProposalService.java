@@ -119,6 +119,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void start() {
+        fillListFromProtectedStore();
+        fillListFromAppendOnlyDataStore();
     }
 
 
@@ -185,8 +187,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     public List<Proposal> getValidatedProposals() {
         return proposalPayloads.stream()
-                .map(proposalPayload -> proposalPayload.getProposal())
-                .filter(proposal -> proposalValidator.isTxTypeValid(proposal))
+                .map(ProposalPayload::getProposal)
+                .filter(proposalValidator::isTxTypeValid)
                 .collect(Collectors.toList());
     }
 
@@ -218,16 +220,16 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     private void onProtectedDataAdded(ProtectedStorageEntry entry) {
-        final ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
+        ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof TempProposalPayload) {
-            final Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
+            Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
             // We do not validate if we are in current cycle and if tx is confirmed yet as the tx might be not
             // available/confirmed. But we check if we are in the proposal phase.
             if (!tempProposals.contains(proposal)) {
                 if (proposalValidator.isValidOrUnconfirmed(proposal)) {
-                    tempProposals.add(proposal);
                     log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                             proposal.getTxId());
+                    tempProposals.add(proposal);
                 } else {
                     log.debug("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
                             proposal.getTxId(), daoStateService.getChainHeight());
@@ -237,15 +239,15 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     private void onProtectedDataRemoved(ProtectedStorageEntry entry) {
-        final ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
+        ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof TempProposalPayload) {
-            final Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
+            Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
             // We allow removal only if we are in the proposal phase.
             if (periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL)) {
                 if (tempProposals.contains(proposal)) {
-                    tempProposals.remove(proposal);
                     log.info("We received a remove request for a TempProposalPayload and have removed the proposal " +
                             "from our list. proposalTxId={}", proposal.getTxId());
+                    tempProposals.remove(proposal);
                 }
             } else {
                 log.warn("We received a remove request outside the PROPOSAL phase. " +
@@ -260,9 +262,9 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             if (!proposalPayloads.contains(proposalPayload)) {
                 Proposal proposal = proposalPayload.getProposal();
                 if (proposalValidator.areDataFieldsValid(proposal)) {
-                    proposalPayloads.add(proposalPayload);
                     log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
                             proposal.getTxId());
+                    proposalPayloads.add(proposalPayload);
                 } else {
                     log.warn("We received a invalid append-only proposal from the P2P network. " +
                                     "Proposal.txId={}, blockHeight={}",

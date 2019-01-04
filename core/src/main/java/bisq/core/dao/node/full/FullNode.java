@@ -21,6 +21,8 @@ import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
+import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
 import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
@@ -239,32 +241,37 @@ public class FullNode extends BsqNode {
     }
 
     private void handleError(Throwable throwable) {
-        String errorMessage = "An error occurred: Error=" + throwable.toString();
-        log.error(errorMessage);
-        throwable.printStackTrace();
+        if (throwable instanceof BlockHashNotConnectingException || throwable instanceof BlockHeightNotConnectingException) {
+            // We do not escalate that exception as it is handled with the snapshot manager to recover its state.
+            log.warn(throwable.toString());
+        } else {
+            String errorMessage = "An error occurred: Error=" + throwable.toString();
+            log.error(errorMessage);
+            throwable.printStackTrace();
 
-        if (throwable instanceof RpcException) {
-            Throwable cause = throwable.getCause();
-            if (cause != null) {
-                if (cause instanceof HttpLayerException) {
-                    if (((HttpLayerException) cause).getCode() == 1004004) {
-                        if (warnMessageHandler != null)
-                            warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
-                                    "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
-                                    "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
+            if (throwable instanceof RpcException) {
+                Throwable cause = throwable.getCause();
+                if (cause != null) {
+                    if (cause instanceof HttpLayerException) {
+                        if (((HttpLayerException) cause).getCode() == 1004004) {
+                            if (warnMessageHandler != null)
+                                warnMessageHandler.accept("You have configured Bisq to run as DAO full node but there is no " +
+                                        "localhost Bitcoin Core node detected. You need to have Bitcoin Core started and synced before " +
+                                        "starting Bisq. Please restart Bisq with proper DAO full node setup or switch to lite node mode.");
+                            return;
+                        }
+                    } else if (cause instanceof NotificationHandlerException) {
+                        // Maybe we need to react specifically to errors as in NotificationHandlerException.getError()
+                        // So far only IO_UNKNOWN was observed
+                        log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
+                        startReOrgFromLastSnapshot();
                         return;
                     }
-                } else if (cause instanceof NotificationHandlerException) {
-                    // Maybe we need to react specifically to errors as in NotificationHandlerException.getError()
-                    // So far only IO_UNKNOWN was observed
-                    log.error("Error type of NotificationHandlerException: " + ((NotificationHandlerException) cause).getError().toString());
-                    startReOrgFromLastSnapshot();
-                    return;
                 }
             }
-        }
 
-        if (errorMessageHandler != null)
-            errorMessageHandler.accept(errorMessage);
+            if (errorMessageHandler != null)
+                errorMessageHandler.accept(errorMessage);
+        }
     }
 }
