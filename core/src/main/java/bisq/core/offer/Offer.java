@@ -70,11 +70,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class Offer implements NetworkPayload, PersistablePayload {
 
-    // We allow max. 0.5 % difference between own offerPayload price calculation and takers calculation.
+    // We allow max. 1 % difference between own offerPayload price calculation and takers calculation.
     // Market price might be different at maker's and takers side so we need a bit of tolerance.
     // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
     // from one provider.
-    final static double PRICE_TOLERANCE = 0.005;
+    final static double PRICE_TOLERANCE = 0.01;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
