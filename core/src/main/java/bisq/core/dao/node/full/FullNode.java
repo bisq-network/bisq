@@ -56,6 +56,8 @@ public class FullNode extends BsqNode {
     private final FullNodeNetworkService fullNodeNetworkService;
     private final ExportJsonFilesService exportJsonFilesService;
     private boolean addBlockHandlerAdded;
+    private int blocksToParseInBatch;
+    private long parseInBatchStartTime;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -182,6 +184,7 @@ public class FullNode extends BsqNode {
                         parseBlocksOnHeadHeight(chainHeight + 1, newChainHeight);
                     } else {
                         log.info("parseBlocksIfNewBlockAvailable did not result in a new block, so we complete.");
+                        log.info("parse {} blocks took {} seconds", blocksToParseInBatch, (System.currentTimeMillis() - parseInBatchStartTime) / 1000d);
                         onParseBlockChainComplete();
                     }
                 },
@@ -196,7 +199,9 @@ public class FullNode extends BsqNode {
 
     private void parseBlocksOnHeadHeight(int startBlockHeight, int chainHeight) {
         if (startBlockHeight <= chainHeight) {
-            log.info("parseBlocks with startBlockHeight={} and chainHeight={}", startBlockHeight, chainHeight);
+            blocksToParseInBatch = chainHeight - startBlockHeight;
+            parseInBatchStartTime = System.currentTimeMillis();
+            log.info("parse {} blocks with startBlockHeight={} and chainHeight={}", blocksToParseInBatch, startBlockHeight, chainHeight);
             chainTipHeight = chainHeight;
             parseBlocks(startBlockHeight,
                     chainHeight,
