@@ -136,13 +136,11 @@ public class BisqAppMain extends BisqExecutable {
         super.onApplicationStarted();
 
        /* if (runWithHttpApi()) {
-            final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
-            bisqHttpApiServer = new BisqHttpApiServer(bisqFacade);
+            bisqHttpApiServer = new BisqHttpApiServer();
         }*/
         /*
         if (runWithGrpcApi()) {
-            final BisqFacade bisqFacade = injector.getInstance(BisqFacade.class);
-            bisqGrpcServer = new BisqGrpcServer(bisqFacade);
+            bisqGrpcServer = new BisqGrpcServer();
         }*/
     }
 
