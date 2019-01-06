@@ -59,6 +59,11 @@ public class BisqAppMain extends BisqExecutable {
         }
     }
 
+    @Override
+    public void onSetupComplete() {
+        log.debug("onSetupComplete");
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
