@@ -48,6 +48,8 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import java.util.Optional;
+
 class EditOfferDataModel extends MutableOfferDataModel {
 
     private final CorePersistenceProtoResolver corePersistenceProtoResolver;
@@ -114,14 +116,15 @@ class EditOfferDataModel extends MutableOfferDataModel {
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
-        TradeCurrency selectedTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get();
-
-        this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
-
-        if (paymentAccount.getSingleTradeCurrency() != null)
-            paymentAccount.setSingleTradeCurrency(selectedTradeCurrency);
-        else
-            paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
+        Optional<TradeCurrency> optionalTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode());
+        if (optionalTradeCurrency.isPresent() && tmpPaymentAccount != null) {
+            TradeCurrency selectedTradeCurrency = optionalTradeCurrency.get();
+            this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
+            if (paymentAccount.getSingleTradeCurrency() != null)
+                paymentAccount.setSingleTradeCurrency(selectedTradeCurrency);
+            else
+                paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
+        }
 
         allowAmountUpdate = false;
     }

@@ -135,10 +135,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected PaymentAccount paymentAccount;
     protected boolean isTabSelected;
     protected double marketPriceMargin = 0;
-    protected Coin txFeeFromFeeService = Coin.ZERO;
-    protected boolean marketPriceAvailable;
-    protected int feeTxSize = 260; // size of typical tx with 1 input
-    protected int feeTxSizeEstimationRecursionCounter;
+    private Coin txFeeFromFeeService = Coin.ZERO;
+    private boolean marketPriceAvailable;
+    private int feeTxSize = 260; // size of typical tx with 1 input
+    private int feeTxSizeEstimationRecursionCounter;
     protected boolean allowAmountUpdate = true;
 
 
@@ -325,11 +325,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         ArrayList<String> acceptedCountryCodes = null;
         if (paymentAccount instanceof SepaAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
+            acceptedCountryCodes = new ArrayList<>(((SepaAccount) paymentAccount).getAcceptedCountryCodes());
         } else if (paymentAccount instanceof SepaInstantAccount) {
-            acceptedCountryCodes = new ArrayList<>();
-            acceptedCountryCodes.addAll(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
+            acceptedCountryCodes = new ArrayList<>(((SepaInstantAccount) paymentAccount).getAcceptedCountryCodes());
         } else if (paymentAccount instanceof CountryBasedPaymentAccount) {
             acceptedCountryCodes = new ArrayList<>();
             acceptedCountryCodes.add(((CountryBasedPaymentAccount) paymentAccount).getCountry().code);
