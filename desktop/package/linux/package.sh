@@ -15,7 +15,7 @@ cd $base_dir
 set -e
 
 echo Installing required packages
-apt install -y fakeroot
+sudo apt install -y fakeroot
 
 if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
     echo Building application
