@@ -9,6 +9,7 @@
 version=0.9.1-SNAPSHOT
 
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
+src_dir=$base_dir/desktop/package
 
 cd $base_dir
 
@@ -57,9 +58,14 @@ if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
 
     echo SHA256 after stripping jar file:
     shasum -a256 $jar_file | awk '{print $1}' | tee $base_dir/desktop/package/desktop-$version-all.jar.txt
-
-    chmod o+rx "$base_dir/desktop/package/desktop-$version-all.jar"
+else
+    local_src_dir="/home/$USER/Desktop/build"
+    mkdir -p $local_src_dir
+    cp $base_dir/desktop/package/desktop-$version-all.jar $local_src_dir/desktop-$version-all.jar
+    src_dir=$local_src_dir
 fi
+
+chmod o+rx "$src_dir/desktop-$version-all.jar"
 
 if [ -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     rm "$base_dir/desktop/package/linux/bisq-$version.deb"
@@ -82,7 +88,7 @@ $JAVA_HOME/bin/javapackager \
     -title "The decentralized exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
-    -srcdir $base_dir/desktop/package \
+    -srcdir $src_dir \
     -srcfiles desktop-$version-all.jar \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
