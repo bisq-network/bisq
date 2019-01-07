@@ -42,6 +42,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -784,7 +785,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.actions")) {
             {
-                setMinWidth(80);
+                setMinWidth(200);
                 setSortable(false);
             }
         };
@@ -803,8 +804,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                             {
                                 button.setGraphic(iconView);
-                                button.setMinWidth(130);
-                                button.setMaxWidth(130);
+                                button.setMinWidth(200);
+                                button.setMaxWidth(200);
                                 button.setGraphicTextGap(10);
                             }
 
@@ -870,7 +871,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
-                                        title = Res.get("offerbook.takeOffer");
+                                        if (isSellOffer) {
+                                            title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                                                    Res.get("offerbook.takeOfferToBuy", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToSell", offer.getCurrencyCode());
+                                        } else {
+                                            title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                                                    Res.get("offerbook.takeOfferToSell", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToBuy", offer.getCurrencyCode());
+                                        }
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                     }
