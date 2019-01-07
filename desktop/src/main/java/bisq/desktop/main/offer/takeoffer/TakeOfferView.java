@@ -282,9 +282,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
+            PaymentAccount lastPaymentAccount = model.getLastSelectedPaymentAccount();
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
-            paymentAccountsComboBox.getSelectionModel().select(model.getLastSelectedPaymentAccount());
-
+            paymentAccountsComboBox.getSelectionModel().select(lastPaymentAccount);
+            model.onPaymentAccountSelected(lastPaymentAccount);
             paymentAccountTitledGroupBg.setText(Res.get("shared.selectTradingAccount"));
 
             // TODO if we have multiple payment accounts we should show some info/warning to
