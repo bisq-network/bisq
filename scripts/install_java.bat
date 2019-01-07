@@ -1,3 +1,9 @@
+:: This script will download and install the appropriate JDK for use with Bisq development.
+:: It will also configure it as the default system JDK.
+:: If you need to change to another default JDK for another purpose later, you just need to
+:: change the JAVA_HOME environment variable. For example, use the following command:
+::     setx /M JAVA_HOME "<JDK_PATH>"
+
 @echo off
 
 :: Ensure we have administrative privileges in order to install files and set environment variables
