@@ -17,20 +17,20 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Coin;
 import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class Bitmark extends Coin {
 
     public static class BitmarkParams extends NetworkParametersAdapter {
-	public BitmarkParams() {
-	    addressHeader = 85;
-	    p2shHeader = 5;
-	    acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
-	}
+        public BitmarkParams() {
+            addressHeader = 85;
+            p2shHeader = 5;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
     }
-    
+
     public Bitmark() {
         super("Bitmark", "BTM", new Base58BitcoinAddressValidator(new BitmarkParams()));
     }
