@@ -24,6 +24,7 @@ import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.btc.wallet.WalletsManager;
@@ -189,7 +190,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        passwordTextField = addPasswordTextField(gridPane, ++rowIndex, Res.get("password.enterPassword"));
+        passwordTextField = addPasswordTextField(gridPane, ++rowIndex, Res.get("password.enterPassword"), Layout.FLOATING_LABEL_DISTANCE);
         GridPane.setColumnSpan(passwordTextField, 1);
         GridPane.setHalignment(passwordTextField, HPos.LEFT);
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(!passwordTextField.validate());
@@ -247,7 +248,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         HBox hBox = new HBox();
         hBox.setMinWidth(560);
-        hBox.setPadding(new Insets(15, 0, 0, 0));
+        hBox.setPadding(new Insets(0, 0, 0, 0));
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         hBox.setAlignment(Pos.CENTER_LEFT);

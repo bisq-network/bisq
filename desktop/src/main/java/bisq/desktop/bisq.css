@@ -299,11 +299,11 @@ bg color of non edit textFields: fafafa
 }
 
 .jfx-button:hover, .jfx-button:focused {
-    -fx-background-color: derive(-bs-rd-grey-light, -30%);
+    -fx-background-color: derive(-bs-rd-grey-light, -10%);
 }
 
 .action-button:hover, .action-button:focused {
-    -fx-background-color: derive(-bs-rd-green-dark, -30%);
+    -fx-background-color: derive(-bs-rd-green-dark, -10%);
 }
 
 .action-button {
@@ -1718,9 +1718,9 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-#buy-button-big:hover, #buy-button:hover, 
+#buy-button-big:hover, #buy-button:hover,
 #buy-button-big:focused, #buy-button:focused {
-    -fx-background-color: derive(-bs-buy, -30%);
+    -fx-background-color: derive(-bs-buy, -10%);
 }
 
 #sell-button-big {
@@ -1736,7 +1736,7 @@ textfield */
 
 #sell-button-big:hover, #sell-button:hover,
 #sell-button-big:focused, #sell-button:focused {
-    -fx-background-color: derive(-bs-sell, -30%);
+    -fx-background-color: derive(-bs-sell, -10%);
 }
 
 #sell-button-big.grey-style, #buy-button-big.grey-style,
