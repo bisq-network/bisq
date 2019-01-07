@@ -484,6 +484,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         model.onShowPayFundsScreen();
 
+        paymentAccountsComboBox.setMouseTransparent(true);
+        paymentAccountsComboBox.setDisable(true);
+        paymentAccountsComboBox.setFocusTraversable(false);
+
         amountTextField.setMouseTransparent(true);
         amountTextField.setDisable(false);
         amountTextField.setFocusTraversable(false);
