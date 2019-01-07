@@ -100,9 +100,10 @@ if [ ! -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     exit 2
 fi
 
-if [ -f "$base_dir/desktop/package/linux/Bisq-$version.deb" ]; then
-    rm "$base_dir/desktop/package/linux/Bisq-$version.deb"
-fi
+# FIXME: My Ubuntu somehow also deletes the lower case file
+# if [ -f "$base_dir/desktop/package/linux/Bisq-$version.deb" ]; then
+#     rm "$base_dir/desktop/package/linux/Bisq-$version.deb"
+# fi
 mv $base_dir/desktop/package/linux/bisq-$version.deb $base_dir/desktop/package/linux/Bisq-$version.deb
 
 echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.deb:
