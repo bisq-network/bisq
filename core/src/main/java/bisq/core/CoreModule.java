@@ -21,7 +21,6 @@ import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.app.BisqFacade;
 import bisq.core.app.BisqSetup;
 import bisq.core.app.P2PNetworkSetup;
 import bisq.core.app.WalletAppSetup;
@@ -83,7 +82,6 @@ public class CoreModule extends AppModule {
         bind(BisqSetup.class).in(Singleton.class);
         bind(P2PNetworkSetup.class).in(Singleton.class);
         bind(WalletAppSetup.class).in(Singleton.class);
-        bind(BisqFacade.class).in(Singleton.class);
 
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 

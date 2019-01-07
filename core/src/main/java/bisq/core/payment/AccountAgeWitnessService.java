@@ -260,9 +260,14 @@ public class AccountAgeWitnessService {
     }
 
     public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
-        final Optional<AccountAgeWitness> witnessOptional = Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload()));
-        return getTradeLimit(paymentAccount.getPaymentMethod()
-                .getMaxTradeLimitAsCoin(currencyCode), currencyCode, witnessOptional, new Date());
+        if (paymentAccount == null)
+            return 0;
+
+        Optional<AccountAgeWitness> witnessOptional = Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload()));
+        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode),
+                currencyCode,
+                witnessOptional,
+                new Date());
     }
 
 
