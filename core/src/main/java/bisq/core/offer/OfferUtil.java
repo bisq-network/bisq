@@ -73,17 +73,12 @@ public class OfferUtil {
      * @param bsqWalletService
      * @param preferences          preferences are used to see if the user indicated a preference for paying fees in BTC
      * @param amount
-     * @param marketPriceAvailable
-     * @param marketPriceMargin
      * @return
      */
     @Nullable
-    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
-        final boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
-        return getMakerFee(isCurrencyForMakerFeeBtc,
-                amount,
-                marketPriceAvailable,
-                marketPriceMargin);
+    public static Coin getMakerFee(BsqWalletService bsqWalletService, Preferences preferences, Coin amount) {
+        boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
+        return getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
 
     /**
@@ -91,27 +86,13 @@ public class OfferUtil {
      *
      * @param isCurrencyForMakerFeeBtc
      * @param amount
-     * @param marketPriceAvailable
-     * @param marketPriceMargin
      * @return
      */
     @Nullable
-    public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+    public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount) {
         if (amount != null) {
             Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            double makerFeeAsDouble = (double) feePerBtc.value;
-            if (marketPriceAvailable) {
-                if (marketPriceMargin > 0)
-                    makerFeeAsDouble = makerFeeAsDouble * Math.sqrt(marketPriceMargin * 100);
-                else
-                    makerFeeAsDouble = 0;
-
-                // For BTC we round so min value change is 100 satoshi
-                if (isCurrencyForMakerFeeBtc)
-                    makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
-            }
-
-            return CoinUtil.maxCoin(Coin.valueOf(MathUtils.doubleToLong(makerFeeAsDouble)), FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
         } else {
             return null;
         }
@@ -124,14 +105,11 @@ public class OfferUtil {
      * @param preferences
      * @param bsqWalletService
      * @param amount
-     * @param marketPriceAvailable
-     * @param marketPriceMargin
      * @return
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount,
-                                                   boolean marketPriceAvailable, double marketPriceMargin) {
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
-        boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount, marketPriceAvailable, marketPriceMargin);
+        boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
     }
 
@@ -140,13 +118,11 @@ public class OfferUtil {
      *
      * @param bsqWalletService
      * @param amount
-     * @param marketPriceAvailable
-     * @param marketPriceMargin
      * @return
      */
-    public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount, boolean marketPriceAvailable, double marketPriceMargin) {
+    public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
         Coin availableBalance = bsqWalletService.getAvailableBalance();
-        Coin makerFee = getMakerFee(false, amount, marketPriceAvailable, marketPriceMargin);
+        Coin makerFee = getMakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ
         // fee each time we open the create offer screen as there the amount is not set.

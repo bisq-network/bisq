@@ -39,7 +39,6 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -69,7 +68,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        TradeWalletService tradeWalletService,
                        FeeService feeService,
                        ReferralIdService referralIdService,
-                       BsqFormatter bsqFormatter,
                        BSFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver) {
         super(openOfferManager,
@@ -85,7 +83,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 tradeWalletService,
                 feeService,
                 referralIdService,
-                bsqFormatter,
                 btcFormatter);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
