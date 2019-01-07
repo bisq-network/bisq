@@ -7,7 +7,7 @@
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
 version=0.9.1-SNAPSHOT
-JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
+
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
 
 cd $base_dir
