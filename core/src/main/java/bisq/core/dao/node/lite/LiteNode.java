@@ -137,15 +137,17 @@ public class LiteNode extends BsqNode {
 
     // We received the missing blocks
     private void onRequestedBlocksReceived(List<RawBlock> blockList) {
-        if (!blockList.isEmpty())
-            log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(),
-                    blockList.get(blockList.size() - 1).getHeight());
+        if (!blockList.isEmpty()) {
+            chainTipHeight = blockList.get(blockList.size() - 1).getHeight();
+            log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
+        }
 
         // 4000 blocks take about 3 seconds if DAO UI is not displayed or 7 sec. if it is displayed.
         // The updates at block height change are not much optimized yet, so that can be for sure improved
         // 144 blocks a day would result in about 4000 in a month, so if a user downloads the app after 1 months latest
         // release it will be a bit of a performance hit. It is a one time event as the snapshots gets created and be
         // used at next startup.
+        long ts = System.currentTimeMillis();
         for (RawBlock block : blockList) {
             try {
                 doParseBlock(block);
@@ -154,13 +156,20 @@ public class LiteNode extends BsqNode {
                 break;
             }
         }
+        log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
 
         onParseBlockChainComplete();
     }
 
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
-        log.info("onNewBlockReceived: block at height {}, hash={}", block.getHeight(), block.getHash());
+        int blockHeight = block.getHeight();
+        log.info("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
+
+        // We only update chainTipHeight if we get a newer block
+        if (blockHeight > chainTipHeight)
+            chainTipHeight = blockHeight;
+
         try {
             doParseBlock(block);
         } catch (RequiredReorgFromSnapshotException ignore) {

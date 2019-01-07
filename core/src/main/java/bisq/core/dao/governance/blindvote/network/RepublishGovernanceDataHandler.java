@@ -105,7 +105,7 @@ public final class RepublishGovernanceDataHandler {
                     TIMEOUT);
         }
 
-        log.warn("We send to peer {} a republishGovernanceDataRequest.", nodeAddress);
+        log.info("We send to peer {} a republishGovernanceDataRequest.", nodeAddress);
         SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, republishGovernanceDataRequest);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override

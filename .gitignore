@@ -29,3 +29,5 @@ desktop.ini
 *.class
 deploy
 */releases/*
+/monitor/TorHiddenServiceStartupTimeTests/*
+/monitor/monitor-tor/*

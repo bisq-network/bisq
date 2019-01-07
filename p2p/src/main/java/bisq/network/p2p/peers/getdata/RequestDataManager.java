@@ -161,7 +161,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             for (int i = 0; i < size; i++) {
                 NodeAddress nodeAddress = finalNodeAddresses.get(i);
                 nodeAddresses.remove(nodeAddress);
-                UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+                // We clone list to avoid mutable change during iterations
+                List<NodeAddress> remainingNodeAddresses = new ArrayList<>(nodeAddresses);
+                UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
             }
 
             isPreliminaryDataRequest = true;
@@ -368,7 +370,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     NodeAddress nextCandidate = remainingNodeAddresses.get(0);
                                     remainingNodeAddresses.remove(nextCandidate);
                                     requestData(nextCandidate, remainingNodeAddresses);
-                                } else {
+                                } else if (handlerMap.isEmpty()) {
+                                    // If not other connection attempts are in the handlerMap we assume that no seed
+                                    // nodes are available.
                                     log.debug("There is no remaining node available for requesting data. " +
                                             "That is expected if no other node is online.\n\t" +
                                             "We will try to use reported peers (if no available we use persisted peers) " +
@@ -383,6 +387,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     }
 
                                     restart();
+                                } else {
+                                    log.info("We could not connect to seed node {} but we have other connection attempts open.", nodeAddress.getFullAddress());
                                 }
                             }
                         });

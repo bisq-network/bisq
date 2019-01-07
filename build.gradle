@@ -34,10 +34,13 @@ configure(subprojects) {
         joptVersion = '5.0.3'
         langVersion = '3.4'
         libdohjVersion = '7be803fa'
+        bitcoinjVersion = 'cd30ad5b'
+        logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
         powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
+        slf4jVersion = '1.7.22'
         sparkVersion = '2.5.2'
         springVersion = '4.3.6.RELEASE'
 
@@ -47,7 +50,6 @@ configure(subprojects) {
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url 'https://raw.githubusercontent.com/JesusMcCloud/tor-binary/8.0.3/release/' }
     }
 
     dependencies {
@@ -132,6 +134,10 @@ configure(project(':assets')) {
     dependencies {
         compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
             exclude(module: 'protobuf-java')
+            exclude(module: 'bitcoinj-core')
+        }
+        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+            exclude(module: 'protobuf-java')
         }
         compile "commons-codec:commons-codec:$codecVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -160,15 +166,20 @@ configure(project(':common')) {
             exclude(module: 'junit')
         }
         compile "org.springframework:spring-core:$springVersion"
-        compile 'org.slf4j:slf4j-api:1.7.22'
-        compile 'ch.qos.logback:logback-core:1.1.10'
-        compile 'ch.qos.logback:logback-classic:1.1.10'
+        compile "org.slf4j:slf4j-api:$slf4jVersion"
+        compile "ch.qos.logback:logback-core:$logbackVersion"
+        compile "ch.qos.logback:logback-classic:$logbackVersion"
         compile 'com.google.code.findbugs:jsr305:3.0.2'
         compile 'com.google.guava:guava:20.0'
         compile('com.google.inject:guice:4.1.0') {
             exclude(module: 'guava')
         }
         compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
+            exclude(module: 'slf4j-api')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bitcoinj-core')
+        }
+        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
@@ -188,10 +199,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6') {
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.3') {
             exclude(module: 'slf4j-api')
         }
-        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6') {
+        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6.3') {
             exclude(module: 'slf4j-api')
         }
         compile('org.apache.httpcomponents:httpclient:4.5.3') {
@@ -311,14 +322,33 @@ configure(project(':desktop')) {
 
 
 configure(project(':monitor')) {
-    mainClassName = 'bisq.monitor.MonitorMain'
+    mainClassName = 'bisq.monitor.Monitor'
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
 
     dependencies {
-        compile project(':core')
-        compile "com.sparkjava:spark-core:$sparkVersion"
-        compile 'net.gpedro.integrations.slack:slack-webhook:1.1.1'
+        compile "org.slf4j:slf4j-api:$slf4jVersion"
+        compile "ch.qos.logback:logback-core:$logbackVersion"
+        compile "ch.qos.logback:logback-classic:$logbackVersion"
+        compile 'com.google.guava:guava:20.0'
+
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.2') {
+            exclude(module: 'slf4j-api')
+        }
+
+        testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.2'
+        testCompile 'org.junit.jupiter:junit-jupiter-params:5.3.2'
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testRuntime('org.junit.jupiter:junit-jupiter-engine:5.3.2')
     }
 }
 
@@ -334,7 +364,6 @@ configure(project(':pricenode')) {
 
     dependencies {
         compile project(":core")
-        compile project(":assets")
         compile("org.knowm.xchange:xchange-bitcoinaverage:4.3.3")
         compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
         compile("org.knowm.xchange:xchange-poloniex:4.3.3")

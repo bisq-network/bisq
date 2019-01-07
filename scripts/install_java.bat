@@ -1,3 +1,9 @@
+:: This script will download and install the appropriate JDK for use with Bisq development.
+:: It will also configure it as the default system JDK.
+:: If you need to change to another default JDK for another purpose later, you just need to
+:: change the JAVA_HOME environment variable. For example, use the following command:
+::     setx /M JAVA_HOME "<JDK_PATH>"
+
 @echo off
 
 :: Ensure we have administrative privileges in order to install files and set environment variables
@@ -30,9 +36,11 @@ if exist "%PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%" (
 
 echo Downloading required files to %TEMP%
 powershell -Command "Invoke-WebRequest %jdk_url% -OutFile $env:temp\%jdk_filename%.tar.gz"
-:: Download 7zip (command line version) in order to extract the tar.gz file since there is no native support in Windows
-powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7za920.zip -OutFile $env:temp\7za920.zip"
-powershell -Command "Expand-Archive $env:temp\7za920.zip -DestinationPath $env:temp\7za920 -Force"
+if not exist "%TEMP%\7za920\7za.exe" (
+    :: Download 7zip ^(command line version^) in order to extract the tar.gz file since there is no native support in Windows
+    powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7za920.zip -OutFile $env:temp\7za920.zip"
+    powershell -Command "Expand-Archive $env:temp\7za920.zip -DestinationPath $env:temp\7za920 -Force"
+)
 
 echo Extracting and installing JDK to %PROGRAMFILES%\Java\openjdk\jdk-%jdk_version%
 "%TEMP%\7za920\7za.exe" x "%TEMP%\%jdk_filename%.tar.gz" -o"%TEMP%" -r -y
@@ -41,8 +49,9 @@ md "%PROGRAMFILES%\Java\openjdk"
 move "%TEMP%\openjdk-%jdk_version%\jdk-%jdk_version%" "%PROGRAMFILES%\Java\openjdk"
 
 echo Removing downloaded files
-rmdir /S /Q %TEMP%\7za920
-del /Q %TEMP%\7za920.zip
+if exist "%TEMP%\7za920.zip" (
+    del /Q %TEMP%\7za920.zip
+)
 rmdir /S /Q %TEMP%\openjdk-%jdk_version%
 del /Q %TEMP%\%jdk_filename%.tar
 del /Q %TEMP%\%jdk_filename%.tar.gz

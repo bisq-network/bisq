@@ -115,7 +115,9 @@ public class BlockParser {
                         genesisBlockHeight,
                         genesisTotalSupply)
                         .ifPresent(txList::add));
-        log.info("parseBsqTxs took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
+
+        if (System.currentTimeMillis() - startTs > 0)
+            log.info("Parsing {} transactions took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;
