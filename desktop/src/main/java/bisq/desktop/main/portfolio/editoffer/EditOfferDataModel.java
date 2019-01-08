@@ -39,7 +39,6 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -48,6 +47,8 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
+
+import java.util.Optional;
 
 class EditOfferDataModel extends MutableOfferDataModel {
 
@@ -69,7 +70,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        TradeWalletService tradeWalletService,
                        FeeService feeService,
                        ReferralIdService referralIdService,
-                       BsqFormatter bsqFormatter,
                        BSFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver) {
         super(openOfferManager,
@@ -85,7 +85,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 tradeWalletService,
                 feeService,
                 referralIdService,
-                bsqFormatter,
                 btcFormatter);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
@@ -117,14 +116,15 @@ class EditOfferDataModel extends MutableOfferDataModel {
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
-        TradeCurrency selectedTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode()).get();
-
-        this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
-
-        if (paymentAccount.getSingleTradeCurrency() != null)
-            paymentAccount.setSingleTradeCurrency(selectedTradeCurrency);
-        else
-            paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
+        Optional<TradeCurrency> optionalTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode());
+        if (optionalTradeCurrency.isPresent() && tmpPaymentAccount != null) {
+            TradeCurrency selectedTradeCurrency = optionalTradeCurrency.get();
+            this.paymentAccount = PaymentAccount.fromProto(tmpPaymentAccount.toProtoMessage(), corePersistenceProtoResolver);
+            if (paymentAccount.getSingleTradeCurrency() != null)
+                paymentAccount.setSingleTradeCurrency(selectedTradeCurrency);
+            else
+                paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
+        }
 
         allowAmountUpdate = false;
     }

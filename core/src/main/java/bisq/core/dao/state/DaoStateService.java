@@ -68,6 +68,7 @@ public class DaoStateService implements DaoSetupService {
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    private boolean parseBlockChainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -207,11 +208,19 @@ public class DaoStateService implements DaoSetupService {
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        // We don't call it during batch parsing as that decreased performance a lot.
+        // With calling at each block we got about 50 seconds for 4000 blocks, without about 4 seconds.
+        if (parseBlockChainComplete)
+            daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
+        parseBlockChainComplete = true;
+
+        // Now we need to trigger the onParseBlockComplete to update the state in the app
+        getLastBlock().ifPresent(this::onParseBlockComplete);
+
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
@@ -775,7 +784,7 @@ public class DaoStateService implements DaoSetupService {
         if (optionalTxOutput.isPresent()) {
             TxOutput lockupTxOutput = optionalTxOutput.get();
             if (isUnspent(lockupTxOutput.getKey())) {
-                log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can confiscate it.", lockupTxOutput.getKey());
                 doConfiscateBond(lockupTxId);
             } else {
                 // We lookup for the unlock tx which need to be still in unlocking state
@@ -784,7 +793,7 @@ public class DaoStateService implements DaoSetupService {
                 String unlockTxId = optionalSpentInfo.get().getTxId();
                 if (isUnlockingAndUnspent(unlockTxId)) {
                     // We found the unlock tx is still not spend
-                    log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                    log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can We confiscate it.", lockupTxOutput.getKey());
                     doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,

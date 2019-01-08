@@ -291,7 +291,7 @@ public class RpcService {
                                     try {
                                         opReturnData = Utils.HEX.decode(chunks[1]);
                                     } catch (Throwable t) {
-                                        log.warn("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
+                                        log.debug("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
                                                 " / chunks[1]=" + chunks[1] +
                                                 "\nWe get sometimes exceptions with opReturn data, seems BitcoinJ " +
                                                 "cannot handle all " +

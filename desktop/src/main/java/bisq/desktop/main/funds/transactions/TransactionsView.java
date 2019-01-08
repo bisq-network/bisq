@@ -154,7 +154,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
-        tableView.getStyleClass().add("large-rows");
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();

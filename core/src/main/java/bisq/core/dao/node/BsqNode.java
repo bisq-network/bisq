@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -62,6 +63,9 @@ public abstract class BsqNode implements DaoSetupService {
     @Nullable
     protected Consumer<String> warnMessageHandler;
     protected List<RawBlock> pendingBlocks = new ArrayList<>();
+    // The chain height of the latest Block we either get reported by Bitcoin Core or from the seed node
+    @Getter
+    protected int chainTipHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

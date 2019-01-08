@@ -1317,13 +1317,15 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     listener = (observable, oldValue, newValue) -> {
                                         setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
-                                        getTableRow().setOpacity(newValue ? 0.4 : 1);
+                                        if (getTableRow() != null)
+                                            getTableRow().setOpacity(newValue ? 0.4 : 1);
                                     };
                                     closedProperty = item.isClosedProperty();
                                     closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
                                     setText(isClosed ? Res.get("support.closed") : Res.get("support.open"));
-                                    getTableRow().setOpacity(isClosed ? 0.4 : 1);
+                                    if (getTableRow() != null)
+                                        getTableRow().setOpacity(isClosed ? 0.4 : 1);
                                 } else {
                                     if (closedProperty != null) {
                                         closedProperty.removeListener(listener);

@@ -1,20 +1,26 @@
-﻿;This file will be executed next to the application bundle image
+;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bisq with application files
-;Note: This file must use UTF-8 encoding with BOM
+;Note: This file must use UTF-8 encoding
 
 #define SourceDir GetEnv('package_dir') + '\windows'
+#define AppVersion GetEnv('version')
+#define FileVersion GetEnv('file_version')
+#define AppCopyrightYear GetDateTimeString('yyyy', '-', ':')
 
 [Setup]
 AppId={{bisq}}
 AppName=Bisq
-AppVersion=0.9.1
-AppVerName=Bisq
+AppVersion={#AppVersion}
+AppVerName=Bisq v{#AppVersion}
 AppPublisher=Bisq
-AppCopyright=Copyright (C) 2018
 AppComments={cm:AppComments}
+AppCopyright=Copyright (C) {#AppCopyrightYear}
 AppPublisherURL=https://bisq.network
-AppSupportURL=https://bisq.network
-;AppUpdatesURL=http://java.com/
+AppSupportURL=https://bisq.community
+;AppUpdatesURL=https://github.com/bisq-network/bisq/releases
+VersionInfoVersion={#FileVersion}
+VersionInfoDescription=Bisq Setup
+VersionInfoCopyright=Copyright (C) {#AppCopyrightYear}
 DefaultDirName={localappdata}\Bisq
 DisableStartupPrompt=Yes
 DisableDirPage=Yes
@@ -25,9 +31,9 @@ DisableWelcomePage=Yes
 DefaultGroupName=Bisq
 ;Optional License
 LicenseFile=
-OutputBaseFilename=Bisq
 ;Windows 7 with Service Pack 1 or above
 MinVersion=0,6.1.7601
+OutputBaseFilename=Bisq-{#AppVersion}
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=lowest
