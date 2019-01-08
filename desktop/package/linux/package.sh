@@ -8,7 +8,6 @@
 
 version=0.9.1-SNAPSHOT
 version_base=$(echo $version | awk -F'[_-]' '{print $1}')
-JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
 src_dir=$base_dir/desktop/package
 
@@ -72,6 +71,7 @@ fi
 
 chmod o+rx "$src_dir/desktop-$version-all.jar"
 
+# Remove previously generated packages so we can later determine if they are actually generated successfully
 if [ -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     rm "$base_dir/desktop/package/linux/bisq-$version.deb"
 fi
@@ -121,7 +121,7 @@ $JAVA_HOME/bin/javapackager \
     -title "The decentralized exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
-    -srcdir $base_dir/desktop/package \
+    -srcdir $src_dir \
     -srcfiles desktop-$version-all.jar \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
