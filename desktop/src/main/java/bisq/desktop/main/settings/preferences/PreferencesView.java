@@ -35,6 +35,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -118,6 +119,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final ReferralIdService referralIdService;
     private final BisqEnvironment bisqEnvironment;
     private final AssetService assetService;
+    private final FilterManager filterManager;
     private final DaoFacade daoFacade;
     private final BSFormatter formatter;
 
@@ -149,13 +151,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
                            ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
-                           AssetService assetService, DaoFacade daoFacade, BSFormatter formatter) {
+                           AssetService assetService, FilterManager filterManager, DaoFacade daoFacade, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
         this.bisqEnvironment = bisqEnvironment;
         this.assetService = assetService;
+        this.filterManager = filterManager;
         this.daoFacade = daoFacade;
         this.formatter = formatter;
     }
@@ -185,7 +188,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Override
     protected void activate() {
         // We want to have it updated in case an asset got removed
-        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService));
+        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         allCryptoCurrencies.removeAll(cryptoCurrencies);
 
         activateGeneralOptions();
@@ -397,6 +400,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
+
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");

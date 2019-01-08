@@ -18,6 +18,7 @@
 package bisq.core.trade.statistics;
 
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 
@@ -52,11 +53,13 @@ import lombok.extern.slf4j.Slf4j;
 public class AssetTradeActivityCheck {
     private final AssetService assetService;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final FilterManager filterManager;
 
     @Inject
-    public AssetTradeActivityCheck(AssetService assetService, TradeStatisticsManager tradeStatisticsManager) {
+    public AssetTradeActivityCheck(AssetService assetService, TradeStatisticsManager tradeStatisticsManager, FilterManager filterManager) {
         this.assetService = assetService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.filterManager = filterManager;
     }
 
     public void onAllServicesInitialized() {
@@ -80,7 +83,7 @@ public class AssetTradeActivityCheck {
         StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
         StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
         StringBuilder notTraded = new StringBuilder("\nNot traded assets:");
-        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getActiveSortedCryptoCurrencies(assetService);
+        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager);
         Set<CryptoCurrency> assetsToRemove = new HashSet<>(whiteListedSortedCryptoCurrencies);
         whiteListedSortedCryptoCurrencies.forEach(e -> {
             String code = e.getCode();
