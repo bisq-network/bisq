@@ -585,6 +585,7 @@ public class DaoStateService implements DaoSetupService {
     public void addNonBsqTxOutput(TxOutput txOutput) {
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
+        log.info("addNonBsqTxOutput: txOutput={}", txOutput);
         daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
