@@ -173,12 +173,15 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("ZER");
         newlyAdded.add("XRC");
 
-        // v0.9.1 or v0.9.2
+        // v0.9.2 (Jan 8 2019)
         newlyAdded.add("AEON");
+        newlyAdded.add("BEAM");
         newlyAdded.add("BTM");
         newlyAdded.add("DXO");
-        newlyAdded.add("GMCN");
         newlyAdded.add("FRTY");
+        newlyAdded.add("GMCN");
+        newlyAdded.add("GRIN");
+        newlyAdded.add("ZEN");
         newlyAdded.add("IDA");
         newlyAdded.add("IRD");
         newlyAdded.add("NOR");
@@ -189,6 +192,7 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("SPACE");
         newlyAdded.add("UCC");
         newlyAdded.add("WEB");
+        newlyAdded.add("WRKZ");
 
         return newlyAdded.contains(code);
     }
