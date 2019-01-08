@@ -6,7 +6,7 @@
 
 @echo off
 
-set version=0.9.2-SNAPSHOT
+set version=0.9.3
 set release_dir=%~dp0..\..\..\releases\%version%
 set package_dir=%~dp0..
 

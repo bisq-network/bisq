@@ -6,7 +6,7 @@
 #   - Update version below
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
-version=0.9.2-SNAPSHOT
+version=0.9.3
 
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
 src_dir=$base_dir/desktop/package
