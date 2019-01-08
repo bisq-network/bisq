@@ -27,6 +27,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -65,6 +66,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final AssetService assetService;
+    private final FilterManager filterManager;
     private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
@@ -78,6 +80,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AltCoinAddressValidator altCoinAddressValidator,
                                AccountAgeWitnessService accountAgeWitnessService,
                                AssetService assetService,
+                               FilterManager filterManager,
                                BSFormatter formatter) {
         super(model);
 
@@ -85,6 +88,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.assetService = assetService;
+        this.filterManager = filterManager;
         this.formatter = formatter;
     }
 
@@ -102,6 +106,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     protected void exportAccounts() {
         model.dataModel.exportAccounts((Stage) root.getScene().getWindow());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -251,7 +256,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
         return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
-                inputValidator, root, gridRow, formatter, assetService);
+                inputValidator, root, gridRow, formatter, assetService, filterManager);
     }
 
     private void removeNewAccountForm() {
