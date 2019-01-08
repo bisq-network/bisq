@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -62,6 +63,9 @@ public abstract class BsqNode implements DaoSetupService {
     @Nullable
     protected Consumer<String> warnMessageHandler;
     protected List<RawBlock> pendingBlocks = new ArrayList<>();
+    // The chain height of the latest Block we either get reported by Bitcoin Core or from the seed node
+    @Getter
+    protected int chainTipHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -207,7 +211,7 @@ public abstract class BsqNode implements DaoSetupService {
         // height we have no block but chainHeight is initially set to genesis height (bad design ;-( but a bit tricky
         // to change now as it used in many areas.)
         if (daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent()) {
-            log.info("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
+            log.debug("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
             return Optional.empty();
         }
 

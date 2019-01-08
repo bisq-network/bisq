@@ -10,6 +10,7 @@ version=0.9.1-SNAPSHOT
 version_base=$(echo $version | awk -F'[_-]' '{print $1}')
 JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
+src_dir=$base_dir/desktop/package
 
 cd $base_dir
 
@@ -17,9 +18,9 @@ set -eu
 
 echo Installing required packages
 if [[ -f "/etc/debian_version" ]]; then
-    apt install -y fakeroot rpm
+    sudo apt install -y fakeroot rpm
 elif [[ -f "/etc/redhat-release" ]]; then
-    yum install -y fakeroot rpm-build dpkg perl-Digest-SHA
+    sudo yum install -y fakeroot rpm-build dpkg perl-Digest-SHA
 fi
 
 if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
@@ -62,9 +63,14 @@ if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
 
     echo SHA256 after stripping jar file:
     shasum -a256 $jar_file | awk '{print $1}' | tee $base_dir/desktop/package/desktop-$version-all.jar.txt
-
-    chmod o+rx "$base_dir/desktop/package/desktop-$version-all.jar"
+else
+    local_src_dir="/home/$USER/Desktop/build"
+    mkdir -p $local_src_dir
+    cp $base_dir/desktop/package/desktop-$version-all.jar $local_src_dir/desktop-$version-all.jar
+    src_dir=$local_src_dir
 fi
+
+chmod o+rx "$src_dir/desktop-$version-all.jar"
 
 if [ -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     rm "$base_dir/desktop/package/linux/bisq-$version.deb"
@@ -90,7 +96,7 @@ $JAVA_HOME/bin/javapackager \
     -title "The decentralized exchange network." \
     -vendor Bisq \
     -outdir $base_dir/desktop/package/linux \
-    -srcdir $base_dir/desktop/package \
+    -srcdir $src_dir \
     -srcfiles desktop-$version-all.jar \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
@@ -127,9 +133,10 @@ if [ ! -f "$base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm" ]; t
     exit 2
 fi
 
-if [ -f "$base_dir/desktop/package/linux/Bisq-$version.deb" ]; then
-    rm "$base_dir/desktop/package/linux/Bisq-$version.deb"
-fi
+# FIXME: My Ubuntu somehow also deletes the lower case file
+# if [ -f "$base_dir/desktop/package/linux/Bisq-$version.deb" ]; then
+#     rm "$base_dir/desktop/package/linux/Bisq-$version.deb"
+# fi
 mv $base_dir/desktop/package/linux/bisq-$version.deb $base_dir/desktop/package/linux/Bisq-$version.deb
 
 echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.deb:

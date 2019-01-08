@@ -178,7 +178,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
-        paymentAccount = possiblePaymentAccounts.get(0);
+        paymentAccount = getLastSelectedPaymentAccount();
 
         long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, myLimit)));
@@ -411,7 +411,7 @@ class TakeOfferDataModel extends OfferDataModel {
             this.paymentAccount = paymentAccount;
 
             long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
-            this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+            this.amount.set(Coin.valueOf(Math.max(offer.getMinAmount().value, Math.min(amount.get().value, myLimit))));
 
             preferences.setTakeOfferSelectedPaymentAccountId(paymentAccount.getId());
         }

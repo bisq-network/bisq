@@ -45,16 +45,16 @@ public enum Param {
 
     // Fee in BTC satoshi for a 1 BTC trade. 200_000 Satoshi =  0.00200000 BTC = 0.2%.
     // 10 USD at BTC price 5_000 USD for a 1 BTC trade;
-    DEFAULT_MAKER_FEE_BTC("0.002", ParamType.BTC, 5, 5),
-    DEFAULT_TAKER_FEE_BTC("0.002", ParamType.BTC, 5, 5),       // 0.2% of trade amount
+    DEFAULT_MAKER_FEE_BTC("0.001", ParamType.BTC, 5, 5),
+    DEFAULT_TAKER_FEE_BTC("0.003", ParamType.BTC, 5, 5),       // 0.2% of trade amount
     MIN_MAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),         // 0.005% of trade amount
     MIN_TAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),
 
     // Fee in BSQ satoshi for a 1 BTC trade. 100 Satoshi = 1 BSQ => about 0.02%.
     // About 1 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of the BTC fee.,
     // Might need adjustment if BSQ/BTC rate changes.
-    DEFAULT_MAKER_FEE_BSQ("1.00", ParamType.BSQ, 5, 5),     // ~ 0.02% of trade amount
-    DEFAULT_TAKER_FEE_BSQ("1", ParamType.BSQ, 5, 5),
+    DEFAULT_MAKER_FEE_BSQ("0.50", ParamType.BSQ, 5, 5),     // ~ 0.01% of trade amount
+    DEFAULT_TAKER_FEE_BSQ("1.5", ParamType.BSQ, 5, 5),
     // 0.03 BSQ (3 satoshi) for a 1 BTC trade. 0.05 USD if 1 BSQ = 1 USD, 10 % of the BTC fee
     MIN_MAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),           // 0.0003%.
     MIN_TAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),
@@ -110,7 +110,7 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
-    // TODO for testnet we want to have a short cycle of about a week
+    // TODO for testnet we want to have a short cycle of about a week (1012 blocks)
     PHASE_UNDEFINED("0", ParamType.BLOCK),
     PHASE_PROPOSAL("380", ParamType.BLOCK, 3, 3),     // 2,6 days
     PHASE_BREAK1("10", ParamType.BLOCK, 3, 3),       // 10 blocks

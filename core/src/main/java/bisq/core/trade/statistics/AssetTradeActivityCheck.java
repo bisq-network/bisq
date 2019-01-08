@@ -147,7 +147,7 @@ public class AssetTradeActivityCheck {
         // v0.8.0 Aug 22 2018
         // none added
 
-        // v0.9.0 (Date TBD)
+        // v0.9.0 (3.12.2018)
         newlyAdded.add("ACM");
         newlyAdded.add("BLUR");
         newlyAdded.add("CHA");
@@ -169,6 +169,23 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("TRTL");
         newlyAdded.add("ZER");
         newlyAdded.add("XRC");
+
+        // v0.9.1 or v0.9.2
+        newlyAdded.add("AEON");
+        newlyAdded.add("BTM");
+        newlyAdded.add("DXO");
+        newlyAdded.add("GMCN");
+        newlyAdded.add("FRTY");
+        newlyAdded.add("IDA");
+        newlyAdded.add("IRD");
+        newlyAdded.add("NOR");
+        newlyAdded.add("PINK");
+        newlyAdded.add("QBS");
+        newlyAdded.add("RMX");
+        newlyAdded.add("SCP");
+        newlyAdded.add("SPACE");
+        newlyAdded.add("UCC");
+        newlyAdded.add("WEB");
 
         return newlyAdded.contains(code);
     }

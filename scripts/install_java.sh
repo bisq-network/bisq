@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# This script will download and install the appropriate JDK for use with Bisq development.
+# It will also configure it as the default system JDK.
+# If you need to change to another default JDK for another purpose later, you can use the
+# following commands and select the default JDK:
+#     update-alternatives --config java
+#     update-alternatives --config javac
 
 JAVA_HOME=/usr/lib/jvm/openjdk-10.0.2
 JDK_FILENAME=openjdk-10.0.2_linux-x64_bin.tar.gz
@@ -31,3 +37,6 @@ if [ ! -d "$JAVA_HOME" ]; then
     update-alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2000
     update-alternatives --install /usr/bin/javac javac $JAVA_HOME/bin/javac 2000
 fi
+
+update-alternatives --set java $JAVA_HOME/bin/java
+update-alternatives --set javac $JAVA_HOME/bin/javac

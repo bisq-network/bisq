@@ -31,7 +31,6 @@
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="selectColumn" minWidth="110" maxWidth="110" sortable="false"/>
             <TableColumn fx:id="addressColumn" minWidth="320"/>
             <TableColumn fx:id="balanceColumn" minWidth="150"/>
             <TableColumn fx:id="confirmationsColumn" minWidth="150"/>

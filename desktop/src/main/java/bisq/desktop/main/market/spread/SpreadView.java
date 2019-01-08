@@ -69,7 +69,6 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     @Override
     public void initialize() {
         tableView = new TableView<>();
-        tableView.getStyleClass().add("large-rows");
 
         int gridRow = 0;
         GridPane.setRowIndex(tableView, gridRow);
