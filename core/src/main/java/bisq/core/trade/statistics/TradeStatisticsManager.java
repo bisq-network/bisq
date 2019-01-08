@@ -103,7 +103,9 @@ public class TradeStatisticsManager {
         Map<String, TradeStatistics2> map = new HashMap<>();
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
-                .forEach(e -> addToMap((TradeStatistics2) e, map));
+                .map(e -> (TradeStatistics2) e)
+                .filter(TradeStatistics2::isValid)
+                .forEach(e -> addToMap(e, map));
         observableTradeStatisticsSet.addAll(map.values());
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
@@ -149,16 +151,18 @@ public class TradeStatisticsManager {
 
     private void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-            boolean itemAlreadyAdded = observableTradeStatisticsSet.stream()
-                    .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId())));
-            if (!itemAlreadyAdded) {
-                observableTradeStatisticsSet.add(tradeStatistics);
-                if (storeLocally) {
-                    priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-                    dump();
-                }
-            } else {
-                log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
+
+            if (observableTradeStatisticsSet.stream()
+                    .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))))
+                return;
+
+            if (!tradeStatistics.isValid())
+                return;
+
+            observableTradeStatisticsSet.add(tradeStatistics);
+            if (storeLocally) {
+                priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+                dump();
             }
         }
     }
