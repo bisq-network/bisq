@@ -36,8 +36,6 @@ public class BeamTest extends AbstractAssetTest {
     @Test
     public void testInvalidAddresses() {
         assertInvalidAddress("");
-        assertInvalidAddress("114a0e54b24d5fdf06891a8eaa57b4b3ac16731e932a64da8ec768083495d624f1");
-        assertInvalidAddress("a0e54b24d5fdf06891a8eaa57b4b3ac16731e932a64da8ec768083495d624f1");
-        assertInvalidAddress("4z0e54b24d5fdf06891a8eaa57b4b3ac16731e932a64da8ec768083495d624f1");
+        assertInvalidAddress("114a0e54b24d5fdf06891a8eaa57b4b3ac16731e932a64da8ec768083495d624f1111111111111111");
     }
 }
