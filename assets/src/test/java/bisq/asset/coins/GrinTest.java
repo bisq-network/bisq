@@ -38,6 +38,14 @@ public class GrinTest extends AbstractAssetTest {
         assertValidAddress("173.194.34.134:11");
         assertValidAddress("173.194.34.134:1111");
         assertValidAddress("173.194.34.134:65535");
+
+        // grinbox
+        assertValidAddress("gVvk7rLBg3r3qoWYL3VsREnBbooT7nynxx5HtDvUWCJUaNCnddvY");
+        assertValidAddress("grinbox://gVtWzX5NTLCBkyNV19QVdnLXue13heAVRD36sfkGD6xpqy7k7e4a");
+        assertValidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com");
+        assertValidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com:1220");
+        assertValidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com");
+        assertValidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com:1220");
     }
 
     @Test
@@ -54,8 +62,15 @@ public class GrinTest extends AbstractAssetTest {
         assertInvalidAddress("http://123.123.123:1222");
         assertInvalidAddress("1000.2.3.4:1222");
         assertInvalidAddress("999.2.3.4:1222");
-
         // too large port
         assertInvalidAddress("173.194.34.134:65536");
+
+        assertInvalidAddress("gVvk7rLBg3r3qoWYL3VsREnBbooT7nynxx5HtDvUWCJUaNCnddvY1111");
+        assertInvalidAddress("grinbox:/gVtWzX5NTLCBkyNV19QVdnLXue13heAVRD36sfkGD6xpqy7k7e4a");
+        assertInvalidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com.");
+        assertInvalidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com:1220a");
+        assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsAsomerelay.com");
+        assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com1220");
+
     }
 }

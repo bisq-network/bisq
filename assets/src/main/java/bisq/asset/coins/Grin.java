@@ -18,14 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.RegexAddressValidator;
+import bisq.asset.GrinAddressValidator;
 
 public class Grin extends Coin {
-    // Borrowed from https://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
-    private static final String IPV4 = "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
-    private static final String PORT = ":(([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$)";
 
     public Grin() {
-        super("Grin", "GRIN", new RegexAddressValidator("^" + IPV4 + PORT));
+        super("Grin", "GRIN", new GrinAddressValidator());
     }
 }
