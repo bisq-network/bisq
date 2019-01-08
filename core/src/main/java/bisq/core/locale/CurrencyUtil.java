@@ -20,6 +20,7 @@ package bisq.core.locale;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 
 import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;
@@ -122,24 +123,21 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("XRC", "Bitcoin Rhodium"));
+
         if (DevEnv.isDaoTradingActivated())
             result.add(new CryptoCurrency("BSQ", "BSQ"));
-        if (!baseCurrencyCode.equals("BTC"))
-            result.add(new CryptoCurrency("BTC", "Bitcoin"));
-        if (!baseCurrencyCode.equals("DASH"))
-            result.add(new CryptoCurrency("DASH", "Dash"));
+
+        result.add(new CryptoCurrency("BEAM", "Beam"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
-        if (!baseCurrencyCode.equals("LTC"))
-            result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("GRIN", "Grin"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
-        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
-        result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
 
@@ -492,9 +490,10 @@ public class CurrencyUtil {
     }
 
     // Excludes all assets which got removed by DAO voting
-    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService) {
+    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService, FilterManager filterManager) {
         return getAllSortedCryptoCurrencies().stream()
                 .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
+                .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
     }
 }

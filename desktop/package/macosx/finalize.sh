@@ -2,14 +2,14 @@
 
 cd ../../
 
-version="0.9.1"
+version="0.9.2-SNAPSHOT"
 
 target_dir="releases/$version"
 
 #vmPath=/Users/christoph/Documents/Workspaces/Java
 vmPath=/Volumes
-linux64=$vmPath/vm_shared_ubuntu
-win64=$vmPath/vm_shared_windows
+linux64=$vmPath/vm_shared_ubuntu/desktop/package/linux
+win64=$vmPath/vm_shared_windows/desktop/package/windows
 
 macOS=deploy
 
@@ -33,10 +33,11 @@ cp "deploy/Bisq-$version.jar.txt" "$target_dir/"
 dmg="Bisq-$version.dmg"
 cp "$macOS/$dmg" "$target_dir/"
 
+deb="Bisq-$version.deb"
 deb64="Bisq-64bit-$version.deb"
-cp "$linux64/$deb64" "$target_dir/"
+cp "$linux64/$deb" "$target_dir/$deb64"
 
-exe="Bisq.exe"
+exe="Bisq-$version.exe"
 exe64="Bisq-64bit-$version.exe"
 cp "$win64/$exe" "$target_dir/$exe64"
 

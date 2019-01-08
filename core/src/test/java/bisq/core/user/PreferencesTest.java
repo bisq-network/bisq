@@ -124,9 +124,7 @@ public class PreferencesTest {
 
         preferences.readPersisted();
 
-        assertEquals(13, preferences.getCryptoCurrenciesAsObservable().size());
         assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
-
     }
 
     @Test
