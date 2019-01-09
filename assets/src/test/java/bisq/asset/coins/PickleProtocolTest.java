@@ -19,11 +19,26 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetWithDefaultValidatorTest;
 
+import org.junit.Test;
+
 
 public class PickleProtocolTest extends AbstractAssetWithDefaultValidatorTest {
+    
     public PickleProtocolTest() {
-        super(new PickleProtocol());
-    }
+    super(new PickleProtocol());
+}
+@ Test
+    public void testValidAddresses() {
+    assertValidAddress("NvkiGCx55W3cGPq3Q2kyQp4dncFypGH7DP");
+    assertValidAddress("Nqbi28Hs4WwdqjdEEJWFPg3PryDFReuNgF");
+    assertValidAddress("P7nkiTEHb7PWZVxi165tuBwjRhN5XsdYij");
+}
+@ Test
+    public void testInvalidAddresses() {
+    assertInvalidAddress("");
+    assertInvalidAddress("Pqbi28Hs4WwdqjdEEJWFPg3PryDFReuNgF");
+    assertInvalidAddress("N7nkiTEHb7PWZVxi165tuBwjRhN5XsdYij");
+}
 }
 
    
