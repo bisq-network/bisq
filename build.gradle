@@ -271,6 +271,85 @@ configure(project(':core')) {
 }
 
 
+configure(project(':http-api')) {
+
+    apply plugin: 'application'
+    
+    mainClassName = 'bisq.httpapi.app.HttpApiMain'
+    
+    dependencies {
+        compile project(':common')
+        compile project(':assets')
+        compile project(':core')
+        compile project(':p2p')
+
+        compile 'org.eclipse.jetty:jetty-servlet:9.4.14.v20181114'
+        compile 'javax.activation:activation:1.1.1'
+        compile 'javax.ws.rs:javax.ws.rs-api:2.1'
+        compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.27'
+        compile 'org.glassfish.jersey.inject:jersey-hk2:2.27'
+        compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
+        compile 'org.glassfish.jersey.media:jersey-media-multipart:2.27'
+        compile 'org.glassfish.jersey.ext:jersey-bean-validation:2.27'
+
+        compile 'io.swagger.core.v3:swagger-jaxrs2:2.0.6'
+        compile 'org.webjars:swagger-ui:3.20.1'
+
+        compileOnly 'org.projectlombok:lombok:1.18.2'
+        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+
+        testCompile 'junit:junit:4.12'
+        testCompile('org.mockito:mockito-core:2.8.9') {
+            exclude(module: 'objenesis')
+        }
+        testCompileOnly 'org.projectlombok:lombok:1.18.2'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+        testCompile "junit:junit:4.12"
+        testCompile "org.mockito:mockito-core:2.7.5"
+        testCompile "com.github.javafaker:javafaker:0.14"
+        testCompile "org.arquillian.universe:arquillian-junit:1.2.0.1"
+        testCompile "org.arquillian.universe:arquillian-cube-docker:1.2.0.1"
+        testCompile "org.arquillian.cube:arquillian-cube-docker:1.15.3"
+        testCompile "io.rest-assured:rest-assured:3.0.2"
+    }
+
+    sourceSets {
+        testIntegration {
+            java.srcDir 'src/testIntegration/java'
+            resources.srcDir 'src/testIntegration/resources'
+            compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+            runtimeClasspath += output + compileClasspath
+        }
+    }
+
+    task testIntegration(type: Test) {
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        description = 'Runs the integration tests.'
+
+        maxHeapSize = '1024m'
+
+        testClassesDir = sourceSets.testIntegration.output.classesDir
+        classpath = sourceSets.testIntegration.runtimeClasspath
+
+        binResultsDir = file("$buildDir/http-api/integration-test-results/binary/testIntegration")
+
+        reports {
+            html.destination = "$buildDir/http-api/reports/integration-test"
+            junitXml.destination = "$buildDir/http-api/integration-test-results"
+        }
+
+        systemProperties = [
+            CUBE_LOGGER_ENABLE: System.getenv('CUBE_LOGGER_ENABLE')
+        ]
+
+        testLogging.showStandardStreams = true
+        testLogging.exceptionFormat = 'full'
+
+        mustRunAfter tasks.test
+    }
+}
+
+
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'witness'
@@ -291,6 +370,7 @@ configure(project(':desktop')) {
         compile project(':p2p')
         compile project(':core')
         compile project(':common')
+        compile project(':http-api')
         compile 'org.controlsfx:controlsfx:8.0.6_20'
         compile 'org.reactfx:reactfx:2.0-M3'
         compile 'net.glxn:qrgen:1.3'

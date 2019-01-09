@@ -36,6 +36,10 @@ import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.httpapi.service.HttpApiServer;
+
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
@@ -44,8 +48,6 @@ public class BisqAppMain extends BisqExecutable {
         super("Bisq Desktop", "bisq-desktop", Version.VERSION);
     }
 
-    /* @Nullable
-     private BisqHttpApiServer bisqHttpApiServer;*/
     /* @Nullable
     private BisqGrpcServer bisqGrpcServer;
     */
@@ -63,7 +65,6 @@ public class BisqAppMain extends BisqExecutable {
     public void onSetupComplete() {
         log.debug("onSetupComplete");
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
@@ -135,9 +136,9 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-       /* if (runWithHttpApi()) {
-            bisqHttpApiServer = new BisqHttpApiServer();
-        }*/
+        if (runWithHttpApi()) {
+            injector.getInstance(HttpApiServer.class).startServer();
+        }
         /*
         if (runWithGrpcApi()) {
             bisqGrpcServer = new BisqGrpcServer();

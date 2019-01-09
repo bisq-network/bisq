@@ -1,0 +1,17 @@
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+docker-compose-base.yml
+Dockerfile
+docker/dev/Dockerfile
+docker/prod/Dockerfile
+
+.idea
+*.iml
+
+target
+support
+
+build
+out
