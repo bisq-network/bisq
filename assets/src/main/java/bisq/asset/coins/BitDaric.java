@@ -14,20 +14,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.asset.coins;
-import bisq.asset.AddressValidationResult;
-import bisq.asset.AddressValidator;
+
 import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
+
 public class BitDaric extends Coin {
+
     public BitDaric() {
-        super("BitDaric", "DARX", new BitDaricAddressValidator());
-    }
-    public static class BitDaricAddressValidator implements AddressValidator {
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (!address.startsWith("R"))
-                return AddressValidationResult.invalidAddress("", "validation.altcoin.BitDaricAddressesNotSupported");
-            return AddressValidationResult.validAddress();
-        }
+        super("BitDaric", "DARX", new RegexAddressValidator("^[R][a-km-zA-HJ-NP-Z1-9]{25,34}$"));
     }
 }
+
