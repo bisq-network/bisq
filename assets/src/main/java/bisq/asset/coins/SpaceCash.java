@@ -23,6 +23,6 @@ import bisq.asset.RegexAddressValidator;
 public class SpaceCash extends Coin {
 
     public SpaceCash() {
-        super("SpaceCash", "SPACE", new RegexAddressValidator("^([0-9a-z]{76})$"));
+        super("SpaceCash", "XSC", new RegexAddressValidator("^([0-9a-z]{76})$"));
     }
 }
