@@ -51,7 +51,7 @@ public abstract class Metric extends Configurable implements Runnable {
     /**
      * enable execution
      */
-    private void enable() {
+    protected void enable() {
         shutdown = false;
 
         thread = new Thread(this);
