@@ -482,6 +482,12 @@ public class CurrencyUtil {
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 
+    public static Optional<Asset> findAsset(String tickerSymbol) {
+        return assetRegistry.stream()
+                .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
+                .findAny();
+    }
+
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
         return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
