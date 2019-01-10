@@ -17,11 +17,9 @@
 
 package bisq.core.trade.protocol.tasks.seller_as_taker;
 
-import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -80,7 +78,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
 
-            Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
+            Transaction depositTx = processModel.getTradeWalletService().sellerAsTakerSignsDepositTx(
                     true,
                     contractHash,
                     processModel.getPreparedDepositTx(),
@@ -88,41 +86,18 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey(),
-                    new TxBroadcaster.Callback() {
-                        @Override
-                        public void onSuccess(Transaction transaction) {
-                            if (!completed) {
-                                // We set the depositTx before we change the state as the state change triggers code
-                                // which expected the tx to be available. That case will usually never happen as the
-                                // callback is called after the method call has returned but in some test scenarios
-                                // with regtest we run into such issues, thus fixing it to make it more stict seems
-                                // reasonable.
-                                trade.setDepositTx(transaction);
-                                log.trace("takerSignsAndPublishesDepositTx succeeded " + transaction);
-                                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+                    trade.getArbitratorBtcPubKey());
 
-                                complete();
-                            } else {
-                                log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                            }
-                        }
+            // We set the depositTx before we change the state as the state change triggers code
+            // which expected the tx to be available. That case will usually never happen as the
+            // callback is called after the method call has returned but in some test scenarios
+            // with regtest we run into such issues, thus fixing it to make it more strict seems
+            // reasonable.
+            trade.setDepositTx(depositTx);
+            trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+            walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
-                        @Override
-                        public void onFailure(TxBroadcastException exception) {
-                            if (!completed) {
-                                failed(exception);
-                            } else {
-                                log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
-                            }
-                        }
-                    });
-            if (trade.getDepositTx() == null) {
-                // We set the deposit tx in case we get the onFailure called. We cannot set it in the onFailure
-                // callback as the tx is returned by the method call where the callback is  used as an argument.
-                trade.setDepositTx(depositTx);
-            }
+            complete();
         } catch (Throwable t) {
             final Contract contract = trade.getContract();
             if (contract != null)

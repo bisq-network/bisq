@@ -585,6 +585,106 @@ public class TradeWalletService {
     }
 
     /**
+     * The seller as taker signs the deposit transaction he received from the maker.
+     *
+     * @param takerIsSeller             The flag indicating if we are in the taker as seller role or the opposite.
+     * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
+     * @param makersDepositTxSerialized The prepared deposit transaction signed by the maker.
+     * @param buyerInputs               The connected outputs for all inputs of the buyer.
+     * @param sellerInputs              The connected outputs for all inputs of the seller.
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
+     * @throws SigningException
+     * @throws TransactionVerificationException
+     * @throws WalletException
+     */
+    public Transaction sellerAsTakerSignsDepositTx(boolean takerIsSeller,
+                                                   byte[] contractHash,
+                                                   byte[] makersDepositTxSerialized,
+                                                   List<RawTransactionInput> buyerInputs,
+                                                   List<RawTransactionInput> sellerInputs,
+                                                   byte[] buyerPubKey,
+                                                   byte[] sellerPubKey,
+                                                   byte[] arbitratorPubKey) throws SigningException, TransactionVerificationException,
+            WalletException {
+        Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
+
+        log.debug("signAndPublishDepositTx called");
+        log.debug("takerIsSeller " + takerIsSeller);
+        log.debug("makersDepositTx " + makersDepositTx.toString());
+        log.debug("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
+        log.debug("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
+        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+
+        checkArgument(!buyerInputs.isEmpty());
+        checkArgument(!sellerInputs.isEmpty());
+
+        // Check if maker's Multisig script is identical to the takers
+        Script p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript))
+            throw new TransactionVerificationException("Maker's p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
+
+        // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
+        // depositTx
+        Transaction depositTx = new Transaction(params);
+
+        if (takerIsSeller) {
+            // Add buyer inputs and apply signature
+            // We grab the signature from the makersDepositTx and apply it to the new tx input
+            for (int i = 0; i < buyerInputs.size(); i++)
+                depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), buyerInputs.get(i)));
+
+            // Add seller inputs
+            for (RawTransactionInput rawTransactionInput : sellerInputs)
+                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
+        } else {
+            // taker is buyer
+            // Add buyer inputs and apply signature
+            for (RawTransactionInput rawTransactionInput : buyerInputs)
+                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
+
+            // Add seller inputs
+            // We grab the signature from the makersDepositTx and apply it to the new tx input
+            for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++)
+                depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), sellerInputs.get(k)));
+        }
+
+        // Check if OP_RETURN output with contract hash matches the one from the maker
+        TransactionOutput contractHashOutput = new TransactionOutput(params, makersDepositTx, Coin.ZERO,
+                ScriptBuilder.createOpReturnScript(contractHash).getProgram());
+        log.debug("contractHashOutput " + contractHashOutput);
+        TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
+        log.debug("makersContractHashOutput " + makersContractHashOutput);
+        if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey()))
+            throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching takers version.");
+
+        // Add all outputs from makersDepositTx to depositTx
+        makersDepositTx.getOutputs().forEach(depositTx::addOutput);
+        //WalletService.printTx("makersDepositTx", makersDepositTx);
+
+        // Sign inputs
+        int start = takerIsSeller ? buyerInputs.size() : 0;
+        int end = takerIsSeller ? depositTx.getInputs().size() : buyerInputs.size();
+        for (int i = start; i < end; i++) {
+            TransactionInput input = depositTx.getInput(i);
+            signInput(depositTx, input, i);
+            WalletService.checkScriptSig(depositTx, input, i);
+        }
+
+        WalletService.printTx("depositTx", depositTx);
+
+        WalletService.verifyTransaction(depositTx);
+        WalletService.checkWalletConsistency(wallet);
+
+        return depositTx;
+    }
+
+
+    //TODO will be changed once we work on the taker as buyer part of the new protocol
+    /**
      * The taker signs the deposit transaction he received from the maker and publishes it.
      *
      * @param takerIsSeller             The flag indicating if we are in the taker as seller role or the opposite.
@@ -600,15 +700,15 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public Transaction takerSignsAndPublishesDepositTx(boolean takerIsSeller,
-                                                       byte[] contractHash,
-                                                       byte[] makersDepositTxSerialized,
-                                                       List<RawTransactionInput> buyerInputs,
-                                                       List<RawTransactionInput> sellerInputs,
-                                                       byte[] buyerPubKey,
-                                                       byte[] sellerPubKey,
-                                                       byte[] arbitratorPubKey,
-                                                       TxBroadcaster.Callback callback) throws SigningException, TransactionVerificationException,
+    public Transaction takerAsBuyerSignsAndPublishesDepositTx(boolean takerIsSeller,
+                                                              byte[] contractHash,
+                                                              byte[] makersDepositTxSerialized,
+                                                              List<RawTransactionInput> buyerInputs,
+                                                              List<RawTransactionInput> sellerInputs,
+                                                              byte[] buyerPubKey,
+                                                              byte[] sellerPubKey,
+                                                              byte[] arbitratorPubKey,
+                                                              TxBroadcaster.Callback callback) throws SigningException, TransactionVerificationException,
             WalletException {
         Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
 

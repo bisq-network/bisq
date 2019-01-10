@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -79,7 +79,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
+            Transaction depositTx = processModel.getTradeWalletService().takerAsBuyerSignsAndPublishesDepositTx(
                     false,
                     contractHash,
                     processModel.getPreparedDepositTx(),
