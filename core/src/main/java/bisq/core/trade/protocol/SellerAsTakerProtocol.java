@@ -20,8 +20,8 @@ package bisq.core.trade.protocol;
 
 import bisq.core.trade.SellerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.CompleteDepositTxRequest;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
@@ -82,8 +82,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                 log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
                         tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-                if (tradeMessage instanceof PublishDepositTxRequest)
-                    handle((PublishDepositTxRequest) tradeMessage, peerNodeAddress);
+                if (tradeMessage instanceof CompleteDepositTxRequest)
+                    handle((CompleteDepositTxRequest) tradeMessage, peerNodeAddress);
                 else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage)
                     handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
                 else
@@ -123,14 +123,14 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
+    private void handle(CompleteDepositTxRequest tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {
                     stopTimeout();
-                    handleTaskRunnerSuccess(tradeMessage, "PublishDepositTxRequest");
+                    handleTaskRunnerSuccess(tradeMessage, "CompleteDepositTxRequest");
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
@@ -234,8 +234,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
-        if (tradeMessage instanceof PublishDepositTxRequest) {
-            handle((PublishDepositTxRequest) tradeMessage, sender);
+        if (tradeMessage instanceof CompleteDepositTxRequest) {
+            handle((CompleteDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
         } else {

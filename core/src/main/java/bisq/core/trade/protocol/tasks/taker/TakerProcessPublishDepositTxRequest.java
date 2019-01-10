@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PublishDepositTxRequest;
+import bisq.core.trade.messages.CompleteDepositTxRequest;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -43,29 +43,29 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            PublishDepositTxRequest publishDepositTxRequest = (PublishDepositTxRequest) processModel.getTradeMessage();
-            checkTradeId(processModel.getOfferId(), publishDepositTxRequest);
-            checkNotNull(publishDepositTxRequest);
+            CompleteDepositTxRequest completeDepositTxRequest = (CompleteDepositTxRequest) processModel.getTradeMessage();
+            checkTradeId(processModel.getOfferId(), completeDepositTxRequest);
+            checkNotNull(completeDepositTxRequest);
 
             final TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload()));
-            tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
-            tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
-            tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));
-            tradingPeer.setContractSignature(nonEmptyStringOf(publishDepositTxRequest.getMakerContractSignature()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
-            tradingPeer.setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
-            final byte[] preparedDepositTx = publishDepositTxRequest.getPreparedDepositTx();
+            tradingPeer.setPaymentAccountPayload(checkNotNull(completeDepositTxRequest.getMakerPaymentAccountPayload()));
+            tradingPeer.setAccountId(nonEmptyStringOf(completeDepositTxRequest.getMakerAccountId()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(completeDepositTxRequest.getMakerMultiSigPubKey()));
+            tradingPeer.setContractAsJson(nonEmptyStringOf(completeDepositTxRequest.getMakerContractAsJson()));
+            tradingPeer.setContractSignature(nonEmptyStringOf(completeDepositTxRequest.getMakerContractSignature()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(completeDepositTxRequest.getMakerPayoutAddressString()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(completeDepositTxRequest.getMakerInputs()));
+            final byte[] preparedDepositTx = completeDepositTxRequest.getPreparedDepositTx();
             processModel.setPreparedDepositTx(checkNotNull(preparedDepositTx));
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
             // challenge protocol for passing the nonce we want to get signed.
-            tradingPeer.setAccountAgeWitnessNonce(publishDepositTxRequest.getPreparedDepositTx());
-            tradingPeer.setAccountAgeWitnessSignature(publishDepositTxRequest.getAccountAgeWitnessSignatureOfPreparedDepositTx());
+            tradingPeer.setAccountAgeWitnessNonce(completeDepositTxRequest.getPreparedDepositTx());
+            tradingPeer.setAccountAgeWitnessSignature(completeDepositTxRequest.getAccountAgeWitnessSignatureOfPreparedDepositTx());
 
-            tradingPeer.setCurrentDate(publishDepositTxRequest.getCurrentDate());
+            tradingPeer.setCurrentDate(completeDepositTxRequest.getCurrentDate());
 
-            checkArgument(publishDepositTxRequest.getMakerInputs().size() > 0);
+            checkArgument(completeDepositTxRequest.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

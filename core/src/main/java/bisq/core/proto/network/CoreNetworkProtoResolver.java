@@ -36,11 +36,11 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.messages.CompleteDepositTxRequest;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
@@ -127,7 +127,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case DEPOSIT_TX_PUBLISHED_MESSAGE:
                     return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage(), messageVersion);
                 case PUBLISH_DEPOSIT_TX_REQUEST:
-                    return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
+                    return CompleteDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
                 case PAYOUT_TX_PUBLISHED_MESSAGE:

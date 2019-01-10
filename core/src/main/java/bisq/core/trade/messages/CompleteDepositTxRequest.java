@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
 // continue later to complete the deposit tx.
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
+public final class CompleteDepositTxRequest extends TradeMessage implements MailboxMessage {
     private final PaymentAccountPayload makerPaymentAccountPayload;
     private final String makerAccountId;
     private final byte[] makerMultiSigPubKey;
@@ -63,19 +63,19 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     private final byte[] accountAgeWitnessSignatureOfPreparedDepositTx;
     private final long currentDate;
 
-    public PublishDepositTxRequest(String tradeId,
-                                   PaymentAccountPayload makerPaymentAccountPayload,
-                                   String makerAccountId,
-                                   byte[] makerMultiSigPubKey,
-                                   String makerContractAsJson,
-                                   String makerContractSignature,
-                                   String makerPayoutAddressString,
-                                   byte[] preparedDepositTx,
-                                   List<RawTransactionInput> makerInputs,
-                                   NodeAddress senderNodeAddress,
-                                   String uid,
-                                   @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
-                                   long currentDate) {
+    public CompleteDepositTxRequest(String tradeId,
+                                    PaymentAccountPayload makerPaymentAccountPayload,
+                                    String makerAccountId,
+                                    byte[] makerMultiSigPubKey,
+                                    String makerContractAsJson,
+                                    String makerContractSignature,
+                                    String makerPayoutAddressString,
+                                    byte[] preparedDepositTx,
+                                    List<RawTransactionInput> makerInputs,
+                                    NodeAddress senderNodeAddress,
+                                    String uid,
+                                    @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                    long currentDate) {
         this(tradeId,
                 makerPaymentAccountPayload,
                 makerAccountId,
@@ -97,20 +97,20 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PublishDepositTxRequest(String tradeId,
-                                    PaymentAccountPayload makerPaymentAccountPayload,
-                                    String makerAccountId,
-                                    byte[] makerMultiSigPubKey,
-                                    String makerContractAsJson,
-                                    String makerContractSignature,
-                                    String makerPayoutAddressString,
-                                    byte[] preparedDepositTx,
-                                    List<RawTransactionInput> makerInputs,
-                                    NodeAddress senderNodeAddress,
-                                    String uid,
-                                    int messageVersion,
-                                    @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
-                                    long currentDate) {
+    private CompleteDepositTxRequest(String tradeId,
+                                     PaymentAccountPayload makerPaymentAccountPayload,
+                                     String makerAccountId,
+                                     byte[] makerMultiSigPubKey,
+                                     String makerContractAsJson,
+                                     String makerContractSignature,
+                                     String makerPayoutAddressString,
+                                     byte[] preparedDepositTx,
+                                     List<RawTransactionInput> makerInputs,
+                                     NodeAddress senderNodeAddress,
+                                     String uid,
+                                     int messageVersion,
+                                     @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                     long currentDate) {
         super(messageVersion, tradeId, uid);
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.makerAccountId = makerAccountId;
@@ -148,12 +148,12 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .build();
     }
 
-    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static CompleteDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
 
-        return new PublishDepositTxRequest(proto.getTradeId(),
+        return new CompleteDepositTxRequest(proto.getTradeId(),
                 coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
                 proto.getMakerAccountId(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
@@ -172,7 +172,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     @Override
     public String toString() {
-        return "PublishDepositTxRequest{" +
+        return "CompleteDepositTxRequest{" +
                 "\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
