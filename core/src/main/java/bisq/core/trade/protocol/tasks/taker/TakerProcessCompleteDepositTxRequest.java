@@ -32,9 +32,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TakerProcessPublishDepositTxRequest extends TradeTask {
+public class TakerProcessCompleteDepositTxRequest extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerProcessPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
+    public TakerProcessCompleteDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
