@@ -30,8 +30,8 @@ import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCompletesDepositTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
@@ -141,7 +141,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
-                SellerAsTakerSignAndPublishDepositTx.class,
+                SellerAsTakerCompletesDepositTx.class,
                 TakerSendDepositTxPublishedMessage.class,
                 PublishTradeStatistics.class
         );

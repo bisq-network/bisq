@@ -41,9 +41,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
+public class SellerAsTakerCompletesDepositTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerAsTakerSignAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerCompletesDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
