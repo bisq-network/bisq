@@ -34,7 +34,7 @@ import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSendCompleteDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -136,7 +136,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositTxListener.class,
-                MakerSendPublishDepositTxRequest.class
+                MakerSendCompleteDepositTxRequest.class
         );
         // We don't use a timeout here because if the DepositTxPublishedMessage does not arrive we
         // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network

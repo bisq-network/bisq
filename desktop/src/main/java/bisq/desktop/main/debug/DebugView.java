@@ -37,7 +37,7 @@ import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishD
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSendCompleteDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -113,7 +113,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerCreateAndSignContract.class,
                         BuyerAsMakerCreatesAndSignsDepositTx.class,
                         MakerSetupDepositTxListener.class,
-                        MakerSendPublishDepositTxRequest.class,
+                        MakerSendCompleteDepositTxRequest.class,
 
                         MakerProcessDepositTxPublishedMessage.class,
                         MakerVerifyTakerAccount.class,
@@ -187,7 +187,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerCreateAndSignContract.class,
                         SellerAsMakerCreatesAndSignsDepositTx.class,
                         MakerSetupDepositTxListener.class,
-                        MakerSendPublishDepositTxRequest.class,
+                        MakerSendCompleteDepositTxRequest.class,
 
                         MakerProcessDepositTxPublishedMessage.class,
                         PublishTradeStatistics.class,

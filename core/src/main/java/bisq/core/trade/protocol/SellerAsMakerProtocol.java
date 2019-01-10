@@ -30,7 +30,7 @@ import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSendCompleteDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -131,7 +131,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 MakerCreateAndSignContract.class,
                 SellerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositTxListener.class,
-                MakerSendPublishDepositTxRequest.class
+                MakerSendCompleteDepositTxRequest.class
         );
 
         // We don't start a timeout because if we don't receive the peers DepositTxPublishedMessage we still
