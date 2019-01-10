@@ -74,7 +74,7 @@ public class Version {
     // If objects are used for both network and database the network version is applied.
     // VERSION = 0.5.0 -> P2P_NETWORK_VERSION = 1
     @SuppressWarnings("ConstantConditions")
-    public static final int P2P_NETWORK_VERSION = 1;
+    public static final int P2P_NETWORK_VERSION = 2;
 
     // The version no. of the serialized data stored to disc. A change will break the serialization of old objects.
     // VERSION = 0.5.0 -> LOCAL_DB_VERSION = 1
@@ -83,7 +83,7 @@ public class Version {
     // The version no. of the current protocol. The offer holds that version.
     // A taker will check the version of the offers to see if his version is compatible.
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
-    public static final int TRADE_PROTOCOL_VERSION = 1;
+    public static final int TRADE_PROTOCOL_VERSION = 2;
     private static int p2pMessageVersion;
 
     public static final String BSQ_TX_VERSION = "1";
