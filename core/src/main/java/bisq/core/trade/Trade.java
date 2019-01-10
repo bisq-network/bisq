@@ -120,6 +120,7 @@ public abstract class Trade implements Tradable, Model {
 
 
         // #################### Phase DEPOSIT_PAID
+        SELLER_TAKER_COMPLETED_DEPOSIT_TX(Phase.TAKER_FEE_PUBLISHED),
         TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PUBLISHED),
 
 

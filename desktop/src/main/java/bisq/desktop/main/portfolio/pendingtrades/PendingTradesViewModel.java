@@ -372,6 +372,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
                 // taker perspective
             case TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST:
+
+                //TODO we add that preliminary here. Need to be checked if that position is correct
+            case SELLER_TAKER_COMPLETED_DEPOSIT_TX:
                 // We don't have a UI state for that, we still have not a ready initiated trade
                 sellerState.set(UNDEFINED);
                 buyerState.set(BuyerState.UNDEFINED);

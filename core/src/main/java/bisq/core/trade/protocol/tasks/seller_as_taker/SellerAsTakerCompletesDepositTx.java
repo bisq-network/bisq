@@ -94,7 +94,7 @@ public class SellerAsTakerCompletesDepositTx extends TradeTask {
             // with regtest we run into such issues, thus fixing it to make it more strict seems
             // reasonable.
             trade.setDepositTx(depositTx);
-            trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+            trade.setState(Trade.State.SELLER_TAKER_COMPLETED_DEPOSIT_TX);
             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
 
             complete();
