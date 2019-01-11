@@ -42,6 +42,9 @@ import lombok.Value;
 
 import javax.annotation.Nullable;
 
+//TODO @Craig: that comment need to be updated with the new protocol and the message should probably change to a DirectMessage
+// instead of a MailboxMessage (TradeMessage implements already DirectMessage)
+
 // We use a MailboxMessage here because the taker has paid already the trade fee and it could be that
 // we lost connection to him but we are complete on our side. So even if the peer is offline he can
 // continue later to complete the deposit tx.
