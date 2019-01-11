@@ -32,7 +32,9 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStar
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerProcessSignTLPayoutTxMessage;
+import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsPublishDepositTxMessage;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignsTLPayoutTx;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
@@ -159,7 +161,9 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
-                BuyerAsMakerProcessSignTLPayoutTxMessage.class
+                BuyerAsMakerProcessSignTLPayoutTxMessage.class,
+                BuyerAsMakerSignsTLPayoutTx.class,
+                BuyerAsMakerSendsPublishDepositTxMessage.class
         );
         taskRunner.run();
     }
