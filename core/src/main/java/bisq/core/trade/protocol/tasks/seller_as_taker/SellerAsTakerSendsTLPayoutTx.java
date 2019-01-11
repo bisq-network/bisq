@@ -22,7 +22,7 @@ import bisq.core.trade.messages.SignTLPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -51,11 +51,11 @@ public class SellerAsTakerSendsTLPayoutTx extends TradeTask {
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            processModel.getP2PService().sendEncryptedMailboxMessage(
+            processModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
                     processModel.getTradingPeer().getPubKeyRing(),
                     message,
-                    new SendMailboxMessageListener() {
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
@@ -63,15 +63,6 @@ public class SellerAsTakerSendsTLPayoutTx extends TradeTask {
 
                             //TODO set correct (new) state
                             // trade.setState(Trade.State.TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
-                            complete();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            //TODO set correct (new) state
-                            //trade.setState(Trade.State.TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
                             complete();
                         }
 

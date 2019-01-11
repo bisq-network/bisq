@@ -17,7 +17,6 @@
 
 package bisq.core.trade.messages;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -30,7 +29,7 @@ import lombok.Value;
 //TODO implement
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class SignTLPayoutTxMessage extends TradeMessage implements MailboxMessage {
+public final class SignTLPayoutTxMessage extends TradeMessage {
     private final NodeAddress senderNodeAddress;
 
     public SignTLPayoutTxMessage(String tradeId,
