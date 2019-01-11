@@ -40,6 +40,7 @@ public class SellerAsTakerSendsTLPayoutTx extends TradeTask {
 
     @Override
     protected void run() {
+        log.warn("Not impl.: SellerAsTakerSendsTLPayoutTx");
         try {
             runInterceptHook();
             final String id = processModel.getOfferId();

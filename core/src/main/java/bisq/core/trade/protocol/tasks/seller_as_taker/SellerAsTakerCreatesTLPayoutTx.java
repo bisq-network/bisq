@@ -33,6 +33,7 @@ public class SellerAsTakerCreatesTLPayoutTx extends TradeTask {
 
     @Override
     protected void run() {
+        log.warn("Not impl.: SellerAsTakerCreatesTLPayoutTx");
         runInterceptHook();
 
         // Bob creates now the alternative payout tx with spending the funds from the multisig address to the
@@ -40,6 +41,7 @@ public class SellerAsTakerCreatesTLPayoutTx extends TradeTask {
 
         //TODO create time locked payout tx from sellers side
         // Store tx in data models
+
         complete();
     }
 }

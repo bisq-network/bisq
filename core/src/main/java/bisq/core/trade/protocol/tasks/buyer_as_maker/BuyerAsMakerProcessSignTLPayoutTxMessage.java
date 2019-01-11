@@ -37,6 +37,7 @@ public class BuyerAsMakerProcessSignTLPayoutTxMessage extends TradeTask {
 
     @Override
     protected void run() {
+        log.warn("Not impl.: BuyerAsMakerProcessSignTLPayoutTxMessage");
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
@@ -49,8 +50,6 @@ public class BuyerAsMakerProcessSignTLPayoutTxMessage extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-
-            processModel.removeMailboxMessageAfterProcessing(trade);
             complete();
         } catch (Throwable t) {
             failed(t);
