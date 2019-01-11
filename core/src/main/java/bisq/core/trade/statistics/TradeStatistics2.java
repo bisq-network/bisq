@@ -263,6 +263,10 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         }
     }
 
+    public boolean isValid() {
+        return tradeAmount > 0 && tradePrice > 0;
+    }
+
     @Override
     public String toString() {
         return "TradeStatistics2{" +

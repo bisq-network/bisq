@@ -17,14 +17,28 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AltCoinAccountDisclaimer;
-import bisq.asset.Coin;
-import bisq.asset.RegexAddressValidator;
+import bisq.asset.AbstractAssetTest;
 
-@AltCoinAccountDisclaimer("account.altcoin.popup.drgl.msg")
-public class Dragonglass extends Coin {
+import org.junit.Test;
 
-    public Dragonglass() {
-        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
+public class DeepOnionTest extends AbstractAssetTest {
+
+    public DeepOnionTest() {
+        super(new DeepOnion());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("DYQLyJ1CcxJyRBujtKdv2JDkQEkEkAzNNA");
+        assertValidAddress("DW7YKfPgm7fdTNGyyaSVfQhY7ccBoeVK5D");
+        assertValidAddress("DsA31xPpijxiCuTQeYMpMTQsTH1m2jTgtS");
+
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("1sA31xPpijxiCuTQeYMpMTQsTH1m2jTgtS");
+        assertInvalidAddress("DsA31xPpijxiCuTQeYMpMTQsTH1m2jTgtSd");
+        assertInvalidAddress("DsA31xPpijxiCuTQeYMpMTQsTH1m2jTgt#");
     }
 }

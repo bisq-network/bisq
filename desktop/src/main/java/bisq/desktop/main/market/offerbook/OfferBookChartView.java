@@ -336,6 +336,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void updateChartData() {
         seriesBuy.getData().clear();
         seriesSell.getData().clear();
+        areaChart.getData().clear();
 
         final Optional<XYChart.Data> buyMinOptional = model.getBuyData().stream()
                 .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
@@ -369,6 +370,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesBuy.getData().addAll(model.getBuyData());
         //noinspection unchecked
         seriesSell.getData().addAll(model.getSellData());
+        areaChart.getData().addAll(seriesBuy, seriesSell);
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {

@@ -29,6 +29,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -38,6 +39,9 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
+
+import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Asset;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -53,6 +57,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import javafx.collections.ObservableList;
+
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
@@ -115,7 +121,6 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
-            String code = selectedTradeCurrency.getCode();
             if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
                 String name = selectedTradeCurrency.getName();
                 new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
@@ -126,47 +131,14 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                         .show();
             }
 
-            switch (code) {
-                case "XMR":
-                    new Popup<>().information(Res.get("account.altcoin.popup.xmr.msg"))
+            final Optional<Asset> asset = CurrencyUtil.findAsset(selectedTradeCurrency.getCode());
+            if (asset.isPresent()) {
+                final AltCoinAccountDisclaimer disclaimerAnnotation = asset.get().getClass().getAnnotation(AltCoinAccountDisclaimer.class);
+                if (disclaimerAnnotation != null) {
+                    new Popup<>().information(Res.get(disclaimerAnnotation.value()))
                             .useIUnderstandButton()
                             .show();
-                    break;
-                case "BLUR":
-                    new Popup<>().information(Res.get("account.altcoin.popup.blur.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "CCX":
-                    new Popup<>().information(Res.get("account.altcoin.popup.ccx.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "DRGL":
-                    new Popup<>().information(Res.get("account.altcoin.popup.drgl.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "ZEC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.ZEC.msg", "ZEC"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "XZC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.XZC.msg", "XZC"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "BCHC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.bch"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "BTG":
-                    new Popup<>().information(Res.get("account.altcoin.popup.btg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
+                }
             }
 
             if (model.getPaymentAccounts().stream().noneMatch(e -> e.getAccountName() != null &&

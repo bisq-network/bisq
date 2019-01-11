@@ -8,7 +8,7 @@
 
 @echo off
 
-set version=0.9.2-SNAPSHOT
+set version=0.9.3-SNAPSHOT
 set package_dir=%~dp0..
 for /F "tokens=1,2,3 delims=.-" %%a in ("%version%") do (
    set file_version=%%a.%%b.%%c

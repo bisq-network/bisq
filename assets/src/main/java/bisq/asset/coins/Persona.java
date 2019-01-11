@@ -17,14 +17,12 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-@AltCoinAccountDisclaimer("account.altcoin.popup.drgl.msg")
-public class Dragonglass extends Coin {
+public class Persona extends Coin {
 
-    public Dragonglass() {
-        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
+    public Persona() {
+        super("Persona", "PRSN", new RegexAddressValidator("^[P][a-km-zA-HJ-NP-Z1-9]{33}$"));
     }
 }
