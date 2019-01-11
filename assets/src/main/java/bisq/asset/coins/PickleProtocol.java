@@ -17,13 +17,23 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.NetworkParametersAdapter;
 
 public class PickleProtocol extends Coin {
-    public PickleProtocol() {
 
-        super("PickleProtocol", "PCK", new DefaultAddressValidator());
+    public PickleProtocol() {
+        super("PickleProtocol", "PCK", new Base58BitcoinAddressValidator(new PickleProtocolParams()));
+    }
+
+
+    public static class PickleProtocolParams extends NetworkParametersAdapter {
+
+        public PickleProtocolParams() {
+            addressHeader = 54;
+            p2shHeader = 119;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
     }
 }
-
