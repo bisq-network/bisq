@@ -5,9 +5,9 @@
 bisq.asset.coins.Actinium
 bisq.asset.coins.Aeon
 bisq.asset.coins.Beam
-bisq.asset.coins.BitcoinRhodium
 bisq.asset.coins.Bitcoin$Mainnet
 bisq.asset.coins.Bitcoin$Regtest
+bisq.asset.coins.BitcoinRhodium
 bisq.asset.coins.Bitcoin$Testnet
 bisq.asset.coins.Bitmark
 bisq.asset.coins.Blur
@@ -25,10 +25,10 @@ bisq.asset.coins.Dogecoin
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
-bisq.asset.coins.GambleCoin
-bisq.asset.coins.Grin
 bisq.asset.coins.FourtyTwo
+bisq.asset.coins.GambleCoin
 bisq.asset.coins.Gridcoin
+bisq.asset.coins.Grin
 bisq.asset.coins.Horizen
 bisq.asset.coins.IdaPay
 bisq.asset.coins.Iridium
