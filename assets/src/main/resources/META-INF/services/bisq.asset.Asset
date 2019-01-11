@@ -4,6 +4,7 @@
 # See https://bisq.network/list-asset for complete instructions.
 bisq.asset.coins.Actinium
 bisq.asset.coins.Aeon
+bisq.asset.coins.Australiacash
 bisq.asset.coins.Beam
 bisq.asset.coins.Bitcoin$Mainnet
 bisq.asset.coins.Bitcoin$Regtest
