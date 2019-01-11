@@ -60,13 +60,10 @@ import mockit.MockUp;
 import mockit.Tested;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-//TODO @Christoph Can you have a look why JMockit is nto working anymore in that module?
-@Ignore
 public class TradesChartsViewModelTest {
     @Tested
     TradesChartsViewModel model;
