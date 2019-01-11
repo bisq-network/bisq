@@ -26,15 +26,22 @@ package bisq.asset;
 public class RegexAddressValidator implements AddressValidator {
 
     private final String regex;
+    private final String errorMessageI18nKey;
 
     public RegexAddressValidator(String regex) {
+        this(regex, null);
+    }
+
+    public RegexAddressValidator(String regex, String errorMessageI18nKey) {
         this.regex = regex;
+        this.errorMessageI18nKey = errorMessageI18nKey;
     }
 
     @Override
     public AddressValidationResult validate(String address) {
         if (!address.matches(regex))
-            return AddressValidationResult.invalidStructure();
+            if (errorMessageI18nKey == null) return AddressValidationResult.invalidStructure();
+            else return AddressValidationResult.invalidAddress("", errorMessageI18nKey);
 
         return AddressValidationResult.validAddress();
     }

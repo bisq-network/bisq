@@ -35,7 +35,7 @@ public class FeePayment {
     }
 
     public long daysCoveredByFee(long bsqFeePerDay) {
-        return fee / bsqFeePerDay;
+        return bsqFeePerDay > 0 ? fee / bsqFeePerDay : 0;
     }
 
     public Optional<Integer> getPassedDays(DaoStateService daoStateService) {
