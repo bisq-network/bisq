@@ -584,16 +584,9 @@ public class BisqSetup {
         disputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
-        tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .filter(addressEntry -> addressEntry.getOfferId() != null)
-                .forEach(addressEntry -> {
-                    log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
-                    btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
-                });
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
-
 
         openOfferManager.onAllServicesInitialized();
 
