@@ -208,6 +208,13 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
+    @Getter
+    protected final String httpApiHost;
+    @Getter
+    protected final Integer httpApiPort;
+    @Getter
+    protected boolean httpApiExperimentalFeaturesEnabled;
+
     public BisqEnvironment(OptionSet options) {
         this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
                 options)));
@@ -249,6 +256,13 @@ public class BisqEnvironment extends StandardEnvironment {
         referralId = commandLineProperties.containsProperty(AppOptionKeys.REFERRAL_ID) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.REFERRAL_ID) :
                 "";
+        httpApiExperimentalFeaturesEnabled = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_EXPERIMENTAL_FEATURES_ENABLED);
+        httpApiHost = commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_HOST) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_HOST) :
+                "127.0.0.1";
+        httpApiPort = Integer.parseInt(commandLineProperties.containsProperty(AppOptionKeys.HTTP_API_PORT) ?
+                (String) commandLineProperties.getProperty(AppOptionKeys.HTTP_API_PORT) :
+                "8080");
         useDevMode = commandLineProperties.containsProperty(CommonOptionKeys.USE_DEV_MODE) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.USE_DEV_MODE) :
                 "";
