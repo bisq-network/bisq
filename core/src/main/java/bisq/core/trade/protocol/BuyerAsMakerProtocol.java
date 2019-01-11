@@ -22,6 +22,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
+import bisq.core.trade.messages.SignTLPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
@@ -30,6 +31,7 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
+import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerProcessSignTLPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
@@ -204,6 +206,20 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void handle(SignTLPayoutTxMessage tradeMessage, NodeAddress peerNodeAddress) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle SignTLPayoutTxMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                BuyerAsMakerProcessSignTLPayoutTxMessage.class
+        );
+        taskRunner.run();
+    }
+
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -228,7 +244,9 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
-        if (tradeMessage instanceof DepositTxPublishedMessage) {
+        if (tradeMessage instanceof SignTLPayoutTxMessage) {
+            handle((SignTLPayoutTxMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof DepositTxPublishedMessage) {
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);

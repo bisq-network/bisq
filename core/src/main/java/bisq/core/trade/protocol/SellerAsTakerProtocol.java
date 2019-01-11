@@ -24,7 +24,6 @@ import bisq.core.trade.messages.CompleteDepositTxRequest;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
-import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
@@ -32,10 +31,11 @@ import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCompletesDepositTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
+import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesTLPayoutTx;
+import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSendsTLPayoutTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessCompleteDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
-import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
@@ -142,8 +142,12 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 SellerAsTakerCompletesDepositTx.class,
+                SellerAsTakerCreatesTLPayoutTx.class,
+                SellerAsTakerSendsTLPayoutTx.class
+
+                /*, //TODO those 2 tasks will be use later in the process
                 TakerSendDepositTxPublishedMessage.class,
-                PublishTradeStatistics.class
+                PublishTradeStatistics.class*/
         );
         taskRunner.run();
     }
