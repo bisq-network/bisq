@@ -41,6 +41,8 @@ import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
+import bisq.core.trade.messages.PublishDepositTxRequest;
+import bisq.core.trade.messages.SignTLPayoutTxMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
@@ -124,10 +126,14 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
 
                 case PAY_DEPOSIT_REQUEST:
                     return PayDepositRequest.fromProto(proto.getPayDepositRequest(), this, messageVersion);
+                case SIGN_T_L_PAYOUT_TX_MESSAGE:
+                    return SignTLPayoutTxMessage.fromProto(proto.getSignTLPayoutTxMessage(), messageVersion);
+                case PUBLISH_DEPOSIT_TX_REQUEST:
+                    return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), messageVersion);
                 case DEPOSIT_TX_PUBLISHED_MESSAGE:
                     return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage(), messageVersion);
-                case PUBLISH_DEPOSIT_TX_REQUEST:
-                    return CompleteDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
+                case COMPLETE_DEPOSIT_TX_REQUEST:
+                    return CompleteDepositTxRequest.fromProto(proto.getCompleteDepositTxRequest(), this, messageVersion);
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
                 case PAYOUT_TX_PUBLISHED_MESSAGE:

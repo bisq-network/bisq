@@ -130,7 +130,7 @@ public final class CompleteDepositTxRequest extends TradeMessage implements Mail
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.PublishDepositTxRequest.Builder builder = PB.PublishDepositTxRequest.newBuilder()
+        final PB.CompleteDepositTxRequest.Builder builder = PB.CompleteDepositTxRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                 .setMakerAccountId(makerAccountId)
@@ -147,11 +147,11 @@ public final class CompleteDepositTxRequest extends TradeMessage implements Mail
         builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder()
-                .setPublishDepositTxRequest(builder)
+                .setCompleteDepositTxRequest(builder)
                 .build();
     }
 
-    public static CompleteDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static CompleteDepositTxRequest fromProto(PB.CompleteDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());

@@ -37,7 +37,7 @@ message NetworkEnvelope {
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 16;
 
         PayDepositRequest pay_deposit_request = 17;
-        PublishDepositTxRequest publish_deposit_tx_request = 18;
+        CompleteDepositTxRequest complete_deposit_tx_request = 18;
         DepositTxPublishedMessage deposit_tx_published_message = 19;
         CounterCurrencyTransferStartedMessage counter_currency_transfer_started_message = 20;
         PayoutTxPublishedMessage payout_tx_published_message = 21;
@@ -57,6 +57,9 @@ message NetworkEnvelope {
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
+
+        SignTLPayoutTxMessage sign_t_l_payout_tx_message = 34;
+        PublishDepositTxRequest publish_deposit_tx_request = 35;
     }
 }
 
@@ -205,7 +208,23 @@ message PayDepositRequest {
     int64 current_date = 23;
 }
 
+// TODO impl data
+message SignTLPayoutTxMessage {
+    string trade_id = 1;
+    bytes deposit_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+// TODO impl data
 message PublishDepositTxRequest {
+    string trade_id = 1;
+    bytes deposit_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message CompleteDepositTxRequest {
     string trade_id = 1;
     PaymentAccountPayload maker_payment_account_payload = 2;
     string maker_account_id = 3;

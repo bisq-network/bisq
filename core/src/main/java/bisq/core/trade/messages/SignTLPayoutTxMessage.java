@@ -57,14 +57,14 @@ public final class SignTLPayoutTxMessage extends TradeMessage {
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
+                .setSignTLPayoutTxMessage(PB.SignTLPayoutTxMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static SignTLPayoutTxMessage fromProto(PB.DepositTxPublishedMessage proto, int messageVersion) {
+    public static SignTLPayoutTxMessage fromProto(PB.SignTLPayoutTxMessage proto, int messageVersion) {
         return new SignTLPayoutTxMessage(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
