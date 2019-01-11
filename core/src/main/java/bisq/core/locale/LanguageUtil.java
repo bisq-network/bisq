@@ -41,10 +41,10 @@ public class LanguageUtil {
             "ru", // Russian
             "fr", // French
             "vi", // Vietnamese
-            "th" // Thai
+            "th", // Thai
+            "fa" // Persian
             /*
             // not translated yet
-            "fa" // Persian --> waiting for third review
             "tr" // Turkish
             "it", // Italian
             "ja", // Japanese

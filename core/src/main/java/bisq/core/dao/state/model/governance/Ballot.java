@@ -112,4 +112,11 @@ public final class Ballot implements PersistablePayload, ConsensusCritical, Immu
                 ",\n     vote=" + vote +
                 "\n}";
     }
+
+    public String info() {
+        return "Ballot{" +
+                "\n     proposalTxId=" + proposal.getTxId() +
+                ",\n     vote=" + vote +
+                "\n}";
+    }
 }

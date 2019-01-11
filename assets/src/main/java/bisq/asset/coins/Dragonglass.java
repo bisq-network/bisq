@@ -17,10 +17,11 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-// Not an ICO token (see https://github.com/bisq-network/proposals/issues/57#issuecomment-441671418)
+@AltCoinAccountDisclaimer("account.altcoin.popup.drgl.msg")
 public class Dragonglass extends Coin {
 
     public Dragonglass() {

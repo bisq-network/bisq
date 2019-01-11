@@ -290,6 +290,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                 BallotList ballotList = createBallotList(voteWithProposalTxIdList);
                                 byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(opReturnData);
                                 long blindVoteStake = blindVoteStakeOutput.getValue();
+                                log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, blindVoteStake={}, ballotList={}",
+                                        blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList);
                                 return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
                             } catch (VoteResultException.MissingBallotException missingBallotException) {
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
@@ -537,6 +539,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                 decryptedBallotsWithMerits.getMeritList(), daoStateService);
                         VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
                         voteWithStakeList.add(voteWithStake);
+                        log.info("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
                     });
         });
         return voteWithStakeByProposalMap;

@@ -72,8 +72,8 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
 
     @Override
     public String toString() {
-        return "List of UID's in BallotList: " + getList().stream()
-                .map(Ballot::getTxId)
+        return "BallotList: " + getList().stream()
+                .map(Ballot::info)
                 .collect(Collectors.toList());
     }
 }
