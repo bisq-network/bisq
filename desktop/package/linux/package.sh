@@ -7,6 +7,12 @@
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
 version=0.9.3-SNAPSHOT
+if [ ! -f "$JAVA_HOME/bin/javapackager" ] && [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
+    JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
+else
+    echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
+    exit 1
+fi
 
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
 src_dir=$base_dir/desktop/package
@@ -24,7 +30,7 @@ if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
     jar_file=$base_dir/desktop/build/libs/desktop-$version-all.jar
     if [ ! -f "$jar_file" ]; then
         echo No jar file available at $jar_file
-        exit 1
+        exit 2
     fi
 
     tmp=$base_dir/desktop/build/libs/tmp
@@ -97,7 +103,7 @@ $JAVA_HOME/bin/javapackager \
 
 if [ ! -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     echo No deb file found at $base_dir/desktop/package/linux/bisq-$version.deb
-    exit 2
+    exit 3
 fi
 
 # FIXME: My Ubuntu somehow also deletes the lower case file
