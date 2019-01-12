@@ -18,6 +18,7 @@
 package bisq.core.trade.statistics;
 
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 
@@ -44,20 +45,26 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This can be removed once the AssetService is activated with the DAO.
+ * At the moment it is only used for printing out trade statistics.
+ */
 @Slf4j
 public class AssetTradeActivityCheck {
     private final AssetService assetService;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final FilterManager filterManager;
 
     @Inject
-    public AssetTradeActivityCheck(AssetService assetService, TradeStatisticsManager tradeStatisticsManager) {
+    public AssetTradeActivityCheck(AssetService assetService, TradeStatisticsManager tradeStatisticsManager, FilterManager filterManager) {
         this.assetService = assetService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.filterManager = filterManager;
     }
 
     public void onAllServicesInitialized() {
         Date compareDate = new Date(new Date().getTime() - Duration.ofDays(120).toMillis());
-        long minTradeAmount = Coin.parseCoin("0.001").value;
+        long minTradeAmount = Coin.parseCoin("0.01").value;
         long minNumOfTrades = 3;
 
         Map<String, Tuple2<Long, Integer>> tradeStatMap = new HashMap<>();
@@ -76,7 +83,7 @@ public class AssetTradeActivityCheck {
         StringBuilder sufficientlyTraded = new StringBuilder("\nSufficiently traded assets:");
         StringBuilder insufficientlyTraded = new StringBuilder("\nInsufficiently traded assets:");
         StringBuilder notTraded = new StringBuilder("\nNot traded assets:");
-        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getWhiteListedSortedCryptoCurrencies(assetService);
+        List<CryptoCurrency> whiteListedSortedCryptoCurrencies = CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager);
         Set<CryptoCurrency> assetsToRemove = new HashSet<>(whiteListedSortedCryptoCurrencies);
         whiteListedSortedCryptoCurrencies.forEach(e -> {
             String code = e.getCode();
@@ -100,7 +107,7 @@ public class AssetTradeActivityCheck {
                         .append(numTrades);
             }
 
-            if (!isWarmingUp(code) && !hasPaidBSQFee(code)) {
+            if (!isWarmingUp(code) /*&& !hasPaidBSQFee(code)*/) {
                 if (isInTradeStatMap) {
                     if (tradeAmount >= minTradeAmount || numTrades >= minNumOfTrades) {
                         assetsToRemove.remove(e);
@@ -137,67 +144,55 @@ public class AssetTradeActivityCheck {
         log.debug(result);
     }
 
-    private boolean hasPaidBSQFee(String code) {
-        return assetService.hasPaidBSQFee(code);
-    }
-
     private boolean isWarmingUp(String code) {
         Set<String> newlyAdded = new HashSet<>();
-
-        // v0.7.1 Jul 4 2018
-        newlyAdded.add("ZOC");
-        newlyAdded.add("AQUA");
-        newlyAdded.add("BTDX");
-        newlyAdded.add("BTCC");
-        newlyAdded.add("BTI");
-        newlyAdded.add("CRDS");
-        newlyAdded.add("CNMC");
-        newlyAdded.add("TARI");
-        newlyAdded.add("DAC");
-        newlyAdded.add("DRIP");
-        newlyAdded.add("FTO");
-        newlyAdded.add("GRFT");
-        newlyAdded.add("LIKE");
-        newlyAdded.add("LOBS");
-        newlyAdded.add("MAX");
-        newlyAdded.add("MEC");
-        newlyAdded.add("MCC");
-        newlyAdded.add("XMN");
-        newlyAdded.add("XMY");
-        newlyAdded.add("NANO");
-        newlyAdded.add("NPW");
-        newlyAdded.add("NIM");
-        newlyAdded.add("PIX");
-        newlyAdded.add("PXL");
-        newlyAdded.add("PRIV");
-        newlyAdded.add("TRIT");
-        newlyAdded.add("WAVI");
 
         // v0.8.0 Aug 22 2018
         // none added
 
-        // v0.9.0 (Date TBD)
+        // v0.9.0 (3.12.2018)
         newlyAdded.add("ACM");
-        newlyAdded.add("BTC2");
         newlyAdded.add("BLUR");
         newlyAdded.add("CHA");
         newlyAdded.add("CROAT");
         newlyAdded.add("DRGL");
         newlyAdded.add("ETHS");
-        newlyAdded.add("GBK");
         newlyAdded.add("KEK");
-        newlyAdded.add("LOKI");
+        newlyAdded.add("MASK");
         newlyAdded.add("MBGL");
+        newlyAdded.add("MOX");
+        newlyAdded.add("MUE");
         newlyAdded.add("NEOS");
         newlyAdded.add("PZDC");
         newlyAdded.add("QMCoin");
-        newlyAdded.add("QRL");
         newlyAdded.add("RADS");
         newlyAdded.add("RYO");
         newlyAdded.add("SUB1X");
         newlyAdded.add("MAI");
         newlyAdded.add("TRTL");
         newlyAdded.add("ZER");
+        newlyAdded.add("XRC");
+
+        // v0.9.2 (Jan 8 2019)
+        newlyAdded.add("AEON");
+        newlyAdded.add("BEAM");
+        newlyAdded.add("BTM");
+        newlyAdded.add("DXO");
+        newlyAdded.add("FRTY");
+        newlyAdded.add("GMCN");
+        newlyAdded.add("GRIN");
+        newlyAdded.add("ZEN");
+        newlyAdded.add("IDA");
+        newlyAdded.add("IRD");
+        newlyAdded.add("NOR");
+        newlyAdded.add("PINK");
+        newlyAdded.add("QBS");
+        newlyAdded.add("RMX");
+        newlyAdded.add("SCP");
+        newlyAdded.add("SPACE");
+        newlyAdded.add("UCC");
+        newlyAdded.add("WEB");
+        newlyAdded.add("WRKZ");
 
         return newlyAdded.contains(code);
     }

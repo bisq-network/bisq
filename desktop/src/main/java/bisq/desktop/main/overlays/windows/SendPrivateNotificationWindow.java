@@ -45,8 +45,8 @@ import javafx.geometry.Insets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.addLabelInputTextField;
-import static bisq.desktop.util.FormBuilder.addLabelTextArea;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificationWindow> {
     private static final Logger log = LoggerFactory.getLogger(SendPrivateNotificationWindow.class);
@@ -84,10 +84,9 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         if (headLine == null)
             headLine = Res.get("sendPrivateNotificationWindow.headline");
 
-        width = 800;
+        width = 868;
         createGridPane();
         addHeadLine();
-        addSeparator();
         addContent();
         applyStyles();
         display();
@@ -116,12 +115,12 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10).second;
+        InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
             keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
                 Res.get("sendPrivateNotificationWindow.privateNotification"),
                 Res.get("sendPrivateNotificationWindow.enterNotification"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;

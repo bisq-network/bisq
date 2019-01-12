@@ -28,4 +28,6 @@ desktop.ini
 */target/*
 *.class
 deploy
-releases/*
+*/releases/*
+/monitor/TorHiddenServiceStartupTimeTests/*
+/monitor/monitor-tor/*

@@ -39,8 +39,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-import javafx.geometry.Insets;
-
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.collections.ListChangeListener;
@@ -53,7 +51,6 @@ import java.util.Comparator;
 @FxmlView
 public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewModel> {
     private final BSFormatter formatter;
-    private final int gridRow = 0;
     private TableView<SpreadItem> tableView;
     private SortedList<SpreadItem> sortedList;
     private ListChangeListener<SpreadItem> itemListChangeListener;
@@ -72,8 +69,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     @Override
     public void initialize() {
         tableView = new TableView<>();
+
+        int gridRow = 0;
         GridPane.setRowIndex(tableView, gridRow);
-        GridPane.setMargin(tableView, new Insets(-10, -15, -10, -15));
         GridPane.setVgrow(tableView, Priority.ALWAYS);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(tableView);
@@ -96,9 +94,9 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         currencyColumn.setComparator(Comparator.comparing(o -> CurrencyUtil.getNameByCode(o.currencyCode)));
-        numberOfOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfOffers).compareTo(o2.numberOfOffers));
-        numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
-        numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
+        numberOfOffersColumn.setComparator(Comparator.comparingInt(o3 -> o3.numberOfOffers));
+        numberOfBuyOffersColumn.setComparator(Comparator.comparingInt(o3 -> o3.numberOfBuyOffers));
+        numberOfSellOffersColumn.setComparator(Comparator.comparingInt(o2 -> o2.numberOfSellOffers));
         totalAmountColumn.setComparator(Comparator.comparing(o -> o.totalAmount));
         spreadColumn.setComparator(Comparator.comparingDouble(o -> o.percentageValue));
 
@@ -139,19 +137,19 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<SpreadItem, SpreadItem> getCurrencyColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<SpreadItem, SpreadItem>(Res.get("shared.currency")) {
+        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<>(Res.get("shared.currency")) {
             {
                 setMinWidth(160);
             }
         };
+        column.getStyleClass().addAll("number-column", "first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -167,7 +165,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<>() {
             {
                 setMinWidth(100);
             }
@@ -175,12 +173,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -196,7 +193,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfBuyOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<>() {
             {
                 setMinWidth(100);
             }
@@ -204,12 +201,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -225,7 +221,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getNumberOfSellOffersColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<>() {
             {
                 setMinWidth(100);
             }
@@ -233,12 +229,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -254,7 +249,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getTotalAmountColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<SpreadItem, SpreadItem>() {
+        TableColumn<SpreadItem, SpreadItem> column = new TableColumn<>() {
             {
                 setMinWidth(140);
             }
@@ -262,12 +257,11 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         column.getStyleClass().add("number-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -285,20 +279,19 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     }
 
     private TableColumn<SpreadItem, SpreadItem> getSpreadColumn() {
-        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<SpreadItem, SpreadItem>(Res.get("market.spread.spreadColumn")) {
+        TableColumn<SpreadItem, SpreadItem> column = new AutoTooltipTableColumn<>(Res.get("market.spread.spreadColumn")) {
             {
                 setMinWidth(110);
             }
         };
-        column.getStyleClass().add("number-column");
+        column.getStyleClass().addAll("number-column", "last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
-                new Callback<TableColumn<SpreadItem, SpreadItem>, TableCell<SpreadItem,
-                        SpreadItem>>() {
+                new Callback<>() {
                     @Override
                     public TableCell<SpreadItem, SpreadItem> call(
                             TableColumn<SpreadItem, SpreadItem> column) {
-                        return new TableCell<SpreadItem, SpreadItem>() {
+                        return new TableCell<>() {
                             @Override
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);

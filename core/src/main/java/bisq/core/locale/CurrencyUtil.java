@@ -20,6 +20,13 @@ package bisq.core.locale;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
+
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
+import bisq.asset.Token;
+import bisq.asset.coins.BSQ;
 
 import bisq.common.app.DevEnv;
 
@@ -32,19 +39,11 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-
-
-
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-import bisq.asset.Token;
-import bisq.asset.coins.BSQ;
 
 @Slf4j
 public class CurrencyUtil {
@@ -53,7 +52,6 @@ public class CurrencyUtil {
         setBaseCurrencyCode(BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
     }
 
-    @Getter
     private static final AssetRegistry assetRegistry = new AssetRegistry();
 
     private static String baseCurrencyCode = "BTC";
@@ -110,46 +108,36 @@ public class CurrencyUtil {
     }
 
     private static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
-        List<CryptoCurrency> result = assetRegistry.stream()
+        return getSortedAssetStream()
+                .map(CurrencyUtil::assetToCryptoCurrency)
+                .collect(Collectors.toList());
+    }
+
+    public static Stream<Asset> getSortedAssetStream() {
+        return assetRegistry.stream()
                 .filter(CurrencyUtil::assetIsNotBaseCurrency)
                 .filter(asset -> isNotBsqOrBsqTradingActivated(asset, BisqEnvironment.getBaseCurrencyNetwork(), DevEnv.isDaoTradingActivated()))
                 .filter(asset -> assetMatchesNetworkIfMainnet(asset, BisqEnvironment.getBaseCurrencyNetwork()))
-                .map(CurrencyUtil::assetToCryptoCurrency)
-                .sorted(TradeCurrency::compareTo)
-                .collect(Collectors.toList());
-
-        // Util for printing all altcoins for adding to FAQ page
-       /* StringBuilder sb = new StringBuilder();
-        result.stream().forEach(e -> sb.append("<li>&#8220;")
-                .append(e.getCode())
-                .append("&#8221;, &#8220;")
-                .append(e.getName())
-                .append("&#8221;</li>")
-                .append("\n"));
-        log.info(sb.toString());*/
-        return result;
+                .sorted(Comparator.comparing(Asset::getName));
     }
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("XRC", "Bitcoin Rhodium"));
+
         if (DevEnv.isDaoTradingActivated())
             result.add(new CryptoCurrency("BSQ", "BSQ"));
-        if (!baseCurrencyCode.equals("BTC"))
-            result.add(new CryptoCurrency("BTC", "Bitcoin"));
-        if (!baseCurrencyCode.equals("DASH"))
-            result.add(new CryptoCurrency("DASH", "Dash"));
+
+        result.add(new CryptoCurrency("BEAM", "Beam"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
-        if (!baseCurrencyCode.equals("LTC"))
-            result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("GRIN", "Grin"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
-        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
-        result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
 
@@ -157,6 +145,20 @@ public class CurrencyUtil {
     }
 
     // At OKPay you can exchange internally those currencies
+    public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("USD"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("UAH"),
+                new FiatCurrency("KZT"),
+                new FiatCurrency("BRL")
+        ));
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
     public static List<TradeCurrency> getAllOKPayCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR"),
@@ -480,6 +482,12 @@ public class CurrencyUtil {
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 
+    public static Optional<Asset> findAsset(String tickerSymbol) {
+        return assetRegistry.stream()
+                .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
+                .findAny();
+    }
+
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
         return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
@@ -488,9 +496,10 @@ public class CurrencyUtil {
     }
 
     // Excludes all assets which got removed by DAO voting
-    public static List<CryptoCurrency> getWhiteListedSortedCryptoCurrencies(AssetService assetService) {
+    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService, FilterManager filterManager) {
         return getAllSortedCryptoCurrencies().stream()
-                .filter(e -> !assetService.isAssetRemoved(e.getCode()))
+                .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
+                .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
     }
 }

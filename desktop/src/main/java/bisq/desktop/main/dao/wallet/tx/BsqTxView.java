@@ -33,9 +33,9 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.IssuanceType;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -46,6 +46,8 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+
+import com.jfoenix.controls.JFXProgressBar;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -131,7 +133,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         addConfidenceColumn();
         addTxTypeColumn();
 
-        chainSyncIndicator = new ProgressBar();
+        chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             chainSyncIndicator.setProgress(-1);
@@ -151,7 +153,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         vBox.setSpacing(10);
         GridPane.setVgrow(vBox, Priority.ALWAYS);
         GridPane.setRowIndex(vBox, ++gridRow);
-        GridPane.setColumnSpan(vBox, 2);
+        GridPane.setColumnSpan(vBox, 3);
+        GridPane.setRowSpan(vBox, 2);
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
         vBox.getChildren().addAll(tableView, hBox);
         VBox.setVgrow(tableView, Priority.ALWAYS);
@@ -236,8 +239,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
             chainSyncIndicator.setVisible(!synced);
             chainSyncIndicator.setManaged(!synced);
-            if (bsqBlockChainHeight > 0)
-                chainSyncIndicator.setProgress((double) bsqBlockChainHeight / (double) bsqWalletChainHeight);
+            if (bsqBlockChainHeight != bsqWalletChainHeight)
+                chainSyncIndicator.setProgress(-1);
 
             if (synced) {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
@@ -279,6 +282,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
         column.setMaxWidth(column.getMinWidth() + 20);
+        column.getStyleClass().add("first-column");
 
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
@@ -489,6 +493,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(70);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {
@@ -585,6 +590,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                         case UNLOCK:
                                             awesomeIcon = AwesomeIcon.UNLOCK;
                                             style = "dao-tx-type-unlock-icon";
+                                            break;
+                                        case ASSET_LISTING_FEE:
+                                            awesomeIcon = AwesomeIcon.FILE_TEXT;
+                                            style = "dao-tx-type-proposal-fee-icon";
+                                            break;
+                                        case PROOF_OF_BURN:
+                                            awesomeIcon = AwesomeIcon.FILE_TEXT;
+                                            style = "dao-tx-type-proposal-fee-icon";
                                             break;
                                         default:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;

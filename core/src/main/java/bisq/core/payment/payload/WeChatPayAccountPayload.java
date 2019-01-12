@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -86,7 +88,7 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "WeChat Pay - Account no.: " + accountNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.no") + " " + accountNr;
     }
 
     @Override

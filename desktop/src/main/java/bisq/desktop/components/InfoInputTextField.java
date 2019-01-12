@@ -54,9 +54,13 @@ public class InfoInputTextField extends AnchorPane {
     private boolean hidePopover;
 
     public InfoInputTextField() {
+        this(0);
+    }
+
+    public InfoInputTextField(double inputLineExtension) {
         super();
 
-        inputTextField = new InputTextField();
+        inputTextField = new InputTextField(inputLineExtension);
 
         infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
         infoIcon.setLayoutY(3);
@@ -80,6 +84,7 @@ public class InfoInputTextField extends AnchorPane {
 
         getChildren().addAll(inputTextField, infoIcon, warningIcon, privacyIcon);
     }
+
 
     private void hideIcons() {
         infoIcon.setManaged(false);
@@ -139,6 +144,10 @@ public class InfoInputTextField extends AnchorPane {
 
     public String getText() {
         return text.get();
+    }
+
+    public final StringProperty textProperty() {
+        return text;
     }
 
 

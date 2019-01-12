@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -101,13 +103,13 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "FasterPayments - UK Sort code: " + sortCode + ", Account number: " + accountNr;
+        return Res.get(paymentMethodId) + " - UK Sort code: " + sortCode + ", " + Res.getWithCol("payment.accountNr") + " " + accountNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
-                "Account number: " + accountNr;
+                Res.getWithCol("payment.accountNr") + " " + accountNr;
     }
 
     @Override

@@ -17,8 +17,8 @@
 
 package bisq.core.dao.node.parser.exceptions;
 
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.RawBlock;
+import bisq.core.dao.node.full.RawBlock;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;

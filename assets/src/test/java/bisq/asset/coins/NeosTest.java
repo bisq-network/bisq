@@ -40,6 +40,7 @@ public class NeosTest extends AbstractAssetTest {
         assertInvalidAddress("17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhemqq");
         assertInvalidAddress("NScgetCW5bqDTVWFH3EYNMtTo5Rc#DxD6B");
         assertInvalidAddress("NeeAy35a0irpmTARHEXpP8uTmpPCcSD9Qn");
+        assertInvalidAddress("neeAy35aQirpmTARHEXpP8uTmpPCcSD9Qn");
         assertInvalidAddress("NScgetCWRcvDxD6B");
     }
 }

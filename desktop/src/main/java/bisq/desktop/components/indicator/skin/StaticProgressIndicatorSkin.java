@@ -160,7 +160,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
      * The colour of the progress segment.
      */
 
-    private final ObjectProperty<Paint> progressColor = new StyleableObjectProperty<Paint>(null) {
+    private final ObjectProperty<Paint> progressColor = new StyleableObjectProperty<>(null) {
 
         @Override
         public void set(Paint newProgressColor) {
@@ -352,8 +352,8 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
         // only update pie arc to nearest degree
         private int degProgress;
 
-        public DeterminateIndicator(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
-                                    Paint fillOverride) {
+        DeterminateIndicator(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
+                             Paint fillOverride) {
             this.control = control;
 
             getStyleClass().add("determinate-indicator");
@@ -430,10 +430,10 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
             // Position and size the circular background
             //double doneTextHeight = doneText.getLayoutBounds().getHeight();
             final Insets controlInsets = control.getInsets();
-            final double left = snapSize(controlInsets.getLeft());
-            final double right = snapSize(controlInsets.getRight());
-            final double top = snapSize(controlInsets.getTop());
-            final double bottom = snapSize(controlInsets.getBottom());
+            final double left = snapSizeX(controlInsets.getLeft());
+            final double right = snapSizeX(controlInsets.getRight());
+            final double top = snapSizeY(controlInsets.getTop());
+            final double bottom = snapSizeY(controlInsets.getBottom());
 
             /*
              ** use the min of width, or height, keep it a circle
@@ -443,16 +443,16 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
             final double radiusW = areaW / 2;
             final double radiusH = areaH / 2;
             final double radius = Math.round(Math.min(radiusW, radiusH)); // use round instead of floor
-            final double centerX = snapPosition(left + radiusW);
-            final double centerY = snapPosition(top + radius);
+            final double centerX = snapPositionX(left + radiusW);
+            final double centerY = snapPositionY(top + radius);
 
             // find radius that fits inside radius - insetsPadding
             final Insets indicatorInsets = indicator.getInsets();
-            final double iLeft = snapSize(indicatorInsets.getLeft());
-            final double iRight = snapSize(indicatorInsets.getRight());
-            final double iTop = snapSize(indicatorInsets.getTop());
-            final double iBottom = snapSize(indicatorInsets.getBottom());
-            final double progressRadius = snapSize(Math.min(Math.min(radius - iLeft, radius - iRight),
+            final double iLeft = snapSizeX(indicatorInsets.getLeft());
+            final double iRight = snapSizeX(indicatorInsets.getRight());
+            final double iTop = snapSizeY(indicatorInsets.getTop());
+            final double iBottom = snapSizeY(indicatorInsets.getBottom());
+            final double progressRadius = snapSizeX(Math.min(Math.min(radius - iLeft, radius - iRight),
                     Math.min(radius - iTop, radius - iBottom)));
 
             indicatorCircle.setRadius(radius);
@@ -466,11 +466,11 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
 
             // find radius that fits inside progressRadius - progressInsets
             final Insets progressInsets = progress.getInsets();
-            final double pLeft = snapSize(progressInsets.getLeft());
-            final double pRight = snapSize(progressInsets.getRight());
-            final double pTop = snapSize(progressInsets.getTop());
-            final double pBottom = snapSize(progressInsets.getBottom());
-            final double indicatorRadius = snapSize(Math.min(Math.min(progressRadius - pLeft,
+            final double pLeft = snapSizeX(progressInsets.getLeft());
+            final double pRight = snapSizeX(progressInsets.getRight());
+            final double pTop = snapSizeY(progressInsets.getTop());
+            final double pBottom = snapSizeY(progressInsets.getBottom());
+            final double indicatorRadius = snapSizeX(Math.min(Math.min(progressRadius - pLeft,
                     progressRadius - pRight), Math.min(progressRadius - pTop, progressRadius - pBottom)));
 
             // find size of spare box that fits inside indicator radius
@@ -486,23 +486,23 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
         @Override
         protected double computePrefWidth(double height) {
             final Insets controlInsets = control.getInsets();
-            final double left = snapSize(controlInsets.getLeft());
-            final double right = snapSize(controlInsets.getRight());
+            final double left = snapSizeX(controlInsets.getLeft());
+            final double right = snapSizeX(controlInsets.getRight());
             final Insets indicatorInsets = indicator.getInsets();
-            final double iLeft = snapSize(indicatorInsets.getLeft());
-            final double iRight = snapSize(indicatorInsets.getRight());
-            final double iTop = snapSize(indicatorInsets.getTop());
-            final double iBottom = snapSize(indicatorInsets.getBottom());
-            final double indicatorMax = snapSize(Math.max(Math.max(iLeft, iRight), Math.max(iTop, iBottom)));
+            final double iLeft = snapSizeX(indicatorInsets.getLeft());
+            final double iRight = snapSizeX(indicatorInsets.getRight());
+            final double iTop = snapSizeY(indicatorInsets.getTop());
+            final double iBottom = snapSizeY(indicatorInsets.getBottom());
+            final double indicatorMax = snapSizeX(Math.max(Math.max(iLeft, iRight), Math.max(iTop, iBottom)));
             final Insets progressInsets = progress.getInsets();
-            final double pLeft = snapSize(progressInsets.getLeft());
-            final double pRight = snapSize(progressInsets.getRight());
-            final double pTop = snapSize(progressInsets.getTop());
-            final double pBottom = snapSize(progressInsets.getBottom());
-            final double progressMax = snapSize(Math.max(Math.max(pLeft, pRight), Math.max(pTop, pBottom)));
+            final double pLeft = snapSizeX(progressInsets.getLeft());
+            final double pRight = snapSizeX(progressInsets.getRight());
+            final double pTop = snapSizeY(progressInsets.getTop());
+            final double pBottom = snapSizeY(progressInsets.getBottom());
+            final double progressMax = snapSizeX(Math.max(Math.max(pLeft, pRight), Math.max(pTop, pBottom)));
             final Insets tickInsets = tick.getInsets();
-            final double tLeft = snapSize(tickInsets.getLeft());
-            final double tRight = snapSize(tickInsets.getRight());
+            final double tLeft = snapSizeX(tickInsets.getLeft());
+            final double tRight = snapSizeX(tickInsets.getRight());
             final double indicatorWidth = indicatorMax + progressMax + tLeft + tRight + progressMax + indicatorMax;
             return left + indicatorWidth + /*Math.max(indicatorWidth, doneText.getLayoutBounds().getWidth()) + */right;
         }
@@ -510,23 +510,23 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
         @Override
         protected double computePrefHeight(double width) {
             final Insets controlInsets = control.getInsets();
-            final double top = snapSize(controlInsets.getTop());
-            final double bottom = snapSize(controlInsets.getBottom());
+            final double top = snapSizeY(controlInsets.getTop());
+            final double bottom = snapSizeY(controlInsets.getBottom());
             final Insets indicatorInsets = indicator.getInsets();
-            final double iLeft = snapSize(indicatorInsets.getLeft());
-            final double iRight = snapSize(indicatorInsets.getRight());
-            final double iTop = snapSize(indicatorInsets.getTop());
-            final double iBottom = snapSize(indicatorInsets.getBottom());
-            final double indicatorMax = snapSize(Math.max(Math.max(iLeft, iRight), Math.max(iTop, iBottom)));
+            final double iLeft = snapSizeX(indicatorInsets.getLeft());
+            final double iRight = snapSizeX(indicatorInsets.getRight());
+            final double iTop = snapSizeY(indicatorInsets.getTop());
+            final double iBottom = snapSizeY(indicatorInsets.getBottom());
+            final double indicatorMax = snapSizeX(Math.max(Math.max(iLeft, iRight), Math.max(iTop, iBottom)));
             final Insets progressInsets = progress.getInsets();
-            final double pLeft = snapSize(progressInsets.getLeft());
-            final double pRight = snapSize(progressInsets.getRight());
-            final double pTop = snapSize(progressInsets.getTop());
-            final double pBottom = snapSize(progressInsets.getBottom());
-            final double progressMax = snapSize(Math.max(Math.max(pLeft, pRight), Math.max(pTop, pBottom)));
+            final double pLeft = snapSizeX(progressInsets.getLeft());
+            final double pRight = snapSizeX(progressInsets.getRight());
+            final double pTop = snapSizeY(progressInsets.getTop());
+            final double pBottom = snapSizeY(progressInsets.getBottom());
+            final double progressMax = snapSizeX(Math.max(Math.max(pLeft, pRight), Math.max(pTop, pBottom)));
             final Insets tickInsets = tick.getInsets();
-            final double tTop = snapSize(tickInsets.getTop());
-            final double tBottom = snapSize(tickInsets.getBottom());
+            final double tTop = snapSizeY(tickInsets.getTop());
+            final double tBottom = snapSizeY(tickInsets.getBottom());
             final double indicatorHeight = indicatorMax + progressMax + tTop + tBottom + progressMax + indicatorMax;
             return top + indicatorHeight /*+ textGap  + doneText.getLayoutBounds().getHeight()*/ + bottom;
         }
@@ -558,15 +558,13 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
         private final IndicatorPaths pathsG;
 
         private final List<Double> opacities = new ArrayList<>();
-        private boolean spinEnabled = false;
 
         private Paint fillOverride = null;
 
-        public IndeterminateSpinner(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
-                                    boolean spinEnabled, Paint fillOverride) {
+        IndeterminateSpinner(TxConfidenceIndicator control, StaticProgressIndicatorSkin s,
+                             boolean spinEnabled, Paint fillOverride) {
             this.control = control;
             this.skin = s;
-            this.spinEnabled = spinEnabled;
             this.fillOverride = fillOverride;
 
             setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
@@ -578,13 +576,12 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
             rebuild();
         }
 
-        public void setFillOverride(Paint fillOverride) {
+        void setFillOverride(Paint fillOverride) {
             this.fillOverride = fillOverride;
             rebuild();
         }
 
-        public void setSpinEnabled(boolean spinEnabled) {
-            this.spinEnabled = spinEnabled;
+        void setSpinEnabled(boolean spinEnabled) {
         }
 
         @Override
@@ -694,10 +691,10 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
      */
     @SuppressWarnings({"deprecation", "unchecked", "ConstantConditions"})
     private static class StyleableProperties {
-        public static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+        static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         private static final CssMetaData<TxConfidenceIndicator, Paint> PROGRESS_COLOR =
-                new CssMetaData<TxConfidenceIndicator, Paint>(
+                new CssMetaData<>(
                         "-fx-progress-color", PaintConverter.getInstance(), null) {
 
                     @Override
@@ -716,7 +713,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
 
 
         private static final CssMetaData<TxConfidenceIndicator, Number> INDETERMINATE_SEGMENT_COUNT =
-                new CssMetaData<TxConfidenceIndicator, Number>(
+                new CssMetaData<>(
                         "-fx-indeterminate-segment-count", SizeConverter.getInstance(), 8) {
 
                     @Override
@@ -739,7 +736,7 @@ public class StaticProgressIndicatorSkin extends SkinBase<TxConfidenceIndicator>
                 };
 
         private static final CssMetaData<TxConfidenceIndicator, Boolean> SPIN_ENABLED = new
-                CssMetaData<TxConfidenceIndicator, Boolean>("-fx-spin-enabled",
+                CssMetaData<>("-fx-spin-enabled",
                         BooleanConverter.getInstance(),
                         Boolean.FALSE) {
 

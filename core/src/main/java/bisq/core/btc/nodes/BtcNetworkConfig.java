@@ -17,6 +17,7 @@
 
 package bisq.core.btc.nodes;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletConfig;
 
 import bisq.network.Socks5MultiDiscovery;
@@ -67,7 +68,7 @@ public class BtcNetworkConfig {
             }
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             delegate.setDiscovery(new Socks5MultiDiscovery(proxy, parameters, socks5DiscoverMode));
-        } else {
+        } else if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet()) {
             log.warn("You don't use tor and use the public Bitcoin network and are exposed to privacy issues " +
                     "caused by the broken bloom filters. See https://bisq.network/blog/privacy-in-bitsquare/ " +
                     "for more info. It is recommended to use Tor and the provided nodes.");

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
@@ -31,6 +32,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
@@ -43,8 +46,9 @@ import javafx.stage.Window;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.GridPane;
 
 import javafx.geometry.Insets;
 
@@ -84,7 +88,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         this.trade = trade;
 
         rowIndex = -1;
-        width = 850;
+        width = 918;
         createGridPane();
         addContent();
         display();
@@ -120,27 +124,27 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String btcDirectionInfo;
         String toReceive = " " + Res.get("shared.toReceive");
         String toSpend = " " + Res.get("shared.toSpend");
-        String offerType = Res.getWithCol("shared.offerType");
+        String offerType = Res.get("shared.offerType");
         if (tradeManager.isBuyer(offer)) {
-            addLabelTextField(gridPane, rowIndex, offerType,
-                    formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addConfirmationLabelLabel(gridPane, rowIndex, offerType,
+                    formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
             fiatDirectionInfo = toSpend;
             btcDirectionInfo = toReceive;
         } else {
-            addLabelTextField(gridPane, rowIndex, offerType,
-                    formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addConfirmationLabelLabel(gridPane, rowIndex, offerType,
+                    formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
             fiatDirectionInfo = toReceive;
             btcDirectionInfo = toSpend;
         }
 
-        addLabelTextField(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
                 formatter.formatCoinWithCode(trade.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex,
+        addConfirmationLabelLabel(gridPane, ++rowIndex,
                 formatter.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
                 formatter.formatVolumeWithCode(trade.getTradeVolume()));
-        addLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 formatter.formatPrice(trade.getTradePrice()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
                 Res.get(offer.getPaymentMethod().getId()));
 
         // second group
@@ -184,9 +188,9 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.tradeId"),
-                trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeDate"),
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.tradeId"),
+                trade.getId(), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeDate"),
                 formatter.formatDateTime(trade.getDate()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
@@ -195,36 +199,36 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 Res.getWithColAndCap("shared.seller") +
                 " " +
                 formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), securityDeposit);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
 
         String txFee = Res.get("shared.makerTxFee", formatter.formatCoinWithCode(offer.getTxFee())) +
                 " / " +
                 Res.get("shared.takerTxFee", formatter.formatCoinWithCode(offer.getTxFee().multiply(3L)));
-        addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
 
         if (trade.getArbitratorNodeAddress() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
                     trade.getArbitratorNodeAddress().getFullAddress());
 
         if (trade.getTradingPeerNodeAddress() != null)
-            addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
                     trade.getTradingPeerNodeAddress().getFullAddress());
 
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                         buyerPaymentAccountPayload.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountPayload != null) {
-                TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
                         sellerPaymentAccountPayload.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
-                addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
+                addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
                         Res.get(contract.getPaymentMethodId()));
         }
 
@@ -233,7 +237,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
 
         if (trade.getDepositTx() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"),
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"),
                     trade.getDepositTx().getHashAsString());
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"),
@@ -243,11 +247,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
-            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
+            Button viewContractButton = addConfirmationLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                     Res.get("shared.viewContractAsJson"), 0).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
-                TextArea textArea = new TextArea();
+                TextArea textArea = new BisqTextArea();
                 textArea.setText(trade.getContractAsJson());
                 String contractAsJson = trade.getContractAsJson();
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
@@ -268,17 +272,28 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 viewContractStage.initOwner(rootScene.getWindow());
                 viewContractStage.initModality(Modality.NONE);
                 viewContractStage.initStyle(StageStyle.UTILITY);
+                viewContractStage.setOpacity(0);
                 viewContractStage.show();
 
                 Window window = rootScene.getWindow();
                 double titleBarHeight = window.getHeight() - rootScene.getHeight();
                 viewContractStage.setX(Math.round(window.getX() + (owner.getWidth() - viewContractStage.getWidth()) / 2) + 200);
                 viewContractStage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - viewContractStage.getHeight()) / 2) + 50);
+                // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
+                // and after a short moment in the correct position
+                UserThread.execute(() -> viewContractStage.setOpacity(1));
+
+                viewContractScene.setOnKeyPressed(ev -> {
+                    if (ev.getCode() == KeyCode.ESCAPE) {
+                        ev.consume();
+                        viewContractStage.hide();
+                    }
+                });
             });
         }
 
         if (trade.hasFailed()) {
-            textArea = addLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "").second;
+            textArea = addConfirmationLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "", 0).second;
             textArea.setText(trade.getErrorMessage());
             textArea.setEditable(false);
 
@@ -292,11 +307,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             textArea.scrollTopProperty().addListener(changeListener);
             textArea.setScrollTop(30);
 
-            TextField state = addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState")).second;
-            state.setText(trade.getState().getPhase().name());
+            addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getState().getPhase().name());
         }
 
         Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
+        GridPane.setColumnSpan(closeButton, 2);
         //TODO app wide focus
         //closeButton.requestFocus();
         closeButton.setOnAction(e -> {

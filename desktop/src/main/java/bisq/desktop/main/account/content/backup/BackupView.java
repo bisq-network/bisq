@@ -19,9 +19,7 @@ package bisq.desktop.main.account.content.backup;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.AppOptionKeys;
@@ -38,7 +36,6 @@ import javax.inject.Inject;
 import javafx.stage.DirectoryChooser;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -54,6 +51,11 @@ import java.io.IOException;
 import java.util.Date;
 
 import javax.annotation.Nullable;
+
+import static bisq.desktop.util.FormBuilder.add2Buttons;
+import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
@@ -81,9 +83,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        FormBuilder.addTitledGroupBg(root, gridRow, 1, Res.get("account.backup.title"));
-        Tuple2<Label, InputTextField> tuple = FormBuilder.addLabelInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
-        backUpLocationTextField = tuple.second;
+        addTitledGroupBg(root, gridRow, 2, Res.get("account.backup.title"));
+        backUpLocationTextField = addInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
         String backupDirectory = preferences.getBackupDirectory();
         if (backupDirectory != null)
             backUpLocationTextField.setText(backupDirectory);
@@ -93,19 +94,19 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                 applyBackupDirectory(backUpLocationTextField.getText());
         };
 
-        Tuple2<Button, Button> tuple2 = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow,
                 Res.get("account.backup.selectLocation"), Res.get("account.backup.backupNow"));
         selectBackupDir = tuple2.first;
         backupNow = tuple2.second;
         updateButtons();
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
-        openDataDirButton = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
-                Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        openDataDirButton.setDefaultButton(false);
-        openLogsButton = FormBuilder.addLabelButton(root, ++gridRow, Res.getWithCol("account.backup.logFile"),
-                Res.get("account.backup.openLogFile")).second;
-        openLogsButton.setDefaultButton(false);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+
+        final Tuple2<Button, Button> applicationDataDirTuple2 = add2Buttons(root, gridRow, Res.get("account.backup.openDirectory"),
+                Res.get("account.backup.openLogFile"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, false);
+
+        openDataDirButton = applicationDataDirTuple2.first;
+        openLogsButton = applicationDataDirTuple2.second;
     }
 
     @Override
@@ -130,24 +131,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             }
 
         });
-        openDataDirButton.setOnAction(event -> {
-            try {
-                Utilities.openFile(dataDir);
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                showWrongPathWarningAndReset(e);
-            }
-        });
-        openLogsButton.setOnAction(event -> {
-            try {
-                Utilities.openFile(logFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                showWrongPathWarningAndReset(e);
-            }
-        });
+        openFileOrShowWarning(openDataDirButton, dataDir);
+        openFileOrShowWarning(openLogsButton, logFile);
 
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
@@ -162,6 +147,18 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     log.error(e.getMessage());
                     showWrongPathWarningAndReset(e);
                 }
+            }
+        });
+    }
+
+    private void openFileOrShowWarning(Button button, File dataDir) {
+        button.setOnAction(event -> {
+            try {
+                Utilities.openFile(dataDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                showWrongPathWarningAndReset(e);
             }
         });
     }

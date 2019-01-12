@@ -17,13 +17,13 @@
 
 package bisq.desktop.components;
 
-import javafx.scene.control.RadioButton;
+import com.jfoenix.controls.JFXRadioButton;
+
 import javafx.scene.control.Skin;
-import javafx.scene.control.skin.RadioButtonSkin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipRadioButton extends RadioButton {
+public class AutoTooltipRadioButton extends JFXRadioButton {
 
     public AutoTooltipRadioButton() {
         super();
@@ -38,8 +38,8 @@ public class AutoTooltipRadioButton extends RadioButton {
         return new AutoTooltipRadioButtonSkin(this);
     }
 
-    private class AutoTooltipRadioButtonSkin extends RadioButtonSkin {
-        public AutoTooltipRadioButtonSkin(RadioButton radioButton) {
+    private class AutoTooltipRadioButtonSkin extends JFXRadioButtonSkinBisqStyle {
+        public AutoTooltipRadioButtonSkin(JFXRadioButton radioButton) {
             super(radioButton);
         }
 

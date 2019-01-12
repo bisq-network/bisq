@@ -321,7 +321,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                         .onClose(privateNotificationManager::removePrivateNotification)
                         .useIUnderstandButton()
                         .show());
-        bisqSetup.setDaoSetupErrorHandler(errorMessage -> new Popup<>().error(errorMessage).show());
+        bisqSetup.setDaoErrorMessageHandler(errorMessage -> new Popup<>().error(errorMessage).show());
+        bisqSetup.setDaoWarnMessageHandler(warnMessage -> new Popup<>().warning(warnMessage).show());
         bisqSetup.setDisplaySecurityRecommendationHandler(key ->
                 new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))

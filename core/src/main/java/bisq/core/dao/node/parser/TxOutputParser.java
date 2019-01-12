@@ -17,12 +17,11 @@
 
 package bisq.core.dao.node.parser;
 
-import bisq.core.dao.bonding.BondingConsensus;
+import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -97,28 +96,38 @@ public class TxOutputParser {
         // If we have a LOCKUP opReturn output we save the lockTime to apply it later to the LOCKUP output.
         // We keep that data in that other output as it makes parsing of the UNLOCK tx easier.
         optionalOpReturnType.filter(opReturnType -> opReturnType == OpReturnType.LOCKUP)
-                .ifPresent(opReturnType -> lockTime = BondingConsensus.getLockTime(opReturnData));
+                .ifPresent(opReturnType -> lockTime = BondConsensus.getLockTime(opReturnData));
     }
 
     void processTxOutput(TempTxOutput tempTxOutput) {
-        // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
-        // another output index is invalid.
-        if (tempTxOutput.isOpReturnOutput()) {
-            tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
-            return;
-        }
+        if (!daoStateService.isConfiscated(tempTxOutput.getKey())) {
+            // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
+            // another output index is invalid.
+            if (tempTxOutput.isOpReturnOutput()) {
+                tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
+                return;
+            }
 
-        long txOutputValue = tempTxOutput.getValue();
-        int index = tempTxOutput.getIndex();
-        if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
-            // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
-            // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
-            // output to not be BSQ output at all
-            handleUnlockBondTx(tempTxOutput);
-        } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
-            handleBsqOutput(tempTxOutput, index, txOutputValue);
+            long txOutputValue = tempTxOutput.getValue();
+            int index = tempTxOutput.getIndex();
+            if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
+                // We need to handle UNLOCK transactions separately as they don't follow the pattern on spending BSQ
+                // The LOCKUP BSQ is burnt unless the output exactly matches the input, that would cause the
+                // output to not be BSQ output at all
+                handleUnlockBondTx(tempTxOutput);
+            } else if (isBtcOutputOfBurnFeeTx(tempTxOutput)) {
+                // In case we have the opReturn for a burn fee tx all outputs after 1st output are considered BTC
+                handleBtcOutput(tempTxOutput, index);
+            } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
+                handleBsqOutput(tempTxOutput, index, txOutputValue);
+            } else {
+                handleBtcOutput(tempTxOutput, index);
+            }
         } else {
-            handleBtcOutput(tempTxOutput, index);
+            log.warn("TxOutput {} is confiscated ", tempTxOutput.getKey());
+            // We only burn that output
+            availableInputValue -= tempTxOutput.getValue();
+            tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         }
     }
 
@@ -162,6 +171,17 @@ public class TxOutputParser {
         utxoCandidates.add(txOutput);
 
         bsqOutputFound = true;
+    }
+
+    private boolean isBtcOutputOfBurnFeeTx(TempTxOutput tempTxOutput) {
+        // If we get a asset listing or proof of burn tx we have only 1 BSQ output and if the
+        // burned amount is larger than the miner fee we might have a BTC output for receiving the burned funds.
+        // If the burned funds are less than the miner fee a BTC input is used for miner fee and a BTC change output for
+        // the remaining funds. In any case only the first output is BSQ all the others are BTC.
+        return optionalOpReturnType.isPresent() &&
+                (optionalOpReturnType.get() == OpReturnType.ASSET_LISTING_FEE ||
+                        optionalOpReturnType.get() == OpReturnType.PROOF_OF_BURN) &&
+                tempTxOutput.getIndex() >= 1;
     }
 
     private void handleBsqOutput(TempTxOutput txOutput, int index, long txOutputValue) {
@@ -234,6 +254,10 @@ public class TxOutputParser {
                 return Optional.of(OpReturnType.VOTE_REVEAL);
             case LOCKUP_OP_RETURN_OUTPUT:
                 return Optional.of(OpReturnType.LOCKUP);
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+                return Optional.of(OpReturnType.ASSET_LISTING_FEE);
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
+                return Optional.of(OpReturnType.PROOF_OF_BURN);
             default:
                 return Optional.empty();
         }

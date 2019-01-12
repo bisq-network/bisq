@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -109,7 +111,9 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Face to Face - Contact: " + contact + ", city: " + city + ", additional information: " + extraInfo;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.f2f.contact") + " " + contact + ", " +
+                Res.getWithCol("payment.f2f.city") + " " + city +
+                ", " + Res.getWithCol("payment.f2f.extra") + " " + extraInfo;
     }
 
 
@@ -117,7 +121,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         // We don't show here more as the makers extra data are the relevant for the trade. City has to be anyway the
         // same for maker and taker.
-        return "Contact details: " + contact;
+        return Res.getWithCol("payment.f2f.contact") + " " + contact;
     }
 
     @Override

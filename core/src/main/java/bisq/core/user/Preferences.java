@@ -631,6 +631,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setTakeOfferSelectedPaymentAccountId(String value) {
+        prefPayload.setTakeOfferSelectedPaymentAccountId(value);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -687,9 +692,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
-        // This check includes localhost, so we also override useTorForBitcoinJ
-        if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest()
+        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet.
+        // At testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
             return false;
         else
@@ -709,6 +714,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
     }
 
+    //TODO remove and use isPayFeeInBtc instead
     public boolean getPayFeeInBtc() {
         return prefPayload.isPayFeeInBtc();
     }
@@ -838,5 +844,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcUser(String value);
 
         void setRpcPw(String value);
+
+        void setTakeOfferSelectedPaymentAccountId(String value);
     }
 }

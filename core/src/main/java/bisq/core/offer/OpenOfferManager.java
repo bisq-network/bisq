@@ -177,11 +177,13 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void cleanUpAddressEntries() {
-        Set<String> openTradesIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
+        Set<String> openOffersIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
         btcWalletService.getAddressEntriesForOpenOffer().stream()
-                .filter(e -> !openTradesIdSet.contains(e.getOfferId()))
+                .filter(e -> !openOffersIdSet.contains(e.getOfferId()))
                 .forEach(e -> {
-                    log.warn("We found an outdated addressEntry for openOffer {}", e.getOfferId());
+                    log.warn("We found an outdated addressEntry for openOffer {} (openOffers does not contain that " +
+                                    "offer), offers.size={}",
+                            e.getOfferId(), openOffers.size());
                     btcWalletService.resetAddressEntriesForOpenOffer(e.getOfferId());
                 });
     }
@@ -483,7 +485,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOffer.setState(OpenOffer.State.CANCELED);
         openOffers.remove(openOffer);
         closedTradableManager.add(openOffer);
-        log.debug("removeOpenOffer, offerId={}", offer.getId());
+        log.info("onRemoved offerId={}", offer.getId());
         btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
         resultHandler.handleResult();
     }
@@ -563,15 +565,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
                 if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
-                    final Offer offer = openOffer.getOffer();
+                    Offer offer = openOffer.getOffer();
                     if (preferences.getIgnoreTradersList().stream().noneMatch(hostName -> hostName.equals(peer.getHostName()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
-                        arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
-                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
-
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
+                            arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                            openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
+
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
                             // in trade price between the peers. Also here poor connectivity might cause market price API connection
                             // losses and therefore an outdated market price.

@@ -47,7 +47,7 @@ public class ColoredDecimalPlacesWithZerosText extends HBox {
             Tuple2<Label, Label> numbers = getSplittedNumberNodes(number, numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
         }
-        setAlignment(Pos.CENTER);
+        setAlignment(Pos.CENTER_LEFT);
     }
 
     private Tuple2<Label, Label> getSplittedNumberNodes(String number, int numberOfZeros) {

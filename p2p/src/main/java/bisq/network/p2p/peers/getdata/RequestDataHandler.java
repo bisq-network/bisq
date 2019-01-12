@@ -44,7 +44,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -281,8 +280,7 @@ class RequestDataHandler implements MessageListener {
                         // We need to take care that the update period between releases stay short as with the current
                         // situation before 0.9 release we receive 4000 objects with a newly installed client, which
                         // causes the application to stay stuck for quite a while at startup.
-                        log.info("Start processing {} delayedItems.", processDelayedItems.size());
-                        long startTs = new Date().getTime();
+                        log.info("Start processing {} items.", processDelayedItems.size());
                         processDelayedItems.forEach(item -> {
                             if (item instanceof ProtectedStorageEntry)
                                 dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null,
@@ -291,7 +289,6 @@ class RequestDataHandler implements MessageListener {
                                 dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender,
                                         false, false, false, false);
                         });
-                        log.info("Processing delayedItems completed after {} sec.", (new Date().getTime() - startTs) / 1000D);
 
                         cleanup();
                         listener.onComplete();

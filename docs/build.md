@@ -1,6 +1,6 @@
 # Building Bisq
 
-_You will need [OpenJDK 10](https://jdk.java.net/10/) installed and set up as the default system JDK to complete the following instructions._
+_You will need [OpenJDK 10](https://jdk.java.net/10/) installed and configured as the default system JDK to complete the following instructions. See the `scripts` directory for scripts that can be used to install and configure the JDK automatically._
 
 
 ## Clone
@@ -15,7 +15,7 @@ You do _not_ need to install Gradle to complete the following command. The `grad
 
     ./gradlew build
 
-If on Windows use the `gradlew.bat` script instead.
+If on Windows run `gradlew.bat build` instead.
 
 
 ## Run

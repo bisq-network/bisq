@@ -473,7 +473,8 @@ public class TradeManager implements PersistedDataHost {
         return new OfferAvailabilityModel(
                 offer,
                 keyRing.getPubKeyRing(),
-                p2PService);
+                p2PService,
+                user);
     }
 
 

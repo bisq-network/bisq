@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -94,13 +96,13 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "Zelle (ClearXchange) - Holder name: " + holderName + ", Email or mobile no.: " + emailOrMobileNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.getWithCol("payment.emailOrMobile") + " " + emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "Holder name: " + holderName + "\n" +
-                "Email or mobile no.: " + emailOrMobileNr;
+        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+                Res.getWithCol("payment.emailOrMobile") + " " + emailOrMobileNr;
     }
 
     @Override

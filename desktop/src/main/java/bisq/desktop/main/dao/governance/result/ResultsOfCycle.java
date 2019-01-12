@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.dao.governance.result;
 
-import bisq.core.dao.governance.proposal.Proposal;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.Cycle;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import java.util.List;
 

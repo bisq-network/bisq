@@ -17,20 +17,18 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.node.full.RawTx;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.OpReturnType;
-import bisq.core.dao.state.blockchain.RawTx;
-import bisq.core.dao.state.blockchain.TempTx;
-import bisq.core.dao.state.blockchain.TempTxOutput;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.period.DaoPhase;
-import bisq.core.dao.state.period.PeriodService;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import org.bitcoinj.core.Coin;
 
@@ -143,8 +141,8 @@ public class TxParser {
         boolean bsqOutputFound = txOutputParser.isBsqOutputFound();
 
         long burntBsq = remainingInputValue + burntBondValue;
-        boolean hasBurntBSQ = burntBsq > 0;
-        if (hasBurntBSQ)
+        boolean hasBurntBsq = burntBsq > 0;
+        if (hasBurntBsq)
             tempTx.setBurntFee(burntBsq);
 
 
@@ -154,14 +152,14 @@ public class TxParser {
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
 
-        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBSQ, unLockInputValid);
+        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
         tempTx.setTxType(txType);
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
             txOutputParser.invalidateUTXOCandidates();
 
-            if (hasBurntBSQ) {
+            if (hasBurntBsq) {
                 log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
                         burntBsq / 100D, tempTx);
             }
@@ -202,9 +200,12 @@ public class TxParser {
                     processBlindVote(blockHeight, tempTx, bsqFee);
                     break;
                 case VOTE_REVEAL:
-                    processVoteReveal(blockHeight, tempTx);
+                    // We do not check phase or cycle as a late voteReveal tx is considered a valid BSQ tx.
+                    // The vote result though will ignore such votes.
                     break;
                 case LOCKUP:
+                case ASSET_LISTING_FEE:
+                case PROOF_OF_BURN:
                     // do nothing
                     break;
             }
@@ -230,14 +231,14 @@ public class TxParser {
     }
 
     private void processProposal(int blockHeight, TempTx tempTx, long bsqFee) {
-        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
+        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(tempTx.getId(), blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         if (!isFeeAndPhaseValid) {
             tempTx.setTxType(TxType.INVALID);
         }
     }
 
     private void processIssuance(int blockHeight, TempTx tempTx, long bsqFee) {
-        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
+        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(tempTx.getId(), blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         Optional<TempTxOutput> optionalIssuanceCandidate = txOutputParser.getOptionalIssuanceCandidate();
         if (isFeeAndPhaseValid) {
             if (optionalIssuanceCandidate.isPresent()) {
@@ -258,7 +259,7 @@ public class TxParser {
     }
 
     private void processBlindVote(int blockHeight, TempTx tempTx, long bsqFee) {
-        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(blockHeight, bsqFee, DaoPhase.Phase.BLIND_VOTE, Param.BLIND_VOTE_FEE);
+        boolean isFeeAndPhaseValid = isFeeAndPhaseValid(tempTx.getId(), blockHeight, bsqFee, DaoPhase.Phase.BLIND_VOTE, Param.BLIND_VOTE_FEE);
         if (!isFeeAndPhaseValid) {
             tempTx.setTxType(TxType.INVALID);
             txOutputParser.getOptionalBlindVoteLockStakeOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
@@ -266,22 +267,6 @@ public class TxParser {
             // valid BSQ tx.
         }
     }
-
-    private void processVoteReveal(int blockHeight, TempTx tempTx) {
-        boolean isPhaseValid = isPhaseValid(blockHeight, DaoPhase.Phase.VOTE_REVEAL);
-        if (!isPhaseValid) {
-            tempTx.setTxType(TxType.INVALID);
-        }
-
-        // We must not use an `if else` here!
-        if (!isPhaseValid || !txInputParser.isVoteRevealInputValid()) {
-            txOutputParser.getOptionalVoteRevealUnlockStakeOutput().ifPresent(
-                    tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
-            // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
-            // valid BSQ tx.
-        }
-    }
-
 
     /**
      * Whether the BSQ fee and phase is valid for a transaction.
@@ -292,27 +277,19 @@ public class TxParser {
      * @param param       The parameter for the fee, e.g {@code Param.PROPOSAL_FEE}.
      * @return True if the fee and phase was valid, false otherwise.
      */
-    private boolean isFeeAndPhaseValid(int blockHeight, long bsqFee, DaoPhase.Phase phase, Param param) {
+    private boolean isFeeAndPhaseValid(String txId, int blockHeight, long bsqFee, DaoPhase.Phase phase, Param param) {
         // The leftover BSQ balance from the inputs is the BSQ fee in case we are in an OP_RETURN output
 
-        if (!isPhaseValid(blockHeight, phase)) {
+        if (!periodService.isInPhase(blockHeight, phase)) {
+            log.warn("Tx with ID {} is not in required phase ({}). blockHeight={}", txId, phase, blockHeight);
             return false;
         }
-
-        long paramValue = daoStateService.getParamValue(param, blockHeight);
+        long paramValue = daoStateService.getParamValueAsCoin(param, blockHeight).value;
         boolean isFeeCorrect = bsqFee == paramValue;
         if (!isFeeCorrect) {
             log.warn("Invalid fee. used fee={}, required fee={}", bsqFee, paramValue);
         }
         return isFeeCorrect;
-    }
-
-    private boolean isPhaseValid(int blockHeight, DaoPhase.Phase phase) {
-        boolean isInPhase = periodService.isInPhase(blockHeight, phase);
-        if (!isInPhase) {
-            log.warn("Not in {} phase. blockHeight={}", phase, blockHeight);
-        }
-        return isInPhase;
     }
 
 
@@ -425,6 +402,10 @@ public class TxParser {
                 return TxType.VOTE_REVEAL;
             case LOCKUP:
                 return TxType.LOCKUP;
+            case ASSET_LISTING_FEE:
+                return TxType.ASSET_LISTING_FEE;
+            case PROOF_OF_BURN:
+                return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
                 return TxType.INVALID;

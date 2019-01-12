@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
@@ -110,6 +112,6 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return "National Bank transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 }

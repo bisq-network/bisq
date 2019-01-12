@@ -30,16 +30,16 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.ballot.Ballot;
-import bisq.core.dao.governance.proposal.Proposal;
+import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.period.CycleService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -224,7 +224,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (selectedProposalListItem != null) {
 
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getBallots().stream()
+            Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
@@ -329,10 +329,19 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getBallots()
-                .stream()
+        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
+                .filter(evaluatedProposal -> {
+                    boolean containsKey = ballotByProposalTxIdMap.containsKey(evaluatedProposal.getProposalTxId());
+
+                    // We saw in testing that the ballot was not there for an evaluatedProposal. We could not reproduce that
+                    // so far but to avoid a nullPointer we filter out such cases.
+                    if (!containsKey)
+                        log.warn("ballotByProposalTxIdMap does not contain expected proposalTxId()={}", evaluatedProposal.getProposalTxId());
+
+                    return containsKey;
+                })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))
@@ -347,7 +356,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -418,6 +427,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         TableColumn<CycleListItem, CycleListItem> column;
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.cycle"));
         column.setMinWidth(160);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -512,6 +522,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.issuance"));
         column.setMinWidth(70);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -545,6 +556,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setMinWidth(190);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -615,7 +627,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
                                     field = new HyperlinkWithIcon(proposal.getLink(), AwesomeIcon.EXTERNAL_LINK);
-                                    field.setOnAction(event -> GUIUtil.openWebPage(Res.get("shared.openURL", proposal.getLink())));
+                                    field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
                                 } else {
@@ -689,21 +701,14 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
                 return new TableCell<>() {
-                    Label myVoteIcon;
-
                     @Override
                     public void updateItem(final ProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            if (myVoteIcon == null) {
-                                myVoteIcon = item.getMyVoteIcon();
-                                setGraphic(myVoteIcon);
-                            }
+                            setGraphic(item.getMyVoteIcon());
                         } else {
                             setGraphic(null);
-                            if (myVoteIcon != null)
-                                myVoteIcon = null;
                         }
                     }
                 };
@@ -715,27 +720,24 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.proposals.table.header.result"));
         column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
             public TableCell<ProposalListItem, ProposalListItem> call(TableColumn<ProposalListItem,
                     ProposalListItem> column) {
                 return new TableCell<>() {
-                    Label icon;
-
                     @Override
                     public void updateItem(final ProposalListItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            icon = new Label();
+                            Label icon = new Label();
                             AwesomeDude.setIcon(icon, item.getIcon());
                             icon.getStyleClass().add(item.getColorStyleClass());
                             setGraphic(icon);
                         } else {
                             setGraphic(null);
-                            if (icon != null)
-                                icon = null;
                         }
                     }
                 };
@@ -756,6 +758,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column.setSortable(false);
         column.setMinWidth(50);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -832,6 +835,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stake"));
         column.setSortable(false);
         column.setMinWidth(100);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {

@@ -37,7 +37,6 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.BisqEnvironment;
@@ -53,37 +52,43 @@ import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
+import com.jfoenix.controls.JFXBadge;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
 import static javafx.scene.layout.AnchorPane.setLeftAnchor;
@@ -143,7 +148,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ChangeListener<Boolean> splashP2PNetworkVisibleListener;
     private BusyAnimation splashP2PNetworkBusyAnimation;
     private Label splashP2PNetworkLabel;
-    private ProgressBar btcSyncIndicator;
+    private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
 
@@ -165,21 +170,27 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     protected void initialize() {
         MainView.rootContainer = root;
 
-        ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market"));
-        ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc"));
-        ToggleButton sellButton = new NavButton(SellOfferView.class, Res.get("mainView.menu.sellBtc"));
-        ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio"));
-        ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds"));
+        ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market").toUpperCase());
+        ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc").toUpperCase());
+        ToggleButton sellButton = new NavButton(SellOfferView.class, Res.get("mainView.menu.sellBtc").toUpperCase());
+        ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio").toUpperCase());
+        ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds").toUpperCase());
+
         ToggleButton disputesButton = new NavButton(DisputesView.class, Res.get("mainView.menu.support"));
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
-        Pane portfolioButtonHolder = new Pane(portfolioButton);
-        Pane disputesButtonHolder = new Pane(disputesButton);
+
+        JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
+        JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
+
+        final Region daoButtonSpacer = getNavigationSpacer();
 
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             daoButton.setVisible(false);
             daoButton.setManaged(false);
+            daoButtonSpacer.setVisible(false);
+            daoButtonSpacer.setManaged(false);
         }
 
         root.sceneProperty().addListener((observable, oldValue, newValue) -> {
@@ -190,6 +201,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                         if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
                             daoButton.setVisible(true);
                             daoButton.setManaged(true);
+                            daoButtonSpacer.setVisible(true);
+                            daoButtonSpacer.setManaged(true);
                         }
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                         marketButton.fire();
@@ -215,11 +228,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setLeftAnchor(this, 10d);
-            setTopAnchor(this, 0d);
-        }};
-
 
         Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
@@ -235,43 +243,61 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.getSelectedPriceFeedComboBoxItemProperty().addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.getPriceFeedComboBoxItems());
 
-        HBox.setMargin(marketPriceBox.second, new Insets(0, 0, 0, 0));
-
-
-        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
+        Tuple2<Label, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
         availableBalanceBox.first.textProperty().bind(model.getAvailableBalance());
+        availableBalanceBox.first.setPrefWidth(100);
+        availableBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.available")));
 
-        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
+        Tuple2<Label, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved.short"));
         reservedBalanceBox.first.textProperty().bind(model.getReservedBalance());
+        reservedBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.reserved")));
 
-        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
+        Tuple2<Label, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked.short"));
         lockedBalanceBox.first.textProperty().bind(model.getLockedBalance());
+        lockedBalanceBox.first.setTooltip(new Tooltip(Res.get("mainView.balance.locked")));
 
-        HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
-                reservedBalanceBox.second, lockedBalanceBox.second,
-                settingsButton, accountButton, daoButton) {{
-            setRightAnchor(this, 10d);
-            setTopAnchor(this, 0d);
-        }};
+        HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
+                sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
-        root.widthProperty().addListener((observable, oldValue, newValue) -> {
-            double w = (double) newValue;
-            if (w > 0) {
-                leftNavPane.setSpacing(w >= 1080 ? 12 : 6);
-                rightNavPane.setSpacing(w >= 1080 ? 12 : 6);
-            }
-        });
+        primaryNav.setAlignment(Pos.CENTER_LEFT);
+        primaryNav.getStyleClass().add("nav-primary");
+        HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        AnchorPane contentContainer = new AnchorPane() {{
-            setId("content-pane");
+        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
+                getNavigationSpacer(), accountButton, daoButtonSpacer, daoButton);
+        secondaryNav.getStyleClass().add("nav-secondary");
+        HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
+
+        secondaryNav.setAlignment(Pos.CENTER);
+
+        HBox priceAndBalance = new HBox(marketPriceBox.second, getNavigationSeparator(), availableBalanceBox.second,
+                getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second);
+        priceAndBalance.setMaxHeight(41);
+
+        priceAndBalance.setAlignment(Pos.CENTER);
+        priceAndBalance.setSpacing(11);
+        priceAndBalance.getStyleClass().add("nav-price-balance");
+
+        HBox navPane = new HBox(primaryNav, secondaryNav,
+                priceAndBalance) {{
             setLeftAnchor(this, 0d);
             setRightAnchor(this, 0d);
-            setTopAnchor(this, 60d);
-            setBottomAnchor(this, 10d);
+            setTopAnchor(this, 0d);
+            setPadding(new Insets(0, 0, 0, 0));
+            getStyleClass().add("top-navigation");
+        }};
+        navPane.setAlignment(Pos.CENTER);
+
+        AnchorPane contentContainer = new AnchorPane() {{
+            getStyleClass().add("content-pane");
+            setLeftAnchor(this, 0d);
+            setRightAnchor(this, 0d);
+            setTopAnchor(this, 57d);
+            setBottomAnchor(this, 0d);
         }};
 
-        AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
-            setId("content-pane");
+        AnchorPane applicationContainer = new AnchorPane(navPane, contentContainer) {{
+            setId("application-container");
         }};
 
         BorderPane baseApplicationContainer = new BorderPane(applicationContainer) {{
@@ -279,9 +305,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
         baseApplicationContainer.setBottom(createFooter());
 
-        setupNotificationIcon(portfolioButtonHolder);
-
-        setupDisputesIcon(disputesButtonHolder);
+        setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
+        setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -315,23 +340,34 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         UserThread.execute(() -> onUiReadyHandler.run());
     }
 
-    private Tuple2<TextField, VBox> getBalanceBox(String text) {
-        TextField textField = new TextField();
-        textField.setEditable(false);
-        textField.setPrefWidth(115); //140
-        textField.setMouseTransparent(true);
-        textField.setFocusTraversable(false);
-        textField.getStyleClass().add("display-text-field");
+    @NotNull
+    private Separator getNavigationSeparator() {
+        final Separator separator = new Separator(Orientation.VERTICAL);
+        HBox.setHgrow(separator, Priority.ALWAYS);
+        separator.setMaxHeight(22);
+        separator.setMaxWidth(Double.MAX_VALUE);
+        return separator;
+    }
 
-        Label label = new AutoTooltipLabel(text);
-        label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 5));
-        label.setPrefWidth(textField.getPrefWidth());
+    @NotNull
+    private Region getNavigationSpacer() {
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        return spacer;
+    }
+
+    private Tuple2<Label, VBox> getBalanceBox(String text) {
+        Label balanceDisplay = new Label();
+        balanceDisplay.getStyleClass().add("nav-balance-display");
+
+        Label label = new Label(text);
+        label.getStyleClass().add("nav-balance-label");
+        label.maxWidthProperty().bind(balanceDisplay.widthProperty());
+        label.setPadding(new Insets(0, 0, 0, 0));
         VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(textField, label);
-        return new Tuple2<>(textField, vBox);
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        vBox.getChildren().addAll(balanceDisplay, label);
+        return new Tuple2<>(balanceDisplay, vBox);
     }
 
     private ListCell<PriceFeedComboBoxItem> getPriceFeedComboBoxListCell() {
@@ -350,88 +386,46 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     private Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> getMarketPriceBox() {
-        ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
-        priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(220);
-        priceComboBox.setMinWidth(220);
+
+        VBox marketPriceBox = new VBox();
+        marketPriceBox.setAlignment(Pos.CENTER_LEFT);
+
+        ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
+        priceComboBox.setVisibleRowCount(12);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
+        priceComboBox.setPadding(new Insets(0, 0, -4, 0));
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
         ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        final ImageView btcAverageIcon = new ImageView();
-        btcAverageIcon.setId("btcaverage");
-        final Button btcAverageIconButton = new AutoTooltipButton("", btcAverageIcon);
-        btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
-        btcAverageIconButton.setFocusTraversable(false);
-        btcAverageIconButton.getStyleClass().add("hidden-icon-button");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
-        btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
-        btcAverageIconButton.setVisible(model.getIsFiatCurrencyPriceFeedSelected().get());
-        btcAverageIconButton.setManaged(btcAverageIconButton.isVisible());
-        btcAverageIconButton.visibleProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
-        btcAverageIconButton.managedProperty().bind(model.getIsFiatCurrencyPriceFeedSelected());
-        btcAverageIconButton.setOnMouseEntered(e -> {
-                    String res = Res.get("mainView.marketPrice.tooltip",
-                            "https://bitcoinaverage.com",
-                            "",
-                            formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
-                            model.getPriceFeedService().getProviderNodeAddress());
-                    btcAverageIconButton.setTooltip(
-                            new Tooltip(res)
-                    );
-                }
-        );
+        Label marketPriceLabel = new Label();
 
-        final ImageView poloniexIcon = new ImageView();
-        poloniexIcon.setId("poloniex");
-        final Button poloniexIconButton = new AutoTooltipButton("", poloniexIcon);
-        poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
-        poloniexIconButton.setFocusTraversable(false);
-        poloniexIconButton.getStyleClass().add("hidden-icon-button");
-        HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
-        poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
-        poloniexIconButton.setVisible(model.getIsCryptoCurrencyPriceFeedSelected().get());
-        poloniexIconButton.setManaged(poloniexIconButton.isVisible());
-        poloniexIconButton.visibleProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
-        poloniexIconButton.managedProperty().bind(model.getIsCryptoCurrencyPriceFeedSelected());
-        poloniexIconButton.setOnMouseEntered(e -> {
-            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
-            String res = Res.get("mainView.marketPrice.tooltip",
-                    "https://poloniex.com",
-                    altcoinExtra,
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
-                    model.getPriceFeedService().getProviderNodeAddress());
-            poloniexIconButton.setTooltip(
-                    new Tooltip(res)
-            );
-        });
+        updateMarketPriceLabel(marketPriceLabel);
 
-        Label label = new AutoTooltipLabel(Res.get("mainView.marketPrice.provider"));
-        label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 2));
+        marketPriceLabel.getStyleClass().add("nav-balance-label");
+        marketPriceLabel.setPadding(new Insets(-2, 0, 4, 9));
+
+        marketPriceBox.getChildren().addAll(priceComboBox, marketPriceLabel);
 
         model.getMarketPriceUpdated().addListener((observable, oldValue, newValue) -> {
-            updateMarketPriceLabel(label);
+            updateMarketPriceLabel(marketPriceLabel);
         });
 
-        HBox hBox2 = new HBox();
-        hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);
+        return new Tuple2<>(priceComboBox, marketPriceBox);
+    }
 
-        VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
-        vBox.getChildren().addAll(priceComboBox, hBox2);
-        return new Tuple2<>(priceComboBox, vBox);
+    @NotNull
+    private String getPriceProvider() {
+        return model.getIsFiatCurrencyPriceFeedSelected().get() ? "BitcoinAverage" : "Poloniex";
     }
 
     private void updateMarketPriceLabel(Label label) {
         if (model.getIsPriceAvailable().get()) {
             if (model.getIsExternallyProvidedPrice().get()) {
-                label.setText(Res.get("mainView.marketPrice.provider"));
-                label.setTooltip(null);
+                label.setText(Res.get("mainView.marketPriceWithProvider.label", getPriceProvider()));
+                label.setTooltip(new Tooltip(getPriceProviderTooltipString()));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
@@ -444,10 +438,31 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }
     }
 
+    @NotNull
+    private String getPriceProviderTooltipString() {
+
+        String res;
+        if (model.getIsFiatCurrencyPriceFeedSelected().get()) {
+            res = Res.get("mainView.marketPrice.tooltip",
+                    "https://bitcoinaverage.com",
+                    "",
+                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                    model.getPriceFeedService().getProviderNodeAddress());
+        } else {
+            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
+            res = Res.get("mainView.marketPrice.tooltip",
+                    "https://poloniex.com",
+                    altcoinExtra,
+                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
+                    model.getPriceFeedService().getProviderNodeAddress());
+        }
+        return res;
+    }
+
     private VBox createSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(0);
+        vBox.setSpacing(10);
         vBox.setId("splash");
 
         ImageView logo = new ImageView();
@@ -463,8 +478,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator = new ProgressBar();
-        btcSyncIndicator.setPrefWidth(120);
+        btcSyncIndicator = new JFXProgressBar();
+        btcSyncIndicator.setPrefWidth(305);
         btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
 
         ImageView btcSyncIcon = new ImageView();
@@ -487,7 +502,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
         blockchainSyncBox.setPrefHeight(50);
-        blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIndicator, btcSyncIcon);
+        blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIcon);
 
 
         // create P2PNetworkBox
@@ -495,16 +510,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkLabel.setWrapText(true);
         splashP2PNetworkLabel.setMaxWidth(500);
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
+        splashP2PNetworkLabel.getStyleClass().add("sub-info");
         splashP2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
-        splashP2PNetworkBusyAnimation = new BusyAnimation();
+        splashP2PNetworkBusyAnimation = new BusyAnimation(false);
 
         splashP2PNetworkErrorMsgListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 splashP2PNetworkLabel.setId("splash-error-state-msg");
+                splashP2PNetworkLabel.getStyleClass().remove("sub-info");
                 splashP2PNetworkLabel.getStyleClass().add("error-text");
+                splashP2PNetworkBusyAnimation.setDisable(true);
                 splashP2PNetworkBusyAnimation.stop();
             } else if (model.getSplashP2PNetworkAnimationVisible().get()) {
+                splashP2PNetworkBusyAnimation.setDisable(false);
                 splashP2PNetworkBusyAnimation.play();
             }
         };
@@ -539,16 +558,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
         model.getP2PNetworkIconId().addListener(splashP2PNetworkIconIdListener);
 
-        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> splashP2PNetworkBusyAnimation.setIsRunning(newValue);
+        splashP2PNetworkVisibleListener = (ov, oldValue, newValue) -> {
+            splashP2PNetworkBusyAnimation.setDisable(!newValue);
+            if (newValue) splashP2PNetworkBusyAnimation.play();
+        };
+
         model.getSplashP2PNetworkAnimationVisible().addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
         splashP2PNetworkBox.setSpacing(10);
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
-        splashP2PNetworkBox.setPrefHeight(50);
+        splashP2PNetworkBox.setPrefHeight(40);
         splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon, showTorNetworkSettingsButton);
 
-        vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
+        vBox.getChildren().addAll(logo, blockchainSyncBox, btcSyncIndicator, splashP2PNetworkBox);
         return vBox;
     }
 
@@ -643,13 +666,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // P2P Network
         Label p2PNetworkLabel = new AutoTooltipLabel();
         p2PNetworkLabel.setId("footer-pane");
-        setRightAnchor(p2PNetworkLabel, 33d);
-        setBottomAnchor(p2PNetworkLabel, 7d);
         p2PNetworkLabel.textProperty().bind(model.getP2PNetworkInfo());
 
         ImageView p2PNetworkIcon = new ImageView();
         setRightAnchor(p2PNetworkIcon, 10d);
-        setBottomAnchor(p2PNetworkIcon, 7d);
+        setBottomAnchor(p2PNetworkIcon, 5d);
         p2PNetworkIcon.setOpacity(0.4);
         p2PNetworkIcon.idProperty().bind(model.getP2PNetworkIconId());
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
@@ -664,49 +685,37 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.getUpdatedDataReceived().addListener((observable, oldValue, newValue) -> {
             p2PNetworkIcon.setOpacity(1);
+            p2pNetworkProgressBar.setProgress(0);
         });
 
-        return new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
+        p2pNetworkProgressBar = new JFXProgressBar(-1);
+        p2pNetworkProgressBar.setMaxHeight(2);
+        p2pNetworkProgressBar.prefWidthProperty().bind(p2PNetworkLabel.widthProperty());
+
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.CENTER_RIGHT);
+        vBox.getChildren().addAll(p2PNetworkLabel, p2pNetworkProgressBar);
+        setRightAnchor(vBox, 33d);
+        setBottomAnchor(vBox, 5d);
+
+        return new AnchorPane(separator, blockchainSyncBox, versionLabel, vBox, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);
         }};
     }
 
-    private void setupNotificationIcon(Pane buttonHolder) {
-        Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.getNumPendingTrades());
-        label.relocate(5, 1);
-        label.setId("nav-alert-label");
+    private void setupBadge(JFXBadge buttonWithBadge, StringProperty badgeNumber, BooleanProperty badgeEnabled) {
+        buttonWithBadge.textProperty().bind(badgeNumber);
+        buttonWithBadge.setEnabled(badgeEnabled.get());
+        badgeEnabled.addListener((observable, oldValue, newValue) -> {
+            buttonWithBadge.setEnabled(newValue);
+            buttonWithBadge.refreshBadge();
+        });
 
-        ImageView icon = new ImageView();
-        icon.setId("image-alert-round");
-
-        Pane notification = new Pane();
-        notification.relocate(30, 9);
-        notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-        notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.getShowPendingTradesNotification());
-        buttonHolder.getChildren().add(notification);
-    }
-
-    private void setupDisputesIcon(Pane buttonHolder) {
-        Label label = new AutoTooltipLabel();
-        label.textProperty().bind(model.getNumOpenDisputes());
-        label.relocate(5, 1);
-        label.setId("nav-alert-label");
-
-        ImageView icon = new ImageView();
-        icon.setId("image-alert-round");
-
-        Pane notification = new Pane();
-        notification.relocate(30, 9);
-        notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
-        notification.getChildren().addAll(icon, label);
-        notification.visibleProperty().bind(model.getShowOpenDisputesNotification());
-        buttonHolder.getChildren().add(notification);
+        buttonWithBadge.setPosition(Pos.TOP_RIGHT);
+        buttonWithBadge.setMinHeight(34);
+        buttonWithBadge.setMaxHeight(34);
     }
 
     private class NavButton extends AutoTooltipToggleButton {
@@ -714,43 +723,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         private final Class<? extends View> viewClass;
 
         NavButton(Class<? extends View> viewClass, String title) {
-            super(title, new ImageView() {{
-                setId("image-nav-" + viewId(viewClass));
-            }});
+            super(title);
 
             this.viewClass = viewClass;
 
             this.setToggleGroup(navButtons);
-            this.setId("nav-button");
-            this.setPadding(new Insets(0, -10, -10, -10));
-            this.setMinSize(50, 50);
-            this.setMaxSize(50, 50);
-            this.setContentDisplay(ContentDisplay.TOP);
-            this.setGraphicTextGap(0);
+            this.getStyleClass().add("nav-button");
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> {
                 this.setMouseTransparent(newValue);
-                this.setMinSize(50, 50);
-                this.setMaxSize(50, 50);
-                this.setGraphicTextGap(newValue ? -1 : 0);
-                if (newValue) {
-                    this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
-                } else {
-                    this.getGraphic().setId("image-nav-" + viewId(viewClass));
-                }
             });
 
             this.setOnAction(e -> navigation.navigateTo(MainView.class, viewClass));
         }
 
-    }
-
-    private static String viewId(Class<? extends View> viewClass) {
-        String viewName = viewClass.getSimpleName();
-        String suffix = "View";
-        int suffixIdx = viewName.indexOf(suffix);
-        if (suffixIdx != viewName.length() - suffix.length())
-            throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
-        return viewName.substring(0, suffixIdx).toLowerCase();
     }
 }

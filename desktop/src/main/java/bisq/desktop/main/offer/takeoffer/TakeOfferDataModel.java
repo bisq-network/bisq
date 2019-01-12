@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.takeoffer;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -64,6 +63,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -178,7 +178,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
-        paymentAccount = possiblePaymentAccounts.get(0);
+        paymentAccount = getLastSelectedPaymentAccount();
 
         long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
         this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, myLimit)));
@@ -328,7 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
     // leading to a smaller tx and too high fees. Simply updating the fee estimation would lead to changed required funds
     // and if funds get higher (if tx get larger) the user would get confused (adding small inputs would increase total required funds).
     // So that would require more thoughts how to deal with all those cases.
-    public void estimateTxSize() {
+    private void estimateTxSize() {
         Address fundingAddress = btcWalletService.getFreshAddressEntry().getAddress();
         int txSize = 0;
         if (btcWalletService.getBalance(Wallet.BalanceType.AVAILABLE).isPositive()) {
@@ -411,7 +411,9 @@ class TakeOfferDataModel extends OfferDataModel {
             this.paymentAccount = paymentAccount;
 
             long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
-            this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+            this.amount.set(Coin.valueOf(Math.max(offer.getMinAmount().value, Math.min(amount.get().value, myLimit))));
+
+            preferences.setTakeOfferSelectedPaymentAccountId(paymentAccount.getId());
         }
     }
 
@@ -424,9 +426,6 @@ class TakeOfferDataModel extends OfferDataModel {
         }
     }
 
-    void setIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
-        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -441,28 +440,29 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
-        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, user.getPaymentAccounts());
+        Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
+        checkNotNull(paymentAccounts, "paymentAccounts must not be null");
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts);
+    }
+
+    public PaymentAccount getLastSelectedPaymentAccount() {
+        ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
+        checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts must not be empty");
+        PaymentAccount firstItem = possiblePaymentAccounts.get(0);
+
+        String id = preferences.getTakeOfferSelectedPaymentAccountId();
+        if (id == null)
+            return firstItem;
+
+        return possiblePaymentAccounts.stream()
+                .filter(e -> e.getId().equals(id))
+                .findAny()
+                .orElse(firstItem);
     }
 
     boolean hasAcceptedArbitrators() {
         final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
         return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
-    boolean isCurrencyForTakerFeeBtc() {
-        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable();
-    }
-
-    boolean isTakerFeeValid() {
-        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
-    }
-
-    boolean isBsqForFeeAvailable() {
-        final Coin takerFee = getTakerFee(false);
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                takerFee != null &&
-                bsqWalletService.getAvailableBalance() != null &&
-                !bsqWalletService.getAvailableBalance().subtract(takerFee).isNegative();
     }
 
     long getMaxTradeLimit() {
@@ -648,5 +648,33 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
+    }
+
+    public boolean isCurrencyForTakerFeeBtc() {
+        return OfferUtil.isCurrencyForTakerFeeBtc(preferences, bsqWalletService, amount.get());
+    }
+
+    public void setPreferredCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        preferences.setPayFeeInBtc(isCurrencyForTakerFeeBtc);
+    }
+
+    public boolean isPreferredFeeCurrencyBtc() {
+        return preferences.isPayFeeInBtc();
+    }
+
+    public Coin getTakerFeeInBtc() {
+        return OfferUtil.getTakerFee(true, amount.get());
+    }
+
+    public Coin getTakerFeeInBsq() {
+        return OfferUtil.getTakerFee(false, amount.get());
+    }
+
+    boolean isTakerFeeValid() {
+        return preferences.getPayFeeInBtc() || OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+    }
+
+    public boolean isBsqForFeeAvailable() {
+        return OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
     }
 }

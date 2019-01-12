@@ -46,7 +46,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class Res {
     public static void setup() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         setBaseCurrencyCode(baseCurrencyNetwork.getCurrencyCode());
         setBaseCurrencyName(baseCurrencyNetwork.getCurrencyName());
     }
@@ -116,6 +116,7 @@ public class Res {
                     .replace("bitcoin", baseCurrencyNameLowerCase);
         } catch (MissingResourceException e) {
             log.warn("Missing resource for key: " + key);
+            e.printStackTrace();
             if (DevEnv.isDevMode())
                 UserThread.runAfter(() -> {
                     // We delay a bit to not throw while UI is not ready

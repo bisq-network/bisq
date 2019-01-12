@@ -48,6 +48,9 @@ public class GUIUtilTest {
         GlobalSettings.setLocale(new Locale("en", "US"));
     }
 
+    // @Christoph: not sure if that was removed with intentions in the release branch.
+    // I leave it here commented out in case it happened due a merge mistake.
+    /*
     @Test
     public void testTradeCurrencyConverter() {
         Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
@@ -76,5 +79,5 @@ public class GUIUtilTest {
         assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(make(euroItem)));
         assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(make(euroItem.but(with(numberOfTrades, 1)))));
 
-    }
+    }*/
 }

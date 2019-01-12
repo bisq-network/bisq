@@ -19,6 +19,7 @@ package bisq.core.offer.availability;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
+import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -38,7 +39,8 @@ public class OfferAvailabilityModel implements Model {
     private final PubKeyRing pubKeyRing; // takers PubKey (my pubkey)
     @Getter
     private final P2PService p2PService;
-
+    @Getter
+    final private User user;
     private NodeAddress peerNodeAddress;  // maker
     private OfferAvailabilityResponse message;
     @Nullable
@@ -48,10 +50,12 @@ public class OfferAvailabilityModel implements Model {
 
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
-                                  P2PService p2PService) {
+                                  P2PService p2PService,
+                                  User user) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
         this.p2PService = p2PService;
+        this.user = user;
     }
 
     public NodeAddress getPeerNodeAddress() {

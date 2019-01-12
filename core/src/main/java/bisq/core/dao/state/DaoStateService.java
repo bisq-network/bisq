@@ -18,31 +18,30 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
-import bisq.core.dao.bonding.BondingConsensus;
-import bisq.core.dao.governance.role.BondedRole;
-import bisq.core.dao.governance.voteresult.DecryptedBallotsWithMerits;
-import bisq.core.dao.governance.voteresult.EvaluatedProposal;
-import bisq.core.dao.state.blockchain.Block;
-import bisq.core.dao.state.blockchain.SpentInfo;
-import bisq.core.dao.state.blockchain.Tx;
-import bisq.core.dao.state.blockchain.TxInput;
-import bisq.core.dao.state.blockchain.TxOutput;
-import bisq.core.dao.state.blockchain.TxOutputKey;
-import bisq.core.dao.state.blockchain.TxOutputType;
-import bisq.core.dao.state.blockchain.TxType;
-import bisq.core.dao.state.governance.ConfiscateBond;
-import bisq.core.dao.state.governance.Issuance;
-import bisq.core.dao.state.governance.IssuanceType;
-import bisq.core.dao.state.governance.Param;
-import bisq.core.dao.state.governance.ParamChange;
-import bisq.core.dao.state.period.Cycle;
+import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.ParamChange;
+import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -56,6 +55,8 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -65,7 +66,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class DaoStateService implements DaoSetupService {
     private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
+    private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    private boolean parseBlockChainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +76,10 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo) {
+    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
         this.daoState = daoState;
         this.genesisTxInfo = genesisTxInfo;
+        this.bsqFormatter = bsqFormatter;
     }
 
 
@@ -98,6 +102,8 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot(DaoState snapshot) {
+        log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());
+
         daoState.setChainHeight(snapshot.getChainHeight());
 
         daoState.getBlocks().clear();
@@ -109,8 +115,8 @@ public class DaoStateService implements DaoSetupService {
         daoState.getUnspentTxOutputMap().clear();
         daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
-        daoState.getConfiscatedTxOutputMap().clear();
-        daoState.getConfiscatedTxOutputMap().putAll(snapshot.getConfiscatedTxOutputMap());
+        daoState.getConfiscatedLockupTxList().clear();
+        daoState.getConfiscatedLockupTxList().addAll(snapshot.getConfiscatedLockupTxList());
 
         daoState.getIssuanceMap().clear();
         daoState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
@@ -129,11 +135,11 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public DaoState getClone() {
-        return daoState.getClone();
+        return DaoState.getClone(daoState);
     }
 
     DaoState getClone(DaoState snapshotCandidate) {
-        return daoState.getClone(snapshotCandidate);
+        return DaoState.getClone(snapshotCandidate);
     }
 
 
@@ -154,8 +160,9 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getCycles();
     }
 
+    @Nullable
     public Cycle getCurrentCycle() {
-        return getCycles().getLast();
+        return !getCycles().isEmpty() ? getCycles().getLast() : null;
     }
 
     public Optional<Cycle> getCycle(int height) {
@@ -187,19 +194,33 @@ public class DaoStateService implements DaoSetupService {
 
     // Second we get the block added with empty txs
     public void onNewBlockWithEmptyTxs(Block block) {
-        daoState.getBlocks().add(block);
-        daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
+        if (daoState.getBlocks().isEmpty() && block.getHeight() != getGenesisBlockHeight()) {
+            log.warn("We don't have any blocks yet and we received a block which is not the genesis block. " +
+                    "We ignore that block as the first block need to be the genesis block. " +
+                    "That might happen in edge cases at reorgs.");
+        } else {
+            daoState.getBlocks().add(block);
+            daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
-        log.info("New Block added at blockHeight " + block.getHeight());
+            log.info("New Block added at blockHeight " + block.getHeight());
+        }
     }
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        // We don't call it during batch parsing as that decreased performance a lot.
+        // With calling at each block we got about 50 seconds for 4000 blocks, without about 4 seconds.
+        if (parseBlockChainComplete)
+            daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
+        parseBlockChainComplete = true;
+
+        // Now we need to trigger the onParseBlockComplete to update the state in the app
+        getLastBlock().ifPresent(this::onParseBlockComplete);
+
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
@@ -218,7 +239,7 @@ public class DaoStateService implements DaoSetupService {
     public boolean isBlockHashKnown(String blockHash) {
         // TODO(chirhonul): If performance of O(n) time in number of blocks becomes an issue,
         // we should keep a HashMap of block hash -> Block to make this method O(1).
-        return getBlocks().stream().anyMatch(block -> block.getHash() == blockHash);
+        return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
     }
 
     public Optional<Block> getLastBlock() {
@@ -360,6 +381,12 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputStream().anyMatch(txOutput -> txOutput.getKey().equals(key));
     }
 
+    public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
+        return getTxOutputStream()
+                .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UnspentTxOutput
@@ -417,6 +444,9 @@ public class DaoStateService implements DaoSetupService {
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
                 return true;
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
+                return false;
             case LOCKUP_OUTPUT:
                 return false;
             case LOCKUP_OP_RETURN_OUTPUT:
@@ -461,6 +491,8 @@ public class DaoStateService implements DaoSetupService {
             case BLIND_VOTE_OP_RETURN_OUTPUT:
             case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
             case VOTE_REVEAL_OP_RETURN_OUTPUT:
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
             case LOCKUP_OUTPUT:
             case LOCKUP_OP_RETURN_OUTPUT:
             case UNLOCK_OUTPUT:
@@ -553,6 +585,7 @@ public class DaoStateService implements DaoSetupService {
     public void addNonBsqTxOutput(TxOutput txOutput) {
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
+        log.info("addNonBsqTxOutput: txOutput={}", txOutput);
         daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
@@ -600,7 +633,7 @@ public class DaoStateService implements DaoSetupService {
         if (lockupTx.isPresent()) {
             byte[] opReturnData = lockupTx.get().getLastTxOutput().getOpReturnData();
             if (opReturnData != null)
-                return Optional.of(BondingConsensus.getHashFromOpReturnData(opReturnData));
+                return Optional.of(BondConsensus.getHashFromOpReturnData(opReturnData));
         }
         return Optional.empty();
     }
@@ -637,15 +670,26 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT);
     }
 
+    public Set<TxOutput> getUnspentLockUpTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.LOCKUP_OUTPUT).stream()
+                .filter(txOutput -> isUnspent(txOutput.getKey()))
+                .collect(Collectors.toSet());
+    }
+
     public Optional<TxOutput> getLockupTxOutput(String txId) {
         return getTx(txId).flatMap(tx -> tx.getTxOutputs().stream()
                 .filter(this::isLockupOutput)
                 .findFirst());
     }
 
+    public Optional<TxOutput> getLockupOpReturnTxOutput(String txId) {
+        return getTx(txId).map(Tx::getLastTxOutput).filter(txOutput -> txOutput.getOpReturnData() != null);
+    }
+
     // Returns amount of all LOCKUP txOutputs (they might have been unlocking or unlocked in the meantime)
     public long getTotalAmountOfLockupTxOutputs() {
         return getLockupTxOutputs().stream()
+                .filter(txOutput -> !isConfiscatedLockupTxOutput(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum();
     }
@@ -657,6 +701,11 @@ public class DaoStateService implements DaoSetupService {
 
 
     // Unlock
+    public boolean isUnspentUnlockOutput(TxOutputKey key) {
+        Optional<TxOutput> opTxOutput = getUnspentTxOutput(key);
+        return opTxOutput.isPresent() && isUnlockOutput(opTxOutput.get());
+    }
+
     public boolean isUnlockOutput(TxOutput txOutput) {
         return txOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT;
     }
@@ -671,19 +720,29 @@ public class DaoStateService implements DaoSetupService {
 
     public long getTotalAmountOfUnLockingTxOutputs() {
         return getUnspentUnlockingTxOutputsStream()
+                .filter(txOutput -> !isConfiscatedUnlockTxOutput(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum();
     }
 
-    public boolean isUnlockingOutput(TxOutputKey key) {
+    public boolean isUnlockingAndUnspent(TxOutputKey key) {
         Optional<TxOutput> opTxOutput = getUnspentTxOutput(key);
-        return opTxOutput.isPresent() && isUnlockingOutput(opTxOutput.get());
+        return opTxOutput.isPresent() && isUnlockingAndUnspent(opTxOutput.get());
     }
 
-    // TODO SQ i changed the code here. i think it was wrong before
-    public boolean isUnlockingOutput(TxOutput unlockTxOutput) {
+    public boolean isUnlockingAndUnspent(String unlockTxId) {
+        Optional<Tx> optionalTx = getTx(unlockTxId);
+        return optionalTx.isPresent() && isUnlockingAndUnspent(optionalTx.get().getTxOutputs().get(0));
+    }
+
+    public boolean isUnlockingAndUnspent(TxOutput unlockTxOutput) {
         return unlockTxOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT &&
+                isUnspent(unlockTxOutput.getKey()) &&
                 !isLockTimeOverForUnlockTxOutput(unlockTxOutput);
+    }
+
+    public Optional<Tx> getLockupTxFromUnlockTxId(String unlockTxId) {
+        return getTx(unlockTxId).flatMap(tx -> getTx(tx.getTxInputs().get(0).getConnectedTxOutputTxId()));
     }
 
     // Unlocked
@@ -694,29 +753,16 @@ public class DaoStateService implements DaoSetupService {
     public boolean isLockTimeOverForUnlockTxOutput(TxOutput unlockTxOutput) {
         checkArgument(isUnlockOutput(unlockTxOutput), "txOutput must be of type UNLOCK");
         return getUnlockBlockHeight(unlockTxOutput.getTxId())
-                .map(unlockBlockHeight -> BondingConsensus.isLockTimeOver(unlockBlockHeight, getChainHeight()))
+                .map(unlockBlockHeight -> BondConsensus.isLockTimeOver(unlockBlockHeight, getChainHeight()))
                 .orElse(false);
     }
 
     // We don't care here about the unspent state
     public Stream<TxOutput> getUnlockedTxOutputsStream() {
         return getTxOutputsByTxOutputType(TxOutputType.UNLOCK_OUTPUT).stream()
+                .filter(txOutput -> !isConfiscatedUnlockTxOutput(txOutput.getTxId()))
                 .filter(this::isLockTimeOverForUnlockTxOutput);
     }
-
-    // TODO SQ
-    /*public boolean isSpentByUnlockTx(TxOutput txOutput) {
-        log.error("txOutput " + txOutput.getTxId());
-        boolean present = getSpentInfo(txOutput)
-                .map(spentInfo -> {
-                    log.error("spentInfo " + spentInfo);
-                    return getTx(spentInfo.getTxId());
-                })
-                .filter(Optional::isPresent)
-                .isPresent();
-        log.error("isSpentByUnlockTx present={}", present);
-        return present;
-    }*/
 
     public long getTotalAmountOfUnLockedTxOutputs() {
         return getUnlockedTxOutputsStream()
@@ -724,34 +770,70 @@ public class DaoStateService implements DaoSetupService {
                 .sum();
     }
 
+    public long getTotalAmountOfConfiscatedTxOutputs() {
+        return daoState.getConfiscatedLockupTxList()
+                .stream()
+                .map(txId -> getTx(txId))
+                .filter(optionalTx -> optionalTx.isPresent())
+                .mapToLong(optionalTx -> optionalTx.get().getLockupOutput().getValue())
+                .sum();
+    }
+
     // Confiscate bond
-    public void confiscateBond(ConfiscateBond confiscateBond) {
-        if (confiscateBond.getHash().length == 0) {
-            // Disallow confiscation of empty bonds
-            return;
+    public void confiscateBond(String lockupTxId) {
+        Optional<TxOutput> optionalTxOutput = getLockupTxOutput(lockupTxId);
+        if (optionalTxOutput.isPresent()) {
+            TxOutput lockupTxOutput = optionalTxOutput.get();
+            if (isUnspent(lockupTxOutput.getKey())) {
+                log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can confiscate it.", lockupTxOutput.getKey());
+                doConfiscateBond(lockupTxId);
+            } else {
+                // We lookup for the unlock tx which need to be still in unlocking state
+                Optional<SpentInfo> optionalSpentInfo = getSpentInfo(lockupTxOutput);
+                checkArgument(optionalSpentInfo.isPresent(), "optionalSpentInfo must be present");
+                String unlockTxId = optionalSpentInfo.get().getTxId();
+                if (isUnlockingAndUnspent(unlockTxId)) {
+                    // We found the unlock tx is still not spend
+                    log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can We confiscate it.", lockupTxOutput.getKey());
+                    doConfiscateBond(lockupTxId);
+                } else {
+                    // We could be more radical here and confiscate the output if it is unspent but lock time is over,
+                    // but its probably better to stick to the rules that confiscation can only happen before lock time
+                    // is over.
+                    log.warn("We could not confiscate the bond because the unlock tx was already spent or lock time " +
+                            "has exceeded. unlockTxId={}", unlockTxId);
+                }
+            }
+        } else {
+            log.warn("No lockupTxOutput found for lockupTxId {}", lockupTxId);
         }
-        getTxOutputStream()
-                .filter(txOutput -> isUnspent(txOutput.getKey()))
-                .filter(txOutput -> txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT ||
-                        (isUnlockTxOutputAndLockTimeNotOver(txOutput)))
-                .filter(txOutput -> {
-                    Optional<byte[]> hash = getLockupHash(txOutput);
-                    return hash.isPresent() && Arrays.equals(hash.get(), confiscateBond.getHash());
-                })
-                .forEach(this::applyConfiscateBond);
     }
 
-    public void applyConfiscateBond(TxOutput txOutput) {
-        daoState.getConfiscatedTxOutputMap().put(txOutput.getKey(), txOutput);
-
-        // TODO SQ TxOutputType is immutable after parsing
-        // We need to add new checks if a txo is not confiscated by using the map similar like utxo map
-        // txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+    private void doConfiscateBond(String lockupTxId) {
+        log.warn("TxId {} added to confiscatedLockupTxIdList.", lockupTxId);
+        daoState.getConfiscatedLockupTxList().add(lockupTxId);
     }
 
-    public boolean isUnlocking(BondedRole bondedRole) {
-        Optional<Tx> optionalTx = getTx(bondedRole.getUnlockTxId());
-        return optionalTx.isPresent() && isUnlockingOutput(optionalTx.get().getTxOutputs().get(0));
+    public boolean isConfiscated(TxOutputKey txOutputKey) {
+        if (isLockupOutput(txOutputKey))
+            return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
+        else if (isUnspentUnlockOutput(txOutputKey))
+            return isConfiscatedUnlockTxOutput(txOutputKey.getTxId());
+        return false;
+    }
+
+    public boolean isConfiscated(String lockupTxId) {
+        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
+    }
+
+    public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
+        return isConfiscated(lockupTxId);
+    }
+
+    public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
+        return getLockupTxFromUnlockTxId(unlockTxId).
+                map(lockupTx -> isConfiscated(lockupTx.getId())).
+                orElse(false);
     }
 
 
@@ -759,7 +841,7 @@ public class DaoStateService implements DaoSetupService {
     // Param
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setNewParam(int blockHeight, Param param, long paramValue) {
+    public void setNewParam(int blockHeight, Param param, String paramValue) {
         List<ParamChange> paramChangeList = daoState.getParamChangeList();
         getStartHeightOfNextCycle(blockHeight)
                 .ifPresent(heightOfNewCycle -> {
@@ -770,7 +852,22 @@ public class DaoStateService implements DaoSetupService {
                 });
     }
 
-    public long getParamValue(Param param, int blockHeight) {
+    public Coin getParamValueAsCoin(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return bsqFormatter.parseParamValueToCoin(param, paramValue);
+    }
+
+    public double getParamValueAsPercentDouble(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return bsqFormatter.parsePercentStringToDouble(paramValue);
+    }
+
+    public int getParamValueAsBlock(Param param, int blockHeight) {
+        String paramValue = getParamValue(param, blockHeight);
+        return Integer.parseInt(paramValue);
+    }
+
+    public String getParamValue(Param param, int blockHeight) {
         List<ParamChange> paramChangeList = new ArrayList<>(daoState.getParamChangeList());
         if (!paramChangeList.isEmpty()) {
             // List is sorted by height, we start from latest entries to find most recent entry.
@@ -811,6 +908,23 @@ public class DaoStateService implements DaoSetupService {
 
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
         return daoState.getDecryptedBallotsWithMeritsList();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Asset listing fee
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<TxOutput> getAssetListingFeeOpReturnTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.ASSET_LISTING_FEE_OP_RETURN_OUTPUT);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Proof of burn
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Set<TxOutput> getProofOfBurnOpReturnTxOutputs() {
+        return getTxOutputsByTxOutputType(TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT);
     }
 
 

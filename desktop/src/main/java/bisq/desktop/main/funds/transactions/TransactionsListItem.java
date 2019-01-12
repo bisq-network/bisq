@@ -26,7 +26,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.blockchain.TxType;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
@@ -139,7 +139,7 @@ class TransactionsListItem {
                                 else if (txTypeOptional.get().equals(TxType.REIMBURSEMENT_REQUEST))
                                     details = Res.get("funds.tx.reimbursementRequestTxFee");
                                 else
-                                    details = Res.get("funds.tx.proposalTxFee");
+                                    details = Res.get("funds.tx.daoTxFee");
                             }
                         } else {
                             outgoing = true;
@@ -166,8 +166,6 @@ class TransactionsListItem {
         txConfidenceIndicator.setId("funds-confidence");
         tooltip = new Tooltip(Res.get("shared.notUsedYet"));
         txConfidenceIndicator.setProgress(0);
-        txConfidenceIndicator.setPrefHeight(30);
-        txConfidenceIndicator.setPrefWidth(30);
         txConfidenceIndicator.setTooltip(tooltip);
 
         txConfidenceListener = new TxConfidenceListener(txId) {

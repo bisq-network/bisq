@@ -186,7 +186,7 @@ public class BSFormatterTest {
         when(offerPayload.getMinAmount()).thenReturn(10000000L);
         when(offerPayload.getAmount()).thenReturn(10000000L);
 
-        assertEquals("         0.1000", formatter.formatAmount(offer, 4, true, 15));
+        assertEquals("0.1000", formatter.formatAmount(offer, 4, true, 15));
     }
 
     @Test

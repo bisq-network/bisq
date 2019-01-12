@@ -77,11 +77,15 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
     @Override
     public Message toProtoMessage() {
+        // We clone list as we got ConcurrentModificationExceptions
+        List<AddressEntry> clone = new ArrayList<>(list);
+        List<PB.AddressEntry> addressEntries = clone.stream()
+                .map(AddressEntry::toProtoMessage)
+                .collect(Collectors.toList());
+
         return PB.PersistableEnvelope.newBuilder()
                 .setAddressEntryList(PB.AddressEntryList.newBuilder()
-                        .addAllAddressEntry(list.stream()
-                                .map(AddressEntry::toProtoMessage)
-                                .collect(Collectors.toList())))
+                        .addAllAddressEntry(addressEntries))
                 .build();
     }
 

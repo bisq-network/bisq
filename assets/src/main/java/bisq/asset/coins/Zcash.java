@@ -17,26 +17,15 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AddressValidationResult;
-import bisq.asset.AddressValidator;
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
+@AltCoinAccountDisclaimer("account.altcoin.popup.ZEC.msg")
 public class Zcash extends Coin {
 
     public Zcash() {
-        super("Zcash", "ZEC", new ZcashAddressValidator());
+        super("Zcash", "ZEC", new RegexAddressValidator("^t.*", "validation.altcoin.zAddressesNotSupported"));
     }
 
-
-    public static class ZcashAddressValidator implements AddressValidator {
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            // We only support t addresses (transparent transactions)
-            if (!address.startsWith("t"))
-                return AddressValidationResult.invalidAddress("", "validation.altcoin.zAddressesNotSupported");
-
-            return AddressValidationResult.validAddress();
-        }
-    }
 }

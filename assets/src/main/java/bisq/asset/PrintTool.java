@@ -41,8 +41,8 @@ public class PrintTool {
     }
 
     private static class Pair {
-        String left;
-        String right;
+        final String left;
+        final String right;
 
         Pair(String left, String right) {
             this.left = left;

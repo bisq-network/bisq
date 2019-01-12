@@ -88,7 +88,8 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setDisplayUpdateHandler((alert, key) -> log.info("onDisplayUpdateHandler"));
         bisqSetup.setDisplayAlertHandler(alert -> log.info("onDisplayAlertHandler. alert={}", alert));
         bisqSetup.setDisplayPrivateNotificationHandler(privateNotification -> log.info("onDisplayPrivateNotificationHandler. privateNotification={}", privateNotification));
-        bisqSetup.setDaoSetupErrorHandler(errorMessage -> log.info("onDaoSetupErrorHandler. errorMessage={}", errorMessage));
+        bisqSetup.setDaoErrorMessageHandler(errorMessage -> log.info("onDaoErrorMessageHandler. errorMessage={}", errorMessage));
+        bisqSetup.setDaoWarnMessageHandler(warnMessage -> log.info("onDaoWarnMessageHandler. warnMessage={}", warnMessage));
         bisqSetup.setDisplaySecurityRecommendationHandler(key -> log.info("onDisplaySecurityRecommendationHandler"));
         bisqSetup.setDisplayLocalhostHandler(key -> log.info("onDisplayLocalhostHandler"));
         bisqSetup.setWrongOSArchitectureHandler(msg -> log.info("onWrongOSArchitectureHandler. msg={}", msg));

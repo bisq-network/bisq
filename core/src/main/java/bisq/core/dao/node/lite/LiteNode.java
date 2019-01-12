@@ -18,14 +18,14 @@
 package bisq.core.dao.node.lite;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.parser.BlockParser;
-import bisq.core.dao.node.parser.exceptions.BlockNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.dao.state.blockchain.RawBlock;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
@@ -121,6 +121,15 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
+    @Override
+    protected void startReOrgFromLastSnapshot() {
+        super.startReOrgFromLastSnapshot();
+
+        int startBlockHeight = getStartBlockHeight();
+        liteNodeNetworkService.reset();
+        liteNodeNetworkService.requestBlocks(startBlockHeight);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -128,39 +137,42 @@ public class LiteNode extends BsqNode {
 
     // We received the missing blocks
     private void onRequestedBlocksReceived(List<RawBlock> blockList) {
-        if (!blockList.isEmpty())
-            log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(),
-                    blockList.get(blockList.size() - 1).getHeight());
+        if (!blockList.isEmpty()) {
+            chainTipHeight = blockList.get(blockList.size() - 1).getHeight();
+            log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
+        }
 
         // 4000 blocks take about 3 seconds if DAO UI is not displayed or 7 sec. if it is displayed.
         // The updates at block height change are not much optimized yet, so that can be for sure improved
         // 144 blocks a day would result in about 4000 in a month, so if a user downloads the app after 1 months latest
         // release it will be a bit of a performance hit. It is a one time event as the snapshots gets created and be
         // used at next startup.
-        long startTs = System.currentTimeMillis();
-        blockList.forEach(this::parseBlock);
-        log.info("Parsing of {} blocks took {} sec.", blockList.size(), (System.currentTimeMillis() - startTs) / 1000D);
+        long ts = System.currentTimeMillis();
+        for (RawBlock block : blockList) {
+            try {
+                doParseBlock(block);
+            } catch (RequiredReorgFromSnapshotException e1) {
+                // In case we got a reorg we break the iteration
+                break;
+            }
+        }
+        log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
+
         onParseBlockChainComplete();
     }
 
     // We received a new block
     private void onNewBlockReceived(RawBlock block) {
-        log.info("onNewBlockReceived: block at height {}", block.getHeight());
-        parseBlock(block);
-    }
+        int blockHeight = block.getHeight();
+        log.info("onNewBlockReceived: block at height {}, hash={}", blockHeight, block.getHash());
 
-    private void parseBlock(RawBlock rawBlock) {
-        if (!isBlockAlreadyAdded(rawBlock)) {
-            try {
-                blockParser.parseBlock(rawBlock);
-            } catch (BlockNotConnectingException throwable) {
-                startReOrgFromLastSnapshot();
-            } catch (Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
-                if (errorMessageHandler != null)
-                    errorMessageHandler.handleErrorMessage(throwable.toString());
-            }
+        // We only update chainTipHeight if we get a newer block
+        if (blockHeight > chainTipHeight)
+            chainTipHeight = blockHeight;
+
+        try {
+            doParseBlock(block);
+        } catch (RequiredReorgFromSnapshotException ignore) {
         }
     }
 }

@@ -17,20 +17,19 @@
 
 package bisq.desktop.main.account.content.altcoinaccounts;
 
-import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
+import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
@@ -41,7 +40,9 @@ import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.UserThread;
+import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Asset;
+
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -51,40 +52,33 @@ import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
-import javafx.geometry.VPos;
+import javafx.collections.ObservableList;
 
-import javafx.beans.value.ChangeListener;
-
-import javafx.util.Callback;
-
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 
 @FxmlView
-public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCoinAccountsViewModel> {
-
-    private ListView<PaymentAccount> paymentAccountsListView;
+public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAccountsViewModel> {
 
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final AssetService assetService;
+    private final FilterManager filterManager;
     private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
-    private Button addAccountButton, saveNewAccountButton, exportButton, importButton;
+    private Button saveNewAccountButton;
     private int gridRow = 0;
-    private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
     @Inject
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
@@ -92,6 +86,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                                AltCoinAddressValidator altCoinAddressValidator,
                                AccountAgeWitnessService accountAgeWitnessService,
                                AssetService assetService,
+                               FilterManager filterManager,
                                BSFormatter formatter) {
         super(model);
 
@@ -99,37 +94,25 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.assetService = assetService;
+        this.filterManager = filterManager;
         this.formatter = formatter;
     }
 
     @Override
-    public void initialize() {
-        buildForm();
-        paymentAccountChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null)
-                onSelectAccount(newValue);
-        };
-        Label placeholder = new AutoTooltipLabel(Res.get("shared.noAccountsSetupYet"));
-        placeholder.setWrapText(true);
-        paymentAccountsListView.setPlaceholder(placeholder);
+    protected ObservableList<PaymentAccount> getPaymentAccounts() {
+        return model.getPaymentAccounts();
     }
 
     @Override
-    protected void activate() {
-        paymentAccountsListView.setItems(model.getPaymentAccounts());
-        paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
-        addAccountButton.setOnAction(event -> addNewAccount());
-        exportButton.setOnAction(event -> model.dataModel.exportAccounts((Stage) root.getScene().getWindow()));
-        importButton.setOnAction(event -> model.dataModel.importAccounts((Stage) root.getScene().getWindow()));
+    protected void importAccounts() {
+        model.dataModel.importAccounts((Stage) root.getScene().getWindow());
     }
 
     @Override
-    protected void deactivate() {
-        paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
-        addAccountButton.setOnAction(null);
-        exportButton.setOnAction(null);
-        importButton.setOnAction(null);
+    protected void exportAccounts() {
+        model.dataModel.exportAccounts((Stage) root.getScene().getWindow());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -138,7 +121,6 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
-            String code = selectedTradeCurrency.getCode();
             if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
                 String name = selectedTradeCurrency.getName();
                 new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
@@ -149,52 +131,18 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                         .show();
             }
 
-            switch (code) {
-                case "XMR":
-                    new Popup<>().information(Res.get("account.altcoin.popup.xmr.msg"))
+            final Optional<Asset> asset = CurrencyUtil.findAsset(selectedTradeCurrency.getCode());
+            if (asset.isPresent()) {
+                final AltCoinAccountDisclaimer disclaimerAnnotation = asset.get().getClass().getAnnotation(AltCoinAccountDisclaimer.class);
+                if (disclaimerAnnotation != null) {
+                    new Popup<>().information(Res.get(disclaimerAnnotation.value()))
                             .useIUnderstandButton()
                             .show();
-                    break;
-                case "BLUR":
-                    new Popup<>().information(Res.get("account.altcoin.popup.blur.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "CCX":
-                    new Popup<>().information(Res.get("account.altcoin.popup.ccx.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "DRGL":
-                    new Popup<>().information(Res.get("account.altcoin.popup.drgl.msg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "ZEC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.ZEC.msg", "ZEC"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "XZC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.XZC.msg", "XZC"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "BCH":
-                case "BCHC":
-                    new Popup<>().information(Res.get("account.altcoin.popup.bch"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
-                case "BTG":
-                    new Popup<>().information(Res.get("account.altcoin.popup.btg"))
-                            .useIUnderstandButton()
-                            .show();
-                    break;
+                }
             }
 
-            if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
-                    e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
+            if (model.getPaymentAccounts().stream().noneMatch(e -> e.getAccountName() != null &&
+                    e.getAccountName().equals(paymentAccount.getAccountName()))) {
                 model.onSaveNewAccount(paymentAccount);
                 removeNewAccountForm();
             } else {
@@ -207,63 +155,17 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         removeNewAccountForm();
     }
 
-    private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup<>().warning(Res.get("shared.askConfirmDeleteAccount"))
-                .actionButtonText(Res.get("shared.yes"))
-                .onAction(() -> {
-                    boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
-                    if (!isPaymentAccountUsed)
-                        removeSelectAccountForm();
-                    else
-                        UserThread.runAfter(() -> new Popup<>().warning(
-                                Res.get("shared.cannotDeleteAccount"))
-                                .show(), 100, TimeUnit.MILLISECONDS);
-                })
-                .closeButtonText(Res.get("shared.cancel"))
-                .show();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Base form
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
+    protected void buildForm() {
+        addTitledGroupBg(root, gridRow, 2, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView<PaymentAccount>> tuple = FormBuilder.addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
-        GridPane.setValignment(tuple.first, VPos.TOP);
+        Tuple3<Label, ListView<PaymentAccount>, VBox> tuple = addTopLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
-        paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
-            @Override
-            public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
-                return new ListCell<PaymentAccount>() {
-                    final Label label = new AutoTooltipLabel();
-                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new AutoTooltipButton("", icon);
-                    final AnchorPane pane = new AnchorPane(label, removeButton);
-
-                    {
-                        label.setLayoutY(5);
-                        removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
-                    }
-
-                    @Override
-                    public void updateItem(final PaymentAccount item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            label.setText(item.getAccountName());
-                            removeButton.setOnAction(e -> onDeleteAccount(item));
-                            setGraphic(pane);
-                        } else {
-                            setGraphic(null);
-                        }
-                    }
-                };
-            }
-        });
+        setPaymentAccountsCellFactory();
 
         Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
                 Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
@@ -273,7 +175,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     // Add new account form
-    private void addNewAccount() {
+    protected void addNewAccount() {
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
@@ -297,10 +199,10 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     // Select account form
-    private void onSelectAccount(PaymentAccount paymentAccount) {
+    protected void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         paymentMethodForm.addFormForDisplayAccount();
         gridRow = paymentMethodForm.getGridRow();
@@ -326,7 +228,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
         return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
-                inputValidator, root, gridRow, formatter, assetService);
+                inputValidator, root, gridRow, formatter, assetService, filterManager);
     }
 
     private void removeNewAccountForm() {
@@ -335,17 +237,21 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         addAccountButton.setDisable(false);
     }
 
-    private void removeSelectAccountForm() {
+    @Override
+    protected void removeSelectAccountForm() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
         addAccountButton.setDisable(false);
         paymentAccountsListView.getSelectionModel().clearSelection();
     }
 
+    @Override
+    protected boolean deleteAccountFromModel(PaymentAccount paymentAccount) {
+        return model.onDeleteAccount(paymentAccount);
+    }
 
     private void removeAccountRows() {
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
     }
-
 }
