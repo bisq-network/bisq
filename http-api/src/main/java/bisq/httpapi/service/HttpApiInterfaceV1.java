@@ -29,5 +29,4 @@ public class HttpApiInterfaceV1 {
     public VersionEndpoint getVersionEndpoint() {
         return versionEndpoint;
     }
-
 }

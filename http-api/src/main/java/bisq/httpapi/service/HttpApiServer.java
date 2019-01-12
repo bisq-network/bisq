@@ -1,7 +1,6 @@
 package bisq.httpapi.service;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.wallet.BtcWalletService;
 
 import javax.inject.Inject;
 
@@ -26,17 +25,30 @@ import org.glassfish.jersey.servlet.ServletContainer;
 @SuppressWarnings("Duplicates")
 @Slf4j
 public class HttpApiServer {
-    private final BtcWalletService walletService;
     private final HttpApiInterfaceV1 httpApiInterfaceV1;
     private final BisqEnvironment bisqEnvironment;
 
-
     @Inject
-    public HttpApiServer(BtcWalletService walletService, HttpApiInterfaceV1 httpApiInterfaceV1,
+    public HttpApiServer(HttpApiInterfaceV1 httpApiInterfaceV1,
                          BisqEnvironment bisqEnvironment) {
-        this.walletService = walletService;
         this.httpApiInterfaceV1 = httpApiInterfaceV1;
         this.bisqEnvironment = bisqEnvironment;
+    }
+
+    public void startServer() {
+        try {
+            ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
+            contextHandlerCollection.setHandlers(new Handler[]{buildAPIHandler(), buildSwaggerUIOverrideHandler(), buildSwaggerUIHandler()});
+            // Start server
+            InetSocketAddress socketAddress = new InetSocketAddress(bisqEnvironment.getHttpApiHost(), bisqEnvironment.getHttpApiPort());
+            Server server = new Server(socketAddress);
+            server.setHandler(contextHandlerCollection);
+            server.setRequestLog(new Slf4jRequestLog());
+            server.start();
+            log.info("HTTP API started on {}", socketAddress);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private ContextHandler buildAPIHandler() {
@@ -66,21 +78,5 @@ public class HttpApiServer {
         swaggerUIContext.setContextPath("/docs");
         swaggerUIContext.setHandler(swaggerUIResourceHandler);
         return swaggerUIContext;
-    }
-
-    public void startServer() {
-        try {
-            ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
-            contextHandlerCollection.setHandlers(new Handler[]{buildAPIHandler(), buildSwaggerUIOverrideHandler(), buildSwaggerUIHandler()});
-            // Start server
-            InetSocketAddress socketAddress = new InetSocketAddress(bisqEnvironment.getHttpApiHost(), bisqEnvironment.getHttpApiPort());
-            Server server = new Server(socketAddress);
-            server.setHandler(contextHandlerCollection);
-            server.setRequestLog(new Slf4jRequestLog());
-            server.start();
-            log.info("HTTP API started on {}", socketAddress);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }
