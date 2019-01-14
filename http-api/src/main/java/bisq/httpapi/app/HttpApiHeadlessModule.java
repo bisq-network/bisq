@@ -17,15 +17,13 @@
 
 package bisq.httpapi.app;
 
+import bisq.httpapi.HttpApiModule;
+
 import bisq.core.CoreModule;
 
 import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;
-
-
-
-import bisq.httpapi.HttpApiModule;
 
 /**
  * Used in case of the headless version.

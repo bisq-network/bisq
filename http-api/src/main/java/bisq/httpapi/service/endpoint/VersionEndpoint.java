@@ -1,10 +1,11 @@
 package bisq.httpapi.service.endpoint;
 
+import bisq.httpapi.model.VersionDetails;
+
 import bisq.common.app.Version;
 
 
 
-import bisq.httpapi.model.VersionDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.ws.rs.GET;

@@ -1,10 +1,11 @@
 package bisq.httpapi.service;
 
+import bisq.httpapi.service.endpoint.VersionEndpoint;
+
 import javax.inject.Inject;
 
 
 
-import bisq.httpapi.service.endpoint.VersionEndpoint;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.tags.Tag;

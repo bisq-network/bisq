@@ -17,6 +17,9 @@
 
 package bisq.httpapi;
 
+import bisq.httpapi.service.HttpApiServer;
+import bisq.httpapi.service.endpoint.VersionEndpoint;
+
 import bisq.core.app.AppOptionKeys;
 
 import bisq.common.app.AppModule;
@@ -25,11 +28,6 @@ import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-
-
-
-import bisq.httpapi.service.HttpApiServer;
-import bisq.httpapi.service.endpoint.VersionEndpoint;
 
 public class HttpApiModule extends AppModule {
 

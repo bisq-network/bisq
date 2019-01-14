@@ -17,6 +17,8 @@
 
 package bisq.httpapi.app;
 
+import bisq.httpapi.service.HttpApiServer;
+
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;
 
@@ -25,10 +27,6 @@ import bisq.common.app.AppModule;
 import bisq.common.setup.CommonSetup;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.httpapi.service.HttpApiServer;
 
 /**
  * Main class for headless version.
