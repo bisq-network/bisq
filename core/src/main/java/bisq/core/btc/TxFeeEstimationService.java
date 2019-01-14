@@ -42,6 +42,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class TxFeeEstimationService {
     public static int TYPICAL_TX_WITH_1_INPUT_SIZE = 260;
+    private static int DEPOSIT_TX_SIZE = 320;
+    private static int PAYOUT_TX_SIZE = 380;
+    private static int BSQ_INPUT_INCREASE = 150;
+    private static int MAX_ITERATIONS = 10;
     private final FeeService feeService;
     private final BtcWalletService btcWalletService;
     private final Preferences preferences;
@@ -83,13 +87,13 @@ public class TxFeeEstimationService {
                                                            Preferences preferences) {
         Coin txFeePerByte = feeService.getTxFeePerByte();
         // We start with min taker fee size of 260
-        int estimatedTxSize = 260;
+        int estimatedTxSize = TYPICAL_TX_WITH_1_INPUT_SIZE;
         try {
             estimatedTxSize = getEstimatedTxSize(List.of(tradeFee, amount), estimatedTxSize, txFeePerByte, btcWalletService);
         } catch (InsufficientMoneyException e) {
             if (isTaker) {
                 // if we cannot do the estimation we use the payout tx size
-                estimatedTxSize = 380;
+                estimatedTxSize = PAYOUT_TX_SIZE;
             }
             log.info("We cannot do the fee estimation because there are not enough funds in the wallet. This is expected " +
                     "if the user pays from an external wallet. In that case we use an estimated tx size of {} bytes.", estimatedTxSize);
@@ -97,15 +101,15 @@ public class TxFeeEstimationService {
 
         if (!preferences.isPayFeeInBtc()) {
             // If we pay the fee in BSQ we have one input more which adds about 150 bytes
-            estimatedTxSize += 150;
+            estimatedTxSize += BSQ_INPUT_INCREASE;
         }
 
         Coin txFee;
         int size;
         if (isTaker) {
-            int averageSize = (estimatedTxSize + 320) / 2;  // deposit tx has about 320 bytes
+            int averageSize = (estimatedTxSize + DEPOSIT_TX_SIZE) / 2;  // deposit tx has about 320 bytes
             // We use at least the size of the payout tx to not underpay at payout.
-            size = Math.max(380, averageSize);
+            size = Math.max(PAYOUT_TX_SIZE, averageSize);
             txFee = txFeePerByte.multiply(size);
             log.info("Fee estimation resulted in a tx size of {} bytes.\n" +
                     "We use an average between the taker fee tx and the deposit tx (320 bytes) which results in {} bytes.\n" +
@@ -139,7 +143,7 @@ public class TxFeeEstimationService {
             }
             counter++;
         }
-        while (!isInTolerance && counter < 10);
+        while (!isInTolerance && counter < MAX_ITERATIONS);
         if (!isInTolerance) {
             log.warn("We could not find a tx which satisfies our tolerance requirement of 20%. " +
                             "realTxSize={}, estimatedTxSize={}",
