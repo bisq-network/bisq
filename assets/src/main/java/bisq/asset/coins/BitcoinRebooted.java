@@ -24,18 +24,6 @@ import bisq.asset.Coin;
 public class BitcoinRebooted extends Coin {
 
     public BitcoinRebooted() {
-        super("Bitcoin Rebooted", "BOOT", new BitcoinRebootedAddressValidator());
-    }
-
-
-    public static class BitcoinRebootedAddressValidator implements AddressValidator {
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (!address.startsWith("R"))
-                return AddressValidationResult.invalidAddress("", "validation.altcoin.BitcoinRebootedAddressesNotSupported");
-
-            return AddressValidationResult.validAddress();
-        }
+        super("Bitcoin Rebooted", "BOOT", new RegexAddressValidator("^R([0-9a-f]{1,80})$"));
     }
 }
