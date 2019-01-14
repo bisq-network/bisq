@@ -1,6 +1,6 @@
-;This file will be executed next to the application bundle image
+﻿;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Bisq with application files
-;Note: This file must use UTF-8 encoding
+;Note: This file must use UTF-8 encoding with BOM for the unicode custom messages to be displayed properly
 
 #define SourceDir GetEnv('package_dir') + '\windows'
 #define AppVersion GetEnv('version')
