@@ -19,10 +19,14 @@ src_dir=$base_dir/desktop/package
 
 cd $base_dir
 
-set -e
+set -eu
 
 echo Installing required packages
-sudo apt install -y fakeroot
+if [[ -f "/etc/debian_version" ]]; then
+    sudo apt install -y fakeroot rpm
+elif [[ -f "/etc/redhat-release" ]]; then
+    sudo yum install -y fakeroot rpm-build dpkg perl-Digest-SHA
+fi
 
 if [ ! -f "$base_dir/desktop/package/desktop-$version-all.jar" ]; then
     echo Building application
@@ -73,8 +77,12 @@ fi
 
 chmod o+rx "$src_dir/desktop-$version-all.jar"
 
+# Remove previously generated packages so we can later determine if they are actually generated successfully
 if [ -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     rm "$base_dir/desktop/package/linux/bisq-$version.deb"
+fi
+if [ -f "$base_dir/desktop/package/linux/bisq-$version.rpm" ]; then
+    rm "$base_dir/desktop/package/linux/bisq-$version.rpm"
 fi
 
 # TODO: add the license as soon as it is working with our build setup
@@ -106,6 +114,31 @@ if [ ! -f "$base_dir/desktop/package/linux/bisq-$version.deb" ]; then
     exit 3
 fi
 
+echo Generating rpm package
+$JAVA_HOME/bin/javapackager \
+    -deploy \
+    -BappVersion=$version_base \
+    -Bcategory=Network \
+    -Bemail=contact@bisq.network \
+    -BlicenseType=GPLv3 \
+    -Bicon=$base_dir/desktop/package/linux/icon.png \
+    -native rpm \
+    -name Bisq \
+    -title "The decentralized exchange network." \
+    -vendor Bisq \
+    -outdir $base_dir/desktop/package/linux \
+    -srcdir $src_dir \
+    -srcfiles desktop-$version-all.jar \
+    -appclass bisq.desktop.app.BisqAppMain \
+    -BjvmOptions=-Xss1280k \
+    -outfile Bisq-$version \
+    -v
+
+if [ ! -f "$base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm" ]; then
+    echo No rpm file found at $base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm
+    exit 3
+fi
+
 # FIXME: My Ubuntu somehow also deletes the lower case file
 # if [ -f "$base_dir/desktop/package/linux/Bisq-$version.deb" ]; then
 #     rm "$base_dir/desktop/package/linux/Bisq-$version.deb"
@@ -114,5 +147,13 @@ mv $base_dir/desktop/package/linux/bisq-$version.deb $base_dir/desktop/package/l
 
 echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.deb:
 shasum -a256 $base_dir/desktop/package/linux/Bisq-$version.deb | awk '{print $1}' | tee $base_dir/desktop/package/linux/Bisq-$version.deb.txt
+
+if [ -f "$base_dir/desktop/package/linux/Bisq-$version_base-1.x86_64.rpm" ]; then
+    rm "$base_dir/desktop/package/linux/Bisq-$version_base-1.x86_64.rpm"
+fi
+mv $base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm $base_dir/desktop/package/linux/Bisq-$version.rpm
+
+echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.rpm:
+shasum -a256 $base_dir/desktop/package/linux/Bisq-$version.rpm | awk '{print $1}' | tee $base_dir/desktop/package/linux/Bisq-$version.rpm.txt
 
 echo Done!

@@ -11,6 +11,7 @@ release_dir=$base_dir/desktop/release/$version
 
 dmg=Bisq-$version.dmg
 deb=Bisq-$version.deb
+rpm=Bisq-$version.rpm
 exe=Bisq-$version.exe
 
 read -p "Enter email address used for gpg signing: " gpg_user
@@ -38,6 +39,10 @@ if [ -f "$package_dir/linux/$deb" ]; then
     cp "$package_dir/linux/$deb" "$release_dir"
     cp "$package_dir/linux/$deb.txt" "$release_dir"
 fi
+if [ -f "$package_dir/linux/$rpm" ]; then
+    cp "$package_dir/linux/$rpm" "$release_dir"
+    cp "$package_dir/linux/$rpm.txt" "$release_dir"
+fi
 if [ -f "$package_dir/windows/$exe" ]; then
     cp "$package_dir/windows/$exe" "$release_dir"
     cp "$package_dir/windows/$exe.txt" "$release_dir"
@@ -50,6 +55,9 @@ fi
 if [ -f "$release_dir/$deb" ]; then
     gpg --digest-algo SHA256 --local-user $gpg_user --output "$release_dir/$deb.asc" --detach-sig --armor "$release_dir/$deb"
 fi
+if [ -f "$release_dir/$rpm" ]; then
+    gpg --digest-algo SHA256 --local-user $gpg_user --output "$release_dir/$rpm.asc" --detach-sig --armor "$release_dir/$rpm"
+fi
 if [ -f "$release_dir/$exe" ]; then
     gpg --digest-algo SHA256 --local-user $gpg_user --output "$release_dir/$exe.asc" --detach-sig --armor "$release_dir/$exe"
 fi
@@ -60,6 +68,9 @@ if [ -f "$release_dir/$dmg" ]; then
 fi
 if [ -f "$release_dir/$deb" ]; then
     gpg --digest-algo SHA256 --verify "$release_dir/$deb.asc"
+fi
+if [ -f "$release_dir/$rpm" ]; then
+    gpg --digest-algo SHA256 --verify "$release_dir/$rpm.asc"
 fi
 if [ -f "$release_dir/$exe" ]; then
     gpg --digest-algo SHA256 --verify "$release_dir/$exe.asc"
