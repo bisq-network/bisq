@@ -9,6 +9,13 @@
 @echo off
 
 set version=0.9.3-SNAPSHOT
+if not exist "%JAVA_HOME%\bin\javapackager.exe" (
+    if not exist "%ProgramFiles%\Java\jdk-10.0.2" (
+        echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
+        exit /B 1
+    )
+    set JAVA_HOME=%ProgramFiles%\Java\jdk-10.0.2
+)
 set package_dir=%~dp0..
 for /F "tokens=1,2,3 delims=.-" %%a in ("%version%") do (
    set file_version=%%a.%%b.%%c
@@ -31,7 +38,7 @@ if exist "%~dp0..\..\..\desktop\build\libs\desktop-%version%-all.jar" (
     set jar_filename=desktop-%version%-all.jar
 ) else (
     echo No jar file available in %~dp0..\..\..\desktop\build\libs
-    exit /B 1
+    exit /B 2
 )
 
 if not exist "%TEMP%\7za920\7za.exe" (
@@ -105,7 +112,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 
 if not exist "%package_dir%\windows\Bisq-%version%.exe" (
     echo No exe file found at %package_dir%\windows\Bisq-%version%.exe
-    exit /B 2
+    exit /B 3
 )
 
 echo SHA256 of %package_dir%\windows\Bisq-%version%.exe:
