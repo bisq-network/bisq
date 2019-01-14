@@ -27,6 +27,7 @@ import java.util.List;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -40,7 +41,7 @@ import static org.mockito.Mockito.when;
 public class TxFeeEstimationServiceTest {
 
     @Test
-    public void testGetEstimatedTxSize() throws InsufficientMoneyException {
+    public void testGetEstimatedTxSize_withDefaultTxSize() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
         int initialEstimatedTxSize;
         Coin txFeePerByte;
@@ -57,18 +58,43 @@ public class TxFeeEstimationServiceTest {
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
         assertEquals(260, result);
+    }
 
+    // FIXME @Bernard could you have a look?
+    @Test
+    @Ignore
+    public void testGetEstimatedTxSize_withLargeTx() throws InsufficientMoneyException {
+        List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
+        int initialEstimatedTxSize;
+        Coin txFeePerByte;
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        int result;
+        int realTxSize;
+        Coin txFee;
 
-        // TODO check how to use the mocking framework for repeated calls
-        // The btcWalletService.getEstimatedFeeTxSize returns 0 at repeated calls in the while loop....
-       /* initialEstimatedTxSize = 260;
+        initialEstimatedTxSize = 260;
         txFeePerByte = Coin.valueOf(10);
         realTxSize = 2600;
 
         txFee = txFeePerByte.multiply(initialEstimatedTxSize);
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
+
+        // repeated calls to getEstimatedFeeTxSize do not work (returns 0 at second call in loop which cause test to fail)
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
         assertEquals(2600, result);
+    }
+
+    // FIXME @Bernard could you have a look?
+    @Test
+    @Ignore
+    public void testGetEstimatedTxSize_withSmallTx() throws InsufficientMoneyException {
+        List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
+        int initialEstimatedTxSize;
+        Coin txFeePerByte;
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        int result;
+        int realTxSize;
+        Coin txFee;
 
         initialEstimatedTxSize = 2600;
         txFeePerByte = Coin.valueOf(10);
@@ -77,7 +103,7 @@ public class TxFeeEstimationServiceTest {
         txFee = txFeePerByte.multiply(initialEstimatedTxSize);
         when(btcWalletService.getEstimatedFeeTxSize(outputValues, txFee)).thenReturn(realTxSize);
         result = TxFeeEstimationService.getEstimatedTxSize(outputValues, initialEstimatedTxSize, txFeePerByte, btcWalletService);
-        assertEquals(260, result);*/
+        assertEquals(260, result);
     }
 
     @Test
