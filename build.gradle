@@ -271,7 +271,7 @@ configure(project(':core')) {
 }
 
 
-configure(project(':http-api')) {
+configure(project(':api')) {
 
     apply plugin: 'application'
 
@@ -335,11 +335,11 @@ configure(project(':http-api')) {
         testClassesDir = sourceSets.testIntegration.output.classesDir
         classpath = sourceSets.testIntegration.runtimeClasspath
 
-        binResultsDir = file("$buildDir/http-api/integration-test-results/binary/testIntegration")
+        binResultsDir = file("$buildDir/api/integration-test-results/binary/testIntegration")
 
         reports {
-            html.destination = "$buildDir/http-api/reports/integration-test"
-            junitXml.destination = "$buildDir/http-api/integration-test-results"
+            html.destination = "$buildDir/api/reports/integration-test"
+            junitXml.destination = "$buildDir/api/integration-test-results"
         }
 
         systemProperties = [
@@ -374,7 +374,7 @@ configure(project(':desktop')) {
         compile project(':p2p')
         compile project(':core')
         compile project(':common')
-        compile project(':http-api')
+        compile project(':api')
         compile 'org.controlsfx:controlsfx:8.0.6_20'
         compile 'org.reactfx:reactfx:2.0-M3'
         compile 'net.glxn:qrgen:1.3'
