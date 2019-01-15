@@ -12,7 +12,7 @@ jobs:
     - stage: integration
       env:
       - CUBE_LOGGER_ENABLE=true
-      install: cd http-api; docker-compose build;
+      install: cd api; docker-compose build;
       script: ../gradlew testIntegration;
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

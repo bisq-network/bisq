@@ -25,21 +25,21 @@ Sample call:
 
 ## Headless mode
 
-    cd http-api
+    cd api
     ../gradlew run
     
 ## Docker integration
 
 First you need to build docker image for the API:
 
-    cd http-api
+    cd api
     docker-compose build
 
 Start container with the API:
     
     docker-compose up alice
 
-It will automatically start `bisq-http-api` (alice), `bitcoind` and `seednode` in regtest mode.
+It will automatically start `bisq-api` (alice), `bitcoind` and `seednode` in regtest mode.
 
     curl localhost:8080/api/v1/version
 
@@ -63,8 +63,8 @@ Some features might be highly experimental and will work only when started with 
 
 Integration tests leverage Docker and run in headless mode. First you need to build docker images for the api:
 
-    cd http-api
+    cd api
     docker-compose build
     ../gradlew testIntegration
     
-IntelliJ Idea has awesome integration so just right click on `http-api/src/testIntegration` directory and select `Debug All Tests`.
+IntelliJ Idea has awesome integration so just right click on `api/src/testIntegration` directory and select `Debug All Tests`.
