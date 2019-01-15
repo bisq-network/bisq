@@ -293,9 +293,6 @@ configure(project(':http-api')) {
         compile 'org.glassfish.jersey.ext:jersey-bean-validation:2.27'
         compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
 
-        // TODO Lets try to get rid of that. Atm compile fails if removed...
-        compile 'org.glassfish.jersey.media:jersey-media-multipart:2.27'
-
         // TODO Lets try to remove swagger for default config (add createDocs config/profile)
         compile('io.swagger.core.v3:swagger-jaxrs2:2.0.6') {
             exclude(module: 'javassist')

@@ -18,7 +18,6 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -53,7 +52,6 @@ public class HttpApiServer {
 
     private ContextHandler buildAPIHandler() {
         ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.register(MultiPartFeature.class);
         resourceConfig.register(httpApiInterfaceV1);
         resourceConfig.packages("io.swagger.v3.jaxrs2.integration.resources");
         ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS | ServletContextHandler.NO_SECURITY);
