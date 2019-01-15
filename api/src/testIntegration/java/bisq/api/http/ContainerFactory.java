@@ -7,13 +7,13 @@ import org.arquillian.cube.docker.impl.client.containerobject.dsl.ContainerBuild
 @SuppressWarnings("WeakerAccess")
 public final class ContainerFactory {
 
-    public static final String BITCOIN_NODE_CONTAINER_NAME = "bisq-http-api-bitcoin-node";
+    public static final String BITCOIN_NODE_CONTAINER_NAME = "bisq-api-bitcoin-node";
     public static final String BITCOIN_NODE_HOST_NAME = "bitcoin";
     public static final String SEED_NODE_CONTAINER_NAME = "bisq-seednode";
     public static final String SEED_NODE_HOST_NAME = SEED_NODE_CONTAINER_NAME;
     public static final String SEED_NODE_ADDRESS = SEED_NODE_HOST_NAME + ":8000";
-    public static final String CONTAINER_NAME_PREFIX = "bisq-http-api-";
-    public static final String API_IMAGE = "bisq/http-api";
+    public static final String CONTAINER_NAME_PREFIX = "bisq-api-";
+    public static final String API_IMAGE = "bisq/api";
     public static final String ENV_NODE_PORT_KEY = "NODE_PORT";
     public static final String ENV_ENABLE_HTTP_API_EXPERIMENTAL_FEATURES_KEY = "ENABLE_HTTP_API_EXPERIMENTAL_FEATURES";
     public static final String ENV_HTTP_API_HOST_KEY = "HTTP_API_HOST";
