@@ -6,6 +6,9 @@ USE AT YOUR OWN RISK!!!**
 The goal of this module is to expose some of the Bisq's functionality for programmatic access.
 HTTP API can be run together with desktop module or in headless mode.
 
+_Note: In the following commands we use `foo` before the actual arguments because gradle does not allow that the first argument
+ starts with a double dash. The `foo` has no meaning and is ignored._
+
 ## Desktop with HTTP API
 
     cd desktop
