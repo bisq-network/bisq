@@ -1,39 +1,56 @@
 # Bisq HTTP API
 
-**THIS IS EXPERIMENTAL SOFTWARE! 
-USE AT YOUR OWN RISK!!!**
+**The API branch is under development! 
+Do not use it in production environment at the current state!**
 
-The goal of this module is to expose some of the Bisq's functionality for programmatic access.
-HTTP API can be run together with desktop module or in headless mode.
+Enabling the API exposes some of Bisq's functionality for access over a http API.
+You can run it either as the desktop application or as a headless application.
 
-_Note: In the following commands we use `foo` before the actual arguments because gradle does not allow that the first argument
+On that branch we start to implement feature by feature starting with the most simple one - `version`.
+
+
+_**Kown issues**: Wallet password protection is not supported at the moment for the headless version. So if you have set 
+ a wallet password when running the Desktop version and afterwards run the headless version it will get stuck at startup 
+ expecting the wallet password. This feature will be implemented soon._
+
+_**Note**: 
+If you have a Bisq application with BTC already set up it is recommended to use the optional `appName` argument to 
+provide a different name and data directory so that the default Bisq application is not exposed via the API. That way 
+your data and wallet from your default Bisq application are completely isolated from the API application. In the below 
+commands we use the argument `--appName=bisq-API` to ensure you are not mixing up your default Bisq setup when 
+experimenting with the API branch. You cannot run the desktop and the headless version in parallel as they would access 
+the same data.
+
+In the following commands we use `foo` before the actual arguments because gradle does not allow that the first argument
  starts with a double dash. The `foo` has no meaning and is ignored._
-
-## Desktop with HTTP API
+ 
+## Run the API as Desktop application
 
     cd desktop
-    ../gradlew run --args "foo --desktopWithHttpApi=true"
+    ../gradlew run --args "foo --desktopWithHttpApi=true --appName=bisq-API"
     
-If all goes well you should see following line in the logs:
+If the application has started up you should see following line in the logs:
 
     HTTP API started on localhost/127.0.0.1:8080
+    
+If you prefer another port or host use the arguments `--httpApiHost` and `--httpApiPort`.
 
 ### API Documentation
 
-Documentation should be available at http://localhost:8080/docs/
+Documentation is available at http://localhost:8080/docs/
 
 Sample call:
 
     curl http://localhost:8080/api/v1/version
 
-## Headless mode
+## Run the API as headless application
 
     cd api
-    ../gradlew run
+    ../gradlew run --args "foo --appName=bisq-API"
     
 ## Docker integration
 
-First you need to build docker image for the API:
+First you need to build the docker image for the API:
 
     cd api
     docker-compose build
@@ -48,19 +65,23 @@ It will automatically start `bisq-api` (alice), `bitcoind` and `seednode` in reg
 
 ## Host and port configuration
 
-    ../gradlew run --args "foo --httpApiHost=0.0.0.0 --httpApiPort=8888" 
+    ../gradlew run --args "foo --httpApiHost=127.0.0.1 --httpApiPort=8080" 
     
-**CAUTION! Please do not expose the API over public interface (0.0.0.0 exposes on all interfaces)**
+**CAUTION! Please do not expose the API over a public interface**
 
 ## Experimental features
 
-Some features might be highly experimental and will work only when started with special flag:
+Some features will be not sufficiently tested and will only be enabled if you add the 
+`enableHttpApiExperimentalFeatures` argument:
 
     ../gradlew run --args "foo --enableHttpApiExperimentalFeatures" 
 
 ## Regtest mode
 
-    ../gradlew run --args "foo --appName=bisq-BTC_REGTEST-alice --nodePort=8003 --useLocalhostForP2P=true --seedNodes=localhost:8000 --btcNodes=localhost:18445 --baseCurrencyNetwork=BTC_REGTEST --logLevel=info --useDevPrivilegeKeys=true --bitcoinRegtestHost=NONE --myAddress=172.17.0.1:8003 --enableHttpApiExperimentalFeatures"
+    ../gradlew run --args "foo --appName=bisq-BTC_REGTEST-alice --nodePort=8003 --useLocalhostForP2P=true 
+    --seedNodes=localhost:8000 --btcNodes=localhost:18445 --baseCurrencyNetwork=BTC_REGTEST --logLevel=info 
+    --useDevPrivilegeKeys=true --bitcoinRegtestHost=NONE --myAddress=172.17.0.1:8003 
+    --enableHttpApiExperimentalFeatures"
 
 ## Integration tests
 
@@ -70,4 +91,5 @@ Integration tests leverage Docker and run in headless mode. First you need to bu
     docker-compose build
     ../gradlew testIntegration
     
-IntelliJ Idea has awesome integration so just right click on `api/src/testIntegration` directory and select `Debug All Tests`.
+IntelliJ Idea has awesome integration so just right click on `api/src/testIntegration` directory and select 
+`Debug All Tests`.
