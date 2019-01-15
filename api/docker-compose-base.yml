@@ -4,8 +4,8 @@ services:
   api:
     build:
       context: ..
-      dockerfile: http-api/docker/dev/Dockerfile
-    image: bisq/http-api
+      dockerfile: api/docker/dev/Dockerfile
+    image: bisq/api
     environment:
       - LOG_LEVEL=debug
       - USE_LOCALHOST_FOR_P2P=true
