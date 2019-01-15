@@ -15,9 +15,9 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.httpapi.app;
+package bisq.api.http.app;
 
-import bisq.httpapi.HttpApiModule;
+import bisq.api.http.HttpApiModule;
 
 import bisq.core.CoreModule;
 

@@ -1,1 +1,1 @@
-bisq.httpapi.arquillian.CubeLoggerExtension
+bisq.api.http.arquillian.CubeLoggerExtension

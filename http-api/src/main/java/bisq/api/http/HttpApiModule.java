@@ -15,10 +15,10 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.httpapi;
+package bisq.api.http;
 
-import bisq.httpapi.service.HttpApiServer;
-import bisq.httpapi.service.endpoint.VersionEndpoint;
+import bisq.api.http.service.HttpApiServer;
+import bisq.api.http.service.endpoint.VersionEndpoint;
 
 import bisq.core.app.AppOptionKeys;
 

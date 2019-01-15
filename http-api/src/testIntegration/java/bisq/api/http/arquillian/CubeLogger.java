@@ -1,4 +1,4 @@
-package bisq.httpapi.arquillian;
+package bisq.api.http.arquillian;
 
 import org.arquillian.cube.CubeController;
 import org.arquillian.cube.spi.event.lifecycle.BeforeStop;

@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.api.http;
 
 @SuppressWarnings("WeakerAccess")
 public final class ApiTestHelper {

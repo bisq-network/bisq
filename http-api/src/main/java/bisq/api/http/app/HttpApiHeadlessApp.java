@@ -1,4 +1,4 @@
-package bisq.httpapi.app;
+package bisq.api.http.app;
 
 import bisq.core.app.BisqHeadlessApp;
 

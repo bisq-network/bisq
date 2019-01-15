@@ -275,7 +275,7 @@ configure(project(':http-api')) {
 
     apply plugin: 'application'
 
-    mainClassName = 'bisq.httpapi.app.HttpApiMain'
+    mainClassName = 'bisq.api.http.app.HttpApiMain'
 
     dependencies {
         compile project(':common')

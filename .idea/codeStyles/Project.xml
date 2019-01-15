@@ -15,8 +15,6 @@
         <value>
           <package name="bisq.monitor" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="bisq.httpapi" withSubpackages="true" static="false" />
-          <emptyLine />
           <package name="bisq.price" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="bisq.statistics" withSubpackages="true" static="false" />
@@ -24,6 +22,8 @@
           <package name="bisq.seednode" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="bisq.desktop" withSubpackages="true" static="false" />
+          <emptyLine />
+          <package name="bisq.api.http" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="bisq.core" withSubpackages="true" static="false" />
           <emptyLine />

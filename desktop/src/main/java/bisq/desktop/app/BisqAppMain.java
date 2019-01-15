@@ -21,6 +21,8 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.api.http.service.HttpApiServer;
+
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -35,10 +37,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.httpapi.service.HttpApiServer;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {

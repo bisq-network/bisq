@@ -1,4 +1,4 @@
-package bisq.httpapi.model;
+package bisq.api.http.model;
 
 public class VersionDetails {
     public String application;

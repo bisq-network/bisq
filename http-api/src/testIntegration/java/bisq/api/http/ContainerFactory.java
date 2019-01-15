@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.api.http;
 
 import org.arquillian.cube.docker.impl.client.config.Await;
 import org.arquillian.cube.docker.impl.client.containerobject.dsl.Container;

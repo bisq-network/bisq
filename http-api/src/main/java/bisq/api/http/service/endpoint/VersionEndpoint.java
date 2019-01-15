@@ -1,6 +1,6 @@
-package bisq.httpapi.service.endpoint;
+package bisq.api.http.service.endpoint;
 
-import bisq.httpapi.model.VersionDetails;
+import bisq.api.http.model.VersionDetails;
 
 import bisq.common.app.Version;
 

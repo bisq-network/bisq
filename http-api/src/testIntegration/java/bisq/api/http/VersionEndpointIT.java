@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.api.http;
 
 import bisq.common.app.Version;
 

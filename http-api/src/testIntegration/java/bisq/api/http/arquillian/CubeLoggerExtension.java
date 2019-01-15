@@ -1,4 +1,4 @@
-package bisq.httpapi.arquillian;
+package bisq.api.http.arquillian;
 
 import org.jboss.arquillian.core.spi.LoadableExtension;
 

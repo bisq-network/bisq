@@ -1,4 +1,4 @@
-package bisq.httpapi.service;
+package bisq.api.http.service;
 
 import bisq.core.app.BisqEnvironment;
 

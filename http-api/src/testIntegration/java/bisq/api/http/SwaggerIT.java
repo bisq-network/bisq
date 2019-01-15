@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.api.http;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -1,4 +1,4 @@
-package bisq.httpapi;
+package bisq.api.http;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;

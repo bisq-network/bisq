@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.httpapi.app;
+package bisq.api.http.app;
 
-import bisq.httpapi.service.HttpApiServer;
+import bisq.api.http.service.HttpApiServer;
 
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;

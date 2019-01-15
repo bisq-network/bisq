@@ -1,6 +1,6 @@
-package bisq.httpapi.service;
+package bisq.api.http.service;
 
-import bisq.httpapi.service.endpoint.VersionEndpoint;
+import bisq.api.http.service.endpoint.VersionEndpoint;
 
 import javax.inject.Inject;
 
