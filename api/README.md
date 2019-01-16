@@ -9,7 +9,7 @@ You can run it either as the desktop application or as a headless application.
 On that branch we start to implement feature by feature starting with the most simple one - `version`.
 
 
-_**Kown issues**: Wallet password protection is not supported at the moment for the headless version. So if you have set 
+_**Known issues**: Wallet password protection is not supported at the moment for the headless version. So if you have set 
  a wallet password when running the Desktop version and afterwards run the headless version it will get stuck at startup 
  expecting the wallet password. This feature will be implemented soon._
 
@@ -21,13 +21,10 @@ commands we use the argument `--appName=bisq-API` to ensure you are not mixing u
 experimenting with the API branch. You cannot run the desktop and the headless version in parallel as they would access 
 the same data.
 
-In the following commands we use `foo` before the actual arguments because gradle does not allow that the first argument
- starts with a double dash. The `foo` has no meaning and is ignored._
- 
 ## Run the API as Desktop application
 
     cd desktop
-    ../gradlew run --args "foo --desktopWithHttpApi=true --appName=bisq-API"
+    ../gradlew run --args="--desktopWithHttpApi=true --appName=bisq-API"
     
 If the application has started up you should see following line in the logs:
 
@@ -46,7 +43,7 @@ Sample call:
 ## Run the API as headless application
 
     cd api
-    ../gradlew run --args "foo --appName=bisq-API"
+    ../gradlew run --args="--appName=bisq-API"
     
 ## Docker integration
 
@@ -65,7 +62,7 @@ It will automatically start `bisq-api` (alice), `bitcoind` and `seednode` in reg
 
 ## Host and port configuration
 
-    ../gradlew run --args "foo --httpApiHost=127.0.0.1 --httpApiPort=8080" 
+    ../gradlew run --args="--httpApiHost=127.0.0.1 --httpApiPort=8080" 
     
 **CAUTION! Please do not expose the API over a public interface**
 
@@ -74,11 +71,11 @@ It will automatically start `bisq-api` (alice), `bitcoind` and `seednode` in reg
 Some features will be not sufficiently tested and will only be enabled if you add the 
 `enableHttpApiExperimentalFeatures` argument:
 
-    ../gradlew run --args "foo --enableHttpApiExperimentalFeatures" 
+    ../gradlew run --args="--enableHttpApiExperimentalFeatures" 
 
 ## Regtest mode
 
-    ../gradlew run --args "foo --appName=bisq-BTC_REGTEST-alice --nodePort=8003 --useLocalhostForP2P=true 
+    ../gradlew run --args="--appName=bisq-BTC_REGTEST-alice --nodePort=8003 --useLocalhostForP2P=true 
     --seedNodes=localhost:8000 --btcNodes=localhost:18445 --baseCurrencyNetwork=BTC_REGTEST --logLevel=info 
     --useDevPrivilegeKeys=true --bitcoinRegtestHost=NONE --myAddress=172.17.0.1:8003 
     --enableHttpApiExperimentalFeatures"
