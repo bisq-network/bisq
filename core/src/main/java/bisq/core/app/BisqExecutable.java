@@ -74,7 +74,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
     private final String fullName;
     private final String scriptName;
@@ -270,7 +270,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
-        bisqSetup.addBisqSetupCompleteListener(this);
+        bisqSetup.addBisqSetupListener(this);
         bisqSetup.start();
     }
 
