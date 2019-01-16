@@ -114,7 +114,15 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class BisqSetup {
-    public interface BisqSetupCompleteListener {
+    public interface BisqSetupListener {
+        default void onInitP2pNetwork() {
+            log.info("onInitP2pNetwork");
+        }
+
+        default void onInitWallet() {
+            log.info("onInitWallet");
+        }
+
         void onSetupComplete();
     }
 
@@ -193,7 +201,7 @@ public class BisqSetup {
     private boolean allBasicServicesInitialized;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
-    private List<BisqSetupCompleteListener> bisqSetupCompleteListeners = new ArrayList<>();
+    private List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
     public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
@@ -276,8 +284,8 @@ public class BisqSetup {
     // Setup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBisqSetupCompleteListener(BisqSetupCompleteListener listener) {
-        bisqSetupCompleteListeners.add(listener);
+    public void addBisqSetupListener(BisqSetupListener listener) {
+        bisqSetupListeners.add(listener);
     }
 
     public void start() {
@@ -302,7 +310,7 @@ public class BisqSetup {
     private void step5() {
         initDomainServices();
 
-        bisqSetupCompleteListeners.forEach(BisqSetupCompleteListener::onSetupComplete);
+        bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
 
         // We set that after calling the setupCompleteHandler to not trigger a popup from the dev dummy accounts
         // in MainViewModel
@@ -496,6 +504,7 @@ public class BisqSetup {
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
 
         // We only init wallet service here if not using Tor for bitcoinj.
@@ -522,6 +531,7 @@ public class BisqSetup {
     }
 
     private void initWallet() {
+        bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
             if (p2pNetworkReady.get())
                 p2PNetworkSetup.setSplashP2PNetworkAnimationVisible(true);
