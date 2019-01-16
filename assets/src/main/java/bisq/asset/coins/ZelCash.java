@@ -17,7 +17,6 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
