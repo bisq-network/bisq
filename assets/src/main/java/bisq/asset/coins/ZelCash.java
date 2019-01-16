@@ -21,7 +21,6 @@ import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-@AltCoinAccountDisclaimer("account.altcoin.popup.ZEL.msg")
 public class ZelCash extends Coin {
 
     public ZelCash() {
