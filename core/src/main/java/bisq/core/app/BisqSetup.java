@@ -119,6 +119,10 @@ public class BisqSetup {
             log.info("onInitWallet");
         }
 
+        default void onRequestWalletPassword() {
+            log.info("onRequestWalletPassword");
+        }
+
         void onSetupComplete();
     }
 
@@ -549,6 +553,8 @@ public class BisqSetup {
     private void initWallet() {
         bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
+            log.info("Wallet password required");
+            bisqSetupListeners.forEach(BisqSetupListener::onRequestWalletPassword);
             if (p2pNetworkReady.get())
                 p2PNetworkSetup.setSplashP2PNetworkAnimationVisible(true);
 
@@ -559,6 +565,9 @@ public class BisqSetup {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
                     } else {
+                        // TODO no guarantee here that the wallet is really fully initialized
+                        // We would need a new walletInitializedButNotEncrypted state to track
+                        // Usually init is fast and we have our wallet initialized at that state though.
                         walletInitialized.set(true);
                     }
                 });
