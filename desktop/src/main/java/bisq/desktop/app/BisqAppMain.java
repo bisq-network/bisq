@@ -61,7 +61,7 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     public void onSetupComplete() {
-        log.debug("onSetupComplete");
+        log.info("onSetupComplete");
     }
 
 
