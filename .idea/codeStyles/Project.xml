@@ -23,6 +23,8 @@
           <emptyLine />
           <package name="bisq.desktop" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="bisq.api.http" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="bisq.core" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="bisq.asset" withSubpackages="true" static="false" />

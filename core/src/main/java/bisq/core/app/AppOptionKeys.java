@@ -29,4 +29,7 @@ public class AppOptionKeys {
     public static final String IGNORE_DEV_MSG_KEY = "ignoreDevMsg";
     public static final String USE_DEV_PRIVILEGE_KEYS = "useDevPrivilegeKeys";
     public static final String REFERRAL_ID = "referralId";
+    public static final String HTTP_API_EXPERIMENTAL_FEATURES_ENABLED = "enableHttpApiExperimentalFeatures";
+    public static final String HTTP_API_HOST = "httpApiHost";
+    public static final String HTTP_API_PORT = "httpApiPort";
 }
