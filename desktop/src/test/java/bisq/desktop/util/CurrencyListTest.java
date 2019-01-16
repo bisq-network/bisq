@@ -25,6 +25,7 @@ import bisq.core.user.Preferences;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,8 +45,10 @@ import static org.mockito.Mockito.when;
 @PrepareForTest(Preferences.class)
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class CurrencyListTest {
-    private static final TradeCurrency USD = new FiatCurrency("USD");
-    private static final TradeCurrency RUR = new FiatCurrency("RUR");
+    private static final Locale locale = new Locale("en", "US");
+
+    private static final TradeCurrency USD = new FiatCurrency(Currency.getInstance("USD"), locale);
+    private static final TradeCurrency RUR = new FiatCurrency(Currency.getInstance("RUR"), locale);
     private static final TradeCurrency BTC = new CryptoCurrency("BTC", "Bitcoin");
     private static final TradeCurrency ETH = new CryptoCurrency("ETH", "Ether");
     private static final TradeCurrency BSQ = new CryptoCurrency("BSQ", "Bisq Token");
@@ -56,7 +59,7 @@ public class CurrencyListTest {
 
     @Before
     public void setUp() {
-        Locale.setDefault(new Locale("en", "US"));
+        Locale.setDefault(locale);
 
         CurrencyPredicates predicates = mock(CurrencyPredicates.class);
         when(predicates.isCryptoCurrency(USD)).thenReturn(false);

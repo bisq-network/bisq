@@ -150,6 +150,10 @@ public abstract class PaymentAccount implements PersistablePayload {
             return null;
     }
 
+    public long getMaxTradePeriod() {
+        return paymentMethod.getMaxTradePeriod();
+    }
+
     protected abstract PaymentAccountPayload createPayload();
 
     public void setSalt(byte[] salt) {

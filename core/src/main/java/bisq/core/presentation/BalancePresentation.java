@@ -17,7 +17,7 @@
 
 package bisq.core.presentation;
 
-import bisq.core.btc.model.BalanceModel;
+import bisq.core.btc.Balances;
 import bisq.core.util.BSFormatter;
 
 import javax.inject.Inject;
@@ -26,7 +26,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class BalancePresentation {
     @Getter
     private final StringProperty availableBalance = new SimpleStringProperty();
@@ -36,8 +38,8 @@ public class BalancePresentation {
     private final StringProperty lockedBalance = new SimpleStringProperty();
 
     @Inject
-    public BalancePresentation(BalanceModel balanceModel, BSFormatter formatter) {
-        balanceModel.getAvailableBalance().addListener((observable, oldValue, newValue) -> {
+    public BalancePresentation(Balances balances, BSFormatter formatter) {
+        balances.getAvailableBalance().addListener((observable, oldValue, newValue) -> {
             String value = formatter.formatCoinWithCode(newValue);
             // If we get full precision the BTC postfix breaks layout so we omit it
             if (value.length() > 11)
@@ -45,10 +47,10 @@ public class BalancePresentation {
             availableBalance.set(value);
         });
 
-        balanceModel.getReservedBalance().addListener((observable, oldValue, newValue) -> {
+        balances.getReservedBalance().addListener((observable, oldValue, newValue) -> {
             reservedBalance.set(formatter.formatCoinWithCode(newValue));
         });
-        balanceModel.getLockedBalance().addListener((observable, oldValue, newValue) -> {
+        balances.getLockedBalance().addListener((observable, oldValue, newValue) -> {
             lockedBalance.set(formatter.formatCoinWithCode(newValue));
         });
     }

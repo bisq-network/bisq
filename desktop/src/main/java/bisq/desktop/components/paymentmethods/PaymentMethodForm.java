@@ -156,7 +156,7 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addLimitations(boolean isDisplayForm) {
-        long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
+        long hours = paymentAccount.getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
         if (paymentAccount.getSingleTradeCurrency() != null)
