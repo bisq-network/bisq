@@ -43,7 +43,7 @@ public class BisqHeadlessApp implements HeadlessApp {
     @Setter
     private GracefulShutDownHandler gracefulShutDownHandler;
     private boolean shutDownRequested;
-    private BisqSetup bisqSetup;
+    protected BisqSetup bisqSetup;
     private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
     private TradeManager tradeManager;
 
