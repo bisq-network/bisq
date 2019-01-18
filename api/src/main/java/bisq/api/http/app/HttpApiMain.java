@@ -58,10 +58,22 @@ public class HttpApiMain extends BisqHeadlessAppMain {
     }
 
     @Override
-    public void onSetupComplete() {
-        log.info("onSetupComplete");
+    public void onInitWallet() {
+        log.info("onInitWallet: We start the http server now");
 
         HttpApiServer httpApiServer = injector.getInstance(HttpApiServer.class);
         httpApiServer.startServer();
+    }
+
+    @Override
+    public void onRequestWalletPassword() {
+        log.info("onRequestWalletPassword");
+
+        // TODO @bernard now we need to get users wallet pw
+    }
+
+    @Override
+    public void onSetupComplete() {
+        log.info("onSetupComplete");
     }
 }
