@@ -25,7 +25,7 @@ public class PickleProtocol extends Coin {
     public PickleProtocol() {
         super("PickleProtocol", "PCK", new Base58BitcoinAddressValidator(new PickleProtocolParams()));
     }
-    public static class PickleProtocolParams extends NetworkParametersAdapter {
+        public static class PickleProtocolParams extends NetworkParametersAdapter {
 
         public PickleProtocolParams() {
             addressHeader = 54;
