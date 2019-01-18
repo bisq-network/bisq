@@ -22,12 +22,9 @@ import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class PickleProtocol extends Coin {
-
     public PickleProtocol() {
         super("PickleProtocol", "PCK", new Base58BitcoinAddressValidator(new PickleProtocolParams()));
     }
-
-
     public static class PickleProtocolParams extends NetworkParametersAdapter {
 
         public PickleProtocolParams() {
