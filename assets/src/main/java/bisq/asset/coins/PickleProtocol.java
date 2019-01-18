@@ -32,7 +32,7 @@ public class PickleProtocol extends Coin {
 
         public PickleProtocolParams() {
             addressHeader = 54;
-            p2shHeader = 119;
+            p2shHeader = 5;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
