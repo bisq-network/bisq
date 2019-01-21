@@ -25,7 +25,7 @@ import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 
 import java.io.File;
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -68,13 +68,10 @@ public class P2PRoundTripTimeTests {
         }
 
         @Override
-        public void report(Map<String, String> values, String prefix) {
-            report(values);
-        }
-
-        @Override
         public void report(long value, String prefix) {
-            report(value);
+            HashMap<String, String> result = new HashMap<>();
+            result.put(prefix, String.valueOf(value));
+            report(result);
         }
     }
 
@@ -97,7 +94,7 @@ public class P2PRoundTripTimeTests {
         DUT.configure(configuration);
 
         // give it some time to start and then stop
-        Thread.sleep(100000);
+        Thread.sleep(5000);
 
         DUT.shutdown();
         DUT.join();

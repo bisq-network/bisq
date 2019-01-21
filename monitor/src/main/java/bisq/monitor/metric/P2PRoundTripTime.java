@@ -26,6 +26,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.Metric;
@@ -79,6 +80,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
         networkNode = new TorNetworkNode(9052, new CoreNetworkProtoResolver(), false,
                 new NewTor(torWorkingDirectory, "", "", null));
+        Version.setBaseCryptoNetworkId(1); // set to BTC_MAINNET
         networkNode.start(this);
     }
 
