@@ -51,6 +51,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     private static final String SAMPLE_SIZE = "run.sampleSize";
     private static final String HOSTS = "run.hosts";
+    private static final String TOR_PROXY_PORT = "run.torProxyPort";
     private NetworkNode networkNode;
     private final File torWorkingDirectory = new File("metric_p2pRoundTripTime");
     private int nonce;
@@ -86,8 +87,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     @Override
     public void configure(Properties properties) {
         super.configure(properties);
-
-        networkNode = new TorNetworkNode(9052, new CoreNetworkProtoResolver(), false,
+        networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9052")), new CoreNetworkProtoResolver(), false,
                 new NewTor(torWorkingDirectory, "", "", null));
         networkNode.start(this);
     }

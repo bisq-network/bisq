@@ -81,6 +81,7 @@ public class P2PRoundTripTimeTests {
             configuration.put("P2PRoundTripTime.run.sampleSize", sampleSize);
         // torproject.org hidden service
         configuration.put("P2PRoundTripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
+        configuration.put("P2PRoundTripTime.run.torProxyPort", "9052");
 
         Metric DUT = new P2PRoundTripTime(reporter);
         // start
