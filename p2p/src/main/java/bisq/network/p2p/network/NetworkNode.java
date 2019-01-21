@@ -200,13 +200,13 @@ public abstract class NetworkNode implements MessageListener {
                 }
             });
 
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            Futures.addCallback(future, new FutureCallback<>() {
                 public void onSuccess(Connection connection) {
                     UserThread.execute(() -> resultFuture.set(connection));
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.info("onFailure at sendMessage: peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope));
+                    log.info("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
             });
