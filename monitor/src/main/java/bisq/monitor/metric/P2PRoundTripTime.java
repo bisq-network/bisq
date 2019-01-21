@@ -18,6 +18,7 @@
 package bisq.monitor.metric;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -49,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 public class P2PRoundTripTime extends Metric implements MessageListener, SetupListener {
 
     private static final String SAMPLE_SIZE = "run.sampleSize";
+    private static final String HOSTS = "run.hosts";
     private NetworkNode networkNode;
     private final File torWorkingDirectory = new File("metric_p2pRoundTripTime");
     private int nonce;
@@ -113,34 +115,44 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     @Override
     protected void execute() {
 
-        // init sample bucket
-        samples = new ArrayList<>();
+        // for each configured host
+        for (String current : configuration.getProperty(HOSTS, "").split(",")) {
+            try {
+                // parse Url
+                URL tmp = new URL(current);
+                NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
 
-        while (samples.size() < Integer.parseInt(configuration.getProperty(SAMPLE_SIZE, "1"))) {
-            nonce = new Random().nextInt();
-            start = System.currentTimeMillis();
-            SettableFuture<Connection> future = networkNode.sendMessage(new NodeAddress("s67qglwhkgkyvr74.onion:8000"),
-                    new Ping(nonce, 5));
+                // init sample bucket
+                samples = new ArrayList<>();
 
-            Futures.addCallback(future, new FutureCallback<Connection>() {
-                @Override
-                public void onSuccess(Connection connection) {
-                    connection.addMessageListener(P2PRoundTripTime.this);
-                    log.debug("Send ping to " + connection + " succeeded.");
+                while (samples.size() < Integer.parseInt(configuration.getProperty(SAMPLE_SIZE, "1"))) {
+                    nonce = new Random().nextInt();
+                    start = System.currentTimeMillis();
+                    SettableFuture<Connection> future = networkNode.sendMessage(target, new Ping(nonce, 42));
+
+                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                        @Override
+                        public void onSuccess(Connection connection) {
+                            connection.addMessageListener(P2PRoundTripTime.this);
+                            log.debug("Send ping to " + connection + " succeeded.");
+                        }
+
+                        @Override
+                        public void onFailure(@NotNull Throwable throwable) {
+                            log.error("Sending ping failed. That is expected if the peer is offline.\n\tException="
+                                    + throwable.getMessage());
+                        }
+                    });
+
+                    await();
                 }
 
-                @Override
-                public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Sending ping failed. That is expected if the peer is offline.\n\tException="
-                            + throwable.getMessage());
-                }
-            });
-
-            await();
+                // report
+                reporter.report(StatisticsHelper.process(samples), "bisq." + getName() + "." + target);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
-        // report
-        reporter.report(StatisticsHelper.process(samples), "bisq." + getName());
     }
 
     @Override
