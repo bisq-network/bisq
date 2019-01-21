@@ -20,23 +20,13 @@ package bisq.monitor;
 import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.reporter.ConsoleReporter;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-
-import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Assert;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Test the round trip time metric against the hidden service of tor project.org.
@@ -97,7 +87,8 @@ public class P2PRoundTripTimeTests {
         DUT.configure(configuration);
 
         // give it some time to start and then stop
-        Thread.sleep(5000);
+        while (!DUT.enabled())
+            Thread.sleep(2000);
 
         DUT.shutdown();
         DUT.join();

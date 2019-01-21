@@ -66,6 +66,7 @@ public class Monitor {
      * @throws Exception
      */
     private void start() throws Throwable {
+
         // start Tor
         Tor.setDefault(new NativeTor(new File("monitor/monitor-tor"), null, null, false));
 

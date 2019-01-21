@@ -60,6 +60,8 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     public P2PRoundTripTime(Reporter reporter) {
         super(reporter);
+
+        Version.setBaseCryptoNetworkId(1); // set to BTC_MAINNET
     }
 
     @Override
@@ -87,13 +89,11 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
         networkNode = new TorNetworkNode(9052, new CoreNetworkProtoResolver(), false,
                 new NewTor(torWorkingDirectory, "", "", null));
-        Version.setBaseCryptoNetworkId(1); // set to BTC_MAINNET
         networkNode.start(this);
     }
 
     /**
-     * synchronization helper. Required because directly closing the
-     * HiddenServiceSocket in its ReadyListener causes a deadlock
+     * synchronization helper.
      */
     private void await() {
         synchronized (torWorkingDirectory) {
