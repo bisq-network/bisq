@@ -62,7 +62,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     public P2PRoundTripTime(Reporter reporter) {
         super(reporter);
 
-        Version.setBaseCryptoNetworkId(1); // set to BTC_MAINNET
+        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
     }
 
     @Override
