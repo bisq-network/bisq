@@ -63,15 +63,18 @@ public class P2PRoundTripTimeTests {
 
         @Override
         public void report(Map<String, String> values) {
-            super.report(values);
-            results = values;
+            Assert.fail();
         }
 
         @Override
         public void report(long value, String prefix) {
-            HashMap<String, String> result = new HashMap<>();
-            result.put(prefix, String.valueOf(value));
-            report(result);
+            Assert.fail();
+        }
+
+        @Override
+        public void report(Map<String, String> values, String prefix) {
+            super.report(values, prefix);
+            results = values;
         }
     }
 
@@ -85,7 +88,7 @@ public class P2PRoundTripTimeTests {
         configuration.put("P2PRoundTripTime.enabled", "true");
         configuration.put("P2PRoundTripTime.run.interval", "2");
         if (!"default".equals(sampleSize))
-            configuration.put("TorRoundTripTime.run.sampleSize", sampleSize);
+            configuration.put("P2PRoundTripTime.run.sampleSize", sampleSize);
         // torproject.org hidden service
         configuration.put("P2PRoundTripTime.run.hosts", "http://expyuzz4wqqyqhjn.onion:80");
 
