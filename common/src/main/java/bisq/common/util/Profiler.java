@@ -35,4 +35,11 @@ public class Profiler {
         return total - free;
     }
 
+    public static long getFreeMemoryInMB() {
+        return Runtime.getRuntime().freeMemory() / 1024 / 1024;
+    }
+
+    public static long getTotalMemoryInMB() {
+        return Runtime.getRuntime().totalMemory() / 1024 / 1024;
+    }
 }
