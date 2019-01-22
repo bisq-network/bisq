@@ -137,12 +137,17 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                 double warningTrigger = maxMemory * 0.8;
                 if (usedMemoryInMB > warningTrigger) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                    "We are over  80% of our memory limit ({}) and call the GC. usedMemory: {} MB. freeMemory: {} MB" +
+                                    "We are over 80% of our memory limit ({}) and call the GC. usedMemory: {} MB. freeMemory: {} MB" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             (int) warningTrigger, usedMemoryInMB, Profiler.getFreeMemoryInMB());
                     System.gc();
                     Profiler.printSystemLoad(log);
                 }
+
+                UserThread.runAfter(() -> {
+                    log.warn("Memory 2 sec. after calling the GC. usedMemory: {} MB. freeMemory: {} MB",
+                            Profiler.getUsedMemoryInMB(), Profiler.getFreeMemoryInMB());
+                }, 2);
 
                 UserThread.runAfter(() -> {
                     long usedMemory = Profiler.getUsedMemoryInMB();
