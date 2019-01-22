@@ -265,7 +265,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
-                            transaction.getUpdateTime(),
+                            // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                            transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
                             bsqFormatter);
                 })
                 .collect(Collectors.toList());
