@@ -752,7 +752,8 @@ public abstract class Trade implements Tradable, Model {
         if (depositTx != null && getTakeOfferDate() != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
                 final long tradeTime = getTakeOfferDate().getTime();
-                long blockTime = depositTx.getUpdateTime().getTime();
+                // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                long blockTime = depositTx.getIncludedInBestChainAt() != null ? depositTx.getIncludedInBestChainAt().getTime() : depositTx.getUpdateTime().getTime();
                 // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
                 // If block date is earlier than our trade date we use our trade date.
                 if (blockTime > now)
