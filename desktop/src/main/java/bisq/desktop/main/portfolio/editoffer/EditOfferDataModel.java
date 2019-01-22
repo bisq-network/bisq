@@ -130,6 +130,18 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     @Override
+    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+        try {
+            return super.initWithData(direction, tradeCurrency);
+        } catch (NullPointerException e) {
+            if (e.getMessage().contains("tradeCurrency")) {
+                throw new IllegalArgumentException("Offers of removed assets cannot be edited. You can only cancel it.", e);
+            }
+            return false;
+        }
+    }
+
+    @Override
     protected PaymentAccount getPreselectedPaymentAccount() {
         return paymentAccount;
     }

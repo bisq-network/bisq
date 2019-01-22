@@ -144,6 +144,17 @@ public class CurrencyUtil {
         return result;
     }
 
+    public static List<CryptoCurrency> getRemovedCryptoCurrencies() {
+        final List<CryptoCurrency> currencies = new ArrayList<>();
+        currencies.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
+        currencies.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
+        currencies.add(new CryptoCurrency("ACH", "AchieveCoin"));
+        currencies.add(new CryptoCurrency("SC", "SpaceCash"));
+        currencies.add(new CryptoCurrency("PPI", "PiedPiper Coin"));
+        currencies.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
+        return currencies;
+    }
+
     // At OKPay you can exchange internally those currencies
     public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
@@ -388,7 +399,12 @@ public class CurrencyUtil {
         if (isCryptoCurrency(currencyCode)) {
             // We might not find the name in case we have a call for a removed asset.
             // If BTC is the code (used in tests) we also want return Bitcoin as name.
-            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" : Res.get("shared.na");
+            final Optional<CryptoCurrency> removedCryptoCurrency = getRemovedCryptoCurrencies().stream()
+                    .filter(cryptoCurrency -> cryptoCurrency.getCode().equals(currencyCode))
+                    .findAny();
+
+            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" :
+                    removedCryptoCurrency.isPresent() ? removedCryptoCurrency.get().getName() : Res.get("shared.na");
             return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(btcOrRemovedAsset);
         }
         try {
