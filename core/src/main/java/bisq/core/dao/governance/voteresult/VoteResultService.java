@@ -217,6 +217,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     voteResultExceptions.add(e);
                 } catch (VoteResultException.ConsensusException e) {
                     log.error(e.toString());
+                    log.error("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
                     e.printStackTrace();
 
                     //TODO notify application of that case (e.g. add error handler)
@@ -730,6 +731,14 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             this.hash = hash;
             this.stake = stake;
         }
+
+        @Override
+        public String toString() {
+            return "HashWithStake{" +
+                    "\n     hash=" + Utilities.bytesAsHexString(hash) +
+                    ",\n     stake=" + stake +
+                    "\n}";
+        }
     }
 
     @Value
@@ -743,6 +752,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             this.vote = vote;
             this.stake = stake;
             this.sumOfAllMerits = sumOfAllMerits;
+        }
+
+        @Override
+        public String toString() {
+            return "VoteWithStake{" +
+                    "\n     vote=" + vote +
+                    ",\n     stake=" + stake +
+                    ",\n     sumOfAllMerits=" + sumOfAllMerits +
+                    "\n}";
         }
     }
 }
