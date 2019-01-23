@@ -18,6 +18,8 @@
 package bisq.api.http;
 
 import bisq.api.http.service.HttpApiServer;
+import bisq.api.http.service.auth.ApiPasswordManager;
+import bisq.api.http.service.auth.TokenRegistry;
 import bisq.api.http.service.endpoint.VersionEndpoint;
 
 import bisq.core.app.AppOptionKeys;
@@ -38,6 +40,8 @@ public class HttpApiModule extends AppModule {
     @Override
     protected void configure() {
         bind(HttpApiServer.class).in(Singleton.class);
+        bind(TokenRegistry.class).in(Singleton.class);
+        bind(ApiPasswordManager.class).in(Singleton.class);
         bind(VersionEndpoint.class).in(Singleton.class);
 
         String httpApiHost = environment.getProperty(AppOptionKeys.HTTP_API_HOST, String.class, "127.0.0.1");
