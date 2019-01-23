@@ -93,6 +93,7 @@ public class BitcoinModule extends AppModule {
         bind(FeeProvider.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);
         bind(FeeService.class).in(Singleton.class);
+        bind(TxFeeEstimationService.class).in(Singleton.class);
     }
 }
 

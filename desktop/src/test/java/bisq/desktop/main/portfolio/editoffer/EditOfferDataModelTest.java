@@ -102,9 +102,8 @@ public class EditOfferDataModelTest {
         model = new EditOfferDataModel(null,
                 btcWalletService, bsqWalletService, empty, user,
                 null, null, priceFeedService, null,
-                accountAgeWitnessService, null, feeService,
-                null, bsFormatter, null);
-
+                accountAgeWitnessService, feeService, null, null,
+                null, null);
     }
 
     @Test
