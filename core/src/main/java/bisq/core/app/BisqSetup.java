@@ -23,9 +23,8 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.DisputeManager;
-import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.model.BalanceModel;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
@@ -41,14 +40,12 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
-import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -73,7 +70,6 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -114,7 +110,19 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class BisqSetup {
-    public interface BisqSetupCompleteListener {
+    public interface BisqSetupListener {
+        default void onInitP2pNetwork() {
+            log.info("onInitP2pNetwork");
+        }
+
+        default void onInitWallet() {
+            log.info("onInitWallet");
+        }
+
+        default void onRequestWalletPassword() {
+            log.info("onRequestWalletPassword");
+        }
+
         void onSetupComplete();
     }
 
@@ -125,7 +133,7 @@ public class BisqSetup {
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
-    private final BalanceModel balanceModel;
+    private final Balances balances;
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
@@ -193,7 +201,7 @@ public class BisqSetup {
     private boolean allBasicServicesInitialized;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
-    private List<BisqSetupCompleteListener> bisqSetupCompleteListeners = new ArrayList<>();
+    private List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
     public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
@@ -201,7 +209,7 @@ public class BisqSetup {
                      WalletsManager walletsManager,
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
-                     BalanceModel balanceModel,
+                     Balances balances,
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
                      P2PService p2PService,
@@ -239,7 +247,7 @@ public class BisqSetup {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
-        this.balanceModel = balanceModel;
+        this.balances = balances;
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
@@ -276,8 +284,8 @@ public class BisqSetup {
     // Setup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBisqSetupCompleteListener(BisqSetupCompleteListener listener) {
-        bisqSetupCompleteListeners.add(listener);
+    public void addBisqSetupListener(BisqSetupListener listener) {
+        bisqSetupListeners.add(listener);
     }
 
     public void start() {
@@ -302,7 +310,7 @@ public class BisqSetup {
     private void step5() {
         initDomainServices();
 
-        bisqSetupCompleteListeners.forEach(BisqSetupCompleteListener::onSetupComplete);
+        bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
 
         // We set that after calling the setupCompleteHandler to not trigger a popup from the dev dummy accounts
         // in MainViewModel
@@ -496,6 +504,7 @@ public class BisqSetup {
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
 
         // We only init wallet service here if not using Tor for bitcoinj.
@@ -522,7 +531,10 @@ public class BisqSetup {
     }
 
     private void initWallet() {
+        bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
+            log.info("Wallet password required");
+            bisqSetupListeners.forEach(BisqSetupListener::onRequestWalletPassword);
             if (p2pNetworkReady.get())
                 p2PNetworkSetup.setSplashP2PNetworkAnimationVisible(true);
 
@@ -533,6 +545,9 @@ public class BisqSetup {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
                     } else {
+                        // TODO no guarantee here that the wallet is really fully initialized
+                        // We would need a new walletInitializedButNotEncrypted state to track
+                        // Usually init is fast and we have our wallet initialized at that state though.
                         walletInitialized.set(true);
                     }
                 });
@@ -588,28 +603,13 @@ public class BisqSetup {
         disputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
-        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> balanceModel.updateBalance());
-        tradeManager.getAddressEntriesForAvailableBalanceStream()
-                .filter(addressEntry -> addressEntry.getOfferId() != null)
-                .forEach(addressEntry -> {
-                    log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
-                    btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
-                });
-
-        btcWalletService.addBalanceListener(new BalanceListener() {
-            @Override
-            public void onBalanceChanged(Coin balance, Transaction tx) {
-                balanceModel.updateBalance();
-            }
-        });
 
         if (walletsSetup.downloadPercentageProperty().get() == 1)
             checkForLockedUpFunds();
 
-        balanceModel.updateBalance();
-
-        openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> balanceModel.updateBalance());
         openOfferManager.onAllServicesInitialized();
+
+        balances.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
 

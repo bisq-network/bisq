@@ -21,6 +21,8 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.api.http.service.HttpApiServer;
+
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -45,8 +47,6 @@ public class BisqAppMain extends BisqExecutable {
     }
 
     /* @Nullable
-     private BisqHttpApiServer bisqHttpApiServer;*/
-    /* @Nullable
     private BisqGrpcServer bisqGrpcServer;
     */
     public static void main(String[] args) throws Exception {
@@ -61,7 +61,7 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     public void onSetupComplete() {
-        log.debug("onSetupComplete");
+        log.info("onSetupComplete");
     }
 
 
@@ -135,9 +135,9 @@ public class BisqAppMain extends BisqExecutable {
     protected void onApplicationStarted() {
         super.onApplicationStarted();
 
-       /* if (runWithHttpApi()) {
-            bisqHttpApiServer = new BisqHttpApiServer();
-        }*/
+        if (runWithHttpApi()) {
+            injector.getInstance(HttpApiServer.class).startServer();
+        }
         /*
         if (runWithGrpcApi()) {
             bisqGrpcServer = new BisqGrpcServer();

@@ -405,7 +405,6 @@ public class OfferBookViewModelTest {
         assertEquals(10, model.maxPlacesForMarketPriceMargin.intValue()); //" (-10.00%)"
     }
 
-    @Ignore
     @Test
     public void testGetPrice() {
         OfferBook offerBook = mock(OfferBook.class);
@@ -435,10 +434,10 @@ public class OfferBookViewModelTest {
         model.activate();
 
         assertEquals("12557.2046 (1.00%)", model.getPrice(lowItem));
-        assertEquals("   10.0000        ", model.getPrice(fixedItem));
+        assertEquals("10.0000", model.getPrice(fixedItem));
         offerBookListItems.addAll(item);
         assertEquals("14206.1304 (-12.00%)", model.getPrice(item));
-        assertEquals("12557.2046   (1.00%)", model.getPrice(lowItem));
+        assertEquals("12557.2046 (1.00%)", model.getPrice(lowItem));
 
 
     }
