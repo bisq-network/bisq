@@ -581,11 +581,11 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public Coin getTotalTxFee() {
-        Coin totalTxTees = txFeeFromFeeService.add(getTxFeeForDepositTx()).add(getTxFeeForPayoutTx());
+        Coin totalTxFees = txFeeFromFeeService.add(getTxFeeForDepositTx()).add(getTxFeeForPayoutTx());
         if (isCurrencyForTakerFeeBtc())
-            return totalTxTees;
+            return totalTxFees;
         else
-            return totalTxTees.subtract(getTakerFee() != null ? getTakerFee() : Coin.ZERO);
+            return totalTxFees.subtract(getTakerFee() != null ? getTakerFee() : Coin.ZERO);
     }
 
     @NotNull
