@@ -10,6 +10,7 @@ bisq.asset.coins.Bitcoin$Mainnet
 bisq.asset.coins.Bitcoin$Regtest
 bisq.asset.coins.BitcoinRhodium
 bisq.asset.coins.Bitcoin$Testnet
+bisq.asset.coins.BitDaric
 bisq.asset.coins.Bitmark
 bisq.asset.coins.Blur
 bisq.asset.coins.BSQ$Mainnet
