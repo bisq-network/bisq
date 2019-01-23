@@ -239,6 +239,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
             paymentAccountsComboBox.setItems(model.getDataModel().getPaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
+            currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
 
             onPaymentAccountsComboBoxSelected();
 
@@ -515,13 +516,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             if (paymentAccount.hasMultipleCurrencies()) {
                 final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
                 currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
-                if (paymentAccount.getSelectedTradeCurrency() != null)
-                    currencyComboBox.getSelectionModel().select(paymentAccount.getSelectedTradeCurrency());
-                else if (tradeCurrencies.contains(model.getTradeCurrency()))
-                    currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
-                else
-                    currencyComboBox.getSelectionModel().select(tradeCurrencies.get(0));
-
                 model.onPaymentAccountSelected(paymentAccount);
             } else {
                 TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
