@@ -1,5 +1,6 @@
 package bisq.desktop.main.offer.createoffer;
 
+import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
@@ -41,7 +42,7 @@ import org.mockito.BDDMockito;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BtcWalletService.class, AddressEntry.class, Preferences.class, User.class,
-        PriceFeedService.class, OfferUtil.class})
+        PriceFeedService.class, OfferUtil.class, FeeService.class, TxFeeEstimationService.class})
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class CreateOfferDataModelTest {
 
@@ -59,6 +60,7 @@ public class CreateOfferDataModelTest {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
         FeeService feeService = mock(FeeService.class);
+        TxFeeEstimationService feeEstimationService = mock(TxFeeEstimationService.class);
         preferences = mock(Preferences.class);
         user = mock(User.class);
 
@@ -69,7 +71,7 @@ public class CreateOfferDataModelTest {
         model = new CreateOfferDataModel(null, btcWalletService,
                 null, preferences, user, null,
                 null, priceFeedService, null,
-                null, null, feeService,
+                null, feeService, feeEstimationService,
                 null, null);
     }
 
