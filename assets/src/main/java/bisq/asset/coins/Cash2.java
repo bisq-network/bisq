@@ -17,9 +17,11 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.CryptonoteAddressValidator;
 
+@AltCoinAccountDisclaimer("account.altcoin.popup.cash2.msg")
 public class Cash2 extends Coin {
 
     public Cash2() {
