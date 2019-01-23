@@ -134,9 +134,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected PaymentAccount paymentAccount;
     protected boolean isTabSelected;
     protected double marketPriceMargin = 0;
-    protected Coin txFeeFromFeeService = Coin.ZERO;
-    protected boolean marketPriceAvailable;
-    protected int feeTxSize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_SIZE;
+    private Coin txFeeFromFeeService = Coin.ZERO;
+    private boolean marketPriceAvailable;
+    private int feeTxSize = TxFeeEstimationService.TYPICAL_TX_WITH_1_INPUT_SIZE;
     protected boolean allowAmountUpdate = true;
 
 
