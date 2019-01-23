@@ -475,12 +475,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
-        if (paymentAccount.getSelectedTradeCurrency() != null)
-            tradeCurrency = paymentAccount.getSelectedTradeCurrency();
-        else if (paymentAccount.getSingleTradeCurrency() != null)
-            tradeCurrency = paymentAccount.getSingleTradeCurrency();
-        else if (!paymentAccount.getTradeCurrencies().isEmpty())
-            tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
+        if (!paymentAccount.getTradeCurrencies().contains(tradeCurrency)) {
+            if (paymentAccount.getSelectedTradeCurrency() != null)
+                tradeCurrency = paymentAccount.getSelectedTradeCurrency();
+            else if (paymentAccount.getSingleTradeCurrency() != null)
+                tradeCurrency = paymentAccount.getSingleTradeCurrency();
+            else if (!paymentAccount.getTradeCurrencies().isEmpty())
+                tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
+        }
 
         checkNotNull(tradeCurrency, "tradeCurrency must not be null");
         tradeCurrencyCode.set(tradeCurrency.getCode());
@@ -744,7 +746,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.minAmount.set(minAmount);
     }
 
-    ReadOnlyStringProperty getTradeCurrencyCode() {
+    public ReadOnlyStringProperty getTradeCurrencyCode() {
         return tradeCurrencyCode;
     }
 
