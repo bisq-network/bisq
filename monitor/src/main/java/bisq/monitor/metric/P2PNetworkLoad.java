@@ -56,6 +56,15 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Contacts a list of hosts and asks them for all the data we do not have. The
+ * answers are then compiled into buckets of message types. Based on these
+ * buckets, the Metric reports (for each host) the message types observed and
+ * their number along with a relative comparison between all hosts.
+ * 
+ * @author Florian Reimair
+ *
+ */
 @Slf4j
 public class P2PNetworkLoad extends Metric implements MessageListener, SetupListener {
 
@@ -70,6 +79,9 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private Set<byte[]> hashes = new HashSet<>();
     private boolean reportFindings;
 
+    /**
+     * Efficient way to count message occurrences.
+     */
     private class Counter {
         private int value = 1;
 
@@ -118,6 +130,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     protected void execute() {
+        // clear our buckets
         bucketsPerHost.clear();
         ArrayList<Thread> threadList = new ArrayList<>();
 
@@ -140,6 +153,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         URL tmp = new URL(current);
                         NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
 
+                        // do the data request
                         nonce = new Random().nextInt();
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
                                 new PreliminaryGetDataRequest(nonce, hashes));
@@ -169,6 +183,9 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
         latch = new CountDownLatch(threadList.size());
 
+        // start all threads and wait until they all finished. We do that so we can
+        // minimize the time between querying the hosts and therefore the chance of
+        // inconsistencies.
         threadList.forEach(Thread::start);
         try {
             latch.await();
