@@ -19,12 +19,15 @@ package bisq.monitor.metric;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 import org.jetbrains.annotations.NotNull;
 import com.google.common.util.concurrent.FutureCallback;
@@ -60,8 +63,9 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private final File torWorkingDirectory = new File("metric_p2pNetworkLoad");
     private int nonce;
     private Boolean ready = false;
-    private Set<byte[]> hashes = new HashSet<>();
-    private Map<String, Counter> payloadByClassName;
+    private Map<String, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
+    private CountDownLatch latch;
+    private Map<String, Set<byte[]>> hashesPerHost = new ConcurrentHashMap<>();;
 
     private class Counter {
         private int value = 1;
@@ -135,54 +139,76 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     protected void execute() {
+        bucketsPerHost.clear();
+        ArrayList<Thread> threadList = new ArrayList<>();
 
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
-            try {
-                // parse Url
-                URL tmp = new URL(current);
-                NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
+            threadList.add(new Thread(new Runnable() {
 
-                nonce = new Random().nextInt();
-                SettableFuture<Connection> future = networkNode.sendMessage(target,
-                        new PreliminaryGetDataRequest(nonce, hashes));
+                @Override
+                public void run() {
+                    try {
+                        // parse Url
+                        URL tmp = new URL(current);
+                        NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
 
-                Futures.addCallback(future, new FutureCallback<Connection>() {
-                    @Override
-                    public void onSuccess(Connection connection) {
-                        connection.addMessageListener(P2PNetworkLoad.this);
-                        log.debug("Send PreliminaryDataRequest to " + connection + " succeeded.");
+                        nonce = new Random().nextInt();
+                        SettableFuture<Connection> future = networkNode.sendMessage(target,
+                                new PreliminaryGetDataRequest(nonce,
+                                        hashesPerHost.get(target.getFullAddress()) == null ? new HashSet<>()
+                                                : hashesPerHost.get(target.getFullAddress())));
+
+                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                            @Override
+                            public void onSuccess(Connection connection) {
+                                connection.addMessageListener(P2PNetworkLoad.this);
+                                log.debug("Send PreliminaryDataRequest to " + connection + " succeeded.");
+                            }
+
+                            @Override
+                            public void onFailure(@NotNull Throwable throwable) {
+                                log.error(
+                                        "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
+                                                + throwable.getMessage());
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
-                    @Override
-                    public void onFailure(@NotNull Throwable throwable) {
-                        log.error(
-                                "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
-                                        + throwable.getMessage());
-                    }
-                });
+                }
+            }, current));
+        }
 
-                await();
+        latch = new CountDownLatch(threadList.size());
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        threadList.forEach(Thread::start);
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         // report
         Map<String, String> report = new HashMap<>();
-        payloadByClassName.forEach((type, counter) -> report.put(type, String.valueOf(counter.value())));
+        bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report.put(host.replace("http://", "").trim() + "." + type,
+                        String.valueOf(counter.value()))));
 
-        reporter.report(report, "bisq." + getName() + "." + "target");
+        reporter.report(report, "bisq." + getName());
     }
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataResponse) {
 
-            GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-            payloadByClassName = new HashMap<>();
-            final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+
+            GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
+            Map<String, Counter> buckets = new HashMap<>();
+            Set<byte[]> hashes = new HashSet<>();
+            final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
             dataSet.stream().forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                 if (protectedStoragePayload == null) {
@@ -197,13 +223,13 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 // For logging different data types
                 String className = protectedStoragePayload.getClass().getSimpleName();
                 try {
-                    payloadByClassName.get(className).increment();
+                    buckets.get(className).increment();
                 } catch (NullPointerException nullPointerException) {
-                    payloadByClassName.put(className, new Counter());
+                    buckets.put(className, new Counter());
                 }
             });
 
-            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse
+            Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
                     .getPersistableNetworkPayloadSet();
             if (persistableNetworkPayloadSet != null) {
                 persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
@@ -215,15 +241,22 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                     // For logging different data types
                     String className = persistableNetworkPayload.getClass().getSimpleName();
                     try {
-                        payloadByClassName.get(className).increment();
+                        buckets.get(className).increment();
                     } catch (NullPointerException nullPointerException) {
-                        payloadByClassName.put(className, new Counter());
+                        buckets.put(className, new Counter());
                     }
                 });
             }
 
+            try {
+                hashesPerHost.get(connection.peersNodeAddressProperty().getValue().getFullAddress()).addAll(hashes);
+            } catch (NullPointerException npe) {
+                hashesPerHost.put(connection.peersNodeAddressProperty().getValue().getFullAddress(), hashes);
+            }
+            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue().getFullAddress(), buckets);
+
             connection.removeMessageListener(this);
-            proceed();
+            latch.countDown();
         }
     }
 

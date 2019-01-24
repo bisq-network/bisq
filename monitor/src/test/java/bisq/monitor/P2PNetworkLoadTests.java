@@ -25,8 +25,7 @@ import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test the round trip time metric against the hidden service of tor project.org.
@@ -68,16 +67,16 @@ public class P2PNetworkLoadTests {
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"default", "3", "4", "10"})
-    public void run(String sampleSize) throws Exception {
+    @Test
+    public void run() throws Exception {
         DummyReporter reporter = new DummyReporter();
 
         // configure
         Properties configuration = new Properties();
         configuration.put("P2PNetworkLoad.enabled", "true");
-        configuration.put("P2PNetworkLoad.run.interval", "2");
-        configuration.put("P2PNetworkLoad.run.hosts", "http://fl3mmribyxgrv63c.onion:8000");
+        configuration.put("P2PNetworkLoad.run.interval", "10");
+        configuration.put("P2PNetworkLoad.run.hosts",
+                "http://fl3mmribyxgrv63c.onion:8000, http://3f3cu2yw7u457ztq.onion:8000");
         configuration.put("P2PNetworkLoad.run.torProxyPort", "9053");
 
         Metric DUT = new P2PNetworkLoad(reporter);
@@ -86,7 +85,8 @@ public class P2PNetworkLoadTests {
 
         // give it some time to start and then stop
         while (!DUT.enabled())
-            Thread.sleep(100000);
+            Thread.sleep(500);
+        Thread.sleep(20000);
 
         DUT.shutdown();
         DUT.join();
@@ -94,19 +94,5 @@ public class P2PNetworkLoadTests {
         // observe results
         Map<String, String> results = reporter.hasResults();
         Assert.assertFalse(results.isEmpty());
-        Assert.assertEquals(results.get("sampleSize"), sampleSize.equals("default") ? "1" : sampleSize);
-
-        Integer p25 = Integer.valueOf(results.get("p25"));
-        Integer p50 = Integer.valueOf(results.get("p50"));
-        Integer p75 = Integer.valueOf(results.get("p75"));
-        Integer min = Integer.valueOf(results.get("min"));
-        Integer max = Integer.valueOf(results.get("max"));
-        Integer average = Integer.valueOf(results.get("average"));
-
-        Assert.assertTrue(0 < min);
-        Assert.assertTrue(min <= p25 && p25 <= p50);
-        Assert.assertTrue(p50 <= p75);
-        Assert.assertTrue(p75 <= max);
-        Assert.assertTrue(min <= average && average <= max);
     }
 }
