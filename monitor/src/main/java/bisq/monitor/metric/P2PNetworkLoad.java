@@ -61,6 +61,23 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private int nonce;
     private Boolean ready = false;
     private Set<byte[]> hashes = new HashSet<>();
+    private Map<String, Counter> payloadByClassName;
+
+    private class Counter {
+        private int value = 1;
+
+        public int value() {
+            return value;
+        }
+
+        public void increment() {
+            value++;
+        }
+
+        public void clear() {
+            value = 0;
+        }
+    }
 
     public P2PNetworkLoad(Reporter reporter) {
         super(reporter);
@@ -153,6 +170,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         }
 
         // report
+        Map<String, String> report = new HashMap<>();
+        payloadByClassName.forEach((type, counter) -> report.put(type, String.valueOf(counter.value())));
+
+        reporter.report(report, "bisq." + getName() + "." + "target");
     }
 
     @Override
@@ -160,6 +181,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         if (networkEnvelope instanceof GetDataResponse) {
 
             GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
+            payloadByClassName = new HashMap<>();
             final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
             dataSet.stream().forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
@@ -173,6 +195,12 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 hashes.add(P2PDataStorage.get32ByteHash(protectedStoragePayload));
 
                 // For logging different data types
+                String className = protectedStoragePayload.getClass().getSimpleName();
+                try {
+                    payloadByClassName.get(className).increment();
+                } catch (NullPointerException nullPointerException) {
+                    payloadByClassName.put(className, new Counter());
+                }
             });
 
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse
@@ -185,6 +213,12 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                     hashes.add(persistableNetworkPayload.getHash());
 
                     // For logging different data types
+                    String className = persistableNetworkPayload.getClass().getSimpleName();
+                    try {
+                        payloadByClassName.get(className).increment();
+                    } catch (NullPointerException nullPointerException) {
+                        payloadByClassName.put(className, new Counter());
+                    }
                 });
             }
 
