@@ -45,6 +45,7 @@ import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -59,6 +60,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private final File torWorkingDirectory = new File("metric_p2pNetworkLoad");
     private int nonce;
     private Boolean ready = false;
+    private Set<byte[]> hashes = new HashSet<>();
 
     public P2PNetworkLoad(Reporter reporter) {
         super(reporter);
@@ -126,7 +128,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                 nonce = new Random().nextInt();
                 SettableFuture<Connection> future = networkNode.sendMessage(target,
-                        new PreliminaryGetDataRequest(nonce, new HashSet<>()));
+                        new PreliminaryGetDataRequest(nonce, hashes));
 
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
@@ -168,6 +170,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                 // memorize message hashes
                 // TODO cleanup hash list once in a while
+                hashes.add(P2PDataStorage.get32ByteHash(protectedStoragePayload));
 
                 // For logging different data types
             });
@@ -179,6 +182,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                     // memorize message hashes
                     // TODO cleanup hash list once in a while
+                    hashes.add(persistableNetworkPayload.getHash());
 
                     // For logging different data types
                 });

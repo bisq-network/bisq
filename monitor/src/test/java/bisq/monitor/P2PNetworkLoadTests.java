@@ -86,7 +86,7 @@ public class P2PNetworkLoadTests {
 
         // give it some time to start and then stop
         while (!DUT.enabled())
-            Thread.sleep(2000);
+            Thread.sleep(100000);
 
         DUT.shutdown();
         DUT.join();
