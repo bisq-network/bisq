@@ -23,11 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import com.google.common.util.concurrent.FutureCallback;
@@ -170,8 +172,24 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
         // report
         Map<String, String> report = new HashMap<>();
+        // - assemble histograms
         bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report.put(host.replace("http://", "").trim() + "." + type,
                         String.valueOf(counter.value()))));
+
+        // - assemble diffs
+        Map<String, Integer> messagesPerHost = new HashMap<>();
+        bucketsPerHost.forEach((host, buckets) -> messagesPerHost.put(host,
+                buckets.values().stream().collect(Collectors.summingInt(Counter::value))));
+        Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
+        Integer referenceValue = messagesPerHost.get(referenceHost.get());
+
+        messagesPerHost.forEach(
+                (host, numberOfMessages) -> {
+                    report.put(host.replace("http://", "").trim() + ".relativeNumberOfMessages",
+                            String.valueOf(numberOfMessages - referenceValue));
+                    report.put(host.replace("http://", "").trim() + ".referenceHost", referenceHost.get());
+                    report.put(host.replace("http://", "").trim() + ".referenceValue", String.valueOf(referenceValue));
+                });
 
         reporter.report(report, "bisq." + getName());
     }
