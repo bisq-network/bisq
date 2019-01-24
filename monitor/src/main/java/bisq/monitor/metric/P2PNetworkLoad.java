@@ -77,10 +77,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         public void increment() {
             value++;
         }
-
-        public void clear() {
-            value = 0;
-        }
     }
 
     public P2PNetworkLoad(Reporter reporter) {
@@ -115,26 +111,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 new CoreNetworkProtoResolver(), false,
                 new NewTor(torWorkingDirectory, "", "", null));
         networkNode.start(this);
-    }
-
-    /**
-     * synchronization helper.
-     */
-    private void await() {
-        synchronized (torWorkingDirectory) {
-            try {
-                torWorkingDirectory.wait();
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void proceed() {
-        synchronized (torWorkingDirectory) {
-            torWorkingDirectory.notify();
-        }
     }
 
     @Override
