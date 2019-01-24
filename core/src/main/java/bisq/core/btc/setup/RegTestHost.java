@@ -21,9 +21,9 @@ public enum RegTestHost {
 
     NONE,
     LOCALHOST,
-    REG_TEST_SERVER; // 188.226.179.109
+    REMOTE_HOST;
 
-    public static final RegTestHost DEFAULT = LOCALHOST;
-    public static final String SERVER_IP = "188.226.179.109";
+    public static final String DEFAULT_HOST = "localhost";
+    public static String HOST = DEFAULT_HOST;
 
 }

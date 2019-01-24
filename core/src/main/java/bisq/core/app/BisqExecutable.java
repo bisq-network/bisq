@@ -482,9 +482,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
 
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
-                format("(default: %s)", RegTestHost.DEFAULT))
+                format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
                 .withRequiredArg()
-                .ofType(RegTestHost.class);
+                .describedAs("host");
 
         parser.accepts(BtcOptionKeys.BTC_NODES,
                 "Custom nodes used for BitcoinJ as comma separated IP addresses.")
