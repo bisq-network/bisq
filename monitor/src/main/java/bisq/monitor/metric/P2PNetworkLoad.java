@@ -39,13 +39,14 @@ import com.google.common.util.concurrent.SettableFuture;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
+import bisq.monitor.Monitor;
 import bisq.monitor.Reporter;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
@@ -71,7 +72,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     private NetworkNode networkNode;
-    private final File torWorkingDirectory = new File("metric_p2pNetworkLoad");
+    private final File torHiddenServiceDir = new File("metric_p2pNetworkLoad");
     private int nonce;
     private Boolean ready = false;
     private Map<String, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
@@ -124,7 +125,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         super.configure(properties);
         networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
                 new CoreNetworkProtoResolver(), false,
-                new NewTor(torWorkingDirectory, "", "", null));
+                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
         networkNode.start(this);
     }
 

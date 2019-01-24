@@ -32,14 +32,15 @@ import com.google.common.util.concurrent.SettableFuture;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
+import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
+import bisq.monitor.Monitor;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
@@ -53,7 +54,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     private NetworkNode networkNode;
-    private final File torWorkingDirectory = new File("metric_p2pRoundTripTime");
+    private final File torHiddenServiceDir = new File("metric_p2pRoundTripTime");
     private int nonce;
     private long start;
     private Boolean ready = false;
@@ -88,7 +89,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     public void configure(Properties properties) {
         super.configure(properties);
         networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9052")), new CoreNetworkProtoResolver(), false,
-                new NewTor(torWorkingDirectory, "", "", null));
+                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
         networkNode.start(this);
     }
 
@@ -96,9 +97,9 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
      * synchronization helper.
      */
     private void await() {
-        synchronized (torWorkingDirectory) {
+        synchronized (torHiddenServiceDir) {
             try {
-                torWorkingDirectory.wait();
+                torHiddenServiceDir.wait();
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -107,8 +108,8 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     }
 
     private void proceed() {
-        synchronized (torWorkingDirectory) {
-            torWorkingDirectory.notify();
+        synchronized (torHiddenServiceDir) {
+            torHiddenServiceDir.notify();
         }
     }
 

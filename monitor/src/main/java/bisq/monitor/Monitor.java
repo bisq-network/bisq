@@ -48,6 +48,7 @@ import sun.misc.Signal;
 @Slf4j
 public class Monitor {
 
+    public static final File TOR_WORKING_DIR = new File("monitor/monitor-tor");
     private static String[] args = {};
 
     public static void main(String[] args) throws Throwable {
@@ -68,7 +69,7 @@ public class Monitor {
     private void start() throws Throwable {
 
         // start Tor
-        Tor.setDefault(new NativeTor(new File("monitor/monitor-tor"), null, null, false));
+        Tor.setDefault(new NativeTor(TOR_WORKING_DIR, null, null, false));
 
         // assemble Metrics
         // - create reporters

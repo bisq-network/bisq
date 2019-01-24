@@ -20,10 +20,17 @@ package bisq.monitor;
 import bisq.monitor.metric.P2PNetworkLoad;
 import bisq.monitor.reporter.ConsoleReporter;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 import java.util.Properties;
 
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.junit.Assert;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +74,12 @@ public class P2PNetworkLoadTests {
         }
     }
 
+    @BeforeAll
+    public static void setup() throws TorCtlException {
+        // simulate the tor instance available to all metrics
+        Tor.setDefault(new NativeTor(Monitor.TOR_WORKING_DIR));
+    }
+
     @Test
     public void run() throws Exception {
         DummyReporter reporter = new DummyReporter();
@@ -77,7 +90,6 @@ public class P2PNetworkLoadTests {
         configuration.put("P2PNetworkLoad.run.interval", "10");
         configuration.put("P2PNetworkLoad.run.hosts",
                 "http://fl3mmribyxgrv63c.onion:8000, http://3f3cu2yw7u457ztq.onion:8000");
-        configuration.put("P2PNetworkLoad.run.torProxyPort", "9053");
 
         Metric DUT = new P2PNetworkLoad(reporter);
         // start
@@ -94,5 +106,12 @@ public class P2PNetworkLoadTests {
         // observe results
         Map<String, String> results = reporter.hasResults();
         Assert.assertFalse(results.isEmpty());
+    }
+
+    @AfterAll
+    public static void cleanup() {
+        Tor tor = Tor.getDefault();
+        checkNotNull(tor, "tor must not be null");
+        tor.shutdown();
     }
 }

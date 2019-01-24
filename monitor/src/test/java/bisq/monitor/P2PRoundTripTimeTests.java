@@ -20,10 +20,17 @@ package bisq.monitor;
 import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.reporter.ConsoleReporter;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Map;
 import java.util.Properties;
 
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.junit.Assert;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -66,6 +73,12 @@ public class P2PRoundTripTimeTests {
             super.report(values, prefix);
             results = values;
         }
+    }
+
+    @BeforeAll
+    public static void setup() throws TorCtlException {
+        // simulate the tor instance available to all metrics
+        Tor.setDefault(new NativeTor(Monitor.TOR_WORKING_DIR));
     }
 
     @ParameterizedTest
@@ -111,5 +124,12 @@ public class P2PRoundTripTimeTests {
         Assert.assertTrue(p50 <= p75);
         Assert.assertTrue(p75 <= max);
         Assert.assertTrue(min <= average && average <= max);
+    }
+
+    @AfterAll
+    public static void cleanup() {
+        Tor tor = Tor.getDefault();
+        checkNotNull(tor, "tor must not be null");
+        tor.shutdown();
     }
 }
