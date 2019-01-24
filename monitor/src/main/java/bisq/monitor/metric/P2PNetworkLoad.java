@@ -67,7 +67,8 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private Boolean ready = false;
     private Map<String, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
     private CountDownLatch latch;
-    private Map<String, Set<byte[]>> hashesPerHost = new ConcurrentHashMap<>();;
+    private Set<byte[]> hashes = new HashSet<>();
+    private boolean reportFindings;
 
     private class Counter {
         private int value = 1;
@@ -120,6 +121,14 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         bucketsPerHost.clear();
         ArrayList<Thread> threadList = new ArrayList<>();
 
+        // in case we just started anew, do not report our findings as they contain not
+        // only the changes since our last run, but a whole lot more dating back even
+        // till the beginning of bisq.
+        if (hashes.isEmpty())
+            reportFindings = false;
+        else
+            reportFindings = true;
+
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
             threadList.add(new Thread(new Runnable() {
@@ -133,9 +142,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                         nonce = new Random().nextInt();
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
-                                new PreliminaryGetDataRequest(nonce,
-                                        hashesPerHost.get(target.getFullAddress()) == null ? new HashSet<>()
-                                                : hashesPerHost.get(target.getFullAddress())));
+                                new PreliminaryGetDataRequest(nonce, hashes));
 
                         Futures.addCallback(future, new FutureCallback<Connection>() {
                             @Override
@@ -191,7 +198,13 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                     report.put(host.replace("http://", "").trim() + ".referenceValue", String.valueOf(referenceValue));
                 });
 
-        reporter.report(report, "bisq." + getName());
+        // when our hash cache exceeds a hard limit, we clear the cache and start anew
+        if (hashes.size() > 150000)
+            hashes.clear();
+
+        // report our findings iff we have not just started anew
+        if (reportFindings)
+            reporter.report(report, "bisq." + getName());
     }
 
     @Override
@@ -201,7 +214,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             Map<String, Counter> buckets = new HashMap<>();
-            Set<byte[]> hashes = new HashSet<>();
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
             dataSet.stream().forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
@@ -211,7 +223,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 }
 
                 // memorize message hashes
-                // TODO cleanup hash list once in a while
                 hashes.add(P2PDataStorage.get32ByteHash(protectedStoragePayload));
 
                 // For logging different data types
@@ -229,7 +240,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
 
                     // memorize message hashes
-                    // TODO cleanup hash list once in a while
                     hashes.add(persistableNetworkPayload.getHash());
 
                     // For logging different data types
@@ -242,11 +252,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 });
             }
 
-            try {
-                hashesPerHost.get(connection.peersNodeAddressProperty().getValue().getFullAddress()).addAll(hashes);
-            } catch (NullPointerException npe) {
-                hashesPerHost.put(connection.peersNodeAddressProperty().getValue().getFullAddress(), hashes);
-            }
             bucketsPerHost.put(connection.peersNodeAddressProperty().getValue().getFullAddress(), buckets);
 
             connection.removeMessageListener(this);
