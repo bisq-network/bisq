@@ -659,7 +659,7 @@ public class BisqSetup {
     private void maybeShowSecurityRecommendation() {
         String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded() &&
+            if (!walletsManager.areWalletsEncrypted() && !user.isPaymentAccountImport() && preferences.showAgain(key) && change.wasAdded() &&
                     displaySecurityRecommendationHandler != null)
                 displaySecurityRecommendationHandler.accept(key);
         });

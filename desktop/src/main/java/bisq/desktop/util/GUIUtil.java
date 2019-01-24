@@ -113,6 +113,7 @@ import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -211,15 +212,17 @@ public class GUIUtil {
                 PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
+                    final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
                     persisted.getList().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
-                            user.addPaymentAccount(paymentAccount);
+                            paymentAccounts.add(paymentAccount);
                             msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
                         } else {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
+                    user.addImportedPaymentAccounts(paymentAccounts);
                     new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
