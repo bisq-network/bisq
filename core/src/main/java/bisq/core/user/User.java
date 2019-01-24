@@ -44,6 +44,7 @@ import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +72,7 @@ public class User implements PersistedDataHost {
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
     private UserPayload userPayload = new UserPayload();
+    private boolean isPaymentAccountImport = false;
 
     @Inject
     public User(Storage<UserPayload> storage, KeyRing keyRing) {
@@ -199,6 +201,17 @@ public class User implements PersistedDataHost {
         setCurrentPaymentAccount(paymentAccount);
         if (changed)
             persist();
+    }
+
+    public void addImportedPaymentAccounts(Collection<PaymentAccount> paymentAccounts) {
+        isPaymentAccountImport = true;
+
+        boolean changed = paymentAccountsAsObservable.addAll(paymentAccounts);
+        setCurrentPaymentAccount(paymentAccounts.stream().findFirst().get());
+        if (changed)
+            persist();
+
+        isPaymentAccountImport = false;
     }
 
     public void removePaymentAccount(PaymentAccount paymentAccount) {
@@ -435,5 +448,9 @@ public class User implements PersistedDataHost {
     @Nullable
     public PriceAlertFilter getPriceAlertFilter() {
         return userPayload.getPriceAlertFilter();
+    }
+
+    public boolean isPaymentAccountImport() {
+        return isPaymentAccountImport;
     }
 }
