@@ -411,6 +411,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         model.onShowPayFundsScreen();
 
+        paymentAccountsComboBox.setDisable(true);
+
         editOfferElements.forEach(node -> {
             node.setMouseTransparent(true);
             node.setFocusTraversable(false);
