@@ -139,7 +139,7 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
         long duration = daoFacade.getDurationForPhaseForDisplay(phase);
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
-        SimpleDateFormat timeFormatter = new SimpleDateFormat("hh:mm", Locale.getDefault());
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
         String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
         String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
         String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);

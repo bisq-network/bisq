@@ -297,8 +297,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toList());
 
-        allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-
         final Optional<Offer> highestBuyPriceOffer = allBuyOffers.stream()
                 .filter(o -> o.getPrice() != null)
                 .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
@@ -339,8 +337,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toList());
 
-        allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
-
         final Optional<Offer> highestSellPriceOffer = allSellOffers.stream()
                 .filter(o -> o.getPrice() != null)
                 .max(Comparator.comparingLong(o -> o.getPrice().getValue()));
@@ -360,26 +356,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
-    }
-
-    // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
-    private List<Offer> filterOffersWithRelevantPrices(List<Offer> offers) {
-        if (offers.size() > 3) {
-            Price bestPrice = offers.get(0).getPrice();
-            if (bestPrice != null) {
-                long bestPriceAsLong = bestPrice.getValue();
-                return offers.stream()
-                        .filter(e -> {
-                            if (e.getPrice() == null)
-                                return false;
-
-                            double ratio = (double) e.getPrice().getValue() / (double) bestPriceAsLong;
-                            return Math.abs(1 - ratio) < 0.3;
-                        })
-                        .collect(Collectors.toList());
-            }
-        }
-        return offers;
     }
 
     private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {

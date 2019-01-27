@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.setup;
+package bisq.asset.coins;
 
-public enum RegTestHost {
+import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
-    NONE,
-    LOCALHOST,
-    REMOTE_HOST;
+public class ZelCash extends Coin {
 
-    public static final String DEFAULT_HOST = "localhost";
-    public static String HOST = DEFAULT_HOST;
+    public ZelCash() {
+        super("ZelCash", "ZEL", new RegexAddressValidator("^t.*", "validation.altcoin.zAddressesNotSupported"));
+    }
 
 }
