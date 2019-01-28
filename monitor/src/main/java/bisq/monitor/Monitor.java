@@ -17,6 +17,8 @@
 
 package bisq.monitor;
 
+import bisq.monitor.metric.P2PNetworkLoad;
+import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
@@ -80,6 +82,8 @@ public class Monitor {
         metrics.add(new TorStartupTime(graphiteReporter));
         metrics.add(new TorRoundTripTime(graphiteReporter));
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
+        metrics.add(new P2PRoundTripTime(graphiteReporter));
+        metrics.add(new P2PNetworkLoad(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux
