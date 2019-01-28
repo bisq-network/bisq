@@ -103,35 +103,26 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     }
 
     @Override
-    protected void enable() {
-        Thread sepp = new Thread(new Runnable() {
-            
-            @Override
-            public void run() {
-                synchronized (ready) {
-                    while (!ready)
-                        try {
-                            ready.wait();
-                        } catch (InterruptedException ignore) {
-                        }
-                    P2PNetworkLoad.super.enable();
-                }
-            }
-        });
-        sepp.start();
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-        networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
-                new CoreNetworkProtoResolver(), false,
-                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
-        networkNode.start(this);
-    }
-
-    @Override
     protected void execute() {
+        // in case we do not have a NetworkNode up and running, we create one
+        if (null == networkNode) {
+            // prepare the gate
+
+            networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
+                    new CoreNetworkProtoResolver(), false,
+                    new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
+            networkNode.start(this);
+
+            // wait for the HS to be published
+            synchronized (ready) {
+                while (!ready)
+                    try {
+                        ready.wait();
+                    } catch (InterruptedException ignore) {
+                    }
+            }
+        }
+
         // clear our buckets
         bucketsPerHost.clear();
         ArrayList<Thread> threadList = new ArrayList<>();
@@ -289,6 +280,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     public void onHiddenServicePublished() {
+        // open the gate
         synchronized (ready) {
             ready.notify();
             ready = true;

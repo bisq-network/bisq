@@ -67,30 +67,8 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     }
 
     @Override
-    protected void enable() {
-        Thread sepp = new Thread(new Runnable() {
-            
-            @Override
-            public void run() {
-                synchronized (ready) {
-                    while (!ready)
-                        try {
-                            ready.wait();
-                        } catch (InterruptedException ignore) {
-                        }
-                    P2PRoundTripTime.super.enable();
-                }
-            }
-        });
-        sepp.start();
-    }
-
-    @Override
     public void configure(Properties properties) {
         super.configure(properties);
-        networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9052")), new CoreNetworkProtoResolver(), false,
-                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
-        networkNode.start(this);
     }
 
     /**
@@ -115,6 +93,22 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     @Override
     protected void execute() {
+
+        if (null == networkNode) {
+            networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9052")),
+                    new CoreNetworkProtoResolver(), false,
+                    new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
+            networkNode.start(this);
+
+            synchronized (ready) {
+                while (!ready)
+                    try {
+                        ready.wait();
+                    } catch (InterruptedException ignore) {
+                    }
+            }
+        }
+
 
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
