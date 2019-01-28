@@ -17,11 +17,11 @@
 
 package bisq.monitor.reporter;
 
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
+import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
-
-import java.net.URL;
 
 import java.io.IOException;
 
@@ -55,10 +55,9 @@ public class GraphiteReporter extends Reporter {
             String report = prefix + ("".equals(key) ? "" : (prefix.isEmpty() ? "" : ".") + key) + " " + value + " "
                     + timestamp + "\n";
 
-            URL url;
             try {
-                url = new URL(configuration.getProperty("serviceUrl"));
-                TorSocket socket = new TorSocket(url.getHost(), url.getPort());
+                NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));
+                TorSocket socket = new TorSocket(nodeAddress.getHostName(), nodeAddress.getPort());
 
                 socket.getOutputStream().write(report.getBytes());
                 socket.close();

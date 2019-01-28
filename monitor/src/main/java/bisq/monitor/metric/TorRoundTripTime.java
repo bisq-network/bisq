@@ -18,16 +18,16 @@
 package bisq.monitor.metric;
 
 import bisq.monitor.Metric;
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
+import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
-
-import java.net.URL;
 
 import java.io.IOException;
 
@@ -61,7 +61,7 @@ public class TorRoundTripTime extends Metric {
             // for each configured host
             for (String current : configuration.getProperty(HOSTS, "").split(",")) {
                 // parse Url
-                URL tmp = new URL(current);
+                NodeAddress tmp = OnionParser.getNodeAddress(current);
 
                 List<Long> samples = new ArrayList<>();
 
@@ -71,7 +71,7 @@ public class TorRoundTripTime extends Metric {
                     long start = System.currentTimeMillis();
 
                     // connect
-                    socket = new SocksSocket(proxy, tmp.getHost(), tmp.getPort());
+                    socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
 
                     // by the time we get here, we are connected
                     samples.add(System.currentTimeMillis() - start);

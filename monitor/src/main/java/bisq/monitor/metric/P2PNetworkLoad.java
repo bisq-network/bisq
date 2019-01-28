@@ -18,7 +18,7 @@
 package bisq.monitor.metric;
 
 import java.io.File;
-import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +42,7 @@ import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
 import bisq.monitor.Monitor;
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -75,7 +76,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private final File torHiddenServiceDir = new File("metric_p2pNetworkLoad");
     private int nonce;
     private Boolean ready = false;
-    private Map<String, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
+    private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
     private CountDownLatch latch;
     private Set<byte[]> hashes = new HashSet<>();
     private boolean reportFindings;
@@ -151,8 +152,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 public void run() {
                     try {
                         // parse Url
-                        URL tmp = new URL(current);
-                        NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
+                        NodeAddress target = OnionParser.getNodeAddress(current);
 
                         // do the data request
                         nonce = new Random().nextInt();
@@ -198,22 +198,27 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // report
         Map<String, String> report = new HashMap<>();
         // - assemble histograms
-        bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report.put(host.replace("http://", "").trim() + "." + type,
-                        String.valueOf(counter.value()))));
+        bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report
+                .put(OnionParser.prettyPrint(host) + "." + type, String.valueOf(counter.value()))));
 
         // - assemble diffs
         Map<String, Integer> messagesPerHost = new HashMap<>();
-        bucketsPerHost.forEach((host, buckets) -> messagesPerHost.put(host,
+        bucketsPerHost.forEach((host, buckets) -> messagesPerHost.put(OnionParser.prettyPrint(host),
                 buckets.values().stream().collect(Collectors.summingInt(Counter::value))));
         Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
         Integer referenceValue = messagesPerHost.get(referenceHost.get());
 
         messagesPerHost.forEach(
                 (host, numberOfMessages) -> {
-                    report.put(host.replace("http://", "").trim() + ".relativeNumberOfMessages",
-                            String.valueOf(numberOfMessages - referenceValue));
-                    report.put(host.replace("http://", "").trim() + ".referenceHost", referenceHost.get());
-                    report.put(host.replace("http://", "").trim() + ".referenceValue", String.valueOf(referenceValue));
+                    try {
+                        report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages",
+                                String.valueOf(numberOfMessages - referenceValue));
+                        report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost.get());
+                        report.put(OnionParser.prettyPrint(host) + ".referenceValue", String.valueOf(referenceValue));
+                    } catch (MalformedURLException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                 });
 
         // when our hash cache exceeds a hard limit, we clear the cache and start anew
@@ -270,7 +275,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 });
             }
 
-            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue().getFullAddress(), buckets);
+            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), buckets);
 
             connection.removeMessageListener(this);
             latch.countDown();

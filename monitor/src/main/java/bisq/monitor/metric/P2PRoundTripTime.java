@@ -18,7 +18,6 @@
 package bisq.monitor.metric;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -35,6 +34,7 @@ import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
 import bisq.monitor.Monitor;
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
 import bisq.network.p2p.NodeAddress;
@@ -120,8 +120,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
             try {
                 // parse Url
-                URL tmp = new URL(current);
-                NodeAddress target = new NodeAddress(tmp.getHost(), tmp.getPort());
+                NodeAddress target = OnionParser.getNodeAddress(current);
 
                 // init sample bucket
                 samples = new ArrayList<>();
@@ -149,7 +148,8 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                 }
 
                 // report
-                reporter.report(StatisticsHelper.process(samples), "bisq." + getName() + "." + target);
+                reporter.report(StatisticsHelper.process(samples),
+                        "bisq." + getName() + "." + OnionParser.prettyPrint(target));
             } catch (Exception e) {
                 e.printStackTrace();
             }
