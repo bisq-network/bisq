@@ -22,7 +22,6 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
@@ -81,10 +80,6 @@ public class CycleService implements DaoStateListener, DaoSetupService {
         if (blockHeight != genesisBlockHeight)
             maybeCreateNewCycle(blockHeight, daoStateService.getCycles())
                     .ifPresent(daoStateService.getCycles()::add);
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
     }
 
     @Override

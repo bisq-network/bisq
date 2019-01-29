@@ -25,7 +25,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -109,10 +108,6 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     @Override
     public void onNewBlockHeight(int height) {
         applyData(height);
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
     }
 
     @Override

@@ -200,7 +200,6 @@ public class DaoStateService implements DaoSetupService {
                     "That might happen in edge cases at reorgs.");
         } else {
             daoState.getBlocks().add(block);
-            daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
             log.info("New Block added at blockHeight " + block.getHeight());
         }
@@ -208,9 +207,12 @@ public class DaoStateService implements DaoSetupService {
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        // We don't call it during batch parsing as that decreased performance a lot.
-        // With calling at each block we got about 50 seconds for 4000 blocks, without about 4 seconds.
+        // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
+        // blocks as that cause performance issues. In earlier versions when we updated at each block it took
+        // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         if (parseBlockChainComplete)
+            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+        else
             daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 

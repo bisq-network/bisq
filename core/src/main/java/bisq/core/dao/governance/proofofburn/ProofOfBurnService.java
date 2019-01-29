@@ -125,7 +125,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         updateList();
     }
 
