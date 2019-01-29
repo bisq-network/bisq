@@ -514,17 +514,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
         daoFacade.publishBlindVote(stake,
                 () -> {
-                    voteButtonBusyAnimation.stop();
-                    voteButtonInfoLabel.setText("");
                     if (!DevEnv.isDevMode())
                         new Popup<>().feedback(Res.get("dao.blindVote.success")).show();
-
-                    updateViews();
                 }, exception -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
                     new Popup<>().warning(exception.toString()).show();
                 });
+
+        // We reset UI without waiting for callback as callback might be slow and then the user could click
+        // multiple times.
+        voteButtonBusyAnimation.stop();
+        voteButtonInfoLabel.setText("");
+        updateViews();
     }
 
     private void updateStateAfterVote() {
