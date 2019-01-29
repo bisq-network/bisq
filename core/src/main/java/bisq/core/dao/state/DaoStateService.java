@@ -211,8 +211,8 @@ public class DaoStateService implements DaoSetupService {
         // With calling at each block we got about 50 seconds for 4000 blocks, without about 4 seconds.
         if (parseBlockChainComplete)
             daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
-
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block, parseBlockChainComplete));
+        else
+            daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed

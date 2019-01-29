@@ -27,6 +27,6 @@ public interface DaoStateListener {
     default void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
-    default void onParseTxsComplete(Block block, boolean parseBlockChainComplete) {
+    default void onParseTxsComplete(Block block) {
     }
 }
