@@ -74,7 +74,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
     public void onNewBlockHeight(int blockHeight) {
     }
 
-    // We listen to each ParseTxsComplete event even the batch processing of all blocks at startup is not completed
+    // We listen to each ParseTxsComplete event even if the batch processing of all blocks at startup is not completed
     // as we need to write snapshots during that batch processing.
     @Override
     public void onParseTxsComplete(Block block) {
