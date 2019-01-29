@@ -50,6 +50,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
@@ -111,6 +112,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final PhasesView phasesView;
     private final DaoStateService daoStateService;
     private final ChangeParamValidator changeParamValidator;
+    private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
 
@@ -154,6 +156,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           PhasesView phasesView,
                           DaoStateService daoStateService,
                           ChangeParamValidator changeParamValidator,
+                          Preferences preferences,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter) {
         this.daoFacade = daoFacade;
@@ -161,6 +164,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
         this.changeParamValidator = changeParamValidator;
+        this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -615,7 +619,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             } else {
                 String msg = "We found multiple MyVote entries in that cycle. That is not supported by the UI.";
                 log.warn(msg);
-                new Popup<>().error(msg).show();
+                String id = "multipleVotes";
+                if (preferences.showAgain(id))
+                    new Popup<>().warning(msg).dontShowAgainId(id).show();
             }
             voteButton.setVisible(false);
             voteButton.setManaged(false);
