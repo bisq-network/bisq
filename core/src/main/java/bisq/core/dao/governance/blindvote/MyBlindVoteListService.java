@@ -35,7 +35,6 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -174,10 +173,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

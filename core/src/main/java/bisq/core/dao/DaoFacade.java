@@ -55,7 +55,6 @@ import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
@@ -186,10 +185,6 @@ public class DaoFacade implements DaoSetupService {
             public void onNewBlockHeight(int blockHeight) {
                 if (blockHeight > 0 && periodService.getCurrentCycle() != null)
                     periodService.getCurrentCycle().getPhaseForHeight(blockHeight).ifPresent(phaseProperty::set);
-            }
-
-            @Override
-            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
             }
 
             @Override

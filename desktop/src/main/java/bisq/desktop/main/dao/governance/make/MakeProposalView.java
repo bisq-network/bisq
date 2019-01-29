@@ -38,7 +38,6 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -185,10 +184,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         proposalTypeComboBox.setDisable(!isProposalPhase);
         if (!isProposalPhase)
             proposalTypeComboBox.getSelectionModel().clearSelection();
-    }
-
-    @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

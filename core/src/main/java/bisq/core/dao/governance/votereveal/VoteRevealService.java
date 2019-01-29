@@ -36,7 +36,6 @@ import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
@@ -155,10 +154,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
 
         maybeRevealVotes();
-    }
-
-    @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

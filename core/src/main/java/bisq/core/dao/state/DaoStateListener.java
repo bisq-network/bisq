@@ -22,12 +22,13 @@ import bisq.core.dao.state.model.blockchain.Block;
 public interface DaoStateListener {
     void onNewBlockHeight(int blockHeight);
 
-    void onParseTxsCompleteAfterBatchProcessing(Block block);
-
     void onParseBlockChainComplete();
 
     // Never used but we still want to provide the event
     default void onEmptyBlockAdded(Block block) {
+    }
+
+    default void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     default void onParseTxsComplete(Block block, boolean parseBlockChainComplete) {

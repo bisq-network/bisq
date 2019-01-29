@@ -22,7 +22,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
@@ -94,10 +93,6 @@ public class PhasesView implements DaoStateListener {
     @Override
     public void onNewBlockHeight(int height) {
         applyData(height);
-    }
-
-    @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

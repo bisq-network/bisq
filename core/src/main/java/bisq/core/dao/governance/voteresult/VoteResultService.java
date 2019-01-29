@@ -33,7 +33,6 @@ import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Ballot;
@@ -153,10 +152,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     public void onNewBlockHeight(int blockHeight) {
         // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
         maybeCalculateVoteResult(blockHeight);
-    }
-
-    @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override
