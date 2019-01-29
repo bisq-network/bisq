@@ -24,11 +24,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
@@ -77,10 +75,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private final File torHiddenServiceDir = new File("metric_p2pNetworkLoad");
     private int nonce;
     private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
-    private CountDownLatch latch;
     private Set<byte[]> hashes = new HashSet<>();
     private boolean reportFindings;
     private final ThreadGate hsReady = new ThreadGate();
+    private final ThreadGate gate = new ThreadGate();
 
     /**
      * Efficient way to count message occurrences.
@@ -170,18 +168,13 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             }, current));
         }
 
-        latch = new CountDownLatch(threadList.size());
+        gate.engage(threadList.size());
 
         // start all threads and wait until they all finished. We do that so we can
         // minimize the time between querying the hosts and therefore the chance of
         // inconsistencies.
         threadList.forEach(Thread::start);
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        gate.await();
 
         // report
         Map<String, String> report = new HashMap<>();
@@ -266,7 +259,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), buckets);
 
             connection.removeMessageListener(this);
-            latch.countDown();
+            gate.proceed();
         }
     }
 

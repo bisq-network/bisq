@@ -29,15 +29,25 @@ public class ThreadGate {
     private CountDownLatch lock = new CountDownLatch(0);
 
     /**
-     * Make everyone wait until the gate is opened again.
+     * Make everyone wait until the gate is open again.
      */
     public void engage() {
         lock = new CountDownLatch(1);
     }
 
     /**
-     * Wait for the gate to be opened. Blocks until the gate is opened again.
-     * Returns immediately if the gate is already open.
+     * Make everyone wait until the gate is open again.
+     * 
+     * @param numberOfLocks how often the gate has to be unlocked until the gate
+     *                      opens.
+     */
+    public void engage(int numberOfLocks) {
+        lock = new CountDownLatch(numberOfLocks);
+    }
+
+    /**
+     * Wait for the gate to be opened. Blocks until the gate is open again. Returns
+     * immediately if the gate is already open.
      */
     public synchronized void await() {
         while (lock.getCount() > 0)
