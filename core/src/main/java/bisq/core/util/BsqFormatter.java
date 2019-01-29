@@ -145,7 +145,8 @@ public class BsqFormatter extends BSFormatter {
     public String formatParamValue(Param param, String value) {
         switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+                // In case we add a new param old clients will not know that enum and fall back to UNDEFINED.
+                return "";
             case BSQ:
                 return formatCoinWithCode(parseToCoin(value));
             case BTC:
