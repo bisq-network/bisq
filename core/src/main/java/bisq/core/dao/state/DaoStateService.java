@@ -200,7 +200,6 @@ public class DaoStateService implements DaoSetupService {
                     "That might happen in edge cases at reorgs.");
         } else {
             daoState.getBlocks().add(block);
-            daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
             log.info("New Block added at blockHeight " + block.getHeight());
         }

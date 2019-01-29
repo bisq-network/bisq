@@ -24,10 +24,6 @@ public interface DaoStateListener {
 
     void onParseBlockChainComplete();
 
-    // Never used but we still want to provide the event
-    default void onEmptyBlockAdded(Block block) {
-    }
-
     default void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
