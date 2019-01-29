@@ -215,9 +215,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 doPublishMyProposal(proposal, transaction);
             }
         } catch (InsufficientMoneyException e) {
-            BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
-            new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
-                    formatter.formatCoinWithCode(e.missing))).show();
+            if (e instanceof InsufficientBsqException) {
+                new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFunds",
+                        bsqFormatter.formatCoinWithCode(e.missing))).show();
+            } else {
+                new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
+                        btcFormatter.formatCoinWithCode(e.missing))).show();
+            }
+
         } catch (ValidationException e) {
             String message;
             if (e.getMinRequestAmount() != null) {
