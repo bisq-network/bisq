@@ -242,7 +242,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                 },
                 errorMessage -> new Popup<>().warning(errorMessage).show());
     }
