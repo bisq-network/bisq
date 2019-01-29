@@ -43,6 +43,7 @@ import bisq.monitor.Monitor;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
+import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -261,6 +262,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
             connection.removeMessageListener(this);
             gate.proceed();
+        } else if (networkEnvelope instanceof CloseConnectionMessage) {
+            gate.unlock();
+        } else {
+            log.warn("Got a message of type <{}>, expected <GetDataResponse>",
+                    networkEnvelope.getClass().getSimpleName());
         }
     }
 

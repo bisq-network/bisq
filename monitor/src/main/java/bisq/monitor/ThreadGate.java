@@ -63,4 +63,12 @@ public class ThreadGate {
     public void proceed() {
         lock.countDown();
     }
+
+    /**
+     * Open the gate with no regards on how many locks are still in place.
+     */
+    public void unlock() {
+        while (lock.getCount() > 0)
+            lock.countDown();
+    }
 }

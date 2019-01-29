@@ -38,6 +38,7 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
 import bisq.monitor.ThreadGate;
+import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -151,6 +152,10 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
             // open the gate
             gate.proceed();
+        } else if (networkEnvelope instanceof CloseConnectionMessage) {
+            gate.unlock();
+        } else {
+            log.warn("Got a message of type <{}>, expected <Pong>", networkEnvelope.getClass().getSimpleName());
         }
     }
 
