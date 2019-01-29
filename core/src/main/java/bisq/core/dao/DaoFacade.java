@@ -189,7 +189,7 @@ public class DaoFacade implements DaoSetupService {
             }
 
             @Override
-            public void onParseTxsComplete(Block block) {
+            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
             }
 
             @Override

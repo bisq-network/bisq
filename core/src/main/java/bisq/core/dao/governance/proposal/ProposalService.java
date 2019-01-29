@@ -158,7 +158,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         int heightForRepublishing = periodService.getFirstBlockOfPhase(daoStateService.getChainHeight(), DaoPhase.Phase.BREAK1);
         if (block.getHeight() == heightForRepublishing) {
             // We only republish if we are completed with parsing old blocks, otherwise we would republish old

@@ -22,7 +22,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 public interface DaoStateListener {
     void onNewBlockHeight(int blockHeight);
 
-    void onParseTxsComplete(Block block);
+    void onParseTxsCompleteAfterBatchProcessing(Block block);
 
     void onParseBlockChainComplete();
 

@@ -78,7 +78,7 @@ public class BallotListPresentation implements BallotListService.BallotListChang
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         onListChanged(ballotListService.getValidatedBallotList());
     }
 

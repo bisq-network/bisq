@@ -99,7 +99,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

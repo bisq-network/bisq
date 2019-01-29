@@ -126,7 +126,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

@@ -177,7 +177,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

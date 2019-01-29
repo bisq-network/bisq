@@ -188,7 +188,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

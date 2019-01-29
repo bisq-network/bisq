@@ -97,7 +97,7 @@ public class PhasesView implements DaoStateListener {
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

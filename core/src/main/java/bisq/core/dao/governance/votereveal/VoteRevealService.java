@@ -158,7 +158,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override

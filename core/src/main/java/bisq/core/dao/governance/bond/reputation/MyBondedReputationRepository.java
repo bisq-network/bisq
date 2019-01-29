@@ -85,7 +85,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
             }
 
             @Override
-            public void onParseTxsComplete(Block block) {
+            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
                 update();
             }
 

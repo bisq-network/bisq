@@ -185,7 +185,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }
 
     @Override
