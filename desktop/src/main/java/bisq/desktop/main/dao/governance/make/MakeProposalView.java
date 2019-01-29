@@ -89,6 +89,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
+    @Nullable
     private ProposalDisplay proposalDisplay;
     private Button makeProposalButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
@@ -125,7 +126,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
+        proposalTypeComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setMaxWidth(300);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
@@ -242,7 +243,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         daoFacade.publishMyProposal(proposal,
                 transaction,
                 () -> {
-                    proposalDisplay.clearForm();
+                    if (proposalDisplay != null)
+                        proposalDisplay.clearForm();
                     proposalTypeComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
                         new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
@@ -253,6 +255,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     @Nullable
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
+
+        checkNotNull(proposalDisplay, "proposalDisplay must not be null");
 
         switch (type) {
             case COMPENSATION_REQUEST:
@@ -359,19 +363,21 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void updateButtonState() {
         AtomicBoolean inputsValid = new AtomicBoolean(true);
-        proposalDisplay.getInputControls().stream()
-                .filter(Objects::nonNull).forEach(e -> {
-            if (e instanceof InputTextField) {
-                InputTextField inputTextField = (InputTextField) e;
-                inputsValid.set(inputsValid.get() &&
-                        inputTextField.getValidator() != null &&
-                        inputTextField.getValidator().validate(e.getText()).isValid);
-            }
-        });
-        proposalDisplay.getComboBoxes().stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
-        });
+        if (proposalDisplay != null) {
+            proposalDisplay.getInputControls().stream()
+                    .filter(Objects::nonNull).forEach(e -> {
+                if (e instanceof InputTextField) {
+                    InputTextField inputTextField = (InputTextField) e;
+                    inputsValid.set(inputsValid.get() &&
+                            inputTextField.getValidator() != null &&
+                            inputTextField.getValidator().validate(e.getText()).isValid);
+                }
+            });
+            proposalDisplay.getComboBoxes().stream()
+                    .filter(Objects::nonNull).forEach(comboBox -> {
+                inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
+            });
+        }
 
         makeProposalButton.setDisable(!inputsValid.get());
     }
