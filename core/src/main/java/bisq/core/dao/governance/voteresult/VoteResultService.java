@@ -212,12 +212,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     }
 
                 } catch (VoteResultException.ValidationException e) {
-                    log.error(e.toString());
+                    log.warn(e.toString());
                     e.printStackTrace();
                     voteResultExceptions.add(e);
                 } catch (VoteResultException.ConsensusException e) {
-                    log.error(e.toString());
-                    log.error("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
+                    log.warn(e.toString());
+                    log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
                     e.printStackTrace();
 
                     //TODO notify application of that case (e.g. add error handler)
@@ -300,7 +300,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                 voteResultExceptions.add(missingBallotException);
                                 return null;
                             } catch (VoteResultException.DecryptionException decryptionException) {
-                                log.error("Could not decrypt data: " + decryptionException.toString());
+                                log.warn("Could not decrypt data: " + decryptionException.toString());
                                 voteResultExceptions.add(decryptionException);
                                 return null;
                             }
@@ -316,7 +316,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             return null;
                         }
                     } catch (VoteResultException.ValidationException e) {
-                        log.error("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
+                        log.warn("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
                         voteResultExceptions.add(e);
                         return null;
                     } catch (Throwable e) {
