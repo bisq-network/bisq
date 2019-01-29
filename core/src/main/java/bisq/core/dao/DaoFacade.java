@@ -397,17 +397,17 @@ public class DaoFacade implements DaoSetupService {
             case PROPOSAL:
                 break;
             case BREAK1:
-                firstBlock++;
+                firstBlock--;
                 break;
             case BLIND_VOTE:
                 break;
             case BREAK2:
-                firstBlock++;
+                firstBlock--;
                 break;
             case VOTE_REVEAL:
                 break;
             case BREAK3:
-                firstBlock++;
+                firstBlock--;
                 break;
             case RESULT:
                 break;
