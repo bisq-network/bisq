@@ -37,6 +37,7 @@ import bisq.monitor.Monitor;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
+import bisq.monitor.ThreadGate;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -57,8 +58,9 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     private final File torHiddenServiceDir = new File("metric_p2pRoundTripTime");
     private int nonce;
     private long start;
-    private Boolean ready = false;
     private List<Long> samples;
+    private final ThreadGate gate = new ThreadGate();
+    private final ThreadGate hsReady = new ThreadGate();
 
     public P2PRoundTripTime(Reporter reporter) {
         super(reporter);
@@ -71,42 +73,20 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
         super.configure(properties);
     }
 
-    /**
-     * synchronization helper.
-     */
-    private void await() {
-        synchronized (torHiddenServiceDir) {
-            try {
-                torHiddenServiceDir.wait();
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void proceed() {
-        synchronized (torHiddenServiceDir) {
-            torHiddenServiceDir.notify();
-        }
-    }
-
     @Override
     protected void execute() {
 
         if (null == networkNode) {
+            // close the gate
+            hsReady.engage();
+
             networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9052")),
                     new CoreNetworkProtoResolver(), false,
                     new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
             networkNode.start(this);
 
-            synchronized (ready) {
-                while (!ready)
-                    try {
-                        ready.wait();
-                    } catch (InterruptedException ignore) {
-                    }
-            }
+            // wait for the gate to be reopened
+            hsReady.await();
         }
 
 
@@ -121,6 +101,10 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
                 while (samples.size() < Integer.parseInt(configuration.getProperty(SAMPLE_SIZE, "1"))) {
                     nonce = new Random().nextInt();
+
+                    // close the gate
+                    gate.engage();
+
                     start = System.currentTimeMillis();
                     SettableFuture<Connection> future = networkNode.sendMessage(target, new Ping(nonce, 42));
 
@@ -138,7 +122,8 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                         }
                     });
 
-                    await();
+                    // wait for the gate to open again
+                    gate.await();
                 }
 
                 // report
@@ -162,7 +147,9 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                         nonce, pong.getRequestNonce());
             }
             connection.removeMessageListener(this);
-            proceed();
+
+            // open the gate
+            gate.proceed();
         }
     }
 
@@ -173,10 +160,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     @Override
     public void onHiddenServicePublished() {
-        synchronized (ready) {
-            ready.notify();
-            ready = true;
-        }
+        hsReady.proceed();
     }
 
     @Override

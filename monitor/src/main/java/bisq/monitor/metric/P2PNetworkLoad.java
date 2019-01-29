@@ -44,6 +44,7 @@ import bisq.monitor.Metric;
 import bisq.monitor.Monitor;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
+import bisq.monitor.ThreadGate;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -75,11 +76,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private NetworkNode networkNode;
     private final File torHiddenServiceDir = new File("metric_p2pNetworkLoad");
     private int nonce;
-    private Boolean ready = false;
     private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
     private CountDownLatch latch;
     private Set<byte[]> hashes = new HashSet<>();
     private boolean reportFindings;
+    private final ThreadGate hsReady = new ThreadGate();
 
     /**
      * Efficient way to count message occurrences.
@@ -107,20 +108,16 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // in case we do not have a NetworkNode up and running, we create one
         if (null == networkNode) {
             // prepare the gate
+            hsReady.engage();
 
+            // start the network node
             networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
                     new CoreNetworkProtoResolver(), false,
                     new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
             networkNode.start(this);
 
             // wait for the HS to be published
-            synchronized (ready) {
-                while (!ready)
-                    try {
-                        ready.wait();
-                    } catch (InterruptedException ignore) {
-                    }
-            }
+            hsReady.await();
         }
 
         // clear our buckets
@@ -281,10 +278,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     @Override
     public void onHiddenServicePublished() {
         // open the gate
-        synchronized (ready) {
-            ready.notify();
-            ready = true;
-        }
+        hsReady.proceed();
     }
 
     @Override
