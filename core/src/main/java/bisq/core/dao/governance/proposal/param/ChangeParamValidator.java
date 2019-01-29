@@ -84,9 +84,10 @@ public class ChangeParamValidator extends ProposalValidator {
             case BTC:
                 bsqFormatter.validateBtcInput(inputValue);
                 newValueAsBtcCoin = bsqFormatter.parseToBTC(inputValue);
-                checkArgument(newValueAsBtcCoin.value >= Restrictions.getMinNonDustOutput().value,
+                checkArgument(!newValueAsBtcCoin.isNegative(), "Input must not be negative");
+                // We allow 0 values (arbitration fee)
+                checkArgument(newValueAsBtcCoin.value == 0 || newValueAsBtcCoin.value >= Restrictions.getMinNonDustOutput().value,
                         Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                checkArgument(newValueAsBtcCoin.isPositive(), "Input must be positive");
                 currentValueAsCoin = daoStateService.getParamValueAsCoin(param, periodService.getChainHeight());
                 checkArgument(!currentValueAsCoin.equals(newValueAsBtcCoin), "Your input must be different to the current value");
                 validateChangeRange((double) currentValueAsCoin.value, (double) newValueAsBtcCoin.value, maxDecrease, maxIncrease);
@@ -100,7 +101,8 @@ public class ChangeParamValidator extends ProposalValidator {
                 break;
             case BLOCK:
                 int newValueAsBlock = Integer.parseInt(inputValue);
-                checkArgument(newValueAsBlock > 0, "newValueAsBlock must be > 0");
+                // We allow 0 values (e.g. time lock for trade)
+                checkArgument(newValueAsBlock >= 0, "newValueAsBlock must be >= 0");
                 int currentValueAsBlock = daoStateService.getParamValueAsBlock(param, periodService.getChainHeight());
                 checkArgument(currentValueAsBlock != newValueAsBlock, "Your input must be different to the current value");
                 validateChangeRange((double) currentValueAsBlock, (double) newValueAsBlock, maxDecrease, maxIncrease);
@@ -180,11 +182,11 @@ public class ChangeParamValidator extends ProposalValidator {
     }
 
     private void validateChangeRange(double currentValue, double newValue, double min, double max) throws ValidationException {
-        double change = newValue / currentValue;
-        if (change > max)
+        double change = currentValue != 0 ? newValue / currentValue : 0;
+        if (max > 0 && change > max)
             throw new ValidationException("Input is larger than " + max + " times the current value.");
 
-        if (change < (1 / min))
+        if (min > 0 && change < (1 / min))
             throw new ValidationException("Input is smaller than " + 1 / min + " times the current value.");
     }
 }
