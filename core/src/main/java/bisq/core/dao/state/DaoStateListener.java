@@ -29,4 +29,7 @@ public interface DaoStateListener {
     // Never used but we still want to provide the event
     default void onEmptyBlockAdded(Block block) {
     }
+
+    default void onParseTxsComplete(Block block, boolean parseBlockChainComplete) {
+    }
 }
