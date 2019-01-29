@@ -130,6 +130,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                 reporter.report(StatisticsHelper.process(samples),
                         "bisq." + getName() + "." + OnionParser.prettyPrint(target));
             } catch (Exception e) {
+                gate.proceed(); // release the gate on error
                 e.printStackTrace();
             }
         }

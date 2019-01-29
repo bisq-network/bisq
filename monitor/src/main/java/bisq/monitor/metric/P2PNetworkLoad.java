@@ -161,6 +161,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         });
 
                     } catch (Exception e) {
+                        gate.proceed(); // release the gate on error
                         e.printStackTrace();
                     }
 
