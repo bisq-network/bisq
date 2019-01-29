@@ -40,6 +40,7 @@ import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -170,6 +171,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void maybeCalculateVoteResult(int chainHeight) {
         if (isInVoteResultPhase(chainHeight)) {
+            Cycle currentCycle = periodService.getCurrentCycle();
             long startTs = System.currentTimeMillis();
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             decryptedBallotsWithMeritsSet.stream()
@@ -214,7 +216,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 } catch (VoteResultException.ValidationException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
-                    voteResultExceptions.add(e);
+                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
                 } catch (VoteResultException.ConsensusException e) {
                     log.warn(e.toString());
                     log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
@@ -224,7 +226,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     // The vote cycle is invalid as conflicting data views of the blind vote data exist and the winner
                     // did not reach super majority of 80%.
 
-                    voteResultExceptions.add(e);
+                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
                 }
             } else {
                 log.info("There have not been any votes in that cycle. chainHeight={}", chainHeight);
@@ -261,6 +263,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         return null;
                     }
 
+                    Cycle currentCycle = periodService.getCurrentCycle();
                     try {
                         // TODO maybe verify version in opReturn
 
@@ -296,12 +299,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                 return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
                             } catch (VoteResultException.MissingBallotException missingBallotException) {
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
-                                missingDataRequestService.addVoteResultException(missingBallotException);
-                                voteResultExceptions.add(missingBallotException);
+                                missingDataRequestService.sendRepublishRequest();
+                                voteResultExceptions.add(new VoteResultException(currentCycle, missingBallotException));
                                 return null;
                             } catch (VoteResultException.DecryptionException decryptionException) {
                                 log.warn("Could not decrypt data: " + decryptionException.toString());
-                                voteResultExceptions.add(decryptionException);
+                                voteResultExceptions.add(new VoteResultException(currentCycle, decryptionException));
                                 return null;
                             }
                         } else {
@@ -311,17 +314,17 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                     "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
 
                             VoteResultException.MissingBlindVoteDataException voteResultException = new VoteResultException.MissingBlindVoteDataException(blindVoteTxId);
-                            missingDataRequestService.addVoteResultException(voteResultException);
-                            voteResultExceptions.add(voteResultException);
+                            missingDataRequestService.sendRepublishRequest();
+                            voteResultExceptions.add(new VoteResultException(currentCycle, voteResultException));
                             return null;
                         }
                     } catch (VoteResultException.ValidationException e) {
                         log.warn("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
-                        voteResultExceptions.add(e);
+                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
                         return null;
                     } catch (Throwable e) {
                         log.error("Could not create DecryptedBallotsWithMerits because of an unknown exception: " + e.toString());
-                        voteResultExceptions.add(new VoteResultException(e));
+                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
                         return null;
                     }
                 })
