@@ -30,8 +30,10 @@ import bisq.desktop.main.dao.burnbsq.BurnBsqView;
 import bisq.desktop.main.dao.governance.GovernanceView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
+import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
@@ -61,9 +63,15 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     private BsqWalletView bsqWalletView;
 
     @Inject
-    private DaoView(CachingViewLoader viewLoader, Navigation navigation) {
+    private DaoView(CachingViewLoader viewLoader, VoteRevealService voteRevealService, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+
+        voteRevealService.addVoteRevealTxPublishedListener(txId -> {
+            new Popup<>().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
+                    .feedback(Res.get("dao.voteReveal.txPublished", txId))
+                    .show();
+        });
     }
 
     @Override
