@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateSnapshotService implements DaoStateListener {
-    private static final int SNAPSHOT_GRID = 10;
+    private static final int SNAPSHOT_GRID = 20;
 
     private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
