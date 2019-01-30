@@ -150,6 +150,7 @@ public class BisqSetup {
     private final VoteResultService voteResultService;
     private final AssetTradeActivityCheck tradeActivityCheck;
     private final AssetService assetService;
+    private final TorSetup torSetup;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -226,6 +227,7 @@ public class BisqSetup {
                      VoteResultService voteResultService,
                      AssetTradeActivityCheck tradeActivityCheck,
                      AssetService assetService,
+                     TorSetup torSetup,
                      BSFormatter formatter) {
 
 
@@ -264,6 +266,7 @@ public class BisqSetup {
         this.voteResultService = voteResultService;
         this.tradeActivityCheck = tradeActivityCheck;
         this.assetService = assetService;
+        this.torSetup = torSetup;
         this.formatter = formatter;
     }
 
@@ -286,6 +289,7 @@ public class BisqSetup {
     }
 
     private void step3() {
+        torSetup.cleanupTorFiles();
         readMapsFromResources();
         checkCryptoSetup();
         checkForCorrectOSArchitecture();
