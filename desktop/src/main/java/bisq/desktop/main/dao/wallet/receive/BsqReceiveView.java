@@ -77,7 +77,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
             addressTextField = tuple.second;
             GridPane.setColumnSpan(tuple.third, 3);
         } else {
-            addTitledGroupBg(root, gridRow, 1,
+            addTitledGroupBg(root, gridRow, 6,
                     Res.get("dao.wallet.receive.dao.headline"), 0);
             FormBuilder.addMultilineLabel(root, gridRow, Res.get("dao.wallet.receive.daoInfo"), 10);
 
