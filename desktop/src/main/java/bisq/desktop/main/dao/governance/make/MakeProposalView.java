@@ -243,13 +243,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         daoFacade.publishMyProposal(proposal,
                 transaction,
                 () -> {
-                    if (proposalDisplay != null)
-                        proposalDisplay.clearForm();
-                    proposalTypeComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
                         new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                 },
                 errorMessage -> new Popup<>().warning(errorMessage).show());
+
+        // We reset UI without waiting for callback as callback might be slow and then the user could create multiple
+        // proposals.
+        if (proposalDisplay != null)
+            proposalDisplay.clearForm();
+        proposalTypeComboBox.getSelectionModel().clearSelection();
     }
 
     @Nullable
@@ -383,4 +386,3 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         makeProposalButton.setDisable(!inputsValid.get());
     }
 }
-
