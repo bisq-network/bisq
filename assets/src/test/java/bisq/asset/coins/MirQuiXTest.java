@@ -29,16 +29,17 @@ public class MirQuiXTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("input_valid_address");
-        assertValidAddress("input_valid_address");
-        assertValidAddress("input_valid_address");
-        assertValidAddress("input_valid_address");
+        assertValidAddress("M9a1uVoZVqSrLo11zCJFanoapkX5jpD4qQ");
+        assertValidAddress("MBqmNXko4PihRKM1PTotY6Xi2PUEeidffQ");
+        assertValidAddress("M8cWbG2vQ8t86nD2hWQj6EUvfzeVWMmac6");
+        assertValidAddress("MQT5VKiejqezJqJtVriubjYhZCPFpkyVoj");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("input_invalid_address");
-        assertInvalidAddress("input_invalid_address");
-        assertInvalidAddress("input_invalid_address");
+        assertInvalidAddress("1DD8P7dPYQFUBjB4GBUhX2N2tBzH5FUTW6");
+        assertInvalidAddress("3E4A83hD5SKRgePNevjtHd5qomLrYLjqsa");
+        assertInvalidAddress("mFEcnULbK7TfHuEfxwNhA2HBZCr9teSaVD");
+        assertInvalidAddress("x8YbvNoZDNUpf3kjpFCs11xnmBFsexbzmk");
     }
 }
