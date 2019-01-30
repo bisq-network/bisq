@@ -78,7 +78,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
         if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             FormBuilder.addMultilineLabel(root, ++gridRow, Res.get("dao.wallet.receive.daoInfo"));
-            Button daoInfoButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.wallet.receive.daoInfo.button"));
+            Button daoInfoButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.wallet.receive.daoInfo.button"), 10);
             daoInfoButton.setOnAction(e -> {
                 GUIUtil.openWebPage("https://bisq.network/dao");
             });
