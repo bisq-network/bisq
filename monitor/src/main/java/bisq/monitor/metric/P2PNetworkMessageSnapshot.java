@@ -73,7 +73,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
     private int nonce;
     private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
     private Set<byte[]> hashes = new HashSet<>();
-    private boolean reportFindings;
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
@@ -118,14 +117,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         // clear our buckets
         bucketsPerHost.clear();
         ArrayList<Thread> threadList = new ArrayList<>();
-
-        // in case we just started anew, do not report our findings as they contain not
-        // only the changes since our last run, but a whole lot more dating back even
-        // till the beginning of bisq.
-        if (hashes.isEmpty())
-            reportFindings = false;
-        else
-            reportFindings = true;
 
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
@@ -186,8 +177,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
             hashes.clear();
 
         // report our findings iff we have not just started anew
-        if (reportFindings)
-            reporter.report(report, "bisq." + getName());
+        reporter.report(report, "bisq." + getName());
     }
 
     @Override
