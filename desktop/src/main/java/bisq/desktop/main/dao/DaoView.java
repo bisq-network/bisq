@@ -34,8 +34,6 @@ import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
-import bisq.common.app.DevEnv;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -78,12 +76,13 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         bondingTab.setClosable(false);
         burnBsqTab.setClosable(false);
 
-        root.getTabs().addAll(bsqWalletTab, proposalsTab, bondingTab, burnBsqTab);
-
-        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq() || !DevEnv.isDaoPhase2Activated()) {
-            bondingTab.setDisable(true);
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
             proposalsTab.setDisable(true);
+            bondingTab.setDisable(true);
             burnBsqTab.setDisable(true);
+            root.getTabs().addAll(bsqWalletTab);
+        } else {
+            root.getTabs().addAll(bsqWalletTab, proposalsTab, bondingTab, burnBsqTab);
         }
 
         navigationListener = viewPath -> {
