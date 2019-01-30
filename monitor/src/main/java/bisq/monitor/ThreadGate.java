@@ -56,7 +56,7 @@ public class ThreadGate {
     public synchronized void await() {
         while (lock.getCount() > 0)
             try {
-                if (lock.await(lock.getCount(), TimeUnit.MINUTES)) {
+                if (!lock.await(lock.getCount(), TimeUnit.MINUTES)) {
                     log.warn("timeout occured!");
                     break; // break the loop
                 }
