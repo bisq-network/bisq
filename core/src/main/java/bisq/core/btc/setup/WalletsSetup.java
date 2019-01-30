@@ -236,7 +236,6 @@ public class WalletsSetup {
             if (regTestHost == RegTestHost.LOCALHOST) {
                 walletConfig.setPeerNodesForLocalHost();
             } else if (regTestHost == RegTestHost.REMOTE_HOST) {
-                walletConfig.setMinBroadcastConnections(1);
                 configPeerNodesForRegTestServer();
             } else {
                 configPeerNodes(socks5Proxy);
@@ -315,7 +314,11 @@ public class WalletsSetup {
 
     private void configPeerNodesForRegTestServer() {
         try {
-            walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
+            if (RegTestHost.HOST.endsWith(".onion")) {
+                walletConfig.setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));
+            } else {
+                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
+            }
         } catch (UnknownHostException e) {
             log.error(e.toString());
             e.printStackTrace();
