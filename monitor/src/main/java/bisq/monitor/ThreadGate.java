@@ -18,12 +18,16 @@
 package bisq.monitor;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Gate pattern to help with thread synchronization
  *
  * @author Florian Reimair
  */
+@Slf4j
 public class ThreadGate {
 
     private CountDownLatch lock = new CountDownLatch(0);
@@ -52,7 +56,10 @@ public class ThreadGate {
     public synchronized void await() {
         while (lock.getCount() > 0)
             try {
-                lock.await();
+                if (lock.await(lock.getCount(), TimeUnit.MINUTES)) {
+                    log.warn("timeout occured!");
+                    break; // break the loop
+                }
             } catch (InterruptedException ignore) {
             }
     }
