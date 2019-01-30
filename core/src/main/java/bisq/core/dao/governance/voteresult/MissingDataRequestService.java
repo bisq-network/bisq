@@ -22,17 +22,8 @@ import bisq.core.dao.governance.blindvote.network.RepublishGovernanceDataHandler
 
 import javax.inject.Inject;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-
-import lombok.Getter;
-
 public class MissingDataRequestService implements DaoSetupService {
     private final RepublishGovernanceDataHandler republishGovernanceDataHandler;
-
-    @Getter
-    private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
 
     @Inject
     public MissingDataRequestService(RepublishGovernanceDataHandler republishGovernanceDataHandler) {
@@ -46,12 +37,6 @@ public class MissingDataRequestService implements DaoSetupService {
 
     @Override
     public void addListeners() {
-        voteResultExceptions.addListener((ListChangeListener<VoteResultException>) c -> {
-            c.next();
-            if (c.wasAdded()) {
-                republishGovernanceDataHandler.sendRepublishRequest();
-            }
-        });
     }
 
     @Override
@@ -63,7 +48,7 @@ public class MissingDataRequestService implements DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addVoteResultException(VoteResultException voteResultException) {
-        this.voteResultExceptions.add(voteResultException);
+    public void sendRepublishRequest() {
+        republishGovernanceDataHandler.sendRepublishRequest();
     }
 }
