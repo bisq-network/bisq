@@ -121,6 +121,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
                         @Override
                         public void onFailure(@NotNull Throwable throwable) {
+                            gate.proceed();
                             log.error("Sending ping failed. That is expected if the peer is offline.\n\tException="
                                     + throwable.getMessage());
                         }

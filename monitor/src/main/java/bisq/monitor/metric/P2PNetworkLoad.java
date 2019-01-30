@@ -155,6 +155,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                             @Override
                             public void onFailure(@NotNull Throwable throwable) {
+                                gate.proceed();
                                 log.error(
                                         "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
                                                 + throwable.getMessage());
