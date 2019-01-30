@@ -103,7 +103,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
                 while (samples.size() < Integer.parseInt(configuration.getProperty(SAMPLE_SIZE, "1"))) {
                     // so we do not get disconnected due to DoS protection mechanisms
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
 
                     nonce = new Random().nextInt();
 

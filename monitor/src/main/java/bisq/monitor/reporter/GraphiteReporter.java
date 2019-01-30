@@ -61,6 +61,16 @@ public class GraphiteReporter extends Reporter {
 
                 socket.getOutputStream().write(report.getBytes());
                 socket.close();
+
+                try {
+                    // give Tor some slack
+                    // TODO maybe use the pickle protocol?
+                    // https://graphite.readthedocs.io/en/latest/feeding-carbon.html
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
