@@ -54,6 +54,7 @@ import javafx.collections.ObservableList;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -73,6 +74,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class VoteRevealService implements DaoStateListener, DaoSetupService {
+
+    public interface VoteRevealTxPublishedListener {
+        void onVoteRevealTxPublished(String txId);
+    }
+
     private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
     private final PeriodService periodService;
@@ -86,7 +92,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
     private final BsqNode bsqNode;
-
+    private final List<VoteRevealTxPublishedListener> voteRevealTxPublishedListeners = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -142,6 +148,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     public byte[] getHashOfBlindVoteList() {
         List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         return VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
+    }
+
+    public void addVoteRevealTxPublishedListener(VoteRevealTxPublishedListener voteRevealTxPublishedListener) {
+        voteRevealTxPublishedListeners.add(voteRevealTxPublishedListener);
     }
 
 
@@ -267,6 +277,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");
+                voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getHashAsString()));
             }
 
             @Override
