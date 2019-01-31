@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.UITheme;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
@@ -87,8 +88,10 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.*;
@@ -103,6 +106,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
+    private ComboBox<UITheme> themeIdComboBox;
     //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
@@ -133,6 +137,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<BlockChainExplorer> blockExplorers;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
+    private ObservableList<UITheme> uiThemes;
     private ObservableList<FiatCurrency> fiatCurrencies;
     private ObservableList<FiatCurrency> allFiatCurrencies;
     private ObservableList<CryptoCurrency> cryptoCurrencies;
@@ -592,10 +597,34 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
 //        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         showOwnOffersInOfferBook = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.showOwnOffers"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        useAnimations = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
+
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
         sortMarketCurrenciesNumerically = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"));
-        resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
+
+        useAnimations = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useAnimations"));
+
+        themeIdComboBox = addComboBox(root, ++gridRow, Res.get("setting.preferences.uiTheme"));
+        themeIdComboBox.setItems(uiThemes);
+        themeIdComboBox.getSelectionModel().select(preferences.getUiThemeId());
+        themeIdComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(UITheme theme) {
+                return theme != null ? theme.getLabel() : "";
+            }
+
+            @Override
+            public UITheme fromString(String string) {
+                return null;
+            }
+        });
+        themeIdComboBox.setOnAction(e -> {
+            UITheme uiTheme = themeIdComboBox.getSelectionModel().getSelectedItem();
+            if (uiTheme != null) {
+                preferences.setThemeId(uiTheme.getId());
+            }
+        });
+
+        resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 15);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(resetDontShowAgainButton, Priority.ALWAYS);
@@ -813,6 +842,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useAnimations.setSelected(preferences.isUseAnimations());
         useAnimations.setOnAction(e -> preferences.setUseAnimations(useAnimations.isSelected()));
 
+        List<UITheme> uiThemeList = Arrays.asList(UITheme.values());
+        uiThemeList = new ArrayList<>(uiThemeList);
+        themeIdComboBox.setItems(FXCollections.observableArrayList(uiThemeList));
+        themeIdComboBox.getSelectionModel().select(preferences.getUiThemeId());
+        themeIdComboBox.setOnAction(e -> onSelectUiTheme());
+
         // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
         // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
 
@@ -898,6 +933,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.setDisable(daoOptionsSet);
     }
 
+
+    private void onSelectUiTheme() {
+        if (themeIdComboBox.getSelectionModel().getSelectedItem().getId() != preferences.getUiThemeId())
+            preferences.setThemeId(themeIdComboBox.getSelectionModel().getSelectedItem().getId());
+    }
+
    /* private void onSelectNetwork() {
         if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
@@ -941,6 +982,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void deactivateDisplayPreferences() {
         useAnimations.setOnAction(null);
+        themeIdComboBox.setOnAction(null);
         // useStickyMarketPriceCheckBox.setOnAction(null);
         sortMarketCurrenciesNumerically.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);

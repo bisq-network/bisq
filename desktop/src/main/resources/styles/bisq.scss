@@ -1,0 +1,427 @@
+
+
+
+@import "_typography";
+@import "_base-colors";
+@import "_tables";
+@import "_icons";
+@import "_popups";
+@import "_ui-elements";
+@import "_CandleStickChart";
+@import "_images";
+@import "_dao";
+@import "_market";
+
+/* Account */
+
+#content-pane-top {
+    -fx-background-color: -bs-color-gray-2,
+    linear-gradient(-bs-color-gray-2 0%, -bs-color-gray-3 100%),
+    linear-gradient(-bs-color-gray-2 0%, -bs-background-gray 100%);
+    -fx-background-insets: 0 0 0 0, 0, 1;
+}
+
+#info-icon-label {
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-color-gray-10;
+}
+
+/* OfferPayload book */
+#num-offers {
+    -fx-font-size: 0.923em;
+}
+
+/* Create offer */
+#direction-icon-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-color-gray-6;
+}
+
+#input-description-label {
+    -fx-font-size: 0.846em;
+    -fx-alignment: center-left;
+}
+
+#create-offer-calc-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.538em;
+    -fx-padding: 15 5 0 5;
+}
+
+#toggle-price-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-color-gray-4;
+    -fx-border-style: solid none solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-price-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-color-gray-4;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+
+#totals-separator {
+    -fx-background: -bs-color-gray-4;
+}
+
+#payment-info {
+    -fx-background-color: -bs-color-gray-1;
+}
+
+.toggle-button-active {
+    -fx-background-color: -bs-blue-transparent;
+}
+
+.toggle-button-inactive {
+    -fx-background-color: -bs-color-gray-1;
+}
+
+#trade-fee-textfield {
+    -fx-font-size: 0.9em;
+    -fx-alignment: center-right;
+}
+
+/* Open Offer */
+.offer-disabled .label {
+    -fx-text-fill: -bs-color-gray-3;
+}
+
+/* OfferBook */
+
+.table-title {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-alignment: center-left;
+}
+
+.currency-label-small {
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-rd-font-lighter;
+    -fx-alignment: center;
+    -fx-pref-height: 35px;
+    -fx-pref-width: 45px;
+}
+
+.offer-label-small {
+    -fx-font-size: 0.692em;
+    -fx-alignment: center-right;
+    -fx-text-fill: -bs-text-color;
+}
+
+.currency-label-selected {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.currency-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-alignment: center-left;
+    -fx-pref-height: 35px;
+}
+
+/* Offer */
+
+.offer-separator {
+    -fx-background: -bs-color-gray-6;
+}
+
+
+/* Account setup */
+#wizard-item-background-deactivated {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-0, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-color-blue-1, -bs-color-blue-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-color-green-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Account settings */
+
+#account-settings-item-background-disabled {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-selected {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-0, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-color-blue-1, -bs-color-blue-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Pending trades */
+
+#trade-wizard-item-background-disabled {
+    -fx-text-fill: -bs-rd-font-light;
+}
+
+#trade-wizard-item-background-active {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.trade-step-label {
+    -fx-text-fill: -bs-background-color;
+}
+
+.trade-step-disabled-bg {
+    -fx-fill: -bs-color-gray-6;
+}
+
+.trade-step-active-bg {
+    -fx-fill: -bs-color-primary-dark;
+}
+
+.trade-msg-state-undefined {
+    -fx-text-fill: -bs-yellow;
+}
+
+.trade-msg-state-sent {
+    -fx-text-fill: -bs-yellow-light;
+}
+
+.trade-msg-state-arrived {
+    -fx-text-fill: -bs-turquoise;
+}
+
+.trade-msg-state-stored{
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.trade-msg-state-acknowledged {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.trade-msg-state-failed {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+#open-support-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-warning;
+}
+
+#open-dispute-button {
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-background-color;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-rd-error-red;
+}
+
+/* TitledGroupBg */
+
+.titled-group-bg-label, .titled-group-bg-label-active {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: transparent;
+}
+
+.titled-group-bg, .titled-group-bg-active {
+    -fx-body-color: -bs-color-gray-background;
+    -fx-border-color: -bs-rd-separator;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.titled-group-bg.last, .titled-group-bg-active.last {
+    -fx-border-width: 0;
+}
+
+/* TableGroupHeadline */
+#table-group-headline {
+    -fx-background-color: -bs-color-gray-1;
+    -fx-background-insets: 10 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* copied form modena.css text-input */
+#flow-pane-checkboxes-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+#flow-pane-checkboxes-non-editable-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-color-gray-1);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+/* message-list-view*/
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-cell {
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em;
+}
+
+#message-list-view.list-view {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+#message-list-view.list-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+/* bubble */
+#message-bubble-green {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-blue {
+    -fx-background-color: -bs-rd-message-bubble;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-grey {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-background-radius: 10 10 10 10;
+}
+
+.attachment-icon {
+    -fx-text-fill: -bs-background-color;
+    -fx-cursor: hand;
+}
+
+.attachment-icon-black {
+    -fx-text-fill: -bs-text-color;
+    -fx-cursor: hand;
+}
+
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Arbitration                                                                                                      *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.message {
+    -fx-text-fill: -bs-text-color;
+}
+
+.my-message {
+    -fx-text-fill: -bs-background-color;
+}
+
+.message-header {
+    -fx-text-fill: -bs-color-gray-3;
+    -fx-font-size: 0.846em;
+}
+
+.my-message-header {
+    -fx-text-fill: -bs-rd-message-bubble;
+    -fx-fill: -bs-rd-message-bubble;
+    -fx-font-size: 0.846em;
+}
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Notifications                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#notification-erase-button {
+    -fx-background-color: -bs-red-soft;
+    -fx-text-fill: -bs-background-color;
+}
+
+
+
+.status-icon {
+    -fx-text-fill: -fx-faint-focus-color;
+}

@@ -1,0 +1,966 @@
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * General                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+/* Text */
+.error-text {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.error {
+    -fx-accent: -bs-rd-error-red;
+}
+
+.success-text {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.highlight, .highlight-static {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+.highlight:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}
+
+.info {
+    -fx-text-fill: -bs-color-primary;
+    -fx-fill: -bs-color-primary;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-color-gray-6;
+    -fx-fill: -bs-color-gray-6;
+}
+
+.sub-info {
+    -fx-text-fill: -bs-color-gray-4;
+    -fx-fill: -bs-color-gray-4;
+}
+
+.headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.692em;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+    -fx-spacing: 6;
+    -fx-alignment: center;
+}
+
+.warning {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warning:hover {
+    -fx-text-fill: -bs-color-gray-6;
+    -fx-fill: -bs-color-gray-6;
+}
+
+.zero-decimals {
+    -fx-text-fill: -bs-color-gray-3;
+}
+
+.confirmation-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-confirmation-label;
+}
+
+.confirmation-value {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.confirmation-text-field-as-label:readonly {
+    -fx-background-color: transparent !important;
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-padding: 0 !important;
+}
+
+/* Other UI Elements */
+
+.separator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-separator-dark;
+}
+
+.separator:vertical *.line {
+    -fx-border-width: 0 1 0 0;
+}
+
+.jfx-progress-bar > .bar,
+.jfx-progress-bar:indeterminate > .bar {
+    -fx-background-color: -bs-color-primary;
+}
+
+.jfx-progress-bar.error > .bar,
+.jfx-progress-bar:indeterminate.error > .bar {
+    -fx-background-color: -bs-rd-error-red;
+}
+
+.jfx-spinner {
+    -jfx-radius: 10;
+}
+
+.jfx-spinner:indeterminate .arc,
+.jfx-spinner:determinate .arc {
+    -fx-stroke: -bs-color-primary;
+}
+
+.busyanimation .text.percentage {
+    -fx-fill: null;
+}
+
+.jfx-button, .action-button {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-size: 0.923em;
+    -fx-font-weight: normal;
+    -fx-background-radius: 2px;
+    -fx-pref-height: 32;
+    -fx-min-height: -fx-pref-height;
+    -fx-padding: 0 40 0 40;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 2, 0, 0, 0, 1);
+    -fx-cursor: hand;
+}
+
+.jfx-button:hover, .jfx-button:focused {
+    -fx-background-color: derive(-bs-color-gray-2, -10%);
+}
+
+.action-button:hover, .action-button:focused {
+    -fx-background-color: derive(-bs-color-primary-dark, -10%);
+}
+
+.action-button {
+    -fx-background-color: -bs-color-primary-dark;
+    -fx-text-fill: -bs-background-color;
+}
+
+.compact-button, .table-cell .jfx-button, .action-button.compact-button {
+    -fx-padding: 0 10 0 10;
+}
+
+.jfx-checkbox {
+    -jfx-checked-color: -bs-color-primary;
+    -fx-font-size: 0.692em;
+}
+
+.jfx-check-box .box,
+.jfx-check-box:indeterminate .box,
+.jfx-check-box:indeterminate:selected .box {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+
+.jfx-check-box .mark,
+.jfx-check-box .indeterminate-mark {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
+}
+
+.jfx-combo-box {
+    -jfx-focus-color: -bs-color-primary;
+    -jfx-unfocus-color: -bs-color-gray-line;
+    -fx-background-color: -bs-background-color;
+}
+
+.jfx-combo-box > .list-cell {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+
+.list-view {
+    -fx-background-color: -bs-background-gray;
+
+    .list-cell {
+        -fx-background-color: -bs-background-color;
+
+        &:odd {
+            -fx-background-color: derive(-bs-background-color, -5%);
+        }
+
+        &:even {
+            -fx-background-color: derive(-bs-background-color, 5%);
+        }
+
+        .text {
+            -fx-text-fill: -bs-rd-font-dark-gray;
+            -fx-fill: -bs-rd-font-dark-gray;
+        }
+    }
+
+}
+
+
+.jfx-combo-box > .arrow-button > .arrow {
+    -fx-background-color: null;
+    -fx-border-color: -jfx-unfocus-color;
+    -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background: -fx-selection-bar;
+    -fx-background-color: -fx-selection-bar;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+}
+
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+.tree-table-view:focused {
+    //-fx-background-color: $color-primary;
+    //-fx-border-color: $color-primary;
+    -fx-background-insets: 0;
+    //-fx-background-color: null;
+}
+
+.list-view:focused  {
+    -fx-background-color: $color-primary;
+    -fx-background-insets: 0;
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+/* Selected when control is not focused */
+.list-cell:filled:selected,
+.tree-cell:filled:selected,
+.table-row-cell:filled:selected,
+.tree-table-row-cell:filled:selected,
+.table-row-cell:filled > .table-cell:selected,
+.tree-table-row-cell:filled > .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+.jfx-text-field {
+    -jfx-focus-color: -bs-color-primary;
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-radius: 3 3 0 0;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-color-gray-6;
+}
+
+.jfx-text-field:readonly, .hyperlink-with-icon {
+    -fx-background-color: -bs-background-gray;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field:readonly > .input-line {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-field:readonly > .input-focused-line {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-field:disabled > .input-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.jfx-text-field:disabled > .input-focused-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+#info-field {
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
+.jfx-password-field {
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 3 3 0 0;
+    -jfx-focus-color: -bs-color-primary;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-password-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-password-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
+    -jfx-focus-color: -bs-rd-error-red;
+    -jfx-unfocus-color: -bs-rd-error-red;
+}
+
+.jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-font-size: 0.692em;
+    -fx-padding: -0.5em 0 0 0;
+}
+
+.jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-font-size: 1em;
+}
+
+.input-with-border {
+    -fx-background-color: -bs-background-color;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-color-gray-2;
+    -fx-border-radius: 3;
+    -fx-pref-height: 43;
+    -fx-pref-width: 310;
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
+}
+
+.input-with-border .text-field {
+    -fx-alignment: center-right;
+    -fx-pref-height: 43;
+    -fx-font-size: 1.385em;
+}
+
+.input-with-border > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 60;
+    -fx-padding: 16;
+    -fx-alignment: center;
+}
+
+.input-with-border .icon {
+    -fx-padding: 10;
+}
+
+.input-with-border-readonly {
+    -fx-background-color: -bs-color-gray-1;
+    -fx-border-width: 0;
+    -fx-pref-width: 300;
+}
+
+.input-with-border-readonly .text-field {
+    -fx-alignment: center-right;
+    -fx-font-size: 1em;
+    -fx-background-color: -bs-color-gray-1;
+}
+
+.input-with-border-readonly .text-field > .input-line {
+    -fx-background-color: transparent;
+}
+
+.input-with-border-readonly > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 30;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+
+.input-with-border-readonly .icon {
+    -fx-padding: 2;
+}
+
+.jfx-badge .badge-pane {
+    -fx-background-color: -bs-red;
+    -fx-background-radius: 15;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+    .text {
+        -fx-fill: white;
+    }
+}
+
+.jfx-badge .badge-pane {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-background-color;
+}
+
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
+}
+
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
+
+.jfx-toggle-button,
+.jfx-toggle-button:armed,
+.jfx-toggle-button:hover,
+.jfx-toggle-button:focused,
+.jfx-toggle-button:selected,
+.jfx-toggle-button:focused:selected {
+    -jfx-toggle-color: -bs-color-primary-dark;
+    -jfx-size: 8;
+}
+
+.jfx-text-area {
+    -jfx-focus-color: -bs-color-primary;
+    -jfx-unfocus-color: -bs-color-gray-line;
+    -fx-background-color: -bs-background-color;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-area:readonly {
+    -fx-background-color: transparent;
+    -jfx-focus-color: transparent;
+}
+
+.jfx-text-area > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-area > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.wallet-seed-words {
+    -fx-font-family: "IBM Plex Mono";
+}
+
+.wallet-seed-words .content,
+.wallet-seed-words:focused .content {
+    -fx-padding: 12 12 0 12;
+}
+
+.jfx-date-picker {
+    -jfx-default-color: -bs-color-primary;
+}
+
+.jfx-date-picker .jfx-text-field {
+    -fx-padding: 0.333333em 0em 0.333333em 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-line {
+    -fx-translate-x: 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-focused-line {
+    -fx-translate-x: 0em;
+}
+
+.jfx-date-picker > .arrow-button > .arrow {
+    -fx-shape: "M320 384h128v128h-128zM512 384h128v128h-128zM704 384h128v128h-128zM128 768h128v128h-128zM320 768h128v128h-128zM512 768h128v128h-128zM320 576h128v128h-128zM512 576h128v128h-128zM704 576h128v128h-128zM128 576h128v128h-128zM832 0v64h-128v-64h-448v64h-128v-64h-128v1024h960v-1024h-128zM896 960h-832v-704h832v704z";
+    -fx-background-color: -jfx-default-color;
+    -fx-background-insets: 0;
+    -fx-padding: 10;
+}
+
+.jfx-date-picker > .arrow-button > .jfx-svg-glyph {
+    -fx-background-color: -jfx-default-color;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: -bs-color-primary-dark;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:vertical .track-background,
+.scroll-bar:horizontal .track-background {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-background-insets: 2 0 2 0;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-background-insets: 0 2 0 2;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 1;
+}
+
+.scroll-bar:horizontal .increment-arrow,
+.scroll-bar:vertical .increment-arrow,
+.scroll-bar:horizontal .decrement-arrow,
+.scroll-bar:vertical .decrement-arrow {
+    -fx-shape: null;
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent, -bs-color-gray-6, -bs-color-gray-6;
+}
+
+/* Behavior */
+
+.show-hand {
+    -fx-cursor: hand;
+}
+
+.hide-focus {
+    -fx-focus-color: transparent;
+}
+
+/* Font */
+
+.very-small-text {
+    -fx-font-size: 0.692em;
+}
+
+.small-text {
+    -fx-font-size: 0.769em;
+}
+
+.normal-text {
+    -fx-font-size: 0.923em;
+}
+
+.default-text {
+    -fx-font-size: 13;
+}
+
+
+/* Splash */
+
+#splash {
+    -fx-background-color: -bs-background-color;
+}
+
+/* Main UI */
+#base-content-container {
+    -fx-background-color: -bs-background-gray;
+}
+
+.content-pane {
+    -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
+}
+
+#footer-pane {
+    -fx-background-color: -bs-footer-pane-background;
+    -fx-font-size: 0.923em;
+    -fx-text-fill: -bs-footer-pane-text;
+}
+
+#footer-pane-line {
+    -fx-border-color: -bs-footer-pane-line;
+    -fx-background-color: -bs-footer-pane-line;
+}
+
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.385em;
+}
+
+
+
+
+/* Main navigation */
+
+.top-navigation {
+    -fx-background-color: -bs-rd-nav-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+    -fx-pref-height: 57;
+    -fx-padding: 0 11 0 0;
+}
+
+.top-navigation .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent -bs-rd-nav-border-color;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-primary {
+    -fx-background-color: -bs-rd-nav-primary-background;
+    -fx-padding: 0 11 0 11;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+}
+
+.nav-secondary {
+    -fx-padding: 0 11 0 11;
+}
+
+.nav-price-balance {
+    -fx-background-color: -bs-color-gray-background;
+    -fx-background-radius: 3;
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
+    -fx-pref-height: 41;
+    -fx-padding: 0 10 0 0;
+}
+
+.nav-price-balance .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent -bs-rd-separator-dark;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-price-balance .jfx-combo-box > .input-line {
+    -fx-pref-height: 0px;
+}
+
+.jfx-badge > .nav-button {
+    -fx-translate-y: 1;
+}
+
+.nav-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 11;
+}
+
+.nav-button .text {
+    -fx-font-size: 0.769em;
+    -fx-font-weight: bold;
+    -fx-fill: -bs-rd-nav-deselected;
+}
+
+.nav-button:selected {
+    -fx-background-color: -bs-background-color;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+.nav-button:selected .text {
+    -fx-fill: -bs-rd-nav-selected;
+}
+
+.nav-balance-display {
+    -fx-alignment: center-left;
+    -fx-text-fill: -bs-rd-font-balance;
+}
+
+.nav-balance-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: center-left;
+}
+
+.nav-balance-label, .nav-balance-label > .text {
+    -fx-text-fill: -bs-rd-font-balance-label;
+}
+
+#nav-alert-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-background-color;
+}
+
+.text-field {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+.text-area {
+    -fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-blue;
+    -fx-underline: true;
+}
+
+/** Confirmation Indicator */
+
+.progress-indicator > .determinate-indicator > .indicator {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: -fx-box-border;
+    -fx-border-width: 1;
+    -fx-padding: 0.166667em; /* 2px */
+}
+
+
+.separated-phase-bar-active {
+    -fx-text-fill: -fx-accent;
+}
+
+.separated-phase-bar-inactive {
+    -fx-text-fill: black;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tooltip                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.tooltip {
+    -fx-background: -bs-background-color;
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, -bs-text-color-transparent, 10, 0.0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
+
+.tooltip-hyperlink-icon {
+    -fx-text-fill: -bs-rd-font-lighter;
+}
+
+
+/* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally
+textfield */
+#label-with-background {
+    -fx-background-color: -bs-color-gray-1;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#funds-confidence {
+    -fx-progress-color: -bs-color-gray-6;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+}
+
+.hyperlink,
+.hyperlink.force-underline .text,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-underline: true;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.hyperlink.no-underline {
+    -fx-underline: false;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bs-text-color;
+}
+
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited {
+    -fx-underline: false;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Images                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.qr-code {
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Textarea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-area {
+    -fx-border-color: -bs-background-gray;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tab pane                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+
+.jfx-tab-pane {
+    -fx-padding: 0;
+    -jfx-disable-animation: true;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-background-color: transparent;
+    -fx-pref-width: 20;
+    -fx-pref-height: 20;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+}
+
+.jfx-tab-pane .tab-content-area {
+    -fx-background-color: -bs-tab-content-area;
+}
+
+.jfx-tab-pane .viewport {
+    -fx-background-color: -bs-viewport-background;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-shape: "M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z";
+    -jfx-size: 9;
+    -fx-background-color: -bs-rd-font-light;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-padding: 0 0 2 0;
+}
+
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-background-color: -fx-accent;
+}
+
+.jfx-tab-pane .tab-header-background {
+    -fx-background-color: -bs-color-gray-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-tab-border;
+}
+
+.jfx-tab-pane .headers-region .tab-selected-line {
+    -fx-background-color: -fx-accent;
+    -fx-pref-height: 1;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-label {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-padding: 14;
+    -fx-font-size: 0.769em;
+    -fx-font-weight: normal;
+}
+
+.jfx-tab-pane .depth-container {
+    -fx-effect: none;
+}
+
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-label {
+    -fx-text-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region > .tab > .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region .tab:closable {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-style: none;
+    -fx-border-insets: 0;
+    -fx-padding: 9;
+}
+
+.jfx-tab-pane .headers-region .tab:closable .tab-container .tab-label {
+    -fx-padding: 5;
+}
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+/* scroll-pane */
+
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-background-color: -bs-scroll-pane-background;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+/* validation */
+.validation-error {
+    -fx-text-fill: -bs-red;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.grid-pane {
+    -fx-background-color: -bs-background-gray;
+    -fx-background-radius: 5;
+    -fx-effect: null;
+    -fx-effect: dropshadow(gaussian, -bs-color-gray-10, 10, 0, 0, 0);
+    -fx-background-insets: 10;
+}
+
+
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: -bs-text-color;
+}

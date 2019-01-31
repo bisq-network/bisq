@@ -98,27 +98,27 @@ public class BuyerStep3View extends TradeStepView {
         switch (messageState) {
             case UNDEFINED:
                 textFieldWithIcon.setIcon(AwesomeIcon.QUESTION);
-                iconLabel.setTextFill(Paint.valueOf("#e9a20a"));
+                iconLabel.getStyleClass().add("trade-msg-state-undefined");
                 break;
             case SENT:
                 textFieldWithIcon.setIcon(AwesomeIcon.ARROW_RIGHT);
-                iconLabel.setTextFill(Paint.valueOf("#afe193"));
+                iconLabel.getStyleClass().add("trade-msg-state-sent");
                 break;
             case ARRIVED:
                 textFieldWithIcon.setIcon(AwesomeIcon.OK);
-                iconLabel.setTextFill(Paint.valueOf("#0793ad"));
+                iconLabel.getStyleClass().add("trade-msg-state-arrived");
                 break;
             case STORED_IN_MAILBOX:
                 textFieldWithIcon.setIcon(AwesomeIcon.ENVELOPE_ALT);
-                iconLabel.setTextFill(Paint.valueOf("#91B6E9"));
+                iconLabel.getStyleClass().add("trade-msg-state-stored");
                 break;
             case ACKNOWLEDGED:
                 textFieldWithIcon.setIcon(AwesomeIcon.OK_SIGN);
-                iconLabel.setTextFill(Paint.valueOf("#009900"));
+                iconLabel.getStyleClass().add("trade-msg-state-acknowledged");
                 break;
             case FAILED:
                 textFieldWithIcon.setIcon(AwesomeIcon.EXCLAMATION_SIGN);
-                iconLabel.setTextFill(Paint.valueOf("#dd0000"));
+                iconLabel.getStyleClass().add("trade-msg-state-failed");
                 break;
         }
     }

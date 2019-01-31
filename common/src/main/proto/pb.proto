@@ -1378,6 +1378,7 @@ message PreferencesPayload {
     int32 ignore_dust_threshold = 51;
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
+    int32 ui_theme = 54;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1876,6 +1877,12 @@ message Country {
 message Region {
     string code = 1;
     string name = 2;
+}
+
+message UITheme {
+    int64 id = 1;
+    string label = 2;
+    bool darkMode = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

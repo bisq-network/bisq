@@ -1,0 +1,114 @@
+
+@import "_base-colors";
+
+$text-color: $color-gray-2;
+$background-color: $color-gray-10;
+$background-color-gray: $color-gray-11;
+
+
+
+.root {
+    -bs-color-primary: $color-primary;
+    -bs-color-primary-dark: $color-primary-dark;
+
+    -bs-text-color: $text-color;
+    -bs-background-color: $background-color;
+    -bs-background-gray: $background-color-gray;
+    -bs-color-gray: $brand-color-gray;
+
+    // Chroma shades
+    -bs-color-gray-11: $color-gray-0;
+    -bs-color-gray-10: $color-gray-1;
+    -bs-color-gray-6:  $color-gray-2;
+    -bs-color-gray-4:  $color-gray-3;
+    -bs-color-gray-3:  $color-gray-4;
+    -bs-color-gray-2:  $color-gray-6;
+    -bs-color-gray-1:  $color-gray-10;
+    -bs-color-gray-0:  $color-gray-11;
+
+    // Top nav colors
+    -bs-rd-nav-selected: $color-primary;
+    -bs-rd-nav-deselected: rgba($background-color, 0.59);
+    -bs-rd-nav-background: $color-primary-dark;
+    -bs-rd-nav-primary-background: $color-primary;
+    -bs-rd-nav-primary-border: $color-primary-light;
+    -bs-rd-nav-border: $color-gray-10;
+    -bs-rd-nav-border-color: rgba($background-color, 0.31);
+
+    // Tab header
+    -bs-rd-tab-border: $color-gray-1;
+    -bs-tab-content-area: $color-gray-1;
+    //-bs-viewport-background: blue;
+
+    // Content pane
+    -bs-color-gray-background: $background-color;
+    -bs-content-pane-bg-top: $background-color-gray;
+    -bs-content-pane-bg-bottom: $color-gray-10;
+
+    // TODO Scrollbar on Settings
+    -bs-scroll-pane-background: transparent;
+    -bs-tab-content-area: transparent;
+    -bs-viewport-background: transparent;
+
+    // Footer pane
+    -bs-footer-pane-background: $color-gray-10;
+    -bs-footer-pane-text: $color-gray-1;
+    -bs-footer-pane-line: $color-gray-10;
+
+    -bs-rd-font-balance: $color-gray-3;
+    -bs-rd-font-dark-gray: $color-gray-4;
+    -bs-rd-font-dark: $color-gray-2;
+    -bs-rd-font-light: $color-gray-1;
+    -bs-rd-font-lighter: $color-gray-0;
+
+    -bs-rd-font-confirmation-label: $color-gray-6;
+    -bs-rd-font-balance-label: $color-gray-6;
+
+    -bs-text-color-transparent-dark: rgba($color-gray-11, 0.54);
+    -bs-text-color-transparent: rgba($color-gray-11, 0.2);
+    -bs-color-gray-line: $color-gray-6;
+    -bs-rd-separator: $color-gray-10;
+    -bs-rd-separator-dark: darken($color-gray-10, 10%);
+    -bs-rd-error-red: $color-red-1;
+    -bs-rd-message-bubble: $color-blue-6;
+    -bs-toggle-selected: $color-gray-6;
+
+    -bs-rd-tooltip-truncated: $text-color;
+
+    -bs-warning: $color-orange-2;
+
+    -bs-buy: $color-primary-dark;
+    -bs-buy-focus: darken($color-primary-dark, 50%);
+    -bs-buy-hover: darken($color-primary-dark, 10%);
+    -bs-buy-transparent: rgba($color-primary-dark, 0.3);
+
+    -bs-sell: $color-red-2;
+    -bs-sell-focus: darken($color-red-1, 50%);
+    -bs-sell-hover: darken($color-red-1, 10%);
+    -bs-sell-transparent: rgba($color-red-1, 0.3);
+
+    -bs-volume-transparent: rgba($color-primary, 0.3);
+    -bs-candle-stick-average-line: rgba($color-green-4, 0.8);
+    -bs-candle-stick-loss: $color-red-2;
+    -bs-candle-stick-won: $color-green-4;
+
+    -bs-cancel: $background-color-gray;
+    -bs-cancel-focus: darken($background-color-gray, 50%);
+    -bs-cancel-hover: darken($background-color-gray, 10%);
+
+    // JavaFX style overrides
+    -fx-accent: $color-primary-dark;
+    -fx-box-border: $color-gray-11;
+
+    -fx-focus-color: $color-primary-dark;
+    -fx-faint-focus-color: rgba($color-blue-5, 0.13);
+    -fx-selection-bar: $color-green-5;
+    -fx-selection-bar-non-focused: -fx-selection-bar;
+    -fx-default-button: lighten($color-primary-dark, 95%);
+}
+
+
+.text {
+    -fx-text-fill: -bs-text-color;
+}
+

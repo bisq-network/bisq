@@ -1,0 +1,28 @@
+
+@import "_variables.scss";
+
+.root {
+    // Auxiliary colors
+    -bs-green-soft: lighten($color-primary, 60%);
+    -bs-bg-green: $color-green-2;
+    -bs-color-green-1: $color-green-1;
+    -bs-color-green-2: $color-green-2;
+    -bs-color-green-3: $color-green-3;
+    -bs-color-green-4: $color-green-4;
+    -bs-color-green-5: $color-green-5;
+
+    -bs-color-blue-1: $color-blue-1;
+    -bs-color-blue-2: $color-blue-2;
+    -bs-color-blue-3: $color-blue-3;
+    -bs-color-blue-4: $color-blue-4;
+    -bs-color-blue-5: $color-blue-5;
+    -bs-turquoise: $color-blue-6;
+    -bs-blue: $color-blue-4;
+    -bs-blue-transparent: rgba($color-blue-5, 0.27);
+
+    -bs-yellow: $color-yellow-1;
+    -bs-yellow-light: $color-yellow-2;
+
+    -bs-red: $color-red-1;
+    -bs-red-soft: lighten($color-red-1, 60%);
+}

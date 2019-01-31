@@ -1,0 +1,85 @@
+
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
+.icon, icon:hover {
+    -fx-cursor: hand;
+}
+
+.hidden-icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.copy-icon-disputes {
+    -fx-text-fill: -bs-background-color;
+}
+
+.copy-icon:hover {
+    -fx-text-fill: -bs-text-color;
+}
+
+.received-funds-icon {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.sent-funds-icon {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.version {
+    -fx-text-fill: -bs-text-color;
+    -fx-underline: false;
+    -fx-cursor: null;
+}
+
+.version-new {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
+
+.opaque-icon {
+    -fx-fill: -bs-color-gray-2;
+    -fx-opacity: 1;
+}
+
+.opaque-icon-character {
+    -fx-font-size: 3em;
+    -fx-text-fill: -bs-color-gray-2;
+    -fx-padding: 24 2 0 2;
+}
+
+.opaque-icon-character.small {
+    -fx-font-size: 1em;
+    -fx-padding: 27 2 0 2;
+}
+
+
+
+#non-clickable-icon {
+    -fx-text-fill: -bs-color-gray-4;
+}
+
+.delete-icon {
+    -fx-fill: -bs-red;
+}
+
+.delete {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.delete:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}

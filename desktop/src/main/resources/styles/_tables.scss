@@ -1,0 +1,185 @@
+
+/*******************************************************************************
+ *                                                                             *
+ * Table                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
+.table-view .table-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 2 0;
+    /*-fx-padding: 3 0 2 0;*/
+}
+
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+
+.table-view .table-cell.last-column {
+    -fx-alignment: center-right;
+    -fx-padding: 2 10 2 0;
+}
+
+.table-view .table-cell.last-column.avatar-column {
+    -fx-alignment: center;
+    -fx-padding: 2 0 2 0;
+}
+
+.table-view .column-header.last-column {
+    -fx-padding: 0 10 0 0;
+}
+
+.table-view .column-header.last-column .label {
+    -fx-alignment: center-right;
+}
+
+.table-view .column-header.last-column.avatar-column {
+    -fx-padding: 0;
+}
+
+.table-view .column-header.last-column.avatar-column .label {
+    -fx-alignment: center;
+}
+
+.table-view .table-cell.first-column {
+    -fx-padding: 2 0 2 10;
+}
+
+.table-view .column-header.first-column {
+    -fx-padding: 0 0 0 10;
+}
+
+.number-column.table-cell {
+    -fx-font-size: 1em;
+    -fx-padding: 0 0 0 0;
+    -fx-background-color: -bs-background-color;
+}
+
+.table-view .filler {
+    -fx-background-color: -bs-color-gray-0;
+}
+
+.table-view {
+    -fx-control-inner-background-alt: -fx-control-inner-background;
+    -fx-background-color: -bs-background-color;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: center-left;
+    -fx-font-weight: normal;
+    -fx-font-size: 0.923em;
+    -fx-padding: 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-padding: 0;
+}
+
+.table-view .focus {
+    -fx-alignment: center-left;
+}
+
+.table-view .text {
+    -fx-fill: -bs-text-color;
+}
+
+/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
+.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
+.table-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+.table-view:focused .table-row-cell:focused {
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.offer-table .table-row-cell {
+    -fx-border-color: -bs-background-color;
+    -fx-table-cell-border-color: -bs-background-color;
+}
+
+
+.table-row-cell {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-color-gray-1;
+    -fx-table-cell-border-color: -bs-background-color;
+}
+
+.table-row-cell:selected {
+    -fx-border-width: 0 0 1 0;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-row-cell:empty {
+    -fx-border-width: 0;
+    -fx-background-color: -bs-background-color;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell .copy-icon .text,
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: -bs-text-color;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: -bs-rd-font-dark;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover,
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: -bs-text-color;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:hover,
+.table-view .table-row-cell .hyperlink:visited,
+.table-view .table-row-cell .hyperlink:hover:visited {
+    -fx-underline: false;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view.large-rows .table-row-cell {
+    -fx-cell-size: 47px;
+}

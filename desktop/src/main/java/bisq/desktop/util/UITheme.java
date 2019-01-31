@@ -17,11 +17,25 @@
 
 package bisq.desktop.util;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
+import lombok.Getter;
 
-public class Colors {
-    public static final Paint BLUE = Color.valueOf("#0f87c3");
-    public static final Paint LIGHT_GREY = Color.valueOf("#CCCCCC");
-    public static final Paint GREEN = Color.valueOf("#00aa33");
+public enum UITheme {
+    LIGHT_THEME(0, "theme-light", "Light theme", false),
+    DARK_THEME(1, "theme-dark", "Dark theme", true);
+
+    @Getter
+    private final int id;
+    @Getter
+    private final String cssName;
+    @Getter
+    private final String label;
+    @Getter
+    private boolean darkMode;
+
+    UITheme(int id, String cssName, String label, boolean darkMode) {
+        this.id = id;
+        this.cssName = cssName;
+        this.label = label;
+        this.darkMode = darkMode;
+    }
 }

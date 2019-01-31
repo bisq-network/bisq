@@ -1,6 +1,10 @@
 buildscript {
     repositories {
         jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
@@ -9,6 +13,7 @@ buildscript {
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41"
+        classpath "gradle.plugin.com.github.anbuck:compass-gradle-plugin:2.0.7"
     }
 }
 
@@ -278,6 +283,7 @@ configure(project(':core')) {
 
 
 configure(project(':desktop')) {
+    apply plugin: "com.github.anbuck.compass"
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
@@ -318,6 +324,13 @@ configure(project(':desktop')) {
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+
+    // https://github.com/anbuck/gradle-compass
+    compass {
+        sassDir = file("src/main/resources/styles")
+        cssDir = file("src/main/java/bisq/desktop/styles")
+        imagesDir = file("src/main/resources/images")
     }
 
     test {

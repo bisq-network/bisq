@@ -1,0 +1,162 @@
+
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Market overview                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#charts .chart-legend {
+    -fx-font-size: 1.077em;
+    -fx-alignment: center;
+}
+
+#charts .axis, #price-chart .axis, #volume-chart .axis {
+    -fx-tick-label-fill: -bs-rd-font-lighter;
+    -fx-tick-label-font-size: 0.769em;
+}
+
+#charts .chart-plot-background {
+    -fx-background-color: -bs-background-color;
+}
+
+#charts .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-sell, -bs-background-color;
+}
+
+#charts .default-color1.chart-area-symbol {
+    -fx-background-color: -bs-buy, -bs-background-color;
+}
+
+#charts .default-color0.chart-series-area-line {
+    -fx-stroke: -bs-sell;
+}
+
+#charts .default-color1.chart-series-area-line {
+    -fx-stroke: -bs-buy;
+}
+
+#charts .default-color0.chart-series-area-fill {
+    -fx-fill: -bs-sell-transparent;
+}
+
+#charts .default-color1.chart-series-area-fill {
+    -fx-fill: -bs-buy-transparent;
+}
+
+#charts .axis-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: center-left;
+}
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Highlight buttons                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+#buy-button-big {
+    -fx-font-size: 1em;
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: white;
+}
+
+#buy-button {
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: white;
+}
+
+#buy-button-big:hover, #buy-button:hover,
+#buy-button-big:focused, #buy-button:focused {
+    -fx-background-color: derive(-bs-buy, -10%);
+}
+
+#sell-button-big {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: white;
+    -fx-font-size: 1em;
+}
+
+#sell-button {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: white;
+}
+
+#sell-button-big:hover, #sell-button:hover,
+#sell-button-big:focused, #sell-button:focused {
+    -fx-background-color: derive(-bs-sell, -10%);
+}
+
+#sell-button-big.grey-style, #buy-button-big.grey-style,
+#sell-button.grey-style, #buy-button.grey-style {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+#price-feed-combo {
+    -fx-background-color: none;
+}
+
+#price-feed-combo > .list-cell {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+#invert-market-price {
+    -fx-text-fill: -bs-color-gray-11;
+}
+
+#popup-qr-code-info {
+    -fx-font-size: 0.846em;
+}
+
+#ident-num-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.769em;
+    -fx-text-fill: -bs-background-color;
+}
+
+#toggle-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-background-radius: 4 0 0 4;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-center {
+    -fx-border-radius: 0;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-insets: 0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-center:selected, #toggle-left:selected, #toggle-right:selected {
+    -fx-text-fill: -bs-background-color;
+    -fx-background-color: -bs-toggle-selected;
+}
+
+#toggle-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-border-width: 0;
+    -fx-background-radius: 0 4 4 0;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-left:hover, #toggle-right:hover, #toggle-center:hover {
+    -fx-background-color: -bs-toggle-selected;
+}

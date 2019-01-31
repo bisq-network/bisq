@@ -1,0 +1,189 @@
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * DAO                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+
+// TODO factor out hardcoded color codes
+
+.dao-tx-type-trade-fee-icon,
+.dao-tx-type-trade-fee-icon:hover {
+    -fx-text-fill: -bs-color-green-2;
+}
+
+.dao-tx-type-unverified-icon,
+.dao-tx-type-unverified-icon:hover {
+    -fx-text-fill: -bs-yellow;
+}
+
+.dao-tx-type-invalid-icon,
+.dao-tx-type-invalid-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-self-icon,
+.dao-tx-type-self-icon:hover {
+    -fx-text-fill: -bs-color-gray-2;
+}
+
+.dao-tx-type-proposal-fee-icon,
+.dao-tx-type-proposal-fee-icon:hover {
+    -fx-text-fill: -bs-color-green-4;
+}
+
+.dao-tx-type-genesis-icon,
+.dao-tx-type-genesis-icon:hover {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-tx-type-received-funds-icon,
+.dao-tx-type-received-funds-icon:hover {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.dao-tx-type-sent-funds-icon,
+.dao-tx-type-sent-funds-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-vote-icon,
+.dao-tx-type-vote-icon:hover {
+    -fx-text-fill: -bs-color-blue-5;
+}
+
+.dao-tx-type-vote-reveal-icon,
+.dao-tx-type-vote-reveal-icon:hover {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.dao-tx-type-issuance-icon,
+.dao-tx-type-issuance-icon:hover {
+    -fx-text-fill: -bs-color-green-3;
+}
+
+.dao-tx-type-lockup-icon,
+.dao-tx-type-lockup-icon:hover {
+    -fx-text-fill: -bs-color-blue-5;
+}
+
+.dao-tx-type-unlock-icon,
+.dao-tx-type-unlock-icon:hover {
+    -fx-text-fill: -bs-color-green-3;
+}
+
+.dao-accepted-icon {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.dao-rejected-icon {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.dao-ignored-icon {
+    -fx-text-fill: -bs-color-gray-4;
+}
+
+.compensation-root {
+    -fx-background-insets: 0, 0 0 0 0
+}
+
+.info-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.info-icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.dao-remove-proposal-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-news-titled-group .titled-group-bg-label-active {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-teaser {
+    -fx-font-size: 1.538em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-header {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-green-dark;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-content, .dao-news-content, .dao-news-section-link {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-section-content {
+    -fx-text-fill: -bs-rd-black;
+}
+
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink, .dao-launch-version {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-news-link {
+    -fx-text-fill: -fx-accent;
+    -fx-padding: 16 0 0 0;
+}
+
+.dao-news-link .hyperlink {
+    -fx-fill: -fx-accent;
+}
+
+.dao-launch-version {
+    -fx-font-size: 1.077em;
+}
+
+.dao-launch-headline {
+    -fx-font-size: 2.154em;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-launch-description {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-launch-paging-button {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-launch-tab-box {
+    -fx-border-style: solid;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: -bs-rd-tab-border;
+}
+
+.slider-section-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-translate-y: -1;
+    -fx-padding: 11;
+}
+
+.slider-section-button .text {
+    -fx-font-size: 0.923em;
+    -fx-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.slider-section-button:selected {
+    -fx-border-style: solid;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: -bs-rd-green;
+}
+
+.slider-section-button:selected .text {
+    -fx-fill: -bs-rd-green;
+}

@@ -1,0 +1,65 @@
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Popups                                                                                                           *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.popup-headline {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.popup-headline-information {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-color-primary;
+}
+
+.popup-headline-warning {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.popup-icon-information {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.popup-icon-warning {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.popup-bg, .notification-popup-bg, .peer-info-popup-bg {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, 0, 0);
+}
+
+.popup-bg-top {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, 0, 0);
+}
+
+.notification-popup-headline, peer-info-popup-headline {
+    -fx-font-size: 1.077em;
+    /*-fx-font-weight: bold;*/
+    -fx-text-fill: -bs-color-primary;
+}
+
+.notification-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, -1, 3);
+}
+
+.peer-info-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, -1, 3);
+}

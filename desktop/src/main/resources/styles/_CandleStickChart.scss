@@ -31,6 +31,17 @@
  */
 /* ====== CANDLE STICK CHART =========================================================== */
 
+
+
+.chart-horizontal-grid-lines, .chart-vertical-grid-lines {
+    -fx-stroke: -bs-color-gray-1;
+}
+
+.chart-horizontal-zero-line, .chart-vertical-zero-line {
+    -fx-stroke: -bs-color-gray-2;
+}
+
+
 .candlestick-tooltip-label {
     -fx-font-size: 0.75em;
     -fx-font-weight: bold;
@@ -89,5 +100,5 @@
 }
 
 .chart-plot-background {
-    -fx-background-color: -bs-rd-white;
+    -fx-background-color: -bs-background-color;
 }

@@ -1,0 +1,313 @@
+
+
+@import "_variables.scss";
+
+/* splash screen */
+/*noinspection CssUnknownTarget*/
+#image-splash-logo {
+    -fx-image: image-url("logo_splash.png");
+}
+
+/* shared*/
+#image-info {
+    -fx-image: image-url("info.png");
+}
+
+#light_close {
+    -fx-image: image-url("light_close.png");
+}
+
+#image-alert-round {
+    -fx-image: image-url("alert_round.png");
+}
+
+#image-green_circle {
+    -fx-image: image-url("green_circle.png");
+}
+
+#image-blue_circle {
+    -fx-image: image-url("blue_circle.png");
+}
+
+#image-remove {
+    -fx-image: image-url("remove.png");
+}
+
+#image-buy-white {
+    -fx-image: image-url("buy_white.png");
+}
+
+#image-buy-green {
+    -fx-image: image-url("buy_green.png");
+}
+
+#image-sell-white {
+    -fx-image: image-url("sell_white.png");
+}
+
+#image-sell-red {
+    -fx-image: image-url("sell_red.png");
+}
+
+#image-expand {
+    -fx-image: image-url("expand.png");
+}
+
+#image-collapse {
+    -fx-image: image-url("collapse.png");
+}
+
+/* navigation buttons */
+#image-nav-market {
+    -fx-image: image-url("nav/market.png");
+}
+
+#image-nav-market-active {
+    -fx-image: image-url("nav/market_active.png");
+}
+
+#image-nav-buyoffer {
+    -fx-image: image-url("nav/buyoffer.png");
+}
+
+#image-nav-buyoffer-active {
+    -fx-image: image-url("nav/buyoffer_active.png");
+}
+
+#image-nav-selloffer {
+    -fx-image: image-url("nav/selloffer.png");
+}
+
+#image-nav-selloffer-active {
+    -fx-image: image-url("nav/selloffer_active.png");
+}
+
+#image-nav-portfolio {
+    -fx-image: image-url("nav/portfolio.png");
+}
+
+#image-nav-portfolio-active {
+    -fx-image: image-url("nav/portfolio_active.png");
+}
+
+#image-nav-funds {
+    -fx-image: image-url("nav/funds.png");
+}
+
+#image-nav-funds-active {
+    -fx-image: image-url("nav/funds_active.png");
+}
+
+#image-nav-disputes {
+    -fx-image: image-url("nav/disputes.png");
+}
+
+#image-nav-disputes-active {
+    -fx-image: image-url("nav/disputes_active.png");
+}
+
+#image-nav-settings {
+    -fx-image: image-url("nav/settings.png");
+}
+
+#image-nav-settings-active {
+    -fx-image: image-url("nav/settings_active.png");
+}
+
+#image-nav-account {
+    -fx-image: image-url("nav/account.png");
+}
+
+#image-nav-account-active {
+    -fx-image: image-url("nav/account_active.png");
+}
+
+#image-nav-dao {
+    -fx-image: image-url("nav/dao.png");
+}
+
+#image-nav-dao-active {
+    -fx-image: image-url("nav/dao_active.png");
+}
+
+/* account*/
+#image-tick {
+    -fx-image: image-url("tick.png");
+}
+
+#image-arrow-blue {
+    -fx-image: image-url("arrow_blue.png");
+}
+
+#image-arrow-grey {
+    -fx-image: image-url("arrow_grey.png");
+}
+
+/* connection state*/
+#image-connection-tor {
+    -fx-image: image-url("connection/tor.png");
+}
+
+#image-connection-direct {
+    -fx-image: image-url("connection/direct.png");
+}
+
+#image-connection-nat {
+    -fx-image: image-url("connection/nat.png");
+}
+
+#image-connection-relay {
+    -fx-image: image-url("connection/relay.png");
+}
+
+#image-connection-synced {
+    -fx-image: image-url("connection/synced.png");
+}
+
+/* software update*/
+
+#image-update-in-progress {
+    -fx-image: image-url("update/update_in_progress.png");
+}
+
+#image-update-up-to-date {
+    -fx-image: image-url("update/update_up_to_date.png");
+}
+
+#image-update-available {
+    -fx-image: image-url("update/update_available.png");
+}
+
+#image-update-failed {
+    -fx-image: image-url("update/update_failed.png");
+}
+
+/* offer state */
+#image-offer_state_unknown {
+    -fx-image: image-url("offer/offer_state_unknown.png");
+}
+
+#image-offer_state_available {
+    -fx-image: image-url("offer/offer_state_available.png");
+}
+
+#image-offer_state_not_available {
+    -fx-image: image-url("offer/offer_state_not_available.png");
+}
+
+#image-attachment {
+    -fx-image: image-url("attachment.png");
+}
+
+#bubble_arrow_grey_left {
+    -fx-image: image-url("bubble_arrow_grey_left.png");
+}
+
+#bubble_arrow_blue_left {
+    -fx-image: image-url("bubble_arrow_blue_left.png");
+}
+
+#bubble_arrow_grey_right {
+    -fx-image: image-url("bubble_arrow_grey_right.png");
+}
+
+#bubble_arrow_blue_right {
+    -fx-image: image-url("bubble_arrow_blue_right.png");
+}
+
+#link {
+    -fx-image: image-url("link.png");
+}
+
+#invert {
+    -fx-image: image-url("invert.png");
+}
+
+#avatar_1 {
+    -fx-image: image-url("avatars/avatar_1.png");
+}
+
+#avatar_2 {
+    -fx-image: image-url("avatars/avatar_2.png");
+}
+
+#avatar_3 {
+    -fx-image: image-url("avatars/avatar_3.png");
+}
+
+#avatar_4 {
+    -fx-image: image-url("avatars/avatar_4.png");
+}
+
+#avatar_5 {
+    -fx-image: image-url("avatars/avatar_5.png");
+}
+
+#avatar_6 {
+    -fx-image: image-url("avatars/avatar_6.png");
+}
+
+#avatar_7 {
+    -fx-image: image-url("avatars/avatar_7.png");
+}
+
+#avatar_8 {
+    -fx-image: image-url("avatars/avatar_8.png");
+}
+
+#avatar_9 {
+    -fx-image: image-url("avatars/avatar_9.png");
+}
+
+#avatar_10 {
+    -fx-image: image-url("avatars/avatar_10.png");
+}
+
+#avatar_11 {
+    -fx-image: image-url("avatars/avatar_11.png");
+}
+
+#avatar_12 {
+    -fx-image: image-url("avatars/avatar_12.png");
+}
+
+#avatar_13 {
+    -fx-image: image-url("avatars/avatar_13.png");
+}
+
+#avatar_14 {
+    -fx-image: image-url("avatars/avatar_14.png");
+}
+
+#avatar_15 {
+    -fx-image: image-url("avatars/avatar_15.png");
+}
+
+#poloniex {
+    -fx-image: image-url("poloniex.png");
+}
+
+#btcaverage {
+    -fx-image: image-url("btcaverage.png");
+}
+
+#accepted {
+    -fx-image: image-url("accepted.png");
+}
+
+#rejected {
+    -fx-image: image-url("rejected.png");
+}
+
+#dao-screenshot-governance {
+    -fx-image: url("dao-screenshot-governance.png");
+}
+
+#dao-screenshot-trading {
+    -fx-image: url("dao-screenshot-trading.png");
+}
+
+
+#dao-screenshot-cheaper-fees {
+    -fx-image: url("dao-screenshot-cheaper-fees.png");
+}
