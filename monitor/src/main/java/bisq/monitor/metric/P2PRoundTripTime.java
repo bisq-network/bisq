@@ -113,7 +113,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                     start = System.currentTimeMillis();
                     SettableFuture<Connection> future = networkNode.sendMessage(target, new Ping(nonce, 42));
 
-                    Futures.addCallback(future, new FutureCallback<Connection>() {
+                    Futures.addCallback(future, new FutureCallback<>() {
                         @Override
                         public void onSuccess(Connection connection) {
                             connection.addMessageListener(P2PRoundTripTime.this);
@@ -168,7 +168,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     @Override
     public void onTorNodeReady() {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -178,13 +177,9 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     @Override
     public void onSetupFailed(Throwable throwable) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onRequestCustomBridges() {
-        // TODO Auto-generated method stub
-
     }
 }

@@ -67,7 +67,7 @@ public class Monitor {
     /**
      * Starts up all configured Metrics.
      *
-     * @throws Exception
+     * @throws Throwable in case something goes wrong
      */
     private void start() throws Throwable {
 
@@ -89,9 +89,7 @@ public class Monitor {
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux
-        Signal.handle(new Signal("USR1"), signal -> {
-            reload();
-        });
+        Signal.handle(new Signal("USR1"), signal -> reload());
 
         // configure Metrics
         // - which also starts the metrics if appropriate
@@ -141,7 +139,6 @@ public class Monitor {
             for (Metric current : metrics)
                 current.configure(properties);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -150,7 +147,7 @@ public class Monitor {
      * Overloads a default set of properties with a file if given
      *
      * @return a set of properties
-     * @throws Exception
+     * @throws Exception in case something goes wrong
      */
     private Properties getProperties() throws Exception {
         Properties defaults = new Properties();

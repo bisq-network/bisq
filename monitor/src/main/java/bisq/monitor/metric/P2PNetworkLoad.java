@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import com.google.common.util.concurrent.FutureCallback;
@@ -77,7 +76,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private int nonce;
     private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
     private Set<byte[]> hashes = new HashSet<>();
-    private boolean reportFindings;
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
@@ -87,11 +85,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private class Counter {
         private int value = 1;
 
-        public int value() {
+        int value() {
             return value;
         }
 
-        public void increment() {
+        void increment() {
             value++;
         }
     }
@@ -123,20 +121,9 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         bucketsPerHost.clear();
         ArrayList<Thread> threadList = new ArrayList<>();
 
-        // in case we just started anew, do not report our findings as they contain not
-        // only the changes since our last run, but a whole lot more dating back even
-        // till the beginning of bisq.
-        if (hashes.isEmpty())
-            reportFindings = false;
-        else
-            reportFindings = true;
-
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
-            threadList.add(new Thread(new Runnable() {
-
-                @Override
-                public void run() {
+            threadList.add(new Thread(() -> {
                     try {
                         // parse Url
                         NodeAddress target = OnionParser.getNodeAddress(current);
@@ -146,7 +133,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
                                 new PreliminaryGetDataRequest(nonce, hashes));
 
-                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                        Futures.addCallback(future, new FutureCallback<>() {
                             @Override
                             public void onSuccess(Connection connection) {
                                 connection.addMessageListener(P2PNetworkLoad.this);
@@ -166,8 +153,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         gate.proceed(); // release the gate on error
                         e.printStackTrace();
                     }
-
-                }
             }, current));
         }
 
@@ -188,7 +173,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // - assemble diffs
         Map<String, Integer> messagesPerHost = new HashMap<>();
         bucketsPerHost.forEach((host, buckets) -> messagesPerHost.put(OnionParser.prettyPrint(host),
-                buckets.values().stream().collect(Collectors.summingInt(Counter::value))));
+                buckets.values().stream().mapToInt(Counter::value).sum()));
         Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
         Integer referenceValue = messagesPerHost.get(referenceHost.get());
 
@@ -209,8 +194,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         if (hashes.size() > 150000)
             hashes.clear();
 
-        // report our findings iff we have not just started anew
-        if (reportFindings)
+        // in case we just started anew, do not report our findings as they contain not
+        // only the changes since our last run, but a whole lot more data dating back even
+        // to the beginning of bisq.
+        if (!hashes.isEmpty())
             reporter.report(report, "bisq." + getName());
     }
 
@@ -222,7 +209,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             Map<String, Counter> buckets = new HashMap<>();
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
-            dataSet.stream().forEach(e -> {
+            dataSet.forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                 if (protectedStoragePayload == null) {
                     log.warn("StoragePayload was null: {}", networkEnvelope.toString());
@@ -244,7 +231,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
                     .getPersistableNetworkPayloadSet();
             if (persistableNetworkPayloadSet != null) {
-                persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
 
                     // memorize message hashes
                     hashes.add(persistableNetworkPayload.getHash());
@@ -273,7 +260,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     public void onTorNodeReady() {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -284,13 +270,9 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     public void onSetupFailed(Throwable throwable) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onRequestCustomBridges() {
-        // TODO Auto-generated method stub
-
     }
 }

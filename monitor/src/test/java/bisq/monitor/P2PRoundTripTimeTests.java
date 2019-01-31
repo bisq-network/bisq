@@ -40,7 +40,8 @@ import org.junit.jupiter.params.provider.ValueSource;
  *
  * @author Florian Reimair
  */
-public class P2PRoundTripTimeTests {
+@Disabled
+class P2PRoundTripTimeTests {
 
     /**
      * A dummy Reporter for development purposes.
@@ -54,7 +55,7 @@ public class P2PRoundTripTimeTests {
             Assert.fail();
         }
 
-        public Map<String, String> hasResults() {
+        Map<String, String> hasResults() {
             return results;
         }
 
@@ -76,14 +77,14 @@ public class P2PRoundTripTimeTests {
     }
 
     @BeforeAll
-    public static void setup() throws TorCtlException {
+    static void setup() throws TorCtlException {
         // simulate the tor instance available to all metrics
         Tor.setDefault(new NativeTor(Monitor.TOR_WORKING_DIR));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"default", "3", "4", "10"})
-    public void run(String sampleSize) throws Exception {
+    void run(String sampleSize) throws Exception {
         DummyReporter reporter = new DummyReporter();
 
         // configure
@@ -127,7 +128,7 @@ public class P2PRoundTripTimeTests {
     }
 
     @AfterAll
-    public static void cleanup() {
+    static void cleanup() {
         Tor tor = Tor.getDefault();
         checkNotNull(tor, "tor must not be null");
         tor.shutdown();

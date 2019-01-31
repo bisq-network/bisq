@@ -55,10 +55,10 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Contacts a list of hosts and asks them for all the data we do not have. The
+ * Contacts a list of hosts and asks them for all the data excluding persisted messages. The
  * answers are then compiled into buckets of message types. Based on these
  * buckets, the Metric reports (for each host) the message types observed and
- * their number along with a relative comparison between all hosts.
+ * their number.
  * 
  * @author Florian Reimair
  *
@@ -82,11 +82,11 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
     private class Counter {
         private int value = 1;
 
-        public int value() {
+        int value() {
             return value;
         }
 
-        public void increment() {
+        void increment() {
             value++;
         }
     }
@@ -120,10 +120,8 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
 
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
-            threadList.add(new Thread(new Runnable() {
+            threadList.add(new Thread(() -> {
 
-                @Override
-                public void run() {
                     try {
                         // parse Url
                         NodeAddress target = OnionParser.getNodeAddress(current);
@@ -133,7 +131,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
                                 new PreliminaryGetDataRequest(nonce, hashes));
 
-                        Futures.addCallback(future, new FutureCallback<Connection>() {
+                        Futures.addCallback(future, new FutureCallback<>() {
                             @Override
                             public void onSuccess(Connection connection) {
                                 connection.addMessageListener(P2PNetworkMessageSnapshot.this);
@@ -154,7 +152,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                         e.printStackTrace();
                     }
 
-                }
             }, current));
         }
 
@@ -188,7 +185,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             Map<String, Counter> buckets = new HashMap<>();
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
-            dataSet.stream().forEach(e -> {
+            dataSet.forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                 if (protectedStoragePayload == null) {
                     log.warn("StoragePayload was null: {}", networkEnvelope.toString());
@@ -207,7 +204,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
                     .getPersistableNetworkPayloadSet();
             if (persistableNetworkPayloadSet != null) {
-                persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
 
                     // memorize message hashes
                     hashes.add(persistableNetworkPayload.getHash());
@@ -230,7 +227,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
 
     @Override
     public void onTorNodeReady() {
-        // TODO Auto-generated method stub
     }
 
     @Override
@@ -241,13 +237,9 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
 
     @Override
     public void onSetupFailed(Throwable throwable) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void onRequestCustomBridges() {
-        // TODO Auto-generated method stub
-
     }
 }

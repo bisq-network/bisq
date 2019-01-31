@@ -18,9 +18,7 @@
 package bisq.monitor;
 
 import java.io.File;
-import java.io.IOException;
 import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
 import bisq.network.p2p.network.TorMode;
 
 /**
@@ -40,7 +38,7 @@ public class AvailableTor extends TorMode {
     }
 
     @Override
-    public Tor getTor() throws IOException, TorCtlException {
+    public Tor getTor() {
         return Tor.getDefault();
     }
 

@@ -51,7 +51,7 @@ public abstract class Metric extends Configurable implements Runnable {
     /**
      * enable execution
      */
-    protected void enable() {
+    private void enable() {
         shutdown = false;
 
         thread = new Thread(this);
@@ -78,7 +78,7 @@ public abstract class Metric extends Configurable implements Runnable {
         disable();
     }
 
-    protected boolean enabled() {
+    boolean enabled() {
         return !shutdown;
     }
 
@@ -153,7 +153,7 @@ public abstract class Metric extends Configurable implements Runnable {
         shutdown = true;
     }
 
-    protected void join() throws InterruptedException {
+    void join() throws InterruptedException {
         thread.join();
     }
 

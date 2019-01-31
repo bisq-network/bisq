@@ -39,7 +39,8 @@ import org.junit.jupiter.api.Test;
  *
  * @author Florian Reimair
  */
-public class P2PNetworkLoadTests {
+@Disabled
+class P2PNetworkLoadTests {
 
     /**
      * A dummy Reporter for development purposes.
@@ -53,7 +54,7 @@ public class P2PNetworkLoadTests {
             Assert.fail();
         }
 
-        public Map<String, String> hasResults() {
+        Map<String, String> hasResults() {
             return results;
         }
 
@@ -75,13 +76,13 @@ public class P2PNetworkLoadTests {
     }
 
     @BeforeAll
-    public static void setup() throws TorCtlException {
+    static void setup() throws TorCtlException {
         // simulate the tor instance available to all metrics
         Tor.setDefault(new NativeTor(Monitor.TOR_WORKING_DIR));
     }
 
     @Test
-    public void run() throws Exception {
+    void run() throws Exception {
         DummyReporter reporter = new DummyReporter();
 
         // configure
@@ -109,7 +110,7 @@ public class P2PNetworkLoadTests {
     }
 
     @AfterAll
-    public static void cleanup() {
+    static void cleanup() {
         Tor tor = Tor.getDefault();
         checkNotNull(tor, "tor must not be null");
         tor.shutdown();
