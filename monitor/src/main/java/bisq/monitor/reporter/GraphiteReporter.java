@@ -24,7 +24,7 @@ import bisq.network.p2p.NodeAddress;
 import org.berndpruenster.netlayer.tor.TorSocket;
 
 import java.io.IOException;
-
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,7 +57,11 @@ public class GraphiteReporter extends Reporter {
 
             try {
                 NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));
-                TorSocket socket = new TorSocket(nodeAddress.getHostName(), nodeAddress.getPort());
+                Socket socket;
+                if (nodeAddress.getFullAddress().contains(".onion"))
+                    socket = new TorSocket(nodeAddress.getHostName(), nodeAddress.getPort());
+                else
+                    socket = new Socket(nodeAddress.getHostName(), nodeAddress.getPort());
 
                 socket.getOutputStream().write(report.getBytes());
                 socket.close();
