@@ -23,6 +23,7 @@ import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.reporter.GraphiteReporter;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
@@ -76,8 +77,12 @@ public class Monitor {
 
         // assemble Metrics
         // - create reporters
-//        ConsoleReporter consoleReporter = new ConsoleReporter();
         Reporter graphiteReporter = new GraphiteReporter();
+
+        // only use ConsoleReporter if requested (for debugging for example)
+        Properties properties = getProperties();
+        if ("true".equals(properties.getProperty("System.useConsoleReporter", "false")))
+            graphiteReporter = new ConsoleReporter();
 
         // - add available metrics with their reporters
         metrics.add(new TorStartupTime(graphiteReporter));
@@ -142,13 +147,14 @@ public class Monitor {
      * @throws Exception in case something goes wrong
      */
     private Properties getProperties() throws Exception {
-        Properties defaults = new Properties();
-        defaults.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
+        Properties result = new Properties();
 
-        Properties result = new Properties(defaults);
-
+        // if we have a config file load the config file, else, load the default config
+        // from the resources
         if (args.length > 0)
             result.load(new FileInputStream(args[0]));
+        else
+            result.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
 
         return result;
     }
