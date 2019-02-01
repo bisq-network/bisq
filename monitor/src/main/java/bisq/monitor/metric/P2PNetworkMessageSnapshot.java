@@ -17,6 +17,8 @@
 
 package bisq.monitor.metric;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -209,6 +211,8 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                 });
             }
 
+            checkNotNull(connection.peersNodeAddressProperty(),
+                    "although the property is nullable, we need it to not be null");
             bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), buckets);
 
             connection.removeMessageListener(this);
