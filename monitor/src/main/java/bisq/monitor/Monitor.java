@@ -104,30 +104,22 @@ public class Monitor {
                 // set the name of the Thread for debugging purposes
                 setName("shutdownHook");
 
-                for (Metric current : metrics) {
-                    current.shutdown();
+                log.info("system shutdown initiated");
+
+                log.info("shutting down active metrics...");
+                Metric.haltAllMetrics();
+
+                try {
+                    log.info("shutting down tor...");
+                    Tor tor = Tor.getDefault();
+                    checkNotNull(tor, "tor must not be null");
+                    tor.shutdown();
+                } catch (Throwable ignore) {
                 }
-
-                // wait for the metrics to gracefully shut down
-                for (Metric current : metrics)
-                    try {
-                        current.join();
-                    } catch (InterruptedException ignore) {
-                    }
-
-                log.info("shutting down tor");
-                Tor tor = Tor.getDefault();
-                checkNotNull(tor, "tor must not be null");
-                tor.shutdown();
 
                 log.info("system halt");
             }
         });
-
-        // prevent the main thread to terminate
-        log.info("joining metrics...");
-        for (Metric current : metrics)
-            current.join();
     }
 
     /**

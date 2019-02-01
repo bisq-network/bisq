@@ -106,8 +106,7 @@ public class TorRoundTripTimeTests {
         // give it some time to start and then stop
         Thread.sleep(100);
 
-        DUT.shutdown();
-        DUT.join();
+        Metric.haltAllMetrics();
 
         // observe results
         Map<String, String> results = reporter.hasResults();

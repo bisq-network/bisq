@@ -78,7 +78,7 @@ public class TorStartupTimeTests {
 
         // give it some time and then stop
         Thread.sleep(15 * 1000);
-        DUT.shutdown();
+        Metric.haltAllMetrics();
 
         // TODO Test fails due timing issue
         // observe results

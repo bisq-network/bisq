@@ -101,8 +101,7 @@ class P2PNetworkLoadTests {
             Thread.sleep(500);
         Thread.sleep(20000);
 
-        DUT.shutdown();
-        DUT.join();
+        Metric.haltAllMetrics();
 
         // observe results
         Map<String, String> results = reporter.hasResults();
