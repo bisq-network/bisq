@@ -80,7 +80,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
      * Efficient way to count message occurrences.
      */
     private class Counter {
-        private int value = 1;
+        private int value = 0;
 
         int value() {
             return value;
@@ -194,11 +194,9 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
 
                 // For logging different data types
                 String className = protectedStoragePayload.getClass().getSimpleName();
-                try {
-                    buckets.get(className).increment();
-                } catch (NullPointerException nullPointerException) {
-                    buckets.put(className, new Counter());
-                }
+
+                buckets.putIfAbsent(className, new Counter());
+                buckets.get(className).increment();
             });
 
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse

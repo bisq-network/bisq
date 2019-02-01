@@ -83,7 +83,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
      * Efficient way to count message occurrences.
      */
     private class Counter {
-        private int value = 1;
+        private int value = 0;
 
         int value() {
             return value;
@@ -238,11 +238,8 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
                     // For logging different data types
                     String className = persistableNetworkPayload.getClass().getSimpleName();
-                    try {
-                        buckets.get(className).increment();
-                    } catch (NullPointerException nullPointerException) {
-                        buckets.put(className, new Counter());
-                    }
+                    buckets.putIfAbsent(className, new Counter());
+                    buckets.get(className).increment();
                 });
             }
 
