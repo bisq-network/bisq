@@ -94,13 +94,18 @@ public class Monitor {
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux
-        Signal.handle(new Signal("USR1"), signal -> reload());
+        Signal.handle(new Signal("USR1"), signal -> {
+            try {
+                configure();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
 
         // configure Metrics
         // - which also starts the metrics if appropriate
-        Properties properties = getProperties();
-        for (Metric current : metrics)
-            current.configure(properties);
+        configure();
 
         // exit Metrics gracefully on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -129,15 +134,13 @@ public class Monitor {
 
     /**
      * Reload the configuration from disk.
+     * 
+     * @throws Exception
      */
-    private void reload() {
-        try {
-            Properties properties = getProperties();
-            for (Metric current : metrics)
-                current.configure(properties);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void configure() throws Exception {
+        Properties properties = getProperties();
+        for (Metric current : metrics)
+            current.configure(properties);
     }
 
     /**
