@@ -18,6 +18,11 @@
 package bisq.monitor;
 
 import java.util.Properties;
+import java.util.Random;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,36 +38,24 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class Metric extends Configurable implements Runnable {
 
     private static final String INTERVAL = "run.interval";
-    private volatile boolean shutdown = false;
-
-    /**
-     * our reporter
-     */
+    private static ScheduledExecutorService executor;
     protected final Reporter reporter;
-    private Thread thread = new Thread();
+    private ScheduledFuture<?> scheduler;
 
     /**
      * disable execution
      */
     private void disable() {
-        shutdown = true;
+        if (scheduler != null)
+            scheduler.cancel(false);
     }
 
     /**
      * enable execution
      */
     private void enable() {
-        shutdown = false;
-
-        thread = new Thread(this);
-
-        // set human readable name
-        thread.setName(getName());
-
-        // set as daemon, so that the jvm does not terminate the thread
-        thread.setDaemon(true);
-
-        thread.start();
+        scheduler = executor.scheduleWithFixedDelay(this, new Random().nextInt(60),
+                Long.parseLong(configuration.getProperty(INTERVAL)), TimeUnit.SECONDS);
     }
 
     /**
@@ -74,12 +67,16 @@ public abstract class Metric extends Configurable implements Runnable {
 
         setName(this.getClass().getSimpleName());
 
-        // disable by default
-        disable();
+        if (executor == null) {
+            executor = new ScheduledThreadPoolExecutor(6);
+        }
     }
 
     boolean enabled() {
-        return !shutdown;
+        if (scheduler != null)
+            return !scheduler.isCancelled();
+        else
+            return false;
     }
 
     @Override
@@ -114,30 +111,14 @@ public abstract class Metric extends Configurable implements Runnable {
 
     @Override
     public void run() {
-        while (!shutdown) {
-            // if not, execute all the things
-            synchronized (this) {
-                log.info("{} started", getName());
-                execute();
-                log.info("{} done", getName());
-            }
+        Thread.currentThread().setName(getName());
 
-            if (shutdown)
-                continue;
-
-            // make sure our configuration is not changed in the moment we want to query it
-            String interval;
-            synchronized (this) {
-                interval = configuration.getProperty(INTERVAL);
-            }
-
-            // and go to sleep for the configured amount of time.
-            try {
-                Thread.sleep(Long.parseLong(interval) * 1000);
-            } catch (InterruptedException ignore) {
-            }
+        // execute all the things
+        synchronized (this) {
+            log.info("{} started", getName());
+            execute();
+            log.info("{} done", getName());
         }
-        log.info("{} shutdown", getName());
     }
 
     /**
@@ -150,11 +131,21 @@ public abstract class Metric extends Configurable implements Runnable {
      */
     public void shutdown() {
         log.debug("{} shutdown requested", getName());
-        shutdown = true;
+        disable();
     }
 
-    void join() throws InterruptedException {
-        thread.join();
-    }
+    /**
+     * initiate an orderly shutdown on all metrics. Blocks until all metrics are
+     * shut down or after one minute.
+     */
+    public final static void haltAllMetrics() {
+        executor.shutdown();
 
+        try {
+            if (!Metric.executor.awaitTermination(2, TimeUnit.MINUTES))
+                Metric.executor.shutdownNow();
+        } catch (InterruptedException e) {
+            Metric.executor.shutdownNow();
+        }
+    }
 }

@@ -94,7 +94,7 @@ public class TorHiddenServiceStartupTimeTests {
 
         // give it some time and then stop
         Thread.sleep(180 * 1000);
-        DUT.shutdown();
+        Metric.haltAllMetrics();
 
         // observe results
         Assert.assertTrue(reporter.results() > 0);
