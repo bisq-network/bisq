@@ -246,7 +246,7 @@ public class ProposalDisplay {
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = FormBuilder.<Param>addComboBox(gridPane, ++gridRow,
+                paramComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
@@ -285,7 +285,7 @@ public class ProposalDisplay {
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addComboBox(gridPane, ++gridRow,
+                bondedRoleTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
@@ -314,7 +314,7 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<Bond>addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
@@ -346,7 +346,7 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case REMOVE_ASSET:
-                assetComboBox = FormBuilder.<Asset>addComboBox(gridPane, ++gridRow,
+                assetComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
@@ -516,9 +516,9 @@ public class ProposalDisplay {
                     .ifPresent(bond -> {
                         confiscateBondComboBox.getSelectionModel().select(bond);
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
-                        comboBoxValueTextField.setOnMouseClicked(e -> {
-                            navigation.navigateTo(MainView.class, DaoView.class, BondingView.class, BondsView.class);
-                        });
+                        comboBoxValueTextField.setOnMouseClicked(e ->
+                                navigation.navigateToWithData(bond, MainView.class, DaoView.class, BondingView.class,
+                                BondsView.class));
                         comboBoxValueTextField.getStyleClass().addAll("hyperlink", "show-hand");
                     });
         } else if (proposal instanceof GenericProposal) {
@@ -575,9 +575,7 @@ public class ProposalDisplay {
         if (linkHyperlinkWithIcon != null)
             linkHyperlinkWithIcon.clear();
 
-        comboBoxes.stream().filter(Objects::nonNull).forEach(comboBox -> {
-            comboBox.getSelectionModel().clearSelection();
-        });
+        comboBoxes.stream().filter(Objects::nonNull).forEach(comboBox -> comboBox.getSelectionModel().clearSelection());
     }
 
     public void setEditable(boolean isEditable) {
