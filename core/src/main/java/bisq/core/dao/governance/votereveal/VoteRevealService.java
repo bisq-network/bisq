@@ -141,7 +141,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
     public byte[] getHashOfBlindVoteList() {
         List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-        return VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
+        byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
+        log.info("blindVoteList for creating hash: " + blindVotes);
+        log.info("Sha256Ripemd160 hash of hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
+        return hashOfBlindVoteList;
     }
 
 
@@ -222,13 +225,8 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // voters  blind vote collection into the opReturn data and check for a majority at issuance time.
             // The voters "vote" with their stake at the reveal tx for their version of the blind vote collection.
 
-            // TODO make more clear by using param like here:
-       /* List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-         VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);*/
-
             byte[] hashOfBlindVoteList = getHashOfBlindVoteList();
-
-            log.info("Sha256Ripemd160 hash of hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
+            log.info("revealVote: Sha256Ripemd160 hash of hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
             byte[] opReturnData = VoteRevealConsensus.getOpReturnData(hashOfBlindVoteList, myVote.getSecretKey());
 
             // We search for my unspent stake output.
