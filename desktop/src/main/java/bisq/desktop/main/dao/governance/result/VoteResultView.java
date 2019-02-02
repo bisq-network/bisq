@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.governance.result;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -96,7 +97,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
-
+    private final Navigation navigation;
 
     private int gridRow = 0;
 
@@ -130,7 +131,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           ProposalService proposalService,
                           BsqWalletService bsqWalletService,
                           Preferences preferences,
-                          BsqFormatter bsqFormatter) {
+                          BsqFormatter bsqFormatter,
+                          Navigation navigation) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
@@ -140,6 +142,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
+        this.navigation = navigation;
     }
 
     @Override
@@ -382,7 +385,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private ProposalDisplay createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null,
+                navigation);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));

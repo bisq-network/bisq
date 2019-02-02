@@ -17,9 +17,14 @@
 
 package bisq.desktop.main.dao.governance;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.bonding.BondingView;
+import bisq.desktop.main.dao.bonding.bonds.BondsView;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -103,6 +108,7 @@ public class ProposalDisplay {
     // Nullable because if we are in result view mode (readonly) we don't need to set the input validator)
     @Nullable
     private final ChangeParamValidator changeParamValidator;
+    private final Navigation navigation;
 
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
@@ -140,11 +146,12 @@ public class ProposalDisplay {
     private VBox comboBoxValueContainer;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                           @Nullable ChangeParamValidator changeParamValidator) {
+                           @Nullable ChangeParamValidator changeParamValidator, Navigation navigation) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.changeParamValidator = changeParamValidator;
+        this.navigation = navigation;
 
         // focusOutListener = observable -> inputChangedListeners.forEach(Runnable::run);
 
@@ -509,8 +516,11 @@ public class ProposalDisplay {
                     .ifPresent(bond -> {
                         confiscateBondComboBox.getSelectionModel().select(bond);
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
+                        comboBoxValueTextField.setOnMouseClicked(e -> {
+                            navigation.navigateTo(MainView.class, DaoView.class, BondingView.class, BondsView.class);
+                        });
+                        comboBoxValueTextField.getStyleClass().addAll("hyperlink", "show-hand");
                     });
-
         } else if (proposal instanceof GenericProposal) {
             // do nothing
         } else if (proposal instanceof RemoveAssetProposal) {
