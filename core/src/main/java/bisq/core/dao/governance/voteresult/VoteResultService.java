@@ -419,6 +419,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 log.info("We found a permutation of our blindVote list which matches the majority view. " +
                         "permutatedListMatchingMajority={}", permutatedListMatchingMajority);
                 //TODO do we need to apply/store it for later use?
+
+                return true;
             } else {
                 log.info("We did not find a permutation of our blindVote list which matches the majority view. " +
                         "We will request the blindVote data from the peers.");
