@@ -98,6 +98,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoSetup.class).in(Singleton.class);
         bind(DaoFacade.class).in(Singleton.class);
+        bind(DaoKillSwitch.class).in(Singleton.class);
 
         // Node, parser
         bind(BsqNodeProvider.class).in(Singleton.class);

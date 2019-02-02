@@ -68,7 +68,8 @@ public class DaoSetup {
                     AssetService assetService,
                     ProofOfBurnService proofOfBurnService,
                     DaoFacade daoFacade,
-                    ExportJsonFilesService exportJsonFilesService) {
+                    ExportJsonFilesService exportJsonFilesService,
+                    DaoKillSwitch daoKillSwitch) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
 
@@ -90,6 +91,7 @@ public class DaoSetup {
         daoSetupServices.add(proofOfBurnService);
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
+        daoSetupServices.add(daoKillSwitch);
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }
 
