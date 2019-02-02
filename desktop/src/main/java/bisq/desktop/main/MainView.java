@@ -290,7 +290,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
 
-        navigation.addListener(viewPath -> {
+        navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
                 return;
 
