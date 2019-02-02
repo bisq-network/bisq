@@ -85,7 +85,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     public void initialize() {
         log.debug("initialize ");
         tradersDisputesTab.setText(Res.get("support.tab.support").toUpperCase());
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
                 loadView(viewPath.tip());
         };

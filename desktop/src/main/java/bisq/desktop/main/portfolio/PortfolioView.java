@@ -85,7 +85,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
         pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades").toUpperCase());
         closedTradesTab.setText(Res.get("portfolio.tab.history").toUpperCase());
 
-        navigationListener = viewPath -> {
+        navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
                 loadView(viewPath.tip());
         };

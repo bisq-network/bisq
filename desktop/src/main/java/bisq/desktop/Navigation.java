@@ -38,12 +38,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public final class Navigation implements PersistedDataHost {
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
     public interface Listener {
-        void onNavigationRequested(ViewPath path);
+        void onNavigationRequested(ViewPath path, @Nullable Object data);
     }
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
@@ -93,10 +95,15 @@ public final class Navigation implements PersistedDataHost {
 
     @SafeVarargs
     public final void navigateTo(Class<? extends View>... viewClasses) {
-        navigateTo(ViewPath.to(viewClasses));
+        navigateTo(ViewPath.to(viewClasses), null);
     }
 
-    public void navigateTo(ViewPath newPath) {
+    @SafeVarargs
+    public final void navigateToWithData(Object data, Class<? extends View>... viewClasses) {
+        navigateTo(ViewPath.to(viewClasses), data);
+    }
+
+    public void navigateTo(ViewPath newPath, Object data) {
         if (newPath == null)
             return;
 
@@ -114,7 +121,7 @@ public final class Navigation implements PersistedDataHost {
                     //noinspection unchecked,unchecked,unchecked
                     Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
-                    navigateTo(currentPath);
+                    navigateTo(currentPath, data);
                     viewClass = newPath.get(n);
                     temp2.add(viewClass);
                 }
@@ -124,7 +131,7 @@ public final class Navigation implements PersistedDataHost {
         currentPath = newPath;
         previousPath = currentPath;
         queueUpForSave();
-        listeners.forEach((e) -> e.onNavigationRequested(currentPath));
+        listeners.forEach((e) -> e.onNavigationRequested(currentPath, data));
     }
 
     private void queueUpForSave() {
@@ -138,7 +145,7 @@ public final class Navigation implements PersistedDataHost {
         if (previousPath == null || previousPath.size() == 0)
             previousPath = DEFAULT_VIEW_PATH;
 
-        navigateTo(previousPath);
+        navigateTo(previousPath, null);
     }
 
     public void addListener(Listener listener) {

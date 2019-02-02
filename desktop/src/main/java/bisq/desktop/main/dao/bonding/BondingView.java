@@ -70,7 +70,7 @@ public class BondingView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
+        listener = (viewPath, data) -> {
             if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
                 return;
 
