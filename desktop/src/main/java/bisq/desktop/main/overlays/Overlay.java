@@ -343,6 +343,7 @@ public abstract class Overlay<T extends Overlay> {
     public T error(String message) {
         type = Type.Error;
         showReportErrorButtons();
+        width = 1100;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.error");
         this.message = message;

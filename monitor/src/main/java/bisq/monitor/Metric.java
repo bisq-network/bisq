@@ -78,7 +78,7 @@ public abstract class Metric extends Configurable implements Runnable {
         disable();
     }
 
-    protected boolean enabled() {
+    boolean enabled() {
         return !shutdown;
     }
 
@@ -117,8 +117,13 @@ public abstract class Metric extends Configurable implements Runnable {
         while (!shutdown) {
             // if not, execute all the things
             synchronized (this) {
+                log.info("{} started", getName());
                 execute();
+                log.info("{} done", getName());
             }
+
+            if (shutdown)
+                continue;
 
             // make sure our configuration is not changed in the moment we want to query it
             String interval;
@@ -148,7 +153,7 @@ public abstract class Metric extends Configurable implements Runnable {
         shutdown = true;
     }
 
-    protected void join() throws InterruptedException {
+    void join() throws InterruptedException {
         thread.join();
     }
 
