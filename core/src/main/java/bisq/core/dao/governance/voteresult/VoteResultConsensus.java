@@ -84,7 +84,9 @@ public class VoteResultConsensus {
             long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
             long stakeOfFirst = hashWithStakeList.get(0).getStake();
             if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
-                log.warn("hashWithStakeList " + hashWithStakeList);
+                log.warn("The winning data view has less then 80% of the " +
+                        "total stake of all data views. We consider the voting cycle as invalid if the " +
+                        "winning data view does not reach a super majority. hashWithStakeList={}", hashWithStakeList);
                 throw new VoteResultException.ConsensusException("The winning data view has less then 80% of the " +
                         "total stake of all data views. We consider the voting cycle as invalid if the " +
                         "winning data view does not reach a super majority.");

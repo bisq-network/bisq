@@ -29,6 +29,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -92,6 +93,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
     private final ProposalService proposalService;
+    private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
 
@@ -126,6 +128,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           CycleService cycleService,
                           VoteResultService voteResultService,
                           ProposalService proposalService,
+                          BsqWalletService bsqWalletService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
@@ -134,6 +137,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
         this.proposalService = proposalService;
+        this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
     }
@@ -212,7 +216,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void maybeShowVoteResultErrors(Cycle cycle) {
         List<VoteResultException> exceptions = voteResultService.getVoteResultExceptions().stream()
-                .filter(voteResultException -> cycle.equals(voteResultException.getCycle()))
+                .filter(voteResultException -> cycle.getHeightOfFirstBlock() == voteResultException.getHeightOfFirstBlock())
                 .collect(Collectors.toList());
         if (!exceptions.isEmpty()) {
             TextArea textArea = FormBuilder.addTextArea(root, ++gridRow, "");
@@ -240,14 +244,18 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
 
         if (selectedProposalListItem != null) {
-
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
             Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
-            createProposalDisplay(evaluatedProposal, ballot);
+            ProposalDisplay proposalDisplay = createProposalDisplay(evaluatedProposal, ballot);
             createVotesTable();
+
+            // Check if my vote is included in result
+            boolean isVoteIncludedInResult = voteListItemList.stream()
+                    .anyMatch(voteListItem -> bsqWalletService.getTransaction(voteListItem.getBlindVoteTxId()) != null);
+            proposalDisplay.setIsVoteIncludedInResult(isVoteIncludedInResult);
         }
     }
 
@@ -372,7 +380,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     // Create views: proposalDisplay
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
+    private ProposalDisplay createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
         ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null);
 
@@ -395,6 +403,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         long merit = meritAndStakeTuple.first;
         long stake = meritAndStakeTuple.second;
         proposalDisplay.applyBallotAndVoteWeight(ballot, merit, stake);
+        return proposalDisplay;
     }
 
 
