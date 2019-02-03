@@ -51,7 +51,7 @@ public class PermutationTest {
         assertTrue(expected.toString().equals(result.toString()));
 
         // remove first
-        indicesToRemove = indicesToRemove = Collections.singletonList(0);
+        indicesToRemove = Collections.singletonList(0);
         expected = new ArrayList<>(list);
         expected.remove(0);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
