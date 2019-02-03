@@ -33,12 +33,14 @@ import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -55,6 +57,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.PermutationUtil;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -140,7 +143,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void start() {
-        maybeCalculateVoteResult(daoStateService.getChainHeight());
     }
 
 
@@ -150,12 +152,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
-        // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
-        maybeCalculateVoteResult(blockHeight);
     }
 
     @Override
     public void onParseBlockChainComplete() {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+        maybeCalculateVoteResult(block.getHeight());
     }
 
 
@@ -165,6 +170,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void maybeCalculateVoteResult(int chainHeight) {
         if (isInVoteResultPhase(chainHeight)) {
+            Cycle currentCycle = periodService.getCurrentCycle();
             long startTs = System.currentTimeMillis();
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             decryptedBallotsWithMeritsSet.stream()
@@ -207,19 +213,19 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     }
 
                 } catch (VoteResultException.ValidationException e) {
-                    log.error(e.toString());
+                    log.warn(e.toString());
                     e.printStackTrace();
-                    voteResultExceptions.add(e);
+                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
                 } catch (VoteResultException.ConsensusException e) {
-                    log.error(e.toString());
-                    log.error("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
+                    log.warn(e.toString());
+                    log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
                     e.printStackTrace();
 
                     //TODO notify application of that case (e.g. add error handler)
                     // The vote cycle is invalid as conflicting data views of the blind vote data exist and the winner
                     // did not reach super majority of 80%.
 
-                    voteResultExceptions.add(e);
+                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
                 }
             } else {
                 log.info("There have not been any votes in that cycle. chainHeight={}", chainHeight);
@@ -256,6 +262,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         return null;
                     }
 
+                    Cycle currentCycle = periodService.getCurrentCycle();
                     try {
                         // TODO maybe verify version in opReturn
 
@@ -291,12 +298,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                 return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
                             } catch (VoteResultException.MissingBallotException missingBallotException) {
                                 log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
-                                missingDataRequestService.addVoteResultException(missingBallotException);
-                                voteResultExceptions.add(missingBallotException);
+                                missingDataRequestService.sendRepublishRequest();
+                                voteResultExceptions.add(new VoteResultException(currentCycle, missingBallotException));
                                 return null;
                             } catch (VoteResultException.DecryptionException decryptionException) {
-                                log.error("Could not decrypt data: " + decryptionException.toString());
-                                voteResultExceptions.add(decryptionException);
+                                log.warn("Could not decrypt data: " + decryptionException.toString());
+                                voteResultExceptions.add(new VoteResultException(currentCycle, decryptionException));
                                 return null;
                             }
                         } else {
@@ -306,17 +313,17 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                     "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
 
                             VoteResultException.MissingBlindVoteDataException voteResultException = new VoteResultException.MissingBlindVoteDataException(blindVoteTxId);
-                            missingDataRequestService.addVoteResultException(voteResultException);
-                            voteResultExceptions.add(voteResultException);
+                            missingDataRequestService.sendRepublishRequest();
+                            voteResultExceptions.add(new VoteResultException(currentCycle, voteResultException));
                             return null;
                         }
                     } catch (VoteResultException.ValidationException e) {
-                        log.error("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
-                        voteResultExceptions.add(e);
+                        log.warn("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
+                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
                         return null;
                     } catch (Throwable e) {
                         log.error("Could not create DecryptedBallotsWithMerits because of an unknown exception: " + e.toString());
-                        voteResultExceptions.add(new VoteResultException(e));
+                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
                         return null;
                     }
                 })
@@ -414,37 +421,43 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // It still could be that we have additional blind votes so our hash does not match. We can try to permute
             // our list with excluding items to see if we get a matching list. If not last resort is to request the
             // missing items from the network.
-            List<BlindVote> permutatedListMatchingMajority = findPermutatedListMatchingMajority(majorityVoteListHash);
-            if (!permutatedListMatchingMajority.isEmpty()) {
-                log.info("We found a permutation of our blindVote list which matches the majority view. " +
-                        "permutatedListMatchingMajority={}", permutatedListMatchingMajority);
+            Optional<List<BlindVote>> permutatedList = findPermutatedListMatchingMajority(majorityVoteListHash);
+            if (permutatedList.isPresent()) {
                 //TODO do we need to apply/store it for later use?
+
+                return true;
             } else {
-                log.info("We did not find a permutation of our blindVote list which matches the majority view. " +
+                log.warn("We did not find a permutation of our blindVote list which matches the majority view. " +
                         "We will request the blindVote data from the peers.");
                 // This is async operation. We will restart the whole verification process once we received the data.
-                requestBlindVoteListFromNetwork(majorityVoteListHash);
+                missingDataRequestService.sendRepublishRequest();
             }
         }
         return matches;
     }
 
-    private List<BlindVote> findPermutatedListMatchingMajority(byte[] majorityVoteListHash) {
+    private Optional<List<BlindVote>> findPermutatedListMatchingMajority(byte[] majorityVoteListHash) {
         List<BlindVote> list = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-        while (!list.isEmpty() && !isListMatchingMajority(majorityVoteListHash, list)) {
-            // We remove first item as it will be sorted anyway...
-            list.remove(0);
+        long ts = System.currentTimeMillis();
+        List<List<BlindVote>> result = PermutationUtil.findAllPermutations(list, 1000000);
+        for (List<BlindVote> variation : result) {
+            if (isListMatchingMajority(majorityVoteListHash, variation)) {
+                log.info("We found a variation of the blind vote list which matches the majority hash. variation={}",
+                        variation);
+                log.info("findPermutatedListMatchingMajority for {} items took {} ms.",
+                        list.size(), (System.currentTimeMillis() - ts));
+                return Optional.of(variation);
+            }
         }
-        return list;
+        log.info("We did not find a variation of the blind vote list which matches the majority hash.");
+        log.info("findPermutatedListMatchingMajority for {} items took {} ms.",
+                list.size(), (System.currentTimeMillis() - ts));
+        return Optional.empty();
     }
 
     private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list) {
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(list);
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
-    }
-
-    private void requestBlindVoteListFromNetwork(byte[] majorityVoteListHash) {
-        //TODO impl
     }
 
     private Set<EvaluatedProposal> getEvaluatedProposals(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet, int chainHeight) {

@@ -18,7 +18,10 @@
 package bisq.monitor.metric;
 
 import bisq.monitor.Metric;
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
+import bisq.monitor.StatisticsHelper;
+import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
@@ -26,17 +29,10 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
-import java.net.URL;
-
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.LongSummaryStatistics;
-import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -65,7 +61,7 @@ public class TorRoundTripTime extends Metric {
             // for each configured host
             for (String current : configuration.getProperty(HOSTS, "").split(",")) {
                 // parse Url
-                URL tmp = new URL(current);
+                NodeAddress tmp = OnionParser.getNodeAddress(current);
 
                 List<Long> samples = new ArrayList<>();
 
@@ -75,7 +71,7 @@ public class TorRoundTripTime extends Metric {
                     long start = System.currentTimeMillis();
 
                     // connect
-                    socket = new SocksSocket(proxy, tmp.getHost(), tmp.getPort());
+                    socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
 
                     // by the time we get here, we are connected
                     samples.add(System.currentTimeMillis() - start);
@@ -84,36 +80,8 @@ public class TorRoundTripTime extends Metric {
                     socket.close();
                 }
 
-                // aftermath
-                Collections.sort(samples);
-
-                // - average, max, min , sample size
-                LongSummaryStatistics statistics = samples.stream().mapToLong(val -> val).summaryStatistics();
-
-                Map<String, String> results = new HashMap<>();
-                results.put("average", String.valueOf(Math.round(statistics.getAverage())));
-                results.put("max", String.valueOf(statistics.getMax()));
-                results.put("min", String.valueOf(statistics.getMin()));
-                results.put("sampleSize", String.valueOf(statistics.getCount()));
-
-                // - p25, median, p75
-                Integer[] percentiles = new Integer[]{25, 50, 75};
-                for (Integer percentile : percentiles) {
-                    double rank = statistics.getCount() * percentile / 100;
-                    Long percentileValue;
-                    if (samples.size() <= rank + 1)
-                        percentileValue = samples.get(samples.size() - 1);
-                    else if (Math.floor(rank) == rank)
-                        percentileValue = samples.get((int) rank);
-                    else
-                        percentileValue = Math.round(samples.get((int) Math.floor(rank))
-                                + (samples.get((int) (Math.floor(rank) + 1)) - samples.get((int) Math.floor(rank)))
-                                / (rank - Math.floor(rank)));
-                    results.put("p" + percentile, String.valueOf(percentileValue));
-                }
-
                 // report
-                reporter.report(results, "bisq." + getName());
+                reporter.report(StatisticsHelper.process(samples), "bisq." + getName());
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block

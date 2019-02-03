@@ -46,7 +46,6 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
@@ -350,7 +349,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private void rePublishOnceWellConnected() {
         int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
-        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
+        if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
+                BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
             int chainHeight = periodService.getChainHeight();
             myBlindVoteList.stream()
                     .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),

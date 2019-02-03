@@ -23,6 +23,7 @@ import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqSetup;
 import bisq.core.app.P2PNetworkSetup;
+import bisq.core.app.TorSetup;
 import bisq.core.app.WalletAppSetup;
 import bisq.core.arbitration.ArbitratorModule;
 import bisq.core.btc.BitcoinModule;
@@ -80,6 +81,7 @@ public class CoreModule extends AppModule {
     @Override
     protected void configure() {
         bind(BisqSetup.class).in(Singleton.class);
+        bind(TorSetup.class).in(Singleton.class);
         bind(P2PNetworkSetup.class).in(Singleton.class);
         bind(WalletAppSetup.class).in(Singleton.class);
 

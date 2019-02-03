@@ -18,34 +18,37 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.Cycle;
 
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 
 public class VoteResultException extends Exception {
+    @Getter
+    private final int heightOfFirstBlockInCycle;
 
-    VoteResultException(Throwable cause) {
+    VoteResultException(Cycle cycle, Throwable cause) {
         super(cause);
-    }
-
-    private VoteResultException(String message) {
-        super(message);
-    }
-
-    private VoteResultException(String message, Throwable cause) {
-        super(message, cause);
+        this.heightOfFirstBlockInCycle = cycle.getHeightOfFirstBlock();
     }
 
     @Override
     public String toString() {
         return "VoteResultException{" +
+                "\n     heightOfFirstBlockInCycle=" + heightOfFirstBlockInCycle +
                 "\n} " + super.toString();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static sub classes
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @EqualsAndHashCode(callSuper = true)
-    public static class ConsensusException extends VoteResultException {
+    public static class ConsensusException extends Exception {
 
         ConsensusException(String message) {
             super(message);
@@ -59,7 +62,7 @@ public class VoteResultException extends Exception {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    public static class ValidationException extends VoteResultException {
+    public static class ValidationException extends Exception {
 
         ValidationException(Throwable cause) {
             super("Validation of vote result failed.", cause);
@@ -74,7 +77,7 @@ public class VoteResultException extends Exception {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    public static abstract class MissingDataException extends VoteResultException {
+    public static abstract class MissingDataException extends Exception {
         private MissingDataException(String message) {
             super(message);
         }
@@ -114,7 +117,7 @@ public class VoteResultException extends Exception {
 
     @EqualsAndHashCode(callSuper = true)
     @Value
-    public static class DecryptionException extends VoteResultException {
+    public static class DecryptionException extends Exception {
         public DecryptionException(Throwable cause) {
             super(cause);
         }
