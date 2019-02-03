@@ -19,6 +19,7 @@ package bisq.monitor.metric;
 
 import bisq.monitor.Metric;
 import bisq.monitor.Reporter;
+import bisq.monitor.ThreadGate;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 
@@ -38,30 +39,10 @@ public class TorHiddenServiceStartupTime extends Metric {
     private static final String SERVICE_PORT = "run.servicePort";
     private static final String LOCAL_PORT = "run.localPort";
     private final String hiddenServiceDirectory = "metric_" + getName();
+    private final ThreadGate gate = new ThreadGate();
 
     public TorHiddenServiceStartupTime(Reporter reporter) {
         super(reporter);
-    }
-
-    /**
-     * synchronization helper. Required because directly closing the
-     * HiddenServiceSocket in its ReadyListener causes a deadlock
-     */
-    private void await() {
-        synchronized (hiddenServiceDirectory) {
-            try {
-                hiddenServiceDirectory.wait();
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void proceed() {
-        synchronized (hiddenServiceDirectory) {
-            hiddenServiceDirectory.notify();
-        }
     }
 
     @Override
@@ -75,6 +56,9 @@ public class TorHiddenServiceStartupTime extends Metric {
         new File(hiddenServiceDirectory).delete();
 
         log.debug("creating the hidden service");
+
+        gate.engage();
+
         // start timer - we do not need System.nanoTime as we expect our result to be in
         // the range of tenth of seconds.
         long start = System.currentTimeMillis();
@@ -85,11 +69,11 @@ public class TorHiddenServiceStartupTime extends Metric {
             // stop the timer and report
             reporter.report(System.currentTimeMillis() - start, "bisq." + getName());
             log.debug("the hidden service is ready");
-            proceed();
+            gate.proceed();
             return null;
         });
 
-        await();
+        gate.await();
         log.debug("going to revoke the hidden service...");
         hiddenServiceSocket.close();
         log.debug("[going to revoke the hidden service...] done");

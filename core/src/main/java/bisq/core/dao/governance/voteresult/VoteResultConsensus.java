@@ -68,27 +68,31 @@ public class VoteResultConsensus {
     // hex encoded hashOfProposalList for comparision
     @Nullable
     public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList)
-            throws VoteResultException.ConsensusException, VoteResultException.ValidationException {
+            throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         try {
             checkArgument(!hashWithStakeList.isEmpty(), "hashWithStakeList must not be empty");
-            hashWithStakeList.sort(Comparator.comparingLong(VoteResultService.HashWithStake::getStake).reversed()
-                    .thenComparing(hashWithStake -> Utilities.encodeToHex(hashWithStake.getHash())));
-
-            // If there are conflicting data views (multiple hashes) we only consider the voting round as valid if
-            // the majority is a super majority with > 80%.
-            if (hashWithStakeList.size() > 1) {
-                long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
-                long stakeOfFirst = hashWithStakeList.get(0).getStake();
-                if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
-                    throw new VoteResultException.ConsensusException("The winning data view has less then 80% of the " +
-                            "total stake of all data views. We consider the voting cycle as invalid if the " +
-                            "winning data view does not reach a super majority.");
-                }
-            }
-            return hashWithStakeList.get(0).getHash();
         } catch (Throwable t) {
             throw new VoteResultException.ValidationException(t);
         }
+
+        hashWithStakeList.sort(Comparator.comparingLong(VoteResultService.HashWithStake::getStake).reversed()
+                .thenComparing(hashWithStake -> Utilities.encodeToHex(hashWithStake.getHash())));
+
+        // If there are conflicting data views (multiple hashes) we only consider the voting round as valid if
+        // the majority is a super majority with > 80%.
+        if (hashWithStakeList.size() > 1) {
+            long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
+            long stakeOfFirst = hashWithStakeList.get(0).getStake();
+            if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
+                log.warn("The winning data view has less then 80% of the " +
+                        "total stake of all data views. We consider the voting cycle as invalid if the " +
+                        "winning data view does not reach a super majority. hashWithStakeList={}", hashWithStakeList);
+                throw new VoteResultException.ConsensusException("The winning data view has less then 80% of the " +
+                        "total stake of all data views. We consider the voting cycle as invalid if the " +
+                        "winning data view does not reach a super majority.");
+            }
+        }
+        return hashWithStakeList.get(0).getHash();
     }
 
     // Key is stored after version and type bytes and list of Blind votes. It has 16 bytes

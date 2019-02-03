@@ -52,6 +52,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.UrlInputValidator;
 
 import bisq.asset.Asset;
 
@@ -202,7 +203,7 @@ public class ProposalDisplay {
                 Res.get("dao.proposal.display.link"));
         linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
         if (isMakeProposalScreen)
-            linkInputTextField.setValidator(new InputValidator());
+            linkInputTextField.setValidator(new UrlInputValidator());
         inputControls.add(linkInputTextField);
 
         Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
@@ -457,6 +458,14 @@ public class ProposalDisplay {
         myVoteLabel.setManaged(show);
         myVoteTextField.setVisible(show);
         myVoteTextField.setManaged(show);
+    }
+
+    public void setIsVoteIncludedInResult(boolean isVoteIncludedInResult) {
+        if (!isVoteIncludedInResult && myVoteTextField != null && !myVoteTextField.getText().isEmpty()) {
+            String text = myVoteTextField.getText();
+            myVoteTextField.setText(Res.get("dao.proposal.myVote.invalid") + " - " + text);
+            myVoteTextField.getStyleClass().add("error-text");
+        }
     }
 
     public void applyProposalPayload(Proposal proposal) {

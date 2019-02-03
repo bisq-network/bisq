@@ -25,20 +25,17 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
+import bisq.core.app.TorSetup;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.network.DefaultPluggableTransports;
 import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.UserThread;
-import bisq.common.storage.FileUtil;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
-
-import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
@@ -65,9 +62,6 @@ import javafx.util.StringConverter;
 
 import java.net.URI;
 
-import java.nio.file.Paths;
-
-import java.io.File;
 import java.io.IOException;
 
 import java.util.Arrays;
@@ -94,8 +88,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private final Preferences preferences;
-    private NetworkNode networkNode;
-    private final File torDir;
+    private final NetworkNode networkNode;
+    private final TorSetup torSetup;
     private Label enterBridgeLabel;
     private ComboBox<Transport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
@@ -106,10 +100,10 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     @Inject
     public TorNetworkSettingsWindow(Preferences preferences,
                                     NetworkNode networkNode,
-                                    @Named(NetworkOptionKeys.TOR_DIR) File torDir) {
+                                    TorSetup torSetup) {
         this.preferences = preferences;
         this.networkNode = networkNode;
-        this.torDir = torDir;
+        this.torSetup = torSetup;
 
         type = Type.Attention;
 
@@ -342,15 +336,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         networkNode.shutDown(() -> {
             // We give it a bit extra time to be sure that OS locks are removed
             UserThread.runAfter(() -> {
-                final File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
-                try {
-                    FileUtil.deleteDirectory(torDir, hiddenservice, true);
-                    resultHandler.run();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    log.error(e.toString());
-                    new Popup<>().error(e.toString()).show();
-                }
+                torSetup.cleanupTorFiles(resultHandler, errorMessage -> new Popup<>().error(errorMessage).show());
             }, 3);
         });
     }

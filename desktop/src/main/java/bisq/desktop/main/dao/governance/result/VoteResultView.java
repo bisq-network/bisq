@@ -25,6 +25,7 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -32,11 +33,13 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -56,6 +59,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
@@ -146,7 +150,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         createCyclesTable();
     }
 
-
     @Override
     protected void activate() {
         super.activate();
@@ -203,6 +206,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (item != null) {
             resultsOfCycle = item.getResultsOfCycle();
 
+            maybeShowVoteResultErrors(item.getResultsOfCycle().getCycle());
             createProposalsTable();
 
             selectedProposalSubscription = EasyBind.subscribe(proposalsTableView.getSelectionModel().selectedItemProperty(),
@@ -210,22 +214,48 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         }
     }
 
+    private void maybeShowVoteResultErrors(Cycle cycle) {
+        List<VoteResultException> exceptions = voteResultService.getVoteResultExceptions().stream()
+                .filter(voteResultException -> cycle.getHeightOfFirstBlock() == voteResultException.getHeightOfFirstBlockInCycle())
+                .collect(Collectors.toList());
+        if (!exceptions.isEmpty()) {
+            TextArea textArea = FormBuilder.addTextArea(root, ++gridRow, "");
+            GridPane.setMargin(textArea, new Insets(Layout.GROUP_DISTANCE, -15, 0, -10));
+            textArea.setPrefHeight(100);
+
+            StringBuilder sb = new StringBuilder(Res.getWithCol("dao.results.exceptions") + "\n");
+            exceptions.forEach(exception -> {
+                if (exception.getCause() != null)
+                    sb.append(exception.getCause().getMessage());
+                else
+                    sb.append(exception.getMessage());
+                sb.append("\n");
+            });
+
+            textArea.setText(sb.toString());
+        }
+    }
+
     private void onSelectProposalResultListItem(ProposalListItem item) {
         selectedProposalListItem = item;
 
-        GUIUtil.removeChildrenFromGridPaneRows(root, 3, gridRow);
+        GUIUtil.removeChildrenFromGridPaneRows(root, 4, gridRow);
         gridRow = 2;
 
 
         if (selectedProposalListItem != null) {
-
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
             Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
                     .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
                     .findAny();
             Ballot ballot = optionalBallot.orElse(null);
-            createProposalDisplay(evaluatedProposal, ballot);
+            ProposalDisplay proposalDisplay = createProposalDisplay(evaluatedProposal, ballot);
             createVotesTable();
+
+            // Check if my vote is included in result
+            boolean isVoteIncludedInResult = voteListItemList.stream()
+                    .anyMatch(voteListItem -> bsqWalletService.getTransaction(voteListItem.getBlindVoteTxId()) != null);
+            proposalDisplay.setIsVoteIncludedInResult(isVoteIncludedInResult);
         }
     }
 
@@ -350,7 +380,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     // Create views: proposalDisplay
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
+    private ProposalDisplay createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
         ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter, daoFacade, null);
 
@@ -373,6 +403,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         long merit = meritAndStakeTuple.first;
         long stake = meritAndStakeTuple.second;
         proposalDisplay.applyBallotAndVoteWeight(ballot, merit, stake);
+        return proposalDisplay;
     }
 
 

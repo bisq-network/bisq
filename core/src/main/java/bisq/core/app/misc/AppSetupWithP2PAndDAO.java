@@ -17,6 +17,7 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.app.TorSetup;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -57,13 +58,15 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyProposalListService myProposalListService,
                                  MyReputationListService myReputationListService,
                                  MyProofOfBurnListService myProofOfBurnListService,
+                                 TorSetup torSetup,
                                  @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         super(encryptionService,
                 keyRing,
                 p2PService,
                 tradeStatisticsManager,
                 accountAgeWitnessService,
-                filterManager);
+                filterManager,
+                torSetup);
 
         this.daoSetup = daoSetup;
 
