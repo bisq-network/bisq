@@ -170,6 +170,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private void maybeCalculateVoteResult(int chainHeight) {
         if (isInVoteResultPhase(chainHeight)) {
+            log.info("CalculateVoteResult at chainHeight={}", chainHeight);
             Cycle currentCycle = periodService.getCurrentCycle();
             long startTs = System.currentTimeMillis();
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);

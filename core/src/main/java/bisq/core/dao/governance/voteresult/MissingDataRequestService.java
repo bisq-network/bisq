@@ -78,9 +78,6 @@ public class MissingDataRequestService implements DaoSetupService {
     }
 
     public void reRepublishAllGovernanceData() {
-        log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
-                "blindVotePayloads to the P2P network.");
-
         ObservableList<ProposalPayload> proposalPayloads = proposalService.getProposalPayloads();
         proposalPayloads.forEach(proposalPayload -> {
             // We want a random delay between 0.1 and 30 sec. depending on the number of items

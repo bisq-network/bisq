@@ -110,6 +110,9 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
+    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
+    ARBITRATOR_FEE("0", ParamType.BTC),
+
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
     // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
@@ -167,13 +170,15 @@ public enum Param {
     private final String defaultValue;
     @Getter
     private final ParamType paramType;
+    // If 0 we ignore check for max decrease
     @Getter
     private final double maxDecrease;
+    // If 0 we ignore check for max increase
     @Getter
     private final double maxIncrease;
 
     Param(String defaultValue, ParamType paramType) {
-        this(defaultValue, paramType, 1, 1);
+        this(defaultValue, paramType, 0, 0);
     }
 
     /**
