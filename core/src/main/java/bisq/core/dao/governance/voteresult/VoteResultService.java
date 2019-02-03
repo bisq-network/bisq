@@ -33,6 +33,7 @@ import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Ballot;
@@ -142,7 +143,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void start() {
-        maybeCalculateVoteResult(daoStateService.getChainHeight());
     }
 
 
@@ -152,12 +152,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
-        // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
-        maybeCalculateVoteResult(blockHeight);
     }
 
     @Override
     public void onParseBlockChainComplete() {
+    }
+
+    @Override
+    public void onParseTxsComplete(Block block) {
+        maybeCalculateVoteResult(block.getHeight());
     }
 
 
@@ -424,7 +427,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
                 return true;
             } else {
-                log.info("We did not find a permutation of our blindVote list which matches the majority view. " +
+                log.warn("We did not find a permutation of our blindVote list which matches the majority view. " +
                         "We will request the blindVote data from the peers.");
                 // This is async operation. We will restart the whole verification process once we received the data.
                 // TODO implement
