@@ -430,8 +430,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 log.warn("We did not find a permutation of our blindVote list which matches the majority view. " +
                         "We will request the blindVote data from the peers.");
                 // This is async operation. We will restart the whole verification process once we received the data.
-                // TODO implement
-                requestBlindVoteListFromNetwork(majorityVoteListHash);
+                missingDataRequestService.sendRepublishRequest();
             }
         }
         return matches;
@@ -459,10 +458,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list) {
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(list);
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
-    }
-
-    private void requestBlindVoteListFromNetwork(byte[] majorityVoteListHash) {
-        //TODO impl
     }
 
     private Set<EvaluatedProposal> getEvaluatedProposals(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet, int chainHeight) {
