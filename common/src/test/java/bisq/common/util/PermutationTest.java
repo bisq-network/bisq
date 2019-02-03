@@ -65,7 +65,7 @@ public class PermutationTest {
         assertTrue(expected.toString().equals(result.toString()));
 
         // remove all
-        indicesToRemove = indicesToRemove = Arrays.asList(0, 1, 2, 3, 4, 5);
+        indicesToRemove = Arrays.asList(0, 1, 2, 3, 4, 5);
         expected = new ArrayList<>();
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
