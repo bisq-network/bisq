@@ -71,7 +71,7 @@ public class PermutationTest {
         assertTrue(expected.toString().equals(result.toString()));
 
         // wrong sorting of indices
-        indicesToRemove = indicesToRemove = Arrays.asList(4, 0, 1);
+        indicesToRemove = Arrays.asList(4, 0, 1);
         expected = expected = new ArrayList<>(Arrays.asList(blindVote2, blindVote3, blindVote5));
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
