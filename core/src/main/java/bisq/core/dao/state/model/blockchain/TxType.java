@@ -44,7 +44,8 @@ public enum TxType implements ImmutableDaoStateModel {
     LOCKUP(true, false),
     UNLOCK(true, false),
     ASSET_LISTING_FEE(true, true),
-    PROOF_OF_BURN(true, true);
+    PROOF_OF_BURN(true, true),
+    IRREGULAR(false, false); // Tx is not rule conform but we don't want to burn the BSQ. hasOpReturn and requiresFee are ignored
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
