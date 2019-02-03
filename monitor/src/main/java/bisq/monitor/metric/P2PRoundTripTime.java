@@ -162,7 +162,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
             gate.unlock();
         } else {
             log.warn("Got a message of type <{}>, expected <Pong>", networkEnvelope.getClass().getSimpleName());
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
         }
     }
 

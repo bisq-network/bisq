@@ -247,7 +247,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         } else {
             log.warn("Got a message of type <{}>, expected <GetDataResponse>",
                     networkEnvelope.getClass().getSimpleName());
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
         }
     }
 
