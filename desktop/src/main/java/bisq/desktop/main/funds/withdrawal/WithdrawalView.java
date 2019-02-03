@@ -38,8 +38,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.CoinUtil;
@@ -156,8 +154,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Inject
     private WithdrawalView(BtcWalletService walletService,
                            TradeManager tradeManager,
-                           ClosedTradableManager closedTradableManager,
-                           FailedTradesManager failedTradesManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
                            BSFormatter formatter,
