@@ -233,7 +233,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // We collect all valid blind vote items we received via the p2p network.
             // It might be that different nodes have a different collection of those items.
             // To ensure we get a consensus of the data for later calculating the result we will put a hash of each
-            // voters  blind vote collection into the opReturn data and check for a majority at the vote result phase.
+            // voter's blind vote collection into the opReturn data and check for a majority in the vote result phase.
             // The voters "vote" with their stake at the reveal tx for their version of the blind vote collection.
 
             // If we are not in the right phase we just add an empty hash (still need to have the hash as otherwise we
