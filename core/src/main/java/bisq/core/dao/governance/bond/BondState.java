@@ -29,5 +29,12 @@ public enum BondState {
     UNLOCK_TX_CONFIRMED,
     UNLOCKING,              // Lock time still not expired
     UNLOCKED,               // Fully unlocked
-    CONFISCATED             // Bond got confiscated by DAO voting
+    CONFISCATED;            // Bond got confiscated by DAO voting
+
+    public boolean isActive() {
+        return this == BondState.LOCKUP_TX_CONFIRMED ||
+                this == BondState.UNLOCK_TX_PENDING ||
+                this == BondState.UNLOCK_TX_CONFIRMED ||
+                this == BondState.UNLOCKING;
+    }
 }

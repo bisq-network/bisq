@@ -188,7 +188,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     }
 
     public List<Bond> getActiveBonds() {
-        return bonds.stream().filter(bond -> bond.isActive()).collect(Collectors.toList());
+        return bonds.stream().filter(Bond::isActive).collect(Collectors.toList());
     }
 
 
