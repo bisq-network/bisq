@@ -284,8 +284,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         });
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> {
             log.warn(voteResultException.toString());
-
-            //new Popup<>().error(voteResultException.toString()).show();
         });
 
         bisqSetup.setChainFileLockedExceptionHandler(msg -> {
