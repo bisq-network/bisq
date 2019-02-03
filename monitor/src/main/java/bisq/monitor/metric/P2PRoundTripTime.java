@@ -130,6 +130,10 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
                     // wait for the gate to open again
                     gate.await();
+
+                    // remove the message listener so we do not get messages we are not interested in anymore
+                    // (especially relevant when gate.await() times out)
+                    future.get().removeMessageListener(this);
                 }
 
                 // report
@@ -153,7 +157,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                                 "We drop that message. nonce={} / requestNonce={}",
                         nonce, pong.getRequestNonce());
             }
-            connection.removeMessageListener(this);
 
             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
             // open the gate
