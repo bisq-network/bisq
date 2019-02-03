@@ -29,16 +29,6 @@ public class GrinTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("0.0.0.0:8080");
-        assertValidAddress("173.194.34.134:8080");
-        assertValidAddress("127.0.0.1:8080");
-        assertValidAddress("192.168.0.1:8080");
-        assertValidAddress("18.101.25.153:8080");
-        assertValidAddress("173.194.34.134:1");
-        assertValidAddress("173.194.34.134:11");
-        assertValidAddress("173.194.34.134:1111");
-        assertValidAddress("173.194.34.134:65535");
-
         // grinbox
         assertValidAddress("gVvk7rLBg3r3qoWYL3VsREnBbooT7nynxx5HtDvUWCJUaNCnddvY");
         assertValidAddress("grinbox://gVtWzX5NTLCBkyNV19QVdnLXue13heAVRD36sfkGD6xpqy7k7e4a");
@@ -50,6 +40,18 @@ public class GrinTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
+        // valid IP:port addresses but not supported in Bisq
+        assertInvalidAddress("0.0.0.0:8080");
+        assertInvalidAddress("173.194.34.134:8080");
+        assertInvalidAddress("127.0.0.1:8080");
+        assertInvalidAddress("192.168.0.1:8080");
+        assertInvalidAddress("18.101.25.153:8080");
+        assertInvalidAddress("173.194.34.134:1");
+        assertInvalidAddress("173.194.34.134:11");
+        assertInvalidAddress("173.194.34.134:1111");
+        assertInvalidAddress("173.194.34.134:65535");
+
+        // invalid IP:port addresses
         assertInvalidAddress("google.com");
         assertInvalidAddress("100.100.100.100");
         assertInvalidAddress(".100.100.100.100:1222");
@@ -71,6 +73,5 @@ public class GrinTest extends AbstractAssetTest {
         assertInvalidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com:1220a");
         assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsAsomerelay.com");
         assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com1220");
-
     }
 }
