@@ -216,7 +216,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void maybeShowVoteResultErrors(Cycle cycle) {
         List<VoteResultException> exceptions = voteResultService.getVoteResultExceptions().stream()
-                .filter(voteResultException -> cycle.getHeightOfFirstBlock() == voteResultException.getHeightOfFirstBlock())
+                .filter(voteResultException -> cycle.getHeightOfFirstBlock() == voteResultException.getHeightOfFirstBlockInCycle())
                 .collect(Collectors.toList());
         if (!exceptions.isEmpty()) {
             TextArea textArea = FormBuilder.addTextArea(root, ++gridRow, "");
