@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,6 +55,9 @@ import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+
+import java.net.MalformedURLException;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -170,6 +174,26 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         // - assemble histograms
         bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report
                 .put(OnionParser.prettyPrint(host) + "." + type, String.valueOf(counter.value()))));
+
+        // - assemble diffs
+        Map<String, Integer> messagesPerHost = new HashMap<>();
+        bucketsPerHost.forEach((host, buckets) -> messagesPerHost.put(OnionParser.prettyPrint(host),
+                        buckets.values().stream().mapToInt(Counter::value).sum()));
+        Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
+        Integer referenceValue = messagesPerHost.get(referenceHost.get());
+
+        messagesPerHost.forEach(
+            (host, numberOfMessages) -> {
+                    try {
+                            report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages",
+                                            String.valueOf(numberOfMessages - referenceValue));
+                            report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost.get());
+                            report.put(OnionParser.prettyPrint(host) + ".referenceValue", String.valueOf(referenceValue));
+                        } catch (MalformedURLException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                });
 
         // when our hash cache exceeds a hard limit, we clear the cache and start anew
         if (hashes.size() > 150000)
