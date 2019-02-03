@@ -68,7 +68,7 @@ public class VoteResultConsensus {
     // hex encoded hashOfProposalList for comparision
     @Nullable
     public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList)
-            throws VoteResultException.ValidationException {
+            throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         try {
             checkArgument(!hashWithStakeList.isEmpty(), "hashWithStakeList must not be empty");
         } catch (Throwable t) {
