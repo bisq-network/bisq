@@ -152,8 +152,10 @@ public class TxParser {
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
 
-        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
-        tempTx.setTxType(txType);
+        if (tempTx.getTxType() != TxType.IRREGULAR) {
+            TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
+            tempTx.setTxType(txType);
+        }
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
