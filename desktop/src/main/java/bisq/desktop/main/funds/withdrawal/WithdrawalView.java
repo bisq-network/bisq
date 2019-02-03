@@ -136,7 +136,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
-    private Set<String> fromAddresses;
+    private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
     private Coin amountAsCoin = Coin.ZERO;
     private Coin sendersAmount = Coin.ZERO;

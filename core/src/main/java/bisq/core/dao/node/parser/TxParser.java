@@ -248,10 +248,15 @@ public class TxParser {
                 log.warn("It can be that we have a opReturn which is correct from its structure but the whole tx " +
                         "in not valid as the issuanceCandidate in not there. " +
                         "As the BSQ fee is set it must be either a buggy tx or an manually crafted invalid tx.");
-                tempTx.setTxType(TxType.INVALID);
+                // Even though the request part if invalid the BSQ transfer and change output should still be valid
+                // as long as the BSQ change <= BSQ inputs.
+                tempTx.setTxType(TxType.UNDEFINED_TX_TYPE);
             }
         } else {
-            tempTx.setTxType(TxType.INVALID);
+            // This could be a valid compensation request that failed to be included in a block during the
+            // correct phase due to no fault of the user. Better not burn the change as long as the BSQ inputs
+            // cover the value of the outputs.
+            tempTx.setTxType(TxType.UNDEFINED_TX_TYPE);
             optionalIssuanceCandidate.ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
@@ -382,7 +387,8 @@ public class TxParser {
                 boolean hasCorrectNumOutputs = tempTx.getTempTxOutputs().size() >= 3;
                 if (!hasCorrectNumOutputs) {
                     log.warn("Compensation/reimbursement request tx need to have at least 3 outputs");
-                    return TxType.INVALID;
+                    // This is not an issuance request but it should still not burn the BSQ change
+                    return TxType.UNDEFINED_TX_TYPE;
                 }
 
                 TempTxOutput issuanceTxOutput = tempTx.getTempTxOutputs().get(1);
@@ -390,7 +396,8 @@ public class TxParser {
                 if (!hasIssuanceOutput) {
                     log.warn("Compensation/reimbursement request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
                             "TxOutputType={}", issuanceTxOutput.getTxOutputType());
-                    return TxType.INVALID;
+                    // This is not an issuance request but it should still not burn the BSQ change
+                    return TxType.UNDEFINED_TX_TYPE;
                 }
 
                 return opReturnType == OpReturnType.COMPENSATION_REQUEST ?
@@ -408,7 +415,7 @@ public class TxParser {
                 return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
-                return TxType.INVALID;
+                return TxType.UNDEFINED_TX_TYPE;
         }
     }
 }
