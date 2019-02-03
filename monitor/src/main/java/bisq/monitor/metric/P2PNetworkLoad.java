@@ -18,8 +18,11 @@
 package bisq.monitor.metric;
 
 import java.io.File;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +75,28 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private final ThreadGate hsReady = new ThreadGate();
     private Map<String, Counter> buckets = new ConcurrentHashMap<>();
     private KeepAliveManager keepAliveManager;
+
+    /**
+     * Buffers the last X message we received. New messages will only be logged in case
+     * the message isn't already in the history. Note that the oldest message hashes are
+     * dropped to record newer hashes.
+     */
+    private Map<Integer, Object> history = Collections.synchronizedMap(new FixedSizeHistoryTracker());
+
+    /**
+     * History implementation using a {@link LinkedHashMap} and its
+     * {@link LinkedHashMap#removeEldestEntry(Map.Entry)} option.
+     */
+    private class FixedSizeHistoryTracker extends LinkedHashMap {
+        FixedSizeHistoryTracker() {
+            super(100, 10, true);
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > 100;
+        }
+    }
 
     /**
      * Efficient way to count message occurrences.
@@ -176,7 +201,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // TODO check if we already have this very message
         if (networkEnvelope instanceof BroadcastMessage) {
             try {
-                buckets.get(networkEnvelope.getClass().getSimpleName()).increment();
+                if(history.get(networkEnvelope.hashCode()) == null) {
+                    history.put(networkEnvelope.hashCode(), null);
+                    buckets.get(networkEnvelope.getClass().getSimpleName()).increment();
+                }
             } catch (NullPointerException e) {
                 // use exception handling because we hardly ever need to add a fresh bucket
                 buckets.put(networkEnvelope.getClass().getSimpleName(), new Counter());
