@@ -433,13 +433,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
-                TableCell<BsqTxListItem, BsqTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                     BsqTxListItem> column) {
-                return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -464,13 +463,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
-                TableCell<BsqTxListItem, BsqTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                     BsqTxListItem> column) {
-                return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
