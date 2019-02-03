@@ -1,35 +1,83 @@
-# Bisq DAO setup guide
+# Bisq DAO development setup guide
+
+This guide describes how to setup a Bisq DAO development environment running against a local Bitcoin regtest network.
+It assumes you have already configured your development environment following the [dev setup guide](dev-setup.md).
 
 ## Configure Bitcoin Core
 
-If you want to run Bisq with DAO mode enabled you need to configure the `bitcoin.conf` file inside the Bitcoin Core data directory as well adding the `blocknotify` file.
+1. Create/configure the [bitcoin.conf](https://en.bitcoin.it/wiki/Running_Bitcoin#Bitcoin.conf_Configuration_File) file inside the Bitcoin Core [data directory](https://en.bitcoin.it/wiki/Data_directory#Default_Location) as follows.
 
-bitcoin.conf:
+_Please note that `txindex` triggers a resync of the entire blockchain and be aware if you set that on mainnet it will take a while. Also, extra settings for more security are recommended if you run this in mainnet mode._
 
-    regtest=1
+Linux:
+```
+regtest=1
 
-    # The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
-    # The default rpcPort for testnet is: 18332
-    # For mainnet: 8332
-    rpcport=18443
+# The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
+# The default rpcPort for testnet is: 18332
+# For mainnet: 8332
+rpcport=18443
 
-    server=1
-    txindex=1
-    rpcuser=YOUR_USER_NAME
-    rpcpassword=YOUR_PW
-    blocknotify=bash [PATH TO DATA DIR]/blocknotify %s
+server=1
+txindex=1
+rpcuser=YOUR_USER_NAME
+rpcpassword=YOUR_PW
+blocknotify=bash ~/.bitcoin/blocknotify %s
+```
 
-_Please note that `txindex` triggers a resync of the entire blockchain (be aware if you set that on mainnet as that it will take a while). Also take care if you use that setting for mainnet. Extra settings for more security are recommended in mainnet mode._
+MacOS:
+```
+regtest=1
 
-The `blocknotify` file need to be added to the Bitcoin Core data directory as well:
+# The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
+# The default rpcPort for testnet is: 18332
+# For mainnet: 8332
+rpcport=18443
 
-    #!/bin/bash
-    echo $1 | nc -w 1 127.0.0.1 5120
-    echo $1 | nc -w 1 127.0.0.1 5121
-    echo $1 | nc -w 1 127.0.0.1 5122
-    echo $1 | nc -w 1 127.0.0.1 5123
+server=1
+txindex=1
+rpcuser=YOUR_USER_NAME
+rpcpassword=YOUR_PW
+blocknotify=bash ~/Library/Application\ Support/Bitcoin/blocknotify %s
+```
 
-It defines the ports where a new block event gets forwarded. Bisq will listen on that port and each Bisq node need to use a different port. You can add or remove ports from the list inside the file if needed.
+Windows:
+```
+regtest=1
+
+# The default rpcPort for regtest from Bitcoin Core 0.16 and higher is: 18443
+# The default rpcPort for testnet is: 18332
+# For mainnet: 8332
+rpcport=18443
+
+server=1
+txindex=1
+rpcuser=YOUR_USER_NAME
+rpcpassword=YOUR_PW
+blocknotify="%AppData%\Bitcoin\blocknotify.bat" %s
+```
+
+2. Create a `blocknotify` file (`blocknotify.bat` on Windows) inside the Bitcoin Core [data directory](https://en.bitcoin.it/wiki/Data_directory#Default_Location) with the following content.
+This defines the ports where a new block event gets forwarded. Bisq will listen on that port and each Bisq node needs to use a different port. You can add or remove ports as needed.
+
+_On Windows, you will need to download and install [ncat](https://nmap.org/ncat/) to be able to use the ncat command._
+
+Linux/MacOS:
+```bash
+#!/bin/bash
+echo $1 | nc -w 1 127.0.0.1 5120
+echo $1 | nc -w 1 127.0.0.1 5121
+echo $1 | nc -w 1 127.0.0.1 5122
+echo $1 | nc -w 1 127.0.0.1 5123
+```
+
+Windows:
+```batch
+echo %1 | ncat -w 1 127.0.0.1 5120
+echo %1 | ncat -w 1 127.0.0.1 5121
+echo %1 | ncat -w 1 127.0.0.1 5122
+echo %1 | ncat -w 1 127.0.0.1 5123
+```
 
 
 ## Program arguments for DAO mode
@@ -41,12 +89,12 @@ It defines the ports where a new block event gets forwarded. Bisq will listen on
  - `--rpcUser`: RPC user as defined in bitcoin.conf
  - `--rpcPassword`: RPC pw as defined in bitcoin.conf
  - `--rpcPort`: RPC port. For regtest 18443
- - `--rpcBlockNotificationPort`: One of the ports defined in the `blocknotify` file inside the Bitcoin data directory (see: DAO setup for Bitcoin Core).
+ - `--rpcBlockNotificationPort`: One of the ports defined in the `blocknotify` file.
 
 
-## DAO mode
+## Run the application in DAO mode
 
-If you want to run any instance in DAO mode use those program arguments:
+If you want to run any instance in DAO mode, use the following program arguments.
 
 Full node mode:
 
@@ -70,7 +118,7 @@ _You need to adjust the path to the `blocknotify` file inside of `bitcoin.conf` 
 
 ### Setup a custom DAO genesis transaction
 
-To create your own genesis transaction follow those steps:
+To create your own genesis transaction follow these steps:
 
  - Send 2.50010000 BTC from Bitcoin Core to another address inside Bitcoin Core (label it with `Genesis funding address`).
  - Go to the send screen and open the coin control feature. Select the labeled transaction output of the address labeled with `Genesis funding address`. Use that as the only input source for the genesis tx.
@@ -80,4 +128,3 @@ To create your own genesis transaction follow those steps:
  - Set the miner fee so that it is exactly the remaining 0.00010000 BTC. That might be the tricky part as miner fee selection is not very convenient in Bitcoin Core. In worst case if you cannot get the right miner fee you can add the difference to one of the receivers (e.g. send 1.0000234 BTC instead of 1 BTC).
 
 _Note: It is important that there is exactly 2.5 BTC spent entirely as described, otherwise the genesis tx is invalid._
-

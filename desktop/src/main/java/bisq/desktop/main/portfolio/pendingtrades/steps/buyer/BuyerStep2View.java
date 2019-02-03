@@ -330,6 +330,8 @@ public class BuyerStep2View extends TradeStepView {
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
+
+        GridPane.setColumnSpan(tuple3.forth, 2);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;

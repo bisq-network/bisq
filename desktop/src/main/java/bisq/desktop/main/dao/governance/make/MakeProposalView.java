@@ -38,7 +38,6 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -89,6 +88,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
+    @Nullable
     private ProposalDisplay proposalDisplay;
     private Button makeProposalButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
@@ -125,7 +125,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         gridRow = phasesView.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.<ProposalType>addComboBox(root, gridRow,
+        proposalTypeComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setMaxWidth(300);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
@@ -188,10 +188,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     @Override
-    public void onParseTxsComplete(Block block) {
-    }
-
-    @Override
     public void onParseBlockChainComplete() {
     }
 
@@ -219,9 +215,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 doPublishMyProposal(proposal, transaction);
             }
         } catch (InsufficientMoneyException e) {
-            BSFormatter formatter = e instanceof InsufficientBsqException ? bsqFormatter : btcFormatter;
-            new Popup<>().warning(Res.get("dao.proposal.create.missingFunds",
-                    formatter.formatCoinWithCode(e.missing))).show();
+            if (e instanceof InsufficientBsqException) {
+                new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFunds",
+                        bsqFormatter.formatCoinWithCode(e.missing))).show();
+            } else {
+                new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
+                        btcFormatter.formatCoinWithCode(e.missing))).show();
+            }
+
         } catch (ValidationException e) {
             String message;
             if (e.getMinRequestAmount() != null) {
@@ -242,30 +243,38 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         daoFacade.publishMyProposal(proposal,
                 transaction,
                 () -> {
-                    proposalDisplay.clearForm();
-                    proposalTypeComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
                 },
                 errorMessage -> new Popup<>().warning(errorMessage).show());
+
+        // We reset UI without waiting for callback as callback might be slow and then the user could create multiple
+        // proposals.
+        if (proposalDisplay != null)
+            proposalDisplay.clearForm();
+        proposalTypeComboBox.getSelectionModel().clearSelection();
     }
 
     @Nullable
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
             throws InsufficientMoneyException, ValidationException, TxException {
 
+        checkNotNull(proposalDisplay, "proposalDisplay must not be null");
+
+        String link = proposalDisplay.linkInputTextField.getText();
+        String name = proposalDisplay.nameTextField.getText();
         switch (type) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
-                return daoFacade.getCompensationProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
+                return daoFacade.getCompensationProposalWithTransaction(name,
+                        link,
                         bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case REIMBURSEMENT_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
-                return daoFacade.getReimbursementProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
+                return daoFacade.getReimbursementProposalWithTransaction(name,
+                        link,
                         bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
@@ -285,8 +294,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                     log.info("Change param: paramValue={}, paramValueAsString={}", paramValue, paramValueAsString);
 
                     changeParamValidator.validateParamValue(selectedParam, paramValue);
-                    return daoFacade.getParamProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                            proposalDisplay.linkInputTextField.getText(),
+                    return daoFacade.getParamProposalWithTransaction(name,
+                            link,
                             selectedParam,
                             paramValue);
                 } catch (Throwable e) {
@@ -296,27 +305,22 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case BONDED_ROLE:
                 checkNotNull(proposalDisplay.bondedRoleTypeComboBox,
                         "proposalDisplay.bondedRoleTypeComboBox must not be null");
-                Role role = new Role(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
+                Role role = new Role(name,
+                        link,
                         proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem());
                 return daoFacade.getBondedRoleProposalWithTransaction(role);
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
                 Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
-                return daoFacade.getConfiscateBondProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
-                        bond.getLockupTxId());
+                return daoFacade.getConfiscateBondProposalWithTransaction(name, link, bond.getLockupTxId());
             case GENERIC:
-                return daoFacade.getGenericProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText());
+                return daoFacade.getGenericProposalWithTransaction(name, link);
             case REMOVE_ASSET:
                 checkNotNull(proposalDisplay.assetComboBox,
                         "proposalDisplay.assetComboBox must not be null");
                 Asset asset = proposalDisplay.assetComboBox.getSelectionModel().getSelectedItem();
-                return daoFacade.getRemoveAssetProposalWithTransaction(proposalDisplay.nameTextField.getText(),
-                        proposalDisplay.linkInputTextField.getText(),
-                        asset);
+                return daoFacade.getRemoveAssetProposalWithTransaction(name, link, asset);
             default:
                 final String msg = "Undefined ProposalType " + selectedProposalType;
                 log.error(msg);
@@ -359,21 +363,26 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void updateButtonState() {
         AtomicBoolean inputsValid = new AtomicBoolean(true);
-        proposalDisplay.getInputControls().stream()
-                .filter(Objects::nonNull).forEach(e -> {
-            if (e instanceof InputTextField) {
-                InputTextField inputTextField = (InputTextField) e;
-                inputsValid.set(inputsValid.get() &&
-                        inputTextField.getValidator() != null &&
-                        inputTextField.getValidator().validate(e.getText()).isValid);
-            }
-        });
-        proposalDisplay.getComboBoxes().stream()
-                .filter(Objects::nonNull).forEach(comboBox -> {
-            inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
-        });
+        if (proposalDisplay != null) {
+            proposalDisplay.getInputControls().stream()
+                    .filter(Objects::nonNull).forEach(e -> {
+                if (e instanceof InputTextField) {
+                    InputTextField inputTextField = (InputTextField) e;
+                    inputsValid.set(inputsValid.get() &&
+                            inputTextField.getValidator() != null &&
+                            inputTextField.getValidator().validate(e.getText()).isValid);
+                }
+            });
+            proposalDisplay.getComboBoxes().stream()
+                    .filter(Objects::nonNull).forEach(comboBox -> {
+                inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
+            });
+
+            InputTextField linkInputTextField = proposalDisplay.linkInputTextField;
+            inputsValid.set(inputsValid.get() &&
+                    linkInputTextField.getValidator().validate(linkInputTextField.getText()).isValid);
+        }
 
         makeProposalButton.setDisable(!inputsValid.get());
     }
 }
-

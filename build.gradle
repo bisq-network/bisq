@@ -318,6 +318,13 @@ configure(project(':desktop')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
+
+    test {
+        systemProperty 'jdk.attach.allowAttachSelf', true
+
+        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
+        jvmArgs "-javaagent:$jmockit"
+    }
 }
 
 
@@ -332,6 +339,8 @@ configure(project(':monitor')) {
     }
 
     dependencies {
+        compile project(':p2p')
+        compile project(':core')
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"

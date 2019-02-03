@@ -39,7 +39,6 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.util.Transitions;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -184,27 +183,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
 
-        final Region daoButtonSpacer = getNavigationSpacer();
-
-        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
-            daoButton.setVisible(false);
-            daoButton.setManaged(false);
-            daoButtonSpacer.setVisible(false);
-            daoButtonSpacer.setManaged(false);
-        }
-
         root.sceneProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 newValue.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
-                    // TODO can be removed once DAO is released
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.D, keyEvent)) {
-                        if (BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
-                            daoButton.setVisible(true);
-                            daoButton.setManaged(true);
-                            daoButtonSpacer.setVisible(true);
-                            daoButtonSpacer.setManaged(true);
-                        }
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                         marketButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
                         buyButton.fire();
@@ -264,7 +246,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButton, daoButtonSpacer, daoButton);
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 

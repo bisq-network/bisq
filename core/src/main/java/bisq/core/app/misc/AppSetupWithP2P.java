@@ -18,6 +18,7 @@
 package bisq.core.app.misc;
 
 import bisq.core.app.SetupUtils;
+import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -46,6 +47,7 @@ public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
     protected final AccountAgeWitnessService accountAgeWitnessService;
     protected final FilterManager filterManager;
+    private final TorSetup torSetup;
     protected BooleanProperty p2pNetWorkReady;
     protected final TradeStatisticsManager tradeStatisticsManager;
     protected ArrayList<PersistedDataHost> persistedDataHosts;
@@ -56,21 +58,24 @@ public class AppSetupWithP2P extends AppSetup {
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
-                           FilterManager filterManager) {
+                           FilterManager filterManager,
+                           TorSetup torSetup) {
         super(encryptionService, keyRing);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.filterManager = filterManager;
+        this.torSetup = torSetup;
         this.persistedDataHosts = new ArrayList<>();
     }
 
     @Override
     public void initPersistedDataHosts() {
+        torSetup.cleanupTorFiles();
         persistedDataHosts.add(p2PService);
 
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-        persistedDataHosts.stream().forEach(e -> {
+        persistedDataHosts.forEach(e -> {
             try {
                 log.info("call readPersisted at " + e.getClass().getSimpleName());
                 e.readPersisted();

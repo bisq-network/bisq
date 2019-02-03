@@ -173,7 +173,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
                 if (!DevEnv.isDevMode()) {
                     GUIUtil.showBsqFeeInfoPopup(amount, miningFee, txSize, bsqFormatter, btcFormatter,
-                            Res.get("dao.proofOfBurn.amount"), () -> doPublishFeeTx(transaction, preImageAsString));
+                            Res.get("dao.proofOfBurn.header"), () -> doPublishFeeTx(transaction, preImageAsString));
                 } else {
                     doPublishFeeTx(transaction, preImageAsString);
                 }

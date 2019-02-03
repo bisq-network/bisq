@@ -17,6 +17,9 @@
 
 package bisq.monitor;
 
+import bisq.monitor.metric.P2PNetworkLoad;
+import bisq.monitor.metric.P2PNetworkMessageSnapshot;
+import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
@@ -48,6 +51,7 @@ import sun.misc.Signal;
 @Slf4j
 public class Monitor {
 
+    public static final File TOR_WORKING_DIR = new File("monitor/monitor-tor");
     private static String[] args = {};
 
     public static void main(String[] args) throws Throwable {
@@ -63,11 +67,12 @@ public class Monitor {
     /**
      * Starts up all configured Metrics.
      *
-     * @throws Exception
+     * @throws Throwable in case something goes wrong
      */
     private void start() throws Throwable {
+
         // start Tor
-        Tor.setDefault(new NativeTor(new File("monitor/monitor-tor"), null, null, false));
+        Tor.setDefault(new NativeTor(TOR_WORKING_DIR, null, null, false));
 
         // assemble Metrics
         // - create reporters
@@ -78,12 +83,13 @@ public class Monitor {
         metrics.add(new TorStartupTime(graphiteReporter));
         metrics.add(new TorRoundTripTime(graphiteReporter));
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
+        metrics.add(new P2PRoundTripTime(graphiteReporter));
+        metrics.add(new P2PNetworkLoad(graphiteReporter));
+        metrics.add(new P2PNetworkMessageSnapshot(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux
-        Signal.handle(new Signal("USR1"), signal -> {
-            reload();
-        });
+        Signal.handle(new Signal("USR1"), signal -> reload());
 
         // configure Metrics
         // - which also starts the metrics if appropriate
@@ -133,7 +139,6 @@ public class Monitor {
             for (Metric current : metrics)
                 current.configure(properties);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -142,7 +147,7 @@ public class Monitor {
      * Overloads a default set of properties with a file if given
      *
      * @return a set of properties
-     * @throws Exception
+     * @throws Exception in case something goes wrong
      */
     private Properties getProperties() throws Exception {
         Properties defaults = new Properties();

@@ -17,14 +17,14 @@
 
 package bisq.monitor.reporter;
 
+import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
+import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
 
-import java.net.URL;
-
 import java.io.IOException;
-
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,13 +55,26 @@ public class GraphiteReporter extends Reporter {
             String report = prefix + ("".equals(key) ? "" : (prefix.isEmpty() ? "" : ".") + key) + " " + value + " "
                     + timestamp + "\n";
 
-            URL url;
             try {
-                url = new URL(configuration.getProperty("serviceUrl"));
-                TorSocket socket = new TorSocket(url.getHost(), url.getPort());
+                NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));
+                Socket socket;
+                if (nodeAddress.getFullAddress().contains(".onion"))
+                    socket = new TorSocket(nodeAddress.getHostName(), nodeAddress.getPort());
+                else
+                    socket = new Socket(nodeAddress.getHostName(), nodeAddress.getPort());
 
                 socket.getOutputStream().write(report.getBytes());
                 socket.close();
+
+                try {
+                    // give Tor some slack
+                    // TODO maybe use the pickle protocol?
+                    // https://graphite.readthedocs.io/en/latest/feeding-carbon.html
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

@@ -36,7 +36,6 @@ import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
@@ -55,6 +54,7 @@ import javafx.collections.ObservableList;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Getter;
@@ -74,6 +74,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class VoteRevealService implements DaoStateListener, DaoSetupService {
+
+    public interface VoteRevealTxPublishedListener {
+        void onVoteRevealTxPublished(String txId);
+    }
+
     private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
     private final PeriodService periodService;
@@ -87,7 +92,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
     private final BsqNode bsqNode;
-
+    private final List<VoteRevealTxPublishedListener> voteRevealTxPublishedListeners = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -145,6 +150,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         return VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
     }
 
+    public void addVoteRevealTxPublishedListener(VoteRevealTxPublishedListener voteRevealTxPublishedListener) {
+        voteRevealTxPublishedListeners.add(voteRevealTxPublishedListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -155,10 +164,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         // TODO check if we should use onParseTxsComplete for calling maybeCalculateVoteResult
 
         maybeRevealVotes();
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
     }
 
     @Override
@@ -272,6 +277,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");
+                voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getHashAsString()));
             }
 
             @Override

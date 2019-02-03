@@ -21,8 +21,8 @@ import bisq.desktop.components.SeparatedPhaseBars;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
@@ -31,9 +31,6 @@ import javax.inject.Inject;
 import javafx.scene.layout.GridPane;
 
 import javafx.geometry.Insets;
-
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,13 +42,14 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @Slf4j
 public class PhasesView implements DaoStateListener {
     private final DaoFacade daoFacade;
+    private final PeriodService periodService;
     private SeparatedPhaseBars separatedPhaseBars;
     private List<SeparatedPhaseBars.SeparatedPhaseBarsItem> phaseBarsItems;
-    private Subscription phaseSubscription;
 
     @Inject
-    private PhasesView(DaoFacade daoFacade) {
+    private PhasesView(DaoFacade daoFacade, PeriodService periodService) {
         this.daoFacade = daoFacade;
+        this.periodService = periodService;
     }
 
     public int addGroup(GridPane gridPane, int gridRow) {
@@ -66,24 +64,11 @@ public class PhasesView implements DaoStateListener {
     public void activate() {
         daoFacade.addBsqStateListener(this);
 
-        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), phase -> {
-            phaseBarsItems.forEach(item -> {
-                if (item.getPhase() == phase) {
-                    item.setActive();
-                } else {
-                    item.setInActive();
-                }
-            });
-
-        });
-
         applyData(daoFacade.getChainHeight());
     }
 
     public void deactivate() {
         daoFacade.removeBsqStateListener(this);
-
-        phaseSubscription.unsubscribe();
     }
 
 
@@ -94,10 +79,19 @@ public class PhasesView implements DaoStateListener {
     @Override
     public void onNewBlockHeight(int height) {
         applyData(height);
-    }
 
-    @Override
-    public void onParseTxsComplete(Block block) {
+        phaseBarsItems.forEach(item -> {
+            DaoPhase.Phase phase = item.getPhase();
+            // Last block is considered for the break as we must not publish a tx there (would get confirmed in next
+            // block which would be a break). Only at result phase we don't have that situation ans show the last block
+            // as valid block in the phase.
+            if (periodService.isInPhaseButNotLastBlock(phase) ||
+                    (phase == DaoPhase.Phase.RESULT && periodService.isInPhase(height, phase))) {
+                item.setActive();
+            } else {
+                item.setInActive();
+            }
+        });
     }
 
     @Override
@@ -136,6 +130,7 @@ public class PhasesView implements DaoStateListener {
                 } else if (height > lastBlock) {
                     progress = 1;
                 }
+
                 item.getProgressProperty().set(progress);
             });
             separatedPhaseBars.updateWidth();

@@ -957,6 +957,24 @@ public class BtcWalletService extends WalletService {
                         tx.getFee().value - targetFee > 1000);
     }
 
+    public int getEstimatedFeeTxSize(List<Coin> outputValues, Coin txFee)
+            throws InsufficientMoneyException, AddressFormatException {
+        Transaction transaction = new Transaction(params);
+        Address dummyAddress = wallet.currentReceiveKey().toAddress(params);
+        outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
+
+        SendRequest sendRequest = SendRequest.forTx(transaction);
+        sendRequest.shuffleOutputs = false;
+        sendRequest.aesKey = aesKey;
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.changeAddress = dummyAddress;
+        wallet.completeTx(sendRequest);
+        return transaction.bitcoinSerialize().length;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Withdrawal Send

@@ -161,7 +161,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
             }
 
             @Override
-            public void onParseTxsComplete(Block block) {
+            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
                 update();
             }
 

@@ -79,7 +79,6 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
     public String toString() {
         return "PersistableList{" +
                 "\n     list=" + list +
-                ",\n     toProto=" + toProto +
                 "\n}";
     }
 }
