@@ -197,7 +197,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
                     } else {
-                        // We missed the vote reveal phase but publish a vote reveal tx to unlock he blind vote stake.
+                        // We missed the vote reveal phase but publish a vote reveal tx to unlock the blind vote stake.
                         boolean isAfterVoteRevealPhase = periodService.getPhaseForHeight(chainHeight).ordinal() > DaoPhase.Phase.VOTE_REVEAL.ordinal();
 
                         // We missed the reveal phase but we are in the correct cycle
