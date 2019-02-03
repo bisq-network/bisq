@@ -74,7 +74,6 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     // different data collections due the eventually consistency of the P2P network.
     @Getter
     private final ObservableList<ProposalPayload> proposalPayloads = FXCollections.observableArrayList();
-    private boolean parsingComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,17 +162,13 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         if (block.getHeight() == heightForRepublishing) {
             // We only republish if we are completed with parsing old blocks, otherwise we would republish old
             // proposals all the time
-            if (parsingComplete) {
-                publishToAppendOnlyDataStore();
-                fillListFromAppendOnlyDataStore();
-            }
+            publishToAppendOnlyDataStore();
+            fillListFromAppendOnlyDataStore();
         }
     }
 
     @Override
     public void onParseBlockChainComplete() {
-        parsingComplete = true;
-
         // Fill the lists with the data we have collected in out stores.
         fillListFromProtectedStore();
         fillListFromAppendOnlyDataStore();
@@ -181,9 +176,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public List<Proposal> getValidatedProposals() {
         return proposalPayloads.stream()
