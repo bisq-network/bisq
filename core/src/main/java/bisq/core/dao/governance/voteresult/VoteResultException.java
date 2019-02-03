@@ -28,17 +28,17 @@ import lombok.Value;
 
 public class VoteResultException extends Exception {
     @Getter
-    private final int heightOfFirstBlock;
+    private final int heightOfFirstBlockInCycle;
 
     VoteResultException(Cycle cycle, Throwable cause) {
         super(cause);
-        this.heightOfFirstBlock = cycle.getHeightOfFirstBlock();
+        this.heightOfFirstBlockInCycle = cycle.getHeightOfFirstBlock();
     }
 
     @Override
     public String toString() {
         return "VoteResultException{" +
-                "\n     heightOfFirstBlock=" + heightOfFirstBlock +
+                "\n     heightOfFirstBlockInCycle=" + heightOfFirstBlockInCycle +
                 "\n} " + super.toString();
     }
 
