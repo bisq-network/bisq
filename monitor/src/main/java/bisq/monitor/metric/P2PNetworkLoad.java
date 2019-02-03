@@ -202,7 +202,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         Set<String> keys = new HashSet<>(buckets.keySet());
 
         // - transfer values to report
-        keys.forEach(key -> report.put(key, String.valueOf(buckets.get(key).getAndReset())));
+        keys.forEach(key -> {
+            int value = buckets.get(key).getAndReset();
+            if(value != 0)
+                report.put(key, String.valueOf(value));
+        });
 
         // - report
         reporter.report(report, "bisq." + getName());
