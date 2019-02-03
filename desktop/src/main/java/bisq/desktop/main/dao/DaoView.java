@@ -93,7 +93,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             root.getTabs().addAll(bsqWalletTab, proposalsTab, bondingTab, burnBsqTab);
         }
 
-        navigationListener = (viewPath, data) -> {
+        navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (proposalsTab == null && viewPath.get(2).equals(BsqWalletView.class))
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);

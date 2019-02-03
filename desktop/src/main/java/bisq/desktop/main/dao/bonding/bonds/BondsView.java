@@ -118,6 +118,22 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setSelectedBond(Bond bond) {
+        // Set the selected bond if it's found in the tableView, which listens to sortedList.
+        // If this is called before the sortedList has been populated the selected bond is stored and
+        // we try to apply again after the next update.
+        tableView.getItems().stream()
+                .filter(item -> item.getBond() == bond)
+                .findFirst()
+                .ifPresentOrElse(item -> tableView.getSelectionModel().select(item),
+                        () -> this.selectedBond = bond);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -302,16 +318,5 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                     }
                 });
         tableView.getColumns().add(column);
-    }
-
-    public void setSelectedBond(Bond bond) {
-        // Set the selected bond if it's found in the tableView, which listens to sortedList.
-        // If this is called before the sortedList has been populated the selected bond is stored and
-        // we try to apply again after the next update.
-        tableView.getItems().stream()
-                .filter(item -> item.getBond() == bond)
-                .findFirst()
-                .ifPresentOrElse(item -> tableView.getSelectionModel().select(item),
-                        () -> this.selectedBond = bond);
     }
 }

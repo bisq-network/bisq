@@ -77,7 +77,7 @@ public class GovernanceView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        navigationListener = (viewPath, data) -> {
+        navigationListener = viewPath -> {
             if (viewPath.size() != 4 || viewPath.indexOf(GovernanceView.class) != 2)
                 return;
 

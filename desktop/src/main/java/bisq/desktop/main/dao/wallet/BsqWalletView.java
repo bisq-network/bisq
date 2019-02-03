@@ -71,7 +71,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        listener = (viewPath, data) -> {
+        listener = viewPath -> {
             if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
                 return;
 

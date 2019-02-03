@@ -45,7 +45,10 @@ public final class Navigation implements PersistedDataHost {
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
     public interface Listener {
-        void onNavigationRequested(ViewPath path, @Nullable Object data);
+        void onNavigationRequested(ViewPath path);
+
+        default void onNavigationRequested(ViewPath path, @Nullable Object data) {
+        }
     }
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
@@ -103,7 +106,7 @@ public final class Navigation implements PersistedDataHost {
         navigateTo(ViewPath.to(viewClasses), data);
     }
 
-    public void navigateTo(ViewPath newPath, Object data) {
+    public void navigateTo(ViewPath newPath, @Nullable Object data) {
         if (newPath == null)
             return;
 
@@ -131,6 +134,7 @@ public final class Navigation implements PersistedDataHost {
         currentPath = newPath;
         previousPath = currentPath;
         queueUpForSave();
+        listeners.forEach((e) -> e.onNavigationRequested(currentPath));
         listeners.forEach((e) -> e.onNavigationRequested(currentPath, data));
     }
 

@@ -82,7 +82,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void initialize() {
-        navigationListener = (viewPath, data) -> {
+        navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1)
                 loadView(viewPath.tip());
         };

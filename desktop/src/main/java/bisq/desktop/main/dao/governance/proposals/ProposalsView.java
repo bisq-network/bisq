@@ -680,8 +680,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade, changeParamValidator,
-                navigation);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade,
+                changeParamValidator, navigation);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);

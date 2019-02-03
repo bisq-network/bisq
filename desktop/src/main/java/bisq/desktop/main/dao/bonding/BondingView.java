@@ -73,12 +73,19 @@ public class BondingView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        listener = (viewPath, data) -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
-                return;
+        listener = new Navigation.Listener() {
+            @Override
+            public void onNavigationRequested(ViewPath path) {
+            }
 
-            selectedViewClass = viewPath.tip();
-            loadView(selectedViewClass, data);
+            @Override
+            public void onNavigationRequested(ViewPath viewPath, @Nullable Object data) {
+                if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
+                    return;
+
+                selectedViewClass = viewPath.tip();
+                loadView(selectedViewClass, data);
+            }
         };
 
         toggleGroup = new ToggleGroup();
