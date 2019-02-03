@@ -460,6 +460,14 @@ public class ProposalDisplay {
         myVoteTextField.setManaged(show);
     }
 
+    public void setIsVoteIncludedInResult(boolean isVoteIncludedInResult) {
+        if (!isVoteIncludedInResult && myVoteTextField != null && !myVoteTextField.getText().isEmpty()) {
+            String text = myVoteTextField.getText();
+            myVoteTextField.setText(Res.get("dao.proposal.myVote.invalid") + " - " + text);
+            myVoteTextField.getStyleClass().add("error-text");
+        }
+    }
+
     public void applyProposalPayload(Proposal proposal) {
         proposalTypeTextField.setText(proposal.getType().getDisplayName());
         nameTextField.setText(proposal.getName());
