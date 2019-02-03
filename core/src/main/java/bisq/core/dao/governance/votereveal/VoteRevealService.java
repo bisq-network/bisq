@@ -186,7 +186,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // The voter need to be at least once online in the reveal phase when he has a blind vote created,
     // otherwise his vote becomes invalid.
     // In case the user miss the vote reveal phase an (invalid) vote reveal tx will be created the next time the user is
-    // online. That tx only serves the purpose to unlock the stake from teh blind vote but it will be ignored for voting.
+    // online. That tx only serves the purpose to unlock the stake from the blind vote but it will be ignored for voting.
     // A blind vote which did not get revealed might still be part of the majority hash calculation as we cannot know
     // which blind votes might be revealed until the phase is over at the moment when we publish the vote reveal tx.
     private void maybeRevealVotes(int chainHeight) {
@@ -200,7 +200,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
                     } else {
-                        // We missed the vote reveal phase but publish a vote reveal tx to unlock he blind vote stake.
+                        // We missed the vote reveal phase but publish a vote reveal tx to unlock the blind vote stake.
                         boolean isAfterVoteRevealPhase = periodService.getPhaseForHeight(chainHeight).ordinal() > DaoPhase.Phase.VOTE_REVEAL.ordinal();
 
                         // We missed the reveal phase but we are in the correct cycle
@@ -236,7 +236,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // We collect all valid blind vote items we received via the p2p network.
             // It might be that different nodes have a different collection of those items.
             // To ensure we get a consensus of the data for later calculating the result we will put a hash of each
-            // voters  blind vote collection into the opReturn data and check for a majority at the vote result phase.
+            // voter's blind vote collection into the opReturn data and check for a majority in the vote result phase.
             // The voters "vote" with their stake at the reveal tx for their version of the blind vote collection.
 
             // If we are not in the right phase we just add an empty hash (still need to have the hash as otherwise we
