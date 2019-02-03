@@ -60,7 +60,7 @@ public class PermutationUtil {
      * With 20 items we reach about 1 million iterations and it takes about 0.5 sec.
      * To avoid performance issues we added the maxIterations parameter to stop once the number of iterations has
      * reached the maxIterations and return in such a case the list of permutations we have been able to create.
-     * Depending on the type of object which is stored in the list the memory usage should to be considered as well for
+     * Depending on the type of object which is stored in the list the memory usage should be considered as well for
      * choosing the right maxIterations value.
      *
      * @param list              List from which we create permutations
