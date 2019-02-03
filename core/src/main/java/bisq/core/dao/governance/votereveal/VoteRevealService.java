@@ -183,7 +183,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // The voter need to be at least once online in the reveal phase when he has a blind vote created,
     // otherwise his vote becomes invalid.
     // In case the user miss the vote reveal phase an (invalid) vote reveal tx will be created the next time the user is
-    // online. That tx only serves the purpose to unlock the stake from teh blind vote but it will be ignored for voting.
+    // online. That tx only serves the purpose to unlock the stake from the blind vote but it will be ignored for voting.
     // A blind vote which did not get revealed might still be part of the majority hash calculation as we cannot know
     // which blind votes might be revealed until the phase is over at the moment when we publish the vote reveal tx.
     private void maybeRevealVotes(int chainHeight) {
