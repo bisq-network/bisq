@@ -51,45 +51,45 @@ public class PermutationTest {
         assertTrue(expected.toString().equals(result.toString()));
 
         // remove first
-        indicesToRemove = indicesToRemove = Collections.singletonList(0);
+        indicesToRemove = Collections.singletonList(0);
         expected = new ArrayList<>(list);
         expected.remove(0);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // remove last
-        indicesToRemove = indicesToRemove = Collections.singletonList(5);
+        indicesToRemove = Collections.singletonList(5);
         expected = new ArrayList<>(list);
         expected.remove(5);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // remove all
-        indicesToRemove = indicesToRemove = Arrays.asList(0, 1, 2, 3, 4, 5);
+        indicesToRemove = Arrays.asList(0, 1, 2, 3, 4, 5);
         expected = new ArrayList<>();
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // wrong sorting of indices
-        indicesToRemove = indicesToRemove = Arrays.asList(4, 0, 1);
+        indicesToRemove = Arrays.asList(4, 0, 1);
         expected = expected = new ArrayList<>(Arrays.asList(blindVote2, blindVote3, blindVote5));
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // wrong sorting of indices
-        indicesToRemove = indicesToRemove = Arrays.asList(0, 0);
-        expected = expected = new ArrayList<>(Arrays.asList(blindVote1, blindVote2, blindVote3, blindVote4, blindVote5));
+        indicesToRemove = Arrays.asList(0, 0);
+        expected = new ArrayList<>(Arrays.asList(blindVote1, blindVote2, blindVote3, blindVote4, blindVote5));
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // don't remove as invalid index
-        indicesToRemove = indicesToRemove = Collections.singletonList(9);
+        indicesToRemove = Collections.singletonList(9);
         expected = new ArrayList<>(list);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
 
         // don't remove as invalid index
-        indicesToRemove = indicesToRemove = Collections.singletonList(-2);
+        indicesToRemove = Collections.singletonList(-2);
         expected = new ArrayList<>(list);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));

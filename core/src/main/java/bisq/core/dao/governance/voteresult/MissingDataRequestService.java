@@ -78,6 +78,9 @@ public class MissingDataRequestService implements DaoSetupService {
     }
 
     public void reRepublishAllGovernanceData() {
+        log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
+                "blindVotePayloads to the P2P network.");
+
         ObservableList<ProposalPayload> proposalPayloads = proposalService.getProposalPayloads();
         proposalPayloads.forEach(proposalPayload -> {
             // We want a random delay between 0.1 and 30 sec. depending on the number of items
@@ -86,7 +89,7 @@ public class MissingDataRequestService implements DaoSetupService {
                 boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
                 String txId = proposalPayload.getProposal().getTxId();
                 if (success) {
-                    log.warn("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
+                    log.debug("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
                             "the P2P network as append only data. proposalTxId={}", txId);
                 } else {
                     log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);
@@ -103,7 +106,7 @@ public class MissingDataRequestService implements DaoSetupService {
                         boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
                         String txId = blindVotePayload.getBlindVote().getTxId();
                         if (success) {
-                            log.warn("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
+                            log.debug("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
                                     "the P2P network as append only data. blindVoteTxId={}", txId);
                         } else {
                             log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
