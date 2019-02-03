@@ -251,7 +251,7 @@ public class TxParser {
                         "As the BSQ fee is set it must be either a buggy tx or an manually crafted invalid tx.");
                 // Even though the request part if invalid the BSQ transfer and change output should still be valid
                 // as long as the BSQ change <= BSQ inputs.
-                // TODO don't burn in such cases
+                // TODO do we want to burn in such a case?
                 tempTx.setTxType(TxType.INVALID);
             }
         } else {
@@ -260,6 +260,8 @@ public class TxParser {
             // cover the value of the outputs.
             // TODO don't burn in such cases
             tempTx.setTxType(TxType.INVALID);
+
+            // TODO don't burn in such cases
             optionalIssuanceCandidate.ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
@@ -394,7 +396,7 @@ public class TxParser {
                 if (!hasCorrectNumOutputs) {
                     log.warn("Compensation/reimbursement request tx need to have at least 3 outputs");
                     // This is not an issuance request but it should still not burn the BSQ change
-                    // TODO don't burn in such cases
+                    // TODO do we want to burn in such a case?
                     return TxType.INVALID;
                 }
 
@@ -404,7 +406,7 @@ public class TxParser {
                     log.warn("Compensation/reimbursement request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
                             "TxOutputType={}", issuanceTxOutput.getTxOutputType());
                     // This is not an issuance request but it should still not burn the BSQ change
-                    // TODO don't burn in such cases
+                    // TODO do we want to burn in such a case?
                     return TxType.INVALID;
                 }
 
@@ -423,7 +425,7 @@ public class TxParser {
                 return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
-                // TODO don't burn in such cases
+                // TODO do we want to burn in such a case?
                 return TxType.INVALID;
         }
     }
