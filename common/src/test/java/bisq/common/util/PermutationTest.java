@@ -83,7 +83,7 @@ public class PermutationTest {
         assertTrue(expected.toString().equals(result.toString()));
 
         // don't remove as invalid index
-        indicesToRemove = indicesToRemove = Collections.singletonList(9);
+        indicesToRemove = Collections.singletonList(9);
         expected = new ArrayList<>(list);
         result = PermutationUtil.getPartialList(list, indicesToRemove);
         assertTrue(expected.toString().equals(result.toString()));
