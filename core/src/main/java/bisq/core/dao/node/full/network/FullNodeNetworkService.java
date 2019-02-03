@@ -181,6 +181,8 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }
         } else if (networkEnvelope instanceof RepublishGovernanceDataRequest) {
+            log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
+                    "blindVotePayloads to the P2P network.");
             missingDataRequestService.reRepublishAllGovernanceData();
         }
     }
