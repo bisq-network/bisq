@@ -17,9 +17,11 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.GrinAddressValidator;
 
+@AltCoinAccountDisclaimer("account.altcoin.popup.grin.msg")
 public class Grin extends Coin {
 
     public Grin() {
