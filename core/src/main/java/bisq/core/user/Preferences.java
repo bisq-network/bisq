@@ -697,7 +697,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
         if ((!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
-                && bisqEnvironment.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC).isEmpty())
+                && (useTorFlagFromOptions == null || useTorFlagFromOptions.isEmpty()))
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();
