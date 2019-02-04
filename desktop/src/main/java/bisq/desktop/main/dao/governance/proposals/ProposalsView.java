@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.governance.proposals;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -115,6 +116,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
+    private final Navigation navigation;
 
     private final ObservableList<ProposalsListItem> listItems = FXCollections.observableArrayList();
     private final SortedList<ProposalsListItem> sortedList = new SortedList<>(listItems);
@@ -158,7 +160,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           ChangeParamValidator changeParamValidator,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
-                          BSFormatter btcFormatter) {
+                          BSFormatter btcFormatter,
+                          Navigation navigation) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
@@ -167,6 +170,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
+        this.navigation = navigation;
     }
 
     @Override
@@ -676,7 +680,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade, changeParamValidator);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade,
+                changeParamValidator, navigation);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);

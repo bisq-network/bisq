@@ -17,9 +17,14 @@
 
 package bisq.desktop.main.dao.governance;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.bonding.BondingView;
+import bisq.desktop.main.dao.bonding.bonds.BondsView;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -103,6 +108,7 @@ public class ProposalDisplay {
     // Nullable because if we are in result view mode (readonly) we don't need to set the input validator)
     @Nullable
     private final ChangeParamValidator changeParamValidator;
+    private final Navigation navigation;
 
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
@@ -140,11 +146,12 @@ public class ProposalDisplay {
     private VBox comboBoxValueContainer;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                           @Nullable ChangeParamValidator changeParamValidator) {
+                           @Nullable ChangeParamValidator changeParamValidator, Navigation navigation) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.changeParamValidator = changeParamValidator;
+        this.navigation = navigation;
 
         // focusOutListener = observable -> inputChangedListeners.forEach(Runnable::run);
 
@@ -239,7 +246,7 @@ public class ProposalDisplay {
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = FormBuilder.<Param>addComboBox(gridPane, ++gridRow,
+                paramComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
@@ -278,7 +285,7 @@ public class ProposalDisplay {
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.<BondedRoleType>addComboBox(gridPane, ++gridRow,
+                bondedRoleTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
@@ -307,7 +314,7 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.<Bond>addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
@@ -339,7 +346,7 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case REMOVE_ASSET:
-                assetComboBox = FormBuilder.<Asset>addComboBox(gridPane, ++gridRow,
+                assetComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
@@ -509,8 +516,11 @@ public class ProposalDisplay {
                     .ifPresent(bond -> {
                         confiscateBondComboBox.getSelectionModel().select(bond);
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
+                        comboBoxValueTextField.setOnMouseClicked(e ->
+                                navigation.navigateToWithData(bond, MainView.class, DaoView.class, BondingView.class,
+                                BondsView.class));
+                        comboBoxValueTextField.getStyleClass().addAll("hyperlink", "show-hand");
                     });
-
         } else if (proposal instanceof GenericProposal) {
             // do nothing
         } else if (proposal instanceof RemoveAssetProposal) {
@@ -565,9 +575,7 @@ public class ProposalDisplay {
         if (linkHyperlinkWithIcon != null)
             linkHyperlinkWithIcon.clear();
 
-        comboBoxes.stream().filter(Objects::nonNull).forEach(comboBox -> {
-            comboBox.getSelectionModel().clearSelection();
-        });
+        comboBoxes.stream().filter(Objects::nonNull).forEach(comboBox -> comboBox.getSelectionModel().clearSelection());
     }
 
     public void setEditable(boolean isEditable) {

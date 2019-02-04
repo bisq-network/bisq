@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.governance.make;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
@@ -87,6 +88,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final ChangeParamValidator changeParamValidator;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
+    private final Navigation navigation;
 
     @Nullable
     private ProposalDisplay proposalDisplay;
@@ -110,7 +112,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                              PhasesView phasesView,
                              ChangeParamValidator changeParamValidator,
                              BSFormatter btcFormatter,
-                             BsqFormatter bsqFormatter) {
+                             BsqFormatter bsqFormatter,
+                             Navigation navigation) {
         this.daoFacade = daoFacade;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
@@ -118,6 +121,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.changeParamValidator = changeParamValidator;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
+        this.navigation = navigation;
     }
 
     @Override
@@ -330,7 +334,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation);
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
