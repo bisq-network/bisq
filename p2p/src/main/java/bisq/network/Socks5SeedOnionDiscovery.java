@@ -150,22 +150,6 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
     }
 
     /**
-     * returns .onion nodes available on mainnet
-     */
-    private String[] LitecoinMainNetSeeds() {
-        return new String[]{
-        };
-    }
-
-    /**
-     * returns .onion nodes available on testnet3
-     */
-    private String[] LitecoinTestNet4Seeds() {
-        return new String[]{
-        };
-    }
-
-    /**
      * Returns an array containing all the Bitcoin nodes within the list.
      */
     @Override
