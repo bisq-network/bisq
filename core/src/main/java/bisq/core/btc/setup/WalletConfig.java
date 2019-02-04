@@ -446,8 +446,9 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                log.info("We try to connect to {} btc nodes", numConnectionForBtc);
-                vPeerGroup.setMaxConnections(Math.min(numConnectionForBtc, peerAddresses.length));
+                int maxConnections = Math.min(numConnectionForBtc, peerAddresses.length);
+                log.info("We try to connect to {} btc nodes", maxConnections);
+                vPeerGroup.setMaxConnections(maxConnections);
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));

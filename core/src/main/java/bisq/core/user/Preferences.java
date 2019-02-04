@@ -692,10 +692,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet.
-        // At testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
-        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
+        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
+        // unless the useTorForBtc parameter is explicitly provided.
+        // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+        if ((!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
+                && (useTorFlagFromOptions == null || useTorFlagFromOptions.isEmpty()))
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();
