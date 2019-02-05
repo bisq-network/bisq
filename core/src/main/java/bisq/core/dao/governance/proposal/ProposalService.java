@@ -239,18 +239,23 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         if (protectedStoragePayload instanceof TempProposalPayload) {
             Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
             // We allow removal only if we are in the proposal phase.
-            if (periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL)) {
+            boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+            boolean txInPastCycle = periodService.isTxInPastCycle(proposal.getTxId(), daoStateService.getChainHeight());
+            Optional<Tx> tx = daoStateService.getTx(proposal.getTxId());
+            boolean unconfirmedOrNonBsqTx = !tx.isPresent();
+            // if the tx is unconfirmed we need to be in the PROPOSAL phase, otherwise the tx must be confirmed.
+            if (inPhase || txInPastCycle || unconfirmedOrNonBsqTx) {
                 if (tempProposals.contains(proposal)) {
-                    log.info("We received a remove request for a TempProposalPayload and have removed the proposal " +
-                            "from our list. proposalTxId={}", proposal.getTxId());
                     tempProposals.remove(proposal);
+                    log.info("We received a remove request for a TempProposalPayload and have removed the proposal " +
+                                    "from our list. proposal creation date={}, proposalTxId={}, inPhase={}, " +
+                                    "txInPastCycle={}, unconfirmedOrNonBsqTx={}",
+                            proposal.getCreationDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
                 }
             } else {
-                Optional<Tx> tx = daoStateService.getTx(proposal.getTxId());
                 log.warn("We received a remove request outside the PROPOSAL phase. " +
-                                "Proposal.txId={}, current blockHeight={}, tx blockHeight={}, proposal creation date={}",
-                        proposal.getTxId(), daoStateService.getChainHeight(),
-                        tx.isPresent() ? tx.get().getBlockHeight() : "null", proposal.getCreationDate());
+                                "Proposal creation date={}, proposal.txId={}, current blockHeight={}",
+                        proposal.getCreationDate(), proposal.getTxId(), daoStateService.getChainHeight());
             }
         }
     }
