@@ -242,7 +242,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // If we are not in the right phase we just add an empty hash (still need to have the hash as otherwise we
             // would not recognize the tx as vote reveal tx)
             byte[] hashOfBlindVoteList = inBlindVotePhase ? getHashOfBlindVoteList() : new byte[20];
-            log.info("revealVote: Sha256Ripemd160 hash of hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
             byte[] opReturnData = VoteRevealConsensus.getOpReturnData(hashOfBlindVoteList, myVote.getSecretKey());
 
             // We search for my unspent stake output.
