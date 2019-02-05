@@ -636,10 +636,6 @@ public class TradeManager implements PersistedDataHost {
             public void onMinuteTick() {
                 updateTradePeriodState();
             }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
         });
     }
 

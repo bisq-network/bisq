@@ -149,10 +149,6 @@ public abstract class TradeStepView extends AnchorPane {
             public void onMinuteTick() {
                 updateTimeLeft();
             }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
         };
     }
 
