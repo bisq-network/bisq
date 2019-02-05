@@ -179,13 +179,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             if (!decryptedBallotsWithMeritsSet.isEmpty()) {
                 // From the decryptedBallotsWithMeritsSet we create a map with the hash of the blind vote list as key and the
-                // aggregated stake+merit as value. That map is used for calculating the majority of the blind vote lists.
+                // aggregated stake as value (no merit as that is part of the P2P network data and might lead to inconsistency).
+                // That map is used for calculating the majority of the blind vote lists.
                 // There might be conflicting versions due the eventually consistency of the P2P network (if some blind
-                // votes do not arrive at all voters) which would lead to consensus failure in the result calculation.
-                // To solve that problem we will only consider the majority data view as valid.
+                // vote payloads do not arrive at all voters) which would lead to consensus failure in the result calculation.
+                // To solve that problem we will only consider the blind votes valid which are matching the majority hash.
                 // If multiple data views would have the same stake we sort additionally by the hex value of the
                 // blind vote hash and use the first one in the sorted list as winner.
-                // A node which has a local blindVote list which does not match the winner data view need to recover it's
+                // A node which has a local blindVote list which does not match the winner data view will try
+                // permutations of his local list and if that does not succeed he need to recover it's
                 // local blindVote list by requesting the correct list from other peers.
                 Map<P2PDataStorage.ByteArray, Long> stakeByHashOfBlindVoteListMap = getStakeByHashOfBlindVoteListMap(decryptedBallotsWithMeritsSet);
 
@@ -207,6 +209,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
                         log.info("processAllVoteResults completed");
                     } else {
+                        // TODO make sure we handle it in the UI -> ask user to restart
                         String msg = "We could not find a list which matches the majority so we cannot calculate the vote result.";
                         log.warn(msg);
                         voteResultExceptions.add(new VoteResultException(currentCycle, new Exception(msg)));
@@ -385,16 +388,15 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
             P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(decryptedBallotsWithMerits.getHashOfBlindVoteList());
             map.putIfAbsent(hash, 0L);
+            // We must not user the merit(stake) as that is from the P2P network data and it is not guaranteed that we
+            // have received it. We must rely only on blockchain data. The stake is from the vote reveal tx input.
             long aggregatedStake = map.get(hash);
-            //TODO move to consensus class
-            long merit = decryptedBallotsWithMerits.getMerit(daoStateService);
             long stake = decryptedBallotsWithMerits.getStake();
-            long combinedStake = stake + merit;
-            aggregatedStake += combinedStake;
+            aggregatedStake += stake;
             map.put(hash, aggregatedStake);
 
-            log.debug("blindVoteTxId={}, meritStake={}, stake={}, combinedStake={}",
-                    decryptedBallotsWithMerits.getBlindVoteTxId(), merit, stake, combinedStake);
+            log.debug("blindVoteTxId={}, stake={}",
+                    decryptedBallotsWithMerits.getBlindVoteTxId(), stake);
         });
         return map;
     }
@@ -437,37 +439,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
         }
     }
-
-   /* // Deal with eventually consistency of P2P network
-    private boolean isBlindVoteListMatchingMajority(byte[] majorityVoteListHash) {
-        // We reuse the method at voteReveal domain used when creating the hash
-        byte[] myBlindVoteListHash = voteRevealService.getHashOfBlindVoteList();
-        log.info("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
-        log.info("myBlindVoteListHash " + Utilities.bytesAsHexString(myBlindVoteListHash));
-        boolean matches = Arrays.equals(majorityVoteListHash, myBlindVoteListHash);
-        // refactor to method
-        if (!matches) {
-            log.warn("myBlindVoteListHash does not match with majorityVoteListHash. We try permuting our list to " +
-                    "find a matching variant");
-            // Each voter has re-published his blind vote list when broadcasting the reveal tx so it should have a very
-            // high change that we have received all blind votes which have been used by the majority of the
-            // voters (e.g. its stake not nr. of voters).
-            // It still could be that we have additional blind votes so our hash does not match. We can try to permute
-            // our list with excluding items to see if we get a matching list. If not last resort is to request the
-            // missing items from the network.
-            Optional<List<BlindVote>> permutatedList = findPermutatedListMatchingMajority(majorityVoteListHash);
-            if (permutatedList.isPresent()) {
-
-                return true;
-            } else {
-                log.warn("We did not find a permutation of our blindVote list which matches the majority view. " +
-                        "We will request the blindVote data from the peers.");
-                // This is async operation. We will restart the whole verification process once we received the data.
-                missingDataRequestService.sendRepublishRequest();
-            }
-        }
-        return matches;
-    }*/
 
     private Optional<List<BlindVote>> findPermutatedListMatchingMajority(byte[] majorityVoteListHash) {
         List<BlindVote> list = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
