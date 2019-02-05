@@ -27,6 +27,7 @@ import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 
@@ -47,6 +48,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -244,8 +246,11 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                     tempProposals.remove(proposal);
                 }
             } else {
+                Optional<Tx> tx = daoStateService.getTx(proposal.getTxId());
                 log.warn("We received a remove request outside the PROPOSAL phase. " +
-                        "Proposal.txId={}, blockHeight={}", proposal.getTxId(), daoStateService.getChainHeight());
+                                "Proposal.txId={}, current blockHeight={}, tx blockHeight={}, proposal creation date={}",
+                        proposal.getTxId(), daoStateService.getChainHeight(),
+                        tx.isPresent() ? tx.get().getBlockHeight() : "null", proposal.getCreationDate());
             }
         }
     }
