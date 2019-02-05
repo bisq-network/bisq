@@ -85,24 +85,6 @@ public class VoteResultException extends Exception {
 
     @EqualsAndHashCode(callSuper = true)
     @Value
-    public static class MissingBlindVoteDataException extends MissingDataException {
-        private String blindVoteTxId;
-
-        MissingBlindVoteDataException(String blindVoteTxId) {
-            super("Blind vote tx ID " + blindVoteTxId + " is missing");
-            this.blindVoteTxId = blindVoteTxId;
-        }
-
-        @Override
-        public String toString() {
-            return "MissingBlindVoteDataException{" +
-                    "\n     blindVoteTxId='" + blindVoteTxId + '\'' +
-                    "\n} " + super.toString();
-        }
-    }
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
     public static class MissingBallotException extends MissingDataException {
         private List<Ballot> existingBallots;
         private List<String> proposalTxIdsOfMissingBallots;
