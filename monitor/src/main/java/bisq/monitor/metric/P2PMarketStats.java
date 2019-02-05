@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class P2PMarketStats extends P2PNetworkMessageSnapshot {
+public class P2PMarketStats extends P2PSeedNodeSnapshot {
 
     /**
      * Efficient way to count occurrences.

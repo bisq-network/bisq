@@ -19,7 +19,7 @@ package bisq.monitor;
 
 import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
-import bisq.monitor.metric.P2PNetworkMessageSnapshot;
+import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
@@ -91,7 +91,7 @@ public class Monitor {
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
         metrics.add(new P2PRoundTripTime(graphiteReporter));
         metrics.add(new P2PNetworkLoad(graphiteReporter));
-        metrics.add(new P2PNetworkMessageSnapshot(graphiteReporter));
+        metrics.add(new P2PSeedNodeSnapshot(graphiteReporter));
         metrics.add(new P2PMarketStats(graphiteReporter));
 
         // prepare configuration reload
