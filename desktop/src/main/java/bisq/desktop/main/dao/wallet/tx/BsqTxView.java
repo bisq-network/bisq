@@ -214,17 +214,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
 
-    @Override
-    public void onParseBlockChainComplete() {
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

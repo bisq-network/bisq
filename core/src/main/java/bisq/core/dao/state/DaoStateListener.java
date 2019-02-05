@@ -20,9 +20,11 @@ package bisq.core.dao.state;
 import bisq.core.dao.state.model.blockchain.Block;
 
 public interface DaoStateListener {
-    void onNewBlockHeight(int blockHeight);
+    default void onNewBlockHeight(int blockHeight) {
+    }
 
-    void onParseBlockChainComplete();
+    default void onParseBlockChainComplete() {
+    }
 
     default void onParseTxsCompleteAfterBatchProcessing(Block block) {
     }

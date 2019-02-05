@@ -26,6 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
 
+@EqualsAndHashCode(callSuper = true)
 public class VoteResultException extends Exception {
     @Getter
     private final int heightOfFirstBlockInCycle;
