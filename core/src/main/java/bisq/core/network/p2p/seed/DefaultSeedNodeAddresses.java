@@ -42,21 +42,8 @@ class DefaultSeedNodeAddresses {
 
             // regtest
             new NodeAddress("localhost:2002"),
-            new NodeAddress("localhost:3002"),
+            new NodeAddress("localhost:3002")
             /*    new NodeAddress("localhost:4002"),*/
-
-            // LTC
-            // mainnet
-            new NodeAddress("localhost:2003"),
-
-            // regtest
-            new NodeAddress("localhost:2005"),
-
-            // DOGE regtest
-            new NodeAddress("localhost:2008"),
-
-            // DASH regtest
-            new NodeAddress("localhost:2011")
     );
 
     // Addresses are used if their port match the network id:
@@ -93,15 +80,8 @@ class DefaultSeedNodeAddresses {
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-            new NodeAddress("4ie52dse64kaarxw.onion:8002"),
+            new NodeAddress("4ie52dse64kaarxw.onion:8002")
 
-            // LTC mainnet
-            new NodeAddress("acyvotgewx46pebw.onion:8003"),
-            new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
-
-            // DASH mainnet
-            new NodeAddress("toeu5ikb27ydscxt.onion:8006"),
-            new NodeAddress("ae4yvaivhnekkhqf.onion:8006")
     );
 
     private DefaultSeedNodeAddresses() {

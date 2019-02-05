@@ -105,26 +105,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
             "https://explorer.bisq.network/testnet/Address.html?addr=");
 
-    private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx/", "https://live.blockcypher.com/ltc/address/"),
-            new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
-            new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
-            new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> LTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> DASH_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
-    ));
-    private static final ArrayList<BlockChainExplorer> DASH_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
-    ));
-
-
     // payload is initialized so the default values are available for Property initialization.
     @Setter
     @Delegate(excludes = ExcludesDelegateMethods.class)
@@ -242,14 +222,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 case "BTC":
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
-                    break;
-                case "LTC":
-                    setBlockChainExplorerMainNet(LTC_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(LTC_TEST_NET_EXPLORERS.get(0));
-                    break;
-                case "DASH":
-                    setBlockChainExplorerMainNet(DASH_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(DASH_TEST_NET_EXPLORERS.get(0));
                     break;
                 default:
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
@@ -672,16 +644,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             case BTC_TESTNET:
             case BTC_REGTEST:
                 return BTC_TEST_NET_EXPLORERS;
-            case LTC_MAINNET:
-                return LTC_MAIN_NET_EXPLORERS;
-            case LTC_TESTNET:
-            case LTC_REGTEST:
-                return LTC_TEST_NET_EXPLORERS;
-            case DASH_MAINNET:
-                return DASH_MAIN_NET_EXPLORERS;
-            case DASH_REGTEST:
-            case DASH_TESTNET:
-                return DASH_TEST_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }

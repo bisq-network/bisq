@@ -23,8 +23,6 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
-import org.libdohj.Version;
-
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
@@ -90,8 +88,8 @@ public class WalletAppSetup {
               Runnable walletPasswordHandler,
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
-        log.info("Initialize WalletAppSetup with BitcoinJ version {} and LibDohJ version {} with hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, Version.VERSION, Version.BITCOINJ_VERSION);
+        log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
+                VersionMessage.BITCOINJ_VERSION, "cd30ad5b");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),

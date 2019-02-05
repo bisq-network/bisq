@@ -17,13 +17,6 @@
 
 package bisq.core.btc;
 
-import org.libdohj.params.DashMainNetParams;
-import org.libdohj.params.DashRegTestParams;
-import org.libdohj.params.DashTestNet3Params;
-import org.libdohj.params.LitecoinMainNetParams;
-import org.libdohj.params.LitecoinRegTestParams;
-import org.libdohj.params.LitecoinTestNet3Params;
-
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -34,15 +27,7 @@ import lombok.Getter;
 public enum BaseCurrencyNetwork {
     BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
     BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
-    BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"),
-
-    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET", "Litecoin"),
-    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET", "Litecoin"),
-    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST", "Litecoin"),
-
-    DASH_MAINNET(DashMainNetParams.get(), "DASH", "MAINNET", "Dash"),
-    DASH_TESTNET(DashTestNet3Params.get(), "DASH", "TESTNET", "Dash"),
-    DASH_REGTEST(DashRegTestParams.get(), "DASH", "REGTEST", "Dash");
+    BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin");
 
     @Getter
     private final NetworkParameters parameters;
@@ -74,14 +59,6 @@ public enum BaseCurrencyNetwork {
 
     public boolean isBitcoin() {
         return "BTC".equals(currencyCode);
-    }
-
-    public boolean isLitecoin() {
-        return "LTC".equals(currencyCode);
-    }
-
-    public boolean isDash() {
-        return "DASH".equals(currencyCode);
     }
 
     public long getDefaultMinFeePerByte() {

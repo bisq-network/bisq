@@ -22,8 +22,6 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-import org.libdohj.params.DashMainNetParams;
-
 public class DeepOnion extends Coin {
     public DeepOnion() {
         super("DeepOnion", "ONION", new DeepOnionAddressValidator());
