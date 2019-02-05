@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao;
+package bisq.core.dao.presentation;
 
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -26,6 +27,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * Util class for shared presentation code.
+ */
 public class DaoUtil {
 
     public static String getNextPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade, BSFormatter formatter) {

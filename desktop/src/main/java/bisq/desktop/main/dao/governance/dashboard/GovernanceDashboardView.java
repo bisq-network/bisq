@@ -23,8 +23,8 @@ import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.DaoUtil;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.presentation.DaoUtil;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
