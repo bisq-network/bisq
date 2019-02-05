@@ -94,6 +94,7 @@ public class InfoTextField extends AnchorPane {
         currentIcon = infoIcon;
 
         hideIcons();
+        setActionHandlers(node);
     }
 
     public void setContentForPrivacyPopOver(Node node) {

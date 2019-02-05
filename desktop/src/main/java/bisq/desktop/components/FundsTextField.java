@@ -21,11 +21,11 @@ import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
@@ -33,6 +33,8 @@ import javafx.beans.property.StringProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static bisq.desktop.util.FormBuilder.getIcon;
 
 public class FundsTextField extends InfoTextField {
     public static final Logger log = LoggerFactory.getLogger(FundsTextField.class);
@@ -49,11 +51,10 @@ public class FundsTextField extends InfoTextField {
         textField.textProperty().unbind();
         textField.textProperty().bind(Bindings.concat(textProperty(), " ", fundsStructure));
 
-        Label copyIcon = new Label();
+        Label copyIcon = getIcon(AwesomeIcon.COPY);
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
         Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
-        AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             String text = getText();
             if (text != null && text.length() > 0) {
@@ -68,9 +69,9 @@ public class FundsTextField extends InfoTextField {
             }
         });
 
-        setRightAnchor(copyIcon, 30.0);
-        setRightAnchor(infoIcon, 62.0);
-        setRightAnchor(textField, 55.0);
+        AnchorPane.setRightAnchor(copyIcon, 30.0);
+        AnchorPane.setRightAnchor(infoIcon, 62.0);
+        AnchorPane.setRightAnchor(textField, 55.0);
 
         getChildren().add(copyIcon);
     }
