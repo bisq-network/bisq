@@ -253,7 +253,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateTimeUntilNextProposalPhase(int height) {
-        nextProposalTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, btcFormatter));
+        nextProposalTextField.setText(DaoUtil.getNextPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, btcFormatter));
     }
 
     private void publishMyProposal(ProposalType type) {

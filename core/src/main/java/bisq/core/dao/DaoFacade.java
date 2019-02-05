@@ -444,7 +444,7 @@ public class DaoFacade implements DaoSetupService {
         return lastBlock;
     }
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getDurationForPhaseForDisplay(DaoPhase.Phase phase) {
         int duration = periodService.getDurationForPhase(phase, daoStateService.getChainHeight());
@@ -473,6 +473,10 @@ public class DaoFacade implements DaoSetupService {
                 break;
         }
         return duration;
+    }
+
+    public int getCurrentCycleDuration() {
+        return periodService.getCurrentCycle().getDuration();
     }
 
     // listeners for phase change

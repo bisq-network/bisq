@@ -28,6 +28,20 @@ import java.util.Locale;
 
 public class DaoUtil {
 
+    public static String getNextPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade, BSFormatter formatter) {
+        final int currentCycleDuration = daoFacade.getCurrentCycleDuration();
+        long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase) + currentCycleDuration;
+        long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase) + currentCycleDuration;
+
+        long now = new Date().getTime();
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+
+        return Res.get("dao.cycle.phaseDurationWithoutBlocks", start, end, startDateTime, endDateTime);
+    }
+
     public static String getPhaseDuration(int height, DaoPhase.Phase phase, DaoFacade daoFacade, BSFormatter formatter) {
         long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase);
         long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase);
