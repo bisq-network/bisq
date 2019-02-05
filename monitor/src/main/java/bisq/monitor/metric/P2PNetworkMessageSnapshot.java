@@ -21,12 +21,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import com.google.common.util.concurrent.FutureCallback;
@@ -79,7 +81,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
     private final File torHiddenServiceDir = new File("metric_p2pNetworkMessageStatus");
     private int nonce;
     protected Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
-    private Set<byte[]> hashes = new HashSet<>();
+    private Set<byte[]> hashes = new TreeSet<>((o1, o2) -> Arrays.compare(o1, o2));
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
