@@ -23,7 +23,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -72,7 +71,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class P2PNetworkMessageSnapshot extends Metric implements MessageListener, SetupListener {
+public class P2PSeedNodeSnapshot extends Metric implements MessageListener, SetupListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
@@ -150,7 +149,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
 
     }
 
-    public P2PNetworkMessageSnapshot(Reporter reporter) {
+    public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
 
         Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
@@ -195,7 +194,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                         Futures.addCallback(future, new FutureCallback<>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                connection.addMessageListener(P2PNetworkMessageSnapshot.this);
+                                connection.addMessageListener(P2PSeedNodeSnapshot.this);
                                 log.debug("Send PreliminaryDataRequest to " + connection + " succeeded.");
                             }
 
