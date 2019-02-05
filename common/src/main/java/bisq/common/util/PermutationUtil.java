@@ -53,6 +53,8 @@ public class PermutationUtil {
         return altered;
     }
 
+    //TODO optimize algorithm so that it starts from all objects and goes down instead starting with from the bottom.
+    // That should help that we are not hitting the iteration limit so easily.
     /**
      * Returns a list of all possible permutations of a give sorted list ignoring duplicates.
      * E.g. List [A,B,C] results in this list of permutations: [[A], [B], [A,B], [C], [A,C], [B,C], [A,B,C]]

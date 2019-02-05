@@ -908,15 +908,20 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getEvaluatedProposalList();
     }
 
+    public void addEvaluatedProposalSet(Set<EvaluatedProposal> evaluatedProposals) {
+        evaluatedProposals.stream()
+                .filter(e -> !daoState.getEvaluatedProposalList().contains(e))
+                .forEach(daoState.getEvaluatedProposalList()::add);
+    }
+
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
         return daoState.getDecryptedBallotsWithMeritsList();
     }
 
-    public void addAllDecryptedBallotsWithMeritsList(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+    public void addDecryptedBallotsWithMeritsSet(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
         decryptedBallotsWithMeritsSet.stream()
                 .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
                 .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
-
     }
 
 
