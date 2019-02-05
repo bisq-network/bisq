@@ -92,3 +92,62 @@ P2PMarketStats.run.torProxyPort=9063
 GraphiteReporter.serviceUrl=k6evlhg44acpchtc.onion:2003
 
 ```
+
+# Monitoring Service
+
+A typical monitoring service consists of a [Graphite](https://graphiteapp.org/) and a [Grafana](https://grafana.com/) instance.
+Both are available via Docker-containers.
+
+## Setting up Graphite
+
+### Install
+
+For a docker setup, use
+
+```
+docker run -d --name graphite --restart=always -p 2003:2003 -p 8080:8080 graphiteapp/graphite-statsd
+```
+
+- Port 2003 is used for the [plaintext protocol](https://graphite.readthedocs.io/en/latest/feeding-carbon.html#the-plaintext-protocol) mentioned above
+- Port 8080 offers an API for user interfaces.
+
+more information can be found [here](https://graphite.readthedocs.io/en/latest/install.html)
+
+### Configuration
+
+There is no further configuration necessary. However, you might change your iptables/firewalls to not let anyone access your Graphite instance from the outside.
+
+### Backup your data
+
+*TBD*
+
+## Setting up Grafana
+
+### Install
+
+For a docker setup, use
+
+```
+docker run -d --name=grafana -p 3000:3000 grafana/grafana
+```
+
+- Port 3000 offers the web interface
+
+more information can be found [here](https://grafana.com/grafana/download?platform=docker)
+
+### Configuration
+
+- Once you have Grafana up and running, go to the *Data Source* configuration tab.
+- Once there click *Add data source* and select *Graphite*.
+- In the HTTP section enter the IP address of your graphite docker container and the port `8080` (as we have configured before). E.g. `http://172.170.1:8080`
+- Select `Server (default)` as an *Access* method and hit *Save & Test*.
+
+You should be all set. You can now proceed to add Dashboards, Panels and finally display the prettiest Graphs you can think of.
+A working connection to Graphite should let you add your data series in a *Graph*s *Metrics* tab in a pretty intuitive way.
+
+- Optional: hide your Grafana instance behind a reverse proxy like nginx and add some TLS.
+- Optional: make your Grafana instance accessible via a Tor hidden service.
+
+### Backup your data
+
+Grafana stores every dashboard as a JSON model. This model can be accessed (copied/restored) within the dashboards settings and its *JSON Model* tab. Do with the data whatever you want.
