@@ -17,6 +17,7 @@
 
 package bisq.monitor;
 
+import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
 import bisq.monitor.metric.P2PNetworkMessageSnapshot;
 import bisq.monitor.metric.P2PRoundTripTime;
@@ -91,6 +92,7 @@ public class Monitor {
         metrics.add(new P2PRoundTripTime(graphiteReporter));
         metrics.add(new P2PNetworkLoad(graphiteReporter));
         metrics.add(new P2PNetworkMessageSnapshot(graphiteReporter));
+        metrics.add(new P2PMarketStats(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux

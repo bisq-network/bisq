@@ -78,7 +78,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     protected Statistics statistics;
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_p2pNetworkMessageStatus");
+    private final File torHiddenServiceDir = new File("metric_" + this.getClass().getSimpleName());
     private int nonce;
     protected Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     private Set<byte[]> hashes = new TreeSet<>((o1, o2) -> Arrays.compare(o1, o2));
@@ -272,7 +272,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         if (hashes.size() > 150000)
             hashes.clear();
 
-        // report our findings iff we have not just started anew
         reporter.report(report, "bisq." + getName());
     }
 
