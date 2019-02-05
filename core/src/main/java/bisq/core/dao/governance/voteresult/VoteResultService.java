@@ -30,7 +30,6 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
-import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -97,7 +96,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class VoteResultService implements DaoStateListener, DaoSetupService {
-    private final VoteRevealService voteRevealService;
     private final ProposalListPresentation proposalListPresentation;
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
@@ -107,6 +105,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private final MissingDataRequestService missingDataRequestService;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
+    @Getter
+    private Set<DecryptedBallotsWithMerits> invalidDecryptedBallotsWithMeritItems = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,15 +114,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public VoteResultService(VoteRevealService voteRevealService,
-                             ProposalListPresentation proposalListPresentation,
+    public VoteResultService(ProposalListPresentation proposalListPresentation,
                              DaoStateService daoStateService,
                              PeriodService periodService,
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
                              IssuanceService issuanceService,
                              MissingDataRequestService missingDataRequestService) {
-        this.voteRevealService = voteRevealService;
         this.proposalListPresentation = proposalListPresentation;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
@@ -150,14 +148,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-    }
 
     @Override
     public void onParseTxsComplete(Block block) {
@@ -198,12 +188,29 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     // Is our local list matching the majority data view?
                     Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash = findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash);
                     if (optionalBlindVoteListMatchingMajorityHash.isPresent()) {
+                        List<BlindVote> blindVoteList = optionalBlindVoteListMatchingMajorityHash.get();
+                        log.info("blindVoteListMatchingMajorityHash: " + blindVoteList.stream()
+                                .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
+                                .collect(Collectors.toList()));
+
+                        Set<String> blindVoteTxIdSet = blindVoteList.stream().map(BlindVote::getTxId).collect(Collectors.toSet());
+                        // We need to filter out result list according to the majority hash list
+                        Set<DecryptedBallotsWithMerits> filteredDecryptedBallotsWithMeritsSet = decryptedBallotsWithMeritsSet.stream()
+                                .filter(decryptedBallotsWithMerits -> {
+                                    boolean contains = blindVoteTxIdSet.contains(decryptedBallotsWithMerits.getBlindVoteTxId());
+                                    if (!contains) {
+                                        invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
+                                    }
+                                    return contains;
+                                })
+                                .collect(Collectors.toSet());
+
                         // Only if we have all blind vote payloads and know the right list matching the majority we add
                         // it to our state. Otherwise we are not in consensus with the network.
-                        daoStateService.addDecryptedBallotsWithMeritsSet(decryptedBallotsWithMeritsSet);
+                        daoStateService.addDecryptedBallotsWithMeritsSet(filteredDecryptedBallotsWithMeritsSet);
 
                         // FIXME we got duplicated items in evaluatedProposals with diff. merit values, find out why...
-                        Set<EvaluatedProposal> evaluatedProposals = getEvaluatedProposals(decryptedBallotsWithMeritsSet, chainHeight);
+                        Set<EvaluatedProposal> evaluatedProposals = getEvaluatedProposals(filteredDecryptedBallotsWithMeritsSet, chainHeight);
                         daoStateService.addEvaluatedProposalSet(evaluatedProposals);
                         Set<EvaluatedProposal> acceptedEvaluatedProposals = getAcceptedEvaluatedProposals(evaluatedProposals);
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
@@ -214,12 +221,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         log.warn(msg);
                         voteResultExceptions.add(new VoteResultException(currentCycle, new Exception(msg)));
                     }
-                } catch (VoteResultException.ValidationException e) {
-                    log.warn(e.toString());
-                    log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
-                    e.printStackTrace();
-                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
-                } catch (VoteResultException.ConsensusException e) {
+                } catch (Throwable e) {
                     log.warn(e.toString());
                     log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
                     e.printStackTrace();
