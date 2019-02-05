@@ -26,6 +26,7 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -33,6 +34,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -44,11 +46,14 @@ import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
@@ -94,6 +99,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
     private final ProposalService proposalService;
+    private final PeriodService periodService;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
@@ -129,6 +135,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           CycleService cycleService,
                           VoteResultService voteResultService,
                           ProposalService proposalService,
+                          PeriodService periodService,
                           BsqWalletService bsqWalletService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
@@ -139,6 +146,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
         this.proposalService = proposalService;
+        this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
@@ -186,12 +194,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int height) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         fillCycleList();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
@@ -214,6 +218,37 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
             selectedProposalSubscription = EasyBind.subscribe(proposalsTableView.getSelectionModel().selectedItemProperty(),
                     this::onSelectProposalResultListItem);
+
+            StringBuilder sb = new StringBuilder();
+            voteResultService.getInvalidDecryptedBallotsWithMeritItems().stream()
+                    .filter(e -> periodService.isTxInCorrectCycle(e.getVoteRevealTxId(),
+                            item.getResultsOfCycle().getCycle().getHeightOfFirstBlock()))
+                    .forEach(e -> {
+                        sb.append("\n")
+                                .append(Res.getWithCol("dao.proposal.myVote.blindVoteTxId")).append(" ")
+                                .append(e.getBlindVoteTxId()).append("\n")
+                                .append(Res.getWithCol("dao.results.votes.table.header.stake")).append(" ")
+                                .append(bsqFormatter.formatCoinWithCode(Coin.valueOf(e.getStake()))).append("\n");
+                        e.getBallotList().stream().forEach(ballot -> {
+                            sb.append(Res.getWithCol("shared.name")).append(" ")
+                                    .append(ballot.getProposal().getName()).append("\n");
+                            sb.append(Res.getWithCol("dao.bond.table.column.link")).append(" ")
+                                    .append(ballot.getProposal().getLink()).append("\n");
+                            Vote vote = ballot.getVote();
+                            String voteString = vote == null ? Res.get("dao.proposal.display.myVote.ignored") :
+                                    vote.isAccepted() ?
+                                            Res.get("dao.proposal.display.myVote.accepted") :
+                                            Res.get("dao.proposal.display.myVote.rejected");
+                            sb.append(Res.getWithCol("dao.results.votes.table.header.vote")).append(" ")
+                                    .append(voteString).append("\n");
+
+                        });
+                    });
+            if (!sb.toString().isEmpty()) {
+                new Popup<>().information("We had invalid votes in that voting cycle. That can happen if a vote was " +
+                        "not distributed well in the P2P network.\n" +
+                        sb.toString()).show();
+            }
         }
     }
 
