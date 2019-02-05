@@ -176,9 +176,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             long startTs = System.currentTimeMillis();
 
             Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
-            decryptedBallotsWithMeritsSet.stream()
-                    .filter(e -> !daoStateService.getDecryptedBallotsWithMeritsList().contains(e))
-                    .forEach(daoStateService.getDecryptedBallotsWithMeritsList()::add);
+            daoStateService.addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsSet);
 
             if (!decryptedBallotsWithMeritsSet.isEmpty()) {
                 // From the decryptedBallotsWithMerits we create a map with the hash of the blind vote list as key and the

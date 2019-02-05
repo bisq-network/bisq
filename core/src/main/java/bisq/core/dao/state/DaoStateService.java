@@ -912,6 +912,13 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getDecryptedBallotsWithMeritsList();
     }
 
+    public void addAllDecryptedBallotsWithMeritsList(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+        decryptedBallotsWithMeritsSet.stream()
+                .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
+                .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
+
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Asset listing fee
