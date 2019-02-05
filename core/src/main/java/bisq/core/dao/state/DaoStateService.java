@@ -220,8 +220,9 @@ public class DaoStateService implements DaoSetupService {
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
 
-        // Now we need to trigger the onParseBlockComplete to update the state in the app
-        getLastBlock().ifPresent(this::onParseBlockComplete);
+        getLastBlock().ifPresent(block -> {
+            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+        });
 
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
