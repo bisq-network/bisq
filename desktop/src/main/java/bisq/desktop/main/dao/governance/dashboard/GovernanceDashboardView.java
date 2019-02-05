@@ -20,10 +20,10 @@ package bisq.desktop.main.dao.governance.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.governance.PhasesView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.DaoUtil;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -34,11 +34,6 @@ import javax.inject.Inject;
 
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-
-import java.text.SimpleDateFormat;
-
-import java.util.Date;
-import java.util.Locale;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
@@ -76,11 +71,11 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
         addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
         currentBlockHeightTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currentPhaseTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase")).second;
-        proposalTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.proposal")).second;
-        blindVoteTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.blindVote")).second;
-        voteRevealTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal")).second;
-        voteResultTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteResult")).second;
+        currentPhaseTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase")).second;
+        proposalTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.proposal")).second;
+        blindVoteTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.blindVote")).second;
+        voteRevealTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteReveal")).second;
+        voteResultTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.voteResult")).second;
     }
 
     @Override
@@ -131,22 +126,9 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
             phase = periodService.getPhaseForHeight(height + 1);
         }
         currentPhaseTextField.setText(Res.get("dao.phase." + phase.name()));
-        proposalTextField.setText(getPhaseDuration(height, DaoPhase.Phase.PROPOSAL));
-        blindVoteTextField.setText(getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE));
-        voteRevealTextField.setText(getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL));
-        voteResultTextField.setText(getPhaseDuration(height, DaoPhase.Phase.RESULT));
-    }
-
-    private String getPhaseDuration(int height, DaoPhase.Phase phase) {
-        long start = daoFacade.getFirstBlockOfPhaseForDisplay(height, phase);
-        long end = daoFacade.getLastBlockOfPhaseForDisplay(height, phase);
-        long duration = daoFacade.getDurationForPhaseForDisplay(phase);
-        long now = new Date().getTime();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
-        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
-        return Res.get("dao.cycle.phaseDuration", duration, durationTime, start, end, startDateTime, endDateTime);
+        proposalTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, formatter));
+        blindVoteTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.BLIND_VOTE, daoFacade, formatter));
+        voteRevealTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.VOTE_REVEAL, daoFacade, formatter));
+        voteResultTextField.setText(DaoUtil.getPhaseDuration(height, DaoPhase.Phase.RESULT, daoFacade, formatter));
     }
 }

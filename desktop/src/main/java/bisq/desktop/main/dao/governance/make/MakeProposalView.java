@@ -21,16 +21,17 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.DaoUtil;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
@@ -51,6 +52,7 @@ import bisq.asset.Asset;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -60,8 +62,15 @@ import javax.inject.Inject;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
@@ -76,7 +85,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
@@ -95,6 +106,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private Button makeProposalButton;
     private ComboBox<ProposalType> proposalTypeComboBox;
     private ChangeListener<ProposalType> proposalTypeChangeListener;
+    private TextField nextProposalTextField;
+    private TitledGroupBg proposalTitledGroup;
+    private VBox nextProposalBox;
+
+    private BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
+    private StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
+
     @Nullable
     private ProposalType selectedProposalType;
     private int gridRow;
@@ -128,8 +146,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     public void initialize() {
         gridRow = phasesView.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.proposal.create.selectProposalType"), Layout.GROUP_DISTANCE);
-        proposalTypeComboBox = FormBuilder.addComboBox(root, gridRow,
+        proposalTitledGroup = addTitledGroupBg(root, ++gridRow, 2, proposalGroupTitle.get(), Layout.GROUP_DISTANCE);
+        final Tuple3<Label, TextField, VBox> nextProposalPhaseTuple = addTopLabelReadOnlyTextField(root, gridRow,
+                Res.get("dao.cycle.proposal.next"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        nextProposalBox = nextProposalPhaseTuple.third;
+        nextProposalTextField = nextProposalPhaseTuple.second;
+        proposalTypeComboBox = addComboBox(root, gridRow,
                 Res.get("dao.proposal.create.proposalType"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         proposalTypeComboBox.setMaxWidth(300);
         proposalTypeComboBox.setConverter(new StringConverter<>() {
@@ -156,6 +179,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void activate() {
+        addBindings();
+
         phasesView.activate();
 
         daoFacade.addBsqStateListener(this);
@@ -169,6 +194,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void deactivate() {
+        removeBindings();
+
         phasesView.deactivate();
 
         daoFacade.removeBsqStateListener(this);
@@ -178,6 +205,25 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             makeProposalButton.setOnAction(null);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Bindings, Listeners
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addBindings() {
+        proposalTypeComboBox.managedProperty().bind(isProposalPhase);
+        proposalTypeComboBox.visibleProperty().bind(isProposalPhase);
+        nextProposalBox.managedProperty().bind(isProposalPhase.not());
+        nextProposalBox.visibleProperty().bind(isProposalPhase.not());
+        proposalTitledGroup.textProperty().bind(proposalGroupTitle);
+    }
+
+    private void removeBindings() {
+        proposalTypeComboBox.managedProperty().unbind();
+        proposalTypeComboBox.visibleProperty().unbind();
+        nextProposalBox.managedProperty().unbind();
+        nextProposalBox.visibleProperty().unbind();
+        proposalTitledGroup.textProperty().unbind();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -185,11 +231,17 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void onNewBlockHeight(int height) {
-        boolean isProposalPhase = daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL);
-        proposalTypeComboBox.setDisable(!isProposalPhase);
-        if (!isProposalPhase)
+        isProposalPhase.set(daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
+        if (isProposalPhase.get()) {
+            proposalGroupTitle.set(Res.get("dao.proposal.create.selectProposalType"));
+        } else {
+            proposalGroupTitle.set(Res.get("dao.proposal.create.phase.inactive"));
             proposalTypeComboBox.getSelectionModel().clearSelection();
+            updateTimeUntilNextProposalPhase(height);
+        }
+
     }
+
 
     @Override
     public void onParseBlockChainComplete() {
@@ -199,6 +251,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateTimeUntilNextProposalPhase(int height) {
+        nextProposalTextField.setText(DaoUtil.getNextPhaseDuration(height, DaoPhase.Phase.PROPOSAL, daoFacade, btcFormatter));
+    }
 
     private void publishMyProposal(ProposalType type) {
         try {
@@ -378,9 +434,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 }
             });
             proposalDisplay.getComboBoxes().stream()
-                    .filter(Objects::nonNull).forEach(comboBox -> {
-                inputsValid.set(inputsValid.get() && comboBox.getSelectionModel().getSelectedItem() != null);
-            });
+                    .filter(Objects::nonNull).forEach(comboBox -> inputsValid.set(inputsValid.get() &&
+                    comboBox.getSelectionModel().getSelectedItem() != null));
 
             InputTextField linkInputTextField = proposalDisplay.linkInputTextField;
             inputsValid.set(inputsValid.get() &&
