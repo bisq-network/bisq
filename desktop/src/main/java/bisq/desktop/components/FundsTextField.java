@@ -52,7 +52,7 @@ public class FundsTextField extends InfoTextField {
         textField.textProperty().bind(Bindings.concat(textProperty(), " ", fundsStructure));
 
         Label copyIcon = getIcon(AwesomeIcon.COPY);
-        copyIcon.setLayoutY(3);
+        copyIcon.setLayoutY(5);
         copyIcon.getStyleClass().addAll("icon", "highlight");
         Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
         copyIcon.setOnMouseClicked(e -> {
