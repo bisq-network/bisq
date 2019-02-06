@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Fetches fee data from the configured price nodes.
+ * Fetches fee and price data from the configured price nodes.
  * Based on the work of HarryMcFinned.
  * 
  * @author Florian Reimair
@@ -57,6 +57,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PriceNodeStats extends Metric {
 
     private static final String HOSTS = "run.hosts";
+    // poor mans JSON parser
+    private final Pattern stringNumberPattern = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
+    private final Pattern pricePattern = Pattern.compile("\"price\" ?: ?([\\d\\.]+)");
+    private final Pattern currencyCodePattern = Pattern.compile("\"currencyCode\" ?: ?\"([A-Z]+)\"");
 
     public PriceNodeStats(Reporter reporter) {
         super(reporter);
@@ -64,9 +68,6 @@ public class PriceNodeStats extends Metric {
 
     @Override
     protected void execute() {
-        // poor mans JSON parser
-        Pattern p = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
-
         try {
             Map<String, String> result = new HashMap<>();
 
@@ -86,18 +87,44 @@ public class PriceNodeStats extends Metric {
                 // prepare to receive data
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                // ask for data
+                // ask for fee data
                 PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
                 out.println("GET /getFees/");
                 out.println();
                 out.flush();
 
-                //sift through the received lines and see if we got something json-like
+                // sift through the received lines and see if we got something json-like
                 String line;
                 while((line = in.readLine()) != null) {
-                    Matcher matcher = p.matcher(line);
+                    Matcher matcher = stringNumberPattern.matcher(line);
                     if(matcher.find())
-                        result.put(OnionParser.prettyPrint(tmp) + "." + matcher.group(1), matcher.group(2));
+                        result.put(OnionParser.prettyPrint(tmp) + ".fees." + matcher.group(1), matcher.group(2));
+                }
+
+                in.close();
+                out.close();
+                socket.close();
+
+                // connect
+                socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
+
+                // prepare to receive data
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                // ask for exchange rate data
+                out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+                out.println("GET /getAllMarketPrices/");
+                out.println();
+                out.flush();
+
+                String currencyCode = "";
+                while((line = in.readLine()) != null) {
+                    Matcher currencyCodeMatcher = currencyCodePattern.matcher(line);
+                    Matcher priceMatcher = pricePattern.matcher(line);
+                    if(currencyCodeMatcher.find())
+                        currencyCode = currencyCodeMatcher.group(1);
+                    else if(priceMatcher.find())
+                            result.put(OnionParser.prettyPrint(tmp) + ".price." + currencyCode, priceMatcher.group(1));
                 }
 
                 // close all the things
