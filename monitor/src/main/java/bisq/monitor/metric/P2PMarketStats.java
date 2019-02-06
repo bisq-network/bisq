@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
  * Demo Stats metric derived from the OfferPayload messages we get from the seed nodes
  * 
  * @author Florian Reimair
- *
  */
 @Slf4j
 public class P2PMarketStats extends P2PSeedNodeSnapshot {
