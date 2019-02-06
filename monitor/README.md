@@ -18,7 +18,9 @@ The *Settled* release features these reporters:
 
 ## Configuration
 
-The *Bisq Network Monitor Node* is to be configured via a Java properties file. The location of the file is to be passed as command line parameter:
+The *Bisq Network Monitor Node* is to be configured via a Java properties file. There is a default configuration file shipped with the monitor which reports to the one monitoring service currently up and running.
+
+If you want to tweak the configuration, you can pass the location of the file as command line parameter:
 
 ```
 ./bisq-monitor /path/to/your/config.properties
