@@ -83,7 +83,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
@@ -503,9 +502,15 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void requestTxFee() {
+        requestTxFee(() -> {
+        });
+    }
+
+    void requestTxFee(Runnable actionHandler) {
         feeService.requestFees(() -> {
             txFeeFromFeeService = feeService.getTxFee(feeTxSize);
             calculateTotalToPay();
+            actionHandler.run();
         });
     }
 
@@ -626,7 +631,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void calculateTotalToPay() {
-        // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker
+        // Maker does not pay the mining fee for the trade txs because the mining fee might be different when maker
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         final Coin makerFee = getMakerFee();
