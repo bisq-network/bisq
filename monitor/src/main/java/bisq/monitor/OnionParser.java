@@ -34,7 +34,7 @@ public class OnionParser {
         if (!nodeAddress.startsWith("http://"))
             nodeAddress = "http://" + nodeAddress;
         URL tmp = new URL(nodeAddress);
-        return new NodeAddress(tmp.getHost(), tmp.getPort());
+        return new NodeAddress(tmp.getHost(), tmp.getPort() > 0 ? tmp.getPort() : 80);
     }
 
     public static String prettyPrint(final NodeAddress host) {

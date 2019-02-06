@@ -29,15 +29,25 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * TODO
- * based on the work of HarryMcFinned
+ * Fetches fee data from the configured price nodes.
+ * Based on the work of HarryMcFinned.
  * 
  * @author Florian Reimair
  * @author HarryMcFinned
@@ -54,8 +64,12 @@ public class PriceNodeStats extends Metric {
 
     @Override
     protected void execute() {
-        SocksSocket socket;
+        // poor mans JSON parser
+        Pattern p = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
+
         try {
+            Map<String, String> result = new HashMap<>();
+
             // fetch proxy
             Tor tor = Tor.getDefault();
             checkNotNull(tor, "tor must not be null");
@@ -67,11 +81,32 @@ public class PriceNodeStats extends Metric {
                 NodeAddress tmp = OnionParser.getNodeAddress(current);
 
                 // connect
-                socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
+                SocksSocket socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
 
+                // prepare to receive data
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                // ask for data
+                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+                out.println("GET /getFees/");
+                out.println();
+                out.flush();
+
+                //sift through the received lines and see if we got something json-like
+                String line;
+                while((line = in.readLine()) != null) {
+                    Matcher matcher = p.matcher(line);
+                    if(matcher.find())
+                        result.put(OnionParser.prettyPrint(tmp) + "." + matcher.group(1), matcher.group(2));
+                }
+
+                // close all the things
+                in.close();
+                out.close();
                 socket.close();
 
                 // report
+                reporter.report(result, "bisq." + getName());
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block
