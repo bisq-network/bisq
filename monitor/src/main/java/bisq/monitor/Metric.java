@@ -111,7 +111,7 @@ public abstract class Metric extends Configurable implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName(getName());
+        Thread.currentThread().setName("Metric: " + getName());
 
         // execute all the things
         synchronized (this) {

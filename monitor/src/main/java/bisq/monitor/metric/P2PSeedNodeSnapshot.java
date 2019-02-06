@@ -75,12 +75,12 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
-    protected Statistics statistics;
+    Statistics statistics;
     private NetworkNode networkNode;
     private final File torHiddenServiceDir = new File("metric_" + this.getClass().getSimpleName());
     private int nonce;
-    protected Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
-    private Set<byte[]> hashes = new TreeSet<>((o1, o2) -> Arrays.compare(o1, o2));
+    Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
+    private Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
@@ -146,7 +146,6 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
         public synchronized void reset() {
             buckets.clear();
         }
-
     }
 
     public P2PSeedNodeSnapshot(Reporter reporter) {

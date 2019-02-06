@@ -91,7 +91,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
             hsReady.await();
         }
 
-
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
             try {
