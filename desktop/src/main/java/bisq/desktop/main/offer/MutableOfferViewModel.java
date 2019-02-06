@@ -948,6 +948,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
     }
 
+    public String getFundsStructure() {
+        String fundsStructure;
+        if (dataModel.isCurrencyForMakerFeeBtc()) {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure",
+                    getSecurityDepositWithCode(), getMakerFeePercentage(), getTxFeePercentage());
+        } else {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure.BSQ",
+                    getSecurityDepositWithCode(), getTxFeePercentage(), bsqFormatter.formatCoinWithCode(dataModel.getMakerFee()));
+        }
+        return fundsStructure;
+    }
+
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +

@@ -414,8 +414,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 String key = "createOfferFundWalletInfo";
                 String tradeAmountText = model.isSellOffer() ?
                         Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+
                 String message = Res.get("createOffer.createOfferFundWalletInfo.msg",
-                        model.totalToPay.get(),
+                        model.getTotalToPayInfo(),
                         tradeAmountText,
                         model.getSecurityDepositInfo(),
                         model.getTradeFee(),
@@ -427,8 +428,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                         .show();
             }
 
-            totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
-                    model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
+            totalToPayTextField.setFundsStructure(model.getFundsStructure());
             totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
         });
 
