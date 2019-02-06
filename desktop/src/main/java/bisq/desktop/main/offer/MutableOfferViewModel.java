@@ -223,21 +223,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public void activate() {
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
-                switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                    case "BTC":
-                        amount.set("1");
-                        price.set("0.0002");
-                        break;
-                    case "LTC":
-                        amount.set("50");
-                        price.set("40");
-                        break;
-                    case "DASH":
-                        amount.set("0.1");
-                        price.set("40");
-                        break;
-                }
-
+                amount.set("1");
+                price.set("0.0002");
                 minAmount.set(amount.get());
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();

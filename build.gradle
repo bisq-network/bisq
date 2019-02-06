@@ -33,7 +33,6 @@ configure(subprojects) {
         jmockitVersion = '1.42'
         joptVersion = '5.0.3'
         langVersion = '3.4'
-        libdohjVersion = '7be803fa'
         bitcoinjVersion = 'cd30ad5b'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
@@ -132,10 +131,6 @@ configure([project(':desktop'),
 
 configure(project(':assets')) {
     dependencies {
-        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
-            exclude(module: 'protobuf-java')
-            exclude(module: 'bitcoinj-core')
-        }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
             exclude(module: 'protobuf-java')
         }
@@ -173,11 +168,6 @@ configure(project(':common')) {
         compile 'com.google.guava:guava:20.0'
         compile('com.google.inject:guice:4.1.0') {
             exclude(module: 'guava')
-        }
-        compile("network.bisq.libdohj:libdohj-core:$libdohjVersion") {
-            exclude(module: 'slf4j-api')
-            exclude(module: 'protobuf-java')
-            exclude(module: 'bitcoinj-core')
         }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
             exclude(module: 'jsr305')
