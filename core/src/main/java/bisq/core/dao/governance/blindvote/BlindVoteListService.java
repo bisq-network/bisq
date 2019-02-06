@@ -94,10 +94,6 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseBlockChainComplete() {
         fillListFromAppendOnlyDataStore();
     }

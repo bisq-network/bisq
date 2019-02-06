@@ -90,18 +90,9 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // At new cycle we don't get a list change but we want to update our predicates
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
     @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         updateLists();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 

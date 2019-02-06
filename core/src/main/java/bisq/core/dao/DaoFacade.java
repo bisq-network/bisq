@@ -186,10 +186,6 @@ public class DaoFacade implements DaoSetupService {
                 if (blockHeight > 0 && periodService.getCurrentCycle() != null)
                     periodService.getCurrentCycle().getPhaseForHeight(blockHeight).ifPresent(phaseProperty::set);
             }
-
-            @Override
-            public void onParseBlockChainComplete() {
-            }
         });
     }
 

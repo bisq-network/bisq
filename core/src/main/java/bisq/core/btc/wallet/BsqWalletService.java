@@ -183,17 +183,9 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         if (isWalletReady())
             updateBsqWalletTransactions();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
