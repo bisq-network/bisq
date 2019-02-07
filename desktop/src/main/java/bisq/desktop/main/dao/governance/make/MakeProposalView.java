@@ -30,6 +30,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.bond.Bond;
@@ -100,6 +101,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final Navigation navigation;
+    private final BsqWalletService bsqWalletService;
 
     @Nullable
     private ProposalDisplay proposalDisplay;
@@ -127,6 +129,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private MakeProposalView(DaoFacade daoFacade,
                              WalletsSetup walletsSetup,
                              P2PService p2PService,
+                             BsqWalletService bsqWalletService,
                              PhasesView phasesView,
                              ChangeParamValidator changeParamValidator,
                              BSFormatter btcFormatter,
@@ -135,6 +138,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         this.daoFacade = daoFacade;
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
+        this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
         this.changeParamValidator = changeParamValidator;
         this.btcFormatter = btcFormatter;
@@ -268,11 +272,22 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             int txSize = transaction.bitcoinSerialize().length;
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
-            if (!DevEnv.isDevMode()) {
-                GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
-                        Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
+            if (type.equals(ProposalType.BONDED_ROLE)) {
+                final long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
+                final long availableBalance = bsqWalletService.getAvailableBalance().value;
+
+                if (requiredBond > availableBalance) {
+                    final long missing = requiredBond - availableBalance;
+                    new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
+                            bsqFormatter.formatCoinWithCode(missing)))
+                            .actionButtonText(Res.get("dao.proposal.create.publish"))
+                            .onAction(() -> {
+                                showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
+                            })
+                            .show();
+                }
             } else {
-                doPublishMyProposal(proposal, transaction);
+                showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
             }
         } catch (InsufficientMoneyException e) {
             if (e instanceof InsufficientBsqException) {
@@ -296,6 +311,15 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
+        }
+    }
+
+    private void showFeeInfoAndPublishMyProposal(Proposal proposal, Transaction transaction, Coin miningFee, int txSize, Coin fee) {
+        if (!DevEnv.isDevMode()) {
+            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+                    Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
+        } else {
+            doPublishMyProposal(proposal, transaction);
         }
     }
 
