@@ -3,6 +3,7 @@
 # See bisq.asset.Asset and bisq.asset.AssetRegistry for further details.
 # See https://bisq.network/list-asset for complete instructions.
 bisq.asset.coins.Actinium
+bisq.asset.coins.Adeptio
 bisq.asset.coins.Aeon
 bisq.asset.coins.Australiacash
 bisq.asset.coins.Beam
