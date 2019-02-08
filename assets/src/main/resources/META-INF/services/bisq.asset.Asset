@@ -80,5 +80,6 @@ bisq.asset.coins.ZelCash
 bisq.asset.coins.Zero
 bisq.asset.coins.ZeroOneCoin
 bisq.asset.tokens.AugmintEuro
+bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
 bisq.asset.tokens.VectorspaceAI
