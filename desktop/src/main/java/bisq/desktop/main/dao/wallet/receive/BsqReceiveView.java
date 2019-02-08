@@ -117,7 +117,8 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         // Hide dao new badge if user saw this page
-        preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
 
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             bsqBalanceUtil.activate();

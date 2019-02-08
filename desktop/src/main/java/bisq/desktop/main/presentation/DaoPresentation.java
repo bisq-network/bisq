@@ -1,5 +1,6 @@
 package bisq.desktop.main.presentation;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
@@ -14,13 +15,13 @@ public class DaoPresentation {
     private final Preferences preferences;
     public static final String DAO_NEWS = "daoNewsVersion0.9.4";
 
-    private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(true);
+    private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
 
     @Inject
     public DaoPresentation(Preferences preferences) {
         this.preferences = preferences;
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
-            if (change.getKey().equals(DAO_NEWS)) {
+            if (change.getKey().equals(DAO_NEWS) && !BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
                 showNotification.set(!change.wasAdded());
             }
         });
@@ -31,6 +32,7 @@ public class DaoPresentation {
     }
 
     public void setup() {
-        showNotification.set(preferences.showAgain(DAO_NEWS));
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            showNotification.set(preferences.showAgain(DAO_NEWS));
     }
 }
