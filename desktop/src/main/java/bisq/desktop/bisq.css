@@ -521,6 +521,10 @@ bg color of non edit textFields: fafafa
     -fx-pref-height: 15;
 }
 
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
 .jfx-badge .label {
     -fx-font-weight: bold;
     -fx-font-size: 0.692em;

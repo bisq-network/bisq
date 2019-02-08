@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -29,6 +30,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple3;
@@ -50,6 +52,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
+    private final Preferences preferences;
     private int gridRow = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,10 +60,12 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil,
+                           Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;
+        this.preferences = preferences;
     }
 
     @Override
@@ -111,6 +116,9 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
+        // Hide dao new badge if user saw this page
+        preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+
         if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
             bsqBalanceUtil.activate();
 

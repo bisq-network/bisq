@@ -81,6 +81,7 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
@@ -182,6 +183,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
+        JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
+        daoButtonWithBadge.getStyleClass().add("new");
 
         root.sceneProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -246,7 +249,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButton);
+                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -289,6 +292,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
+        setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)

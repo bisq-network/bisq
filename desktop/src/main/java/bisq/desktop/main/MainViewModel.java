@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -89,6 +90,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private final TradePresentation tradePresentation;
     private final DisputePresentation disputePresentation;
     private final MarketPricePresentation marketPricePresentation;
+    private final DaoPresentation daoPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final Preferences preferences;
@@ -128,6 +130,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                          TradePresentation tradePresentation,
                          DisputePresentation disputePresentation,
                          MarketPricePresentation marketPricePresentation,
+                         DaoPresentation daoPresentation,
                          P2PService p2PService,
                          TradeManager tradeManager,
                          Preferences preferences,
@@ -149,6 +152,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         this.tradePresentation = tradePresentation;
         this.disputePresentation = disputePresentation;
         this.marketPricePresentation = marketPricePresentation;
+        this.daoPresentation = daoPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.preferences = preferences;
@@ -222,6 +226,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         setupBtcNumPeersWatcher();
 
         marketPricePresentation.setup();
+        daoPresentation.setup();
 
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
@@ -562,5 +567,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     public ObservableList<PriceFeedComboBoxItem> getPriceFeedComboBoxItems() {
         return marketPricePresentation.getPriceFeedComboBoxItems();
+    }
+
+    public BooleanProperty getShowDaoUpdatesNotification() {
+        return daoPresentation.getShowDaoUpdatesNotification();
     }
 }
