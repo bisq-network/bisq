@@ -510,6 +510,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         return bisqSetup.getBtcSplashSyncIconId();
     }
 
+    BooleanProperty getUseTorForBTC() {
+        return bisqSetup.getUseTorForBTC();
+    }
+
     // P2P
     StringProperty getP2PNetworkInfo() {
         return bisqSetup.getP2PNetworkInfo();

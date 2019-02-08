@@ -288,13 +288,13 @@ public class TorNetworkNode extends NetworkNode {
                 log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
                 restartTor(e.getMessage());
             } catch (IOException e) {
-                log.error("Could not connect to running Tor: "
-                        + e.getMessage());
-
-                // Seems a bit harsh, but since we cannot connect to Tor, we cannot do nothing.
+                log.error("Could not connect to running Tor: " + e.getMessage());
+                // Since we cannot connect to Tor, we cannot do nothing.
                 // Furthermore, we have no hidden services started yet, so there is no graceful
                 // shutdown needed either
-                System.exit(1);
+                UserThread.execute(() -> {
+                    setupListeners.stream().forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage())));
+                });
             } catch (Throwable ignore) {
             }
 
@@ -306,8 +306,7 @@ public class TorNetworkNode extends NetworkNode {
 
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
-                    log.error("Hidden service creation failed" + throwable);
-                    restartTor(throwable.getMessage());
+                    log.error("Hidden service creation failed: " + throwable);
                 });
             }
         });
