@@ -171,10 +171,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseBlockChainComplete() {
         rePublishOnceWellConnected();
     }

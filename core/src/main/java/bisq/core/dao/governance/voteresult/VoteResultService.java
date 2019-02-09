@@ -30,7 +30,6 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
-import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -77,15 +76,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Calculates the result of the voting at the VoteResult period.
@@ -96,7 +99,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class VoteResultService implements DaoStateListener, DaoSetupService {
-    private final VoteRevealService voteRevealService;
     private final ProposalListPresentation proposalListPresentation;
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
@@ -106,6 +108,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private final MissingDataRequestService missingDataRequestService;
     @Getter
     private final ObservableList<VoteResultException> voteResultExceptions = FXCollections.observableArrayList();
+    @Getter
+    private Set<DecryptedBallotsWithMerits> invalidDecryptedBallotsWithMeritItems = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,15 +117,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public VoteResultService(VoteRevealService voteRevealService,
-                             ProposalListPresentation proposalListPresentation,
+    public VoteResultService(ProposalListPresentation proposalListPresentation,
                              DaoStateService daoStateService,
                              PeriodService periodService,
                              BallotListService ballotListService,
                              BlindVoteListService blindVoteListService,
                              IssuanceService issuanceService,
                              MissingDataRequestService missingDataRequestService) {
-        this.voteRevealService = voteRevealService;
         this.proposalListPresentation = proposalListPresentation;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
@@ -151,14 +153,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-    }
-
-    @Override
     public void onParseTxsComplete(Block block) {
         maybeCalculateVoteResult(block.getHeight());
     }
@@ -172,60 +166,68 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         if (isInVoteResultPhase(chainHeight)) {
             log.info("CalculateVoteResult at chainHeight={}", chainHeight);
             Cycle currentCycle = periodService.getCurrentCycle();
+            checkNotNull(currentCycle, "currentCycle must not be null");
             long startTs = System.currentTimeMillis();
-            Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
-            decryptedBallotsWithMeritsSet.stream()
-                    .filter(e -> !daoStateService.getDecryptedBallotsWithMeritsList().contains(e))
-                    .forEach(daoStateService.getDecryptedBallotsWithMeritsList()::add);
 
+            Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet = getDecryptedBallotsWithMeritsSet(chainHeight);
             if (!decryptedBallotsWithMeritsSet.isEmpty()) {
-                // From the decryptedBallotsWithMerits we create a map with the hash of the blind vote list as key and the
-                // aggregated stake+merit as value. That map is used for calculating the majority of the blind vote lists.
+                // From the decryptedBallotsWithMeritsSet we create a map with the hash of the blind vote list as key and the
+                // aggregated stake as value (no merit as that is part of the P2P network data and might lead to inconsistency).
+                // That map is used for calculating the majority of the blind vote lists.
                 // There might be conflicting versions due the eventually consistency of the P2P network (if some blind
-                // votes do not arrive at all voters) which would lead to consensus failure in the result calculation.
-                // To solve that problem we will only consider the majority data view as valid.
+                // vote payloads do not arrive at all voters) which would lead to consensus failure in the result calculation.
+                // To solve that problem we will only consider the blind votes valid which are matching the majority hash.
                 // If multiple data views would have the same stake we sort additionally by the hex value of the
                 // blind vote hash and use the first one in the sorted list as winner.
-                // A node which has a local blindVote list which does not match the winner data view need to recover it's
+                // A node which has a local blindVote list which does not match the winner data view will try
+                // permutations of his local list and if that does not succeed he need to recover it's
                 // local blindVote list by requesting the correct list from other peers.
                 Map<P2PDataStorage.ByteArray, Long> stakeByHashOfBlindVoteListMap = getStakeByHashOfBlindVoteListMap(decryptedBallotsWithMeritsSet);
 
                 try {
                     // Get majority hash
-                    byte[] majorityBlindVoteListHash = getMajorityBlindVoteListHash(stakeByHashOfBlindVoteListMap);
+                    byte[] majorityBlindVoteListHash = calculateMajorityBlindVoteListHash(stakeByHashOfBlindVoteListMap);
 
                     // Is our local list matching the majority data view?
-                    if (isBlindVoteListMatchingMajority(majorityBlindVoteListHash)) {
-                        //TODO should we write the decryptedBallotsWithMerits here into the state?
+                    Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash = findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash);
+                    if (optionalBlindVoteListMatchingMajorityHash.isPresent()) {
+                        List<BlindVote> blindVoteList = optionalBlindVoteListMatchingMajorityHash.get();
+                        log.info("blindVoteListMatchingMajorityHash: " + blindVoteList.stream()
+                                .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
+                                .collect(Collectors.toList()));
 
-                        //TODO we get duplicated items in evaluatedProposals with diff. merit values
-                        Set<EvaluatedProposal> evaluatedProposals = getEvaluatedProposals(decryptedBallotsWithMeritsSet, chainHeight);
+                        Set<String> blindVoteTxIdSet = blindVoteList.stream().map(BlindVote::getTxId).collect(Collectors.toSet());
+                        // We need to filter out result list according to the majority hash list
+                        Set<DecryptedBallotsWithMerits> filteredDecryptedBallotsWithMeritsSet = decryptedBallotsWithMeritsSet.stream()
+                                .filter(decryptedBallotsWithMerits -> {
+                                    boolean contains = blindVoteTxIdSet.contains(decryptedBallotsWithMerits.getBlindVoteTxId());
+                                    if (!contains) {
+                                        invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
+                                    }
+                                    return contains;
+                                })
+                                .collect(Collectors.toSet());
 
+                        // Only if we have all blind vote payloads and know the right list matching the majority we add
+                        // it to our state. Otherwise we are not in consensus with the network.
+                        daoStateService.addDecryptedBallotsWithMeritsSet(filteredDecryptedBallotsWithMeritsSet);
+
+                        // FIXME we got duplicated items in evaluatedProposals with diff. merit values, find out why...
+                        Set<EvaluatedProposal> evaluatedProposals = getEvaluatedProposals(filteredDecryptedBallotsWithMeritsSet, chainHeight);
+                        daoStateService.addEvaluatedProposalSet(evaluatedProposals);
                         Set<EvaluatedProposal> acceptedEvaluatedProposals = getAcceptedEvaluatedProposals(evaluatedProposals);
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
-
-                        evaluatedProposals.stream()
-                                .filter(e -> !daoStateService.getEvaluatedProposalList().contains(e))
-                                .forEach(daoStateService.getEvaluatedProposalList()::add);
                         log.info("processAllVoteResults completed");
                     } else {
-                        log.warn("Our list of received blind votes do not match the list from the majority of voters.");
-                        // TODO request missing blind votes
+                        // TODO make sure we handle it in the UI -> ask user to restart
+                        String msg = "We could not find a list which matches the majority so we cannot calculate the vote result.";
+                        log.warn(msg);
+                        voteResultExceptions.add(new VoteResultException(currentCycle, new Exception(msg)));
                     }
-
-                } catch (VoteResultException.ValidationException e) {
-                    log.warn(e.toString());
-                    e.printStackTrace();
-                    voteResultExceptions.add(new VoteResultException(currentCycle, e));
-                } catch (VoteResultException.ConsensusException e) {
+                } catch (Throwable e) {
                     log.warn(e.toString());
                     log.warn("decryptedBallotsWithMeritsSet " + decryptedBallotsWithMeritsSet);
                     e.printStackTrace();
-
-                    //TODO notify application of that case (e.g. add error handler)
-                    // The vote cycle is invalid as conflicting data views of the blind vote data exist and the winner
-                    // did not reach super majority of 80%.
-
                     voteResultExceptions.add(new VoteResultException(currentCycle, e));
                 }
             } else {
@@ -245,91 +247,119 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // We want all voteRevealTxOutputs which are in current cycle we are processing.
         return daoStateService.getVoteRevealOpReturnTxOutputs().stream()
                 .filter(txOutput -> periodService.isTxInCorrectCycle(txOutput.getTxId(), chainHeight))
-                .map(txOutput -> {
-                    // TODO make method
-                    byte[] opReturnData = txOutput.getOpReturnData();
-                    String voteRevealTxId = txOutput.getTxId();
-                    Optional<Tx> optionalVoteRevealTx = daoStateService.getTx(voteRevealTxId);
-                    if (!optionalVoteRevealTx.isPresent()) {
-                        log.error("optionalVoteRevealTx is not present. voteRevealTxId={}", voteRevealTxId);
-                        //TODO throw exception
-                        return null;
-                    }
-
-                    Tx voteRevealTx = optionalVoteRevealTx.get();
-                    // If we get a voteReveal tx which was published too late we ignore it.
-                    if (!periodService.isTxInPhaseAndCycle(voteRevealTx.getId(), DaoPhase.Phase.VOTE_REVEAL, chainHeight)) {
-                        log.warn("We got a vote reveal tx with was not in the correct phase and/or cycle. voteRevealTxId={}", voteRevealTx.getId());
-                        return null;
-                    }
-
-                    Cycle currentCycle = periodService.getCurrentCycle();
-                    try {
-                        // TODO maybe verify version in opReturn
-
-                        TxOutput blindVoteStakeOutput = VoteResultConsensus.getConnectedBlindVoteStakeOutput(voteRevealTx, daoStateService);
-                        String blindVoteTxId = blindVoteStakeOutput.getTxId();
-                        boolean isBlindVoteInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(blindVoteTxId, DaoPhase.Phase.BLIND_VOTE, chainHeight);
-                        // If we get a voteReveal tx which was published too late we ignore it.
-                        if (!isBlindVoteInCorrectPhaseAndCycle) {
-                            log.warn("We got a blind vote tx with was not in the correct phase and/or cycle. blindVoteTxId={}", blindVoteTxId);
-                            return null;
-                        }
-
-                        VoteResultConsensus.validateBlindVoteTx(blindVoteStakeOutput.getTxId(), daoStateService, periodService, chainHeight);
-
-                        List<BlindVote> blindVoteList = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-                        Optional<BlindVote> optionalBlindVote = blindVoteList.stream()
-                                .filter(blindVote -> blindVote.getTxId().equals(blindVoteTxId))
-                                .findAny();
-                        if (optionalBlindVote.isPresent()) {
-                            BlindVote blindVote = optionalBlindVote.get();
-                            try {
-                                SecretKey secretKey = VoteResultConsensus.getSecretKey(opReturnData);
-                                VoteWithProposalTxIdList voteWithProposalTxIdList = VoteResultConsensus.decryptVotes(blindVote.getEncryptedVotes(), secretKey);
-                                MeritList meritList = MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
-                                // We lookup for the proposals we have in our local list which match the txId from the
-                                // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
-                                // the voteWithProposalTxIdList
-                                BallotList ballotList = createBallotList(voteWithProposalTxIdList);
-                                byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(opReturnData);
-                                long blindVoteStake = blindVoteStakeOutput.getValue();
-                                log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, blindVoteStake={}, ballotList={}",
-                                        blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList);
-                                return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
-                            } catch (VoteResultException.MissingBallotException missingBallotException) {
-                                log.warn("We are missing proposals to create the vote result: " + missingBallotException.toString());
-                                missingDataRequestService.sendRepublishRequest();
-                                voteResultExceptions.add(new VoteResultException(currentCycle, missingBallotException));
-                                return null;
-                            } catch (VoteResultException.DecryptionException decryptionException) {
-                                log.warn("Could not decrypt data: " + decryptionException.toString());
-                                voteResultExceptions.add(new VoteResultException(currentCycle, decryptionException));
-                                return null;
-                            }
-                        } else {
-                            log.warn("We have a blindVoteTx but we do not have the corresponding blindVote payload in our local database.\n" +
-                                    "That can happen if the blindVote item was not properly broadcast. We will go on " +
-                                    "and see if that blindVote was part of the majority data view. If so we should " +
-                                    "recover the missing blind vote by a request to our peers. blindVoteTxId={}", blindVoteTxId);
-
-                            VoteResultException.MissingBlindVoteDataException voteResultException = new VoteResultException.MissingBlindVoteDataException(blindVoteTxId);
-                            missingDataRequestService.sendRepublishRequest();
-                            voteResultExceptions.add(new VoteResultException(currentCycle, voteResultException));
-                            return null;
-                        }
-                    } catch (VoteResultException.ValidationException e) {
-                        log.warn("Could not create DecryptedBallotsWithMerits because of voteResultValidationException: " + e.toString());
-                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
-                        return null;
-                    } catch (Throwable e) {
-                        log.error("Could not create DecryptedBallotsWithMerits because of an unknown exception: " + e.toString());
-                        voteResultExceptions.add(new VoteResultException(currentCycle, e));
-                        return null;
-                    }
-                })
+                .filter(this::isInVoteRevealPhase)
+                .map(txOutputToDecryptedBallotsWithMerits(chainHeight))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+    }
+
+    private boolean isInVoteRevealPhase(TxOutput txOutput) {
+        String voteRevealTx = txOutput.getTxId();
+        boolean txInPhase = periodService.isTxInPhase(voteRevealTx, DaoPhase.Phase.VOTE_REVEAL);
+        if (!txInPhase)
+            log.warn("We got a vote reveal tx with was not in the correct phase of that cycle. voteRevealTxId={}", voteRevealTx);
+
+        return txInPhase;
+    }
+
+    @NotNull
+    private Function<TxOutput, DecryptedBallotsWithMerits> txOutputToDecryptedBallotsWithMerits(int chainHeight) {
+        return voteRevealTxOutput -> {
+            String voteRevealTxId = voteRevealTxOutput.getTxId();
+            Cycle currentCycle = periodService.getCurrentCycle();
+            checkNotNull(currentCycle, "currentCycle must not be null");
+            try {
+                byte[] voteRevealOpReturnData = voteRevealTxOutput.getOpReturnData();
+                Optional<Tx> optionalVoteRevealTx = daoStateService.getTx(voteRevealTxId);
+                checkArgument(optionalVoteRevealTx.isPresent(), "optionalVoteRevealTx must be present. voteRevealTxId=" + voteRevealTxId);
+                Tx voteRevealTx = optionalVoteRevealTx.get();
+
+                // TODO maybe verify version in opReturn
+
+                // Here we use only blockchain tx data so far so we don't have risks with missing P2P network data.
+                // We work back from the voteRealTx to the blindVoteTx to caclulate the majority hash. From that we
+                // will derive the blind vote list we will use for result calculation and as it was based on
+                // blockchain data it will be consistent for all peers independent on their P2P network data state.
+                TxOutput blindVoteStakeOutput = VoteResultConsensus.getConnectedBlindVoteStakeOutput(voteRevealTx, daoStateService);
+                String blindVoteTxId = blindVoteStakeOutput.getTxId();
+
+                // If we get a blind vote tx which was published too late we ignore it.
+                if (!periodService.isTxInPhaseAndCycle(blindVoteTxId, DaoPhase.Phase.BLIND_VOTE, chainHeight)) {
+                    log.warn("We got a blind vote tx with was not in the correct phase and/or cycle. " +
+                                    "We ignore that vote reveal and blind vote tx. voteRevealTx={}, blindVoteTxId={}",
+                            voteRevealTx, blindVoteTxId);
+                    return null;
+                }
+
+                VoteResultConsensus.validateBlindVoteTx(blindVoteTxId, daoStateService, periodService, chainHeight);
+
+                byte[] hashOfBlindVoteList = VoteResultConsensus.getHashOfBlindVoteList(voteRevealOpReturnData);
+                long blindVoteStake = blindVoteStakeOutput.getValue();
+
+                List<BlindVote> blindVoteList = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
+                Optional<BlindVote> optionalBlindVote = blindVoteList.stream()
+                        .filter(blindVote -> blindVote.getTxId().equals(blindVoteTxId))
+                        .findAny();
+                if (optionalBlindVote.isPresent()) {
+                    return getDecryptedBallotsWithMerits(voteRevealTxId, currentCycle, voteRevealOpReturnData,
+                            blindVoteTxId, hashOfBlindVoteList, blindVoteStake, optionalBlindVote.get());
+                }
+                return getEmptyDecryptedBallotsWithMerits(voteRevealTxId, blindVoteTxId, hashOfBlindVoteList,
+                        blindVoteStake);
+            } catch (Throwable e) {
+                log.error("Could not create DecryptedBallotsWithMerits from voteRevealTxId {} because of " +
+                        "exception: {}", voteRevealTxId, e.toString());
+                voteResultExceptions.add(new VoteResultException(currentCycle, e));
+                return null;
+            }
+        };
+    }
+
+    @NotNull
+    private DecryptedBallotsWithMerits getEmptyDecryptedBallotsWithMerits(
+            String voteRevealTxId, String blindVoteTxId, byte[] hashOfBlindVoteList, long blindVoteStake) {
+        log.warn("We have a blindVoteTx but we do not have the corresponding blindVote payload.\n" +
+                "That can happen if the blindVote item was not properly broadcast. " +
+                "We still add it to our result collection because it might be relevant for the majority " +
+                "hash by stake calculation. blindVoteTxId={}", blindVoteTxId);
+
+        missingDataRequestService.sendRepublishRequest();
+
+        // We prefer to use an empty list here instead a null or optional value to avoid that
+        // client code need to handle nullable or optional values.
+        BallotList emptyBallotList = new BallotList(new ArrayList<>());
+        MeritList emptyMeritList = new MeritList(new ArrayList<>());
+        log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, " +
+                        "blindVoteStake={}, ballotList={}",
+                blindVoteTxId, voteRevealTxId, blindVoteStake, emptyBallotList);
+        return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId,
+                blindVoteStake, emptyBallotList, emptyMeritList);
+    }
+
+    @Nullable
+    private DecryptedBallotsWithMerits getDecryptedBallotsWithMerits(
+            String voteRevealTxId, Cycle currentCycle, byte[] voteRevealOpReturnData, String blindVoteTxId,
+            byte[] hashOfBlindVoteList, long blindVoteStake, BlindVote blindVote)
+            throws VoteResultException.MissingBallotException {
+        SecretKey secretKey = VoteResultConsensus.getSecretKey(voteRevealOpReturnData);
+        try {
+            VoteWithProposalTxIdList voteWithProposalTxIdList = VoteResultConsensus.decryptVotes(blindVote.getEncryptedVotes(), secretKey);
+            MeritList meritList = MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
+            // We lookup for the proposals we have in our local list which match the txId from the
+            // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
+            // the voteWithProposalTxIdList
+            BallotList ballotList = createBallotList(voteWithProposalTxIdList);
+            log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, blindVoteStake={}, ballotList={}",
+                    blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList);
+            return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
+        } catch (VoteResultException.DecryptionException decryptionException) {
+            // We don't consider such vote reveal txs valid for the majority hash
+            // calculation and don't add it to our result collection
+            log.error("Could not decrypt blind vote. This vote reveal and blind vote will be ignored. " +
+                    "VoteRevealTxId={}. DecryptionException={}", voteRevealTxId, decryptionException.toString());
+            voteResultExceptions.add(new VoteResultException(currentCycle, decryptionException));
+            return null;
+        }
     }
 
     private BallotList createBallotList(VoteWithProposalTxIdList voteWithProposalTxIdList)
@@ -383,58 +413,56 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
             P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(decryptedBallotsWithMerits.getHashOfBlindVoteList());
             map.putIfAbsent(hash, 0L);
+            // We must not use the merit(stake) as that is from the P2P network data and it is not guaranteed that we
+            // have received it. We must rely only on blockchain data. The stake is from the vote reveal tx input.
             long aggregatedStake = map.get(hash);
-            //TODO move to consensus class
-            long merit = decryptedBallotsWithMerits.getMerit(daoStateService);
             long stake = decryptedBallotsWithMerits.getStake();
-            long combinedStake = stake + merit;
-            aggregatedStake += combinedStake;
+            aggregatedStake += stake;
             map.put(hash, aggregatedStake);
 
-            log.debug("blindVoteTxId={}, meritStake={}, stake={}, combinedStake={}",
-                    decryptedBallotsWithMerits.getBlindVoteTxId(), merit, stake, combinedStake);
+            log.debug("blindVoteTxId={}, stake={}",
+                    decryptedBallotsWithMerits.getBlindVoteTxId(), stake);
         });
         return map;
     }
 
-    private byte[] getMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> map)
+    private byte[] calculateMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> stakes)
             throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
-        List<HashWithStake> list = map.entrySet().stream()
+        List<HashWithStake> stakeList = stakes.entrySet().stream()
                 .map(entry -> new HashWithStake(entry.getKey().bytes, entry.getValue()))
                 .collect(Collectors.toList());
-        return VoteResultConsensus.getMajorityHash(list);
+        return VoteResultConsensus.getMajorityHash(stakeList);
     }
 
     // Deal with eventually consistency of P2P network
-    private boolean isBlindVoteListMatchingMajority(byte[] majorityVoteListHash) {
+    private Optional<List<BlindVote>> findBlindVoteListMatchingMajorityHash(byte[] majorityVoteListHash) {
         // We reuse the method at voteReveal domain used when creating the hash
-        byte[] myBlindVoteListHash = voteRevealService.getHashOfBlindVoteList();
-        log.info("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
-        log.info("myBlindVoteListHash " + Utilities.bytesAsHexString(myBlindVoteListHash));
-        boolean matches = Arrays.equals(majorityVoteListHash, myBlindVoteListHash);
-        // refactor to method
-        if (!matches) {
-            log.warn("myBlindVoteListHash does not match with majorityVoteListHash. We try permuting our list to " +
-                    "find a matching variant");
-            // Each voter has re-published his blind vote list when broadcasting the reveal tx so it should have a very
-            // high change that we have received all blind votes which have been used by the majority of the
-            // voters (e.g. its stake not nr. of voters).
+        List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
+        if (isListMatchingMajority(majorityVoteListHash, blindVotes, true)) {
+            // Out local list is matching the majority hash
+            return Optional.of(blindVotes);
+        } else {
+            log.warn("Our local list of blind vote payloads does not match the majorityVoteListHash. " +
+                    "We try permuting our list to find a matching variant");
+            // Each voter has re-published his blind vote list when broadcasting the reveal tx so there should have a very
+            // high chance that we have received all blind votes which have been used by the majority of the
+            // voters (majority by stake).
             // It still could be that we have additional blind votes so our hash does not match. We can try to permute
             // our list with excluding items to see if we get a matching list. If not last resort is to request the
             // missing items from the network.
+            // TODO we should add some metadata about the published blind vote txId list so it becomes easier to find
+            // the majority list. We could add a new payload for that or add a message to request the list from peers.
             Optional<List<BlindVote>> permutatedList = findPermutatedListMatchingMajority(majorityVoteListHash);
             if (permutatedList.isPresent()) {
-                //TODO do we need to apply/store it for later use?
-
-                return true;
+                return permutatedList;
             } else {
                 log.warn("We did not find a permutation of our blindVote list which matches the majority view. " +
                         "We will request the blindVote data from the peers.");
                 // This is async operation. We will restart the whole verification process once we received the data.
                 missingDataRequestService.sendRepublishRequest();
+                return Optional.empty();
             }
         }
-        return matches;
     }
 
     private Optional<List<BlindVote>> findPermutatedListMatchingMajority(byte[] majorityVoteListHash) {
@@ -442,7 +470,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         long ts = System.currentTimeMillis();
         List<List<BlindVote>> result = PermutationUtil.findAllPermutations(list, 1000000);
         for (List<BlindVote> variation : result) {
-            if (isListMatchingMajority(majorityVoteListHash, variation)) {
+            if (isListMatchingMajority(majorityVoteListHash, variation, false)) {
                 log.info("We found a variation of the blind vote list which matches the majority hash. variation={}",
                         variation);
                 log.info("findPermutatedListMatchingMajority for {} items took {} ms.",
@@ -456,8 +484,14 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return Optional.empty();
     }
 
-    private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list) {
+    private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list, boolean doLog) {
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(list);
+        if (doLog) {
+            log.info("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
+            log.info("hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
+            log.info("List of blindVoteTxIds " + list.stream().map(BlindVote::getTxId)
+                    .collect(Collectors.joining(", ")));
+        }
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
     }
 
@@ -539,19 +573,17 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
         Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new HashMap<>();
-        decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
-            decryptedBallotsWithMerits.getBallotList()
-                    .forEach(ballot -> {
-                        Proposal proposal = ballot.getProposal();
-                        voteWithStakeByProposalMap.putIfAbsent(proposal, new ArrayList<>());
-                        List<VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
-                        long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
-                                decryptedBallotsWithMerits.getMeritList(), daoStateService);
-                        VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
-                        voteWithStakeList.add(voteWithStake);
-                        log.info("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
-                    });
-        });
+        decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> decryptedBallotsWithMerits.getBallotList()
+                .forEach(ballot -> {
+                    Proposal proposal = ballot.getProposal();
+                    voteWithStakeByProposalMap.putIfAbsent(proposal, new ArrayList<>());
+                    List<VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
+                    long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
+                            decryptedBallotsWithMerits.getMeritList(), daoStateService);
+                    VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
+                    voteWithStakeList.add(voteWithStake);
+                    log.info("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
+                }));
         return voteWithStakeByProposalMap;
     }
 

@@ -82,10 +82,6 @@ public class CycleService implements DaoStateListener, DaoSetupService {
                     .ifPresent(daoStateService.getCycles()::add);
     }
 
-    @Override
-    public void onParseBlockChainComplete() {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

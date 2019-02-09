@@ -274,10 +274,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         updateViews();
     }

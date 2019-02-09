@@ -74,17 +74,12 @@ public class BallotListPresentation implements BallotListService.BallotListChang
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
+        //TODO should it be in onParseTxsComplete?
         ballotsOfCycle.setPredicate(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), blockHeight));
     }
 
     @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
-        onListChanged(ballotListService.getValidatedBallotList());
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-        // As we update the list in ProposalService.onParseBlockChainComplete we need to update here as well.
         onListChanged(ballotListService.getValidatedBallotList());
     }
 

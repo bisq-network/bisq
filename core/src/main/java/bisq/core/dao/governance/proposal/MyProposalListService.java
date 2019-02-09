@@ -121,10 +121,6 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
     public void onParseBlockChainComplete() {
         rePublishOnceWellConnected();
     }

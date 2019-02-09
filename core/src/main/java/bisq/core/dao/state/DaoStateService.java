@@ -220,8 +220,9 @@ public class DaoStateService implements DaoSetupService {
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
 
-        // Now we need to trigger the onParseBlockComplete to update the state in the app
-        getLastBlock().ifPresent(this::onParseBlockComplete);
+        getLastBlock().ifPresent(block -> {
+            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+        });
 
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
@@ -908,8 +909,20 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getEvaluatedProposalList();
     }
 
+    public void addEvaluatedProposalSet(Set<EvaluatedProposal> evaluatedProposals) {
+        evaluatedProposals.stream()
+                .filter(e -> !daoState.getEvaluatedProposalList().contains(e))
+                .forEach(daoState.getEvaluatedProposalList()::add);
+    }
+
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
         return daoState.getDecryptedBallotsWithMeritsList();
+    }
+
+    public void addDecryptedBallotsWithMeritsSet(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+        decryptedBallotsWithMeritsSet.stream()
+                .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
+                .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
     }
 
 

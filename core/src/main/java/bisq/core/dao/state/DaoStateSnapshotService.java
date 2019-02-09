@@ -70,10 +70,6 @@ public class DaoStateSnapshotService implements DaoStateListener {
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
     // We listen to each ParseTxsComplete event even if the batch processing of all blocks at startup is not completed
     // as we need to write snapshots during that batch processing.
     @Override
@@ -101,14 +97,6 @@ public class DaoStateSnapshotService implements DaoStateListener {
             snapshotCandidate = daoStateService.getClone();
             log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
-    }
-
-    private boolean isValidHeight(int heightOfLastBlock) {
-        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
@@ -151,6 +139,10 @@ public class DaoStateSnapshotService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isValidHeight(int heightOfLastBlock) {
+        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
+    }
 
     private void applyEmptySnapshot(DaoState persisted) {
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();

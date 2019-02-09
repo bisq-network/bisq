@@ -23,6 +23,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
@@ -77,8 +78,8 @@ public class PhasesView implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int height) {
-        applyData(height);
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+        applyData(block.getHeight());
 
         phaseBarsItems.forEach(item -> {
             DaoPhase.Phase phase = item.getPhase();
@@ -86,16 +87,12 @@ public class PhasesView implements DaoStateListener {
             // block which would be a break). Only at result phase we don't have that situation ans show the last block
             // as valid block in the phase.
             if (periodService.isInPhaseButNotLastBlock(phase) ||
-                    (phase == DaoPhase.Phase.RESULT && periodService.isInPhase(height, phase))) {
+                    (phase == DaoPhase.Phase.RESULT && periodService.isInPhase(block.getHeight(), phase))) {
                 item.setActive();
             } else {
                 item.setInActive();
             }
         });
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 

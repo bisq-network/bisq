@@ -157,16 +157,8 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     public void addListeners() {
         daoStateService.addBsqStateListener(new DaoStateListener() {
             @Override
-            public void onNewBlockHeight(int blockHeight) {
-            }
-
-            @Override
             public void onParseTxsCompleteAfterBatchProcessing(Block block) {
                 update();
-            }
-
-            @Override
-            public void onParseBlockChainComplete() {
             }
         });
         bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());

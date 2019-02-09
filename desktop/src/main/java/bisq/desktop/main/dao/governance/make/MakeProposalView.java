@@ -40,6 +40,7 @@ import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.presentation.DaoUtil;
 import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -230,22 +231,18 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int height) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         isProposalPhase.set(daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
         if (isProposalPhase.get()) {
             proposalGroupTitle.set(Res.get("dao.proposal.create.selectProposalType"));
         } else {
             proposalGroupTitle.set(Res.get("dao.proposal.create.phase.inactive"));
             proposalTypeComboBox.getSelectionModel().clearSelection();
-            updateTimeUntilNextProposalPhase(height);
+            updateTimeUntilNextProposalPhase(block.getHeight());
         }
 
     }
 
-
-    @Override
-    public void onParseBlockChainComplete() {
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

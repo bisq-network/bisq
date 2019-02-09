@@ -46,6 +46,8 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
     private final String blindVoteTxId;
     private final String voteRevealTxId;
     private final long stake;
+
+    // BallotList and meritList can be empty list in case we don't have a blind vote payload
     private final BallotList ballotList;
     private final MeritList meritList;
 
