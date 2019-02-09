@@ -245,9 +245,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         });
                     });
             if (!sb.toString().isEmpty()) {
-                new Popup<>().information("We had invalid votes in that voting cycle. That can happen if a vote was " +
-                        "not distributed well in the P2P network.\n" +
-                        sb.toString()).show();
+                new Popup<>().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
             }
         }
     }
