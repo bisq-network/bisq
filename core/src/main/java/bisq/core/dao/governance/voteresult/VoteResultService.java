@@ -248,7 +248,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return daoStateService.getVoteRevealOpReturnTxOutputs().stream()
                 .filter(txOutput -> periodService.isTxInCorrectCycle(txOutput.getTxId(), chainHeight))
                 .filter(this::isInVoteRevealPhase)
-                .map(txOutputToBallot(chainHeight))
+                .map(txOutputToDecryptedBallotsWithMerits(chainHeight))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
@@ -263,7 +263,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     @NotNull
-    private Function<TxOutput, DecryptedBallotsWithMerits> txOutputToBallot(int chainHeight) {
+    private Function<TxOutput, DecryptedBallotsWithMerits> txOutputToDecryptedBallotsWithMerits(int chainHeight) {
         return voteRevealTxOutput -> {
             String voteRevealTxId = voteRevealTxOutput.getTxId();
             Cycle currentCycle = periodService.getCurrentCycle();
