@@ -69,8 +69,6 @@ public class PriceNodeStats extends Metric {
     @Override
     protected void execute() {
         try {
-            Map<String, String> result = new HashMap<>();
-
             // fetch proxy
             Tor tor = Tor.getDefault();
             checkNotNull(tor, "tor must not be null");
@@ -78,6 +76,7 @@ public class PriceNodeStats extends Metric {
 
             // for each configured host
             for (String current : configuration.getProperty(HOSTS, "").split(",")) {
+                Map<String, String> result = new HashMap<>();
                 // parse Url
                 NodeAddress tmp = OnionParser.getNodeAddress(current);
 
@@ -98,7 +97,7 @@ public class PriceNodeStats extends Metric {
                 while((line = in.readLine()) != null) {
                     Matcher matcher = stringNumberPattern.matcher(line);
                     if(matcher.find())
-                        result.put(OnionParser.prettyPrint(tmp) + ".fees." + matcher.group(1), matcher.group(2));
+                        result.put("fees." + matcher.group(1), matcher.group(2));
                 }
 
                 in.close();
@@ -124,7 +123,7 @@ public class PriceNodeStats extends Metric {
                     if(currencyCodeMatcher.find())
                         currencyCode = currencyCodeMatcher.group(1);
                     else if(priceMatcher.find())
-                            result.put(OnionParser.prettyPrint(tmp) + ".price." + currencyCode, priceMatcher.group(1));
+                        result.put("price." + currencyCode, priceMatcher.group(1));
                 }
 
                 // close all the things
@@ -134,6 +133,10 @@ public class PriceNodeStats extends Metric {
 
                 // report
                 reporter.report(result, "bisq." + getName());
+
+                // only ask for data as long as we got none
+                if(!result.isEmpty())
+                    break;
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block
