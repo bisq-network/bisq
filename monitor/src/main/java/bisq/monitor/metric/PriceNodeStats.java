@@ -21,6 +21,9 @@ import bisq.monitor.Metric;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+
 import bisq.network.p2p.NodeAddress;
 
 import org.berndpruenster.netlayer.tor.Tor;
@@ -36,7 +39,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +66,7 @@ public class PriceNodeStats extends Metric {
     private final Pattern stringNumberPattern = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
     private final Pattern pricePattern = Pattern.compile("\"price\" ?: ?([\\d\\.]+)");
     private final Pattern currencyCodePattern = Pattern.compile("\"currencyCode\" ?: ?\"([A-Z]+)\"");
+    private final List<Object> assets = Arrays.asList(new AssetRegistry().stream().map(Asset::getTickerSymbol).toArray());
 
     public PriceNodeStats(Reporter reporter) {
         super(reporter);
@@ -120,9 +126,11 @@ public class PriceNodeStats extends Metric {
                 while((line = in.readLine()) != null) {
                     Matcher currencyCodeMatcher = currencyCodePattern.matcher(line);
                     Matcher priceMatcher = pricePattern.matcher(line);
-                    if(currencyCodeMatcher.find())
+                    if(currencyCodeMatcher.find()) {
                         currencyCode = currencyCodeMatcher.group(1);
-                    else if(priceMatcher.find())
+                        if(!assets.contains(currencyCode))
+                            currencyCode = "";
+                    } else if(!"".equals(currencyCode) && priceMatcher.find())
                         result.put("price." + currencyCode, priceMatcher.group(1));
                 }
 
