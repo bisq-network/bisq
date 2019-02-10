@@ -122,11 +122,66 @@ more information can be found [here](https://graphite.readthedocs.io/en/latest/i
 
 ### Configuration
 
-There is no further configuration necessary. However, you might change your iptables/firewalls to not let anyone access your Graphite instance from the outside.
+For configuration, you must adapt the whisper database schema to suit your needs. First, stop your docker container by running
+
+```
+docker stop graphite
+```
+
+Find your config files within the `Source` directory stated in
+
+```
+docker inspect graphite | grep -C 2 graphite/conf\",
+```
+
+Edit `storage-schemas.conf` so that the frequency of your incoming data (configured in the monitor configs `interval`) is matched. For example, insert 
+```
+[bisq]
+pattern = ^bisq.*
+retentions = 10s:1h,5m:31d,30m:2y,1h:5y
+```
+before the `[default...` blocks of the file. This basically says, that every incoming set of data reflects 5 minutes of the time series. Furthermore, every 30 minutes, the data is compressed and thus, takes less memory as it is kept for 2 years.
+
+Further, edit `storage-aggregation.conf` to configure how your data is compressed. For example, insert
+```
+[bisq]
+pattern=^bisq.*
+xFilesFactor = 0
+aggregationMethod = average
+```
+before the `[default...` blocks of the file. With this configuration, whenever data is aggregated, the `average` data is made available given that at least `0%` of the data points (i.e. floor(30 / 5 * 40%) = 2 data points) exist. Otherwise, the aggregated data is dropped. Since we start the first hour with a frequency of 10s but only supply data every 4 to 6 minutes, our aggregated values would get dropped.
+
+*Please note, that I have not been able to get the whole thing to work without the 10s:1h part yet*
+
+Finally, update the database. For doing that, go to the storage directory of graphite, the `Source` directory stated in
+```
+docker inspect graphite | grep -C 2 graphite/conf\",
+```
+Once there, you have two options:
+- delete the whisper directory
+```
+rm -r whisper
+```
+- update the database by doing
+```
+find ./ -type f -name '*.wsp' -exec whisper-resize.py --nobackup {} 10s:1h 5m:31d 30m:2y 1h:5y \;
+```
+
+and finally, restart your graphite container:
+```
+docker start graphite
+```
+
+
+Other than that, there is no further configuration necessary. However, you might change your iptables/firewalls to not let anyone access your Graphite instance from the outside.
 
 ### Backup your data
 
-*TBD*
+The metric data is kept in the `Source` directory stated in
+```
+docker inspect graphite | grep -C 2 graphite/conf\",
+```
+ready to be backed up regularly.
 
 ## Setting up Grafana
 
