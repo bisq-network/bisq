@@ -34,7 +34,6 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
@@ -667,9 +666,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         updateButtonDisableState();
     }
 
-    void onShowPayFundsScreen() {
+    void onShowPayFundsScreen(Runnable actionHandler) {
         dataModel.estimateTxSize();
-        dataModel.requestTxFee();
+        dataModel.requestTxFee(actionHandler);
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
     }
@@ -947,6 +946,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             return totalToPay;
         else
             return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
+    }
+
+    public String getFundsStructure() {
+        String fundsStructure;
+        if (dataModel.isCurrencyForMakerFeeBtc()) {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure",
+                    getSecurityDepositWithCode(), getMakerFeePercentage(), getTxFeePercentage());
+        } else {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure.BSQ",
+                    getSecurityDepositWithCode(), getTxFeePercentage(), bsqFormatter.formatCoinWithCode(dataModel.getMakerFee()));
+        }
+        return fundsStructure;
     }
 
     public String getTxFee() {

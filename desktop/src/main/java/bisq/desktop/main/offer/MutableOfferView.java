@@ -409,7 +409,28 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         advancedOptionsBox.setVisible(false);
         advancedOptionsBox.setManaged(false);
 
-        model.onShowPayFundsScreen();
+        model.onShowPayFundsScreen(() -> {
+            if (!DevEnv.isDevMode()) {
+                String key = "createOfferFundWalletInfo";
+                String tradeAmountText = model.isSellOffer() ?
+                        Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+
+                String message = Res.get("createOffer.createOfferFundWalletInfo.msg",
+                        model.getTotalToPayInfo(),
+                        tradeAmountText,
+                        model.getSecurityDepositInfo(),
+                        model.getTradeFee(),
+                        model.getTxFee()
+                );
+                new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
+                        .instruction(message)
+                        .dontShowAgainId(key)
+                        .show();
+            }
+
+            totalToPayTextField.setFundsStructure(model.getFundsStructure());
+            totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
+        });
 
         paymentAccountsComboBox.setDisable(true);
 
@@ -431,21 +452,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();
-
-            key = "createOfferFundWalletInfo";
-            String tradeAmountText = model.isSellOffer() ?
-                    Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
-            String message = Res.get("createOffer.createOfferFundWalletInfo.msg",
-                    model.totalToPay.get(),
-                    tradeAmountText,
-                    model.getSecurityDepositInfo(),
-                    model.getTradeFee(),
-                    model.getTxFee()
-            );
-            new Popup<>().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
-                    .instruction(message)
-                    .dontShowAgainId(key)
-                    .show();
         }
 
         waitingForFundsSpinner.play();
@@ -456,10 +462,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         qrCodeImageView.setVisible(true);
         balanceTextField.setVisible(true);
         cancelButton2.setVisible(true);
-
-        totalToPayTextField.setFundsStructure(Res.get("createOffer.fundsBox.fundsStructure",
-                model.getSecurityDepositWithCode(), model.getMakerFeePercentage(), model.getTxFeePercentage()));
-        totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
 
         final byte[] imageBytes = QRCode
                 .from(getBitcoinURI())
