@@ -39,6 +39,6 @@ public class MirQuiXTest extends AbstractAssetTest {
     public void testInvalidAddresses() {
         assertInvalidAddress("m9a1uVoZVqSrLo11zCJFanoapkX5jpD4qQ");
         assertInvalidAddress("m8cWbG2vQ8t86nD2hWQj6EUvfzeVWMmac6");
-        assertInvalidAddress("x8YbvNoZDNUpf3kjpFCs11xnmBFsexbzmk");
+        assertInvalidAddress("xBqmNXko4PihRKM1PTotY6Xi2PUEeidffQ");
     }
 }
