@@ -52,6 +52,7 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,6 +122,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableMap<String, Boolean> dontShowAgainMapAsObservable = FXCollections.observableHashMap();
 
     private final Storage<PreferencesPayload> storage;
     private final BisqEnvironment bisqEnvironment;
@@ -251,6 +253,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
+        dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
         if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
@@ -300,11 +303,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void dontShowAgain(String key, boolean dontShowAgain) {
         prefPayload.getDontShowAgainMap().put(key, dontShowAgain);
         persist();
+        dontShowAgainMapAsObservable.put(key, dontShowAgain);
     }
 
     public void resetDontShowAgain() {
         prefPayload.getDontShowAgainMap().clear();
         persist();
+        dontShowAgainMapAsObservable.clear();
     }
 
 
@@ -627,6 +632,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public ObservableList<TradeCurrency> getTradeCurrenciesAsObservable() {
         return tradeCurrenciesAsObservable;
+    }
+
+    public ObservableMap<String, Boolean> getDontShowAgainMapAsObservable() {
+        return dontShowAgainMapAsObservable;
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
