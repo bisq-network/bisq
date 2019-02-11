@@ -415,7 +415,7 @@ public class WalletConfig extends AbstractIdleService {
                             vStore.close();
                             if (!chainFile.delete())
                                 throw new IOException("Failed to delete chain file in preparation for restore.");
-                            vStore = new SPVBlockStore(params, chainFile);
+                            vStore = provideBlockStore(chainFile);
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -431,7 +431,7 @@ public class WalletConfig extends AbstractIdleService {
                     vStore.close();
                     if (!chainFile.delete())
                         throw new IOException("Failed to delete chain file in preparation for restore.");
-                    vStore = new SPVBlockStore(params, chainFile);
+                    vStore = provideBlockStore(chainFile);
                 }
             }
             vChain = new BlockChain(params, vStore);
