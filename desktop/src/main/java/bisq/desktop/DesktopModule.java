@@ -22,7 +22,6 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewFactory;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
-import bisq.desktop.main.MarketPricePresentation;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
 import bisq.desktop.main.funds.transactions.TradableRepository;
@@ -31,6 +30,8 @@ import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
+import bisq.desktop.main.presentation.DaoPresentation;
+import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.app.AppOptionKeys;
@@ -72,6 +73,7 @@ public class DesktopModule extends AppModule {
         bind(BsqFormatter.class).in(Singleton.class);
         bind(TorNetworkSettingsWindow.class).in(Singleton.class);
         bind(MarketPricePresentation.class).in(Singleton.class);
+        bind(DaoPresentation.class).in(Singleton.class);
 
         bind(Transitions.class).in(Singleton.class);
 

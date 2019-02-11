@@ -29,6 +29,7 @@ import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.DaoPresentation;
+import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -66,11 +67,14 @@ import com.google.inject.Inject;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import javafx.collections.ObservableList;
@@ -109,6 +113,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
+    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty();
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
@@ -354,6 +359,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
+
+        bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
+        daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
+
     }
 
     private void setupP2PNumPeersWatcher() {
@@ -460,6 +469,16 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         }
     }
 
+    private void updateBtcSyncProgress() {
+        final DoubleProperty btcSyncProgress = bisqSetup.getBtcSyncProgress();
+
+        if (btcSyncProgress.doubleValue() < 1) {
+            combinedSyncProgress.set(btcSyncProgress.doubleValue());
+        } else {
+            combinedSyncProgress.set(daoPresentation.getBsqSyncProgress().doubleValue());
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MainView delegate getters
@@ -500,11 +519,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     // Wallet
     StringProperty getBtcInfo() {
-        return bisqSetup.getBtcInfo();
+        final StringProperty combinedInfo = new SimpleStringProperty();
+        combinedInfo.bind(Bindings.concat(bisqSetup.getBtcInfo(), " ", daoPresentation.getBsqInfo()));
+        return combinedInfo;
     }
 
     DoubleProperty getBtcSyncProgress() {
-        return bisqSetup.getBtcSyncProgress();
+        return combinedSyncProgress;
     }
 
     StringProperty getWalletServiceErrorMsg() {

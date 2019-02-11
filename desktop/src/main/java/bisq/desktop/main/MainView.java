@@ -592,8 +592,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcInfoLabel.setId("footer-pane");
         btcInfoLabel.textProperty().bind(model.getBtcInfo());
 
-        ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
-        blockchainSyncIndicator.setPrefWidth(120);
+        ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
+        blockchainSyncIndicator.setPrefWidth(80);
         blockchainSyncIndicator.setMaxHeight(10);
         blockchainSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
 

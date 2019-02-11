@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main;
+package bisq.desktop.main.presentation;
 
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
