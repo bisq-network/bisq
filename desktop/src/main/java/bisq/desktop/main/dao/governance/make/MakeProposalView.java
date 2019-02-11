@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.governance.make;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.governance.PhasesView;
@@ -55,6 +56,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -67,6 +69,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import javafx.beans.property.BooleanProperty;
@@ -86,7 +89,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
 import static bisq.desktop.util.FormBuilder.addComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
@@ -112,6 +115,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private TextField nextProposalTextField;
     private TitledGroupBg proposalTitledGroup;
     private VBox nextProposalBox;
+    private BusyAnimation busyAnimation;
+    private Label busyLabel;
 
     private BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
     private StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
@@ -321,19 +326,31 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private void doPublishMyProposal(Proposal proposal, Transaction transaction) {
+
+        busyLabel.setVisible(true);
+        busyAnimation.play();
+        makeProposalButton.setDisable(true);
+
         daoFacade.publishMyProposal(proposal,
                 transaction,
                 () -> {
                     if (!DevEnv.isDevMode())
                         new Popup<>().feedback(Res.get("dao.tx.published.success")).show();
-                },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
 
-        // We reset UI without waiting for callback as callback might be slow and then the user could create multiple
-        // proposals.
-        if (proposalDisplay != null)
-            proposalDisplay.clearForm();
-        proposalTypeComboBox.getSelectionModel().clearSelection();
+                    if (proposalDisplay != null)
+                        proposalDisplay.clearForm();
+                    proposalTypeComboBox.getSelectionModel().clearSelection();
+                    busyAnimation.stop();
+                    busyLabel.setVisible(false);
+                    makeProposalButton.setDisable(false);
+                },
+                errorMessage -> {
+                    new Popup<>().warning(errorMessage).show();
+                    busyAnimation.stop();
+                    busyLabel.setVisible(false);
+                    makeProposalButton.setDisable(false);
+                });
+
     }
 
     @Nullable
@@ -412,10 +429,19 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
             proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation);
-            proposalDisplay.createAllFields(Res.get("dao.proposal.create.createNew"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
+
+            proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
-            makeProposalButton = addButtonAfterGroup(root, proposalDisplay.incrementAndGetGridRow(), Res.get("dao.proposal.create.create.button"));
+            final Tuple4<Button, BusyAnimation, Label, HBox> makeProposalTuple = addButtonBusyAnimationLabel(root,
+                    proposalDisplay.getGridRow(), 0, Res.get("dao.proposal.create.button"), 0);
+            makeProposalButton = makeProposalTuple.first;
+
+            busyAnimation = makeProposalTuple.second;
+            busyLabel = makeProposalTuple.third;
+            busyLabel.setVisible(false);
+            busyLabel.setText(Res.get("dao.proposal.create.publishing"));
+
             setMakeProposalButtonHandler();
             proposalDisplay.addInputChangedListener(this::updateButtonState);
             updateButtonState();
