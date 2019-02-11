@@ -326,7 +326,11 @@ public class WalletConfig extends AbstractIdleService {
      * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
      */
     private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        return new SPVBlockStore(params, file);
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            return new NonMMappedSPVBlockStore(params, file);
+        } else {
+            return new SPVBlockStore(params, file);
+        }
     }
 
     /**
