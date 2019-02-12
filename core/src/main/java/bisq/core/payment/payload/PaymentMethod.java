@@ -17,7 +17,6 @@
 
 package bisq.core.payment.payload;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -155,23 +154,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static List<PaymentMethod> getAllValues() {
         if (ALL_VALUES == null) {
-            Coin maxTradeLimitHighRisk;
-            Coin maxTradeLimitMidRisk;
-            Coin maxTradeLimitLowRisk;
-            Coin maxTradeLimitVeryLowRisk;
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    // we want to avoid more then 4 decimal places (0.125 / 4 = 0.03125), so we use a bit higher value to get 0.04 for first month
-                    maxTradeLimitHighRisk = Coin.parseCoin("0.16");
-
-                    maxTradeLimitMidRisk = Coin.parseCoin("0.25");
-                    maxTradeLimitLowRisk = Coin.parseCoin("0.5");
-                    maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
-                    break;
-                default:
-                    log.error("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
-                    throw new RuntimeException("Unsupported BaseCurrency. " + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode());
-            }
+            // we want to avoid more then 4 decimal places (0.125 / 4 = 0.03125), so we use a bit higher value to get 0.04 for first month
+            Coin maxTradeLimitHighRisk = Coin.parseCoin("0.16");
+            Coin maxTradeLimitMidRisk = Coin.parseCoin("0.25");
+            Coin maxTradeLimitLowRisk = Coin.parseCoin("0.5");
+            Coin maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
 
             ALL_VALUES = new ArrayList<>(Arrays.asList(
                     // EUR
