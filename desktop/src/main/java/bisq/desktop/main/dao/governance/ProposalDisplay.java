@@ -93,9 +93,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("ConstantConditions")
@@ -113,7 +111,6 @@ public class ProposalDisplay {
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
     private TextField proposalTypeTextField, myVoteTextField, voteResultTextField;
-    private Label myVoteLabel, voteResultLabel;
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
     @Nullable
@@ -142,8 +139,7 @@ public class ProposalDisplay {
     private ChangeListener<BondedRoleType> requiredBondForRoleListener;
     private TitledGroupBg titledGroupBg;
     private int titledGroupBgRowSpan;
-    private VBox linkWithIconContainer;
-    private VBox comboBoxValueContainer;
+    private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
                            @Nullable ChangeParamValidator changeParamValidator, Navigation navigation) {
@@ -213,7 +209,7 @@ public class ProposalDisplay {
             linkInputTextField.setValidator(new UrlInputValidator());
         inputControls.add(linkInputTextField);
 
-        Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, gridRow,
+        Tuple3<Label, HyperlinkWithIcon, VBox> tuple = addTopLabelHyperlinkWithIcon(gridPane, gridRow,
                 Res.get("dao.proposal.display.link"), "", "", 0);
         linkHyperlinkWithIcon = tuple.second;
         linkWithIconContainer = tuple.third;
@@ -370,7 +366,7 @@ public class ProposalDisplay {
         }
 
         if (comboBoxValueTextFieldIndex > -1) {
-            Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, comboBoxValueTextFieldIndex,
+            Tuple3<Label, TextField, VBox> tuple3 = addTopLabelReadOnlyTextField(gridPane, comboBoxValueTextFieldIndex,
                     Res.get("dao.proposal.display.option"));
             comboBoxValueTextField = tuple3.second;
             comboBoxValueContainer = tuple3.third;
@@ -385,20 +381,20 @@ public class ProposalDisplay {
         }
 
         Tuple3<Label, TextField, VBox> tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.myVote"));
-        myVoteLabel = tuple3.first;
-        myVoteLabel.setVisible(false);
-        myVoteLabel.setManaged(false);
+
+        myVoteBox = tuple3.third;
+        myVoteBox.setVisible(false);
+        myVoteBox.setManaged(false);
+
         myVoteTextField = tuple3.second;
-        myVoteTextField.setVisible(false);
-        myVoteTextField.setManaged(false);
 
         tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
-        voteResultLabel = tuple3.first;
-        voteResultLabel.setVisible(false);
-        voteResultLabel.setManaged(false);
+
+        voteResultBox = tuple3.third;
+        voteResultBox.setVisible(false);
+        voteResultBox.setManaged(false);
+
         voteResultTextField = tuple3.second;
-        voteResultTextField.setVisible(false);
-        voteResultTextField.setManaged(false);
 
         addListeners();
     }
@@ -413,10 +409,8 @@ public class ProposalDisplay {
         }
         myVoteTextField.setText(myVote);
 
-        myVoteLabel.setVisible(isNotNull);
-        myVoteLabel.setManaged(isNotNull);
-        myVoteTextField.setVisible(isNotNull);
-        myVoteTextField.setManaged(isNotNull);
+        myVoteBox.setVisible(isNotNull);
+        myVoteBox.setManaged(isNotNull);
     }
 
     public void applyEvaluatedProposal(@Nullable EvaluatedProposal evaluatedProposal) {
@@ -435,10 +429,8 @@ public class ProposalDisplay {
                     threshold, requiredThreshold, quorum, requiredQuorum);
             voteResultTextField.setText(summary);
         }
-        voteResultLabel.setVisible(isEvaluatedProposalNotNull);
-        voteResultLabel.setManaged(isEvaluatedProposalNotNull);
-        voteResultTextField.setVisible(isEvaluatedProposalNotNull);
-        voteResultTextField.setManaged(isEvaluatedProposalNotNull);
+        voteResultBox.setVisible(isEvaluatedProposalNotNull);
+        voteResultBox.setManaged(isEvaluatedProposalNotNull);
     }
 
     public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake) {
@@ -461,10 +453,8 @@ public class ProposalDisplay {
         }
 
         boolean show = ballotIsNotNull && hasVoted;
-        myVoteLabel.setVisible(show);
-        myVoteLabel.setManaged(show);
-        myVoteTextField.setVisible(show);
-        myVoteTextField.setManaged(show);
+        myVoteBox.setVisible(show);
+        myVoteBox.setManaged(show);
     }
 
     public void setIsVoteIncludedInResult(boolean isVoteIncludedInResult) {
