@@ -20,7 +20,6 @@ package bisq.desktop.main.funds.transactions;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -101,7 +100,7 @@ class TransactionsListItem {
                     received = false;
                     if (WalletService.isOutputScriptConvertibleToAddress(output)) {
                         addressString = WalletService.getAddressStringFromOutput(output);
-                        if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
+                        if (bsqWalletService.isTransactionOutputMine(output)) {
                             txFeeForBsqPayment = true;
                         } else {
                             direction = Res.get("funds.tx.direction.sentTo");
@@ -128,7 +127,7 @@ class TransactionsListItem {
                 if (!btcWalletService.isTransactionOutputMine(output)) {
                     if (WalletService.isOutputScriptConvertibleToAddress(output)) {
                         addressString = WalletService.getAddressStringFromOutput(output);
-                        if (BisqEnvironment.isBaseCurrencySupportingBsq() && bsqWalletService.isTransactionOutputMine(output)) {
+                        if (bsqWalletService.isTransactionOutputMine(output)) {
                             outgoing = false;
                             txFeeForBsqPayment = true;
 

@@ -108,10 +108,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
 
-    public static boolean isBaseCurrencySupportingBsq() {
-        return getBaseCurrencyNetwork().getCurrencyCode().equals("BTC");
-    }
-
     public static NetworkParameters getParameters() {
         return getBaseCurrencyNetwork().getParameters();
     }

@@ -17,7 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterManager;
@@ -139,8 +138,7 @@ public class OfferUtil {
         if (makerFee == null)
             return true;
 
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                !availableBalance.subtract(makerFee).isNegative();
+        return !availableBalance.subtract(makerFee).isNegative();
     }
 
 
@@ -169,8 +167,7 @@ public class OfferUtil {
         if (takerFee == null)
             return true;
 
-        return BisqEnvironment.isBaseCurrencySupportingBsq() &&
-                !availableBalance.subtract(takerFee).isNegative();
+        return !availableBalance.subtract(takerFee).isNegative();
     }
 
     public static Volume getRoundedFiatVolume(Volume volumeByAmount) {

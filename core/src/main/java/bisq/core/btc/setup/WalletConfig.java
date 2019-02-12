@@ -80,7 +80,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -172,8 +171,6 @@ public class WalletConfig extends AbstractIdleService {
                 // We have already the chain here so we can use this to distinguish.
                 List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
                 if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BisqDeterministicKeyChain) {
-                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
-                            "called BisqWalletFactory.create with BisqDeterministicKeyChain");
                     return new BsqWallet(params, keyChainGroup);
                 } else {
                     return new Wallet(params, keyChainGroup);
@@ -184,8 +181,6 @@ public class WalletConfig extends AbstractIdleService {
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet) {
                 // This is called at first startup when we create the wallet
                 if (isBsqWallet) {
-                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
-                            "called BisqWalletFactory.create with isBsqWallet=true");
                     return new BsqWallet(params, keyChainGroup);
                 } else {
                     return new Wallet(params, keyChainGroup);
@@ -394,11 +389,9 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
 
             // BSQ wallet
-            if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
-                vBsqWalletFile = new File(directory, bsqWalletFileName);
-                vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
-                vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
-            }
+            vBsqWalletFile = new File(directory, bsqWalletFileName);
+            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
+            vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);

@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
@@ -227,16 +226,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     private void addListeners() {
         btcWalletService.addBalanceListener(btcBalanceListener);
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
-            bsqWalletService.addBsqBalanceListener(this);
+        bsqWalletService.addBsqBalanceListener(this);
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
         btcWalletService.removeBalanceListener(btcBalanceListener);
-        if (BisqEnvironment.isBaseCurrencySupportingBsq())
-            bsqWalletService.removeBsqBalanceListener(this);
+        bsqWalletService.removeBsqBalanceListener(this);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 

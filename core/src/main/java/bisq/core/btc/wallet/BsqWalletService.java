@@ -17,7 +17,6 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
@@ -117,62 +116,60 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
 
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
-            walletsSetup.addSetupCompletedHandler(() -> {
-                wallet = walletsSetup.getBsqWallet();
-                if (wallet != null) {
-                    wallet.setCoinSelector(bsqCoinSelector);
-                    wallet.addEventListener(walletEventListener);
+        walletsSetup.addSetupCompletedHandler(() -> {
+            wallet = walletsSetup.getBsqWallet();
+            if (wallet != null) {
+                wallet.setCoinSelector(bsqCoinSelector);
+                wallet.addEventListener(walletEventListener);
 
-                    //noinspection deprecation
-                    wallet.addEventListener(new AbstractWalletEventListener() {
-                        @Override
-                        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            updateBsqWalletTransactions();
-                        }
+                //noinspection deprecation
+                wallet.addEventListener(new AbstractWalletEventListener() {
+                    @Override
+                    public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onReorganize(Wallet wallet) {
-                            log.warn("onReorganize ");
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onReorganize(Wallet wallet) {
+                        log.warn("onReorganize ");
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onKeysAdded(List<ECKey> keys) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onKeysAdded(List<ECKey> keys) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onWalletChanged(Wallet wallet) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onWalletChanged(Wallet wallet) {
+                        updateBsqWalletTransactions();
+                    }
 
-                    });
-                }
+                });
+            }
 
-                final BlockChain chain = walletsSetup.getChain();
-                if (chain != null) {
-                    chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
-                    chainHeightProperty.set(chain.getBestChainHeight());
-                    updateBsqWalletTransactions();
-                }
-            });
-        }
+            final BlockChain chain = walletsSetup.getChain();
+            if (chain != null) {
+                chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
+                chainHeightProperty.set(chain.getBestChainHeight());
+                updateBsqWalletTransactions();
+            }
+        });
 
         daoStateService.addBsqStateListener(this);
     }
