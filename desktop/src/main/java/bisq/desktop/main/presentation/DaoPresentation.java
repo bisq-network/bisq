@@ -9,6 +9,8 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
+import bisq.common.app.DevEnv;
+
 import javax.inject.Inject;
 
 import javafx.beans.property.BooleanProperty;
