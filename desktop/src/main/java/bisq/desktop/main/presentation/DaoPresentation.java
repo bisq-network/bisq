@@ -60,6 +60,11 @@ public class DaoPresentation implements DaoStateListener {
             }
         });
 
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+            bsqInfo.set("");
+            bsqSyncProgress.set(0);
+        }
+
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
 
@@ -68,6 +73,9 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onUpdateAnyChainHeight() {
+        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            return;
+
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {
@@ -93,24 +101,13 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-
-    }
-
-    @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
 
-    @Override
-    public void onParseTxsComplete(Block block) {
-
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BooleanProperty getShowDaoUpdatesNotification() {
         return showNotification;

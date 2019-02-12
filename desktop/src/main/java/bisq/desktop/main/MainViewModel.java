@@ -113,7 +113,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
-    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty();
+    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
