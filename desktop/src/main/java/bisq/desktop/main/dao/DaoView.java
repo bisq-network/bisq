@@ -35,6 +35,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
 
+import bisq.common.app.DevEnv;
+
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;

@@ -32,6 +32,7 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;

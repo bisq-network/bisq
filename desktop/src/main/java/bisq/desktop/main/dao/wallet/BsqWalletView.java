@@ -34,6 +34,8 @@ import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.app.DevEnv;
+
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
