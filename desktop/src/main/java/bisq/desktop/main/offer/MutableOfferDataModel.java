@@ -83,6 +83,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
@@ -280,7 +282,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         // We request to get the actual estimated fee
-        requestTxFee();
+        requestTxFee(null);
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
@@ -501,16 +503,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.marketPriceMargin = marketPriceMargin;
     }
 
-    void requestTxFee() {
-        requestTxFee(() -> {
-        });
-    }
-
-    void requestTxFee(Runnable actionHandler) {
+    void requestTxFee(@Nullable Runnable actionHandler) {
         feeService.requestFees(() -> {
             txFeeFromFeeService = feeService.getTxFee(feeTxSize);
             calculateTotalToPay();
-            actionHandler.run();
+            if (actionHandler != null)
+                actionHandler.run();
         });
     }
 
