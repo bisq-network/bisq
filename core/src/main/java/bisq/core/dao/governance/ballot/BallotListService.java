@@ -17,8 +17,6 @@
 
 package bisq.core.dao.governance.ballot;
 
-import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.storage.Storage;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.period.PeriodService;
@@ -29,15 +27,22 @@ import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
+
+import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.storage.Storage;
+
+import javax.inject.Inject;
+
 import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Takes the proposals from the append only store and makes Ballots out of it (vote is null).
@@ -121,7 +126,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivated()) {
             BallotList persisted = storage.initAndGetPersisted(ballotList, 100);
             if (persisted != null) {
                 ballotList.clear();

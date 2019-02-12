@@ -88,7 +88,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
 
         // TODO just until DAO is enabled
-        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (!BisqEnvironment.isDAOActivated()) {
             dashboard.setDisable(true);
             send.setDisable(true);
             transactions.setDisable(true);
@@ -110,7 +110,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
                 selectedViewClass = BsqDashboardView.class;
 
             // TODO just until DAO is enabled
-            if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+            if (!BisqEnvironment.isDAOActivated())
                 selectedViewClass = BsqReceiveView.class;
 
             loadView(selectedViewClass);

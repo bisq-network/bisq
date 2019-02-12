@@ -109,9 +109,9 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
 
-    public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
+    public static boolean isDAOActivated() {
         //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.isDaoActivated() && isBaseCurrencySupportingBsq();
+        return DevEnv.isDaoActivated();
     }
 
     public static boolean isBaseCurrencySupportingBsq() {

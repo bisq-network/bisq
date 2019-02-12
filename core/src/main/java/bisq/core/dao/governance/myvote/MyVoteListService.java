@@ -68,7 +68,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivated()) {
             MyVoteList persisted = storage.initAndGetPersisted(myVoteList, 100);
             if (persisted != null) {
                 this.myVoteList.clear();

@@ -135,7 +135,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+        if (BisqEnvironment.isDAOActivated())
             chainSyncIndicator.setProgress(-1);
         else
             chainSyncIndicator.setProgress(0);
