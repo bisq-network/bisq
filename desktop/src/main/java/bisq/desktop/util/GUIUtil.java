@@ -140,9 +140,14 @@ public class GUIUtil {
     public final static int AMOUNT_DECIMALS = 4;
 
     private static FeeService feeService;
+    private static Preferences preferences;
 
     public static void setFeeService(FeeService feeService) {
         GUIUtil.feeService = feeService;
+    }
+
+    public static void setPreferences(Preferences preferences) {
+        GUIUtil.preferences = preferences;
     }
 
     public static double getScrollbarWidth(Node scrollablePane) {
@@ -586,19 +591,51 @@ public class GUIUtil {
 
 
     public static void openWebPage(String target) {
+
+        if (target.contains("bisq.network")) {
+            // add utm parameters
+            target = appendURI(target, "utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_" +
+                    preferences.getUserLanguage());
+        }
+
         String key = "warnOpenURLWhenTorEnabled";
         if (DontShowAgainLookup.showAgain(key)) {
+            final String finalTarget = target;
             new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(key, true);
-                        doOpenWebPage(target);
+                        doOpenWebPage(finalTarget);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
-                    .onClose(() -> Utilities.copyToClipboard(target))
+                    .onClose(() -> Utilities.copyToClipboard(finalTarget))
                     .show();
         } else {
             doOpenWebPage(target);
+        }
+    }
+
+    private static String appendURI(String uri, String appendQuery) {
+        try {
+            final URI oldURI = new URI(uri);
+
+            String newQuery = oldURI.getQuery();
+
+            if (newQuery == null) {
+                newQuery = appendQuery;
+            } else {
+                newQuery += "&" + appendQuery;
+            }
+
+            URI newURI = new URI(oldURI.getScheme(), oldURI.getAuthority(), oldURI.getPath(),
+                    newQuery, oldURI.getFragment());
+
+            return newURI.toString();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+
+            return uri;
         }
     }
 
