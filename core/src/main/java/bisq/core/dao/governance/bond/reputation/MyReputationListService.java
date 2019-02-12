@@ -55,7 +55,7 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivated()) {
             MyReputationList persisted = storage.initAndGetPersisted(myReputationList, 100);
             if (persisted != null) {
                 myReputationList.clear();

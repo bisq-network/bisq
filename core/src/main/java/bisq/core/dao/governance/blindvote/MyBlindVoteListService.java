@@ -156,7 +156,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivated()) {
             MyBlindVoteList persisted = storage.initAndGetPersisted(myBlindVoteList, 100);
             if (persisted != null) {
                 myBlindVoteList.clear();

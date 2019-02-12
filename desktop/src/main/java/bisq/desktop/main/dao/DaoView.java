@@ -84,7 +84,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         bondingTab.setClosable(false);
         burnBsqTab.setClosable(false);
 
-        if (!BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (!BisqEnvironment.isDAOActivated()) {
             proposalsTab.setDisable(true);
             bondingTab.setDisable(true);
             burnBsqTab.setDisable(true);

@@ -55,7 +55,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (BisqEnvironment.isDAOActivated()) {
             MyProofOfBurnList persisted = storage.initAndGetPersisted(myProofOfBurnList, 100);
             if (persisted != null) {
                 myProofOfBurnList.clear();
