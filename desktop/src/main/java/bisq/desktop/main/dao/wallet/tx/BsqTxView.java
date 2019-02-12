@@ -27,7 +27,6 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -135,7 +134,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        if (BisqEnvironment.isDAOActivated())
+        if (DevEnv.isDaoActivated())
             chainSyncIndicator.setProgress(-1);
         else
             chainSyncIndicator.setProgress(0);

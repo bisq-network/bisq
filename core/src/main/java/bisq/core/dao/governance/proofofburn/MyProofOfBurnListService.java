@@ -17,9 +17,9 @@
 
 package bisq.core.dao.governance.proofofburn;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
@@ -55,7 +55,7 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             MyProofOfBurnList persisted = storage.initAndGetPersisted(myProofOfBurnList, 100);
             if (persisted != null) {
                 myProofOfBurnList.clear();

@@ -27,7 +27,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
@@ -70,7 +69,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
             TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1,
@@ -117,10 +116,10 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         // Hide dao new badge if user saw this page
-        if (!BisqEnvironment.isDAOActivated())
+        if (!DevEnv.isDaoActivated())
             preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
 
-        if (BisqEnvironment.isDAOActivated())
+        if (DevEnv.isDaoActivated())
             bsqBalanceUtil.activate();
 
         addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
@@ -128,7 +127,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        if (BisqEnvironment.isDAOActivated())
+        if (DevEnv.isDaoActivated())
             bsqBalanceUtil.deactivate();
     }
 }

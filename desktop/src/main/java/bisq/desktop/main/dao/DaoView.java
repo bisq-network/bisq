@@ -32,7 +32,6 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
 
@@ -84,7 +83,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         bondingTab.setClosable(false);
         burnBsqTab.setClosable(false);
 
-        if (!BisqEnvironment.isDAOActivated()) {
+        if (!DevEnv.isDaoActivated()) {
             proposalsTab.setDisable(true);
             bondingTab.setDisable(true);
             burnBsqTab.setDisable(true);

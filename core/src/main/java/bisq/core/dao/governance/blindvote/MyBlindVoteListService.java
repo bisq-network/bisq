@@ -46,6 +46,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
@@ -156,7 +157,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             MyBlindVoteList persisted = storage.initAndGetPersisted(myBlindVoteList, 100);
             if (persisted != null) {
                 myBlindVoteList.clear();

@@ -105,7 +105,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             MyProposalList persisted = storage.initAndGetPersisted(myProposalList, 100);
             if (persisted != null) {
                 myProposalList.clear();

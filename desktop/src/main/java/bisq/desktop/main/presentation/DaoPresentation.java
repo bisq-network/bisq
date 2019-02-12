@@ -1,6 +1,5 @@
 package bisq.desktop.main.presentation;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
@@ -33,7 +32,7 @@ public class DaoPresentation implements DaoStateListener {
     private final DaoFacade daoFacade;
     private final BsqWalletService bsqWalletService;
     private final DaoStateService daoStateService;
-    
+
     private final ChangeListener<Number> walletChainHeightListener;
 
     @Getter
@@ -53,14 +52,14 @@ public class DaoPresentation implements DaoStateListener {
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
-        
+
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
-            if (change.getKey().equals(DAO_NEWS) && !BisqEnvironment.isDAOActivated()) {
+            if (change.getKey().equals(DAO_NEWS) && !DevEnv.isDaoActivated()) {
                 showNotification.set(!change.wasAdded());
             }
         });
 
-        if (!BisqEnvironment.isDAOActivated()) {
+        if (!DevEnv.isDaoActivated()) {
             bsqInfo.set("");
             bsqSyncProgress.set(0);
         }
@@ -73,7 +72,7 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onUpdateAnyChainHeight() {
-        if (!BisqEnvironment.isDAOActivated())
+        if (!DevEnv.isDaoActivated())
             return;
 
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
@@ -114,12 +113,12 @@ public class DaoPresentation implements DaoStateListener {
     }
 
     public void setup() {
-        if (!BisqEnvironment.isDAOActivated())
+        if (!DevEnv.isDaoActivated())
             showNotification.set(preferences.showAgain(DAO_NEWS));
 
         this.btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
         daoStateService.addBsqStateListener(this);
-        
+
         onUpdateAnyChainHeight();
     }
 }

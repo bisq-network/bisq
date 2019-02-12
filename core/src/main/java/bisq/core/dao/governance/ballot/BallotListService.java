@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.ballot;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -28,6 +27,7 @@ import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 
+import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
@@ -126,7 +126,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             BallotList persisted = storage.initAndGetPersisted(ballotList, 100);
             if (persisted != null) {
                 ballotList.clear();

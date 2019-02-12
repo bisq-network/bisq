@@ -17,13 +17,13 @@
 
 package bisq.core.dao.governance.myvote;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
 
+import bisq.common.app.DevEnv;
 import bisq.common.crypto.Encryption;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
@@ -68,7 +68,7 @@ public class MyVoteListService implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivated()) {
+        if (DevEnv.isDaoActivated()) {
             MyVoteList persisted = storage.initAndGetPersisted(myVoteList, 100);
             if (persisted != null) {
                 this.myVoteList.clear();

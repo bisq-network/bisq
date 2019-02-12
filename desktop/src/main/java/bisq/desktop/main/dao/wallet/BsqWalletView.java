@@ -32,7 +32,6 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -88,7 +87,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
 
         // TODO just until DAO is enabled
-        if (!BisqEnvironment.isDAOActivated()) {
+        if (!DevEnv.isDaoActivated()) {
             dashboard.setDisable(true);
             send.setDisable(true);
             transactions.setDisable(true);
@@ -110,7 +109,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
                 selectedViewClass = BsqDashboardView.class;
 
             // TODO just until DAO is enabled
-            if (!BisqEnvironment.isDAOActivated())
+            if (!DevEnv.isDaoActivated())
                 selectedViewClass = BsqReceiveView.class;
 
             loadView(selectedViewClass);
