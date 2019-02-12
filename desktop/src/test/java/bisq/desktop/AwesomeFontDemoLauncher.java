@@ -6,6 +6,4 @@ public class AwesomeFontDemoLauncher {
     public static void main(String[] args) {
         Application.launch(AwesomeFontDemo.class);
     }
-
-
 }
