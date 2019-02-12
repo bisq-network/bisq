@@ -162,39 +162,37 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             File storageDir = torHiddenServiceDir;
             String seedNodes = "";
             try {
-            BisqEnvironment environment = new BisqEnvironment(new PropertySource<String>("name") {
+                BisqEnvironment environment = new BisqEnvironment(new PropertySource<String>("name") {
 
-                @Override
-                public String getProperty(String name) {
-                    if(BtcOptionKeys.BASE_CURRENCY_NETWORK.equals(name))
-                            return BaseCurrencyNetwork.BTC_MAINNET.name();
-                    return "";
-                }
-            });
-            int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
-            NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
-            CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
-                    networkProtoResolver, storageDir);
-            DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(
-                    new SeedNodeAddressLookup(environment, false, 0, null, seedNodes));
-            PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
-                    persistenceProtoResolver, maxConnections, storageDir);
+                    @Override
+                    public String getProperty(String name) {
+                        if(BtcOptionKeys.BASE_CURRENCY_NETWORK.equals(name))
+                                return BaseCurrencyNetwork.BTC_MAINNET.name();
+                        return "";
+                    }
+                });
+                int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
+                NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
+                CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
+                        networkProtoResolver, storageDir);
+                DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(
+                        new SeedNodeAddressLookup(environment, false, 0, null, seedNodes));
+                PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
+                        persistenceProtoResolver, maxConnections, storageDir);
 
-            // init file storage
-            peerManager.readPersisted();
+                // init file storage
+                peerManager.readPersisted();
 
-            PeerExchangeManager peerExchangeManager = new PeerExchangeManager(networkNode, seedNodeRepository,
-                    peerManager);
-            // updates the peer list every now and then as well
-            peerExchangeManager
-                    .requestReportedPeersFromSeedNodes(seedNodeRepository.getSeedNodeAddresses().iterator().next()); // irgendeine
-                                                                                                                     // seednode
-                                                                                                                     // nehmen
+                PeerExchangeManager peerExchangeManager = new PeerExchangeManager(networkNode, seedNodeRepository,
+                        peerManager);
+                // updates the peer list every now and then as well
+                peerExchangeManager
+                        .requestReportedPeersFromSeedNodes(seedNodeRepository.getSeedNodeAddresses().iterator().next());
 
-            keepAliveManager = new KeepAliveManager(networkNode, peerManager);
-            keepAliveManager.start();
+                keepAliveManager = new KeepAliveManager(networkNode, peerManager);
+                keepAliveManager.start();
 
-            networkNode.addMessageListener(this);
+                networkNode.addMessageListener(this);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -203,21 +201,24 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         // report
         Map<String, String> report = new HashMap<>();
 
-        // - get snapshot so we do not loose data
-        Set<String> keys = new HashSet<>(buckets.keySet());
         if(lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
             // - normalize to data/minute
             double perMinuteFactor = 60000.0 / (System.currentTimeMillis() - lastRun);
 
-        // - transfer values to report
-        keys.forEach(key -> {
-            int value = buckets.get(key).getAndReset();
-            if(value != 0)
-                    report.put(key, String.format("%.2f", value * perMinuteFactor));
-        });
 
-        // - report
-        reporter.report(report, "bisq." + getName());
+            // - get snapshot so we do not loose data
+            Set<String> keys = new HashSet<>(buckets.keySet());
+
+            // - transfer values to report
+            keys.forEach(key -> {
+                int value = buckets.get(key).getAndReset();
+                if (value != 0) {
+                    report.put(key, String.format("%.2f", value * perMinuteFactor));
+                }
+            });
+
+            // - report
+            reporter.report(report, "bisq." + getName());
         }
 
         // - reset last run
@@ -226,7 +227,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
-        // TODO check if we already have this very message
         if (networkEnvelope instanceof BroadcastMessage) {
             try {
                 if(history.get(networkEnvelope.hashCode()) == null) {
