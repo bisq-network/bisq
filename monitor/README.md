@@ -100,6 +100,31 @@ GraphiteReporter.serviceUrl=k6evlhg44acpchtc.onion:2003
 
 ```
 
+## Run
+
+The distribution ships with a systemd .desktop file. Validate/change the executable/config paths within the shipped `bisq-monitor.service` file and copy/move the file to your systemd directory (something along `/usr/lib/systemd/system/`). Now you can control your *Monitor Node* via the usual systemd start/stop commands
+
+```
+systemctl start bisq-monitor.service
+systemctl stop bisq-monitor.service
+```
+and
+```
+systemctl enable bisq-monitor.service
+```
+
+You can reload the configuration without restarting the service by using
+
+```
+systemctl reload bisq-monitor.service
+```
+
+Follow the logs created by the service by inspecting
+
+```
+journalctl --unit bisq-monitor --follow
+```
+
 # Monitoring Service
 
 A typical monitoring service consists of a [Graphite](https://graphiteapp.org/) and a [Grafana](https://grafana.com/) instance.
