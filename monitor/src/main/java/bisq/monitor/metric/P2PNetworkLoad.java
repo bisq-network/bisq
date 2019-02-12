@@ -84,6 +84,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
      * dropped to record newer hashes.
      */
     private Map<Integer, Object> history;
+    private long lastRun = 0;
 
     /**
      * History implementation using a {@link LinkedHashMap} and its
@@ -204,16 +205,23 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
         // - get snapshot so we do not loose data
         Set<String> keys = new HashSet<>(buckets.keySet());
+        if(lastRun != 0 && System.currentTimeMillis() - lastRun != 0) {
+            // - normalize to data/minute
+            double perMinuteFactor = 60000.0 / (System.currentTimeMillis() - lastRun);
 
         // - transfer values to report
         keys.forEach(key -> {
             int value = buckets.get(key).getAndReset();
             if(value != 0)
-                report.put(key, String.valueOf(value));
+                    report.put(key, String.format("%.2f", value * perMinuteFactor));
         });
 
         // - report
         reporter.report(report, "bisq." + getName());
+        }
+
+        // - reset last run
+        lastRun = System.currentTimeMillis();
     }
 
     @Override
