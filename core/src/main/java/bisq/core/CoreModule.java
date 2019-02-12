@@ -41,6 +41,7 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OfferModule;
+import bisq.core.payment.TradeLimits;
 import bisq.core.presentation.CorePresentationModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -86,6 +87,8 @@ public class CoreModule extends AppModule {
         bind(WalletAppSetup.class).in(Singleton.class);
 
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
+
+        bind(TradeLimits.class).in(Singleton.class);
 
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);

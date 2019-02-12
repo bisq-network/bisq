@@ -43,6 +43,7 @@ import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -151,6 +152,7 @@ public class BisqSetup {
     private final AssetTradeActivityCheck tradeActivityCheck;
     private final AssetService assetService;
     private final TorSetup torSetup;
+    private final TradeLimits tradeLimits;
     private final BSFormatter formatter;
     @Setter
     @Nullable
@@ -228,6 +230,7 @@ public class BisqSetup {
                      AssetTradeActivityCheck tradeActivityCheck,
                      AssetService assetService,
                      TorSetup torSetup,
+                     TradeLimits tradeLimits,
                      BSFormatter formatter) {
 
 
@@ -267,6 +270,7 @@ public class BisqSetup {
         this.tradeActivityCheck = tradeActivityCheck;
         this.assetService = assetService;
         this.torSetup = torSetup;
+        this.tradeLimits = tradeLimits;
         this.formatter = formatter;
     }
 
@@ -583,6 +587,7 @@ public class BisqSetup {
 
         clock.start();
 
+        tradeLimits.onAllServicesInitialized();
         PaymentMethod.onAllServicesInitialized();
 
         disputeManager.onAllServicesInitialized();

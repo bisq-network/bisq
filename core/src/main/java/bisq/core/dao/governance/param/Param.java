@@ -112,6 +112,7 @@ public enum Param {
 
     LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
     ARBITRATOR_FEE("0", ParamType.BTC),
+    MAX_TRADE_LIMIT("2", ParamType.BTC), // max trade limit for lowest risk payment method. Others will get derived from that.
 
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be

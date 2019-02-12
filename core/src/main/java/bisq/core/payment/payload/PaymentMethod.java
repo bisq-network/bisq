@@ -18,6 +18,7 @@
 package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
+import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -37,6 +38,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
@@ -154,11 +157,13 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static List<PaymentMethod> getAllValues() {
         if (ALL_VALUES == null) {
-            // we want to avoid more then 4 decimal places (0.125 / 4 = 0.03125), so we use a bit higher value to get 0.04 for first month
-            Coin maxTradeLimitHighRisk = Coin.parseCoin("0.16");
-            Coin maxTradeLimitMidRisk = Coin.parseCoin("0.25");
-            Coin maxTradeLimitLowRisk = Coin.parseCoin("0.5");
-            Coin maxTradeLimitVeryLowRisk = Coin.parseCoin("1");
+            TradeLimits tradeLimits = TradeLimits.getINSTANCE();
+            checkNotNull(tradeLimits, "tradeLimits must not be null");
+            long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
+            Coin maxTradeLimitVeryLowRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 1));
+            Coin maxTradeLimitLowRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 2));
+            Coin maxTradeLimitMidRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 4));
+            Coin maxTradeLimitHighRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 8));
 
             ALL_VALUES = new ArrayList<>(Arrays.asList(
                     // EUR
