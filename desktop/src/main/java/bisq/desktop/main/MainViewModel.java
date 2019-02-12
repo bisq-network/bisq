@@ -178,6 +178,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
+        GUIUtil.setPreferences(preferences);
 
         setupHandlers();
         bisqSetup.addBisqSetupCompleteListener(this);
