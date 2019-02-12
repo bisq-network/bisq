@@ -55,6 +55,7 @@ import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
@@ -482,6 +483,14 @@ public class DaoFacade implements DaoSetupService {
 
     public int getChainHeight() {
         return daoStateService.getChainHeight();
+    }
+
+    public Optional<Block> getBlockAtChainHeight() {
+        return getBlockAtHeight(getChainHeight());
+    }
+
+    public Optional<Block> getBlockAtHeight(int chainHeight) {
+        return daoStateService.getBlockAtHeight(chainHeight);
     }
 
 

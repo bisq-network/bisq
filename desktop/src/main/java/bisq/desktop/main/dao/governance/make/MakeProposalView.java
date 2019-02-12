@@ -85,6 +85,7 @@ import javafx.util.StringConverter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
@@ -199,7 +200,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         if (makeProposalButton != null)
             setMakeProposalButtonHandler();
 
-        onNewBlockHeight(daoFacade.getChainHeight());
+        Optional<Block> blockAtChainHeight = daoFacade.getBlockAtChainHeight();
+
+        if (blockAtChainHeight.isPresent())
+            onParseTxsCompleteAfterBatchProcessing(blockAtChainHeight.get());
     }
 
     @Override
