@@ -73,7 +73,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private static final String MAX_CONNECTIONS = "run.maxConnections";
     private static final String HISTORY_SIZE = "run.historySize";
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_p2pNetworkLoad");
+    private final File torHiddenServiceDir = new File("monitor/metric_p2pNetworkLoad");
     private final ThreadGate hsReady = new ThreadGate();
     private Map<String, Counter> buckets = new ConcurrentHashMap<>();
     private KeepAliveManager keepAliveManager;
@@ -158,7 +158,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             hsReady.await();
 
             // boot up P2P node
-            File storageDir = new File("/tmp/bisq-metric-storage");
+            File storageDir = torHiddenServiceDir;
             String seedNodes = "";
             try {
             BisqEnvironment environment = new BisqEnvironment(new PropertySource<String>("name") {
@@ -178,6 +178,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                     new SeedNodeAddressLookup(environment, false, 0, null, seedNodes));
             PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
                     persistenceProtoResolver, maxConnections, storageDir);
+
+            // init file storage
+            peerManager.readPersisted();
+
             PeerExchangeManager peerExchangeManager = new PeerExchangeManager(networkNode, seedNodeRepository,
                     peerManager);
             // updates the peer list every now and then as well
