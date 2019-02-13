@@ -1,6 +1,6 @@
 # Building Bisq
 
-_You will need [OpenJDK 10](https://jdk.java.net/10/) installed and configured as the default system JDK to complete the following instructions. See the `scripts` directory for scripts that can be used to install and configure the JDK automatically._
+_You will need [OpenJDK 11](https://jdk.java.net/11/) installed and configured as the default system JDK to complete the following instructions. See the `scripts` directory for scripts that can be used to install and configure the JDK automatically._
 
 
 ## Clone
