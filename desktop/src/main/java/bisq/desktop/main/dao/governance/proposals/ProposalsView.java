@@ -697,6 +697,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
         voteFields.add(meritLabel);
         voteFields.add(meritTextField);
+        voteFields.add(meritTuple.third);
 
         stakeInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("dao.proposal.myVote.stake"));
@@ -721,6 +722,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
         voteButtons.add(voteButton);
+        voteFields.add(voteButtonTuple.forth);
         voteButtonBusyAnimation = voteButtonTuple.second;
         voteButtonInfoLabel = voteButtonTuple.third;
     }
