@@ -732,10 +732,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
             if (result.isValid) {
-                Coin minAmount = dataModel.getMinAmount().get();
-                syncMinAmountWithAmount = minAmount != null && minAmount.equals(dataModel.getAmount().get());
+                Coin minAmountAsCoin = dataModel.getMinAmount().get();
+                syncMinAmountWithAmount = minAmountAsCoin != null && minAmountAsCoin.equals(dataModel.getAmount().get());
                 setMinAmountToModel();
-                this.minAmount.set(btcFormatter.formatCoin(minAmount));
+                this.minAmount.set(btcFormatter.formatCoin(minAmountAsCoin));
 
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     this.amount.set(this.minAmount.get());
