@@ -629,10 +629,10 @@ public class ProposalDisplay {
 
         gridPane.getColumnConstraints().addAll(columnConstraints1);
 
-        AnchorPane.setBottomAnchor(gridPane, 20d);
+        AnchorPane.setBottomAnchor(gridPane, 10d);
         AnchorPane.setRightAnchor(gridPane, 10d);
         AnchorPane.setLeftAnchor(gridPane, 10d);
-        AnchorPane.setTopAnchor(gridPane, 20d);
+        AnchorPane.setTopAnchor(gridPane, 10d);
         anchorPane.getChildren().add(gridPane);
 
         return scrollPane;
