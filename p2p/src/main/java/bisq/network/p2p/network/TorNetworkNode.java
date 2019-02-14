@@ -44,9 +44,12 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
-import java.net.Socket;
 import java.security.SecureRandom;
+
+import java.net.Socket;
+
 import java.io.IOException;
+
 import java.util.Base64;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +80,7 @@ public class TorNetworkNode extends NetworkNode {
 
     private TorMode torMode;
 
-    private boolean streamIsolation = false;
+    private boolean streamIsolation;
 
     private Socks5Proxy socksProxy;
 
@@ -227,7 +230,7 @@ public class TorNetworkNode extends NetworkNode {
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
             UserThread.execute(() -> {
-                setupListeners.stream().forEach(SetupListener::onRequestCustomBridges);
+                setupListeners.forEach(SetupListener::onRequestCustomBridges);
             });
             log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
             shutDown(null);
@@ -252,7 +255,7 @@ public class TorNetworkNode extends NetworkNode {
             try {
                 // get tor
                 Tor.setDefault(torMode.getTor());
-                UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onTorNodeReady));
+                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
 
                 // start hidden service
                 long ts2 = new Date().getTime();
@@ -270,7 +273,7 @@ public class TorNetworkNode extends NetworkNode {
                                     Log.traceCall("hiddenService created");
                                     nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                                     startServer(socket);
-                                    UserThread.execute(() -> setupListeners.stream().forEach(SetupListener::onHiddenServicePublished));
+                                    UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
                                 } catch (final Exception e1) {
                                     log.error(e1.toString());
                                     e1.printStackTrace();
@@ -292,9 +295,7 @@ public class TorNetworkNode extends NetworkNode {
                 // Since we cannot connect to Tor, we cannot do nothing.
                 // Furthermore, we have no hidden services started yet, so there is no graceful
                 // shutdown needed either
-                UserThread.execute(() -> {
-                    setupListeners.stream().forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage())));
-                });
+                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
             } catch (Throwable ignore) {
             }
 
@@ -305,9 +306,7 @@ public class TorNetworkNode extends NetworkNode {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> {
-                    log.error("Hidden service creation failed: " + throwable);
-                });
+                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable));
             }
         });
     }

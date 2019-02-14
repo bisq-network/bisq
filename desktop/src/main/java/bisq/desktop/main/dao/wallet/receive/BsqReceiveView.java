@@ -78,7 +78,6 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-
         if (DevEnv.isDaoActivated())
             bsqBalanceUtil.activate();
 

@@ -51,7 +51,6 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     @Override
     protected void initialize() {
-
         root.setSpacing(20);
 
         AnchorPane bisqDAOPane = createBisqDAOContent();
@@ -100,7 +99,6 @@ public class NewsView extends ActivatableView<HBox, Void> {
     }
 
     private int addInfoSection(GridPane gridPane, int rowIndex, String title, String content, String linkURL) {
-
         Label titleLabel = addLabel(gridPane, ++rowIndex, title);
         GridPane.setMargin(titleLabel, new Insets(6, 0, 0, 0));
 
@@ -167,6 +165,5 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     @Override
     protected void deactivate() {
-
     }
 }
