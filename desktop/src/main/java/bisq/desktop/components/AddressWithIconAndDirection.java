@@ -19,6 +19,7 @@ package bisq.desktop.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.GlyphIcons;
 
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -39,7 +40,7 @@ public class AddressWithIconAndDirection extends HBox {
     private static final Logger log = LoggerFactory.getLogger(AddressWithIconAndDirection.class);
     private final Hyperlink hyperlink;
 
-    public AddressWithIconAndDirection(String text, String address, AwesomeIcon awesomeIcon, boolean received) {
+    public AddressWithIconAndDirection(String text, String address, GlyphIcons icon, boolean received) {
         Label directionIcon = new Label();
         directionIcon.getStyleClass().add("icon");
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
@@ -54,7 +55,7 @@ public class AddressWithIconAndDirection extends HBox {
         HBox.setMargin(directionIcon, new Insets(0, 3, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);
 
-        hyperlink = new HyperlinkWithIcon(address, awesomeIcon);
+        hyperlink = new HyperlinkWithIcon(address, icon);
         HBox.setMargin(hyperlink, new Insets(0));
         HBox.setHgrow(hyperlink, Priority.SOMETIMES);
         // You need to set max width to Double.MAX_VALUE to make HBox.setHgrow working like expected!
