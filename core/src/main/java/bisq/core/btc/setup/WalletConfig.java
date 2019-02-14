@@ -22,6 +22,7 @@ import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
 
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.CheckpointManager;
@@ -321,7 +322,7 @@ public class WalletConfig extends AbstractIdleService {
      * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
      */
     private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+        if (Utilities.isWindows()) {
             return new NonMMappedSPVBlockStore(params, file);
         } else {
             return new SPVBlockStore(params, file);
