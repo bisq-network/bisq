@@ -35,7 +35,7 @@ import bisq.core.util.BsqFormatter;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -304,7 +304,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
                                 if (item != null && !empty) {
                                     String lockupTxId = item.getLockupTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(lockupTxId, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(lockupTxId, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     setGraphic(hyperlinkWithIcon);

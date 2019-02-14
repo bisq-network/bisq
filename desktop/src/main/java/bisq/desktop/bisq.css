@@ -33,8 +33,13 @@ bg color of non edit textFields: fafafa
 }
 
 @font-face {
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+@font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
+
 
 .root {
     -bs-very-dark-grey3: #444; /* 3 usages */
@@ -2005,6 +2010,43 @@ textfield */
 
 .dao-remove-proposal-icon {
     -fx-text-fill: -fx-accent;
+}
+
+.dao-news-titled-group .titled-group-bg-label-active {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-teaser {
+    -fx-font-size: 1.538em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-header {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-green-dark;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-content, .dao-news-content, .dao-news-section-link {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-section-content {
+    -fx-text-fill: -bs-rd-black;
+}
+
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-news-link {
+    -fx-text-fill: -fx-accent;
+    -fx-padding: 16 0 0 0;
+}
+
+.dao-news-link .hyperlink {
+    -fx-fill: -fx-accent;
 }
 
 /********************************************************************************************************************

@@ -59,6 +59,7 @@ import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -690,7 +691,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
-                                    field = new HyperlinkWithIcon(proposal.getLink(), AwesomeIcon.EXTERNAL_LINK);
+                                    field = new HyperlinkWithIcon(proposal.getLink(), MaterialDesignIcon.LINK);
                                     field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);

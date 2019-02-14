@@ -47,6 +47,7 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
@@ -328,7 +329,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -399,7 +400,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             // Received
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                    AwesomeIcon.EXTERNAL_LINK, item.isReceived());
+                                                    MaterialDesignIcon.LINK, item.isReceived());
                                             field.setOnAction(event -> openAddressInBlockExplorer(item));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);
