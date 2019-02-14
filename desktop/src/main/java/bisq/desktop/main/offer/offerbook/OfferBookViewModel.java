@@ -117,7 +117,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     // If id is empty string we ignore filter (display all methods)
 
-    PaymentMethod selectedPaymentMethod = new PaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+    PaymentMethod selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
@@ -329,7 +329,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getPaymentMethods());
-        list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG));
+        list.add(0, PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;
     }
 

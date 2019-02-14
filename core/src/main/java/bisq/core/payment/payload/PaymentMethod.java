@@ -56,6 +56,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // We initialize very early before reading persisted data. We will apply later the limit from the DAO param
     // but that can be only done after the dao is initialized. The default values will be used for deriving the
     // risk factor so the relation between the risk categories stays the same as with the default values.
+    // We must not change those values as it could lead to invalid offers if amount becomes lower then new trade limit.
+    // Increasing might be ok, but needs more thought as well...
     private static final Coin DEFAULT_TRADE_LIMIT_VERY_LOW_RISK = Coin.parseCoin("1");
     private static final Coin DEFAULT_TRADE_LIMIT_LOW_RISK = Coin.parseCoin("0.5");
     private static final Coin DEFAULT_TRADE_LIMIT_MID_RISK = Coin.parseCoin("0.25");
@@ -115,6 +117,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
 
+    // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
+    // than new trade limit) and violate the maker expectation when he created the offer (duration).
     @Getter
     private final static List<PaymentMethod> paymentMethods = new ArrayList<>(Arrays.asList(
             // EUR
@@ -177,6 +181,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         });
     }
 
+    public static PaymentMethod getDummyPaymentMethod(String id) {
+        return new PaymentMethod(id, 0, Coin.ZERO);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -184,6 +192,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     @Getter
     private final String id;
+
+    // Must not change as old offers would get a new period then and that would violate the makers "contract" or
+    // expectation when he created the offer.
     @Getter
     private final long maxTradePeriod;
 
@@ -207,14 +218,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
      * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
      * @param maxTradeLimit  The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id, long maxTradePeriod, Coin maxTradeLimit) {
+    private PaymentMethod(String id, long maxTradePeriod, Coin maxTradeLimit) {
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
         this.maxTradeLimit = maxTradeLimit.value;
     }
 
     // Used for dummy entries in payment methods list (SHOW_ALL)
-    public PaymentMethod(String id) {
+    private PaymentMethod(String id) {
         this(id, 0, Coin.ZERO);
     }
 
@@ -263,8 +274,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             riskFactor = 2;
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_MID_RISK.value)
             riskFactor = 4;
-        else
+        else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_HIGH_RISK.value)
             riskFactor = 8;
+        else
+            throw new RuntimeException("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
 
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");
