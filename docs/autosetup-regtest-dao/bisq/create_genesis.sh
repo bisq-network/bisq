@@ -92,4 +92,4 @@ echo "genesis_height is $genesis_height"
 edit_conf_file $genesis_txid $genesis_height
 
 echo "your conf file was modified accordingly"
-echo "dao setup done"
+echo "DAO setup done"

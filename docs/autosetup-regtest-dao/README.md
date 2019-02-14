@@ -1,8 +1,8 @@
-# Automated setup of regtest dao - for Linux
+# Automated setup of regtest DAO - for Linux
 
-The goal of these helper scripts is to set up a bisq dao from scratch. The scripts run `bitcoind` in regtest mode for you and a `seed node`, `alice` and `bob` instances.
+The goal of these helper scripts is to set up a bisq DAO from scratch. The scripts run `bitcoind` in regtest mode for you and a `seed node`, `alice` and `bob` instances.
 
-We assume the user is in the `autosetup-regtest-dao` directory. Is it ok to move the directory, but please move it as a whole. Also `bitcoin-qt`, `bitcoin-cli`, `bitcoin-tx`, `jq` and `bc` has to be installed on the system. Do not change the shipped `bitcoin.conf` file as it will break things.
+We assume the user is in the `autosetup-regtest-dao` directory. It is ok to move the directory, but please move it as a whole. Also `bitcoin-qt`, `bitcoin-cli`, `bitcoin-tx`, `jq` and `bc` has to be installed on the system. Do not change the shipped `bitcoin.conf` file as it will break things.
 
 ## Steps to spin up a fresh DAO (we assume the user is in the autosetup-regtest-dao directory):
 1. Set up `bitcoin-qt` to run in the `autosetup-regtest-dao` directory, it detects when the `bitcoin-qt` instance comes up and once it is ready the script queries the number of blocks. If there are less then 101 blocks (fresh start) the script generates 101 blocks for you so you have an available input that will be later used for the genesis tx creation.
@@ -11,9 +11,8 @@ We assume the user is in the `autosetup-regtest-dao` directory. Is it ok to move
 ```
 Example output (note the below errors are normal and can be ignored):
 ```
-user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao$ ./start_bitcoind.sh 
+user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao$ ./start_bitcoind.sh
 error: Could not connect to the server 127.0.0.1:18443
-
 Make sure the bitcoind server is running and that you are connecting to the correct RPC port.
 error code: -28
 error message:
@@ -36,19 +35,18 @@ Loading wallet...
 ]
 ./generate_101_blocks.sh: done, exiting
 ```
-2. Open a new terminal (preferably a new tab), go to the `bisq` folder and start the `create_genesis.sh` script. The script tests for a running bitcoind node in regtest, so make sure step 1 was successful. 
+2. Open a new terminal (preferably a new tab), go to the `bisq` folder and start the `create_genesis.sh` script. The script tests for a running bitcoind node in regtest, so make sure step 1 was successful.
 ```
 cd bisq
 ./create_genesis.sh
 ```
 example output:
 ```
-user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh 
+user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh
 testing if bitcoind is running: bitcoind is running, all is ok!
 Please provide Alice's BSQ Address
-
 ```
-3. We need the BSQ address of `Alice`. We need to go to the bisq directory and start the `Alice` instance. Wait until the instance starts up then go to `DAO -> Receive` and copy the BSQ address. Note the address starts with a `B`. Open a new terminal and enter the below commands to start `Alice`. Then wait for the gui to start and paste the BSQ address to `create_genesis.sh` which is still running from step 2.
+3. We need the BSQ address of `Alice`. Go to the `bisq` directory and start the `Alice` instance. Wait until the instance starts up then go to `DAO -> Receive` and copy the BSQ address. Note the address starts with a `B`. Open a new terminal and enter the commands below to start `Alice`. Then wait for the gui to start and paste the BSQ address to `create_genesis.sh` which is still running from step 2.
 ```
 cd bisq
 ./alice
@@ -56,25 +54,23 @@ cd bisq
 4. Enter the amount of BTC in the `create_genesis.sh` script you want `Alice` to receive as BSQ.
 Example output:
 ```
-user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh 
+user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh
 testing if bitcoind is running: bitcoind is running, all is ok!
 Please provide Alice's BSQ Address
 Bn2iUHwJQTreQaoajKwnT6h7pYF9nCWULJA
 How much BTC to turn to BSQ for Alice? (sum must be 2.5BTC)
 1
 Alice will receive 1000000.00 BSQ to Bn2iUHwJQTreQaoajKwnT6h7pYF9nCWULJA
-
 ```
-5. We need the BSQ address of `Bob`. We need to go to the bisq directory and start the `Bob` instance. Wait until the instance starts up then go to `DAO -> Receive` and copy the BSQ address. Note the address starts with a `B`. Open a new terminal and enter the below commands to start `Bob`. Then wait for the gui to start and paste the BSQ address to `create_genesis.sh` which is still running from step 2.
+5. We need the BSQ address of `Bob`. Go to the `bisq` directory and start the `Bob` instance. Wait until the instance starts up then go to `DAO -> Receive` and copy the BSQ address. Note the address starts with a `B`. Open a new terminal and enter the commands below to start `Bob`. Then wait for the gui to start and paste the BSQ address to `create_genesis.sh` which is still running from step 2.
 ```
 cd bisq
 ./bob
 ```
-
 6. Enter the amount of BTC in the `create_genesis.sh` script you want `Bob` to receive as BSQ.
 Example output:
 ```
-tk@workbook:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh 
+tk@workbook:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao/bisq$ ./create_genesis.sh
 testing if bitcoind is running: bitcoind is running, all is ok!
 Please provide Alice's BSQ Address
 Bn2iUHwJQTreQaoajKwnT6h7pYF9nCWULJA
@@ -145,7 +141,6 @@ Please verify if decoded tx looks ok:
   ]
 }
 Press enter to broadcast transaction, ctrl+c otherwise
-
 ```
 7. verify if the tx shown as json is ok (the sum of outputs must be 2.5 to be valid). Note the script does not check the sum of the outputs as one needs to create an invalid genesis tx as well to test things. Press `enter` if tx looks ok.
 
@@ -154,7 +149,6 @@ Example output:
 ```
 ... <output ommited - see step above>
 Press enter to broadcast transaction, ctrl+c otherwise
-
 Genesis txid is:
 a876c877de410480530f7e8fa7e34034085db4db603d30a5635610fb59e646b2
 Mining genesis tx for you
@@ -162,9 +156,8 @@ genesis_block is 39249aab4e42c85e14f59517ec6b45305fdc7d660315c6602aab1a1b7b96cd3
 genesis_height is 102
 your conf file was modified accordingly
 dao setup done
-
 ```
-9. Start the `seed` node in full dao node using the `seed_node` script. Make sure you are in the `bisq` directory.
+9. Start the `seed` node in full DAO node using the `seed_node` script. Make sure you are in the `bisq` directory.
 ```
 cd bisq
 ./seed_node
@@ -173,16 +166,14 @@ cd bisq
 
 ## Continuing work on the existing setup
 
-1. Just run `start_bitcoind.sh` script and spin up `seed node`, `alice` and `bob` with respected scripts. 
+1. Just run `start_bitcoind.sh` script and spin up `seed node`, `alice` and `bob` with respected scripts.
 
 ## Clearing the DAO - for a fresh start
 
 1. Run `clean.sh`. It will clear the bitcoind files and bisq files from `~/.local/share/` directory. Make sure your `bitcoind/bitcoin-qt` is stopped before running.
 ```
-user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao$ ./clean.sh 
+user@host:~/bin/KanoczTomas/bisq/docs/autosetup-regtest-dao$ ./clean.sh
 DANGER! This will nuke your bitcoin regtest dir and bisq seed, alice and bob regtest dirs as well!
 Press Enter to continue, otherwise ctrl+c
-
 cleaned bitcoind home and bisq seed, alice, bob instances. The conf file for bisq was reset to dao=false
-
 ```
