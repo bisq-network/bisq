@@ -321,7 +321,11 @@ public class WalletConfig extends AbstractIdleService {
      * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
      */
     private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        return new SPVBlockStore(params, file);
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+            return new NonMMappedSPVBlockStore(params, file);
+        } else {
+            return new SPVBlockStore(params, file);
+        }
     }
 
     /**
@@ -408,7 +412,7 @@ public class WalletConfig extends AbstractIdleService {
                             vStore.close();
                             if (!chainFile.delete())
                                 throw new IOException("Failed to delete chain file in preparation for restore.");
-                            vStore = new SPVBlockStore(params, chainFile);
+                            vStore = provideBlockStore(chainFile);
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -424,7 +428,7 @@ public class WalletConfig extends AbstractIdleService {
                     vStore.close();
                     if (!chainFile.delete())
                         throw new IOException("Failed to delete chain file in preparation for restore.");
-                    vStore = new SPVBlockStore(params, chainFile);
+                    vStore = provideBlockStore(chainFile);
                 }
             }
             vChain = new BlockChain(params, vStore);
