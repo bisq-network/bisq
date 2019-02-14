@@ -61,14 +61,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private static final Coin DEFAULT_TRADE_LIMIT_MID_RISK = Coin.parseCoin("0.25");
     private static final Coin DEFAULT_TRADE_LIMIT_HIGH_RISK = Coin.parseCoin("0.125");
 
-    @Deprecated
-    public static final String OK_PAY_ID = "OK_PAY";
     public static final String UPHOLD_ID = "UPHOLD";
-    @Deprecated
-    public static final String CASH_APP_ID = "CASH_APP"; // Removed due too high chargeback risk
     public static final String MONEY_BEAM_ID = "MONEY_BEAM";
-    @Deprecated
-    public static final String VENMO_ID = "VENMO";  // Removed due too high chargeback risk
     public static final String POPMONEY_ID = "POPMONEY";
     public static final String REVOLUT_ID = "REVOLUT";
     public static final String PERFECT_MONEY_ID = "PERFECT_MONEY";
@@ -94,14 +88,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
 
-    @Deprecated
-    public static PaymentMethod OK_PAY;
     public static PaymentMethod UPHOLD;
-    @Deprecated
-    public static PaymentMethod CASH_APP; // Removed due too high chargeback risk
     public static PaymentMethod MONEY_BEAM;
-    @Deprecated
-    public static PaymentMethod VENMO; // Removed due too high chargeback risk
     public static PaymentMethod POPMONEY;
     public static PaymentMethod REVOLUT;
     public static PaymentMethod PERFECT_MONEY;

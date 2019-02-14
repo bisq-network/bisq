@@ -155,7 +155,6 @@ public class CurrencyUtil {
         return currencies;
     }
 
-    // At OKPay you can exchange internally those currencies
     public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("USD"),
@@ -165,34 +164,6 @@ public class CurrencyUtil {
                 new FiatCurrency("UAH"),
                 new FiatCurrency("KZT"),
                 new FiatCurrency("BRL")
-        ));
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllOKPayCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("EUR"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("ZAR"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("CNY")
         ));
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
