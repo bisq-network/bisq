@@ -40,7 +40,7 @@ public class DaoPresentation implements DaoStateListener {
     @Getter
     private final DoubleProperty bsqSyncProgress = new SimpleDoubleProperty(-1);
     @Getter
-    private final StringProperty bsqInfo = new SimpleStringProperty(Res.get("mainView.footer.bsqInfo.initializing"));
+    private final StringProperty bsqInfo = new SimpleStringProperty("");
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
 
     @Inject
