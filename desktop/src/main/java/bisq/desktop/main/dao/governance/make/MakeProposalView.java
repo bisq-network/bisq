@@ -90,7 +90,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
+import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
 import static bisq.desktop.util.FormBuilder.addComboBox;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
@@ -437,8 +437,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
 
-            final Tuple4<Button, BusyAnimation, Label, HBox> makeProposalTuple = addButtonBusyAnimationLabel(root,
-                    proposalDisplay.getGridRow(), 0, Res.get("dao.proposal.create.button"), 0);
+            final Tuple4<Button, BusyAnimation, Label, HBox> makeProposalTuple = addButtonBusyAnimationLabelAfterGroup(root,
+                    proposalDisplay.getGridRow(), 0, Res.get("dao.proposal.create.button"));
             makeProposalButton = makeProposalTuple.first;
 
             busyAnimation = makeProposalTuple.second;
