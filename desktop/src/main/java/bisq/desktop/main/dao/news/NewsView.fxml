@@ -17,11 +17,11 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
-<GridPane fx:id="root" fx:controller="bisq.desktop.main.dao.news.NewsView"
-          xmlns:fx="http://javafx.com/fxml" hgap="5.0" vgap="5.0">
+<HBox fx:id="root" fx:controller="bisq.desktop.main.dao.news.NewsView"
+      xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-</GridPane>
+</HBox>
