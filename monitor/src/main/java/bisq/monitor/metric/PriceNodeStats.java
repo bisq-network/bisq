@@ -62,6 +62,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PriceNodeStats extends Metric {
 
     private static final String HOSTS = "run.hosts";
+    private static final String IGNORE = "dashTxFee ltcTxFee dogeTxFee";
     // poor mans JSON parser
     private final Pattern stringNumberPattern = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
     private final Pattern pricePattern = Pattern.compile("\"price\" ?: ?([\\d\\.]+)");
@@ -103,7 +104,8 @@ public class PriceNodeStats extends Metric {
                 while((line = in.readLine()) != null) {
                     Matcher matcher = stringNumberPattern.matcher(line);
                     if(matcher.find())
-                        result.put("fees." + matcher.group(1), matcher.group(2));
+                        if(!IGNORE.contains(matcher.group(1)))
+                            result.put("fees." + matcher.group(1), matcher.group(2));
                 }
 
                 in.close();
