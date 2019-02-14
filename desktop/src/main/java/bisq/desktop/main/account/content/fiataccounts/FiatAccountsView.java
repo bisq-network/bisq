@@ -340,7 +340,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
-        List<PaymentMethod> list = PaymentMethod.getActivePaymentMethods().stream()
+        List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));

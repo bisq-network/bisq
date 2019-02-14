@@ -50,11 +50,14 @@ public class TradeLimits {
         INSTANCE = this;
     }
 
-    public Coin getMaxTradeLimit() {
-        return daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
+    public void onAllServicesInitialized() {
+        // Do nothing but required to enforce class creation by guice.
+        // The TradeLimits is used by PaymentMethod via the static INSTANCE and this would not trigger class creation by
+        // guice.
     }
 
-    public void onAllServicesInitialized() {
+    public Coin getMaxTradeLimit() {
+        return daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
     }
 
     // We possibly rounded value for the first month gets multiplied by 4 to get the trade limit after the account
@@ -89,5 +92,4 @@ public class TradeLimits {
         double rounded = MathUtils.roundDouble(decimalForm, 4);
         return MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(rounded, 8));
     }
-
 }

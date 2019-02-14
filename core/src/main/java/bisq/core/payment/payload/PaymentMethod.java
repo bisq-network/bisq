@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,6 +51,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     // time in blocks (average 10 min for one block confirmation
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
+
+    // Default trade limits.
+    // We initialize very early before reading persisted data. We will apply later the limit from the DAO param
+    // but that can be only done after the dao is initialized. The default values will be used for deriving the
+    // risk factor so the relation between the risk categories stays the same as with the default values.
+    private static final Coin DEFAULT_TRADE_LIMIT_VERY_LOW_RISK = Coin.parseCoin("1");
+    private static final Coin DEFAULT_TRADE_LIMIT_LOW_RISK = Coin.parseCoin("0.5");
+    private static final Coin DEFAULT_TRADE_LIMIT_MID_RISK = Coin.parseCoin("0.25");
+    private static final Coin DEFAULT_TRADE_LIMIT_HIGH_RISK = Coin.parseCoin("0.125");
 
     @Deprecated
     public static final String OK_PAY_ID = "OK_PAY";
@@ -119,11 +127,66 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
 
-    private static List<PaymentMethod> ALL_VALUES;
+    @Getter
+    private final static List<PaymentMethod> paymentMethods = new ArrayList<>(Arrays.asList(
+            // EUR
+            SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
+            // UK
+            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
 
-    public static void onAllServicesInitialized() {
-        getAllValues();
+            // Sweden
+            SWISH = new PaymentMethod(SWISH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // US
+            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+
+            POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+
+            // Canada
+            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+
+            // Global
+            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            MONEY_GRAM = new PaymentMethod(MONEY_GRAM_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+            F2F = new PaymentMethod(F2F_ID, 4 * DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Trans national
+            UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+            ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+
+            // China
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+            WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Thailand
+            PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Altcoins
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+    ));
+
+    static {
+        paymentMethods.sort((o1, o2) -> {
+            String id1 = o1.getId();
+            if (id1.equals(CLEAR_X_CHANGE_ID))
+                id1 = "ZELLE";
+            String id2 = o2.getId();
+            if (id2.equals(CLEAR_X_CHANGE_ID))
+                id2 = "ZELLE";
+            return id1.compareTo(id2);
+        });
     }
 
 
@@ -135,6 +198,13 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private final String id;
     @Getter
     private final long maxTradePeriod;
+
+    // With v0.9.4 we changed context of that field. Before it was the hard coded trade limit. Now it is the default
+    // limit which will be used just in time to adjust the real trade limit based on the DAO param value and risk factor.
+    // The risk factor is derived from the maxTradeLimit.
+    // As that field is used in protobuffer definitions we cannot change it to reflect better the new context. We prefer
+    // to keep the convention that PB fields has the same name as the Java class field (as we could rename it in
+    // Java without breaking PB).
     private final long maxTradeLimit;
 
 
@@ -149,95 +219,17 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
      * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
      * @param maxTradeLimit  The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id, long maxTradePeriod, @NotNull Coin maxTradeLimit) {
+    public PaymentMethod(String id, long maxTradePeriod, Coin maxTradeLimit) {
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
         this.maxTradeLimit = maxTradeLimit.value;
     }
 
-    public static List<PaymentMethod> getAllValues() {
-        if (ALL_VALUES == null) {
-            TradeLimits tradeLimits = TradeLimits.getINSTANCE();
-            checkNotNull(tradeLimits, "tradeLimits must not be null");
-            long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
-            Coin maxTradeLimitVeryLowRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 1));
-            Coin maxTradeLimitLowRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 2));
-            Coin maxTradeLimitMidRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 4));
-            Coin maxTradeLimitHighRisk = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, 8));
-
-            ALL_VALUES = new ArrayList<>(Arrays.asList(
-                    // EUR
-                    SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, maxTradeLimitMidRisk),
-                    SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, maxTradeLimitMidRisk),
-                    MONEY_BEAM = new PaymentMethod(MONEY_BEAM_ID, DAY, maxTradeLimitHighRisk),
-
-                    // UK
-                    FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, maxTradeLimitMidRisk),
-
-                    // Sweden
-                    SWISH = new PaymentMethod(SWISH_ID, DAY, maxTradeLimitLowRisk),
-
-                    // US
-                    CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    CASH_APP = new PaymentMethod(CASH_APP_ID, DAY, maxTradeLimitHighRisk),
-
-                    VENMO = new PaymentMethod(VENMO_ID, DAY, maxTradeLimitHighRisk),
-
-                    POPMONEY = new PaymentMethod(POPMONEY_ID, DAY, maxTradeLimitHighRisk),
-                    CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, maxTradeLimitMidRisk),
-                    US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, maxTradeLimitMidRisk),
-
-                    // Canada
-                    INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, maxTradeLimitMidRisk),
-
-                    // Global
-                    CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    MONEY_GRAM = new PaymentMethod(MONEY_GRAM_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    WESTERN_UNION = new PaymentMethod(WESTERN_UNION_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, maxTradeLimitMidRisk),
-                    SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, maxTradeLimitMidRisk),
-                    HAL_CASH = new PaymentMethod(HAL_CASH_ID, DAY, maxTradeLimitLowRisk),
-                    F2F = new PaymentMethod(F2F_ID, 4 * DAY, maxTradeLimitLowRisk),
-
-                    // Trans national
-                    OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, maxTradeLimitVeryLowRisk),
-                    UPHOLD = new PaymentMethod(UPHOLD_ID, DAY, maxTradeLimitHighRisk),
-                    REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, maxTradeLimitHighRisk),
-                    PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, maxTradeLimitLowRisk),
-                    ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, maxTradeLimitVeryLowRisk),
-
-                    // China
-                    ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, maxTradeLimitLowRisk),
-                    WECHAT_PAY = new PaymentMethod(WECHAT_PAY_ID, DAY, maxTradeLimitLowRisk),
-
-                    // Thailand
-                    PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, maxTradeLimitLowRisk),
-
-                    // Altcoins
-                    BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, maxTradeLimitVeryLowRisk)
-            ));
-
-            ALL_VALUES.sort((o1, o2) -> {
-                String id1 = o1.getId();
-                if (id1.equals(CLEAR_X_CHANGE_ID))
-                    id1 = "ZELLE";
-                String id2 = o2.getId();
-                if (id2.equals(CLEAR_X_CHANGE_ID))
-                    id2 = "ZELLE";
-                return id1.compareTo(id2);
-            });
-        }
-        return ALL_VALUES;
+    // Used for dummy entries in payment methods list (SHOW_ALL)
+    public PaymentMethod(String id) {
+        this(id, 0, Coin.ZERO);
     }
 
-    public static List<PaymentMethod> getActivePaymentMethods() {
-        return getAllValues().stream()
-                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VENMO_ID))
-                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.CASH_APP_ID))
-                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.OK_PAY_ID))
-                .collect(Collectors.toList());
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -263,30 +255,39 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Used for dummy entries in payment methods list (SHOW_ALL)
-    public PaymentMethod(String id) {
-        this(id, 0, Coin.ZERO);
-    }
-
     public static PaymentMethod getPaymentMethodById(String id) {
-        return getAllValues().stream()
+        return paymentMethods.stream()
                 .filter(e -> e.getId().equals(id))
                 .findFirst()
                 .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
 
-    // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
-        if (currencyCode.equals("SF") || currencyCode.equals("BSQ"))
+        // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
+        if (currencyCode.equals("SF"))
             return Coin.parseCoin("4");
+
+        // We use the class field maxTradeLimit only for mapping the risk factor.
+        long riskFactor;
+        if (maxTradeLimit == DEFAULT_TRADE_LIMIT_VERY_LOW_RISK.value)
+            riskFactor = 1;
+        else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_LOW_RISK.value)
+            riskFactor = 2;
+        else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_MID_RISK.value)
+            riskFactor = 4;
         else
-            return Coin.valueOf(maxTradeLimit);
+            riskFactor = 8;
+
+        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
+        checkNotNull(tradeLimits, "tradeLimits must not be null");
+        long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
+        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, riskFactor));
     }
 
     @Override
     public int compareTo(@NotNull Object other) {
         if (id != null)
-            return this.id.compareTo(((PaymentMethod) other).id);
+            return id.compareTo(((PaymentMethod) other).id);
         else
             return 0;
     }

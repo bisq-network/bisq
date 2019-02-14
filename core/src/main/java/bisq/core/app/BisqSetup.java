@@ -44,7 +44,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
@@ -588,7 +587,6 @@ public class BisqSetup {
         clock.start();
 
         tradeLimits.onAllServicesInitialized();
-        PaymentMethod.onAllServicesInitialized();
 
         disputeManager.onAllServicesInitialized();
 

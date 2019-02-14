@@ -328,7 +328,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     ObservableList<PaymentMethod> getPaymentMethods() {
-        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getActivePaymentMethods());
+        ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.getPaymentMethods());
         list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;
     }
