@@ -355,6 +355,10 @@ public class BisqSetup {
         return walletAppSetup.getBtcSplashSyncIconId();
     }
 
+    public BooleanProperty getUseTorForBTC() {
+        return walletAppSetup.getUseTorForBTC();
+    }
+
     // P2P
     public StringProperty getP2PNetworkInfo() {
         return p2PNetworkSetup.getP2PNetworkInfo();
@@ -484,6 +488,11 @@ public class BisqSetup {
         };
 
         Timer startupTimeout = UserThread.runAfter(() -> {
+            if (p2PNetworkSetup.p2pNetworkFailed.get()) {
+                // Skip this timeout action if the p2p network setup failed
+                // since a p2p network error prompt will be shown containing the error message
+                return;
+            }
             log.warn("startupTimeout called");
             if (walletsManager.areWalletsEncrypted())
                 walletInitialized.addListener(walletInitializedListener);

@@ -32,8 +32,10 @@ import javax.inject.Inject;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -68,6 +70,8 @@ public class WalletAppSetup {
     private final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
     @Getter
     private int numBtcPeers = 0;
+    @Getter
+    private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
     public WalletAppSetup(WalletsManager walletsManager,
@@ -80,6 +84,7 @@ public class WalletAppSetup {
         this.bisqEnvironment = bisqEnvironment;
         this.preferences = preferences;
         this.formatter = formatter;
+        this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
     }
 
     void init(@Nullable Consumer<String> chainFileLockedExceptionHandler,
