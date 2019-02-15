@@ -91,7 +91,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
 
         Statistics create();
 
-        void log(ProtectedStoragePayload message);
+        void log(Object message);
 
         Map<String, T> values();
 
@@ -126,7 +126,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
         }
 
         @Override
-        public synchronized void log(ProtectedStoragePayload message) {
+        public synchronized void log(Object message) {
 
             // For logging different data types
             String className = message.getClass().getSimpleName();
@@ -174,8 +174,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
                         NodeAddress target = OnionParser.getNodeAddress(current);
 
                         // do the data request
-                        SettableFuture<Connection> future = networkNode.sendMessage(target,
-                                new PreliminaryGetDataRequest(new Random().nextInt(), hashes));
+                        SettableFuture<Connection> future = networkNode.sendMessage(target, getFreshRequest(networkNode.getNodeAddress()));
 
                         Futures.addCallback(future, new FutureCallback<>() {
                             @Override
@@ -209,6 +208,11 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
         gate.await();
 
         report();
+    }
+
+    protected NetworkEnvelope getFreshRequest(NodeAddress nodeAddress) {
+        int nonce = new Random().nextInt();
+        return new PreliminaryGetDataRequest(nonce, hashes);
     }
 
     /**
@@ -261,6 +265,18 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
+        if(treatMessage(networkEnvelope, connection)) {
+            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
+            gate.proceed();
+        } else if (networkEnvelope instanceof CloseConnectionMessage) {
+            gate.unlock();
+        } else {
+            log.warn("Got an unexpected message of type <{}>",
+                    networkEnvelope.getClass().getSimpleName());
+        }
+    }
+
+    protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataResponse) {
 
             Statistics result = this.statistics.create();
@@ -295,14 +311,8 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
             checkNotNull(connection.getPeersNodeAddressProperty(),
                     "although the property is nullable, we need it to not be null");
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
-
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
-            gate.proceed();
-        } else if (networkEnvelope instanceof CloseConnectionMessage) {
-            gate.unlock();
-        } else {
-            log.warn("Got a message of type <{}>, expected <GetDataResponse>",
-                    networkEnvelope.getClass().getSimpleName());
+            return true;
         }
+        return false;
     }
 }

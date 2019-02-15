@@ -61,7 +61,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshot {
         }
 
         @Override
-        public synchronized void log(ProtectedStoragePayload message) {
+        public synchronized void log(Object message) {
 
             if(message instanceof OfferPayload) {
                 OfferPayload currentMessage = (OfferPayload) message;
