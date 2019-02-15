@@ -130,8 +130,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     public P2PNetworkLoad(Reporter reporter) {
         super(reporter);
-
-        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
     }
 
     @Override
@@ -176,7 +174,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
                         networkProtoResolver, storageDir);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(
-                        new SeedNodeAddressLookup(environment, false, 0, null, seedNodes));
+                        new SeedNodeAddressLookup(environment, false, Version.getBaseCurrencyNetwork(), null, seedNodes));
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
                         persistenceProtoResolver, maxConnections, storageDir);
 

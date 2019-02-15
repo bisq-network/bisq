@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
@@ -150,8 +149,6 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
 
     public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
-
-        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
 
         statistics = new MyStatistics();
     }

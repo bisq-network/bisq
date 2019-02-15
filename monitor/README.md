@@ -34,6 +34,9 @@ A sample configuration file looks like follows:
 # true overwrites the reporters picked by the developers (for debugging for example) (defaults to false)
 System.useConsoleReporter=true
 
+# 0 -> BTC_MAINNET, 1 -> BTC_TESTNET (default)
+System.baseCurrencyNetwork=0
+
 ## Each Metric is configured via a set of properties.
 ##
 ## The minimal set of properties required to run a Metric is:
@@ -70,9 +73,8 @@ P2PRoundTripTime.run.torProxyPort=9060
 #P2PNetworkLoad Metric
 P2PNetworkLoad.enabled=true
 P2PNetworkLoad.run.interval=100
-P2PNetworkLoad.run.hosts=723ljisnynbtdohi.onion:8000, fl3mmribyxgrv63c.onion:8000
 P2PNetworkLoad.run.torProxyPort=9061
-P2PNetworkLoad.run.historySize=200
+P2PNetworkLoad.run.historySize=500
 
 #P2PNetworkMessageSnapshot Metric
 P2PSeedNodeSnapshot.enabled=true

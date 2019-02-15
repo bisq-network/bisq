@@ -17,6 +17,8 @@
 
 package bisq.monitor;
 
+import bisq.common.app.Version;
+
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,6 +27,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.btc.BtcOptionKeys.BASE_CURRENCY_NETWORK;
 
 /**
  * Starts a Metric (in its own {@link Thread}), manages its properties and shuts
@@ -85,6 +89,8 @@ public abstract class Metric extends Configurable implements Runnable {
             log.info("{} (re)loading config...", getName());
             super.configure(properties);
             reporter.configure(properties);
+
+            Version.setBaseCryptoNetworkId(Integer.parseInt(properties.getProperty("System." + BASE_CURRENCY_NETWORK, "1"))); // defaults to BTC_TESTNET
 
             // decide whether to enable or disable the task
             if (configuration.isEmpty() || !configuration.getProperty("enabled", "false").equals("true")
