@@ -23,6 +23,6 @@ import bisq.asset.CryptonoteAddressValidator;
 public class Aeon extends Coin {
 
      public Aeon() {
-        super("Aeon", "AEON", new CryptonoteAddressValidator("Wm", "Xn"));
+        super("Aeon", "AEON", new CryptonoteAddressValidator(0xB2, 0x06B8));
     }
 }

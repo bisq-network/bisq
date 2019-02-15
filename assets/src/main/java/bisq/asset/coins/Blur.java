@@ -25,6 +25,6 @@ import bisq.asset.CryptonoteAddressValidator;
 public class Blur extends Coin {
 
      public Blur() {
-        super("Blur", "BLUR", new CryptonoteAddressValidator("bL", "Ry"));
+        super("Blur", "BLUR", new CryptonoteAddressValidator(0x1e4d, 0x2195));
     }
 }

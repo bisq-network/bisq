@@ -23,6 +23,6 @@ import bisq.asset.CryptonoteAddressValidator;
 public class FourtyTwo extends Coin {
 
     public FourtyTwo() {
-        super("FourtyTwo", "FRTY", new CryptonoteAddressValidator("foUr", "SNake"));
+        super("FourtyTwo", "FRTY", new CryptonoteAddressValidator(0x1cbd67, 0x13271817));
     }
 }

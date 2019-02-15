@@ -22,6 +22,6 @@ import bisq.asset.CryptonoteAddressValidator;
 
 public class Mask extends Coin {
     public Mask() {
-        super("Mask", "MASK", new CryptonoteAddressValidator("M", "bT"));
+        super("Mask", "MASK", new CryptonoteAddressValidator(123, 206));
     }
 }
