@@ -168,6 +168,19 @@ public class ChangeParamValidator extends ProposalValidator {
             case RECIPIENT_BTC_ADDRESS:
                 break;
 
+            case ASSET_LISTING_FEE_PER_DAY:
+                break;
+            case ASSET_MIN_VOLUME:
+                break;
+
+            case LOCK_TIME_TRADE_PAYOUT:
+                break;
+            case ARBITRATOR_FEE:
+                break;
+
+            case MAX_TRADE_LIMIT:
+                break;
+
             case PHASE_UNDEFINED:
                 break;
             case PHASE_PROPOSAL:

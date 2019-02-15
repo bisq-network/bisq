@@ -314,9 +314,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public PaymentMethod getPaymentMethod() {
-        return new PaymentMethod(offerPayload.getPaymentMethodId(),
-                offerPayload.getMaxTradePeriod(),
-                Coin.valueOf(offerPayload.getMaxTradeLimit()));
+        return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
     }
 
     // utils

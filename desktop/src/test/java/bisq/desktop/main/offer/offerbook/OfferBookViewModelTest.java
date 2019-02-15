@@ -25,10 +25,10 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.NationalBankAccount;
-import bisq.core.payment.OKPayAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.SameBankAccount;
@@ -110,10 +110,10 @@ public class OfferBookViewModelTest {
 
         // simple cases: same payment methods
 
-        // offer: okpay paymentAccount: okpay - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getOKPayAccount("EUR")));
+        // offer: alipay paymentAccount: alipay - same country, same currency
+        paymentAccounts = new ArrayList<>(Collections.singletonList(getAliPayAccount("CNY")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getOKPayPaymentMethod("EUR"), paymentAccounts));
+                getAliPayPaymentMethod("EUR"), paymentAccounts));
 
         // offer: ether paymentAccount: ether - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getCryptoAccount("ETH")));
@@ -442,8 +442,8 @@ public class OfferBookViewModelTest {
 
     }
 
-    private PaymentAccount getOKPayAccount(String currencyCode) {
-        PaymentAccount paymentAccount = new OKPayAccount();
+    private PaymentAccount getAliPayAccount(String currencyCode) {
+        PaymentAccount paymentAccount = new AliPayAccount();
         paymentAccount.setSelectedTradeCurrency(new FiatCurrency(currencyCode));
         return paymentAccount;
     }
@@ -498,9 +498,9 @@ public class OfferBookViewModelTest {
                 null);
     }
 
-    private Offer getOKPayPaymentMethod(String currencyCode) {
+    private Offer getAliPayPaymentMethod(String currencyCode) {
         return getOffer(currencyCode,
-                PaymentMethod.OK_PAY_ID,
+                PaymentMethod.ALI_PAY_ID,
                 null,
                 null,
                 null,

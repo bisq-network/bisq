@@ -22,7 +22,6 @@ import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
-import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -34,7 +33,6 @@ import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
-import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
 import bisq.desktop.components.paymentmethods.PromptPayForm;
@@ -45,7 +43,6 @@ import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
-import bisq.desktop.components.paymentmethods.VenmoForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -216,20 +213,11 @@ public class BuyerStep2View extends TradeStepView {
                     Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
         switch (paymentMethodId) {
-            case PaymentMethod.OK_PAY_ID:
-                gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
-                break;
             case PaymentMethod.UPHOLD_ID:
                 gridRow = UpholdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
-            case PaymentMethod.CASH_APP_ID:
-                gridRow = CashAppForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
-                break;
             case PaymentMethod.MONEY_BEAM_ID:
                 gridRow = MoneyBeamForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
-                break;
-            case PaymentMethod.VENMO_ID:
-                gridRow = VenmoForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.POPMONEY_ID:
                 gridRow = PopmoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
