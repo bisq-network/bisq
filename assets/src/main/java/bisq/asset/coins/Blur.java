@@ -19,12 +19,12 @@ package bisq.asset.coins;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.blur.msg")
 public class Blur extends Coin {
 
      public Blur() {
-        super("Blur", "BLUR", new CryptonoteAddressValidator(0x1e4d, 0x2195));
+         super("Blur", "BLUR", new CryptoNoteAddressValidator(0x1e4d, 0x2195));
     }
 }

@@ -18,10 +18,10 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 public class Mask extends Coin {
     public Mask() {
-        super("Mask", "MASK", new CryptonoteAddressValidator(123, 206));
+        super("Mask", "MASK", new CryptoNoteAddressValidator(123, 206));
     }
 }

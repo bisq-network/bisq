@@ -19,12 +19,12 @@ package bisq.asset.coins;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.xmr.msg")
 public class Monero extends Coin {
 
     public Monero() {
-        super("Monero", "XMR", new CryptonoteAddressValidator(18, 42));
+        super("Monero", "XMR", new CryptoNoteAddressValidator(18, 42));
     }
 }

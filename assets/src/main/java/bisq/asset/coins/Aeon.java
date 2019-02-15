@@ -18,11 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 public class Aeon extends Coin {
 
      public Aeon() {
-        super("Aeon", "AEON", new CryptonoteAddressValidator(0xB2, 0x06B8));
+         super("Aeon", "AEON", new CryptoNoteAddressValidator(0xB2, 0x06B8));
     }
 }

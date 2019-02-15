@@ -18,11 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 public class FourtyTwo extends Coin {
 
     public FourtyTwo() {
-        super("FourtyTwo", "FRTY", new CryptonoteAddressValidator(0x1cbd67, 0x13271817));
+        super("FourtyTwo", "FRTY", new CryptoNoteAddressValidator(0x1cbd67, 0x13271817));
     }
 }

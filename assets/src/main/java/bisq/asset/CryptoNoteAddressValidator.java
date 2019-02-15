@@ -17,10 +17,11 @@
 
 package bisq.asset;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.LongBuffer;
+
+import java.math.BigInteger;
+
 import java.util.Map;
 
 /**
@@ -28,25 +29,25 @@ import java.util.Map;
  *
  * @author Xiphon
  */
-public class CryptonoteAddressValidator implements AddressValidator {
+public class CryptoNoteAddressValidator implements AddressValidator {
 
-    private final long[] validPefixes;
+    private final long[] validPrefixes;
     private final boolean validateChecksum;
 
-    public CryptonoteAddressValidator(boolean validateChecksum, long... validPefixes) {
-        this.validPefixes = validPefixes;
+    public CryptoNoteAddressValidator(boolean validateChecksum, long... validPrefixes) {
+        this.validPrefixes = validPrefixes;
         this.validateChecksum = validateChecksum;
     }
 
-    public CryptonoteAddressValidator(long... validPefixes) {
-        this(true, validPefixes);
+    public CryptoNoteAddressValidator(long... validPrefixes) {
+        this(true, validPrefixes);
     }
 
     @Override
     public AddressValidationResult validate(String address) {
         try {
             long prefix = MoneroBase58.decodeAddress(address, this.validateChecksum);
-            for (long validPrefix : this.validPefixes) {
+            for (long validPrefix : this.validPrefixes) {
                 if (prefix == validPrefix) {
                     return AddressValidationResult.validAddress();
                 }
@@ -187,7 +188,7 @@ class MoneroBase58 {
             }
             result = result.add(order.multiply(BigInteger.valueOf(digit)));
             if (result.compareTo(UINT64_MAX) > 0) {
-                throw new Exception("64-bit unsinged integer overflow " + result.toString());
+                throw new Exception("64-bit unsigned integer overflow " + result.toString());
             }
         }
 
