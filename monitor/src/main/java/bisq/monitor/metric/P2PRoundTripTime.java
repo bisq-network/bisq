@@ -20,7 +20,6 @@ package bisq.monitor.metric;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +27,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
@@ -66,13 +64,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     public P2PRoundTripTime(Reporter reporter) {
         super(reporter);
-
-        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
     }
 
     @Override
