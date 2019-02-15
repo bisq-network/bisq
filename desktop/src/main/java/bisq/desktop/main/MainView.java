@@ -466,7 +466,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         btcSyncIndicator = new JFXProgressBar();
         btcSyncIndicator.setPrefWidth(305);
-        btcSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
+        btcSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
 
         ImageView btcSyncIcon = new ImageView();
         btcSyncIcon.setVisible(false);
@@ -606,7 +606,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
         blockchainSyncIndicator.setPrefWidth(80);
         blockchainSyncIndicator.setMaxHeight(10);
-        blockchainSyncIndicator.progressProperty().bind(model.getBtcSyncProgress());
+        blockchainSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
 
         model.getWalletServiceErrorMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
@@ -623,7 +623,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
-        model.getBtcSyncProgress().addListener((ov, oldValue, newValue) -> {
+        model.getCombinedSyncProgress().addListener((ov, oldValue, newValue) -> {
             if ((double) newValue >= 1) {
                 blockchainSyncIndicator.setVisible(false);
                 blockchainSyncIndicator.setManaged(false);
