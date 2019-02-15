@@ -17,6 +17,7 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
@@ -30,6 +31,7 @@ import bisq.asset.RegexAddressValidator;
  * but it's a more complex test, requiring cryptographic code.
  *
  */
+@AltCoinAccountDisclaimer("account.altcoin.popup.beam.msg")
 public class Beam extends Coin {
     public Beam() {
         super("Beam", "BEAM", new RegexAddressValidator("^([0-9a-f]{1,80})$"));
