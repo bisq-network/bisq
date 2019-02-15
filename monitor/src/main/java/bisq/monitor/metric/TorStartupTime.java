@@ -40,7 +40,7 @@ import java.util.Properties;
 public class TorStartupTime extends Metric {
 
     private static final String SOCKS_PORT = "run.socksPort";
-    private final File torWorkingDirectory = new File("metric_torStartupTime");
+    private final File torWorkingDirectory = new File("monitor/work/metric_torStartupTime");
     private Torrc torOverrides;
 
     public TorStartupTime(Reporter reporter) {

@@ -55,7 +55,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_p2pRoundTripTime");
+    private final File torHiddenServiceDir = new File("monitor/work/metric_p2pRoundTripTime");
     private int nonce;
     private long start;
     private List<Long> samples;
