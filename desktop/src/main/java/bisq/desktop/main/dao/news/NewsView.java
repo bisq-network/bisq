@@ -5,6 +5,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.presentation.DaoPresentation;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -92,7 +93,7 @@ public class NewsView extends ActivatableView<HBox, Void> {
                 "https://docs.bisq.network/getting-started-dao.html#explore-a-bsq-block-explorer");
 
         Hyperlink hyperlink = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.news.DAOOnTestnet.readMoreLink"),
-                "https://docs.bisq.network/user-dao-intro.html");
+                "https://bisq.network/docs/dao");
         hyperlink.getStyleClass().add("dao-news-link");
 
         return gridPane;
@@ -127,7 +128,7 @@ public class NewsView extends ActivatableView<HBox, Void> {
         theBisqDaoTitledGroup.getStyleClass().addAll("last", "dao-news-titled-group");
         Label daoTeaserContent = addMultilineLabel(bisqDAOPane, ++rowIndex, Res.get("dao.news.bisqDAO.description"));
         daoTeaserContent.getStyleClass().add("dao-news-teaser");
-        Hyperlink hyperlink = addHyperlinkWithIcon(bisqDAOPane, ++rowIndex, Res.get("dao.news.bisqDAO.readMoreLink"), "https://bisq.network/dao");
+        Hyperlink hyperlink = addHyperlinkWithIcon(bisqDAOPane, ++rowIndex, Res.get("dao.news.bisqDAO.readMoreLink"), "https://bisq.network/docs/dao");
         hyperlink.getStyleClass().add("dao-news-link");
 
         GridPane pastContributorsPane = new GridPane();
@@ -148,6 +149,7 @@ public class NewsView extends ActivatableView<HBox, Void> {
         Button requestNowButton = addPrimaryActionButton(pastContributorsPane, ++rowIndex, Res.get("dao.news.pastContribution.requestNow"), 0);
         requestNowButton.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(requestNowButton, Priority.ALWAYS);
+        requestNowButton.setOnAction(e -> GUIUtil.openWebPage("https://bisq.network/docs/dao/genesis"));
 
         anchorPane.getChildren().addAll(bisqDAOPane, pastContributorsPane);
 
