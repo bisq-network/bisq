@@ -25,6 +25,6 @@ import bisq.asset.CryptonoteAddressValidator;
 public class Cash2 extends Coin {
 
     public Cash2() {
-        super("Cash2", "CASH2", new CryptonoteAddressValidator("2", ""));
+        super("Cash2", "CASH2", new CryptonoteAddressValidator(false, 0x6));
     }
 }
