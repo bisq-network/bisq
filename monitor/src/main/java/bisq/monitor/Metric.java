@@ -17,8 +17,10 @@
 
 package bisq.monitor;
 
+import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
@@ -91,6 +93,10 @@ public abstract class Metric extends Configurable implements Runnable {
             reporter.configure(properties);
 
             Version.setBaseCryptoNetworkId(Integer.parseInt(properties.getProperty("System." + BASE_CURRENCY_NETWORK, "1"))); // defaults to BTC_TESTNET
+
+            // add all capabilities
+            if(Capabilities.getSupportedCapabilities().isEmpty())
+                Arrays.stream(Capabilities.Capability.values()).forEach(capability -> Capabilities.addCapability(capability.ordinal()));
 
             // decide whether to enable or disable the task
             if (configuration.isEmpty() || !configuration.getProperty("enabled", "false").equals("true")
