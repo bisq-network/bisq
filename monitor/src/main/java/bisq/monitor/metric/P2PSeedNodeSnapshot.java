@@ -267,7 +267,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
         if (hashes.size() > 150000)
             hashes.clear();
 
-        reporter.report(report, "bisq." + getName());
+        reporter.report(report, getName());
     }
 
     @Override

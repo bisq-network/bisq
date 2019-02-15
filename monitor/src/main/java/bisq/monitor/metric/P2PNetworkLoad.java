@@ -216,7 +216,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
             });
 
             // - report
-            reporter.report(report, "bisq." + getName());
+            reporter.report(report, getName());
         }
 
         // - reset last run
