@@ -54,7 +54,7 @@ import sun.misc.Signal;
 @Slf4j
 public class Monitor {
 
-    public static final File TOR_WORKING_DIR = new File("monitor/monitor-tor");
+    public static final File TOR_WORKING_DIR = new File("monitor/work/monitor-tor");
     private static String[] args = {};
 
     public static void main(String[] args) throws Throwable {
