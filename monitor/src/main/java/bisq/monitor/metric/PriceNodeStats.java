@@ -142,7 +142,7 @@ public class PriceNodeStats extends Metric {
                 socket.close();
 
                 // report
-                reporter.report(result, "bisq." + getName());
+                reporter.report(result, getName());
 
                 // only ask for data as long as we got none
                 if(!result.isEmpty())

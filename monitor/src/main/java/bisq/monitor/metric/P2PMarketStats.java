@@ -95,6 +95,6 @@ public class P2PMarketStats extends P2PSeedNodeSnapshot {
         Map<String, String> report = new HashMap<>();
         bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((market, numberOfOffers) -> report.put(OnionParser.prettyPrint(host) + "." + market.toString(), String.valueOf(((Counter) numberOfOffers).value()))));
 
-        reporter.report(report, "bisq." + getName());
+        reporter.report(report, getName());
     }
 }
